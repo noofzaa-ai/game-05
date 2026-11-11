@@ -14,6 +14,7 @@ extends RefCounted
 
 const Fighter := preload("res://logic/fighter.gd")
 const SimInput := preload("res://logic/sim_input.gd")
+const SkillBuild := preload("res://logic/skill_build.gd")
 
 const REACH := 1.5  ## stop walking and start swinging inside this distance (metres, body to body)
 const BLADE_REACH := 1.45  ## the weapon reach number REACH was tuned for (data/combat/weapons.json blade)
@@ -105,7 +106,9 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	input.aim = toward
 	if me.state != Fighter.State.IDLE and me.state != Fighter.State.ATTACK:
 		return input
-	if me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
+	# While the skill-build system is on, GameSim drops the ultimate button (and retires the gauge): pressing it
+	# would only waste the tick, and a full gauge would freeze the fighter in place, so swing instead.
+	if not SkillBuild.enabled() and me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
 		input.ultimate = true
 		return input
 	var slot := _ready_skill_slot(sim, me, id, memory, tick)
@@ -138,12 +141,14 @@ static func _ready_skill_slot(sim, me: Fighter, id: int, memory: Dictionary, tic
 	var system = sim.skill_system
 	if system == null or not system.casters.has(id):
 		return -1
+	if SkillBuild.start_for(me.style) != str(system.builds[id].get("start", "")):
+		return -1  # this class's style has no skill tree (the cast would fail with weapon_tree_mismatch)
 	var ready_at: Dictionary = memory["slot_ready_at"]
 	for step in 4:
 		var slot: int = (int(memory["next_slot"]) + step) % 4
 		if int(ready_at.get(slot, 0)) > tick:
 			continue
-		var cost := float(preload("res://logic/skill_build.gd").config().stamina.get(system.builds[id].skills[slot].skill, 0))
+		var cost := float(SkillBuild.config().stamina.get(system.builds[id].skills[slot].skill, 0))
 		if me.energy < cost:
 			continue
 		ready_at[slot] = tick + SKILL_RETRY_TICKS

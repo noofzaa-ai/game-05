@@ -1,0 +1,224 @@
+extends SceneTree
+## Class balance check (auto-battler): fixed-seed scripted fights of the 12-wave journey
+## (data/journeys/goblin_waves.json) through the real rules, with logic/auto_pilot.gd driving our fighters.
+##   godot --headless --path . --script res://tools/balance/class_sim.gd [-- seeds=8 only=solo,squad,greatsword]
+## Scenarios: each class solo, the starter squad (logic/card_deck.gd STARTER_SQUAD), and each class x3
+## (a measurement only: a real squad never repeats a class). Prints one table row per scenario and one
+## row per class inside the squads: win rate, waves reached, time to clear, damage dealt/taken, deaths,
+## ultimates fired, share of ticks a fighter spent attacking vs walking (kiting/stall detector).
+## Tool only: nothing in the game loads this file.
+
+const Pilot := preload("res://logic/auto_pilot.gd")
+const Party := preload("res://logic/coop_journey.gd")
+const Journey := preload("res://logic/journey.gd")
+const JourneyData := preload("res://logic/journey_data.gd")
+const Fighter := preload("res://logic/fighter.gd")
+const SimInput := preload("res://logic/sim_input.gd")
+const Map := preload("res://logic/map_loader.gd")
+const World := preload("res://logic/sim_world.gd")
+const Sim := preload("res://logic/game_sim.gd")
+const Deck := preload("res://logic/card_deck.gd")
+const Rules := preload("res://logic/item_rules_loader.gd")
+const Camp := preload("res://logic/camp_data_loader.gd")
+const Loot := preload("res://logic/loot_data_loader.gd")
+const CombatLoader := preload("res://logic/combat_data_loader.gd")
+const Profile := preload("res://logic/profile.gd")
+const Run := preload("res://logic/run.gd")
+
+const MAX_TICKS := 60 * 600  ## 10 minutes of fight at 60 ticks/s
+const REACTION := 0.85  ## the pilot's default reaction chance (client/session/local_session.gd uses the default)
+
+var rules
+var camp
+var loot
+var combat
+var no_skills := false  ## "noskills": detach the skill-build skills (measurement only, to see what they add)
+
+
+func _init() -> void:
+	rules = Rules.load_default()
+	camp = Camp.load_default(rules.tiers.size())
+	loot = Loot.load_default(camp.materials.keys(), rules.tiers.size())
+	combat = CombatLoader.load_default()
+	var seeds := 8
+	var only := ""
+	no_skills = OS.get_cmdline_user_args().has("noskills")
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("seeds="):
+			seeds = int(arg.substr(6))
+		elif arg.begins_with("only="):
+			only = arg.substr(5)
+	var scenarios := []
+	for class_id in ["sword_shield", "greatsword", "longbow", "magic"]:
+		scenarios.append({"name": "solo " + class_id, "classes": [class_id], "kind": "solo"})
+	scenarios.append({"name": "starter squad", "classes": Array(Deck.STARTER_SQUAD), "kind": "squad"})
+	for class_id in ["sword_shield", "greatsword", "longbow"]:
+		scenarios.append({"name": "3x " + class_id, "classes": [class_id, class_id, class_id], "kind": "mono"})
+	print("CLASS SIM  seeds=%d  reaction=%.2f  max=%ds" % [seeds, REACTION, MAX_TICKS / 60])
+	print("scenario            | win  | waves avg/min | clear s | dmg dealt | dmg taken | deaths | ults | timeouts")
+	var per_class := {}
+	for scenario in scenarios:
+		if not only.is_empty() and not _picked(only, scenario):
+			continue
+		var wins := 0
+		var waves_total := 0
+		var waves_min := 99
+		var clear_ticks := 0
+		var dealt := 0.0
+		var taken := 0.0
+		var deaths := 0
+		var ults := 0
+		var timeouts := 0
+		for s in seeds:
+			var result := play(scenario["classes"], 1000 + s * 17)
+			if result["won"]:
+				wins += 1
+				clear_ticks += int(result["ticks"])
+			if result["timeout"]:
+				timeouts += 1
+			waves_total += int(result["waves"])
+			waves_min = mini(waves_min, int(result["waves"]))
+			for m in result["members"]:
+				dealt += m["dealt"] + m["skill_dealt"]
+				taken += m["taken"]
+				deaths += m["deaths"]
+				ults += m["ults"]
+				if true:
+					var key := "%s in %s" % [m["class"], scenario["name"]]
+					if not per_class.has(key):
+						per_class[key] = {"dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "n": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0}
+					for field in ["dealt", "taken", "deaths", "ults", "attack", "walk", "alive", "kills", "gauge_full", "skill_dealt", "casts", "casting"]:
+						per_class[key][field] += m[field]
+					per_class[key]["n"] += 1
+		print("%-19s | %3d%% | %5.1f / %2d    | %7s | %9.0f | %9.0f | %6.2f | %4.1f | %d" % [scenario["name"], 100 * wins / seeds, float(waves_total) / seeds, waves_min,
+			("%.0f" % (clear_ticks / 60.0 / wins)) if wins > 0 else "-", dealt / seeds, taken / seeds, float(deaths) / seeds, float(ults) / seeds, timeouts])
+	print("")
+	print("member (per run avg)              | weapon dmg | skill dmg | casts | dmg taken | kills | deaths | ults | gauge-full s | attacking% | walking% | casting%")
+	for key in per_class:
+		var c: Dictionary = per_class[key]
+		var n := float(c["n"])
+		var alive := maxf(1.0, float(c["alive"]))
+		print("%-34s | %10.0f | %9.0f | %5.1f | %9.0f | %5.1f | %6.2f | %4.1f | %12.1f | %9.0f%% | %7.0f%% | %7.0f%%" % [key, c["dealt"] / n, c["skill_dealt"] / n, c["casts"] / n, c["taken"] / n, c["kills"] / n, c["deaths"] / n, c["ults"] / n, c["gauge_full"] / 60.0 / n, 100.0 * c["attack"] / alive, 100.0 * c["walk"] / alive, 100.0 * c["casting"] / alive])
+	quit(0)
+
+
+## only=solo,squad picks by kind; only=greatsword picks every scenario whose name contains it.
+func _picked(only: String, scenario: Dictionary) -> bool:
+	for part in only.split(","):
+		if part == str(scenario["kind"]) or str(scenario["name"]).contains(part):
+			return true
+	return false
+
+
+func _trip(seed: int):
+	var r := RandomNumberGenerator.new()
+	r.seed = seed
+	var profile = Profile.new_player(rules, camp, r)
+	return Run.start(profile, camp)
+
+
+## One fight of the wave journey with these classes (1 = solo). Returns totals and one entry per member.
+func play(classes: Array, seed: int) -> Dictionary:
+	var data = JourneyData.load_by_id("goblin_waves", combat.enemies.keys())
+	var trips := {}
+	for i in classes.size():
+		trips[i + 1] = _trip(seed + i)
+	var journey = Party.start_party(data, trips, rules, loot, combat.weapon_ids, seed) if classes.size() > 1 else Journey.start(data, trips[1], rules, loot, combat.weapon_ids, seed)
+	while journey.state != journey.IN_STAGE and not journey.is_over():
+		if journey.state == journey.CHOOSING:
+			journey.choose(0)
+		elif journey.state == journey.AT_NODE:
+			journey.leave_node()
+	var map = Map.load_by_id(str(journey.current.map))
+	var world := World.new()
+	world.half_width = map.half_width
+	world.half_depth = map.half_depth
+	for solid in map.solids:
+		world.add_solid(solid.box)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	var sim := Sim.new(world, combat, rng)
+	var ids: Array = range(1, classes.size() + 1)
+	if classes.size() == 1:
+		sim.add_player(1, map.spawn)
+		sim.attach_run(1, journey.run, journey.item_rules, journey.loot_data)
+	journey.populate(sim, map, 1, 100)
+	if no_skills and sim.skill_system != null:
+		for id in ids:
+			sim.skill_system.attach(id, {})  # an invalid build detaches the caster and its hooks
+	var members := {}
+	var memories := {}
+	for i in ids.size():
+		var id: int = ids[i]
+		sim.set_class_style(id, str(Deck.class_data(str(classes[i])).get("weapon", "")))
+		memories[id] = Pilot.new_memory(id * 7919 + 1 + seed)
+		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0}
+	var waves := 1
+	var tick := 0
+	var gauge_max := float(combat.rules["ultimate_gauge_max"])
+	while tick < MAX_TICKS and sim.living_enemy_count() + sim.pending_wave_count() > 0:
+		var any_alive := false
+		for id in ids:
+			if sim.fighters[id].is_alive() and not sim.fighters[id].incapacitated:
+				any_alive = true
+			sim.set_input(id, SimInput.decode(Pilot.decide(sim, combat, id, memories[id], tick, REACTION).encode()))
+		if not any_alive:
+			break
+		sim.tick()
+		tick += 1
+		for event in sim.events:
+			match str(event["type"]):
+				"hit", "blocked":
+					var a := int(event.get("attacker", -1))
+					var t := int(event.get("target", -1))
+					if members.has(a) and not members.has(t):
+						members[a]["dealt"] += float(event["damage"])
+					if members.has(t) and not members.has(a):
+						members[t]["taken"] += float(event["damage"])
+				"skill_hit", "skill_dot":
+					var a := int(event.get("attacker", -1))
+					var t := int(event.get("target", -1))
+					if members.has(a) and not members.has(t):
+						members[a]["skill_dealt"] += float(event["damage"])
+					if members.has(t) and not members.has(a):
+						members[t]["taken"] += float(event["damage"])
+				"skill_cast":
+					if members.has(int(event.get("player", -1))):
+						members[int(event["player"])]["casts"] += 1
+				"dot":
+					var t := int(event.get("target", -1))
+					if members.has(t):
+						members[t]["taken"] += float(event["damage"])
+				"killed":
+					var t := int(event.get("target", -1))
+					if members.has(t):
+						members[t]["deaths"] += 1
+					elif members.has(int(event.get("by", -1))):
+						members[int(event["by"])]["kills"] += 1
+				"eliminated":
+					pass
+				"attack_started":
+					var p := int(event.get("player", -1))
+					if members.has(p) and str(event.get("move", "")).ends_with("ultimate"):
+						members[p]["ults"] += 1
+				"wave_arrived":
+					waves = int(event["wave"])
+		for id in ids:
+			var f: Fighter = sim.fighters[id]
+			if not f.is_alive() or f.incapacitated:
+				continue
+			members[id]["alive"] += 1
+			if f.skill_view.get("casting", false) or f.skill_view.get("moving", false):
+				members[id]["casting"] += 1
+			elif f.state == Fighter.State.ATTACK:
+				members[id]["attack"] += 1
+			elif sim.bodies[id].velocity.length() > 0.5:
+				members[id]["walk"] += 1
+			if f.gauge >= gauge_max:
+				members[id]["gauge_full"] += 1
+	var alive := 0
+	for id in ids:
+		if sim.fighters[id].is_alive() and not sim.fighters[id].incapacitated:
+			alive += 1
+	var cleared: bool = sim.living_enemy_count() + sim.pending_wave_count() == 0 and alive > 0
+	return {"won": cleared, "ticks": tick, "timeout": tick >= MAX_TICKS, "waves": 12 if cleared else waves, "members": members.values()}
