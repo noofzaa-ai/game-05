@@ -3,14 +3,12 @@ extends Node3D
 ## drives the camera, effects and HUD. Everything that decides what happens is in logic/;
 ## this script only feeds it input and draws the result.
 
-const CampScreen := preload("res://client/camp_screen.gd")
 const Combat := preload("res://logic/combat.gd")
 const TELEGRAPH_SHADER := preload("res://client/vfx/attack_telegraph.gdshader")
 const TELEGRAPH_LIFT := 0.05  ## the ground warning floats this much above the floor (no flicker)
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const CameraRig := preload("res://client/camera_rig.gd")
 const CameraTrigger := preload("res://client/camera_trigger.gd")
-const UltimateCamera := preload("res://client/ultimate_camera.gd")
 const Effects := preload("res://client/effects.gd")
 var _skill_presenter: Node3D
 const ExitPortal := preload("res://client/exit_portal.gd")
@@ -52,7 +50,7 @@ const RUN_DUST_TICKS := 8  ## a puff of dust under a sprinting fighter this ofte
 const HELP_TEXT := "Move WASD   Light %s   Heavy %s   Guard hold %s   Dodge %s   Run hold %s   Jump %s   Skill %s   Ultimate %s\nRun/Jump + attack = special attack   Camera 6-9   %s   F3 hit boxes   F1 hide help"
 ## The keys for leaving: a free stage has rest points, retry and the way home; a journey stage is
 ## fought to the end (Q, R and Esc do nothing there) and rests at its camp rooms.
-const HELP_STAGE_KEYS := "Q rest point   R retry   Esc campfire"
+const HELP_STAGE_KEYS := "R retry   Esc cards"
 const HELP_JOURNEY_KEYS := "Clear the stage, then stand in a light to pick the next stage"
 ## Journey exits (Boss 2026-10-13): after a clear the portals rise this long after the last monster falls.
 const PORTAL_DELAY := 1.2
@@ -84,7 +82,6 @@ var _hud: CanvasLayer
 var _event_trigger: Node
 var _party_hud
 var _party_camera
-var _ultimate_camera: Node  ## client/ultimate_camera.gd: the local player's ultimate plays its pack's camera
 var _zone_triggers: Array[Node] = []
 var _is_pve := true
 var _show_hitboxes := false
@@ -92,9 +89,6 @@ var _result := ""  ## "", "cleared" or "defeated"
 var _run  ## this trip: the run bag and gear (logic/run.gd)
 var _banked := false  ## the bag has been brought back to camp
 var _ink_style := false  ## the map is an "ink" stage: outlines and a painted ground
-var _screen: CanvasLayer  ## the rest point screen while it is open (the stage is paused)
-var _rest_points: Array[Dictionary] = []
-var _near_rest := ""  ## id of the rest point the player stands in
 var _dust_clock := 0
 var _perf: CanvasLayer  ## frame timing readout (F2)
 var _journey  ## the journey this stage belongs to (logic/journey.gd), null for a single stage
@@ -107,8 +101,6 @@ var _scene_build_started_us := 0
 var _scene_presented := false
 var _scene_loading_label: Label
 var _leaving := false  ## a portal was taken: the next stage is loading
-var _campfire := {}  ## {"position", "radius"} of a rest camp's fire
-var _near_campfire := false
 var _clear_banner_left := 0.0  ## the STAGE CLEAR banner shows this long, then the portal hint
 var _chest: Node3D  ## client/treasure_chest.gd while a taken treasure waits to be opened (or just opened)
 var _near_chest := false
@@ -157,13 +149,9 @@ func _ready() -> void:
 	_build_atmosphere(map.atmosphere)
 	_build_stage(map)
 	if not _build_session(map): return
-	if _journey == null:  # (a journey rests at its camps, not at the map's rest points)
-		_rest_points = map.rest_points
-	_build_rest_markers()
 	_build_camera(map)
 	_build_effects_and_hud()
 	if _camp_mode:
-		_build_campfire(map)
 		if not (_session.has_method("is_lobby") and _session.is_lobby()): _spawn_portals()
 		_hud.show_skill_banner("Rest camp")
 	var loading_layer := CanvasLayer.new()
@@ -213,13 +201,13 @@ func _physics_process(_delta: float) -> void:
 func _physics_frame(_delta: float) -> void:
 	var work_started:=Time.get_ticks_usec()
 	if _session!=null and _session.has_method("physics_begin"):_session.physics_begin()
-	if not _scene_presented or _session == null or (_screen != null and not _session.has_method("is_remote")):
+	if not _scene_presented or _session == null:
 		return  # (no stage yet, or paused at a rest point)
 	if _scene_loading_label != null:
 		var loading: bool = _session.has_method("is_remote") and _session.server_state.get("meta", {}).get("scene_loading", false)
 		_scene_loading_label.visible = loading
 		_scene_loading_label.text = "รอผู้เล่นโหลดฉากพร้อม…"
-	var auto_fight: bool = GameState.auto_battle and not _session.has_method("is_remote") and _screen == null and not (_session.has_method("is_lobby") and _session.is_lobby())
+	var auto_fight: bool = GameState.auto_battle and not _session.has_method("is_remote") and not (_session.has_method("is_lobby") and _session.is_lobby())
 	if auto_fight and _session.is_coop():
 		for other_id in _session.fighters:  # every other fighter of our squad is also brain-driven
 			if other_id != _local_player_id and _session.fighters[other_id].team == _session.fighters[_local_player_id].team:
@@ -228,7 +216,7 @@ func _physics_frame(_delta: float) -> void:
 		var secondary = InputReader.read_secondary()
 		secondary.move = _rig.movement_from_screen(secondary.move)
 		_session.set_input(2, secondary)
-	var frame = _session.auto_input(_local_player_id) if auto_fight else (InputReader.read(get_viewport()) if _screen == null else preload("res://logic/sim_input.gd").new())
+	var frame = _session.auto_input(_local_player_id) if auto_fight else InputReader.read(get_viewport())
 	if auto_fight:
 		frame = _auto_journey_input(frame)
 	if _party_hud != null and _party_hud.revive_held: frame = preload("res://logic/sim_input.gd").new()
@@ -269,7 +257,6 @@ func _physics_frame(_delta: float) -> void:
 	_update_hitbox_views()
 	for trigger in _zone_triggers:
 		trigger.update(_views[_local_player_id].position)
-	_ultimate_camera.update(_session.fighters[_local_player_id], _views[_local_player_id].position, _views[_local_player_id].body_center(), _views[_local_player_id].skill_weapon_point())
 
 	var player: Fighter = _session.fighters[_local_player_id]
 	if _session.local_defeated() and _result.is_empty():
@@ -288,7 +275,6 @@ func _physics_frame(_delta: float) -> void:
 		var own_ultimate: bool = player.state == Fighter.State.ATTACK and _combat_data.styles.get(player.style, {}).get("ultimate", "") == player.move_id
 		_party_camera.update(_session, _views, own_ultimate)
 	_running_dust()
-	_update_rest_prompt(player)
 	if _journey != null:
 		_update_journey_exits(player, 1.0 / float(Engine.physics_ticks_per_second))
 	_hud.update_from(player, _combat_data, _session.living_enemy_count(), _camera_text(), _bag_text())
@@ -317,10 +303,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	var key := key_event.physical_keycode
 	if key == KEY_ESCAPE and _session != null and _session.has_method("is_remote") and _session.can_return_to_hub():
-		GameState.go_hub()
+		GameState.go_card_deck()
 		return
-	if _screen != null:
-		return  # the rest point screen has the keyboard
 	if key == KEY_ESCAPE and _session != null and _session.has_method("is_lobby") and _session.is_lobby():
 		var response: Dictionary = _session.command({"type": "party_leave"})
 		_hud.set_prompt("กำลังออกจากปาร์ตี้ กลับแคมป์หลัก…" if response.get("pending", false) else preload("res://client/online/online_text.gd").message(str(response.get("error", "unavailable"))))
@@ -337,16 +321,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if key == KEY_E and _near_chest:
 			open_chest()
 			return
-		if _camp_mode and key == KEY_E and _near_campfire:
-			_open_campfire()
-			return
 		if key == KEY_ESCAPE or key == KEY_R or key == KEY_Q:
 			return  # a journey stage is fought to the end (go home from a camp)
 	if key == KEY_ESCAPE:
 		_bank_loot()  # (until the stage has rest points, leaving early brings the loot home)
-		GameState.go_hub()
-	elif key == KEY_Q:
-		_try_open_rest()
+		GameState.go_card_deck()
 	elif _rig == null:
 		return
 	elif key == KEY_R:
@@ -483,61 +462,6 @@ func _add_boss_label(view: Node3D) -> void:
 	view.add_child(label)
 
 
-## A glowing ring on the ground and a label for every rest point of the map.
-func _build_rest_markers() -> void:
-	for point in _rest_points:
-		var ring := MeshInstance3D.new()
-		var torus := TorusMesh.new()
-		torus.outer_radius = float(point["radius"])
-		torus.inner_radius = float(point["radius"]) - 0.1
-		var material := StandardMaterial3D.new()
-		material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		material.albedo_color = Color(0.4, 1.0, 0.85)
-		torus.material = material
-		ring.mesh = torus
-		ring.scale.y = 0.15
-		ring.position = point["position"] + Vector3(0.0, 0.05, 0.0)
-		add_child(ring)
-		var label := Label3D.new()
-		label.text = "REST POINT"
-		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		label.pixel_size = 0.01
-		label.font_size = 48
-		label.outline_size = 10
-		label.modulate = Color(0.6, 1.0, 0.9)
-		label.no_depth_test = true
-		label.position = point["position"] + Vector3(0.0, 1.6, 0.0)
-		add_child(label)
-
-
-## Shows the "Q = rest point" prompt while the player stands in a rest point.
-func _update_rest_prompt(player: Fighter) -> void:
-	_near_rest = ""
-	if player.is_alive() and _screen == null:
-		var at: Vector3 = _session.bodies[_local_player_id].position
-		for point in _rest_points:
-			var spot: Vector3 = point["position"]
-			if Vector2(at.x - spot.x, at.z - spot.z).length() <= float(point["radius"]):
-				_near_rest = point["id"]
-	_hud.set_prompt("Q  =  rest point (sort the bag, heal, go home)" if not _near_rest.is_empty() and _result.is_empty() else "")
-
-
-func _try_open_rest() -> void:
-	if _near_rest.is_empty() or _screen != null or _run == null or not _result.is_empty():
-		return
-	if not _session.open_rest(_near_rest):
-		return
-	_screen = CampScreen.new()
-	add_child(_screen)
-	_screen.setup(GameState.profile, GameState.camp_data, GameState.item_rules, _combat_data, null if _session.has_method("is_lobby") and _session.is_lobby() else _run, _near_rest, null if _session.has_method("is_lobby") and _session.is_lobby() else _journey, _session)
-	_screen.closed.connect(_on_rest_closed)
-	_screen.rest_requested.connect(_on_rest_requested)
-	_screen.retreat_requested.connect(_on_retreat)
-	_screen.gear_changed.connect(_on_gear_changed)
-	_hud.set_prompt("")
-	Audio.play_ui("open")
-
-
 ## What the player's character wears now (models of the worn items) and their own looks.
 func _player_looks(id: int = -1) -> Dictionary:
 	if id < 0: id = _local_player_id
@@ -566,23 +490,6 @@ func _player_looks(id: int = -1) -> Dictionary:
 func _on_gear_changed() -> void:
 	if _views.has(_local_player_id):
 		_views[_local_player_id].set_looks(_player_looks())
-
-
-func _on_rest_closed() -> void:
-	_session.close_menu()
-	_screen = null
-
-
-func _on_rest_requested() -> void:
-	if _session.use_rest():
-		_hud.flash(Color(0.4, 1.0, 0.8, 0.3), 0.3)
-		_play_at_fighter("rest", _local_player_id)
-
-
-func _on_retreat() -> void:
-	_screen = null
-	_bank_loot()
-	GameState.go_hub()
 
 
 ## Brings what is in the run bag back to camp (once). A dead player's bag is already empty.
@@ -644,7 +551,7 @@ func _loot_line(at: Vector3, line: int, text: String, color: Color, icon: Textur
 
 func _build_camera(map) -> void:
 	_rig = CameraRig.new()
-	_rig.input_allowed = func() -> bool: return _scene_presented and _screen == null
+	_rig.input_allowed = func() -> bool: return _scene_presented
 	_rig.target = _views[_local_player_id]
 	_rig.min_x = -map.half_width + 6.0
 	_rig.max_x = map.half_width - 6.0
@@ -678,9 +585,6 @@ func _build_camera(map) -> void:
 	_event_trigger.max_duration = EVENT_DURATION
 	add_child(_event_trigger)
 
-	_ultimate_camera = UltimateCamera.new()  # (after the zone triggers: a cast's camera wins over a zone's)
-	_ultimate_camera.rig = _rig
-	add_child(_ultimate_camera)
 
 
 func _build_effects_and_hud() -> void:
@@ -1182,13 +1086,12 @@ func _show_telegraph(id: int, shape: Dictionary, clock: float) -> void:
 var _squad_panel: CanvasLayer
 var _focus_id := -1  ## auto-battle: the fighter the camera follows when zoomed in (-1 = the local player)
 var _wave_now := 1  ## wave-mode journeys: the wave on the field (arrivals come as "wave_arrived" events)
-var _auto_rested := false  ## the squad already used this camp's fire
 
 ## Between fights the auto-battler walks the squad on by itself: open a waiting chest, rest once at a camp's
 ## fire, then take the best portal (combat, challenge, boss first; a camp only when hurt; a chest last).
 func _auto_journey_input(frame):
 	var me: Fighter = _session.fighters.get(_local_player_id)
-	if me == null or not me.is_alive() or _journey == null or _leaving or _screen != null:
+	if me == null or not me.is_alive() or _journey == null or _leaving:
 		return frame
 	var at: Vector3 = _session.bodies[_local_player_id].position
 	var goal = null
@@ -1200,13 +1103,6 @@ func _auto_journey_input(frame):
 		goal = _chest.global_position
 		if _near_chest:
 			open_chest()
-	elif _camp_mode and not _campfire.is_empty() and not _auto_rested:
-		goal = _campfire["position"]
-		if _near_campfire:
-			_auto_rested = true
-			_near_rest = _camp_point_id()
-			if _session.open_rest(_near_rest):
-				_session.use_rest()
 	elif not _portals.is_empty() and _clear_banner_left <= 0.0:
 		var hurt: bool = me.hp < me.max_hp() * 0.6
 		var ranks := {"boss": 0, "combat": 1, "challenge": 2, "camp": 0 if hurt else 3, "treasure": 4}
@@ -1249,10 +1145,7 @@ func _update_journey_exits(player: Fighter, delta: float) -> void:
 	if _chest != null and not _chest.is_open:
 		_hud.set_prompt("" if _near_chest else "Open the treasure chest")
 		return
-	_near_campfire = _camp_mode and not _campfire.is_empty() and player.is_alive() and Vector2(at.x - _campfire["position"].x, at.z - _campfire["position"].z).length() <= float(_campfire["radius"])
-	if _near_campfire:
-		prompt = "E  =  rest at the campfire (heal, sort the bag, swap gear, go home)"  # (storing the bag is a button in that window)
-	elif not _portals.is_empty() and _clear_banner_left <= 0.0:
+	if not _portals.is_empty() and _clear_banner_left <= 0.0:
 		prompt = PORTAL_HINT
 	for portal in _portals:
 		var inside: bool = player.is_alive() and portal.contains(at)
@@ -1274,7 +1167,7 @@ func _spawn_portals() -> void:
 	if _journey == null or _journey.is_over() or _journey.treasure_pending:
 		return
 	var options: Array = _journey.upcoming_choices()
-	var spots := portal_spots(_map, options.size(), _campfire.get("position", null))
+	var spots := portal_spots(_map, options.size(), null)
 	for index in options.size():
 		var portal := ExitPortal.new()
 		portal.setup(options[index], index)
@@ -1397,7 +1290,7 @@ func _spawn_chest() -> void:
 	var body = _session.bodies[_local_player_id]
 	_chest = TreasureChest.new()
 	add_child(_chest)
-	var next_spots := portal_spots(_map, _journey.upcoming_choices().size(), _campfire.get("position", null))  # (keep clear of the portals to come)
+	var next_spots := portal_spots(_map, _journey.upcoming_choices().size(), null)  # (keep clear of the portals to come)
 	_chest.position = chest_spot(_map, body.position, Vector2(_session.fighters[_local_player_id].direction), next_spots)
 	if _session.has_method("is_remote") and _session.is_remote():
 		var wave_meta: Dictionary = _session.server_state.get("meta", {}).get("goblin_wave", {})
@@ -1480,115 +1373,6 @@ func _on_chest_opened() -> void:
 		_portal_delay = PORTAL_DELAY
 
 
-## The rest camp's fire: the map's `campfire` spot (level data, optional), else next to the spawn.
-## A map without its own art gets a small fire drawn here; every camp gets the ring and the glow.
-func _build_campfire(map) -> void:
-	var spot: Vector3 = map.campfire if bool(map.get("has_campfire")) else map.spawn + Vector3(3.0, 0.0, -3.0)
-	var radius := CAMPFIRE_RADIUS
-	_campfire = {"position": spot, "radius": radius}
-	var fire := Node3D.new()
-	fire.name = "Campfire"
-	fire.position = spot
-	add_child(fire)
-	if str(map.art_scene).is_empty():  # (a modelled rest map brings its own fire; the glow is added on top)
-		var wood := StandardMaterial3D.new()
-		wood.albedo_color = Color(0.32, 0.2, 0.12)
-		for angle in [0.0, 60.0, 120.0]:
-			var log_mesh := CylinderMesh.new()
-			log_mesh.top_radius = 0.09
-			log_mesh.bottom_radius = 0.11
-			log_mesh.height = 1.0
-			log_mesh.material = wood
-			var log_node := MeshInstance3D.new()
-			log_node.mesh = log_mesh
-			log_node.rotation_degrees = Vector3(0.0, angle, 82.0)
-			log_node.position.y = 0.12
-			fire.add_child(log_node)
-	var flame := CPUParticles3D.new()
-	flame.amount = 24
-	flame.lifetime = 0.9
-	flame.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-	flame.emission_sphere_radius = 0.22
-	flame.direction = Vector3.UP
-	flame.spread = 12.0
-	flame.gravity = Vector3(0.0, 1.5, 0.0)
-	flame.initial_velocity_min = 0.6
-	flame.initial_velocity_max = 1.2
-	flame.scale_amount_min = 1.4
-	flame.scale_amount_max = 2.4
-	var fade := Gradient.new()
-	fade.set_color(0, Color(1.0, 0.85, 0.4, 1.0))
-	fade.set_color(1, Color(0.9, 0.2, 0.05, 0.0))
-	flame.color_ramp = fade
-	var quad := QuadMesh.new()
-	quad.size = Vector2(0.28, 0.28)
-	var glow := ExitPortal._additive(Color(1.0, 0.6, 0.25))
-	glow.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	glow.vertex_color_use_as_albedo = true
-	glow.albedo_texture = ExitPortal._radial_texture(1.0)
-	quad.material = glow
-	flame.mesh = quad
-	flame.position.y = 0.25
-	fire.add_child(flame)
-	var light := OmniLight3D.new()
-	light.light_color = Color(1.0, 0.62, 0.3)
-	light.light_energy = 2.2
-	light.omni_range = 6.0
-	light.position.y = 0.8
-	fire.add_child(light)
-	var ring := MeshInstance3D.new()
-	var torus := TorusMesh.new()
-	torus.outer_radius = radius
-	torus.inner_radius = radius - 0.08
-	torus.rings = 32
-	ring.mesh = torus
-	ring.material_override = ExitPortal._additive(Color(1.0, 0.6, 0.25, 0.7))
-	ring.scale.y = 0.15
-	ring.position.y = 0.05
-	fire.add_child(ring)
-	var label := Label3D.new()
-	label.text = "CAMPFIRE"
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.pixel_size = 0.01
-	label.font_size = 48
-	label.outline_size = 10
-	label.modulate = Color(1.0, 0.8, 0.5)
-	label.no_depth_test = true
-	label.position.y = 1.8
-	fire.add_child(label)
-
-
-func _camp_point_id() -> String:
-	return "journey_camp_%d" % _journey.stage_number()
-
-
-## "E rest" at the campfire: the rest window (heal, bag, gear, go home with the bag).
-func _open_campfire() -> void:
-	if _screen != null or _run == null:
-		return
-	_near_rest = _camp_point_id()
-	if not _session.open_rest(_near_rest):
-		return
-	_screen = CampScreen.new()
-	add_child(_screen)
-	_screen.setup(GameState.profile, GameState.camp_data, GameState.item_rules, _combat_data, null if _session.has_method("is_lobby") and _session.is_lobby() else _run, _near_rest, null if _session.has_method("is_lobby") and _session.is_lobby() else _journey, _session)
-	_screen.closed.connect(_on_rest_closed)
-	_screen.rest_requested.connect(_on_rest_requested)
-	_screen.retreat_requested.connect(_on_camp_retreat)
-	if _screen.has_signal("bag_banked"):  # (its "Store the bag in the stash" button already banked it)
-		_screen.bag_banked.connect(_on_bag_banked)
-	_screen.gear_changed.connect(_on_gear_changed)
-	_hud.set_prompt("")
-	Audio.play_ui("open")
-
-
-## "Return to camp with the loot" at a journey camp ends the journey with the bag (Journey.retreat).
-func _on_camp_retreat() -> void:
-	_screen = null
-	GameState.last_trip = _session.command({"type": "journey_retreat"}).get("result", {})
-	GameState.go_journey()  # (the summary)
-
-
 ## Stores the journey bag in the stash now (camp_banks_bag; Journey.bank_bag(), safe from a later death)
 ## and shows it. Public: the camp window's "Store the bag in the stash" button does the same banking
 ## itself and reports through its bag_banked signal (-> _on_bag_banked). Returns what moved ({} = not allowed).
@@ -1636,8 +1420,6 @@ func _remote_command_completed(_id: int, result: Dictionary) -> void:
 	if not result.get("ok", false):
 		if _journey.treasure_pending and _chest != null and _chest.is_open: _spawn_chest()
 		_hud.set_prompt("รอหัวหน้าปาร์ตี้เลือกเส้นทาง" if result.get("error") == "leader_only" else "คำสั่งไม่สำเร็จ กรุณาลองใหม่")
-	if is_instance_valid(_screen):
-		_screen.call_deferred("_refresh")
 	_on_gear_changed()
 
 func _remote_looks_changed() -> void:
@@ -1655,7 +1437,7 @@ func _aim_skill(frame) -> void:
 	if not _session.bodies.has(_local_player_id):return
 	var origin: Vector3=_session.bodies[_local_player_id].position
 	var camera:=get_viewport().get_camera_3d()
-	var mobile: bool=is_instance_valid(GameState.mobile_controls) and GameState.mobile_controls.enabled
+	var mobile := false
 	if not mobile and camera!=null and get_viewport().gui_get_hovered_control()==null:
 		var mouse:=get_viewport().get_mouse_position()
 		var point=Plane(Vector3.UP,origin.y).intersects_ray(camera.project_ray_origin(mouse),camera.project_ray_normal(mouse))

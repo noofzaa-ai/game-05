@@ -171,7 +171,7 @@ func _build_shot(look: String) -> Node3D:
 		if _arrow_model_mesh != null:
 			# The artist's arrow (+Z forward, origin in the middle): turned to face -Z like the shot.
 			arrow.mesh = _arrow_model_mesh
-			arrow.material_override = _arrow_model_material
+			# No material_override: the model's own surface material is the same one, and the override made the renderer log "Parameter material is null".
 			arrow.rotation.y = PI
 			arrow.scale = Vector3.ONE * float(LOOKS["arrow"]["model_scale"])
 		else:

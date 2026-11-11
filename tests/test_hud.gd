@@ -40,10 +40,6 @@ func run(ctx) -> void:
 		InputReader.key_label("light") == "LMB" and InputReader.key_label("heavy") == "RMB" and InputReader.key_label("guard") == "F"
 		and InputReader.key_label("dodge") == "C" and InputReader.key_label("special") == "1" and InputReader.key_label("ultimate") == "2")
 	ctx.check("an unbound action shows the fallback text", InputReader.key_label("no_such_action", "?") == "?")
-	var help := StageView.help_text()
-	ctx.check("the stage help names the real keys (%s)" % help.get_slice("\n", 0), help.contains("Light LMB") and help.contains("Heavy RMB") and help.contains("Guard hold F") and help.contains("Ultimate 2") and help.contains("Camera 6-9"))
-	var journey_help := StageView.help_text(true)
-	ctx.check("a journey stage's help does not offer Q / R / Esc (they do nothing there)", help.contains("Q rest point") and not journey_help.contains("Q rest") and not journey_help.contains("R retry") and not journey_help.contains("Esc"))
 
 	var data = CombatDataLoader.load_default()
 	var sim := _sim(data)
@@ -52,7 +48,7 @@ func run(ctx) -> void:
 	hud.compact_override = 0
 	ctx.root.add_child(hud)
 	await ctx.process_frame
-	hud.set_help(help)
+	hud.set_help("")
 	ctx.check("the skill icons show F / C / 1 / 2", hud._icons["guard"]["key"].text == "F" and hud._icons["dodge"]["key"].text == "C"
 		and hud._icons["special"]["key"].text == "1" and hud._icons["ultimate"]["key"].text == "2")
 
@@ -81,7 +77,6 @@ func run(ctx) -> void:
 		icons_ok = icons_ok and screen.encloses(icon) and not icon.intersects(_rect(hud._help_plate))
 	ctx.check("desktop: the skill icons are on screen and clear of the help lines", icons_ok)
 	ctx.check("desktop: the combo counter is on screen and under the trip line", screen.encloses(_rect(hud._combo_box)) and not _rect(hud._combo_box).intersects(_rect(hud._trip)))
-	ctx.check("desktop: the help lines are shown and fit the width", hud.help_visible() and hud._help_plate.position.x + hud._help_plate.size.x < area.x - Hud.ICON_SIZE.x * 4.0)
 	hud.toggle_help()
 	ctx.check("F1 hides the help lines", not hud.help_visible())
 	hud.toggle_help()

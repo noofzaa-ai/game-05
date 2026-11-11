@@ -43,8 +43,6 @@ static func read(viewport: Viewport = null) -> SimInput:
 			if Input.is_action_just_pressed(["special","ultimate","skill_3","skill_4"][index]): input.skill_slot = index
 		input.special = false
 		input.ultimate = false
-	if is_instance_valid(GameState.mobile_controls):
-		GameState.mobile_controls.merge(input)
 	return input
 
 

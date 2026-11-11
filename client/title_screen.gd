@@ -13,7 +13,6 @@ extends Node
 const InkUi := preload("res://client/ink_ui.gd")
 const VersionInfo := preload("res://client/version_info.gd")
 
-const HUB_SCENE := "res://scenes/hub.tscn"
 ## The animated backdrop, first one that exists (a script for a Node3D, or a scene).
 const BACKDROPS := ["res://client/title_backdrop.gd", "res://scenes/title_backdrop.tscn"]
 const CREDITS_PATH := "res://data/ui/credits.json"

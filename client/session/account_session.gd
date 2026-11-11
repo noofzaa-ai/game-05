@@ -18,7 +18,7 @@ func refresh_account() -> Dictionary:
 		if decoded == null: return {"ok": false, "error": "invalid_profile"}
 		if profile == null: profile = decoded
 		else:
-			for field in ["stash", "vault", "loadout", "camp_level", "facility_levels","farm", "appearance", "name", "created", "beta_kit_version", "diamonds", "mall_owned", "bonus_stash_slots", "armor_migration_version", "skill_build", "relics"]:
+			for field in ["stash", "vault", "loadout", "camp_level", "facility_levels","farm", "appearance", "name", "created", "beta_kit_version", "diamonds", "mall_owned", "bonus_stash_slots", "armor_migration_version", "skill_build", "relics", "card_deck"]:
 				profile.set(field, decoded.get(field))
 		ownership_changed.emit()
 	return result

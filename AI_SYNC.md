@@ -49,4 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-11 | lead-programmer | (ยังไม่ push) | Boss สั่งตัดระบบเก่า: ลบฮับ/แคมป์/ร้านค้า/ฟาร์ม/warp/NPC/หน้าสกิล/ศูนย์กล้องอัลติ/ปุ่มมือถือเก่า (client + scenes/hub, workshops + tests/tools ที่เกี่ยวข้อง); `go_hub` ถูกตัดแล้ว ทุกทางกลับไป `GameState.go_card_deck()`; `camp_screen.gd` เหลือแค่หน้าต่าง Backpack ของการ์ด (ใช้ gear_panel); stage_view ไม่มีจุดพัก/กองไฟแล้ว
+
+- 2026-11-11 | PO | (ยังไม่ push) | การ์ดซิงก์กับบัญชีออนไลน์ (`card_deck` ใน `account_session.gd`, `card_look`/`card_squad` ใน `server/profile/runner.gd` ALLOWED) · แก้ error `material is null` (ต้นเหตุ: `material_override` ของลูกธนู goblin_archer ใน `client/projectile_view.gd`) · เทสต์ 2404 ผ่าน/162 พังชุดเดิม
+
 - 2026-11-11 | PO | (ยังไม่ push) | เริ่ม AI_SYNC ใหม่ · คลาสมีผลต่อกติกา · กล้องตามการ์ด · ทัพเริ่มต้นเปลี่ยนเป็นดาบโล่/ดาบใหญ่/ธนู · ติดตั้งเฟรมเวิร์ก + Codex CLI · มอบงานหน้าการ์ดให้ agent ของเรา

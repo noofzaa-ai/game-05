@@ -6,7 +6,6 @@ extends Control
 ## choice, the camp window, bag banking, and leaving the journey.
 ## Every rule is in logic/journey.gd; this only shows it and passes the player's picks on.
 
-const CampScreen := preload("res://client/camp_screen.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const InkUi := preload("res://client/ink_ui.gd")
 const Journey := preload("res://logic/journey.gd")
@@ -22,7 +21,6 @@ const TYPE_TEXT := {
 
 var _box: VBoxContainer
 var _center: CenterContainer
-var _screen: CanvasLayer  ## the camp window while it is open
 var _buttons: Array[Button] = []
 
 
@@ -82,11 +80,14 @@ func _refresh() -> void:
 		return
 	if j == null:
 		_box.add_child(_label("No journey in progress.", InkUi.MUTED))
-		_add_button("Back to the campfire", GameState.go_hub)
+		_add_button("Back to the cards", GameState.go_card_deck)
 		return
-	_box.add_child(InkUi.brush_title("%s   -   %s" % [j.data.display_name, j.progress_text()], InkUi.FONT_TITLE))
-	_box.add_child(_label(_status_text(j), InkUi.PAPER))
-	_box.add_child(_label(_path_text(j), InkUi.MUTED))
+	var over: bool = j.state in [Journey.WON, Journey.LOST, Journey.RETREATED, Journey.ABANDONED]
+	# The fight is over: the title is the stage alone (no "Wave 1/12"), and no bag/gold/path line (the auto-battler has no bag).
+	_box.add_child(InkUi.brush_title(str(j.data.display_name) if over else "%s   -   %s" % [j.data.display_name, j.progress_text()], InkUi.FONT_TITLE))
+	if not over:
+		_box.add_child(_label(_status_text(j), InkUi.PAPER))
+		_box.add_child(_label(_path_text(j), InkUi.MUTED))
 	match j.state:
 		Journey.CHOOSING:
 			_box.add_child(_label("Choose the next stage:", InkUi.PAPER))
@@ -110,18 +111,17 @@ func _refresh() -> void:
 				_box.add_child(_label("Treasure: " + _reward_text(j.last_reward), InkUi.GOLD))
 			else:
 				_box.add_child(_label("You rest at the camp. Health restored.", InkUi.GOOD))
-				_add_button("Open the camp (gear, bag, go home)", _open_camp)
 				if j.can_bank_bag():
 					_add_button("Store the bag in the stash (safe from death)", _bank)
 			_add_button("Continue", _leave).grab_focus.call_deferred()
 			if not j.is_at_camp():
 				_add_button("Leave the journey (the bag is lost)", _abandon)
 		_:
-			var ending := {Journey.WON: "The boss is down. Your bag comes home with you.", Journey.LOST: "พ่ายแพ้ — อุปกรณ์ วัตถุดิบ และทองในเป้ถูกส่งกลับคลังแล้ว", Journey.RETREATED: "You went home with your bag.", Journey.ABANDONED: "You left before reaching a camp. The run bag is lost."}
+			var ending := {Journey.WON: "ชนะ! บอสล้มแล้ว", Journey.LOST: "พ่ายแพ้ — ทัพล้มก่อนจบเวฟ", Journey.RETREATED: "ถอนทัพกลับแล้ว", Journey.ABANDONED: "ออกจากด่านกลางทาง"}
 			_box.add_child(_label(str(ending.get(j.state, "")), InkUi.GOLD if j.state == Journey.WON else InkUi.BAD))
 			if GameState.remote_session != null and not GameState.remote_session.saved:
 				_box.add_child(_label("กำลังบันทึกผลรอบบนเซิร์ฟเวอร์…", InkUi.MUTED))
-			var back := _add_button("Back to the campfire", GameState.end_journey)
+			var back := _add_button("กลับหน้าการ์ด", GameState.end_journey)
 			if GameState.remote_session != null and not GameState.remote_session.can_return_to_hub():
 				back.disabled = true
 				back.text = "กำลังบันทึกผล…"
@@ -204,25 +204,6 @@ func _abandon() -> void:
 func _bank() -> void:
 	GameState.last_trip = GameState.get_session().command({"type": "bank_bag"}).get("result", {})
 	_refresh()
-
-
-func _open_camp() -> void:
-	if _screen != null:
-		return
-	_screen = CampScreen.new()
-	add_child(_screen)
-	var point_id := "journey_camp_%d" % journey().stage_number()
-	GameState.get_session().open_route_camp(point_id)  # the camp already healed: its Rest button shows as used
-	_screen.setup(GameState.profile, GameState.camp_data, GameState.item_rules, CombatDataLoader.load_default(), journey().run, point_id, journey(), GameState.get_session())
-	_screen.closed.connect(func() -> void:
-		_screen = null
-		GameState.get_session().close_menu()
-		_refresh())
-	_screen.retreat_requested.connect(func() -> void:
-		_screen = null
-		GameState.last_trip = GameState.get_session().command({"type": "journey_retreat"}).get("result", {})
-		_refresh())
-	Audio.play_ui("open")
 
 
 func _add_button(text: String, callback: Callable) -> Button:

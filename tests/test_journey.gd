@@ -318,6 +318,6 @@ func _check_screen(ctx) -> void:
 	var buttons: Array = ctx.current_scene.get("_buttons")
 	ctx.check("the route screen (fallback, Esc between stages) offers the 3 choices for stage 2", ctx.current_scene.scene_file_path == "res://scenes/journey.tscn" and buttons.size() == 3)
 	game_state.journey = null
-	game_state.go_hub()
+	game_state.go_card_deck()
 	for i in 3:
 		await ctx.process_frame

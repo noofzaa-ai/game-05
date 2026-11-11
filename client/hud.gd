@@ -112,9 +112,6 @@ var _clock := 0.0
 
 
 func _ready() -> void:
-	if preload("res://logic/skill_build.gd").enabled():
-		_new_skills = preload("res://client/skills/skill_hud.gd").new()
-		add_child(_new_skills)
 	_root = Control.new()
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_root)
@@ -401,8 +398,6 @@ func _update_combo(fighter: Fighter, data: CombatData) -> void:
 func _wants_compact() -> bool:
 	if compact_override >= 0:
 		return compact_override == 1
-	if is_instance_valid(GameState.mobile_controls) and GameState.mobile_controls.enabled:
-		return true
 	if OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios"):
 		return true
 	return get_window().size.y < COMPACT_HEIGHT
@@ -448,8 +443,8 @@ func _layout() -> void:
 	# Bottom right: the skill icons (where the touch buttons will be on a phone).
 	var row_width := ICON_SIZE.x * SKILL_KEYS.size() + ICON_GAP * (SKILL_KEYS.size() - 1)
 	for i in SKILL_KEYS.size():
-		_icons[SKILL_KEYS[i]]["root"].visible = not (is_instance_valid(GameState.mobile_controls) and GameState.mobile_controls.enabled)
-		_icons[SKILL_KEYS[i]]["root"].position = Vector2(area.x - MARGIN - row_width + float(i) * (ICON_SIZE.x + ICON_GAP), area.y - MARGIN - ICON_SIZE.y - (170.0 / ui_scale if is_instance_valid(GameState.mobile_controls) and GameState.mobile_controls.enabled else 0.0))
+		_icons[SKILL_KEYS[i]]["root"].visible = true
+		_icons[SKILL_KEYS[i]]["root"].position = Vector2(area.x - MARGIN - row_width + float(i) * (ICON_SIZE.x + ICON_GAP), area.y - MARGIN - ICON_SIZE.y)
 
 	# Top right: the trip line, with the combo counter under it.
 	_trip.position = Vector2(area.x - MARGIN - 340.0, 16.0)

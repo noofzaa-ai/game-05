@@ -4,7 +4,6 @@ extends RefCounted
 ## the character creator and the character by the campfire.
 
 const CampDataLoader := preload("res://logic/camp_data_loader.gd")
-const CampScreen := preload("res://client/camp_screen.gd")
 const CharacterCreator := preload("res://client/character_creator.gd")
 const CharacterModel := preload("res://client/character_model.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
@@ -133,53 +132,13 @@ func run(ctx) -> void:
 	model.queue_free()
 	other.queue_free()
 
-	# The Look tab.
+	# (The camp Look tab was cut with the campfire; the creator below still uses the look panel.)
 	var rules := ItemRulesLoader.load_default()
 	var camp := CampDataLoader.load_default(rules.tiers.size())
 	var combat := CombatDataLoader.load_default()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
 	var profile = Profile.new_player(rules, camp, rng)
-	var screen: CanvasLayer = CampScreen.new()
-	ctx.root.add_child(screen)
-	screen.setup(profile, camp, rules, combat)
-	await _frames(ctx)
-	var look = screen.look
-	ctx.check("the camp has a Look tab with the face, hair, hair color and skin choices", look != null and look._buttons.has("face") and look._buttons["hair_style"].size() == 32 and look._buttons["skin"].size() == options.choices["skin"].size() and look._buttons.has("hair_color"))
-	ctx.check("Look has three category tabs", look._tabs.size() == 3 and look.selected_tab == "face")
-	look.show_tab("hair")
-	ctx.check("hair page hides other choices", look._pages["hair"].get_parent().visible and not look._pages["face"].get_parent().visible)
-	look.show_tab("colors")
-	ctx.check("color page shows independently", look._pages["colors"].get_parent().visible and not look._pages["hair"].get_parent().visible)
-	look.show_tab("face")
-	ctx.check("cosmetic icons use enlarged width", look._buttons["face"]["vampire"].get_theme_constant("icon_max_width") == 88)
-	var camp_size: Vector2i = ctx.root.size
-	screen.show_tab(1)
-	for phone in [Vector2i(844, 390), Vector2i(667, 375)]:
-		ctx.root.size = phone
-		screen._apply_layout()
-		await _frames(ctx)
-		ctx.check("Look preview fits %s" % phone, ctx.root.get_visible_rect().encloses(look._doll_holder.get_global_rect()))
-		ctx.check("Look tabs fit %s" % phone, ctx.root.get_visible_rect().encloses(look._tabs["colors"].get_global_rect()))
-	ctx.root.size = camp_size
-	screen._apply_layout()
-	await _frames(ctx)
-	ctx.check("the defaults are shown picked", look.picked_id("skin") == options.defaults["skin"] and look._buttons["skin"][options.defaults["skin"]].button_pressed)
-	# Legacy cosmetic fixtures use the body those items were fitted to.
-	look.doll.model.load_model("res://art/characters/chibi-studio/chibi_base_animated.glb")
-	screen.gear.doll.model.load_model("res://art/characters/chibi-studio/chibi_base_animated.glb")
-	look._buttons["skin"]["tan"].pressed.emit()
-	look._buttons["face"]["vampire"].pressed.emit()
-	await _frames(ctx)
-	look._buttons["hair_style"]["topknot"].pressed.emit()
-	await _frames(ctx)
-	ctx.check("pressing a choice puts it in the profile", profile.appearance.get("skin") == "tan" and profile.appearance.get("face") == "vampire" and profile.appearance.get("hair_style") == "topknot")
-	ctx.check("the doll wears the hair style", look.doll.model.hair_style_path().ends_with("hair_row2_topknot_01.glb"))
-	ctx.check("the button shows as picked and the old one not", look._buttons["skin"]["tan"].button_pressed and not look._buttons["skin"][options.defaults["skin"]].button_pressed)
-	ctx.check("the Look doll wears it", look.doll.model != null and look.doll.model.face_path().ends_with("face_vampire_01.glb"))
-	ctx.check("the inventory's doll wears it too", screen.gear.doll.model.face_path().ends_with("face_vampire_01.glb"))
-	screen.queue_free()
-	await _frames(ctx)
 
 	# Names and the dice.
 	for case in [["Ink", ""], ["นักดาบ", ""], ["  Mo  ", ""], ["A", "too_short"], ["Abcdefghijklmnopq", "too_long"], ["<script>", "bad_characters"], ["two  spaces", "bad_characters"]]:

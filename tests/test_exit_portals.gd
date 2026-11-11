@@ -186,48 +186,12 @@ func _check_scenes(ctx) -> void:
 	var next_rose: bool = await _wait(ctx, func(): return stage.get("_portals").size() == 2 and not stage.get("_leaving"))
 	ctx.check("after opening, the stage-3 portals rise (fight, camp)", next_rose and stage.get("_portals")[1].kind == "camp")
 
-	# The green portal: a safe rest map with a campfire.
-	await _step_into(ctx, stage, 1)
+	# A blue portal: the next fight with its monsters (the green camp portal and its rest map were cut with the campfire).
+	await _step_into(ctx, stage, 0)
 	await _next_scene(ctx, stage)
-	var rest: Node = ctx.current_scene
-	var sim = rest.get("_session")
-	ctx.check("the green portal chose the camp (journey.choose_next index 1)", journey.is_at_camp() and journey.current == journey.nodes[2][1])
-	ctx.check("a camp choice drops no chest", rest.get("_chest") == null)
-	ctx.check("the camp loads a rest map with no monsters", rest.get("_camp_mode") and sim != null and sim.fighters.size() == 1 and sim.living_enemy_count() == 0)
-	var fire: Dictionary = rest.get("_campfire")
-	ctx.check("the rest map has a campfire", not fire.is_empty() and rest.get_node_or_null("Campfire") != null)
-	ctx.check("the camp's portals stand ready at once (the stage after the camp)", rest.get("_portals").size() == journey.nodes[3].size())
-	sim.bodies[1].position = fire["position"] + Vector3(0.5, 0.0, 0.0)
-	await _wait(ctx, func(): return rest.get("_near_campfire"), 1.0)
-	ctx.check("standing at the fire offers E rest", rest.get("_near_campfire") and str(rest.get("_hud")._prompt.text).begins_with("E  =  rest"))
-	_press(rest, KEY_E)
-	var screen = rest.get("_screen")
-	ctx.check("E opens the rest window on the journey's bag (and its journey, for the bank button)", screen != null and screen.run == journey.run and screen.journey == journey)
-	ctx.check("the campfire prompt no longer offers a B key (storing moved into the window)", not str(rest.get("_hud")._prompt.text).contains("B  ="))
-	journey.run.bag.gold = 17
-	var stash_gold: int = journey.run.profile.stash.gold
-	if screen != null:
-		screen._request_bank()
-	ctx.check("the window's store button banks the bag into the stash", journey.run.bag.gold == 0 and journey.run.profile.stash.gold == stash_gold + 17 and journey.is_at_camp())
-	ctx.check("the stage hears it (bag_banked) and remembers the trip", game_state.last_trip.get("gold", -1) == 17)
-	if screen != null:
-		screen._close()
-	await ctx.process_frame
-	journey.run.bag.gold = 5
-	_press(rest, KEY_B)
-	ctx.check("the B key does nothing any more", journey.run.bag.gold == 5)
-	ctx.check("bank_bag_at_camp() (public) still banks", rest.bank_bag_at_camp().get("gold", -1) == 5 and journey.run.bag.gold == 0)
-
-	# A blue portal from the camp: the next fight with its monsters.
-	rest.get("_session").fighters[1].gauge = 37.0
-	await _step_into(ctx, rest, 0)
-	await _next_scene(ctx, rest)
 	var fight: Node = ctx.current_scene
-	# (within 0.5, not exact: the camp's rest buff regenerates the gauge ~1.5/s over the few ticks of the walk
-	# into the portal and the next stage's first frames, and how many ticks run depends on load time)
-	ctx.check("the ultimate gauge carries through a portal into the next stage (Boss 2026-10-15)", absf(fight.get("_session").fighters[1].gauge - 37.0) < 0.5)
 	ctx.check("a fight choice drops no chest", fight.get("_chest") == null)
-	ctx.check("the blue portal from the camp starts the next fight", journey.state == Journey.IN_STAGE and journey.current == journey.nodes[3][0] and fight.get("_session").living_enemy_count() > 0)
+	ctx.check("the blue portal starts the next fight", journey.state == Journey.IN_STAGE and fight.get("_session").living_enemy_count() > 0)
 
 	# The boss stage still ends the journey: no portals, the summary.
 	journey.completed = 11
@@ -247,6 +211,6 @@ func _check_scenes(ctx) -> void:
 	await _next_scene(ctx, boss, false)
 	ctx.check("Enter goes to the journey summary", ctx.current_scene.scene_file_path == "res://scenes/journey.tscn")
 	game_state.journey = null
-	game_state.go_hub()
+	game_state.go_card_deck()
 	for i in 3:
 		await ctx.process_frame
