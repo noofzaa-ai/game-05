@@ -38,9 +38,14 @@ func loadout() -> Loadout:
 	return profile.loadout
 
 
+## The skill build this fighter uses (a squad member: its card's build, logic/squad_member.gd).
+func skill_build() -> Dictionary:
+	return profile.skill_build
+
+
 ## The character's stats for this run: worn gear (as worn down) plus the camp skills.
 func stats(item_rules: ItemRules) -> Dictionary:
-	var totals := Stats.totals(item_rules, profile.loadout.items())
+	var totals := Stats.totals(item_rules, loadout().items())
 	var bonus := Camp.skill_bonus(profile, camp)
 	for stat in bonus:
 		totals[stat] = float(totals.get(stat, 0.0)) + float(bonus[stat])
@@ -83,8 +88,8 @@ func equip_from_bag(bag_index: int, slot_index: int = 0) -> bool:
 	if bag_index < 0 or bag_index >= bag.items.size():
 		return false
 	var item: Item = bag.items[bag_index]
-	var old := profile.loadout.item_at(item.slot, slot_index)
-	if not profile.loadout.equip(item, slot_index):
+	var old := loadout().item_at(item.slot, slot_index)
+	if not loadout().equip(item, slot_index):
 		return false
 	bag.items.remove_at(bag_index)
 	if old != null:
@@ -98,11 +103,11 @@ func equip_from_bag(bag_index: int, slot_index: int = 0) -> bool:
 func unequip_to_bag(slot_id: String, slot_index: int = 0) -> Dictionary:
 	if died:
 		return {"ok": false, "reason": "trip_over"}
-	if profile.loadout.item_at(slot_id, slot_index) == null:
+	if loadout().item_at(slot_id, slot_index) == null:
 		return {"ok": false, "reason": "nothing_worn"}
 	if bag.free_slots() < 1:
 		return {"ok": false, "reason": "bag_full"}
-	bag.items.append(profile.loadout.unequip(slot_id, slot_index))
+	bag.items.append(loadout().unequip(slot_id, slot_index))
 	return {"ok": true, "reason": ""}
 
 

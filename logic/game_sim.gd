@@ -23,6 +23,7 @@ const ItemRules := preload("res://logic/item_rules.gd")
 const Loot := preload("res://logic/loot.gd")
 const LootData := preload("res://logic/loot_data.gd")
 const Run := preload("res://logic/run.gd")
+const SquadMember := preload("res://logic/squad_member.gd")
 const Wear := preload("res://logic/wear.gd")
 
 var world: SimWorld
@@ -118,7 +119,7 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 		if skill_system == null:
 			skill_system = preload("res://logic/skills/system.gd").new()
 			skill_system.setup(self)
-		skill_system.attach(id, run.profile.skill_build)
+		skill_system.attach(id, run.skill_build())  # a squad member: its own card's build
 
 
 ## Auto-battler: the squad member's class decides the fighting style (data/classes/<class>.json "weapon" is a
@@ -131,9 +132,10 @@ func set_class_style(id: int, style: String) -> void:
 		return
 	class_styles[id] = style
 	_apply_class_style(id)
-	# The class's own skill set (data/skill_system/integration.json class_skills) replaces the profile's.
+	# The class's own skill set (data/skill_system/integration.json class_skills) replaces the profile's;
+	# a squad member (logic/squad_member.gd) keeps its own card's build instead.
 	if skill_system != null and fighters.has(id):
-		var build: Dictionary = preload("res://logic/skill_build.gd").initial(style)
+		var build: Dictionary = runs[id].skill_build() if runs.has(id) and runs[id] is SquadMember else preload("res://logic/skill_build.gd").initial(style)
 		if not str(build.get("start", "")).is_empty() and skill_system.builds.get(id, {}) != build:
 			skill_system.attach(id, build)
 
@@ -152,7 +154,7 @@ func gear_changed(id: int) -> void:
 	_apply_class_style(id)
 	_refresh_run_stats(id)
 	if skill_system != null:
-		var build: Dictionary = runs[id].profile.skill_build
+		var build: Dictionary = runs[id].skill_build()
 		if skill_system.builds.get(id,{}) != build:
 			skill_system.attach(id,build)
 
@@ -372,8 +374,12 @@ func _on_killed(target_id: int, killer_id: int) -> void:
 	if _coop["paid"].has(target_id): return
 	_coop["paid"][target_id] = true
 	if coop_enabled:
+		# One drop per kill per bag: a squad shares one bag (Boss 2026-11-11), so it gets one drop, given to
+		# its first living member; separate players (online party) each still get their own.
+		var paid_bags: Array = []
 		for id in _coop["players"]:
-			if runs.has(id) and not runs[id].died:
+			if runs.has(id) and not runs[id].died and not paid_bags.has(runs[id].bag):
+				paid_bags.append(runs[id].bag)
 				_give_drop(target_id, id)
 	elif runs.has(killer_id):
 		_give_drop(target_id, killer_id)
@@ -461,6 +467,9 @@ func _check_stage_clear() -> void:
 
 
 const StateCodec := preload("res://logic/state_codec.gd")
+## 2: squad members (logic/squad_member.gd) share one saved Run ("squads"). A checkpoint without the field is
+## version 1 (separate runs only) and still loads; a newer version is rejected.
+const CHECKPOINT_VERSION := 2
 
 ## Complete continuation state, separate from the legacy drawing summary above.
 ## Rules stay external; world, AI configuration and mutable run ownership are included.
@@ -478,9 +487,21 @@ func _checkpoint() -> Array:
 		ai_data[id] = StateCodec.fields(_ai[id], ["world"])
 	for id in _inputs:
 		input_data[id] = StateCodec.fields(_inputs[id])
+	# A squad's members share one Run: save it once in "squads" and only the member fields per fighter.
+	var squads: Array = []
+	var shared_runs: Array = []
 	for id in runs:
-		run_data[id] = runs[id].to_dict()
-	return StateCodec.pack({"world": StateCodec.fields(world), "bodies": body_data,
+		if runs[id] is SquadMember:
+			var at := shared_runs.find(runs[id].shared)
+			if at < 0:
+				at = shared_runs.size()
+				shared_runs.append(runs[id].shared)
+				squads.append(runs[id].shared.to_dict())
+			run_data[id] = runs[id].member_fields()
+			run_data[id]["squad"] = at
+		else:
+			run_data[id] = runs[id].to_dict()
+	return StateCodec.pack({"checkpoint_v": CHECKPOINT_VERSION, "squads": squads,"world": StateCodec.fields(world), "bodies": body_data,
 		"fighters": fighter_data, "ai": ai_data, "inputs": input_data, "runs": run_data,
 		"rng_seed": rng.seed, "rng_state": rng.state, "tick": tick_count,
 		"ranged": _ranged, "events": events, "waves": _waves, "waves_released": _waves_released,
@@ -499,12 +520,36 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 		return false
 	if not d["runs"].is_empty() and (item_rules == null or loot_data == null or camp_data == null):
 		return false
+	var version := int(d.get("checkpoint_v", 1))
+	if version < 1 or version > CHECKPOINT_VERSION:
+		return false
 	var restored_runs := {}
+	var squad_ids: Array = []  ## per saved squad: its member ids in fighter order
+	for squad in d.get("squads", []):
+		squad_ids.append([])
 	for id in d["runs"]:
+		if d["runs"][id].has("squad"):
+			var at := int(d["runs"][id]["squad"])
+			if at < 0 or at >= squad_ids.size():
+				return false
+			squad_ids[at].append(id)
+			continue
 		var trip = Run.from_dict(d["runs"][id], item_rules, camp_data)
 		if trip == null:
 			return false
 		restored_runs[id] = trip
+	for at in squad_ids.size():
+		var base = Run.from_dict(d["squads"][at], item_rules, camp_data)
+		if base == null or squad_ids[at].is_empty():
+			return false
+		var ids: Array = squad_ids[at]
+		ids.sort()
+		var members := SquadMember.make_squad(base, ids.map(func(id): return str(d["runs"][id].get("card", ""))))
+		for i in ids.size():
+			if not base.profile.card_gear.has(members[i].card_id):
+				return false
+			members[i].apply_member_fields(d["runs"][ids[i]])
+			restored_runs[ids[i]] = members[i]
 	StateCodec.apply_fields(world, d["world"])
 	bodies.clear()
 	fighters.clear()

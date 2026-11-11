@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-11 | gameplay-programmer via PO | feature/class-weapons-card-screen | อุปกรณ์ต่อการ์ด ขั้น 4-5: ทัพสร้างจากการ์ด 3 ใบในทัพ (`logic/squad_member.gd`) ใช้ของ/สกิลของการ์ดเอง กระเป๋ากลาง ดรอป 1 ชิ้น/kill · checkpoint_v 2, party_v 2 (v1 ยังโหลดได้) · ตัด guest สุ่มใน `game_state.gd` · ห้องออนไลน์ยังไม่เปลี่ยน · เทสต์ 2116/83 ชุดเดิม
+
 - 2026-11-11 | tech-artist via PO | feature/class-weapons-card-screen | บังคับแนวนอน: `project.godot` handheld orientation=4 (sensor landscape) · `tools/web/play_template.html` หน้า Rotate your device (CSS, จอสัมผัสแนวตั้ง) + lock landscape ตอนเต็มจอ · `ink_ui.gd` เลิกใช้ layout แนวตั้ง · ยังไม่ได้ build/deploy เว็บ · เทสต์ 2098/83 ชุดเดิม
 
 - 2026-11-11 | gameplay-programmer via PO | feature/class-weapons-card-screen | อุปกรณ์ต่อการ์ด ขั้น 1-3 (`Profile.card_gear`, migration ไปดาบโล่, คำสั่ง equip/unequip/skill_build/repair_all รับ `card`, `weapon_families` ในคลาส, แฟชั่นนับชิ้น `card_fashion`) · `Profile.loadout` ยังเป็น stand-in ของการ์ดดาบโล่จนถึงขั้น 4 · เทสต์ 2098/83 ชุดเดิม

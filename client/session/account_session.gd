@@ -45,5 +45,5 @@ func _execute(id: int, request: Dictionary) -> void:
 	_busy = false
 	command_completed.emit(id, result)
 
-func start_journey(_data, _weapons: Array, _seed_value: int, _party_profiles: Dictionary = {}) -> void:
+func start_journey(_data, _weapons: Array, _seed_value: int, _party_profiles: Dictionary = {}, _squad_cards: Array = []) -> void:
 	push_error("Account sessions require an authoritative room")

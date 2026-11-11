@@ -7,6 +7,7 @@ const SimWorld := preload("res://logic/sim_world.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 const Profile := preload("res://logic/profile.gd")
 const Run := preload("res://logic/run.gd")
+const SquadMember := preload("res://logic/squad_member.gd")
 const PartyJourney := preload("res://logic/coop_journey.gd")
 const Journey := preload("res://logic/journey.gd")
 const CampDataLoader := preload("res://logic/camp_data_loader.gd")
@@ -74,9 +75,23 @@ func create_profile(random: RandomNumberGenerator, test_kit: bool = false) -> vo
 	Camp.refresh(profile, camp)
 
 
-func start_journey(data, weapons: Array, seed_value: int, party_profiles: Dictionary = {}) -> void:
+## `squad_cards` (auto-battler, docs/tech/per_card_gear_plan.md step 5): the class ids of the squad in fighter
+## order. The account goes on ONE trip (one bag); each card fights with its own gear and skill build
+## (logic/squad_member.gd). `party_profiles` is the old separate-profile party (--coop-debug only).
+func start_journey(data, weapons: Array, seed_value: int, party_profiles: Dictionary = {}, squad_cards: Array = []) -> void:
 	run = Run.start(profile, camp)
-	if party_profiles.is_empty():
+	if not squad_cards.is_empty():
+		var members: Array = SquadMember.make_squad(run, squad_cards)
+		run = members[0]
+		if members.size() == 1:
+			journey = Journey.start(data, run, rules, loot, weapons, seed_value)
+			return
+		var trips := {}
+		for i in members.size():
+			trips[_player_id + i] = members[i]
+		journey = PartyJourney.start_party(data, trips, rules, loot, weapons, seed_value, _player_id)
+		run = journey.run
+	elif party_profiles.is_empty():
 		journey = Journey.start(data, run, rules, loot, weapons, seed_value)
 	else:
 		var trips := {_player_id: run}

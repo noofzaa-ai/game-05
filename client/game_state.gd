@@ -139,19 +139,20 @@ func start_journey(journey_id: String = DEFAULT_JOURNEY, seed: int = 0) -> bool:
 		seed = randi()
 	mode = Mode.PVE
 	var guests := {}
+	var squad_cards: Array = []
 	if auto_battle:
-		for guest_id in range(2, mini(squad_size, squad_looks().size()) + 1):
-			var squad_rng := RandomNumberGenerator.new()
-			squad_rng.seed = seed + guest_id
-			guests[guest_id] = preload("res://logic/profile.gd").new_player(item_rules, camp_data, squad_rng)
+		# The squad is the player's own class cards, each with its own gear and skill build (Boss 2026-11-11).
+		squad_cards = squad_looks().slice(0, squad_size).map(func(slot): return str(slot.get("class", "")))
 	elif OS.get_cmdline_user_args().has("--coop-debug=2"):
 		var guest_rng := RandomNumberGenerator.new()
 		guest_rng.seed = seed + 2
 		guests[2] = preload("res://logic/profile.gd").new_player(item_rules, camp_data, guest_rng)
 	var fight_session = get_session()
 	if "squad_classes" in fight_session:  # only the local session runs the auto-battler
-		fight_session.squad_classes = squad_looks().map(func(slot): return str(slot.get("class", ""))) if auto_battle else []
-	fight_session.start_journey(data, combat.weapon_ids, seed, guests)
+		fight_session.squad_classes = squad_cards
+		fight_session.start_journey(data, combat.weapon_ids, seed, guests, squad_cards)
+	else:
+		fight_session.start_journey(data, combat.weapon_ids, seed, guests)
 	journey = session.journey
 	# Stage 1 is always one plain fight: go straight in (the route screen had a single button there).
 	# Between stages the exit portals choose; the route screen stays for the end summary and as a fallback.

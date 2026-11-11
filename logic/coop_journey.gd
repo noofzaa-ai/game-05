@@ -2,6 +2,7 @@ extends "res://logic/journey.gd"
 ## Shared route with separate ownership, HP, gauge and incapacitation per participant.
 const PartySpawns := preload("res://logic/party_spawns.gd")
 const Fighter := preload("res://logic/fighter.gd")
+const SquadMember := preload("res://logic/squad_member.gd")
 
 var primary_id := 1
 var runs_by_player: Dictionary = {}
@@ -16,8 +17,12 @@ static func start_party(journey_data, trips: Dictionary, rules, loot, weapons: A
 	ids.sort()
 	var profiles := []
 	for id in ids:
-		if not id is int or id < 0 or trips[id] == null or trips[id].died or profiles.has(trips[id].profile): return null
+		if not id is int or id < 0 or trips[id] == null or trips[id].died: return null
+		# Separate players never share a profile. An auto-battle squad (logic/squad_member.gd) is the one
+		# exception: its members all wrap one account trip, so they must ALL be members of that same squad.
+		if profiles.has(trips[id].profile) and not (trips[id] is SquadMember and trips[id].squad == trips[ids[0]].squad): return null
 		profiles.append(trips[id].profile)
+	if trips.values().any(func(t): return t is SquadMember) and not trips.values().all(func(t): return t is SquadMember and t.squad == trips[ids[0]].squad): return null
 	var j = load("res://logic/coop_journey.gd").new()
 	j.data = journey_data
 	j.item_rules = rules
@@ -106,9 +111,8 @@ func stage_cleared(hp_left: float) -> void:
 	last_rewards.clear()
 	last_reward = {}
 	if str(current["kind"]) == "challenge":
-		for id in player_ids():
-			if not runs_by_player[id].died:
-				last_rewards[id] = runs_by_player[id].loot_into_bag(challenge_reward(_rng_for("challenge-player-%d" % id, completed + 1)))
+		for id in _paying_players():
+			last_rewards[id] = runs_by_player[id].loot_into_bag(challenge_reward(_rng_for("challenge-player-%d" % id, completed + 1)))
 		last_reward = last_rewards.get(primary_id, {})
 	_advance()
 
@@ -116,11 +120,20 @@ func open_treasure() -> Dictionary:
 	if not treasure_pending or state != AT_NODE: return {}
 	treasure_pending = false
 	last_rewards.clear()
-	for id in player_ids():
-		if not runs_by_player[id].died:
-			last_rewards[id] = runs_by_player[id].loot_into_bag({"gold": 0, "materials": {}, "items": [treasure_item(_rng_for("treasure-player-%d" % id, completed + 1))]})
+	for id in _paying_players():
+		last_rewards[id] = runs_by_player[id].loot_into_bag({"gold": 0, "materials": {}, "items": [treasure_item(_rng_for("treasure-player-%d" % id, completed + 1))]})
 	last_reward = last_rewards.get(primary_id, {})
 	return last_reward
+
+## The living players that get a reward: one per bag (a squad shares one bag, so it is paid once).
+func _paying_players() -> Array:
+	var paid: Array = []
+	var bags: Array = []
+	for id in player_ids():
+		if not runs_by_player[id].died and not bags.has(runs_by_player[id].bag):
+			bags.append(runs_by_player[id].bag)
+			paid.append(id)
+	return paid
 
 func bank_bag_for(id: int) -> Dictionary:
 	return runs_by_player[id].return_to_camp() if can_bank_bag() and runs_by_player.has(id) else {}
@@ -154,11 +167,12 @@ func abandon() -> Dictionary:
 
 func to_dict() -> Dictionary:
 	var saved := super.to_dict()
-	saved["party_v"] = 1
+	var squad := runs_by_player.values().all(func(t): return t is SquadMember)
+	saved["party_v"] = 2 if squad else 1  # 2: one shared squad run in "run", member fields per player
 	saved["primary_id"] = primary_id
 	var players: Array = []
 	for id in player_ids():
-		players.append({"id": id, "run": runs_by_player[id].to_dict(), "hp": StateCodec.float_text(health_by_player[id]), "gauge": StateCodec.float_text(gauge_by_player[id]), "downed": downed_by_player.get(id, {}).duplicate()})
+		players.append({"id": id, "run": runs_by_player[id].member_fields() if squad else runs_by_player[id].to_dict(), "hp": StateCodec.float_text(health_by_player[id]), "gauge": StateCodec.float_text(gauge_by_player[id]), "downed": downed_by_player.get(id, {}).duplicate()})
 	saved["party"] = players
 	var rewards: Array = []
 	for id in last_rewards:
@@ -171,17 +185,26 @@ func to_dict() -> Dictionary:
 	return saved
 
 static func from_dict(d: Dictionary, journey_data: JourneyData, rules, camp_data, loot, weapons: Array):
-	if int(d.get("party_v", 0)) != 1: return null
+	var version := int(d.get("party_v", 0))
+	if version != 1 and version != 2: return null
 	var base = load("res://logic/journey.gd").from_dict(d, journey_data, rules, camp_data, loot, weapons)
 	if base == null: return null
 	var j = load("res://logic/coop_journey.gd").new()
 	StateCodec.apply_fields(j, StateCodec.fields(base))
 	j.primary_id = int(d["primary_id"])
-	for player in d["party"]:
+	var members: Array = []
+	if version == 2:  # an auto-battle squad: base.run is the shared account trip
+		var cards: Array = d["party"].map(func(player): return str(player["run"].get("card", "")))
+		members = SquadMember.make_squad(base.run, cards)
+	for at in d["party"].size():
+		var player: Dictionary = d["party"][at]
 		var id := int(player["id"])
 		if j.runs_by_player.has(id): return null
-		var trip = Run.from_dict(player["run"], rules, camp_data)
+		var trip = members[at] if version == 2 else Run.from_dict(player["run"], rules, camp_data)
 		if trip == null: return null
+		if version == 2:
+			if not base.run.profile.card_gear.has(trip.card_id): return null
+			trip.apply_member_fields(player["run"])
 		j.runs_by_player[id] = trip
 		j.health_by_player[id] = StateCodec.float_value(player["hp"])
 		j.gauge_by_player[id] = StateCodec.float_value(player["gauge"])
