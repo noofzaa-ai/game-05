@@ -40,6 +40,8 @@ func run(ctx) -> void:
 		InputReader.key_label("light") == "LMB" and InputReader.key_label("heavy") == "RMB" and InputReader.key_label("guard") == "F"
 		and InputReader.key_label("dodge") == "C" and InputReader.key_label("special") == "1" and InputReader.key_label("ultimate") == "2")
 	ctx.check("an unbound action shows the fallback text", InputReader.key_label("no_such_action", "?") == "?")
+	ctx.check("auto-battle hides our squad's overhead name/HP tag (the squad panel shows it); co-op outside auto-battle keeps it",
+		not StageView.party_status_shown(true, true) and StageView.party_status_shown(true, false) and not StageView.party_status_shown(false, false))
 
 	var data = CombatDataLoader.load_default()
 	var sim := _sim(data)

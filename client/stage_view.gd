@@ -207,7 +207,7 @@ func _physics_frame(_delta: float) -> void:
 		var loading: bool = _session.has_method("is_remote") and _session.server_state.get("meta", {}).get("scene_loading", false)
 		_scene_loading_label.visible = loading
 		_scene_loading_label.text = "รอผู้เล่นโหลดฉากพร้อม…"
-	var auto_fight: bool = GameState.auto_battle and not _session.has_method("is_remote") and not (_session.has_method("is_lobby") and _session.is_lobby())
+	var auto_fight: bool = _is_auto_fight()
 	if auto_fight and _session.is_coop():
 		for other_id in _session.fighters:  # every other fighter of our squad is also brain-driven
 			if other_id != _local_player_id and _session.fighters[other_id].team == _session.fighters[_local_player_id].team:
@@ -427,7 +427,7 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 		view.monster_nock_mesh = definition["nock_mesh"]
 	add_child(view)
 	_views[id] = view
-	if is_player and _session.is_coop():
+	if is_player and party_status_shown(_session.is_coop(), _is_auto_fight()):
 		var status := Label3D.new()
 		status.name = "PartyStatus"
 		status.position.y = 2.1
@@ -439,6 +439,18 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 		_add_boss_label(view)
 		_boss_id = id
 	view.show_state(_session.bodies[id], _session.fighters[id], _combat_data)
+
+
+## Whether our squad fighters get the overhead "name  HP / max" tag. In a local auto-battle the squad
+## panel (squad_panel.gd) already shows each member's name and HP, and the auto camera zooms in so far
+## the small tag only blurs into a smudge; it stays for online/co-op play outside auto-battle.
+static func party_status_shown(coop: bool, auto_fight: bool) -> bool:
+	return coop and not auto_fight
+
+
+## A local auto-battle (no remote room, not the lobby): the squad's brains drive every fighter.
+func _is_auto_fight() -> bool:
+	return GameState.auto_battle and not _session.has_method("is_remote") and not (_session.has_method("is_lobby") and _session.is_lobby())
 
 
 ## The HUD's boss bar follows the journey boss while it lives.

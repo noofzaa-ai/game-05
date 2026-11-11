@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-11 | ux-ui-designer via PO | feature/class-weapons-card-screen | auto-battle ไม่สร้างป้ายชื่อ/HP บนหัวทัพเรา (`stage_view.gd` `party_status_shown`) · Boss ปฏิเสธหน้าการ์ดแนวท้องฟ้า/v8 เลือกแนวดาร์กแฟนตาซีวาดมือ (กำลังทำ v9) · เทสต์ 83 พังชุดเดิม
+
 - 2026-11-11 | PO | feature/class-weapons-card-screen | Boss: ใช้สกิล ยังไม่ทำอัลติ → ซ่อนเกจอัลติ (`squad_panel.gd` SHOW_ULTIMATE) · สกิล 4 ช่องต่อคลาส (`integration.json` class_skills + weapon_starts greatsword/longbow/magic; `GameSim.set_class_style` แนบ build ของคลาส) · แก้ auto_pilot จองช่องสกิลทิ้ง · เทสต์ 2065/83 ชุดเดิม
 
 - 2026-11-11 | PO | feature/class-weapons-card-screen | กล้องกระดานซูม/เลื่อนตามจุดที่สู้อัตโนมัติ (`camera_rig.gd` `_auto_frame`, `stage_view.gd` `_action_points`; หมุน/ซูมเองแล้วปิด) แตะ `stage_view.gd` · เทสต์ 2065/83 ชุดเดิม
