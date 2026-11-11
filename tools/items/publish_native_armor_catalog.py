@@ -1,6 +1,9 @@
-"""Replace legacy armor catalog with native heavy/light/cloth; explicit one-to-one save aliases."""
+"""Replace legacy armor catalog with native heavy/light/cloth; explicit one-to-one save aliases.
+One-time migration: it rebuilds every non-weapon entry (it would drop the off-hand shields). To only rename
+the pieces use tools/items/armor_names.py."""
 from pathlib import Path
-import json
+import json,sys
+sys.path.insert(0,str(Path(__file__).resolve().parent));import armor_names
 ROOT=Path(__file__).resolve().parents[2]
 def read(p):return json.loads((ROOT/p).read_text())
 def write(p,d):(ROOT/p).write_text(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
@@ -12,10 +15,11 @@ for family,(label,heavy) in families.items():
  for kind,style in [('heavy',heavy),('light',family+'_leather'),('cloth',family+'_cloth')]:
   set_id='armor_'+style
   bonuses=previous_sets.get(set_id,previous_sets.get('armor_dark_knight_01' if family=='obsidian' else 'armor_gilded_sentinel_01' if family=='royal' else 'armor_white_blue_aegis_01',{})).get('bonuses',[])
-  sets['sets'][set_id]={'name':label+' · '+{'heavy':'หนัก','light':'เบา','cloth':'ผ้า'}[kind],'bonuses':bonuses}
+  set_en,set_th=armor_names.set_names(family,kind);sets['sets'][set_id]={'name':set_en,'name_th':set_th,'bonuses':bonuses}
   for part,(slot,name,stat) in slots.items():
    identity='armor_'+style+'_'+slot
-   c['items'][identity]={'asset_id':identity,'name':label+' '+name+' · '+{'heavy':'เกราะหนัก','light':'เกราะเบา','cloth':'เกราะผ้า'}[kind],'slot':slot,'set':set_id,'drop_level':1,'armor_class':kind,'main_stat':stat,'asset_path':'res://art/armor/'+style+'/'+part+'.glb','icon_path':'res://art/armor/'+style+'/icon-'+part+'.png','source_style':style}
+   en,th=armor_names.piece_names(family,slot,kind) # English name, Thai kept (tools/items/armor_names.py)
+   c['items'][identity]={'asset_id':identity,'name':en,'name_th':th,'slot':slot,'set':set_id,'drop_level':1,'armor_class':kind,'main_stat':stat,'asset_path':'res://art/armor/'+style+'/'+part+'.glb','icon_path':'res://art/armor/'+style+'/icon-'+part+'.png','source_style':style}
 legacy_family={'scout':'ash_steel','knight':'obsidian_gold','sentinel':'royal_gold','aegis':'ash_steel'}
 aliases={identity:'armor_'+legacy_family[identity.split('_')[0]]+'_'+row['slot'] for identity,row in old.items() if identity.split('_')[0] in legacy_family}
 existing=ROOT/'data/items/armor_migration.json'

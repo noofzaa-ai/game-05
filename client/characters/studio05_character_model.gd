@@ -631,12 +631,13 @@ func set_appearance(appearance: Dictionary) -> void:
 
 
 ## eye-makeup.js makeupStyle for a makeup id. The Studio menu: 0 Anime Soft, 1 Sharp Wing, 2 natural (no makeup).
-## The card's "none" keeps the look the game showed before (Anime Soft) until the Boss picks the mapping.
+## The card's "none" is the Studio's natural / no-makeup set (PO default 2026-11-12, docs/po_defaults.md);
+## any other id (the account look's "" / old ids) keeps Anime Soft.
 static func makeup_style(id: String) -> int:
 	match id:
 		"sharp_wing":
 			return 1
-		"natural":
+		"natural", "none":
 			return 2
 	return 0
 

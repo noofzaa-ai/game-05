@@ -10,6 +10,7 @@ const PARTS := {
 	"face": ["res://data/cosmetics/faces.json", "faces"],
 	"hair_style": ["res://data/cosmetics/hair_styles.json", "styles"],
 	"eye_color": ["res://data/cosmetics/eye_colors.json", "colors"],
+	"iris_style": ["res://data/cosmetics/iris_styles.json", "styles"],  ## class card iris (Studio 2026-11-11); "color" = the style's default eye colour
 	"fashion": ["res://data/cosmetics/fashion.json", "styles"],
 	"fashion_display": ["res://data/cosmetics/wear_modes.json", "styles"],
 	"fashion_hat": ["res://data/cosmetics/fashion_hats.json", "styles"],

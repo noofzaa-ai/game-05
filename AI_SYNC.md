@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-12 | gameplay-programmer via PO | feature/class-weapons-card-screen | การ์ดเริ่มต้นใส่ชุดเกราะคลาส · ตัวเลือกม่านตา 7 แบบ (`data/cosmetics/iris_styles.json`, part `iris_style`) ใน Tailor · makeup none = natural · ชื่อเกราะ/เซ็ตเป็นอังกฤษ (`tools/items/armor_names.py`, เก็บไทยใน name_th) · เทสต์ 2194/82
+
 - 2026-11-12 | tech-artist via PO | feature/class-weapons-card-screen | เอฟเฟกต์สกิล: ทุกสกิลของ 4 คลาสมีภาพ (skill_cast/burst/trail/struck ใน vfx.json), ลูกไฟใหม่, เลิกก้อนดำ, frost_armor ชัดขึ้น, ชื่อสกิลขึ้นเหนือการ์ดทัพ, ตัวเลข/ของดรอปไม่บัง HUD, HP ไม่เกิน max · ยังไม่ได้วัดบนเว็บ/มือถือ
 
 - 2026-11-12 | character-artist via PO | feature/class-weapons-card-screen | ไฟล์ตัวละคร Studio 2026-11-11: ชุดเกราะ+อาวุธของคลาส (`art/characters/studio05/v1111/`), ผม A-G ทุกคลาส, ตา 7 แบบ/เมคอัพ 3/กะพริบใหม่ ใน `studio05_toon.gdshader`, โล่ที่ใส่จริงโชว์บนตัว (`item_assets.looks()` offhand) · รายการ `docs/tech/studio_v20261111_inventory.md` · rig 102 เหมือนเดิม

@@ -30,6 +30,19 @@ func run(ctx) -> void:
 	ctx.check("the look carries the card's choices", look["class"] == "magic" and look["silver"] == false and look["makeup"] == "sharp_wing" and look["skin"] == "tan")
 	ctx.check("the deck stays valid after edits", Deck.validate(deck, cosmetics) == "")
 
+	# PO defaults 2026-11-12 (docs/po_defaults.md): class armor starters, Studio iris styles.
+	var fresh := Deck.initial(cosmetics)
+	ctx.check("every starter card wears its class armor", classes.all(func(c): return fresh["cards"][c]["outfit"] == "none"))
+	ctx.check("the iris styles are the Studio's seven", Deck.options("magic", "iris_style", cosmetics) == ["0", "1", "3", "6", "7", "9", "10"])
+	ctx.check("a starter card has the Classic iris", fresh["cards"]["longbow"]["iris_style"] == "0" and Deck.look_of(fresh, "longbow")["iris_style"] == "0")
+	ctx.check("an iris style brings its own eye colour", Deck.set_look(fresh, "longbow", "iris_style", "3", cosmetics) and fresh["cards"]["longbow"]["eye_color"] == "#ff562c" and Deck.look_of(fresh, "longbow")["iris_style"] == "3")
+	ctx.check("an iris style not in the Studio is refused", not Deck.set_look(fresh, "longbow", "iris_style", "2", cosmetics) and fresh["cards"]["longbow"]["iris_style"] == "3")
+	var older := Deck.initial(cosmetics)
+	older["cards"]["greatsword"]["outfit"] = "silver"
+	older["cards"]["greatsword"].erase("iris_style")
+	var kept := Deck.repaired(older, cosmetics)
+	ctx.check("an older saved card keeps its own outfit and gets the Classic iris", kept["cards"]["greatsword"]["outfit"] == "silver" and not kept["cards"]["greatsword"].has("iris_style") and Deck.look_of(kept, "greatsword")["iris_style"] == "0")
+
 	# Squad rules.
 	ctx.check("a squad of one to three is allowed", Deck.set_squad(deck, ["longbow"]) and Deck.set_squad(deck, ["magic", "longbow", "sword_shield"]))
 	ctx.check("a class twice, an unknown class, an empty or a fourth card are refused", not Deck.set_squad(deck, ["magic", "magic"]) and not Deck.set_squad(deck, ["ghost"]) and not Deck.set_squad(deck, []) and not Deck.set_squad(deck, classes + ["magic"]))

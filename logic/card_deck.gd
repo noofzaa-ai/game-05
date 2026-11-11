@@ -8,20 +8,23 @@ extends RefCounted
 ##
 ## deck = {"v": 1, "cards": {class_id: card}, "squad": [class_id, ...]}
 ## card = {"hair": "a", "outfit": "none"|"silver", "eye_color": id or "#rrggbb", "skin": id or "#rrggbb",
-##         "makeup": "none"|"sharp_wing", "skills": []}
+##         "makeup": "none"|"sharp_wing", "iris_style": id of data/cosmetics/iris_styles.json, "skills": []}
 
 const CLASS_FOLDER := "res://data/classes/"
 const CLASS_ORDER: Array[String] = ["sword_shield", "greatsword", "longbow", "magic"]
 const SQUAD_MAX := 3
-const OUTFITS: Array[String] = ["none", "silver"]  ## none = the base body; silver = Silver Silk (test05 Studio)
+const OUTFITS: Array[String] = ["none", "silver"]  ## none = the class armor (Studio "ชุดประจำคลาส"); silver = Silver Silk + class weapons
 const MAKEUPS: Array[String] = ["none", "sharp_wing"]
-const PARTS: Array[String] = ["hair", "outfit", "eye_color", "skin", "makeup"]
-## The card each class starts with (the squad the game had before cards).
+const PARTS: Array[String] = ["hair", "outfit", "eye_color", "skin", "makeup", "iris_style"]
+## Parts added after cards shipped: a saved card without them uses this value (the card stays valid).
+const LATER_PARTS := {"iris_style": "0"}
+## The card each class starts with. Every class starts in its class armor (outfit "none", PO default 2026-11-12,
+## docs/po_defaults.md); saved cards keep their own choice.
 const STARTERS := {
 	"sword_shield": {"hair": "a", "outfit": "none"},
-	"greatsword": {"hair": "c", "outfit": "silver"},
-	"longbow": {"hair": "e", "outfit": "silver"},
-	"magic": {"hair": "f", "outfit": "silver"},
+	"greatsword": {"hair": "c", "outfit": "none"},
+	"longbow": {"hair": "e", "outfit": "none"},
+	"magic": {"hair": "f", "outfit": "none"},
 }
 ## The squad a new player starts with (Boss 2026-11-11): Sword & Shield, Great Sword, Bow. Magic is meant to unlock after a few quests (not built yet: the card exists and can already be picked).
 const STARTER_SQUAD: Array[String] = ["sword_shield", "greatsword", "longbow"]
@@ -67,7 +70,7 @@ static func options(class_id: String, part: String, cosmetics) -> Array:
 		"hair": return hair_options(class_id)
 		"outfit": return OUTFITS.duplicate()
 		"makeup": return MAKEUPS.duplicate()
-		"eye_color", "skin":
+		"eye_color", "skin", "iris_style":
 			var ids := []
 			if cosmetics != null:
 				for entry in cosmetics.choices.get(part, []):
@@ -89,6 +92,7 @@ static func starter_card(class_id: String, cosmetics) -> Dictionary:
 		"eye_color": str(cosmetics.defaults.get("eye_color", "")) if cosmetics != null else "",
 		"skin": str(cosmetics.defaults.get("skin", "")) if cosmetics != null else "",
 		"makeup": "none",
+		"iris_style": str(cosmetics.defaults.get("iris_style", "0")) if cosmetics != null else "0",
 		"skills": [],
 	}
 
@@ -137,6 +141,8 @@ static func validate_card(class_id: String, card: Variant, cosmetics = null) -> 
 	if not card is Dictionary:
 		return "bad_card"
 	for part in PARTS:
+		if LATER_PARTS.has(part) and not card.has(part):
+			continue  # an older card: the default applies
 		if not card.get(part) is String:
 			return "bad_card"
 		if not _part_allowed(class_id, part, card[part], cosmetics):
@@ -147,7 +153,7 @@ static func validate_card(class_id: String, card: Variant, cosmetics = null) -> 
 
 
 static func _part_allowed(class_id: String, part: String, choice: String, cosmetics) -> bool:
-	if part in ["eye_color", "skin"] and cosmetics == null:
+	if part in ["eye_color", "skin", "iris_style"] and cosmetics == null:
 		return true  # without the cosmetic lists a colour cannot be checked here (the server always has them)
 	if options(class_id, part, cosmetics).has(choice):
 		return true
@@ -161,6 +167,11 @@ static func set_look(deck: Dictionary, class_id: String, part: String, choice: S
 	if not _part_allowed(class_id, part, choice, cosmetics):
 		return false
 	deck["cards"][class_id][part] = choice.to_lower() if choice.begins_with("#") else choice
+	if part == "iris_style" and cosmetics != null:
+		# index.html irisSelect: a style brings its own colour (data-color) into the eye colour.
+		var tint := str(cosmetics.entry("iris_style", choice).get("color", ""))
+		if not tint.is_empty():
+			deck["cards"][class_id]["eye_color"] = tint.to_lower()
 	return true
 
 
@@ -180,7 +191,7 @@ static func set_squad(deck: Dictionary, squad: Array) -> bool:
 
 
 ## What the card looks like, as plain data the client dresses a model with:
-## {"class", "hair", "silver", "eye_color", "skin", "makeup"}.
+## {"class", "hair", "silver", "eye_color", "skin", "makeup", "iris_style"}.
 static func look_of(deck: Dictionary, class_id: String) -> Dictionary:
 	var card: Dictionary = deck.get("cards", {}).get(class_id, {})
 	return {
@@ -190,6 +201,7 @@ static func look_of(deck: Dictionary, class_id: String) -> Dictionary:
 		"eye_color": str(card.get("eye_color", "")),
 		"skin": str(card.get("skin", "")),
 		"makeup": str(card.get("makeup", "none")),
+		"iris_style": str(card.get("iris_style", LATER_PARTS["iris_style"])),
 	}
 
 

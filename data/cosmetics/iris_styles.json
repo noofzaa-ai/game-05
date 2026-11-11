@@ -1,0 +1,13 @@
+{
+  "_comment": "Iris styles of a class card (Studio 2026-11-11 index.html #iris-style). id = the Studio option value (shader iris_style); color = the style's data-color, which picking the style copies into the card's eye colour (Classic: the eye-colour input default #c98634). Options come from the source Studio: do not add new ones here.",
+  "default": "0",
+  "styles": [
+    {"id": "0", "name": "Classic", "color": "#c98634"},
+    {"id": "1", "name": "Starry Violet", "color": "#a352df"},
+    {"id": "3", "name": "03 · Solar Flame", "color": "#ff562c"},
+    {"id": "6", "name": "06 · Lavender Orbit", "color": "#a577db"},
+    {"id": "7", "name": "07 · Sunburst", "color": "#f75c3e"},
+    {"id": "9", "name": "09 · Pastel Halo", "color": "#b960db"},
+    {"id": "10", "name": "10 · Astral Sigil", "color": "#9b69e7"}
+  ]
+}

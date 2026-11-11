@@ -16,7 +16,7 @@ const ItemAssets := preload("res://client/item_assets.gd")
 ## Category tab -> the profile part it changes ("look" = card_look parts, "mall" = Mall fashion parts).
 const CATEGORIES: Array[Dictionary] = [
 	{"id": "hair", "kind": "look", "part": "hair"},
-	{"id": "eyes", "kind": "look", "part": "eye_color"},
+	{"id": "eyes", "kind": "look", "part": "eye_color", "parts": ["iris_style", "eye_color"]},  ## iris style (Studio) then colour
 	{"id": "skin", "kind": "look", "part": "skin"},
 	{"id": "makeup", "kind": "look", "part": "makeup"},
 	{"id": "base_outfit", "kind": "look", "part": "outfit"},
@@ -191,7 +191,16 @@ func refresh() -> void:
 	var entry := _category()
 	var part := str(entry["part"])
 	if str(entry["kind"]) == "look":
-		_fill_looks(p, part)
+		var parts: Array = entry.get("parts", [part])
+		for each in parts:
+			if parts.size() > 1:
+				_section(CardTokens.t("tailor_part_" + str(each)))
+			_fill_looks(p, str(each))
+		if parts.size() > 1:
+			var now := []
+			for each in parts:
+				now.append(_look_name(str(each), str(p.card_deck.get("cards", {}).get(card, {}).get(str(each), CardDeck.LATER_PARTS.get(str(each), "")))))
+			_strip_line.text = CardTokens.t("tailor_look_line") % " + ".join(now)
 	else:
 		_fill_mall(p, part)
 
@@ -199,11 +208,11 @@ func refresh() -> void:
 # ------------------------------------------------------------------ card looks (card_look)
 func _fill_looks(p, part: String) -> void:
 	var cosmetics = ItemAssets.cosmetics()
-	var current := str(p.card_deck.get("cards", {}).get(card, {}).get(part, ""))
+	var current := str(p.card_deck.get("cards", {}).get(card, {}).get(part, CardDeck.LATER_PARTS.get(part, "")))
 	for id in CardDeck.options(card, part, cosmetics):
 		var choice := str(id)
 		var swatch := ""
-		if part in ["eye_color", "skin"]:
+		if part in ["eye_color", "skin", "iris_style"]:
 			swatch = str(cosmetics.entry(part, choice).get("color", ""))
 		_option(_look_name(part, choice), null, swatch, choice == current, _set_look.bind(part, choice))
 	_strip_name.text = CardTokens.t("tailor_" + category)
@@ -216,6 +225,7 @@ static func _look_name(part: String, choice: String) -> String:
 		"hair": return CardTokens.hair_name(choice)
 		"outfit": return CardTokens.choice_name("outfit", choice)
 		"makeup": return CardTokens.choice_name("makeup", choice)
+		"iris_style": return CardTokens.choice_name("iris_style", choice)
 	if choice.begins_with("#"):
 		return CardTokens.t("custom")
 	return CardTokens.choice_name(part, choice)
@@ -329,6 +339,14 @@ func _option(text: String, picture: Texture2D, swatch: String, chosen: bool, cal
 	b.pressed.connect(callback)
 	_flow.add_child(b)
 	return b
+
+
+## A full-width caption in the choice list (a tab that shows more than one part, e.g. Eyes: iris style + colour).
+func _section(text: String) -> void:
+	var caption := CardTokens.label(text, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, 1.0, 0, "display")
+	CardTokens.hub_text(caption, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "display")
+	caption.custom_minimum_size = Vector2(_flow.custom_minimum_size.x, CardTokens.FONT_CHAR_LINE * 1.6 * s)
+	_flow.add_child(caption)
 
 
 func _clear_strip_buttons() -> void:

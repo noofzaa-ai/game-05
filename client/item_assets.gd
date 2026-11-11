@@ -72,7 +72,7 @@ static func cosmetics() -> RefCounted:
 ## "hair_style": path ("" = the body's own), "face_replaces_head" / "face_hides_hair": bool (whole
 ## replacement heads, from the model team's register)}.
 ## The model's appearance for one class card's look (card_deck.look_of): the card's own hair, outfit, eyes,
-## skin and makeup on top of `base` (the account's appearance).
+## skin, makeup and iris style on top of `base` (the account's appearance).
 static func card_appearance(look: Dictionary, base: Dictionary) -> Dictionary:
 	var result := base.duplicate(true)
 	var picks: Dictionary = result.get("choices", {}).duplicate()
@@ -86,6 +86,7 @@ static func card_appearance(look: Dictionary, base: Dictionary) -> Dictionary:
 		result["skin"] = Color(parts["skin"]["color"])
 		picks["skin"] = str(parts["skin"]["id"])
 	picks["makeup"] = str(look.get("makeup", "none"))
+	result["iris_style"] = int(str(look.get("iris_style", "0")))
 	result["choices"] = picks
 	return result
 
