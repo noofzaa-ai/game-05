@@ -161,4 +161,17 @@ static func looks(loadout, catalog, style: String) -> Dictionary:
 		result["refine"][slot_id] = item.refine_level
 		if slot_id == "hat" and entry(asset_id).get("hide_hair", false):
 			result["hide_hair"] = true
+	# The off-hand shield (Sword & Shield only, Boss 2026-11-11): {} = empty slot (the model shows the class's own).
+	var shield = loadout.item_at("offhand", 0) if loadout.has_method("item_at") else null
+	if shield != null and not shield.destroyed:
+		var info: Dictionary = catalog.entry(shield.item_id)
+		var shield_file := str(info.get("asset_path", ""))
+		if shield_file.is_empty():
+			shield_file = path(str(info.get("asset_id", "")))
+		if not shield_file.is_empty() and not ResourceLoader.exists(shield_file):
+			shield_file = ""
+		result["offhand"] = {"item_id": shield.item_id, "asset_id": str(info.get("asset_id", "")), "procedural": bool(info.get("procedural", false)), "path": shield_file, "refine_level": shield.refine_level}
+		result["refine"]["offhand"] = shield.refine_level
+	else:
+		result["offhand"] = {}
 	return result

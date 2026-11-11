@@ -172,6 +172,11 @@ func _dress() -> void:
 		"appearance": ItemAssets.card_appearance(look, ItemAssets.appearance({})),
 		"weapon": {"path": "", "family": _weapon, "style": _weapon},
 	}
+	# The card's equipped off-hand shield and its refine aura (display only: read from the card's loadout).
+	var gear := _card_looks()
+	if gear.has("offhand"):
+		looks["offhand"] = gear["offhand"]
+		looks["refine"] = {"offhand": int(gear.get("refine", {}).get("offhand", 0)), "weapon": int(gear.get("refine", {}).get("weapon", 0))}
 	model.equipment_rest = true
 	model.dress(looks)
 	model.set_pose("idle", 0.0, 0.0, true, Vector2(0.0, 1.0), false, "", "", _weapon)
@@ -179,6 +184,17 @@ func _dress() -> void:
 	_redraw_once = true
 	_fit_camera.call_deferred()
 	_update_rendering()
+
+
+## ItemAssets.looks() of this card's own loadout (Profile.loadout_of), {} when there is no profile.
+func _card_looks() -> Dictionary:
+	var state := get_node_or_null("/root/GameState")
+	if state == null or state.get("profile") == null or state.get("item_rules") == null:
+		return {}
+	var loadout = state.profile.loadout_of(class_id) if state.profile.has_method("loadout_of") else null
+	if loadout == null:
+		return {}
+	return ItemAssets.looks(loadout, state.item_rules.catalog, _weapon)
 
 
 func _update_rendering() -> void:

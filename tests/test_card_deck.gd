@@ -21,7 +21,7 @@ func run(ctx) -> void:
 	# One card changes, the others stay.
 	var other_before: Dictionary = deck["cards"]["magic"].duplicate(true)
 	ctx.check("a hair the class can wear is accepted", Deck.set_look(deck, "sword_shield", "hair", "b", cosmetics))
-	ctx.check("a hair the class cannot wear is refused", not Deck.set_look(deck, "magic", "hair", "a", cosmetics))
+	ctx.check("a hair the class cannot wear is refused", not Deck.set_look(deck, "magic", "hair", "d", cosmetics))  # (hair D was retired in the Studio)
 	ctx.check("an unknown class, part or choice is refused", not Deck.set_look(deck, "nope", "hair", "a", cosmetics) and not Deck.set_look(deck, "magic", "wings", "x", cosmetics) and not Deck.set_look(deck, "magic", "outfit", "gold", cosmetics))
 	ctx.check("changing one card leaves the others alone", deck["cards"]["magic"] == other_before and deck["cards"]["sword_shield"]["hair"] == "b")
 	ctx.check("outfit, makeup, eyes and skin can be set", Deck.set_look(deck, "magic", "outfit", "none", cosmetics) and Deck.set_look(deck, "magic", "makeup", "sharp_wing", cosmetics) and Deck.set_look(deck, "magic", "eye_color", "violet", cosmetics) and Deck.set_look(deck, "magic", "skin", "tan", cosmetics))
@@ -52,7 +52,7 @@ func run(ctx) -> void:
 	var state := {"profile": profile, "rules": rules, "camp": camp, "location": "camp", "cosmetics": cosmetics}
 	var ok: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair", "choice": "e"}, rng)
 	ctx.check("the card_look command changes the card", ok.get("ok", false) and profile.card_deck["cards"]["greatsword"]["hair"] == "e")
-	var bad: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair", "choice": "a"}, rng)
+	var bad: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair", "choice": "d"}, rng)
 	ctx.check("a hair the class cannot wear is rejected by the server", not bad.get("ok", true) and bad.get("error") == "invalid_card")
 	var squad_ok: Dictionary = Commands.apply(state, {"type": "card_squad", "squad": ["longbow", "magic"]}, rng)
 	ctx.check("the card_squad command sets the squad", squad_ok.get("ok", false) and profile.card_deck["squad"] == ["longbow", "magic"])

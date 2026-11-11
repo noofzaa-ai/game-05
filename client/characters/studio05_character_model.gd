@@ -1,25 +1,59 @@
 extends "res://client/character_model.gd"
-## Production player (Boss goal 2026-11-10): the test05/studio "Sword & Shield" toon character,
-## five hair styles (A-E) and the Silver Silk outfit, each its own GLB with the Mixamo rig (102 joints,
-## 6x3 hair chain) and 47 authored clips. The source rig, weights and clips are used as they are; the
-## game only adds two weapon socket bones under the hands. Looks follow test05/studio/STUDIO_SPEC.md:
-## fixed-key cel bands, procedural anime eyes/makeup/face ink and the face/hair ink hulls.
+## Production player (Boss goal 2026-11-10): the studio05 toon character on its own Mixamo rig (102 joints,
+## 6x3 hair chain). Source of truth: the Studio drop of 2026-11-11 (docs/tech/studio_v20261111_inventory.md).
+## Per class the body file is the class's own GLB (hair A/B/C/E/F, the class clips); the class gear
+## (outfits/armor_<class>.glb, same 102 joints and rest) is merged onto that skeleton like class-gear.js:
+## "outfit" = every gear mesh and the base body hidden, "weapons" = only "| Sword/Shield/Bow/Quiver/Staff/
+## Spellbook" pieces (Silver Silk shows the silk over the body plus the class weapons). Hair G
+## (hair/hair_g.glb) replaces the file's hair mesh like replaceCharacterHair(). The source rig, weights,
+## blend shapes and clips are used as they are; the game only adds two weapon socket bones under the hands.
+## Looks follow STUDIO_SPEC.md: fixed-key cel bands, procedural anime eyes (iris presets, makeup, blink),
+## face/hair ink and the ink hulls.
 ## Combat poses are mapped onto the source clips (data/classes/<id>.json); clips are sampled at times driven by
 ## the simulation, the hips stay in place (the game moves the body).
 
 const ItemAssets := preload("res://client/item_assets.gd")
 const ToonShader := preload("res://client/characters/studio05_toon.gdshader")
 const InkShader := preload("res://client/characters/studio05_ink.gdshader")
+const RefineEffect := preload("res://client/refine_equipment.gd")
 const FOLDER := "res://art/characters/studio05/"
-const HAIR_STYLES: Array[String] = ["a", "b", "c", "e", "f"]  ## (hair D was retired in the Studio)
+const V1111 := "res://art/characters/studio05/v1111/"
+const HAIR_STYLES: Array[String] = ["a", "b", "c", "e", "f", "g"]  ## Studio hair buttons (hair D was retired; G is new)
 const HEIGHT := 1.35  ## Boss: characters at most 135cm
 const HIPS := "mixamorig_Hips"
-const DEFAULT_HAIR := Color("6f657f")
+const DEFAULT_HAIR := Color("6f657f")  ## index.html #hair-color default (hairs A, B)
+const LIGHT_HAIR := Color("ffffff")  ## index.html: hairs C-G default to white (their colour is in the file)
 const DEFAULT_IRIS := Color("c98634")
 const SKIN_LINEAR := Color(0.72, 0.56, 0.48)
 const CLASS_FOLDER := "res://data/classes/"
 const DEFAULT_CLASS := "sword_shield"
+## index.html characterClasses: the class's body file prefix and gear file.
+const CLASS_FILES := {
+	"sword_shield": {"model": "lowpoly_toon", "gear": "armor_sword_shield"},
+	"greatsword": {"model": "greatsword", "gear": "armor_greatsword"},
+	"longbow": {"model": "longbow", "gear": "armor_longbow"},
+	"magic": {"model": "magic", "gear": "armor_magic"},
+}
+## class-gear.js 'weapons' mode: the gear pieces kept over the Silver Silk outfit.
+const WEAPON_PIECE := "\\| (?:Sword|Shield|Bow|Quiver|Staff|Spellbook)\\b"
+## index.html iris menu: value -> default colour (data-color); 0 Classic uses the eye colour input.
+const IRIS_STYLES := {0: "", 1: "a352df", 3: "ff562c", 6: "a577db", 7: "f75c3e", 9: "b960db", 10: "9b69e7"}
+## eyes/blink.js timings (seconds).
+const BLINK_CLOSE := 0.080
+const BLINK_HOLD := 0.035
+const BLINK_OPEN := 0.145
+const BLINK_FIRST := 1.6
+const BLINK_GAP_MIN := 2.8
+const BLINK_GAP_SPAN := 2.8
+const BLINK_DOUBLE_CHANCE := 0.16
+const BLINK_DOUBLE_GAP := 0.18
+## Cape morph targets of armor_sword_shield (B 00 | Armor suit). The source drives them from a gear clip
+## that class-gear.js only keeps when the body has a clip of the same name (index.html: the sword & shield
+## run/idle). Its weight tracks are copied from the gear file by clip name.
+const CAPE_SHAPES: Array[String] = ["Cape Trail", "Cape Ripple Sine", "Cape Ripple Cosine"]
 static var _classes: Dictionary = {}
+static var _cape_tracks: Dictionary = {}  ## gear path -> {clip: {shape: Animation track}} (+ "_animation" refs)
+static var _weapon_regex: RegEx
 
 
 ## The class file (data/classes/<id>.json): its animation clips, how our moves and states map onto them.
@@ -46,7 +80,9 @@ var weapon_grip_degrees := Vector3(0.0, 0.0, -90.0)
 var _library: RefCounted
 var _variant := ""
 var _hair_color := DEFAULT_HAIR
+var _custom_hair := false
 var _iris := DEFAULT_IRIS
+var _iris_style := 0
 var _skin := SKIN_LINEAR
 var _makeup := 0
 var _toon: Array[ShaderMaterial] = []
@@ -54,19 +90,50 @@ var _flash := Color(0, 0, 0, 0)
 var _relic_orbit: Node3D
 var _weapon_args := ["", ""]
 var _shield: Node3D
+var _hair_letter := "a"
+var _silver := false
+var _gear_meshes: Array[MeshInstance3D] = []  ## merged class gear (armor_<class>.glb)
+var _gear_weapons: Array[MeshInstance3D] = []  ## ... its weapon pieces (shown in both modes)
+var _gear_shield: Array[MeshInstance3D] = []  ## ... its shield piece (sword & shield)
+var _offhand := {}  ## ItemAssets.looks()["offhand"]: the equipped shield, {} = class default
+var _cape_mesh: MeshInstance3D
+var _blink := 0.0
+var _blink_clock := 0.0
+var _blink_start := BLINK_FIRST
+var _blink_rng := RandomNumberGenerator.new()
+var blink_enabled := true  ## eyes/blink.js: off = eyes held open
 var class_id := DEFAULT_CLASS  ## which data/classes/<id>.json drives the animations
 ## Simple stand-in shield on the left hand (GLB units, in the left hand bone): radius, thickness.
 const SHIELD_RADIUS := 0.11
 const SHIELD_THICKNESS := 0.012
 const SHIELD_OFFSET := Vector3(0.0, 0.0, 0.0)
 var shield_turn_degrees := Vector3(0.0, 0.0, 90.0)
+var _offhand_node: Node3D  ## an equipped shield that has its own model file (left hand socket)
+var _offhand_path := ""
+var _weapon_shown := true
 
 
+## The body file a variant starts from (index.html loadInPlaceRun): the class's own GLB with hair A-F;
+## hair G starts from the hair A file and swaps the hair mesh. Silver Silk is merged on top (_dress_class_gear).
+static func body_path(class_name_id: String, hair: String) -> String:
+	var letter := "a" if hair == "g" else hair
+	var model := str(CLASS_FILES.get(class_name_id, CLASS_FILES[DEFAULT_CLASS])["model"])
+	if model == "lowpoly_toon":
+		return FOLDER + "our_character_lowpoly_toon_hair_" + letter + "_5k.glb"
+	return V1111 + "hair/our_character_" + model + "_hair_" + letter + "_5k.glb"
+
+
+static func gear_path(class_name_id: String) -> String:
+	return V1111 + "outfits/" + str(CLASS_FILES.get(class_name_id, CLASS_FILES[DEFAULT_CLASS])["gear"]) + ".glb"
+
+
+## The Sword & Shield body files the game shipped before 2026-11-11 (byte-identical to the Studio's).
 static func variant_path(hair: String, silver: bool) -> String:
-	return FOLDER + "our_character_lowpoly_toon_hair_" + hair + "_5k" + ("_silver" if silver else "") + ".glb"
+	var letter := "a" if hair == "g" else hair
+	return FOLDER + "our_character_lowpoly_toon_hair_" + letter + "_5k" + ("_silver" if silver else "") + ".glb"
 
 
-## The A-E hair file for a cosmetic hair id: stable per id so remote players see the same.
+## The hair letter for a cosmetic hair id: stable per id so remote players see the same.
 static func hair_for(hair_id: String) -> String:
 	if hair_id.length() == 1 and hair_id in HAIR_STYLES:
 		return hair_id
@@ -75,16 +142,22 @@ static func hair_for(hair_id: String) -> String:
 	return HAIR_STYLES[absi(hash(hair_id)) % HAIR_STYLES.size()]
 
 
-## `path` is ignored unless it is one of the test05 files: every caller asks for "the player".
-func load_model(path: String = "") -> bool:
-	if not path.begins_with(FOLDER):
-		path = variant_path("a", false)
-	return _load_variant(path)
+static func is_weapon_piece(mesh_name: String) -> bool:
+	if _weapon_regex == null:
+		_weapon_regex = RegEx.create_from_string(WEAPON_PIECE)
+	return _weapon_regex.search(mesh_name) != null
 
 
-func _load_variant(path: String) -> bool:
-	if path == _variant and _model_root != null:
+## `path` is ignored: every caller asks for "the player" (class, hair and outfit come from dress()).
+func load_model(_path: String = "") -> bool:
+	return _load_variant(class_id, _hair_letter, _silver)
+
+
+func _load_variant(cls: String, hair: String, silver: bool) -> bool:
+	var key := "%s|%s|%s" % [cls, hair, silver]
+	if key == _variant and _model_root != null:
 		return true
+	var path := body_path(cls, hair)
 	if not ResourceLoader.exists(path):
 		return false
 	var packed := load(path) as PackedScene
@@ -104,12 +177,21 @@ func _load_variant(path: String) -> bool:
 	_meshes.clear()
 	_body_meshes.clear()
 	_hair_meshes.clear()
+	_gear_meshes.clear()
+	_gear_weapons.clear()
+	_gear_shield.clear()
+	_cape_mesh = null
 	_bone_index.clear()
 	_rest.clear()
 	_global_rest.clear()
 	_rest_position.clear()
 	_toon.clear()
-	_variant = path
+	_offhand_node = null
+	_offhand_path = ""
+	_variant = key
+	class_id = cls
+	_hair_letter = hair
+	_silver = silver
 	_anim_model = ""
 	_model_root = packed.instantiate()
 	_lie.add_child(_model_root)
@@ -134,28 +216,135 @@ func _load_variant(path: String) -> bool:
 		_rest[bone_name] = _skeleton.get_bone_rest(index).basis.get_rotation_quaternion()
 		_global_rest[bone_name] = _skeleton.get_bone_global_rest(index).basis.get_rotation_quaternion()
 		_rest_position[bone_name] = _skeleton.get_bone_rest(index).origin
+	if hair == "g":  # replaceCharacterHair(): the file's hair mesh goes, Hair_G (hair/hair_g.glb) comes in
+		for mesh in _meshes.duplicate():
+			if str(mesh.name).begins_with("Hair_"):
+				_meshes.erase(mesh)
+				mesh.queue_free()
+		_meshes.append_array(_merge(V1111 + "hair/hair_g.glb", func(_n: String) -> bool: return true))
 	for mesh in _meshes:
 		if str(mesh.name).begins_with("Hair_"):
 			_hair_meshes.append(mesh)
-	_body_meshes = _meshes.duplicate()
-	var spec := class_data(class_id)
-	_library = AnimationSet.load_file(str(spec.get("animations", "")), str(spec.get("clip_marks", "")))
-	if _library == null:
-		return false
+	# The body's size is set before the gear goes on (a hood or a staff must not change the character's size).
 	var bounds := _union_bounds()
 	var factor := HEIGHT / bounds.size.y
 	_model_root.scale = Vector3.ONE * factor
 	_model_root.position.y = -bounds.position.y * factor
+	_body_meshes = _meshes.duplicate()
+	_dress_class_gear(cls, silver)
+	var spec := class_data(cls)
+	# The clips come from this very file: the Studio bakes each hair's own secondary motion into its clips.
+	_library = AnimationSet.load_file(path, str(spec.get("clip_marks", "")))
+	if _library == null:
+		_library = AnimationSet.load_file(str(spec.get("animations", "")), str(spec.get("clip_marks", "")))
+	if _library == null:
+		return false
+	_skill_clip = {}
 	_prepare_meshes()
 	_apply_colors()
 	_shield = null
 	_build_shield()
 	if not str(weapon[0]).is_empty():
 		_show_weapon(weapon[0], weapon[1])
+	_update_shield()
+	_fit_weapon()
 	return true
 
 
-## A plain round shield (steel face, gold rim, boss in the middle) held on the left hand's socket.
+## class-gear.js equipClassGear(): "outfit" = all gear meshes and no base body; "weapons" (Silver Silk) =
+## the silk over the base body plus only the weapon pieces.
+func _dress_class_gear(cls: String, silver: bool) -> void:
+	var gear := gear_path(cls)
+	if not ResourceLoader.exists(gear):
+		return
+	if silver:
+		var silk := _merge(variant_path("c", true), func(n: String) -> bool: return n.begins_with("Outfit_SilverSilk"))
+		_meshes.append_array(silk)
+		_gear_meshes.append_array(silk)
+	else:
+		for mesh in _meshes.duplicate():
+			if str(mesh.name) == "Base_Body":
+				_meshes.erase(mesh)
+				_body_meshes.erase(mesh)
+				mesh.queue_free()
+	var pieces := _merge(gear, func(n: String) -> bool: return not silver or is_weapon_piece(n))
+	for mesh in pieces:
+		var label := str(mesh.name)
+		if is_weapon_piece(label):
+			if label.contains("| Shield"):
+				_gear_shield.append(mesh)
+			else:
+				_gear_weapons.append(mesh)
+		if mesh.mesh.get_blend_shape_count() > 0 and mesh.find_blend_shape_by_name(CAPE_SHAPES[0]) >= 0:
+			_cape_mesh = mesh
+			_load_cape_tracks(gear)
+	_meshes.append_array(pieces)
+	_gear_meshes.append_array(pieces)
+
+
+## Moves the skinned meshes of another file with the same 102-joint rig and rest pose onto our skeleton
+## (their skins bind by bone name). `keep` gets the mesh name.
+func _merge(path: String, keep: Callable) -> Array[MeshInstance3D]:
+	var found: Array[MeshInstance3D] = []
+	var packed := load(path) as PackedScene if ResourceLoader.exists(path) else null
+	if packed == null:
+		return found
+	var piece := packed.instantiate()
+	var meshes: Array[MeshInstance3D] = []
+	_find_meshes(piece, meshes)
+	for mesh in meshes:
+		if mesh.skin == null or not keep.call(str(mesh.name)):
+			continue
+		mesh.owner = null
+		mesh.get_parent().remove_child(mesh)
+		_skeleton.add_child(mesh)
+		mesh.transform = Transform3D.IDENTITY
+		mesh.skeleton = mesh.get_path_to(_skeleton)
+		found.append(mesh)
+	piece.free()
+	return found
+
+
+## The cape's morph-target tracks in the gear file, by clip name (class-gear.js keeps a gear clip only when
+## the body has a clip of the same name).
+func _load_cape_tracks(gear: String) -> void:
+	if _cape_tracks.has(gear):
+		return
+	var tracks := {}
+	var packed := load(gear) as PackedScene
+	var scene := packed.instantiate()
+	for player in scene.find_children("*", "AnimationPlayer", true, false):
+		for clip in player.get_animation_list():
+			var animation: Animation = player.get_animation(clip)
+			var shapes := {}
+			for track in animation.get_track_count():
+				if animation.track_get_type(track) == Animation.TYPE_BLEND_SHAPE:
+					shapes[str(animation.track_get_path(track).get_concatenated_subnames())] = track
+			if not shapes.is_empty():
+				tracks[str(clip)] = {"animation": animation, "shapes": shapes}
+	scene.free()
+	_cape_tracks[gear] = tracks
+
+
+func _apply_cape(clip: String, time: float) -> void:
+	if _cape_mesh == null or _library == null:
+		return
+	var entry: Dictionary = _cape_tracks.get(gear_path(class_id), {}).get(clip, {})
+	for shape in CAPE_SHAPES:
+		var index := _cape_mesh.find_blend_shape_by_name(shape)
+		if index < 0:
+			continue
+		var value := 0.0
+		if not entry.is_empty() and entry["shapes"].has(shape):
+			var animation: Animation = entry["animation"]
+			var looping: bool = _library.has_clip(clip) and _library.is_looping(clip)
+			var t := fposmod(time, animation.length) if looping else clampf(time, 0.0, animation.length)
+			value = animation.blend_shape_track_interpolate(entry["shapes"][shape], t)
+		_cape_mesh.set_blend_shape_value(index, value)
+
+
+## A plain round shield (steel face, gold rim, boss in the middle) on the left hand's socket: the look of
+## the procedural catalog shield (data/items/catalog.json round_shield).
 func _build_shield() -> void:
 	var attachment := BoneAttachment3D.new()
 	attachment.name = "ShieldAttachment"
@@ -188,12 +377,62 @@ func _build_shield() -> void:
 		instance.layers |= 1 << (CharacterLight.LAYER - 1)
 		_shield.add_child(instance)
 	_shield.visible = false
-	_update_shield()
+
+
+## Which shield shows (Boss 2026-11-11: the off-hand slot is Sword & Shield only):
+## "file" = an equipped shield with its own model; "procedural" = the equipped procedural round_shield
+## (or the class file's round_shield fallback); "class" = the Studio's "| Shield" gear piece when the
+## slot is empty; "" = none (classes with off_hand "none").
+func shield_kind() -> String:
+	var spec_off := str(class_data(class_id).get("off_hand", "none"))
+	if spec_off == "none":
+		return ""
+	if not _offhand.is_empty():
+		if not str(_offhand.get("path", "")).is_empty():
+			return "file"
+		if bool(_offhand.get("procedural", false)):
+			return "procedural"
+	if not _gear_shield.is_empty():
+		return "class"
+	return "procedural" if spec_off == "round_shield" else ""
 
 
 func _update_shield() -> void:
+	var kind := shield_kind()
+	var shown := _weapon_shown
 	if _shield != null:
-		_shield.visible = not str(_weapon_args[0]).is_empty() and str(class_data(class_id).get("off_hand", "round_shield")) == "round_shield"
+		_shield.visible = kind == "procedural" and shown
+	for mesh in _gear_shield:
+		mesh.visible = kind == "class" and shown
+	var wanted := str(_offhand.get("path", "")) if kind == "file" else ""
+	if wanted != _offhand_path and _skeleton != null:
+		if _offhand_node != null:
+			_offhand_node.get_parent().queue_free()
+			_offhand_node = null
+		_offhand_path = wanted
+		var packed := load(wanted) as PackedScene if not wanted.is_empty() and ResourceLoader.exists(wanted) else null
+		if packed != null:
+			_offhand_node = _attach(packed, WEAPON_BONE_LEFT)
+			_offhand_node.quaternion = Quaternion.from_euler(shield_turn_degrees * PI / 180.0)
+			_offhand_node.scale = Vector3.ONE / maxf(model_scale(), 0.0001)
+			_prepare_meshes()
+	if _offhand_node != null:
+		_offhand_node.visible = shown
+
+
+## The meshes that show the shield now (refine aura, tests).
+func shield_meshes() -> Array[MeshInstance3D]:
+	var found: Array[MeshInstance3D] = []
+	match shield_kind():
+		"class":
+			found.append_array(_gear_shield)
+		"procedural":
+			if _shield != null:
+				_find_meshes(_shield, found)
+		"file":
+			if _offhand_node != null:
+				_find_meshes(_offhand_node, found)
+	return found.filter(func(m): return m.name != "RefineAura")
 
 
 func _union_bounds() -> AABB:
@@ -202,6 +441,8 @@ func _union_bounds() -> AABB:
 	for mesh in _meshes:
 		if not is_instance_valid(mesh) or not mesh.visible or str(mesh.name).ends_with("_StudioInk"):
 			continue
+		if mesh in _gear_weapons or mesh in _gear_shield:
+			continue  # framing follows the body, not the reach of a bow or staff
 		var current: AABB = mesh.transform * mesh.mesh.get_aabb()
 		bounds = current if first else bounds.merge(current)
 		first = false
@@ -209,6 +450,7 @@ func _union_bounds() -> AABB:
 
 
 ## Bind-pose position copied into UV/UV2: the face artwork and hair strokes stay on the skin while it moves.
+## (Only for the UV-less head and hair A-F; textured pieces keep their UV.)
 static func _with_rest_coordinates(source: Mesh) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	for surface in source.get_surface_count():
@@ -233,27 +475,43 @@ static func _with_rest_coordinates(source: Mesh) -> ArrayMesh:
 
 
 func _prepare_meshes() -> void:
-	for mesh in _body_meshes.duplicate():
-		if mesh.has_meta("studio05"):
+	for mesh in _meshes.duplicate():
+		if not is_instance_valid(mesh) or mesh.has_meta("studio05"):
 			continue
 		mesh.set_meta("studio05", true)
-		var label := str(mesh.name)
-		var part := 1 if label.begins_with("Head_Anime") else (2 if label.begins_with("Hair_") else 0)
-		if part != 0:
+		var label: String = str(mesh.name)
+		var part: int = 1 if label.begins_with("Head_Anime") else (2 if label.begins_with("Hair_") else 0)
+		var has_uv: bool = (mesh.mesh.surface_get_format(0) & Mesh.ARRAY_FORMAT_TEX_UV) != 0
+		var rest: bool = part != 0 and not has_uv
+		if rest:
 			mesh.mesh = _with_rest_coordinates(mesh.mesh)
+		var first_texture: Texture2D = null
+		var has_color := false
 		for surface in mesh.mesh.get_surface_count():
 			var original := mesh.mesh.surface_get_material(surface) as BaseMaterial3D
 			var material := ShaderMaterial.new()
 			material.shader = ToonShader
 			material.resource_name = original.resource_name if original != null else label
 			material.set_shader_parameter("part", part)
-			material.set_shader_parameter("has_rest", part != 0)
-			var color := original.albedo_color if original != null else Color.WHITE
+			material.set_shader_parameter("has_rest", rest)
+			# The importer gives albedo_color in sRGB; the Studio multiplies in linear (three.js material.color).
+			var color := (original.albedo_color if original != null else Color.WHITE).srgb_to_linear()
 			material.set_meta("file_color", color)
 			material.set_shader_parameter("base_color_linear", Vector3(color.r, color.g, color.b))
+			if original != null and original.albedo_texture != null:
+				material.set_shader_parameter("use_albedo_tex", true)
+				material.set_shader_parameter("albedo_tex", original.albedo_texture)
+				first_texture = original.albedo_texture
+			var format: int = mesh.mesh.surface_get_format(surface)
+			if original != null and original.normal_enabled and original.normal_texture != null and (format & Mesh.ARRAY_FORMAT_TANGENT):
+				material.set_shader_parameter("use_normal_tex", true)
+				material.set_shader_parameter("normal_tex", original.normal_texture)
+			if format & Mesh.ARRAY_FORMAT_COLOR:
+				material.set_shader_parameter("use_vertex_color", true)
+				has_color = true
 			if part == 2:
 				material.set_shader_parameter("hair_part", 0.009 if label.begins_with("Hair_A") else -0.003)
-				material.set_shader_parameter("painted_bangs", 0.0 if label.substr(5, 1) in ["C", "D", "E"] else 1.0)
+				material.set_shader_parameter("painted_bangs", 0.0 if label.substr(5, 1) in ["C", "D", "E", "F", "G"] else 1.0)
 			mesh.set_surface_override_material(surface, material)
 			_toon.append(material)
 		if part != 0:
@@ -267,15 +525,26 @@ func _prepare_meshes() -> void:
 			ink.shader = InkShader
 			ink.set_shader_parameter("grow", 0.0019 if part == 2 else 0.0014)
 			ink.set_shader_parameter("is_hair", part == 2)
-			ink.set_shader_parameter("has_rest", true)
+			ink.set_shader_parameter("has_rest", rest)
+			ink.set_shader_parameter("use_vertex_color", has_color)
+			if first_texture != null:
+				ink.set_shader_parameter("use_albedo_tex", true)
+				ink.set_shader_parameter("albedo_tex", first_texture)
 			hull.material_override = ink
 			hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			hull.set_meta("studio05_ink", part)
 	CharacterLight.prepare(_model_root)
 
 
+## Hair colour (index.html updateColors): the chosen colour, else #6F657F for hairs A/B and white for
+## C-G (their colour lives in the file: vertex colours, or Hair G's texture).
+func _hair_linear() -> Color:
+	var chosen := _hair_color if _custom_hair else (LIGHT_HAIR if _hair_letter in ["c", "e", "f", "g"] else DEFAULT_HAIR)
+	return chosen.srgb_to_linear()
+
+
 func _apply_colors() -> void:
-	var hair := _hair_color.srgb_to_linear()
+	var hair := _hair_linear()
 	var iris := _iris.srgb_to_linear()
 	for material in _toon:
 		var label := material.resource_name.to_lower()
@@ -286,7 +555,9 @@ func _apply_colors() -> void:
 			material.set_shader_parameter("base_color_linear", Vector3(_skin.r, _skin.g, _skin.b))
 		if part == 1:
 			material.set_shader_parameter("iris_tint", Vector3(iris.r, iris.g, iris.b))
+			material.set_shader_parameter("iris_style", _iris_style)
 			material.set_shader_parameter("makeup_style", _makeup)
+			material.set_shader_parameter("blink", _blink)
 		material.set_shader_parameter("flash", Vector4(_flash.r, _flash.g, _flash.b, _flash.a))
 	for mesh in _hair_meshes:
 		for hull in mesh.get_children():
@@ -294,30 +565,39 @@ func _apply_colors() -> void:
 				hull.material_override.set_shader_parameter("base_color_linear", Vector3(hair.r, hair.g, hair.b))
 
 
-## Fashion: an active outfit shows the Silver Silk file; the hair choice picks the A-E file.
-## Combat armor of the old rig cannot fit this body, so equipment stays stats-only (not shown).
-## Switches the class (data/classes/<id>.json): its animation library, what the hands hold and the shield.
+## Switches the class (data/classes/<id>.json): its body file, gear, animation library and shield.
 func set_class(id: String) -> void:
 	if id == class_id and _library != null:
 		return
-	var spec := class_data(id)
-	if spec.is_empty():
+	if class_data(id).is_empty():
 		return
-	class_id = id
-	_library = AnimationSet.load_file(str(spec.get("animations", "")), str(spec.get("clip_marks", "")))
-	_skill_clip = {}
-	_update_shield()
-	_fit_weapon()
+	_load_variant(id, _hair_letter, _silver)
 
 
 func _fit_weapon() -> void:
 	var spec := class_data(class_id)
-	var shown := bool(spec.get("weapon_visible", true))
+	# The class gear carries the class weapon (class-gear.js): the item weapon stays in the socket
+	# (swing trails, skills) but is not drawn over it.
+	var shown := bool(spec.get("weapon_visible", true)) and _gear_weapons.is_empty() and _weapon_shown
 	var scale_by := float(spec.get("weapon_scale", 1.0)) / maxf(model_scale(), 0.0001)
 	for node in [_weapon_node, _weapon_left]:
 		if node != null:
 			node.visible = shown
 			node.scale = Vector3.ONE * scale_by
+	for mesh in _gear_weapons:
+		mesh.visible = _weapon_shown
+	_update_shield()
+
+
+## Hides the weapons in the hands without unequipping them (a spear pack throws it and catches it again).
+func set_weapon_visible(shown: bool) -> void:
+	_weapon_shown = shown
+	_fit_weapon()
+
+
+## True when the class gear draws the class weapon (the item weapon is then kept hidden in the socket).
+func has_class_weapon() -> bool:
+	return not _gear_weapons.is_empty()
 
 
 func set_appearance(appearance: Dictionary) -> void:
@@ -325,24 +605,40 @@ func set_appearance(appearance: Dictionary) -> void:
 	var outfit := str(choices.get("fashion", "none"))
 	var silver := outfit != "none" and str(choices.get("fashion_display", "on")) == "on"
 	var hair := hair_for(str(choices.get("hair_style", "")))
-	if appearance.has("studio_hair"):  # the squad's own look (GameState.squad_loadout) wins
-		hair = str(appearance["studio_hair"])
+	if appearance.has("studio_hair"):  # the card's own look (CardDeck.look_of) wins
+		hair = hair_for(str(appearance["studio_hair"]))
 		silver = bool(appearance.get("studio_silver", silver))
-	if appearance.has("hair") and not bool(appearance.get("hair_natural", true)):
-		_hair_color = appearance["hair"]
-	else:
-		_hair_color = DEFAULT_HAIR
+	_custom_hair = appearance.has("hair") and not bool(appearance.get("hair_natural", true))
+	_hair_color = appearance["hair"] if _custom_hair else DEFAULT_HAIR
+	_iris_style = int(appearance.get("iris_style", 0))
+	if not IRIS_STYLES.has(_iris_style):
+		_iris_style = 0
 	if appearance.has("eye_color") and str(appearance.get("eye_color_id", "")) not in ["", "original", "default"]:
 		_iris = appearance["eye_color"]
+	elif _iris_style != 0:
+		_iris = Color(str(IRIS_STYLES[_iris_style]))  # index.html: a preset brings its own data-color
 	else:
 		_iris = DEFAULT_IRIS
 	if appearance.has("skin") and str(choices.get("skin", "default")) not in ["default", ""]:
 		_skin = (appearance["skin"] as Color).srgb_to_linear()
 	else:
 		_skin = SKIN_LINEAR
-	_makeup = 1 if str(choices.get("makeup", "")) == "sharp_wing" else 0
-	_load_variant(variant_path(hair, silver))
+	_makeup = makeup_style(str(choices.get("makeup", "")))
+	if appearance.has("blink_mode"):
+		set_blink_mode(str(appearance["blink_mode"]))
+	_load_variant(class_id, hair, silver)
 	_apply_colors()
+
+
+## eye-makeup.js makeupStyle for a makeup id. The Studio menu: 0 Anime Soft, 1 Sharp Wing, 2 natural (no makeup).
+## The card's "none" keeps the look the game showed before (Anime Soft) until the Boss picks the mapping.
+static func makeup_style(id: String) -> int:
+	match id:
+		"sharp_wing":
+			return 1
+		"natural":
+			return 2
+	return 0
 
 
 func dress(looks: Dictionary) -> void:
@@ -354,13 +650,37 @@ func dress(looks: Dictionary) -> void:
 		set_class(str(looks["class"]))
 	if looks.has("appearance"):
 		set_appearance(looks["appearance"])
+	if looks.has("offhand"):
+		_offhand = looks["offhand"] if looks["offhand"] is Dictionary else {}
 	if looks.has("weapon"):
 		var weapon: Dictionary = looks["weapon"]
 		if not str(weapon.get("path", "")).is_empty():
 			_show_weapon(weapon["path"], str(weapon.get("family", "")))
 		else:
 			set_weapon(str(weapon.get("style", "")))
+	_update_shield()
 	_apply_equipment_refine(looks.get("refine", {}))
+
+
+## The base aura on the item weapon, plus the class weapon pieces (weapon level) and the shield on show
+## (off-hand level).
+func _apply_equipment_refine(levels: Dictionary) -> void:
+	super._apply_equipment_refine(levels)
+	var kind := shield_kind()
+	var offhand_level := int(levels.get("offhand", 0))
+	for mesh in _gear_weapons:
+		RefineEffect.apply(mesh, int(levels.get("weapon", 0)), _skeleton)
+	for mesh in _gear_shield:
+		RefineEffect.apply(mesh, offhand_level if kind == "class" else 0, _skeleton)
+	for holder in [_shield, _offhand_node]:
+		if holder == null:
+			continue
+		var meshes: Array[MeshInstance3D] = []
+		_find_meshes(holder, meshes)
+		var shown: bool = (holder == _shield and kind == "procedural") or (holder == _offhand_node and kind == "file")
+		for mesh in meshes:
+			if mesh.name != "RefineAura":
+				RefineEffect.apply(mesh, offhand_level if shown else 0, _skeleton)
 
 
 func set_relics(ids: Array) -> void:
@@ -372,8 +692,57 @@ func set_relics(ids: Array) -> void:
 	_relic_orbit.configure(ids)
 
 
-func set_blink_mode(_mode: String) -> void:
-	pass  # the source Studio has no blink
+## eyes/blink.js: "auto" blinks (the Studio's only behaviour), "open" / "closed" hold the lids.
+func set_blink_mode(mode: String) -> void:
+	blink_enabled = mode != "open" and mode != "closed"
+	_blink = 1.0 if mode == "closed" else 0.0
+	_blink_clock = 0.0
+	_blink_start = BLINK_FIRST
+	_set_blink_uniform()
+
+
+## blink.js blinkAmount(): fast close, brief contact, slower opening (smoothstep easing).
+static func blink_amount(elapsed: float) -> float:
+	if elapsed < 0.0:
+		return 0.0
+	if elapsed < BLINK_CLOSE:
+		return smoothstep(0.0, 1.0, elapsed / BLINK_CLOSE)
+	if elapsed < BLINK_CLOSE + BLINK_HOLD:
+		return 1.0
+	return 1.0 - smoothstep(0.0, 1.0, (elapsed - BLINK_CLOSE - BLINK_HOLD) / BLINK_OPEN)
+
+
+func _update_blink(delta: float) -> void:
+	if not blink_enabled:
+		return
+	if delta > 0.5:  # blink.js: a long gap (hidden tab, throttled portrait) restarts the wait
+		_blink_clock = 0.0
+		_blink_start = BLINK_FIRST
+	_blink_clock += minf(delta, 0.5)
+	var elapsed := _blink_clock - _blink_start
+	var value := blink_amount(elapsed)
+	if elapsed >= BLINK_CLOSE + BLINK_HOLD + BLINK_OPEN:
+		_blink_clock = 0.0
+		_blink_start = BLINK_DOUBLE_GAP if _blink_rng.randf() < BLINK_DOUBLE_CHANCE else BLINK_GAP_MIN + _blink_rng.randf() * BLINK_GAP_SPAN
+		value = 0.0
+	if value != _blink:
+		_blink = value
+		_set_blink_uniform()
+
+
+func _set_blink_uniform() -> void:
+	for material in _toon:
+		if int(material.get_shader_parameter("part")) == 1:
+			material.set_shader_parameter("blink", _blink)
+
+
+func blink_value() -> float:
+	return _blink
+
+
+func apply_pose(delta: float) -> void:
+	super.apply_pose(delta)
+	_update_blink(delta)
 
 
 func is_hair_shown() -> bool:
@@ -389,7 +758,6 @@ func tint(color: Color) -> void:
 func _show_weapon(path: String, family: String) -> void:
 	_weapon_args = [path, family]
 	super._show_weapon(path, family)
-	_update_shield()
 	var grip := Quaternion.from_euler(weapon_grip_degrees * PI / 180.0)
 	_grip_ours = grip
 	_grip_own = grip
@@ -458,6 +826,7 @@ func _active_clip() -> Dictionary:
 
 func _apply_clip(active: Dictionary) -> void:
 	var sample: Dictionary = active["set"].sample(active["clip"], active["time"])
+	_apply_cape(str(active["clip"]), float(active["time"]))
 	for bone_name in _bone_index:
 		var values: Dictionary = sample.get(bone_name, {})
 		_move_bone_to(bone_name, values.get("rotation", _rest[bone_name]))

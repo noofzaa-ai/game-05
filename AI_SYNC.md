@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-12 | character-artist via PO | feature/class-weapons-card-screen | ไฟล์ตัวละคร Studio 2026-11-11: ชุดเกราะ+อาวุธของคลาส (`art/characters/studio05/v1111/`), ผม A-G ทุกคลาส, ตา 7 แบบ/เมคอัพ 3/กะพริบใหม่ ใน `studio05_toon.gdshader`, โล่ที่ใส่จริงโชว์บนตัว (`item_assets.looks()` offhand) · รายการ `docs/tech/studio_v20261111_inventory.md` · rig 102 เหมือนเดิม
+
 - 2026-11-12 | ui-programmer via PO | feature/class-weapons-card-screen | เมนู Tailor (แต่งตัวต่อการ์ด card_look + แฟชั่นนับชิ้น mall_buy/card_fashion, แท็บ Outfit เปิดหน้านี้) และ Shop (ขาย/ขายหลายชิ้น/ขายวัตถุดิบ; หน้าซื้อว่างเพราะ shop.json มีแค่ bow_01 ที่ไม่อยู่ใน catalog) · `hub_tailor_panel.gd`, `hub_shop_panel.gd`
 
 - 2026-11-12 | ui-programmer via PO | feature/class-weapons-card-screen | เมนู Blacksmith (ตีบวก/อัปเกรด/ซ่อม ของทุกการ์ดและคลัง) และ Storage (คลัง/ห้องนิรภัย/ใส่ให้การ์ด/ทิ้ง) ใช้ได้จริง · แยก `hub_item_cell.gd`/`hub_item_details.gd`/`hub_service_panel.gd` · Shop/Tailor ยังไม่ทำ · เทสต์ 2166/83 ชุดเดิม
