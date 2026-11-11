@@ -11,12 +11,15 @@ const MARGIN := 12.0
 const GAP := 8.0
 const MAX_CARD_WIDTH := 260.0
 const NAMES := {"sword_shield": "Sword & Shield", "greatsword": "Great Sword", "longbow": "Longbow", "magic": "Magic"}
+const CALLOUT_SECONDS := 1.3  ## how long a skill's name stays above its fighter's card
+const CALLOUT_HEIGHT := 30.0
+const CALLOUT_WHITEN := 0.55  ## how far a skill's colour is lifted toward the HUD text colour (readable on any ground)
 
 signal selected(id: int)  ## the player picked this fighter for the camera
 
 var _root: Control
 var _selected := -1
-var _cards: Dictionary = {}  ## fighter id -> {"panel", "name", "hp_fill", "hp_text", "ult_fill", "gauge_back"}
+var _cards: Dictionary = {}  ## fighter id -> {"panel", "name", "hp_fill", "hp_text", "ult_fill", "gauge_back", "callout"}
 var _order: Array = []
 
 
@@ -51,12 +54,51 @@ func update_from(fighters: Dictionary, local_id: int, combat_data) -> void:
 		var card: Dictionary = _cards[id]
 		var ratio := clampf(fighter.hp / maxf(fighter.max_hp(), 1.0), 0.0, 1.0)
 		card["hp_fill"].size.x = card["bar_width"] * ratio
-		card["hp_text"].text = "%d / %d" % [int(ceilf(maxf(fighter.hp, 0.0))), int(fighter.max_hp())]
+		card["hp_text"].text = hp_text(fighter.hp, fighter.max_hp())
 		var gauge := clampf(fighter.gauge / gauge_max, 0.0, 1.0)
 		card["ult_fill"].size.x = card["bar_width"] * gauge
 		card["ult_fill"].color = InkUi.ULT_READY_TEXT if gauge >= 1.0 else InkUi.ULT
 		card["panel"].modulate.a = 1.0 if fighter.is_alive() else 0.45
 		card["panel"].color = InkUi.HUD_PANEL.lightened(0.25) if id == _selected else InkUi.HUD_PANEL
+
+
+## "hp / max" as whole numbers that never show more than the maximum (both fractional in the rules).
+static func hp_text(hp: float, max_hp: float) -> String:
+	var top := maxi(roundi(max_hp), 1)
+	var now := clampi(ceili(maxf(hp, 0.0)), 0, top)
+	return "%d / %d" % [now, top]
+
+
+## A skill was cast by fighter `id`: its name pops up above that fighter's card (each card has its own
+## callout, so casts on the same tick never pile up on one banner; a newer cast replaces the text).
+func callout(id: int, text: String, color: Color) -> void:
+	if not _cards.has(id) or not _cards[id].has("callout"):
+		return
+	var label: Label = _cards[id]["callout"]
+	label.text = text
+	var tint := color.lerp(InkUi.HUD_TEXT, CALLOUT_WHITEN)
+	InkUi.style_text(label, tint)
+	label.visible = true
+	label.modulate.a = 1.0
+	label.scale = Vector2(1.25, 1.25)
+	var old = _cards[id].get("callout_tween")
+	if old is Tween and old.is_valid():
+		old.kill()
+	var tween := label.create_tween()
+	tween.tween_property(label, "scale", Vector2.ONE, 0.12).set_ease(Tween.EASE_OUT)
+	tween.tween_interval(CALLOUT_SECONDS - 0.42)
+	tween.tween_property(label, "modulate:a", 0.0, 0.3)
+	tween.tween_callback(label.hide)
+	_cards[id]["callout_tween"] = tween
+
+
+## The squad cards and their callouts, in viewport pixels (combat pop-ups keep off them).
+func keep_out_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	for card in _cards.values():
+		var rect: Rect2 = (card["panel"] as Control).get_global_rect()
+		rects.append(Rect2(rect.position - Vector2(0.0, CALLOUT_HEIGHT + 4.0), rect.size + Vector2(0.0, CALLOUT_HEIGHT + 4.0)).grow(6.0))
+	return rects
 
 
 func select(id: int) -> void:
@@ -104,10 +146,10 @@ func _rebuild() -> void:
 		hp_fill.color = InkUi.HP
 		hp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		hp_back.add_child(hp_fill)
-		var hp_text := Label.new()
-		InkUi.style_text(hp_text, InkUi.HUD_TEXT, InkUi.FONT_CAPTION)
-		hp_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		hp_back.add_child(hp_text)
+		var hp_label := Label.new()
+		InkUi.style_text(hp_label, InkUi.HUD_TEXT, InkUi.FONT_CAPTION)
+		hp_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hp_back.add_child(hp_label)
 		var ult_back := ColorRect.new()
 		ult_back.color = InkUi.HUD_PANEL
 		ult_back.position = Vector2(8, 56)
@@ -118,7 +160,14 @@ func _rebuild() -> void:
 		ult_fill.color = InkUi.ULT
 		ult_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		ult_back.add_child(ult_fill)
-		_cards[id] = {"panel": panel, "name": name_label, "hp_back": hp_back, "hp_fill": hp_fill, "hp_text": hp_text, "ult_back": ult_back, "ult_fill": ult_fill, "bar_width": 100.0}
+		var callout := Label.new()
+		callout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		callout.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		InkUi.style_text(callout, InkUi.HUD_TEXT, InkUi.FONT_HEADING, 7)
+		callout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		callout.visible = false
+		panel.add_child(callout)
+		_cards[id] = {"panel": panel, "name": name_label, "hp_back": hp_back, "hp_fill": hp_fill, "hp_text": hp_label, "ult_back": ult_back, "ult_fill": ult_fill, "bar_width": 100.0, "callout": callout}
 	_place()
 
 
@@ -143,4 +192,7 @@ func _place() -> void:
 		card["hp_text"].horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		card["ult_back"].size = Vector2(bar_width, 10.0)
 		card["ult_fill"].size = Vector2(0.0, 10.0)
+		card["callout"].size = Vector2(width, CALLOUT_HEIGHT)
+		card["callout"].position = Vector2(0.0, -CALLOUT_HEIGHT - 4.0)
+		card["callout"].pivot_offset = card["callout"].size * 0.5
 		index += 1

@@ -237,6 +237,7 @@ func _physics_frame(_delta: float) -> void:
 	_ranged.show_state(_session)
 	Audio.handle_events(_session.events, _session, _local_player_id)
 	work_started=_work_mark("skill_vfx_projectiles_audio",work_started)
+	_update_popup_keep_out()
 	if _squad_panel != null:
 		for squad_id in _views:
 			if _views[squad_id].looks.has("class"):
@@ -607,6 +608,7 @@ func _build_effects_and_hud() -> void:
 	add_child(_effects)
 	if preload("res://logic/skill_build.gd").enabled():
 		_skill_presenter = preload("res://client/skills/presenter.gd").new()
+		_skill_presenter.effects = _effects
 		add_child(_skill_presenter)
 	_ranged = ProjectileView.new()  # arrows, bolts and ground circles (logic/projectiles.gd)
 	_ranged.effects = _effects
@@ -703,10 +705,13 @@ func _handle_events() -> void:
 		match event["type"]:
 			"skill_visual":
 				if _skill_presenter != null: _skill_presenter.event(event)
+				_play_skill_burst(event)
 			"skill_cast":
 				# Buff-only effect gems have no hit to ride on: mark them on the caster as the cast lands.
 				if str(event.get("effect","")) in ["thorns", "regen"]:
 					_play_at_fighter("skill_gem/" + str(event.effect), int(event.player))
+				_play_at_fighter("skill_cast/" + str(event.skill), int(event.player), _vfx.skill_color(str(event.skill), DEFAULT_WEAPON_COLOR))
+				_announce_cast(int(event.player), str(event.skill))
 			"skill_hit":
 				if _views.has(event.target):
 					_views[event.target].flash()
@@ -843,6 +848,8 @@ func _play_skill_hit(event: Dictionary, impact: Dictionary) -> Dictionary:
 	var periodic := bool(event.get("periodic", false))
 	for key in _vfx.skill_hit_keys(tier, crit, periodic):
 		_effects.play(key, ctx)
+	if not periodic:
+		_effects.play("skill_struck/" + skill_id, ctx)  # (only skills whose own look does not land on the target have one)
 	for gem in event.get("gems", []):  # the effect gem's own mark at the moment it lands
 		if _vfx.has("skill_gem/" + str(gem)) and not str(gem) in ["thorns", "regen"]:
 			_effects.play("skill_gem/" + str(gem), ctx)
@@ -850,6 +857,57 @@ func _play_skill_hit(event: Dictionary, impact: Dictionary) -> Dictionary:
 		impact.tier = maxi(int(impact.tier), tier)
 		impact.crit = bool(impact.crit) or crit
 	return impact
+
+
+## Damage numbers and loot pickups keep off the HUD (trip line, banners, boss bar) and the squad cards.
+func _update_popup_keep_out() -> void:
+	var keep: Array[Rect2] = []
+	if _hud != null and _hud.has_method("keep_out_rects"):
+		keep.append_array(_hud.keep_out_rects())
+	if _squad_panel != null:
+		keep.append_array(_squad_panel.keep_out_rects())
+	_combat_numbers.keep_out = keep
+	_loot_popups.keep_out = keep
+
+
+## A skill's own visual landed (logic/skills: a burst at a point, or a beam from `position` to `end`): its
+## 'skill_burst/<skill>' look from data/combat/vfx.json on top of the presenter's art (so every skill reads
+## even where the authored art is faint at the board camera's distance).
+func _play_skill_burst(event: Dictionary) -> void:
+	var kind := str(event.get("kind", ""))
+	if not kind in ["burst", "beam"]:
+		return
+	var skill := str(event.get("skill", ""))
+	var feet: Vector3 = event["position"]
+	var color: Color = _vfx.skill_color(skill, DEFAULT_WEAPON_COLOR)
+	var extra := {}
+	var at := feet
+	if kind == "beam":  # body to body, at chest height
+		at = feet + Vector3(0.0, Effects.CHEST_HEIGHT, 0.0)
+		extra["end"] = Vector3(event["end"]) + Vector3(0.0, Effects.CHEST_HEIGHT, 0.0)
+	_effects.play("skill_burst/" + skill, Effects.context(at, feet, Vector2.RIGHT, color, extra))
+
+
+## Every skill-tree cast of our squad: the skill's name shows on the caster's squad card (one callout per
+## card, so casts on the same tick never pile up on one banner); a lone fighter gets the HUD banner.
+func _announce_cast(id: int, skill: String) -> void:
+	if not _session.fighters.has(id) or _session.fighters[id].team != _session.fighters.get(_local_player_id, _session.fighters[id]).team:
+		return
+	var name := skill_display_name(skill)
+	if _squad_panel != null:
+		_squad_panel.callout(id, name, _vfx.skill_color(skill, DEFAULT_WEAPON_COLOR))
+	elif id == _local_player_id:
+		_hud.show_skill_banner(name)
+
+
+static var _skill_names: Dictionary = {}
+## A skill's player-facing name (data/skill_system/skills/<id>.tres display_name), cached.
+static func skill_display_name(skill: String) -> String:
+	if not _skill_names.has(skill):
+		var path := "res://data/skill_system/skills/%s.tres" % skill
+		var data = load(path) if ResourceLoader.exists(path) else null
+		_skill_names[skill] = str(data.display_name) if data != null and not str(data.display_name).is_empty() else skill.capitalize()
+	return _skill_names[skill]
 
 
 ## A special skill or ultimate of the local player: its name appears in a brush-stroke banner.

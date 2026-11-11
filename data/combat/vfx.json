@@ -27,7 +27,7 @@
 		"earth": "#e0552e"
 	},
 
-	"_skill_comment": "SKILL TREE hits (client/stage_view.gd): 'skill_hit/<tier 1-3>' sparks on every struck target, 'skill_hit/crit' on crits, 'skill_hit/tick' for periodic ground/totem hits, 'skill_dot' for burn/bleed ticks, 'skill_impact/<tier>'  'skill_impact/crit' = camera only (shake/punch/flash), played once per frame and only when the local player cast or took the hit. The tier comes from the rules (data/skill_system/integration.json 'impact'). 'skill_gem/<effect gem id>' plays on the target when a hit carries that effect gem (thorns/regen play on the caster at cast). 'weapon' color in skill keys = skill_colors[skill].",
+	"_skill_comment": "Per-skill looks (all optional): 'skill_cast/<skill>' on the caster as the cast starts, 'skill_burst/<skill>' where the skill's own visual lands (the burst point; for a beam 'at' is its start and anchor 'end' its far end, and a sprite with link true is stretched between them), 'skill_trail/<skill>' left behind a flying projectile or along a ground zone, 'skill_struck/<skill>' on each target the skill hits (for skills whose own visual does not land on the target). SKILL TREE hits (client/stage_view.gd): 'skill_hit/<tier 1-3>' sparks on every struck target, 'skill_hit/crit' on crits, 'skill_hit/tick' for periodic ground/totem hits, 'skill_dot' for burn/bleed ticks, 'skill_impact/<tier>'  'skill_impact/crit' = camera only (shake/punch/flash), played once per frame and only when the local player cast or took the hit. The tier comes from the rules (data/skill_system/integration.json 'impact'). 'skill_gem/<effect gem id>' plays on the target when a hit carries that effect gem (thorns/regen play on the caster at cast). 'weapon' color in skill keys = skill_colors[skill].",
 	"skill_colors": {
 		"storm_blades": "crimson", "blood_pierce": "crimson", "thorn_trap": "crimson", "blood_shield": "crimson",
 		"fire_ring": "ember", "fireball": "ember", "eruption": "fire", "flame_dash": "ember",
@@ -330,7 +330,7 @@
 		"hit": {"layers": [
 			{"type": "sprite", "mode": "glow", "size": [0.5, 1.3], "seconds": 0.12, "color": "white", "scale": true},
 			{"type": "sprite", "mode": "star", "size": [0.7, 1.8], "spikes": 10, "seconds": 0.16, "color": "gold", "ink": 0.35, "scale": true},
-			{"type": "sprite", "mode": "splat", "size": [0.35, 0.95], "seconds": 0.35, "color": "weapon", "ink": 0.75, "scale": true},
+			{"type": "sprite", "mode": "splat", "size": [0.35, 0.95], "seconds": 0.3, "color": "weapon", "ink": 0.3, "opacity": 0.85, "scale": true},
 			{"type": "burst", "style": "streak", "count": 10, "speed": 5.0, "spread": 65, "dir": "forward", "lift": 25, "gravity": 9, "drag": 1.5, "size": 0.07, "streak": 0.05, "seconds": 0.35, "color": "gold", "scale": true},
 			{"type": "shake", "strength": 0.016, "seconds": 0.1, "scale": true}
 		]},
@@ -413,9 +413,9 @@
 		]},
 		"death": {"layers": [
 			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [1.0, 2.4], "seconds": 0.2, "color": "white"},
-			{"type": "sprite", "mode": "splat", "anchor": "chest", "size": [1.0, 3.0], "seconds": 0.8, "color": "weapon", "ink": 0.85},
-			{"type": "ground", "mode": "stain", "anchor": "feet", "size": [1.2, 2.6], "seconds": 2.2, "color": "weapon", "ink": 0.85},
-			{"type": "burst", "style": "puff", "anchor": "chest", "count": 16, "speed": 2.4, "spread": 70, "dir": "up", "gravity": -1, "drag": 2, "size": 0.7, "seconds": 1.1, "color": "ink", "ink": 0.6, "delay": 0.1},
+			{"type": "sprite", "mode": "splat", "anchor": "chest", "size": [0.8, 2.2], "seconds": 0.55, "color": "weapon", "ink": 0.25, "opacity": 0.85},
+			{"type": "ground", "mode": "stain", "anchor": "feet", "size": [1.0, 2.0], "seconds": 1.6, "color": "weapon", "ink": 0.45, "opacity": 0.55},
+			{"type": "burst", "style": "puff", "anchor": "chest", "count": 12, "speed": 2.2, "spread": 70, "dir": "up", "gravity": -1, "drag": 2, "size": 0.55, "seconds": 0.8, "color": "dust", "ink": 0.15, "opacity": 0.6, "delay": 0.1},
 			{"type": "burst", "style": "streak", "anchor": "chest", "count": 14, "speed": 5.5, "spread": 180, "dir": "none", "gravity": 6, "drag": 1, "size": 0.07, "streak": 0.05, "seconds": 0.5, "color": "#ffb366"},
 			{"type": "shake", "strength": 0.05, "seconds": 0.2}
 		]},
@@ -456,12 +456,12 @@
 		]},
 		"skill_hit/2": {"base": "skill_hit/1", "layers": [
 			{"type": "sprite", "mode": "ring", "size": [0.6, 2.6], "seconds": 0.24, "color": "weapon", "ink": 0.35, "scale": true},
-			{"type": "sprite", "mode": "splat", "size": [0.4, 1.2], "seconds": 0.38, "color": "weapon", "ink": 0.7, "scale": true},
+			{"type": "sprite", "mode": "splat", "size": [0.4, 1.2], "seconds": 0.3, "color": "weapon", "ink": 0.15, "opacity": 0.8, "scale": true},
 			{"type": "burst", "style": "streak", "count": 16, "speed": 8.0, "spread": 70, "dir": "up", "gravity": 9, "drag": 2, "size": 0.08, "streak": 0.06, "seconds": 0.4, "color": "white"}
 		]},
 		"skill_hit/3": {"base": "skill_hit/2", "layers": [
 			{"type": "sprite", "mode": "star", "size": [1.0, 3.4], "spikes": 12, "seconds": 0.22, "color": "white", "ink": 0.15},
-			{"type": "ground", "mode": "crack", "anchor": "feet", "size": [2.6, 2.6], "seconds": 0.9, "color": "weapon", "ink": 0.7},
+			{"type": "ground", "mode": "crack", "anchor": "feet", "size": [2.6, 2.6], "seconds": 0.9, "color": "weapon", "ink": 0.35},
 			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.6, 4.2], "seconds": 0.42, "color": "weapon", "ink": 0.35},
 			{"type": "burst", "style": "puff", "anchor": "feet", "count": 10, "speed": 2.6, "spread": 85, "dir": "up", "gravity": 0.5, "drag": 3, "size": 0.7, "seconds": 0.6, "color": "dust", "ink": 0.25},
 			{"type": "burst", "style": "streak", "count": 24, "speed": 11.0, "spread": 180, "dir": "none", "gravity": 5, "drag": 4, "size": 0.09, "streak": 0.08, "seconds": 0.42, "color": "weapon"}
@@ -513,6 +513,126 @@
 		]},
 		"skill_gem/leech": {"base": "status/debuff", "layers": []},
 		"skill_gem/thorns": {"base": "status/buff", "layers": []},
-		"skill_gem/regen": {"base": "status/buff", "layers": []}
+		"skill_gem/regen": {"base": "status/buff", "layers": []},
+
+		"skill_cast/storm_blades": {"layers": [
+			{"type": "ghosts", "count": 4, "interval": 0.05, "size": 1.0, "height": 1.9, "seconds": 0.3, "color": "crimson", "ink": 0.2, "opacity": 0.8},
+			{"type": "trail", "shape": "arc", "radius": 1.6, "width": 0.45, "from": 100, "to": -100, "rise": [1.3, 0.9], "tilt": 15, "seconds": 0.24, "sweep": 0.45, "tail": 0.7, "color": "#ff5a78", "ink": 0.15},
+			{"type": "trail", "shape": "arc", "radius": 1.4, "width": 0.4, "from": -100, "to": 100, "rise": [0.8, 1.3], "tilt": -15, "seconds": 0.24, "sweep": 0.45, "tail": 0.7, "color": "#ffd0d8", "ink": 0.1, "delay": 0.1}
+		]},
+		"skill_burst/storm_blades": {"layers": [
+			{"type": "sprite", "mode": "cross", "anchor": "feet", "offset": [0.0, 1.0, 0.0], "size": [0.8, 2.6], "seconds": 0.28, "color": "#ff5a78", "ink": 0.1},
+			{"type": "burst", "style": "streak", "anchor": "feet", "offset": [0.0, 1.0, 0.0], "count": 14, "speed": 7.0, "spread": 180, "dir": "none", "gravity": 4, "drag": 3, "size": 0.07, "streak": 0.06, "seconds": 0.35, "color": "#ffd0d8"}
+		]},
+		"skill_cast/riposte": {"layers": [
+			{"type": "sprite", "mode": "ring", "anchor": "chest", "size": [0.5, 2.4], "seconds": 0.4, "color": "gold", "ink": 0.05},
+			{"type": "sprite", "mode": "star", "anchor": "chest", "offset": [0.4, 0.2, 0.0], "size": [0.3, 1.4], "spikes": 4, "seconds": 0.35, "color": "white", "ink": 0.0},
+			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [1.2, 1.8], "seconds": 0.6, "color": "gold", "ink": 0.1}
+		]},
+		"skill_burst/riposte": {"layers": [
+			{"type": "sprite", "mode": "cross", "anchor": "feet", "offset": [0.0, 1.0, 0.0], "size": [0.9, 3.0], "seconds": 0.3, "color": "gold", "ink": 0.1},
+			{"type": "sprite", "mode": "glow", "anchor": "feet", "offset": [0.0, 1.0, 0.0], "size": [0.6, 1.8], "seconds": 0.18, "color": "white"},
+			{"type": "burst", "style": "streak", "anchor": "feet", "offset": [0.0, 1.0, 0.0], "count": 16, "speed": 8.0, "spread": 180, "dir": "none", "gravity": 6, "drag": 3, "size": 0.08, "streak": 0.07, "seconds": 0.4, "color": "#ffe9a8"}
+		]},
+		"skill_cast/blood_shield": {"layers": [
+			{"type": "sprite", "mode": "ring", "anchor": "chest", "size": [0.4, 2.6], "seconds": 0.45, "color": "crimson", "ink": 0.1},
+			{"type": "burst", "style": "mote", "anchor": "feet", "count": 16, "speed": 2.4, "spread": 40, "dir": "up", "gravity": -1.5, "drag": 1, "size": 0.16, "seconds": 0.8, "color": "#ff6b86"}
+		]},
+		"skill_cast/flame_dash": {"layers": [
+			{"type": "ghosts", "count": 6, "interval": 0.04, "size": 1.1, "height": 1.9, "seconds": 0.35, "color": "fire", "ink": 0.1, "opacity": 0.85},
+			{"type": "sprite", "mode": "flame", "anchor": "feet", "billboard": "y", "size": [1.8, 2.4], "height": 2.2, "seconds": 0.5, "color": "fire"},
+			{"type": "burst", "style": "mote", "anchor": "feet", "count": 18, "speed": 3.0, "spread": 50, "dir": "up", "gravity": -2.0, "drag": 1.5, "size": 0.15, "seconds": 0.7, "color": "ember"}
+		]},
+		"skill_trail/flame_dash": {"layers": [
+			{"type": "sprite", "mode": "flame", "anchor": "feet", "billboard": "y", "size": [1.3, 1.7], "height": 1.5, "seconds": 0.6, "color": "fire"},
+			{"type": "burst", "style": "mote", "anchor": "feet", "count": 4, "speed": 1.6, "spread": 30, "dir": "up", "gravity": -2.0, "drag": 1, "size": 0.12, "seconds": 0.6, "color": "ember"}
+		]},
+		"skill_burst/ground_slam": {"layers": [
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.8, 5.5], "seconds": 0.45, "color": "#ffcf6a", "ink": 0.1},
+			{"type": "ground", "mode": "crack", "anchor": "feet", "size": [3.2, 3.2], "seconds": 1.0, "color": "earth", "ink": 0.3},
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.0, 0.5, 0.0], "size": [1.0, 3.0], "spikes": 10, "seconds": 0.22, "color": "#ffe2a0", "ink": 0.05},
+			{"type": "burst", "style": "streak", "anchor": "feet", "count": 18, "speed": 7.0, "spread": 70, "dir": "up", "gravity": 12, "drag": 1.5, "size": 0.1, "streak": 0.05, "seconds": 0.55, "color": "#d9a066"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 10, "speed": 2.8, "spread": 88, "dir": "up", "gravity": 0.5, "drag": 3, "size": 0.7, "seconds": 0.6, "color": "#efe2c8", "ink": 0.05, "opacity": 0.7}
+		]},
+		"skill_burst/shatter_smash": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.0, 0.8, 0.0], "size": [1.0, 3.2], "spikes": 7, "seconds": 0.28, "color": "#bfefff", "ink": 0.05},
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.6, 4.2], "seconds": 0.45, "color": "#9fe3ff", "ink": 0.05},
+			{"type": "burst", "style": "streak", "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 20, "speed": 8.0, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.5, "size": 0.09, "streak": 0.05, "seconds": 0.5, "color": "#e8fbff"},
+			{"type": "burst", "style": "mote", "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 12, "speed": 2.0, "spread": 180, "dir": "none", "gravity": 1, "drag": 2, "size": 0.14, "seconds": 0.7, "color": "#dff6ff"}
+		]},
+		"skill_burst/eruption": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "feet", "offset": [0.0, 0.6, 0.0], "size": [1.2, 3.2], "seconds": 0.25, "color": "#ffb340"},
+			{"type": "sprite", "mode": "flame", "anchor": "feet", "billboard": "y", "size": [2.4, 3.2], "height": 3.0, "seconds": 0.6, "color": "fire"},
+			{"type": "burst", "style": "streak", "anchor": "feet", "count": 20, "speed": 9.0, "spread": 40, "dir": "up", "gravity": 9, "drag": 1, "size": 0.09, "streak": 0.06, "seconds": 0.7, "color": "ember"}
+		]},
+		"skill_cast/war_cry": {"layers": [
+			{"type": "sprite", "mode": "ring", "anchor": "chest", "offset": [0.0, 0.4, 0.0], "size": [0.6, 3.6], "seconds": 0.4, "color": "stun", "ink": 0.05},
+			{"type": "sprite", "mode": "ring", "anchor": "chest", "offset": [0.0, 0.4, 0.0], "size": [0.4, 2.6], "seconds": 0.4, "color": "white", "ink": 0.0, "delay": 0.12},
+			{"type": "burst", "style": "mote", "anchor": "feet", "count": 14, "speed": 2.0, "spread": 50, "dir": "up", "gravity": -1, "drag": 1.5, "size": 0.15, "seconds": 0.7, "color": "stun"}
+		]},
+		"skill_cast/piercing_shot": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "chest", "offset": [0.6, 0.0, 0.0], "size": [0.3, 1.6], "spikes": 4, "seconds": 0.35, "color": "#fff1c4", "ink": 0.0},
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "offset": [0.6, 0.0, 0.0], "size": [0.4, 1.2], "seconds": 0.4, "color": "gold"}
+		]},
+		"skill_trail/piercing_shot": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "at", "size": [0.7, 0.3], "seconds": 0.18, "color": "#ffe08a"},
+			{"type": "burst", "style": "streak", "anchor": "at", "count": 4, "speed": 1.2, "spread": 60, "dir": "none", "drag": 4, "size": 0.07, "streak": 0.08, "seconds": 0.3, "color": "gold"}
+		]},
+		"skill_burst/thorn_trap": {"layers": [
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.5, 3.2], "seconds": 0.4, "color": "#ff6b86", "ink": 0.05},
+			{"type": "burst", "style": "streak", "anchor": "feet", "count": 14, "speed": 6.0, "spread": 50, "dir": "up", "gravity": 9, "drag": 1.5, "size": 0.08, "streak": 0.05, "seconds": 0.45, "color": "#ffb3c1"}
+		]},
+		"skill_trail/ice_lance": {"layers": [
+			{"type": "burst", "style": "mote", "anchor": "at", "count": 4, "speed": 0.8, "spread": 180, "dir": "none", "gravity": 1, "drag": 2, "size": 0.12, "seconds": 0.45, "color": "#dff6ff"}
+		]},
+		"skill_burst/ice_lance": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.0, 0.8, 0.0], "size": [0.5, 1.8], "spikes": 6, "seconds": 0.22, "color": "#bfefff", "ink": 0.05},
+			{"type": "burst", "style": "mote", "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 8, "speed": 2.0, "spread": 180, "dir": "none", "gravity": 1, "drag": 2, "size": 0.12, "seconds": 0.5, "color": "#dff6ff"}
+		]},
+		"skill_burst/fire_ring": {"layers": [
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.6, 4.0], "seconds": 0.45, "color": "#ff8a2a", "ink": 0.05},
+			{"type": "burst", "style": "mote", "anchor": "feet", "count": 12, "speed": 2.4, "spread": 60, "dir": "up", "gravity": -1.5, "drag": 1.5, "size": 0.15, "seconds": 0.6, "color": "ember"}
+		]},
+		"skill_cast/chain_lightning": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "offset": [0.5, 0.0, 0.0], "size": [0.4, 1.4], "seconds": 0.3, "color": "lightning"},
+			{"type": "burst", "style": "streak", "anchor": "chest", "offset": [0.5, 0.0, 0.0], "count": 8, "speed": 4.0, "spread": 180, "dir": "none", "drag": 4, "size": 0.05, "streak": 0.05, "seconds": 0.25, "color": "#bff4ff"}
+		]},
+		"skill_burst/chain_lightning": {"layers": [
+			{"type": "sprite", "mode": "bolt", "link": true, "anchor": "at", "size": [0.9, 0.9], "seconds": 0.42, "color": "#8fdcff"},
+			{"type": "sprite", "mode": "bolt", "link": true, "anchor": "at", "size": [0.5, 0.5], "seconds": 0.34, "color": "#ffffff", "delay": 0.06},
+			{"type": "sprite", "mode": "glow", "anchor": "end", "size": [0.6, 1.6], "seconds": 0.22, "color": "#bff4ff"},
+			{"type": "burst", "style": "streak", "anchor": "end", "count": 10, "speed": 5.0, "spread": 180, "dir": "none", "gravity": 3, "drag": 3, "size": 0.06, "streak": 0.06, "seconds": 0.3, "color": "#e6fbff"}
+		]},
+		"skill_cast/fireball": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "offset": [0.5, 0.0, 0.0], "size": [0.4, 1.4], "seconds": 0.35, "color": "#ffb340"},
+			{"type": "burst", "style": "mote", "anchor": "chest", "offset": [0.5, 0.0, 0.0], "count": 8, "speed": 1.5, "spread": 180, "dir": "none", "gravity": -1, "drag": 2, "size": 0.12, "seconds": 0.45, "color": "ember"}
+		]},
+		"skill_trail/fireball": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "at", "size": [1.2, 0.5], "seconds": 0.22, "color": "#ff7a1a"},
+			{"type": "sprite", "mode": "glow", "anchor": "at", "size": [0.6, 0.25], "seconds": 0.15, "color": "#fff1c4"},
+			{"type": "burst", "style": "mote", "anchor": "at", "count": 6, "speed": 1.2, "spread": 180, "dir": "none", "gravity": -2, "drag": 2, "size": 0.2, "seconds": 0.45, "color": "fire"}
+		]},
+		"skill_burst/fireball": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.2, 3.4], "seconds": 0.28, "color": "#ffb340"},
+			{"type": "sprite", "mode": "flame", "anchor": "feet", "billboard": "y", "size": [2.2, 3.0], "height": 2.4, "seconds": 0.55, "color": "fire"},
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.6, 3.6], "seconds": 0.4, "color": "#ff8a2a", "ink": 0.05},
+			{"type": "burst", "style": "streak", "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 16, "speed": 7.0, "spread": 180, "dir": "none", "gravity": 6, "drag": 2, "size": 0.08, "streak": 0.06, "seconds": 0.45, "color": "ember"}
+		]},
+		"skill_cast/lightning_strike": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "offset": [0.0, 0.9, 0.0], "size": [0.4, 1.4], "seconds": 0.5, "color": "lightning"},
+			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [1.0, 1.6], "seconds": 0.55, "color": "#8fdcff", "ink": 0.1}
+		]},
+		"skill_burst/lightning_strike": {"layers": [
+			{"type": "sprite", "mode": "bolt", "anchor": "feet", "billboard": "y", "size": [1.2, 1.2], "height": 7.0, "seconds": 0.34, "color": "#8fdcff"},
+			{"type": "sprite", "mode": "bolt", "anchor": "feet", "billboard": "y", "size": [0.6, 0.6], "height": 7.0, "seconds": 0.28, "color": "#ffffff", "delay": 0.05},
+			{"type": "sprite", "mode": "glow", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "size": [1.2, 2.8], "seconds": 0.25, "color": "#e6fbff"},
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.6, 3.4], "seconds": 0.4, "color": "#8fdcff", "ink": 0.05},
+			{"type": "burst", "style": "streak", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 16, "speed": 7.0, "spread": 80, "dir": "up", "gravity": 8, "drag": 2, "size": 0.07, "streak": 0.07, "seconds": 0.4, "color": "#e6fbff"}
+		]},
+		"skill_cast/frost_armor": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "chest", "size": [0.5, 2.4], "spikes": 6, "seconds": 0.35, "color": "#bfefff", "ink": 0.05},
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.4, 2.6], "seconds": 0.5, "color": "#9fe3ff", "ink": 0.05},
+			{"type": "burst", "style": "mote", "anchor": "feet", "count": 16, "speed": 2.0, "spread": 45, "dir": "up", "gravity": -1.0, "drag": 1.5, "size": 0.14, "seconds": 0.8, "color": "#e8fbff"}
+		]}
 	}
 }

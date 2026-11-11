@@ -17,6 +17,7 @@ func run(ctx) -> void:
 	_check_coverage(ctx, lib, data)
 	_check_rules(ctx, lib)
 	_check_bad_data(ctx)
+	_check_skill_looks(ctx, lib)
 	await _check_player(ctx, lib)
 
 
@@ -145,3 +146,35 @@ func _drawn_layers(lib) -> int:
 				"ghosts":
 					count += int(layer.get("count", 4))
 	return count
+
+
+## Every class skill reads on screen (QA 2026-11-12: several skills showed nothing), HUD helpers.
+func _check_skill_looks(ctx, lib) -> void:
+	var integration: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/skill_system/integration.json"))
+	var silent: Array[String] = []
+	for family in integration["class_skills"]:
+		if not integration["class_skills"][family] is Array:
+			continue  # (the "_comment")
+		for skill in integration["class_skills"][family]:
+			if not (lib.has("skill_cast/" + skill) or lib.has("skill_burst/" + skill) or lib.has("skill_struck/" + skill)):
+				silent.append(str(skill))
+	ctx.check("every class skill has its own cast, burst or struck look %s" % [silent], silent.is_empty())
+	for skill in ["chain_lightning", "lightning_strike", "ground_slam", "shatter_smash", "riposte", "fireball", "flame_dash"]:
+		ctx.check("%s lands with a data look" % skill, lib.has("skill_burst/" + skill) or lib.has("skill_struck/" + skill) or lib.has("skill_trail/" + skill))
+	var dark: Array[String] = []
+	for key in ["skill_hit/1", "skill_hit/2", "skill_hit/3", "hit", "death"]:
+		for layer in lib.layers(key):
+			if str(layer.get("type")) in ["sprite", "burst", "ground"] and float(layer.get("ink", 0.0)) > 0.5 and str(layer.get("mode", layer.get("style", ""))) in ["splat", "puff", "stain"]:
+				dark.append(key)
+	ctx.check("hit and death looks have no dark ink blobs %s" % [dark], dark.is_empty())
+	var link = VfxLibrary.parse('{"version": 1, "actions": {"a": {"layers": [{"type": "sprite", "mode": "bolt", "link": true, "billboard": "y", "seconds": 0.2}]}}}')
+	ctx.check("bad data: a link sprite must turn round its own axis", " ".join(link.errors).contains("link sprite"))
+	var SquadPanel = load("res://client/squad_panel.gd")
+	ctx.check("squad HP text never shows more than the maximum", SquadPanel.hp_text(1079.6, 1079.4) == "1079 / 1079" and SquadPanel.hp_text(0.2, 100.0) == "1 / 100" and SquadPanel.hp_text(-5.0, 100.0) == "0 / 100")
+	var Numbers = load("res://client/combat_numbers.gd")
+	var keep: Array[Rect2] = [Rect2(900, 10, 360, 34)]
+	var shift: Vector2 = Numbers.avoid(Rect2(950, 20, 80, 40), keep, Vector2(1280, 720))
+	ctx.check("a pop-up under the HUD's trip line moves out of it %s" % shift, not Rect2(Vector2(950, 20) + shift, Vector2(80, 40)).intersects(keep[0]))
+	ctx.check("a pop-up clear of the HUD stays put", Numbers.avoid(Rect2(400, 300, 80, 40), keep, Vector2(1280, 720)) == Vector2.ZERO)
+	var edge: Vector2 = Numbers.avoid(Rect2(1250, 300, 80, 40), [] as Array[Rect2], Vector2(1280, 720))
+	ctx.check("a pop-up at the screen edge stays on screen", 1250.0 + edge.x + 80.0 <= 1280.0)

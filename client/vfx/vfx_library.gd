@@ -11,12 +11,12 @@ const DATA_PATH := "res://data/combat/vfx.json"
 const SUPPORTED_VERSION := 1
 const LAYER_TYPES: Array[String] = ["trail", "sprite", "ground", "burst", "ghosts", "shake", "punch", "flash"]
 const TRAIL_SHAPES: Array[String] = ["arc", "thrust", "ring"]
-const SPRITE_MODES: Array[String] = ["glow", "star", "splat", "ring", "beam", "swirl", "ghost", "cross"]  ## index = shader mode
+const SPRITE_MODES: Array[String] = ["glow", "star", "splat", "ring", "beam", "swirl", "ghost", "cross", "bolt", "flame"]  ## index = shader mode
 const GROUND_MODES: Array[String] = ["ring", "crack", "stain", "glyph"]  ## index = shader mode
 const BURST_STYLES: Array[String] = ["streak", "puff", "mote"]  ## index = shader style
 const BURST_DIRS: Array[String] = ["up", "down", "forward", "back", "none"]
-const BILLBOARDS: Array[String] = ["ground", "camera", "y"]  ## index = shader billboard (0 = as placed)
-const ANCHORS: Array[String] = ["at", "feet", "chest", "hitbox"]
+const BILLBOARDS: Array[String] = ["ground", "camera", "y", "axis"]  ## index = shader billboard (0 = as placed, 3 = turns round its own long axis)
+const ANCHORS: Array[String] = ["at", "feet", "chest", "hitbox", "end"]
 const MAX_BURST := 32  ## particles one burst mesh holds
 ## Keys the stage plays for things that are not moves (every one must exist in the data).
 const EVENT_KEYS: Array[String] = [
@@ -26,6 +26,10 @@ const EVENT_KEYS: Array[String] = [
 	"skill_hit/1", "skill_hit/2", "skill_hit/3", "skill_hit/crit", "skill_hit/tick", "skill_dot",
 	"skill_impact/1", "skill_impact/2", "skill_impact/3", "skill_impact/crit",
 ]
+## Optional per-skill keys (client/stage_view.gd): 'skill_cast/<skill id>' on the caster when the cast starts,
+## 'skill_burst/<skill id>' where the skill's own visual lands (a burst or a beam: ctx "end" = the beam's far end),
+## 'skill_trail/<skill id>' sparks left behind a flying projectile or along a ground zone (client/skills/presenter.gd),
+## 'skill_struck/<skill id>' on every target the skill hits.
 
 var palette: Dictionary = {}  ## name -> Color
 var hit_rules: Dictionary = {}
@@ -254,6 +258,8 @@ func _check_layer(key: String, index: int, layer: Dictionary) -> void:
 				errors.append("%s has an unknown mode '%s'" % [where, layer.get("mode")])
 			if layer.has("billboard") and not str(layer["billboard"]) in BILLBOARDS:
 				errors.append("%s has an unknown billboard '%s'" % [where, layer["billboard"]])
+			if bool(layer.get("link", false)) and str(layer.get("billboard", "axis")) != "axis":
+				errors.append("%s: a link sprite turns round its own axis (billboard 'axis')" % where)
 		"ground":
 			if not str(layer.get("mode", "")) in GROUND_MODES:
 				errors.append("%s has an unknown mode '%s'" % [where, layer.get("mode")])

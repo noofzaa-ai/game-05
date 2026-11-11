@@ -350,6 +350,18 @@ func show_skill_banner(text: String) -> void:
 	_skill_tween.tween_callback(func() -> void: _skill_banner.visible = false)
 
 
+## Screen rectangles combat pop-ups must not cover (damage numbers, loot): the trip line (top right),
+## the skill/wave banner while it shows and the boss bar. In viewport pixels.
+func keep_out_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	for item in [_trip_plate if _trip_plate != null else _trip, _skill_banner, _boss_name]:
+		if item is Control and (item as Control).is_visible_in_tree():
+			rects.append((item as Control).get_global_rect().grow(6.0))
+	if _boss_name != null and _boss_name.visible and _boss.get("back") is Control:
+		rects.append((_boss["back"] as Control).get_global_rect().grow(6.0))
+	return rects
+
+
 func set_prompt(text: String) -> void:
 	_prompt.text = text
 

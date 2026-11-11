@@ -7,6 +7,9 @@ const LIFE := 0.9
 var slots: Array = []
 var advances: Array = []
 var sequence := 0
+## Screen rectangles the numbers must not cover (the HUD's trip line and banners, the squad cards), in
+## viewport pixels. The stage refreshes them every frame (hud.gd / squad_panel.gd keep_out_rects()).
+var keep_out: Array[Rect2] = []
 
 func _ready() -> void:
 	advances = JSON.parse_string(FileAccess.get_file_as_string("res://art/ui/combat_numbers/digits.json")).advances
@@ -47,12 +50,13 @@ func _draw() -> void:
 		var point := camera.unproject_position(slot.at)
 		point+=Vector2(slot.scatter,-age*48.0-slot.pushed)*responsive
 		var pop := lerpf(0.65,1.22,age/0.07) if age<0.07 else lerpf(1.22,1.0,clampf((age-0.07)/0.11,0,1))
-		var scale_factor: float=[0.64,0.80,0.58,0.64][slot.kind]*responsive*pop
+		var scale_factor: float=[0.56,0.76,0.52,0.6][slot.kind]*responsive*pop
 		var opacity := 1.0-smoothstep(0.48,LIFE,age)
 		var width := 0.0
 		for ch in slot.text:
 			var index := CHARS.find(ch)
 			if index>=0: width+=float(advances[index])
+		point+=avoid(Rect2(point-Vector2(width*0.5,76.0)*scale_factor,Vector2(width,112.0)*scale_factor),keep_out,get_viewport_rect().size)
 		draw_set_transform(point,0,Vector2.ONE*scale_factor)
 		var x := -width*0.5
 		for ch in slot.text:
@@ -61,3 +65,27 @@ func _draw() -> void:
 			draw_texture_rect_region(ATLAS,Rect2(x-12,-76,80,112),Rect2(index*80,slot.kind*112,80,112),Color(1,1,1,opacity))
 			x+=float(advances[index])
 	draw_set_transform(Vector2.ZERO)
+
+
+## How far a pop-up whose screen box is `box` must move to stay on screen and off every `keep` rectangle
+## (the shortest way out of each: down, up or sideways). Vector2.ZERO when it is already clear.
+static func avoid(box: Rect2, keep: Array[Rect2], area: Vector2) -> Vector2:
+	var shift := Vector2.ZERO
+	var moved := Rect2(box.position, box.size)
+	shift.x = clampf(moved.position.x, 4.0, maxf(4.0, area.x - moved.size.x - 4.0)) - moved.position.x
+	shift.y = clampf(moved.position.y, 4.0, maxf(4.0, area.y - moved.size.y - 4.0)) - moved.position.y
+	for i in range(2):  # (a second pass in case leaving one rectangle walked into another)
+		for rect in keep:
+			moved = Rect2(box.position + shift, box.size)
+			if not moved.intersects(rect):
+				continue
+			var best := Vector2.ZERO
+			# The shortest way out that stays on screen: down, up, left or right.
+			for option in [Vector2(0.0, rect.end.y - moved.position.y), Vector2(0.0, rect.position.y - moved.end.y), Vector2(rect.position.x - moved.end.x, 0.0), Vector2(rect.end.x - moved.position.x, 0.0)]:
+				var landed := Rect2(moved.position + option, moved.size)
+				if landed.position.x < 0.0 or landed.position.y < 0.0 or landed.end.x > area.x or landed.end.y > area.y:
+					continue
+				if best == Vector2.ZERO or option.length() < best.length():
+					best = option
+			shift += best
+	return shift

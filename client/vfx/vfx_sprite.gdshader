@@ -1,12 +1,14 @@
 shader_type spatial;
 // Flat effect shapes drawn on a quad: glow, impact star, ink splat, ring, light beam, stun swirl,
-// afterimage silhouette and crossed slashes. The shape is a uniform (`mode`), so one compiled shader
-// serves all of them. billboard: 0 = as placed, 1 = faces the camera, 2 = turns around the up axis only.
+// afterimage silhouette, crossed slashes, a jagged lightning bolt and a licking flame. The shape is a
+// uniform (`mode`), so one compiled shader serves all of them. billboard: 0 = as placed, 1 = faces the
+// camera, 2 = turns around the up axis only, 3 = turns around its own long (local y) axis to face the
+// camera (a bolt stretched between two points).
 render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled, fog_disabled, blend_mix;
 
 #include "res://client/vfx/vfx_common.gdshaderinc"
 
-uniform int mode = 0;  // 0 glow, 1 star, 2 splat, 3 ring, 4 beam, 5 swirl, 6 ghost, 7 cross
+uniform int mode = 0;  // 0 glow, 1 star, 2 splat, 3 ring, 4 beam, 5 swirl, 6 ghost, 7 cross, 8 bolt, 9 flame
 uniform int billboard = 1;
 uniform vec4 color : source_color = vec4(1.0, 0.7, 0.2, 1.0);
 uniform vec4 ink_color : source_color = vec4(0.06, 0.05, 0.08, 1.0);
@@ -26,6 +28,15 @@ void vertex() {
 	} else if (billboard == 2) {
 		MODELVIEW_MATRIX = VIEW_MATRIX * mat4(vec4(normalize(cross(vec3(0.0, 1.0, 0.0), INV_VIEW_MATRIX[2].xyz)), 0.0), vec4(0.0, 1.0, 0.0, 0.0), vec4(normalize(cross(INV_VIEW_MATRIX[0].xyz, vec3(0.0, 1.0, 0.0))), 0.0), MODEL_MATRIX[3]);
 		MODELVIEW_MATRIX = MODELVIEW_MATRIX * mat4(vec4(length(MODEL_MATRIX[0].xyz), 0.0, 0.0, 0.0), vec4(0.0, length(MODEL_MATRIX[1].xyz), 0.0, 0.0), vec4(0.0, 0.0, length(MODEL_MATRIX[2].xyz), 0.0), vec4(0.0, 0.0, 0.0, 1.0));
+	} else if (billboard == 3) {
+		vec3 axis = MODEL_MATRIX[1].xyz;
+		float len = max(length(axis), 0.0001);
+		vec3 up = axis / len;
+		vec3 to_cam = INV_VIEW_MATRIX[3].xyz - MODEL_MATRIX[3].xyz;
+		vec3 side = cross(up, to_cam);
+		side = length(side) > 0.0001 ? normalize(side) : normalize(cross(up, vec3(0.0, 0.0, 1.0) + up.yzx * 0.01));
+		vec3 facing = cross(side, up);
+		MODELVIEW_MATRIX = VIEW_MATRIX * mat4(vec4(side * length(MODEL_MATRIX[0].xyz), 0.0), vec4(axis, 0.0), vec4(facing, 0.0), MODEL_MATRIX[3]);
 	}
 }
 
@@ -105,6 +116,29 @@ void fragment() {
 		float d = min(head, torso) + (vfx_noise(p * 6.0 + seed) - 0.5) * 0.08;
 		alpha = smoothstep(0.03, -0.03, d) * (1.0 - progress) * (0.45 + 0.35 * vfx_noise(vec2(p.x * 2.0, p.y * 14.0 + seed)));
 		rgb = mix(color.rgb, ink_color.rgb, ink * smoothstep(-0.12, 0.0, d));
+	} else if (mode == 8) {  // lightning bolt along the quad's height: a jagged white-hot core that flickers
+		float t = UV.y;
+		float jag = (vfx_noise(vec2(t * 7.0, seed * 3.0 + floor(progress * 14.0))) - 0.5) * 0.9
+			+ (vfx_noise(vec2(t * 23.0, seed * 7.0 + floor(progress * 14.0))) - 0.5) * 0.35;
+		jag *= smoothstep(0.0, 0.12, t) * smoothstep(1.0, 0.88, t);
+		float d = abs(p.x - jag);
+		float core = smoothstep(0.09, 0.0, d);
+		float halo = smoothstep(0.55, 0.0, d) * 0.45;
+		float flicker = 0.65 + 0.35 * step(0.35, vfx_hash(vec2(floor(progress * 18.0), seed)));
+		alpha = max(core, halo) * flicker * (1.0 - smoothstep(0.45, 1.0, progress));
+		rgb = mix(color.rgb, vec3(1.0), core);
+	} else if (mode == 9) {  // flame: tongues of fire rising from the bottom edge, hot yellow core, ember edge
+		float t = 1.0 - UV.y;  // 0 at the bottom edge (the standing quad's UV.y runs top to bottom)
+		float rise = t * 2.2 - progress * 3.0;
+		float sway = (vfx_noise(vec2(rise, seed)) - 0.5) * 0.7 * t;
+		float tongues = 0.55 + 0.45 * vfx_noise(vec2(p.x * 3.5 + seed * 2.0, rise * 1.5));
+		float width = mix(0.8, 0.12, t) * tongues;
+		float d = abs(p.x - sway) / max(width, 0.01);
+		float top = 1.0 - smoothstep(0.45, 1.0, t + (vfx_noise(vec2(p.x * 5.0 + seed, rise * 2.0)) - 0.5) * 0.5);
+		float lick = smoothstep(1.0, 0.5, d) * top * smoothstep(0.0, 0.06, t);
+		alpha = lick * smoothstep(0.0, 0.08, progress) * (1.0 - smoothstep(0.5, 1.0, progress));
+		float heat = smoothstep(0.75, 0.0, d) * (1.0 - t * 0.8);
+		rgb = mix(color.rgb, vec3(1.0, 0.9, 0.4), heat);
 	} else {  // two crossed slashes (critical)
 		float len = 0.95 * grow;
 		float d1 = abs(q.x - q.y) * 0.7071;

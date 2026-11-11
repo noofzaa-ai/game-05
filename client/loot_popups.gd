@@ -1,12 +1,15 @@
 extends Node2D
 ## Compact A-style pickups: existing icons, rounded text, no panel or per-pickup Tween.
 const InkUi = preload("res://client/ink_ui.gd")
+const CombatNumbers = preload("res://client/combat_numbers.gd")
 const FACE = preload("res://art/fonts/ChangaOne-Italic.ttf")
 const CAP := 20
 const LIFE := 1.5
 var slots: Array = []
 var sequence := 0
 var face: Font
+## Screen rectangles pickups must not cover (HUD trip line, banners, squad cards); set by the stage.
+var keep_out: Array[Rect2] = []
 
 func _ready() -> void:
 	face = FACE.duplicate()
@@ -43,7 +46,8 @@ func show_pickup(at: Vector3, text: String, color: Color, icon: Texture2D = null
 		if slots[i].age>oldest:oldest=slots[i].age;selected=i
 	var slot: Dictionary=slots[selected]
 	sequence+=1
-	slot.age=0.0;slot.at=at+Vector3(0,0.6,0);slot.line=mini(line,4);slot.sequence=sequence
+	# Above the head and beside the body, not over it: the skill's effect and the hit sparks play on the body.
+	slot.age=0.0;slot.at=at+Vector3(0,1.7,0);slot.line=mini(line,4);slot.sequence=sequence
 	slot.icon.texture=icon;slot.icon.visible=icon!=null
 	slot.label.text=text
 	slot.label.add_theme_color_override("font_color",color)
@@ -70,8 +74,9 @@ func _process(delta: float) -> void:
 		slot.row.show()
 		var width: float=slot.width
 		var point := camera.unproject_position(slot.at)
-		point+=Vector2(-width*factor*0.5,-slot.age*24.0-slot.line*27.0*factor)
+		point+=Vector2(22.0*factor,-slot.age*24.0-slot.line*27.0*factor)
 		slot.row.scale=Vector2.ONE*factor
 		# Pickups remain legible at screen edges, without entering touch UI hit testing.
-		slot.row.position=Vector2(clampf(point.x,8,maxf(8,area.x-width*factor-8)),clampf(point.y,8,maxf(8,area.y-28*factor-8)))
+		var at:=Vector2(clampf(point.x,8,maxf(8,area.x-width*factor-8)),clampf(point.y,8,maxf(8,area.y-28*factor-8)))
+		slot.row.position=at+CombatNumbers.avoid(Rect2(at,Vector2(width,28.0)*factor),keep_out,area)
 		slot.row.modulate.a=1.0-smoothstep(0.8,LIFE,float(slot.age))

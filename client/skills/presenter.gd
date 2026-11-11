@@ -10,6 +10,12 @@ var _idle_count:=0
 var _status_sync_pending:=false
 static var pool_created: int=0
 static var pool_reused: int=0
+## Set by the stage: client/effects.gd. Flying projectiles and burning ground zones leave the data-driven
+## 'skill_trail/<skill>' look of data/combat/vfx.json behind them (a few pooled quads per puff).
+var effects: Node3D
+const TRAIL_EVERY := 0.045  ## seconds between trail puffs behind a projectile
+const ZONE_TRAIL_EVERY := 0.18  ## seconds between flames licking up along a ground zone
+var _trail_clock: Dictionary = {}
 
 func _ready() -> void:
  _allowed=JSON.parse_string(FileAccess.get_file_as_string("res://data/skill_system/catalog.json"))
@@ -126,6 +132,7 @@ func update_from(fighters: Dictionary,bodies: Dictionary,views: Dictionary={}) -
      fx.call("play_effect");_active[key]=fx
     fx.position=data.position;fx.scale=data.scale
     if data.direction.length_squared()>.00001:fx.rotation.y=atan2(data.direction.x,data.direction.z)
+    _trail(key,data)
    for status in view.get("statuses",{}):
     var status_scene=_status_scene(status)
     if status_scene==null or not bodies.has(id):continue
@@ -144,6 +151,24 @@ func update_from(fighters: Dictionary,bodies: Dictionary,views: Dictionary={}) -
   if not wanted.has(key):
    if is_instance_valid(_active[key]):_recycle(_active[key])
    _active.erase(key)
+ for key in _trail_clock.keys():
+  if not wanted.has(key):_trail_clock.erase(key)
+
+## Leaves 'skill_trail/<skill>' behind a projectile (at its head) or along a ground zone (a random spot of it).
+func _trail(key: String,data: Dictionary) -> void:
+ if effects==null or effects.library==null:return
+ var look:="skill_trail/"+str(data.skill)
+ if not effects.library.has(look):return
+ var zone:=str(data.phase)=="persistent"
+ var every:=ZONE_TRAIL_EVERY if zone else TRAIL_EVERY
+ var clock:=float(_trail_clock.get(key,every))+get_physics_process_delta_time()
+ if clock<every:_trail_clock[key]=clock;return
+ _trail_clock[key]=0.0
+ var at: Vector3=data.position
+ var direction: Vector3=data.direction
+ if zone:at+=direction.normalized()*randf_range(-1.0,1.0)*float(data.scale.z)
+ var feet:=Vector3(at.x,0.0 if zone else maxf(0.0,at.y-.65),at.z)
+ effects.play(look,effects.context(at,feet,Vector2(direction.x,direction.z),Color.WHITE))
 
 func _status_dimensions(visual: Node3D)->Vector3:
  if visual.has_meta("status_vfx_size"):return visual.get_meta("status_vfx_size")

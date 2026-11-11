@@ -54,6 +54,8 @@ static func context(at: Vector3, feet: Vector3, facing: Vector2, color: Color, e
 	ctx.merge(extra, true)
 	if not ctx.has("hitbox"):
 		ctx["hitbox"] = at
+	if not ctx.has("end"):  # (the far end of a beam; prewarm and single-point actions get a spot 2 m ahead)
+		ctx["end"] = at + Vector3(ctx["facing"].x, 0.0, ctx["facing"].y) * 2.0
 	ctx["chest"] = feet + Vector3(0.0, CHEST_HEIGHT, 0.0)
 	return ctx
 
@@ -153,11 +155,20 @@ func _trail(layer: Dictionary, ctx: Dictionary, delay: float) -> void:
 func _sprite(layer: Dictionary, ctx: Dictionary, delay: float, strength: float) -> void:
 	var node := _take("sprite", SPRITE_SHADER)
 	var mode := str(layer["mode"])
-	var tall := layer.has("height") or mode in ["beam", "ghost"]
+	var link := bool(layer.get("link", false))  # stretched from the action's point to ctx "end" (a lightning arc)
+	var tall := not link and (layer.has("height") or mode in ["beam", "ghost"])
 	node.mesh = _tall_quad if tall else _quad
-	var billboard := str(layer.get("billboard", "y" if tall else "camera"))
+	var billboard := "axis" if link else str(layer.get("billboard", "y" if tall else "camera"))
 	node.position = _point(layer, ctx, "at")
 	node.rotation = Vector3(-PI * 0.5, 0.0, 0.0) if billboard == "ground" else Vector3.ZERO
+	var link_length := 0.0
+	if link:
+		var from := node.position
+		var to: Vector3 = ctx["end"]
+		link_length = maxf(from.distance_to(to), 0.05)
+		node.position = (from + to) * 0.5
+		var along := (to - from) / link_length if from.distance_to(to) > 0.001 else Vector3.UP
+		node.quaternion = Quaternion(Vector3.UP, along) if along.dot(Vector3.UP) > -0.999 else Quaternion(Vector3.RIGHT, PI)
 	var mat: ShaderMaterial = node.material_override
 	_common_uniforms(mat, layer, ctx, 0.0)
 	mat.set_shader_parameter("mode", VfxLibrary.SPRITE_MODES.find(mode))
@@ -165,7 +176,8 @@ func _sprite(layer: Dictionary, ctx: Dictionary, delay: float, strength: float) 
 	mat.set_shader_parameter("spikes", float(layer.get("spikes", 10.0)))
 	mat.set_shader_parameter("pull", CAMERA_PULL if billboard == "camera" and _at_body(layer, "at") else 0.0)
 	var size := _size(layer, strength)
-	_add(node, layer, delay, {"size": size, "height": float(layer.get("height", 0.0)) * (strength if bool(layer.get("scale", false)) else 1.0), "spin": deg_to_rad(float(layer.get("spin", 0.0)))})
+	var height := link_length if link else float(layer.get("height", 0.0)) * (strength if bool(layer.get("scale", false)) else 1.0)
+	_add(node, layer, delay, {"size": size, "height": height, "spin": deg_to_rad(float(layer.get("spin", 0.0)))})
 
 
 func _ground(layer: Dictionary, ctx: Dictionary, delay: float, strength: float) -> void:

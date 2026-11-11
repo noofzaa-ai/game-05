@@ -92,8 +92,8 @@ func handle_events(events: Array, color_of: Callable) -> void:
 				var at: Vector3 = event["pos"]
 				effects.play("shot/" + ("arrow" if str(event["look"])=="jade_arrow" else str(event["look"])), Effects.context(at, Vector3(at.x, at.y - 0.6, at.z), event["dir"], color_of.call(int(event["player"]))))
 			"projectile_ended":
-				if str(event["reason"]) == "blocked":
-					continue  # (the block effect shows it)
+				if str(event["reason"]) in ["blocked", "spent", "gone"]:
+					continue  # (the block effect shows a block; a shot that just runs out of range fades, no ring in mid-air)
 				var end: Vector3 = event["pos"]
 				var look: String = _look_of_shot(event)
 				effects.play("shot_end/" + ("arrow" if look=="jade_arrow" else look), Effects.context(end, Vector3(end.x, maxf(0.0, end.y - 0.6), end.z), Vector2.RIGHT, LOOKS.get(look, {}).get("color", Color.WHITE)))

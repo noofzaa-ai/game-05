@@ -79,6 +79,7 @@ func play_effect() -> void:
   var modes:=_material_modes(path).duplicate()
   if "tesla_totem/" in path:modes.merge(_material_modes("res://art/skill_system/mcp_vfx/tesla_totem_projectile/effect.tscn"))
   _style_visual(visual,modes)
+  if "fireball_projectile/" in path and DisplayServer.get_name()!="headless":_add_fire_glow(visual)
   visual.position=visual_offset
   visual.scale=axis_scale*asset_scale if effect_phase=="impact" or effect_phase=="persistent" else Vector3.ONE
   players.clear();_collect_players(visual)
@@ -179,6 +180,7 @@ func _style_frame(mesh: Mesh, original: Material, modes: Dictionary) -> Dictiona
   if DisplayServer.get_name()!="headless":
    if _shell_material==null:
     _shell_material=ShaderMaterial.new();_shell_material.shader=preload("res://client/skills/energy_shell.gdshader");_shell_material.set_shader_parameter("energy_color",tint);styled_materials.append(_shell_material)
+    if "frost_armor" in asset_path:_shell_material.set_shader_parameter("energy_color",Color(0.45,0.82,1.0));_shell_material.set_shader_parameter("rim_strength",0.75)
    result.material=_shell_material
  elif original is BaseMaterial3D and DisplayServer.get_name()!="headless":
   var material: BaseMaterial3D=original.duplicate()
@@ -196,6 +198,10 @@ func _style_frame(mesh: Mesh, original: Material, modes: Dictionary) -> Dictiona
    if "flame_dash" in asset_path:
     var color:=material.albedo_color;color.a*=2.2 if original.resource_name.begins_with("เปลวระเบิด") else .55;material.albedo_color=color
    result.material=material
+   if "fireball_projectile/" in _signature and modes.get(original.resource_name)!="additive":
+    # The authored ball is two flat opaque cards that read as a flat orange coin from the board camera:
+    # hide them; _add_fire_glow draws the ball as a hot glow at the same spot.
+    material.albedo_color.a=0.0;material.transparency=BaseMaterial3D.TRANSPARENCY_ALPHA
  _style_cache[key]=result
  return result
 
@@ -218,3 +224,20 @@ func _collect_players(node: Node) -> void:
  if node is AnimationPlayer:players.append(node)
  if node.get_script()!=null and node is Node3D:node.set("autoplay",false);node.set("free_on_finish",false)
  for child in node.get_children():_collect_players(child)
+
+
+## Fireball in flight: the ball is drawn as three camera-facing glows (orange halo, flame body, white-hot
+## heart) where the authored ball sits. Same shader as client/effects.gd sprites (compiled at load); 3 quads.
+func _add_fire_glow(root: Node3D) -> void:
+ var centre:=Vector3.ZERO;var count:=0
+ for mesh in root.find_children("*","MeshInstance3D",true,false):
+  if mesh.mesh==null:continue
+  centre+=root.global_transform.affine_inverse()*mesh.global_transform*mesh.mesh.get_aabb().get_center();count+=1
+ if count>0:centre/=count
+ for spec in [[1.9,Color(1.0,0.38,0.06,0.9)],[1.0,Color(1.0,0.62,0.18,1.0)],[0.5,Color(1.0,0.96,0.75,1.0)]]:
+  var quad:=MeshInstance3D.new();quad.mesh=QuadMesh.new();quad.cast_shadow=GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+  var glow:=ShaderMaterial.new();glow.shader=preload("res://client/vfx/vfx_sprite.gdshader")
+  glow.set_shader_parameter("mode",0);glow.set_shader_parameter("billboard",1);glow.set_shader_parameter("color",spec[1])
+  glow.set_shader_parameter("progress",0.0);glow.set_shader_parameter("opacity",1.0);glow.set_shader_parameter("pull",0.4)
+  quad.material_override=glow;quad.scale=Vector3.ONE*float(spec[0]);quad.position=centre;quad.extra_cull_margin=2.0
+  root.add_child(quad)
