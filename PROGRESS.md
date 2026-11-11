@@ -1535,4 +1535,4 @@ Boss ยืนยันหลัง candidate4 ว่า “ลื่นขึ�
 - 2026-11-11 auto_pilot จองช่องสกิลทิ้งตอนคอมโบ (บั๊กจริง) แต่พอแก้ ทัพ 2 ตัวแพ้บอส 3/6 seed → ถอยคืน รอจูนพร้อมเรื่องสกิลต่อคลาส
 - รอ Boss: อัลติ, สกิลต่อคลาส, เก็บของที่ได้, อาร์ตการ์ด v8, กระดูก 57 vs 102, ความยากโหมดเวฟ (ตอนนี้ชนะสบาย)
 - 2026-11-11 **Boss: ใช้ท่าสกิล ยังไม่ทำอัลติ** → ซ่อนเกจอัลติบนการ์ดทัพ · ทุกคลาสมีสกิล 4 ช่องของตัวเอง (`data/skill_system/integration.json` `class_skills`: ดาบโล่ storm_blades/riposte/blood_shield/flame_dash, ดาบใหญ่ ground_slam/shatter_smash/eruption/war_cry, ธนู piercing_shot/thorn_trap/ice_lance/chain_lightning, เวท fireball/fire_ring/lightning_strike/frost_armor — PO เลือกเอง Boss แก้ได้) · class_sim (4 seed): ทัพเริ่มต้นชนะ 100% ทุกคลาสร่ายสกิล 67-92 ครั้ง/รอบ; เดี่ยว 50-75% · กล้องกระดานซูมตามจุดสู้อัตโนมัติ · หน้าสรุปแนวการ์ตูน
-
+- 2026-11-11 **Boss ตัดสิน: ใช้ rig 102 กระดูก** (ของ studio05/Studio) เป็นโครงหลักของตัวละครผู้เล่น ไม่ย้ายไป 57 กระดูก งานอาวุธ/ท่า/สกิลต่อจากนี้ทำบน rig 102
