@@ -48,6 +48,7 @@ func parse(item_data: Dictionary, set_data: Dictionary, known_slots: Array, know
 			"asset_id": str(entry.get("asset_id", "")), "name": str(entry.get("name", item_id)), "slot": slot,
 			"armor_class": str(entry.get("armor_class", "")), "main_stat": str(entry.get("main_stat", "")), "asset_path": str(entry.get("asset_path", "")), "icon_path": str(entry.get("icon_path", "")), "source_style": str(entry.get("source_style", "")),
 			"weapon_type": str(entry.get("weapon_type", "")), "set": set_id, "drop_level": int(entry.get("drop_level", 1)),
+			"procedural": bool(entry.get("procedural", false)),  ## the client builds the look in code (no model file)
 		}
 
 

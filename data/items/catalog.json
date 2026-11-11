@@ -596,6 +596,14 @@
    "asset_path": "res://art/armor/ash_cloth/shoes.glb",
    "icon_path": "res://art/armor/ash_cloth/icon-shoes.png",
    "source_style": "ash_cloth"
+  },
+  "round_shield": {
+   "asset_id": "procedural_round_shield",
+   "name": "Round Shield",
+   "slot": "offhand",
+   "name_th": "โล่กลม",
+   "drop_level": 1,
+   "procedural": true
   }
  },
  "_comment": "Game items made from the model team's assets (art/items/item_manifest.json). The key is the item_id the game and saves use; asset_id finds the model. slot is the game's slot, weapon_type the combat style, set a set id in sets.json, drop_level the lowest monster level that drops it. tools/items/build_catalog.py adds new assets and never changes entries already here."

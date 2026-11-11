@@ -46,7 +46,7 @@ func _item_at_level(rules, slot: String, tier: int, level: int, rng: RandomNumbe
 
 
 func _test_rule_book(ctx, rules) -> void:
-	ctx.check("14 equipment slots in total", rules.total_slot_count() == 14)
+	ctx.check("15 equipment slots in total (offhand added, Boss 2026-11-11)", rules.total_slot_count() == 15)
 	ctx.check("two earrings, two bracelets, two rings, one armband piece for both arms", rules.slot("earring")["count"] == 2 and rules.slot("bracelet")["count"] == 2 and rules.slot("ring")["count"] == 2 and rules.slot("armband")["count"] == 1)
 	ctx.check("weapon and shoes are separate single slots", rules.slot("weapon")["count"] == 1 and rules.slot("shoes")["count"] == 1)
 	ctx.check("the necklace gives STAMINA as its main stat", rules.slot("necklace")["main_stat"] == "STAMINA")

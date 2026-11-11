@@ -11,7 +11,7 @@ var stat_ids: Array[String] = []
 var stat_base: Dictionary = {}  ## stat -> value a character has with no equipment
 var stat_unit: Dictionary = {}  ## stat -> "flat" or "percent" (display only)
 var tiers: Array[Dictionary] = []  ## {"id", "color", "substat_count"} in rank order, lowest first
-var slots: Array[Dictionary] = []  ## {"id", "count", "main_stat"}
+var slots: Array[Dictionary] = []  ## {"id", "count", "main_stat", "classes": [] = open to every class}
 var main_by_tier: Dictionary = {}  ## stat -> Array[float], one value per tier
 var substat_range: Dictionary = {}  ## stat -> Vector2(min, max) at the lowest tier
 var tier_multiplier: Array[float] = []  ## sub stat values are multiplied by this per tier
@@ -36,6 +36,13 @@ var errors: Array[String] = []  ## filled by the loader; empty means the rules a
 
 func is_valid() -> bool:
 	return errors.is_empty()
+
+
+## Whether class card `class_id` may wear slot `slot_id` (data/items/rules.json "classes"; no list = every class).
+## Boss 2026-11-11: the offhand (shield) slot is Sword & Shield only.
+func slot_open_for(slot_id: String, class_id: String) -> bool:
+	var classes: Array = slot(slot_id).get("classes", [])
+	return classes.is_empty() or classes.has(class_id)
 
 
 func slot(id: String) -> Dictionary:

@@ -119,7 +119,14 @@ static func _parse_slots(root: Dictionary, rules: ItemRules) -> void:
 		var main_stat := str(slot.get("main_stat", ""))
 		if not rules.stat_ids.has(main_stat):
 			rules.errors.append("%s.main_stat '%s' is not a known stat" % [label, main_stat])
-		rules.slots.append({"id": id, "count": count, "main_stat": main_stat})
+		var classes: Array[String] = []
+		if slot.has("classes"):
+			if not slot["classes"] is Array or slot["classes"].is_empty():
+				rules.errors.append("%s.classes must be a non-empty list of class ids" % label)
+			else:
+				for class_id in slot["classes"]:
+					classes.append(str(class_id))
+		rules.slots.append({"id": id, "count": count, "main_stat": main_stat, "classes": classes})
 	if rules.slots.is_empty():
 		rules.errors.append("slots must list at least one slot")
 

@@ -26,7 +26,7 @@
 		{"id": "legendary", "color": "gold", "substat_count": 4}
 	],
 
-	"_slots_comment": "main_stat per slot is a placeholder guess, awaiting the director.",
+	"_slots_comment": "main_stat per slot is a placeholder guess, awaiting the director. classes (optional) = the only class cards that may wear the slot; offhand = shields, Sword & Shield only (Boss 2026-11-11).",
 	"slots": [
 		{"id": "weapon", "count": 1, "main_stat": "ATK"},
 		{"id": "hat", "count": 1, "main_stat": "HP"},
@@ -38,7 +38,8 @@
 		{"id": "earring", "count": 2, "main_stat": "EFFECT_ACC"},
 		{"id": "bracelet", "count": 2, "main_stat": "ATKSPD"},
 		{"id": "ring", "count": 2, "main_stat": "EFFECT_RES"},
-		{"id": "back", "count": 1, "main_stat": "CRIDMG"}
+		{"id": "back", "count": 1, "main_stat": "CRIDMG"},
+		{"id": "offhand", "count": 1, "main_stat": "DEF", "classes": ["sword_shield"]}
 	],
 
 	"main_stat_by_tier": {

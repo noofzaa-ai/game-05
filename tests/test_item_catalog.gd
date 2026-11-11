@@ -48,6 +48,8 @@ func run(ctx) -> void:
 	ctx.check("a piece with no set has no set line", ItemText.set_text(katana, rules, []) == "")
 	var no_icon: Array[String] = []
 	for item_id in catalog.items:
+		if catalog.items[item_id].get("procedural", false):
+			continue  # a look built in code (off-hand round shield): its slot shape is drawn, like a plain piece
 		if ItemAssets.icon(ItemSystem.create_item(rules, "i", catalog.items[item_id]["slot"], 0, rng, "", item_id), catalog) == null:
 			no_icon.append(item_id)
 	ctx.check("catalog items have an inventory icon from the model team's preview (none: %s)" % [no_icon], no_icon.is_empty())
@@ -65,7 +67,7 @@ func _test_assets(ctx, catalog) -> void:
 	var bad_type: Array[String] = []
 	for item_id in catalog.items:
 		var item: Dictionary = catalog.items[item_id]
-		if ItemAssets.path(item["asset_id"]).is_empty():
+		if ItemAssets.path(item["asset_id"]).is_empty() and not item.get("procedural", false):
 			missing.append(item_id)
 		if item["slot"] == "weapon" and not combat.styles.has(item["weapon_type"]):
 			bad_type.append(item_id)
@@ -171,7 +173,7 @@ func _test_kit(ctx, rules) -> void:
 	for item in profile.stash.items:
 		ids[item.item_id] = true
 	var worn := 0
-	for slot_id in ["weapon", "shirt", "shoes"]:
+	for slot_id in ["weapon", "shirt", "shoes", "offhand"]:
 		worn += 1 if profile.loadout.item_at(slot_id) != null and rules.catalog.items.has(profile.loadout.item_at(slot_id).item_id) else 0
 	ctx.check("the test kit puts every catalog item that is not worn in the stash (%d + %d worn of %d)" % [added, worn, rules.catalog.items.size()], added == rules.catalog.items.size() - worn and ids.size() == added)
 	ctx.check("the stash grows to fit the kit and keeps its normal free room (%d free of %d)" % [profile.stash.free_slots(), profile.stash.capacity], profile.stash.free_slots() >= base_slots - profile.stash.materials.size())

@@ -50,6 +50,7 @@ var appearance: Dictionary = {}
 var armor_migration_version := 0
 var starter_armor_kit_version := 0
 var starter_weapon_kit_version := 0
+var starter_shield_kit_version := 0  ## 1 = the offhand starter shield was granted (ensure_starter_shields)
 var beta_kit_version := 0
 var bonus_stash_slots := 0
 ## Transition stand-in: the lead card's skill build (IDs only; validated by skill_build.gd on the authority).
@@ -88,6 +89,7 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	profile.ensure_starter_weapons(item_rules, rng)
 	profile.ensure_starter_armor(item_rules, rng)
 	profile.ensure_starter_cards(item_rules)
+	profile.ensure_starter_shields(item_rules)
 	profile.armor_migration_version = 2
 	return profile
 
@@ -153,9 +155,46 @@ static func weapon_families(card: String) -> Array:
 	return families if families is Array else []
 
 
-## Whether class card `card` may wear `item` (only the weapon slot is restricted, by class).
-static func card_can_wear(card: String, item: Item) -> bool:
-	return item.slot != "weapon" or weapon_families(card).has(item.weapon_type)
+## Whether class card `card` may wear `item`: the weapon slot is restricted by class weapon families, and a
+## slot listing "classes" in data/items/rules.json (offhand = Sword & Shield only) is closed to other classes.
+## Pass the rules to check closed slots (slot_problem tells which rule failed).
+static func card_can_wear(card: String, item: Item, item_rules: ItemRules = null) -> bool:
+	return slot_problem(card, item, item_rules).is_empty()
+
+
+## "" when `card` may wear `item`, else "slot_closed" (the class cannot use that slot) or "wrong_weapon_family".
+static func slot_problem(card: String, item: Item, item_rules: ItemRules = null) -> String:
+	if item_rules != null and not item_rules.slot_open_for(item.slot, card):
+		return "slot_closed"
+	if item.slot == "weapon" and not weapon_families(card).has(item.weapon_type):
+		return "wrong_weapon_family"
+	return ""
+
+
+## The catalog item every class card that can use the offhand slot starts with (Boss 2026-11-11).
+const STARTER_SHIELD := "round_shield"
+
+
+## One-time starter shield (starter_shield_kit_version 1) for every class card whose offhand slot is open and
+## empty (new players and old saves alike). Id "starter-offhand-v1-<class>"; fixed seed per class, so every
+## authority that migrates the same save makes the same item. Once granted, an emptied slot stays empty.
+func ensure_starter_shields(item_rules: ItemRules) -> void:
+	if starter_shield_kit_version >= 1 or item_rules.slot("offhand").is_empty():
+		return
+	for card in CardDeck.classes():
+		var worn = loadout_of(card)
+		if worn == null or not item_rules.slot_open_for("offhand", card) or worn.item_at("offhand", 0) != null:
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("starter-offhand-v1-" + card)
+		var shield = ItemSystem.create_item(item_rules, "starter-offhand-v1-" + card, "offhand", 0, rng, "", STARTER_SHIELD)
+		if shield != null:
+			worn.equip(shield)
+	starter_shield_kit_version = 1
+
+
+static func item_rules_of(worn: Loadout) -> ItemRules:
+	return worn.rules if worn != null else null
 
 
 ## One-time starter set for every class card that has no gear yet (new players, migrated saves, a class
@@ -251,7 +290,7 @@ func equip_from_stash(stash_index: int, slot_index: int = 0, card: String = "") 
 		return false
 	var worn := loadout_of(card)
 	var item: Item = stash.items[stash_index]
-	if worn == null or not card_can_wear(lead_card() if card.is_empty() else card, item):
+	if worn == null or not card_can_wear(lead_card() if card.is_empty() else card, item, item_rules_of(worn)):
 		return false
 	var old := worn.item_at(item.slot, slot_index)
 	if not worn.equip(item, slot_index):
@@ -286,7 +325,7 @@ func to_dict() -> Dictionary:
 		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
-		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "beta_kit_version": beta_kit_version, "bonus_stash_slots": bonus_stash_slots,
+		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "beta_kit_version": beta_kit_version, "bonus_stash_slots": bonus_stash_slots,
 		"skill_build": skill_build.duplicate(true), "relics": relics.duplicate(true), "card_deck": card_deck.duplicate(true)}
 
 
@@ -350,6 +389,8 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 		if build == null: return null
 		p.card_gear["sword_shield"] = {"loadout": worn, "skill_build": build}
 	p.ensure_starter_cards(item_rules)  # the other cards (or a class added later) get a starter set once
+	p.starter_shield_kit_version = maxi(0, int(d.get("starter_shield_kit_version", 0)))
+	p.ensure_starter_shields(item_rules)  # old saves: the Sword & Shield card gets its starter shield once
 	var fashion = d.get("card_fashion", {})
 	if not d.has("card_fashion"):
 		# Migration: the account-wide worn fashion (owned copies only) dresses the Sword & Shield card.

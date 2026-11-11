@@ -129,8 +129,9 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 					return _error("item_not_in_container")
 				if item.destroyed:
 					return _error("item_destroyed")
-				if not Profile.card_can_wear(p.lead_card() if card.is_empty() else card, item):
-					return _error("wrong_weapon_family")
+				var wear_problem := Profile.slot_problem(p.lead_card() if card.is_empty() else card, item, state["rules"])
+				if not wear_problem.is_empty():
+					return _error(wear_problem)  # slot_closed (offhand: Sword & Shield only) or wrong_weapon_family
 				if item.slot == "weapon" and not preload("res://logic/skill_build.gd").can_equip(p, item.weapon_type, card):
 					return _error("reskill_required")
 				if source == "bag" and not card.is_empty() and card != p.lead_card():

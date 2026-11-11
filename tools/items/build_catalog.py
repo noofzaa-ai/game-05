@@ -82,7 +82,8 @@ def main():
     catalog = load(CATALOG, {"version": 1, "items": {}})
     sets = load(SETS, {"version": 1, "sets": {}})
     by_id = {asset["id"]: asset for asset in manifest}
-    removed = [item_id for item_id, entry in catalog["items"].items() if not has_model(by_id.get(entry["asset_id"], {}))]
+    # "procedural": the client builds the look in code (off-hand shields, tools/items/publish_offhand_catalog.py).
+    removed = [item_id for item_id, entry in catalog["items"].items() if not entry.get("procedural") and not has_model(by_id.get(entry["asset_id"], {}))]
     for item_id in removed:
         print(f"removed {item_id} (asset {catalog['items'][item_id]['asset_id']} has no model)")
         del catalog["items"][item_id]

@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-12 | gameplay-programmer via PO | feature/class-weapons-card-screen | ช่อง `offhand` (โล่) เฉพาะ sword_shield: `rules.json` slot classes, `ItemRules.slot_open_for`, equip คืน `slot_closed`, โล่เริ่มต้น `starter-offhand-v1-sword_shield` (+migration), refine ได้, catalog `round_shield` (procedural) ผ่าน `tools/items/publish_offhand_catalog.py` · ยังไม่มีโมเดล/ไอคอนโล่ และตัวละครยังโชว์โล่ของคลาส · เทสต์ 2134/83 ชุดเดิม
+
 - 2026-11-11 | gameplay-programmer via PO | feature/class-weapons-card-screen | อุปกรณ์ต่อการ์ด ขั้น 4-5: ทัพสร้างจากการ์ด 3 ใบในทัพ (`logic/squad_member.gd`) ใช้ของ/สกิลของการ์ดเอง กระเป๋ากลาง ดรอป 1 ชิ้น/kill · checkpoint_v 2, party_v 2 (v1 ยังโหลดได้) · ตัด guest สุ่มใน `game_state.gd` · ห้องออนไลน์ยังไม่เปลี่ยน · เทสต์ 2116/83 ชุดเดิม
 
 - 2026-11-11 | tech-artist via PO | feature/class-weapons-card-screen | บังคับแนวนอน: `project.godot` handheld orientation=4 (sensor landscape) · `tools/web/play_template.html` หน้า Rotate your device (CSS, จอสัมผัสแนวตั้ง) + lock landscape ตอนเต็มจอ · `ink_ui.gd` เลิกใช้ layout แนวตั้ง · ยังไม่ได้ build/deploy เว็บ · เทสต์ 2098/83 ชุดเดิม

@@ -31,6 +31,7 @@ const ICONS := {
 	"earring": "<circle cx='12' cy='6' r='2.5'/><path d='M12 8.5v3'/><path d='M12 11.5l3 4.5-3 5-3-5z'/>",
 	"bracelet": "<ellipse cx='12' cy='13' rx='8' ry='5'/><ellipse cx='12' cy='13' rx='5' ry='2.5'/><path d='M12 6.5l1.5 1.5-1.5 1.5-1.5-1.5z' fill='{c}'/>",
 	"ring": "<circle cx='12' cy='15' r='6'/><path d='M9.5 6L12 3l2.5 3-2.5 3z'/>",
+	"offhand": "<path d='M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z'/><circle cx='12' cy='11' r='2.5' fill='{c}'/>",
 	"back": "<path d='M8 3h8l3 17-3.5-2-3.5 3-3.5-3L5 20z'/><path d='M8 3c1 2 7 2 8 0'/>",
 	# --- item categories
 	"all": "<path d='M7.5 4l3.5 3.5-3.5 3.5L4 7.5zM16.5 4l3.5 3.5-3.5 3.5-3.5-3.5zM7.5 13l3.5 3.5-3.5 3.5L4 16.5zM16.5 13l3.5 3.5-3.5 3.5-3.5-3.5z'/>",
