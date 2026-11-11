@@ -43,6 +43,7 @@ var skill_system  ## Pure fixed-tick Skill Lab adapter; activation is server con
 
 var item_rules: ItemRules  ## with loot_data: monsters drop loot and gear wears (see attach_run)
 var loot_data: LootData
+var loot_factor := 1.0  ## loot by squad size (Boss 2026-11-12): set by Journey.populate from JourneyData.loot_for
 var runs: Dictionary = {}  ## player id (int) -> Run: the bag and gear of a player on a trip (only when attached)
 
 var _inputs: Dictionary = {}  ## id (int) -> SimInput
@@ -395,8 +396,8 @@ func _finalize_player_death(target_id: int) -> void:
 
 func _give_drop(target_id: int, killer_id: int) -> void:
 	var dead: Fighter = fighters[target_id]
-	var drop := Loot.roll(item_rules, loot_data, dead.enemy_type, dead.level, combat.weapon_ids, rng)
-	drop["relics"]=load("res://logic/relics.gd").roll(dead.enemy_type,rng)
+	var drop := Loot.roll(item_rules, loot_data, dead.enemy_type, dead.level, combat.weapon_ids, rng, loot_factor)
+	drop["relics"]=load("res://logic/relics.gd").roll(dead.enemy_type,rng,loot_factor)
 	var stored: Dictionary = runs[killer_id].loot_into_bag(drop)
 	var item_summaries: Array[Dictionary] = []
 	for item in stored["items"]:
@@ -507,7 +508,7 @@ func _checkpoint() -> Array:
 		"ranged": _ranged, "events": events, "waves": _waves, "waves_released": _waves_released,
 		"skill_system": skill_system.save() if skill_system != null else {},
 		"coop": _coop, "had_enemies": _had_enemies, "clear_reported": _clear_reported,
-		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles})
+		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor})
 
 
 ## Restore into a sim constructed with the same combat/rules. Supply camp data if runs exist.
@@ -586,6 +587,7 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 	_had_enemies = d["had_enemies"]
 	_clear_reported = d["clear_reported"]
 	wave_heal_fraction = float(d.get("wave_heal_fraction", 0.0))
+	loot_factor = float(d.get("loot_factor", 1.0))
 	class_styles = d.get("class_styles", {}).duplicate()
 	if not d.get("skill_system", {}).is_empty():
 		skill_system = preload("res://logic/skills/system.gd").new()

@@ -14,16 +14,18 @@ const LootData := preload("res://logic/loot_data.gd")
 
 ## Returns {"gold": int, "materials": {id: count}, "items": Array[Item]}. A monster type with no
 ## loot table drops nothing. `weapon_types` are the weapon styles a dropped weapon can be.
-static func roll(rules: ItemRules, loot: LootData, enemy_type: String, level: int, weapon_types: Array, rng: RandomNumberGenerator) -> Dictionary:
+## `factor` (loot by squad size, JourneyData.loot_for) multiplies every drop chance and the gold; it never
+## changes how many random numbers are drawn, so a seed gives the same stream at any factor.
+static func roll(rules: ItemRules, loot: LootData, enemy_type: String, level: int, weapon_types: Array, rng: RandomNumberGenerator, factor: float = 1.0) -> Dictionary:
 	var result := {"gold": 0, "materials": {}, "items": []}
 	if not loot.by_enemy.has(enemy_type):
 		return result
 	var table: Dictionary = loot.tables[loot.by_enemy[enemy_type]]
 	var gold_range: Vector2i = table["gold"]
 	var base_gold := rng.randi_range(gold_range.x, gold_range.y)
-	result["gold"] = roundi(float(base_gold) * (1.0 + loot.gold_per_level * float(maxi(level, 1) - 1)))
+	result["gold"] = roundi(float(base_gold) * (1.0 + loot.gold_per_level * float(maxi(level, 1) - 1)) * factor)
 	for drop in table["drops"]:
-		var happens := rng.randf() < float(drop["chance"])
+		var happens := rng.randf() < float(drop["chance"]) * factor
 		if drop.has("material"):
 			var count_range: Vector2i = drop["count"]
 			var count := rng.randi_range(count_range.x, count_range.y)

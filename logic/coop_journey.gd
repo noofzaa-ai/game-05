@@ -41,6 +41,10 @@ static func start_party(journey_data, trips: Dictionary, rules, loot, weapons: A
 func player_ids() -> Array:
 	return runs_by_player.keys()  # inserted in sorted order
 
+## Loot by squad size: the party's fighters (a member down still counts; the squad chose its size).
+func fighter_count() -> int:
+	return runs_by_player.size()
+
 func choose(index: int) -> Dictionary:
 	hp_fraction = float(health_by_player[primary_id])
 	var node := super.choose(index)
@@ -121,7 +125,7 @@ func open_treasure() -> Dictionary:
 	treasure_pending = false
 	last_rewards.clear()
 	for id in _paying_players():
-		last_rewards[id] = runs_by_player[id].loot_into_bag({"gold": 0, "materials": {}, "items": [treasure_item(_rng_for("treasure-player-%d" % id, completed + 1))]})
+		last_rewards[id] = runs_by_player[id].loot_into_bag(treasure_drop("treasure-player-%d" % id))
 	last_reward = last_rewards.get(primary_id, {})
 	return last_reward
 

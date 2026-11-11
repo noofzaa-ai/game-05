@@ -55,6 +55,7 @@ func _init() -> void:
 	for class_id in ["sword_shield", "greatsword", "longbow", "magic"]:
 		scenarios.append({"name": "solo " + class_id, "classes": [class_id], "kind": "solo"})
 	scenarios.append({"name": "starter squad", "classes": Array(Deck.STARTER_SQUAD), "kind": "squad"})
+	scenarios.append({"name": "starter duo", "classes": Array(Deck.STARTER_SQUAD).slice(0, 2), "kind": "duo"})  # loot by squad size (Boss 2026-11-12)
 	for class_id in ["sword_shield", "greatsword", "longbow"]:
 		scenarios.append({"name": "3x " + class_id, "classes": [class_id, class_id, class_id], "kind": "mono"})
 	print("CLASS SIM  seeds=%d  reaction=%.2f  max=%ds" % [seeds, REACTION, MAX_TICKS / 60])
@@ -75,7 +76,7 @@ func _init() -> void:
 		var wave_taken := []
 		wave_taken.resize(13)
 		wave_taken.fill(0.0)
-		var loot_total := {"drops": 0, "gold": 0, "items": 0, "materials": 0}
+		var loot_total := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0}
 		for s in range(first, first + seeds):
 			var result := play(scenario["classes"], 1000 + s * 17)
 			for field in loot_total:
@@ -103,7 +104,7 @@ func _init() -> void:
 					per_class[key]["n"] += 1
 		print("%-19s | %3d%% | %5.1f / %2d    | %7s | %9.0f | %9.0f | %6.2f | %4.1f | %d" % [scenario["name"], 100 * wins / seeds, float(waves_total) / seeds, waves_min,
 			("%.0f" % (clear_ticks / 60.0 / wins)) if wins > 0 else "-", dealt / seeds, taken / seeds, float(deaths) / seeds, float(ults) / seeds, timeouts])
-		print("  loot per run: drops %.1f gold %.0f items %.2f materials %.1f" % [float(loot_total["drops"]) / seeds, float(loot_total["gold"]) / seeds, float(loot_total["items"]) / seeds, float(loot_total["materials"]) / seeds])
+		print("  loot per run: drops %.1f gold %.0f items %.2f (lost, bag full: %.2f) materials %.1f" % [float(loot_total["drops"]) / seeds, float(loot_total["gold"]) / seeds, float(loot_total["items"]) / seeds, float(loot_total["lost_items"]) / seeds, float(loot_total["materials"]) / seeds])
 		print("  taken per wave 1..12: %s" % [", ".join(range(1, 13).map(func(w): return "%.0f" % (wave_taken[w] / seeds)))])
 	print("")
 	print("member (per run avg)              | weapon dmg | skill dmg | casts | dmg taken | kills | deaths | ults | gauge-full s | attacking% | walking% | casting%")
@@ -176,7 +177,7 @@ func play(classes: Array, seed: int) -> Dictionary:
 		memories[id] = Pilot.new_memory(id * 7919 + 1 + seed)
 		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0}
 	var waves := 1
-	var loot_seen := {"drops": 0, "gold": 0, "items": 0, "materials": 0}  ## "loot" events: what reached a run bag
+	var loot_seen := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0}  ## "loot" events: what reached a run bag
 	var wave_taken := []
 	wave_taken.resize(13)
 	wave_taken.fill(0.0)
@@ -237,6 +238,7 @@ func play(classes: Array, seed: int) -> Dictionary:
 					loot_seen["drops"] += 1
 					loot_seen["gold"] += int(event["gold"])
 					loot_seen["items"] += event["items"].size()
+					loot_seen["lost_items"] += int(event["lost_items"])  # dropped but the run bag was full
 					for material in event["materials"]:
 						loot_seen["materials"] += int(event["materials"][material])
 		for id in ids:

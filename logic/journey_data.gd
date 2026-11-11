@@ -18,6 +18,9 @@ var wave_mode := false
 var wave_count_scale := 1.0
 var wave_power_scale := 1.0  ## multiplies every wave monster's HP and ATK on top of the stage power (waves have no camps in between)
 var wave_power_by_squad: Array[float] = []  ## optional: wave_power_scale per squad size (index 0 = 1 fighter); a bigger squad uses the last entry
+## Loot by squad size (Boss 2026-11-12): fewer fighters is easier but pays less. Index 0 = 1 fighter; a bigger
+## squad uses the last entry; empty = full loot. Scales every loot source of the fight (see loot_for).
+var loot_by_squad: Array[float] = []
 var wave_heal_fraction := 0.0  ## how much of their max HP the living players get back as each wave arrives
 
 var choice_count := 3  ## how many next stages the player picks from
@@ -86,6 +89,8 @@ static func parse(text: String, enemy_types: Array = []) -> RefCounted:
 	data.wave_power_scale = maxf(0.05, float(root.get("wave_power_scale", 1.0)))
 	for value in root.get("wave_power_by_squad", []):
 		data.wave_power_by_squad.append(maxf(0.05, float(value)))
+	for value in root.get("loot_by_squad", []):
+		data.loot_by_squad.append(maxf(0.0, float(value)))
 	data.wave_heal_fraction = clampf(float(root.get("wave_heal_fraction", 0.0)), 0.0, 1.0)
 	data.choice_count = int(root.get("choices", 3))
 	for stage in root.get("first_camp_stages", []):
@@ -141,6 +146,14 @@ func _check_fight(fight: Dictionary, label: String, enemy_types: Array) -> void:
 			errors.append("%s: every enemy needs count >= 1" % label)
 		if not enemy_types.is_empty() and not enemy_types.has(str(enemy.get("type", ""))):
 			errors.append("%s: unknown enemy type %s" % [label, enemy.get("type", "")])
+
+
+## The loot factor for a squad of `fighters` (loot_by_squad when given, else 1.0): it scales every drop chance,
+## the gold and the treasure chance of the fight (Loot.roll, Relics.roll, Journey.open_treasure).
+func loot_for(fighters: int) -> float:
+	if loot_by_squad.is_empty():
+		return 1.0
+	return loot_by_squad[clampi(fighters, 1, loot_by_squad.size()) - 1]
 
 
 ## The wave power for a squad of `fighters` (wave_power_by_squad when given, else wave_power_scale).

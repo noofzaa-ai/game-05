@@ -139,8 +139,26 @@ func open_treasure() -> Dictionary:
 	if not treasure_pending or state != AT_NODE:
 		return {}
 	treasure_pending = false
-	last_reward = run.loot_into_bag({"gold": 0, "materials": {}, "items": [treasure_item(_rng_for("treasure", completed + 1))]})
+	last_reward = run.loot_into_bag(treasure_drop("treasure"))
 	return last_reward
+
+
+## How many fighters this journey fights with (a party overrides it).
+func fighter_count() -> int:
+	return 1
+
+
+## Loot by squad size (Boss 2026-11-12): the factor every loot source of this journey is scaled by.
+func loot_factor() -> float:
+	return data.loot_for(fighter_count())
+
+
+## A treasure's contents for the reward key `what`: its piece, given with a chance of loot_factor() (always
+## at 1.0). The pay roll has its own generator, so the piece rolled is the same at any factor.
+func treasure_drop(what: String) -> Dictionary:
+	var item = treasure_item(_rng_for(what, completed + 1))
+	var pays := _rng_for(what + "-pays", completed + 1).randf() < loot_factor()
+	return {"gold": 0, "materials": {}, "items": [item] if pays else []}
 
 
 func is_treasure_closed() -> bool:
@@ -220,6 +238,7 @@ func fight_for(node: Dictionary) -> Dictionary:
 ## Returns the fighter ids of the boss monsters (the client labels them).
 func populate(sim: GameSim, map, player_id: int, first_enemy_id: int) -> Array[int]:
 	var bosses: Array[int] = []
+	sim.loot_factor = loot_factor()
 	if sim.fighters.has(player_id):
 		sim.fighters[player_id].hp = minf(sim.fighters[player_id].max_hp(), sim.fighters[player_id].max_hp() * hp_fraction)
 		sim.fighters[player_id].gauge = gauge
@@ -355,7 +374,7 @@ func challenge_reward(rng: RandomNumberGenerator) -> Dictionary:
 	var fight := fight_for(current)
 	var level := int(fight["level"]) + int(data.challenge_reward.get("level_bonus", 0))
 	for i in int(data.challenge_reward.get("rolls", 1)):
-		var drop := Loot.roll(item_rules, loot_data, str(data.challenge_reward.get("table", "brute")), level, weapon_ids, rng)
+		var drop := Loot.roll(item_rules, loot_data, str(data.challenge_reward.get("table", "brute")), level, weapon_ids, rng, loot_factor())
 		reward["gold"] += int(drop["gold"])
 		for id in drop["materials"]:
 			reward["materials"][id] = int(reward["materials"].get(id, 0)) + int(drop["materials"][id])

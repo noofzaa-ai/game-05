@@ -1,7 +1,9 @@
 {
 	"version": 1,
 
-	"_comment": "What monsters drop. Each monster type points at a table (by_enemy). A table gives gold (a range) and a list of independent drops, each with a chance 0..1: a material (with a count range) or an equipment piece ('item': true; its tier is rolled from tier_weights by the monster's level, its slot at random, a weapon gets a random weapon type). Gold grows by gold_per_level for each monster level above 1. All numbers are PLACEHOLDERS to tune by feel. Drops go straight into the killer's run bag.",
+	"_comment": "What monsters drop. Each monster type points at a table (by_enemy). A table gives gold (a range) and a list of independent drops, each with a chance 0..1: a material (with a count range) or an equipment piece ('item': true; its tier is rolled from tier_weights by the monster's level, its slot at random, a weapon gets a random weapon type). Gold grows by gold_per_level for each monster level above 1. All numbers are PLACEHOLDERS to tune by feel. Drops go straight into the killer's run bag (a squad shares one bag and gets ONE drop per kill, Boss 2026-11-11).",
+
+	"_tuning": "LOOT x1.5 (Boss 2026-11-12: target = HALF of the old one-drop-per-living-fighter amount; for the starter squad on goblin_waves that is ~10 items / ~1500 gold / ~128 materials per full 12-wave run; measured before this pass with one drop per kill: 6.4 / 1010 / 83, 20 seeds of tools/balance/class_sim.gd). Every table was scaled by the same factors, structure unchanged: item chance x1.56 (goblin 0.06->0.095, charger 0.22->0.34, brute 0.45->0.70, grunt 0.10->0.155); gold range x1.5 (goblin [4,10]->[6,15], charger [15,33]->[23,50], brute [38,75]->[57,113], grunt [6,15]->[9,23]); material chances x1.54 (brute ore chance kept at 0.75 and its count raised [3,6]->[5,9] instead, since 0.75x1.54 > 1). gold_per_level and tier_weights unchanged, so the tier mix is unchanged. Expected-value model per full run (67 goblin-table kills, 9 knights, 1 Chief): items 6.45 -> 10.1, materials 75.5 -> 116.9 (x1.55, measured-equivalent ~128), gold x1.5 (~1515). Side effects: solo runs scale by the same x1.5 (solo always got one drop per kill), and the old road mode's challenge_reward (2 brute rolls) also grows x1.5.",
 
 	"gold_per_level": 0.12,
 
@@ -14,39 +16,39 @@
 
 	"tables": {
 		"grunt": {
-			"gold": [6, 15],
+			"gold": [9, 23],
 			"drops": [
-				{"chance": 0.5, "material": "ore", "count": [1, 3]},
-				{"chance": 0.1, "material": "leather", "count": [1, 1]},
-				{"chance": 0.08, "material": "herb", "count": [1, 2]},
-				{"chance": 0.1, "item": true}
+				{"chance": 0.77, "material": "ore", "count": [1, 3]},
+				{"chance": 0.15, "material": "leather", "count": [1, 1]},
+				{"chance": 0.12, "material": "herb", "count": [1, 2]},
+				{"chance": 0.155, "item": true}
 			]
 		},
 		"goblin": {
-			"gold": [4, 10],
+			"gold": [6, 15],
 			"drops": [
-				{"chance": 0.35, "material": "ore", "count": [1, 2]},
-				{"chance": 0.12, "material": "leather", "count": [1, 1]},
-				{"chance": 0.06, "material": "herb", "count": [1, 1]},
-				{"chance": 0.06, "item": true}
+				{"chance": 0.55, "material": "ore", "count": [1, 2]},
+				{"chance": 0.18, "material": "leather", "count": [1, 1]},
+				{"chance": 0.09, "material": "herb", "count": [1, 1]},
+				{"chance": 0.095, "item": true}
 			]
 		},
 		"charger": {
-			"gold": [15, 33],
+			"gold": [23, 50],
 			"drops": [
-				{"chance": 0.6, "material": "ore", "count": [2, 4]},
-				{"chance": 0.4, "material": "leather", "count": [1, 3]},
-				{"chance": 0.05, "material": "essence", "count": [1, 1]},
-				{"chance": 0.22, "item": true}
+				{"chance": 0.92, "material": "ore", "count": [2, 4]},
+				{"chance": 0.62, "material": "leather", "count": [1, 3]},
+				{"chance": 0.08, "material": "essence", "count": [1, 1]},
+				{"chance": 0.34, "item": true}
 			]
 		},
 		"brute": {
-			"gold": [38, 75],
+			"gold": [57, 113],
 			"drops": [
-				{"chance": 0.75, "material": "ore", "count": [3, 6]},
-				{"chance": 0.35, "material": "leather", "count": [1, 3]},
-				{"chance": 0.2, "material": "essence", "count": [1, 2]},
-				{"chance": 0.45, "item": true}
+				{"chance": 0.75, "material": "ore", "count": [5, 9]},
+				{"chance": 0.54, "material": "leather", "count": [1, 3]},
+				{"chance": 0.3, "material": "essence", "count": [1, 2]},
+				{"chance": 0.7, "item": true}
 			]
 		}
 	},

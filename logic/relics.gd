@@ -43,11 +43,12 @@ static func catalog() -> Dictionary:
 	return data().get("items",{})
 
 ## Called only by authoritative monster-death loot. No command can grant an instance.
-static func roll(enemy: String, rng: RandomNumberGenerator) -> Array:
+## `factor`: loot by squad size (JourneyData.loot_for) multiplies the drop chance.
+static func roll(enemy: String, rng: RandomNumberGenerator, factor: float = 1.0) -> Array:
 	var rule: Dictionary=data().get("boss_drops",{}).get(enemy,{})
 	if rule.is_empty(): return []
 	var pool: Array=rule.get("pool",[])
-	if pool.is_empty() or rng.randf()>=float(rule.get("chance",0)): return []
+	if pool.is_empty() or rng.randf()>=float(rule.get("chance",0))*factor: return []
 	var result: Array=[]
 	for n in int(rule.get("count",1)):
 		var instance := "relic-%d-%d"%[rng.seed,rng.state]

@@ -58,7 +58,7 @@
 		}
 	},
 	"bag": {
-		"run_slots": 12,
+		"run_slots": 16,
 		"stash_slots": 40,
 		"bank_slots": 20
 	},
