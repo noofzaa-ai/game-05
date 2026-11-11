@@ -250,7 +250,7 @@ func _activate(key: String) -> void:
 func start_game() -> void:
 	items["start"].disabled = true
 	if await GameState.connect_account_profile():
-		get_tree().change_scene_to_file(HUB_SCENE)
+		get_tree().change_scene_to_file(GameState.CARD_DECK_SCENE)  # the class card screen replaced the campfire hub
 	else:
 		_connection_label.text = GameState.online_error
 		items["start"].disabled = false

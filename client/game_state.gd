@@ -54,6 +54,7 @@ const JourneyData := preload("res://logic/journey_data.gd")
 const MapLoader := preload("res://logic/map_loader.gd")
 
 const HUB_SCENE := "res://scenes/hub.tscn"
+const CARD_DECK_SCENE := "res://scenes/card_deck_screen.tscn"
 const STAGE_SCENE := "res://scenes/stage.tscn"
 const JOURNEY_SCENE := "res://scenes/journey.tscn"
 const DEFAULT_JOURNEY := "ink_road"
@@ -122,6 +123,20 @@ func go_hub() -> void:
 	get_tree().change_scene_to_file(HUB_SCENE)
 
 
+## The home screen since the auto-battler (Boss 2026-11-11): the Class Card screen. The campfire hub
+## (go_hub, scenes/hub.tscn) is kept but no longer reached from the game flow.
+func go_card_deck() -> void:
+	if remote_session != null and remote_session.admission.get("diagnostic",false):
+		if not _exiting_diagnostic: _exit_diagnostic.call_deferred()
+		return
+	if remote_session != null:
+		if not remote_session.can_return_to_hub(): return
+		stop_online_room()
+	if session != null:
+		session.enter_camp()
+	get_tree().change_scene_to_file(CARD_DECK_SCENE)
+
+
 ## Starts a 12-stage journey (data/journeys/<id>.json) with a fresh run bag and opens the path screen.
 ## `seed` 0 = a random journey. Returns false if the data is broken.
 func start_journey(journey_id: String = DEFAULT_JOURNEY, seed: int = 0) -> bool:
@@ -152,7 +167,10 @@ func start_journey(journey_id: String = DEFAULT_JOURNEY, seed: int = 0) -> bool:
 		var guest_rng := RandomNumberGenerator.new()
 		guest_rng.seed = seed + 2
 		guests[2] = preload("res://logic/profile.gd").new_player(item_rules, camp_data, guest_rng)
-	get_session().start_journey(data, combat.weapon_ids, seed, guests)
+	var fight_session = get_session()
+	if "squad_classes" in fight_session:  # only the local session runs the auto-battler
+		fight_session.squad_classes = squad_looks().map(func(slot): return str(slot.get("class", ""))) if auto_battle else []
+	fight_session.start_journey(data, combat.weapon_ids, seed, guests)
 	journey = session.journey
 	# Stage 1 is always one plain fight: go straight in (the route screen had a single button there).
 	# Between stages the exit portals choose; the route screen stays for the end summary and as a fallback.
@@ -211,12 +229,12 @@ func end_journey() -> void:
 	if remote_session != null:
 		if not remote_session.can_return_to_hub(): return
 		stop_online_room()
-		go_hub()
+		go_card_deck()
 		return
 	if journey != null and journey.state == Journey.WON:
 		last_trip = get_session().command({"type": "journey_finish"}).get("result", {})
 	journey = null
-	go_hub()
+	go_card_deck()
 
 
 ## Boss test kit (2026-10-06, every armor / clothing piece too since 2026-10-15): one of every
