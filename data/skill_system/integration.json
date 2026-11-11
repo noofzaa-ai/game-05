@@ -6,7 +6,17 @@
   "boss_bonus_points": 1,
   "max_points": 12,
   "weapon_starts": {
-    "blade": "katana"
+    "blade": "katana",
+    "greatsword": "hammer",
+    "longbow": "bow",
+    "magic": "staff"
+  },
+  "class_skills": {
+    "_comment": "Auto-battler (Boss 2026-11-11: skills, no ultimate yet): the 4 skills each class style starts with. A style missing here uses default_skills.",
+    "blade": ["storm_blades", "riposte", "blood_shield", "flame_dash"],
+    "greatsword": ["ground_slam", "shatter_smash", "eruption", "war_cry"],
+    "longbow": ["piercing_shot", "thorn_trap", "ice_lance", "chain_lightning"],
+    "magic": ["fireball", "fire_ring", "lightning_strike", "frost_armor"]
   },
   "default_skills": [
     "fire_ring",

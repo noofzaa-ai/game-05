@@ -26,7 +26,7 @@ static func ready_for_run(profile) -> bool:
 static func initial(family: String) -> Dictionary:
 	var start := start_for(family)
 	var slots: Array = []
-	for id in config().get("default_skills", []):
+	for id in config().get("class_skills", {}).get(family, config().get("default_skills", [])):
 		slots.append({"skill": id, "shape": "", "effect": ""})
 	return {"v": 1, "start": start, "allocated": ["start_" + start] if not start.is_empty() else [], "skills": slots}
 

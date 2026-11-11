@@ -131,6 +131,11 @@ func set_class_style(id: int, style: String) -> void:
 		return
 	class_styles[id] = style
 	_apply_class_style(id)
+	# The class's own skill set (data/skill_system/integration.json class_skills) replaces the profile's.
+	if skill_system != null and fighters.has(id):
+		var build: Dictionary = preload("res://logic/skill_build.gd").initial(style)
+		if not str(build.get("start", "")).is_empty() and skill_system.builds.get(id, {}) != build:
+			skill_system.attach(id, build)
 
 
 func _apply_class_style(id: int) -> void:

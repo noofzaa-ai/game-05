@@ -111,8 +111,9 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	if not SkillBuild.enabled() and me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
 		input.ultimate = true
 		return input
-	var slot := _ready_skill_slot(sim, me, id, memory, tick)
-	if slot >= 0 and nearest_distance < SKILL_RANGE and me.state == Fighter.State.IDLE:
+	# Only book a slot when the cast can go out now, or the retry timer burns it mid-combo.
+	var slot := _ready_skill_slot(sim, me, id, memory, tick) if nearest_distance < SKILL_RANGE and me.state == Fighter.State.IDLE else -1
+	if slot >= 0:
 		input.skill_slot = slot
 		input.aim_distance = clampf(nearest_distance, 1.0, 8.0)
 		return input

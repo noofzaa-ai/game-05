@@ -1,11 +1,12 @@
 extends CanvasLayer
 ## The squad's info in an auto-battle fight (Boss 2026-11-10): one card per fighter at the bottom of the
-## screen with its name, health and ultimate gauge. Nobody steers: a card (click, or key 1-3) only picks which
+## screen with its name and health (the ultimate gauge is hidden: Boss 2026-11-11, skills only, no ultimate yet). Nobody steers: a card (click, or key 1-3) only picks which
 ## fighter the camera follows when zoomed in.
 
 const InkUi := preload("res://client/ink_ui.gd")
 const Fighter := preload("res://logic/fighter.gd")
-const CARD_HEIGHT := 78.0
+const SHOW_ULTIMATE := false  ## Boss 2026-11-11: skills only for now; turn on when ultimates come back
+const CARD_HEIGHT := 78.0 if SHOW_ULTIMATE else 58.0
 const MARGIN := 12.0
 const GAP := 8.0
 const MAX_CARD_WIDTH := 260.0
@@ -111,6 +112,7 @@ func _rebuild() -> void:
 		ult_back.color = InkUi.HUD_PANEL
 		ult_back.position = Vector2(8, 56)
 		ult_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		ult_back.visible = SHOW_ULTIMATE
 		panel.add_child(ult_back)
 		var ult_fill := ColorRect.new()
 		ult_fill.color = InkUi.ULT
