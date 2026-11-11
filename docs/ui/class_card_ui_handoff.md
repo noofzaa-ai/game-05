@@ -1,6 +1,6 @@
 # Class Card screen: complete UI handoff
 
-**Status: approved to build (Boss 2026-11-11).** This is the single source for the UI team: what the screen
+**Status: approved to build (Boss 2026-11-11).** **Update 2026-11-11 (Boss): there is no outside UI team. Our own agents build this: `art-director` (visual assets via Codex), `ui-programmer` (Godot screen + portrait), `ux-ui-designer` (review against §17). The PO coordinates; the old hub is cut later, hidden for now.** This is the single source for the UI team: what the screen
 does, how it looks, every string, every asset, the Godot contract and the acceptance checklist. It replaces the
 earlier `class_card_screen_spec.md` and `class_card_art_direction.md`. If something here is unclear or impossible,
 ask the PO; do not guess.

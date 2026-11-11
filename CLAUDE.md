@@ -20,8 +20,10 @@ repo นี้มีหลายฝั่ง/หลาย AI ทำพร้อ�
 - ตรวจภาพจริงได้โดยรัน Godot แบบมีหน้าต่าง (ไม่ใส่ --headless) ด้วยสคริปต์ที่บันทึก viewport เป็น PNG
 
 ## ทีมและการสื่อสาร (director สั่ง 2026-10-04)
-- PO (session หลัก) ใช้ model Opus 5.5 (ผู้ใช้ตั้งเองด้วย `/model`) คุยกับ director คนเดียวเป็น**ภาษาไทย** และเรียก director ว่า **Boss**
-- ทีมอยู่ใน `.claude/agents/`: `animator` (opus), `character-artist` (opus), `combat-designer` (opus), `ux-ui-designer` (opus), `level-designer` (opus), `tech-artist` (opus, ประสิทธิภาพ/ส่งออกเว็บ), `sound-designer` (opus, เสียง/ดนตรี/มิกซ์), `qa` (opus อ่านอย่างเดียว) **ทุกคนใช้ Opus 5.5 (Boss สั่ง 2026-10-12)**; บน Kiro CLI ทีมเดียวกันอยู่ที่ `.kiro/agents/<ชื่อ>.json` (model `claude-opus-5.5`) สร้างจากไฟล์ .md ด้วย `python3 tools/kiro/sync_agents.py` (แก้ .md แล้วรันใหม่ อย่าแก้ .json ตรง) PO คุยกับทีมเป็น**ภาษาอังกฤษ**เท่านั้น และทีมไม่คุยกับ Boss ตรง
+- PO (session หลัก) คุยกับ director คนเดียวเป็น**ภาษาไทย** และเรียก director ว่า **Boss** PO คุยกับทีมเป็น**ภาษาอังกฤษ** ทีมทุกตัว (ทั้ง 8 ตัวของเราและตัวจากเฟรมเวิร์ก รวม creative-director/technical-director/producer) **รายงานผ่าน PO เท่านั้น ไม่คุยหรือถามผู้ใช้ตรง** เรื่องที่ต้องตัดสินให้ใส่ในรายงานเป็นคำถาม 2-4 ตัวเลือกพร้อมคำแนะนำ แล้ว PO ส่งต่อให้ Boss
+- โมเดล (Boss สั่ง 2026-11-11): agent ของเรา 8 ตัวและ creative-director, technical-director, producer ใช้ Opus 5.5 effort medium (ปรับจาก Sonnet high เมื่อ Boss สั่งอีกครั้ง); agent ที่เหลือทั้งหมดใช้ตามโมเดลของ session ที่เรียก (`model: inherit`) ทีมอยู่ใน `.claude/agents/` (27 ตัว) สร้างด้วยมือ ไม่มี Kiro แล้ว
+- **PO ตอบ Boss สั้น กระชับ ได้ใจความ (Boss สั่ง 2026-11-11):** ขึ้นด้วยผลลัพธ์ทันที ไม่เขียนยาว ไม่ทวนสิ่งที่ถามหรือที่ทำไปแล้ว ใส่เฉพาะที่ต้องรู้/ต้องตัดสินใจ (รวมสิ่งที่ล้มเหลวหรือยังไม่ได้ตรวจ) รายละเอียดยาวเก็บในไฟล์แล้วชี้ลิงก์
+- **งานสร้างรูปภาพ 2D ทุกชนิด (Boss สั่ง 2026-11-11):** PO มอบให้ agent สายภาพ (`art-director`, `character-artist`, `ux-ui-designer`, `ui-programmer`, `technical-artist`, `tech-artist`) และ agent ต้องสร้างผ่าน Codex CLI (gpt-6.1-sol, effort high) เสมอ ตามขั้นตอนใน `docs/tech/codex_image_workflow.md` รูปรอ Boss ตรวจก่อนนำเข้าเกม (โมเดล 3D ยังใช้ Blender)
 - PO เป็นคนมอบงาน/ประสานงาน/สรุปให้ Boss; เรื่องที่ต้องให้ Boss ตัดสิน (โครงกระดูก, ระบบ logic/client ฯลฯ) ทีมต้องหยุดและรายงานผ่าน PO
 - งานที่แตะไฟล์เดียวกัน (เช่น `character_model.gd`) อย่าให้สองคนทำพร้อมกัน
 
@@ -44,3 +46,13 @@ Cosmetic hats are out of the current migration scope. Game and generated Game St
 ## Deploy preference (Boss, 2026-10-27)
 
 Boss อนุญาตว่า “ต่อไป deploy และเทสได้เลยนะไม่ต้องถาม” สำหรับงานเกมนี้ ให้ดำเนินการ build, deploy และทดสอบตามงานที่สั่งได้โดยไม่ขอยืนยันซ้ำ และตรวจ rollout/เว็บจริงพร้อมเก็บ rollback ตามเดิม.
+
+
+## Studio framework (Claude Code Game Studios v1.3.0, MIT — เพิ่ม 2026-11-11, flow แบบ standard)
+นำเฟรมเวิร์ก https://github.com/Donchitos/Claude-Code-Game-Studios มาใช้ครบชุด: agent 27 ตัว (`.claude/agents/`, ตัดและรวมจาก 55 เมื่อ 2026-11-11), skill 77 ตัว (`.claude/skills/`), hook (`.claude/hooks/`), กฎตามโฟลเดอร์ (`.claude/rules/`), เอกสารอ้างอิง (`.claude/docs/`), `project.yaml` (ค่า rigor/engine/commands ของเรา), `design/` `production/` `docs/architecture/`
+- **ลำดับทำงาน:** `/next-step` บอกขั้นถัดไป · `/project-stage-detect` / `/adopt` ดูสถานะโปรเจกต์ที่มีโค้ดอยู่แล้ว · `/design-system` (GDD ทีละระบบ) → `/architecture-decision` → `/create-epics` → `/create-stories` → `/sprint-plan` → `/dev-story` → `/story-done` · `/gate-check` ก่อนข้ามช่วง · `/balance-check` `/playtest-report` `/bug-report` ตามต้องการ · ตั้งค่า `/project-settings`
+- **เมื่อกฎซ้อนกัน ยึดของ zorx เหนือเฟรมเวิร์ก:** PO คุยกับ Boss เป็นภาษาไทย / ทีมคุยกับ PO เป็นอังกฤษ ทีมไม่คุย Boss ตรง (ข้อ "ทีมและการสื่อสาร" ด้านบน) · ต้องอ่าน/อัปเดต `AI_SYNC.md` และ `PROGRESS.md` · ต้องรันชุดเทสต์ของเรา (`commands.test` ใน `project.yaml`) · กฎสถาปัตยกรรม `logic/` กับ `client/` · ห้าม commit/push เองโดยไม่ได้รับคำสั่ง
+- **agent ของเรา 8 ตัวเดิมยังอยู่และชนะชื่อซ้ำ** (`level-designer`, `sound-designer` ใช้ของเรา ไม่ใช้ของเฟรมเวิร์ก) ตัวอื่นของเฟรมเวิร์กใช้เสริมได้ (เช่น `producer`, `systems-designer`, `economy-designer`, `ai-programmer`, `godot-*-specialist`)
+- **โหมด:** `modes.rigor: standard`, `modes.automation: guided` (ตัดสินเรื่องเล็กเอง ถามเรื่องใหญ่/ย้อนกลับไม่ได้) ปิดการเช็กอัปเดตผ่านเน็ต (`updates.check: false`)
+- **ข้อจำกัดที่รู้:** เฟรมเวิร์กรับ `engine.code_root` ได้โฟลเดอร์เดียว เราตั้งเป็น `logic/` ดังนั้นการสแกน TODO/หนี้เทคนิคไม่ครอบคลุม `client/` · `commands.test` ใช้ตัวรันของเรา (`tests/run_all.gd`) ไม่ใช่ gdUnit4 · สกิลสาย web prototype (`/prototype` ฯลฯ) ไม่เกี่ยวกับเกมนี้ · hook ต้องมี Git Bash + Python (เครื่องนี้มีแล้ว)
+- hook: สแกนหาคำสั่งเครือข่าย/ลบ/eval แล้ว และทดสอบรัน 4 ตัว (session-start, detect-gaps, validate-commit, validate-push) ยังไม่ได้อ่านครบทุกบรรทัด; ตัวเช็กอัปเดตผ่านเน็ตปิดไว้ ตั้งค่าหลักอยู่ที่ `.claude/settings.json` (deny: `git push --force`, `git reset --hard`, `rm -rf` ฯลฯ)
