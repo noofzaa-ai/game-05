@@ -2,6 +2,8 @@
  "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. Add a class = add a file here, drop its clips next to the body, point 'animations' at them. 'weapon' is the combat weapon id in data/combat/weapons.json (its overrides hold the class's advance distances: advance = clip hip travel in metres * 7.2, see client/characters/studio05_character_model.gd).",
  "id": "sword_shield",
  "weapon": "blade",
+ "weapon_families": ["blade"],
+ "_weapon_families": "Weapon items (catalog weapon_type) this class card may wear in its weapon slot, logic/profile.gd card_can_wear (Boss 2026-11-11).",
  "animations": "res://art/characters/studio05/our_character_lowpoly_toon_hair_a_5k.glb",
  "clip_marks": "res://art/characters/studio05/clips.json",
  "moves": {

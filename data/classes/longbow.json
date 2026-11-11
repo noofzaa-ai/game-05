@@ -2,6 +2,8 @@
  "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. 'animations' is the GLB the clips are read from (same 102-joint rig as the body files), 'clip_marks' its timing marks. weapon_visible/weapon_scale/off_hand: what the hands hold for the look (the combat 'weapon' id keeps owning the stats). Advance (travel) distances live in the weapon's overrides in data/combat/weapons.json.",
  "id": "longbow",
  "weapon": "longbow",
+ "weapon_families": ["blade"],
+ "_weapon_families": "Weapon items (catalog weapon_type) this class card may wear in its weapon slot, logic/profile.gd card_can_wear (Boss 2026-11-11) (placeholder: the catalog has only blade weapons; list the class weapon family here once its items exist).",
  "animations": "res://art/characters/studio05/classes/longbow.glb",
  "clip_marks": "res://art/characters/studio05/classes/longbow_clips.json",
  "moves": {

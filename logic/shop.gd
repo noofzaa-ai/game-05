@@ -44,7 +44,8 @@ static func buy(profile, rules, camp, sku: String, rng: RandomNumberGenerator) -
 		if tier < 0 or tier >= rules.tiers.size(): return {"ok": false, "reason": "not_configured"}
 		var used := {}
 		for item in profile.stash.items + profile.vault.items: used[item.id] = true
-		for item in profile.loadout.items(): used[item.id] = true
+		for list in profile.worn_lists():
+			for item in list: used[item.id] = true
 		var instance_id := ""
 		for attempt in 16:
 			var candidate := "shop-%d-%d" % [rng.seed, rng.state]
@@ -129,7 +130,7 @@ static func sell_batch(profile, rules, camp, entries: Array, expected_price: int
 			for index in profile.stash.items.size():
 				if profile.stash.items[index].id == entry.id: at = index; break
 			if at < 0:
-				for owned in profile.vault.items + profile.loadout.items():
+				for owned in profile.vault.items + profile.worn_items():
 					if owned.id == entry.id: return {"ok": false, "reason": "item_not_in_container"}
 				return {"ok": false, "reason": "item_not_owned"}
 			price = item_sell_price(profile.stash.items[at], rules)

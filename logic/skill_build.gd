@@ -100,8 +100,10 @@ static func basic_stats(value: Dictionary) -> Dictionary:
 	_basics[key] = result.duplicate(true)
 	return result
 
-static func can_equip(profile, family: String) -> bool:
-	if not enabled(): return true
+## Whether the weapon family fits the build. With a `card` the class decides the tree (class_style), so
+## any weapon the class may hold (Profile.card_can_wear) fits: returns true. "" = the legacy weapon-led rule.
+static func can_equip(profile, family: String, card: String = "") -> bool:
+	if not enabled() or not card.is_empty(): return true
 	var start := start_for(family)
 	return not start.is_empty() and (not has_allocated_passives(profile.skill_build) or profile.skill_build.get("start", "") == start)
 
@@ -112,34 +114,48 @@ static func has_allocated_passives(value: Dictionary) -> bool:
 	if owned.is_empty(): return false
 	return owned.size()!=1 or str(owned[0])!="start_"+str(value.get("start",""))
 
-static func follow_unspent_weapon(profile, family: String) -> void:
-	if not enabled() or has_allocated_passives(profile.skill_build): return
+## Legacy weapon-led path only: per-card builds follow the class, never the weapon item.
+static func follow_unspent_weapon(profile, family: String, card: String = "") -> void:
+	if not card.is_empty() or not enabled() or has_allocated_passives(profile.skill_build): return
 	var start := start_for(family)
 	if start.is_empty(): return
 	profile.skill_build.start=start
 	profile.skill_build.allocated=["start_"+start]
 
-static func apply(profile, request: Dictionary) -> Dictionary:
+## Saves/resets a skill build. `card` = the class card whose build changes (per-card gear, Boss 2026-11-11):
+## its tree start must match the card's class style (data/classes/<card>.json "weapon"), not the weapon item,
+## because the class decides the fighting style. "" = the legacy path: the lead card, matched to its weapon.
+static func apply(profile, request: Dictionary, card: String = "") -> Dictionary:
 	if not enabled(): return {"ok": false, "reason": "not_configured"}
+	var build: Dictionary = profile.build_of(card)
 	var action: String = request.get("action", "")
 	if action == "reset":
 		var cost := int(config().reskill_gold)
 		if profile.stash.gold < cost: return {"ok": false, "reason": "cannot_afford"}
-		if profile.skill_build.get("start", "").is_empty(): return {"ok": false, "reason": "tree_already_reset"}
+		if build.get("start", "").is_empty(): return {"ok": false, "reason": "tree_already_reset"}
 		profile.stash.gold -= cost
-		profile.skill_build.start = ""
-		profile.skill_build.allocated = []
+		build.start = ""
+		build.allocated = []
 		return {"ok": true, "gold": cost}
 	if action != "save": return {"ok": false, "reason": "invalid_command"}
 	var value = request.get("build", {})
 	var problem := validate(value)
 	if not problem.is_empty(): return {"ok": false, "reason": problem}
-	var old_start: String = profile.skill_build.get("start", "")
+	var old_start: String = build.get("start", "")
 	if not old_start.is_empty():
 		if value.start != old_start: return {"ok": false, "reason": "reskill_required"}
-		for id in profile.skill_build.get("allocated", []):
+		for id in build.get("allocated", []):
 			if not id in value.allocated: return {"ok": false, "reason": "reskill_required"}
-	var weapon = profile.loadout.item_at("weapon", 0)
-	if weapon == null or start_for(weapon.weapon_type) != value.start: return {"ok": false, "reason": "weapon_tree_mismatch"}
-	profile.skill_build = value.duplicate(true)
+	if card.is_empty():
+		var weapon = profile.loadout.item_at("weapon", 0)
+		if weapon == null or start_for(weapon.weapon_type) != value.start: return {"ok": false, "reason": "weapon_tree_mismatch"}
+		profile.skill_build = value.duplicate(true)
+	else:
+		if start_for(class_style(card)) != value.start: return {"ok": false, "reason": "weapon_tree_mismatch"}
+		profile.card_gear[card]["skill_build"] = value.duplicate(true)
 	return {"ok": true}
+
+
+## The fighting style of a class card (its combat weapon id, data/classes/<card>.json "weapon").
+static func class_style(card: String) -> String:
+	return str(preload("res://logic/card_deck.gd").class_data(card).get("weapon", ""))

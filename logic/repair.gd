@@ -42,10 +42,10 @@ static func repair(item: Item, profile: Profile, camp: CampData) -> Dictionary:
 	return {"ok": true, "reason": "", "cost": cost}
 
 
-## Repairs every worn item that needs it, cheapest first, until the money or materials run out.
-## Returns {"repaired": int, "skipped": int, "gold": int}.
-static func repair_all_worn(profile: Profile, camp: CampData) -> Dictionary:
-	var worn := profile.loadout.items()
+## Repairs every item card `card` wears ("" = the lead card) that needs it, cheapest first, until the
+## money or materials run out. Returns {"repaired": int, "skipped": int, "gold": int}.
+static func repair_all_worn(profile: Profile, camp: CampData, card: String = "") -> Dictionary:
+	var worn := profile.loadout_of(card).items()
 	var discount := Camp.repair_discount(profile, camp)
 	worn.sort_custom(func(a: Item, b: Item) -> bool: return quote(a, camp, discount)["gold"] < quote(b, camp, discount)["gold"])
 	var summary := {"repaired": 0, "skipped": 0, "gold": 0}

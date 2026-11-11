@@ -14,19 +14,22 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		return _error("invalid_command")
 	var kind: String = command["type"]
 	var schemas := {
-		"equip": {"item": TYPE_STRING, "source": TYPE_STRING, "index": TYPE_INT},
-		"unequip": {"slot": TYPE_STRING, "destination": TYPE_STRING, "index": TYPE_INT},
+		# "card" (optional, per-card gear, Boss 2026-11-11): the class card whose slots/build change. Missing =
+		# the lead card (Profile.lead_card) with the old weapon-led skill rule, so older clients keep working.
+		"equip": {"item": TYPE_STRING, "source": TYPE_STRING, "index": TYPE_INT, "card": TYPE_STRING},
+		"unequip": {"slot": TYPE_STRING, "destination": TYPE_STRING, "index": TYPE_INT, "card": TYPE_STRING},
 		"discard": {"item": TYPE_STRING, "source": TYPE_STRING},
 		"discard_material": {"material": TYPE_STRING, "count": TYPE_INT, "source": TYPE_STRING},
-		"repair": {"item": TYPE_STRING}, "repair_all": {},
+		"repair": {"item": TYPE_STRING}, "repair_all": {"card": TYPE_STRING},
 		"upgrade_camp": {}, "upgrade_facility": {"facility": TYPE_STRING},
 		"appearance": {"part": TYPE_STRING, "choice": TYPE_STRING},
 		"mall_buy": {"part": TYPE_STRING, "choice": TYPE_STRING},
+		"card_fashion": {"class": TYPE_STRING, "part": TYPE_STRING, "choice": TYPE_STRING},
 		"set_name": {"name": TYPE_STRING},
 		"card_look": {"class": TYPE_STRING, "part": TYPE_STRING, "choice": TYPE_STRING}, "card_squad": {"squad": TYPE_ARRAY},
 		"farm_seed": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_plant": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_harvest": {"plot":TYPE_INT},
 		"shop_buy": {"sku": TYPE_STRING},
-		"skill_build": {"action": TYPE_STRING, "build": TYPE_DICTIONARY},
+		"skill_build": {"action": TYPE_STRING, "build": TYPE_DICTIONARY, "card": TYPE_STRING},
 		"relic_equip": {"relic":TYPE_STRING,"slot":TYPE_INT},
 		"shop_sell": {"item": TYPE_STRING, "expected_price": TYPE_INT},
 		"shop_sell_batch": {"entries": TYPE_ARRAY, "expected_price": TYPE_INT},
@@ -57,9 +60,12 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		elif typeof(value) != schema[key]:
 			return _error("invalid_command")
 	for key in schema:
-		if not command.has(key) and not key in ["index", "protect"]:
+		if not command.has(key) and not key in ["index", "protect", "card"]:
 			return _error("invalid_command")
 	var p: Profile = state["profile"]
+	var card: String = command.get("card", "")
+	if command.has("card") and not p.has_card(card):
+		return _error("invalid_card")
 	var location: String = state["location"]
 	var trip = state.get("run")
 	if not location in ["camp", "rest", "stage"]:
@@ -77,9 +83,11 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 	if kind.begins_with("farm_"):
 		if location != "camp": return _error("camp_only")
 		return preload("res://logic/farm.gd").apply(p,command,int(state.get("now",0)))
-	# Reject ambiguous IDs across ALL containers, including destroyed worn entries.
+	# Reject ambiguous IDs across ALL containers, including destroyed worn entries of EVERY card: an item is
+	# in the shared stash/vault/bag or worn by exactly one card.
 	var owned := {}
-	var containers: Array = [p.stash.items, p.vault.items, p.loadout._equipped.values()]
+	var containers: Array = [p.stash.items, p.vault.items]
+	containers.append_array(p.worn_lists())
 	if trip != null:
 		containers.append(trip.bag.items)
 	for list in containers:
@@ -101,7 +109,7 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 	match kind:
 		"skill_build":
 			if location != "camp": return _error("not_available_here")
-			result = preload("res://logic/skill_build.gd").apply(p, command)
+			result = preload("res://logic/skill_build.gd").apply(p, command, card)
 			if not result.get("ok", false): return _error(str(result.get("reason", "invalid_skill_build")))
 		"equip", "unequip", "discard", "discard_material":
 			var source: String = command.get("source", command.get("destination", ""))
@@ -121,21 +129,27 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 					return _error("item_not_in_container")
 				if item.destroyed:
 					return _error("item_destroyed")
-				if item.slot == "weapon" and not preload("res://logic/skill_build.gd").can_equip(p, item.weapon_type):
+				if not Profile.card_can_wear(p.lead_card() if card.is_empty() else card, item):
+					return _error("wrong_weapon_family")
+				if item.slot == "weapon" and not preload("res://logic/skill_build.gd").can_equip(p, item.weapon_type, card):
 					return _error("reskill_required")
-				if not (p.equip_from_stash(at, index) if source == "stash" else trip.equip_from_bag(at, index)):
+				if source == "bag" and not card.is_empty() and card != p.lead_card():
+					return _error("not_available_here")  # run bags dress the fighting character only (plan step 4)
+				if not (p.equip_from_stash(at, index, card) if source == "stash" else trip.equip_from_bag(at, index)):
 					return _error("invalid_slot")
 				if item.slot == "weapon":
-					preload("res://logic/skill_build.gd").follow_unspent_weapon(p,item.weapon_type)
+					preload("res://logic/skill_build.gd").follow_unspent_weapon(p, item.weapon_type, card)
 			elif kind == "unequip":
 				if command.slot == "weapon" and preload("res://logic/skill_build.gd").enabled():
 					return _error("weapon_required")
-				if p.loadout.item_at(command["slot"], index) == null:
+				if source == "bag" and not card.is_empty() and card != p.lead_card():
+					return _error("not_available_here")
+				if p.loadout_of(card).item_at(command["slot"], index) == null:
 					return _error("nothing_worn")
 				if inventory.free_slots() < 1:
 					return _error("bag_full")
 				if source == "stash":
-					p.unequip_to_stash(command["slot"], index)
+					p.unequip_to_stash(command["slot"], index, card)
 				else:
 					trip.unequip_to_bag(command["slot"], index)
 			elif kind == "discard":
@@ -151,6 +165,10 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"mall_buy":
 			if location != "camp": return _error("not_available_here")
 			return preload("res://logic/mall.gd").buy(p,state.get("cosmetics"),command.part,command.choice)
+		"card_fashion":
+			if location != "camp": return _error("not_available_here")
+			var worn_result: Dictionary = preload("res://logic/mall.gd").wear_on_card(p, state.get("cosmetics"), command["class"], command.part, command.choice)
+			if not worn_result.get("ok", false): return _error(str(worn_result.get("reason", "invalid_cosmetic")))
 		"card_look", "card_squad":
 			if location != "camp": return _error("not_available_here")
 			var deck_rules := preload("res://logic/card_deck.gd")
@@ -193,7 +211,7 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				"upgrade": result = preload("res://logic/upgrade.gd").apply(item, p, state["rules"], state["camp"], int(command.count), _rng)
 				"refine": result = preload("res://logic/refine.gd").apply(item, p, state["rules"], state["camp"], int(command.level), _rng)
 				"repair": result = Repair.repair(item, p, state["camp"])
-				"repair_all": result = Repair.repair_all_worn(p, state["camp"])
+				"repair_all": result = Repair.repair_all_worn(p, state["camp"], card)
 				"upgrade_camp": result = Camp.upgrade_camp(p, state["camp"])
 				"upgrade_facility": result = Camp.upgrade_facility(p, state["camp"], command["facility"])
 			if result.has("ok") and not result["ok"]:

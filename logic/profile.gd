@@ -11,6 +11,7 @@ const Item := preload("res://logic/item.gd")
 const ItemRules := preload("res://logic/item_rules.gd")
 const ItemSystem := preload("res://logic/item_system.gd")
 const Loadout := preload("res://logic/loadout.gd")
+const CardDeck := preload("res://logic/card_deck.gd")
 
 const NAME_MIN := 2
 const NAME_MAX := 16
@@ -20,10 +21,27 @@ const STARTER_LOOKS := {"weapon": "blade_01", "shirt": "scout_vest", "shoes": "s
 
 var vault: Inventory = Inventory.new(0)  ## Storage NPC bank; old profiles start empty
 var stash: Inventory
-var loadout: Loadout
+## Per-card gear (Boss 2026-11-11, docs/tech/per_card_gear_plan.md): class id -> {"loadout": Loadout,
+## "skill_build": Dictionary}. Each class card wears its own equipment slots and owns its own skill build;
+## stash, vault, gold and materials stay shared by the whole account. An item is in the stash/vault OR worn
+## by exactly one card (logic/commands.gd rejects any id seen twice).
+var card_gear: Dictionary = {}
+## Transition stand-in (until plan step 7): the lead card's worn gear (lead_card()). The sim,
+## runs and online rooms still read this; per-card code uses loadout_of(card).
+var loadout: Loadout:
+	get:
+		var gear = card_gear.get(lead_card())
+		return gear["loadout"] if gear != null else null
+	set(value):
+		_lead_gear()["loadout"] = value
 var camp_level := 1
 var diamonds := int(preload("res://logic/mall.gd").config().initial_diamonds)
+## Owned fashion copies, one "part:id" entry per piece bought (Boss 2026-11-11: counted; two entries = two
+## cards can wear it at once). logic/mall.gd owns the rules.
 var mall_owned: Array = []
+## The fashion each class card wears: class id -> {part: id} for part in Mall.CARD_PARTS; missing = "none".
+## A piece is worn by at most as many cards as the copies owned (logic/mall.gd wear_on_card).
+var card_fashion: Dictionary = {}
 var farm: Dictionary = {}
 var facility_levels: Dictionary = {}  ## facility id -> built level (0 = not built)
 ## The character's own looks: part -> chosen id (logic/cosmetic_options.gd); a missing part = its default.
@@ -34,7 +52,13 @@ var starter_armor_kit_version := 0
 var starter_weapon_kit_version := 0
 var beta_kit_version := 0
 var bonus_stash_slots := 0
-var skill_build: Dictionary = {}  ## IDs only; validated by skill_build.gd on the authority.
+## Transition stand-in: the lead card's skill build (IDs only; validated by skill_build.gd on the authority).
+var skill_build: Dictionary:
+	get:
+		var gear = card_gear.get(lead_card())
+		return gear["skill_build"] if gear != null else {}
+	set(value):
+		_lead_gear()["skill_build"] = value
 ## One class card per class, each customised on its own, plus the squad of the next fight (logic/card_deck.gd).
 var card_deck: Dictionary = preload("res://logic/card_deck.gd").initial(preload("res://logic/cosmetic_options.gd").load_default())
 var name := ""  ## the character's name, set when the player creates the character
@@ -50,19 +74,113 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 		stacks[id] = camp.materials[id]["stack"]
 	profile.stash = Inventory.new(camp.stash_slots, stacks)
 	profile.vault = Inventory.new(camp.bank_slots, stacks)
-	profile.loadout = Loadout.new(item_rules)
+	profile.card_gear["sword_shield"] = {"loadout": Loadout.new(item_rules), "skill_build": {}}
 	profile.facility_levels = camp.start_levels.duplicate()
 	profile.stash.gold = int(camp.starter.get("gold", 0))
 	for id in camp.starter.get("materials", {}):
 		profile.stash.add_material(str(id), int(camp.starter["materials"][id]))
-	profile.loadout.equip(ItemSystem.create_item(item_rules, "starter-weapon", "weapon", 1, rng, "blade", STARTER_LOOKS["weapon"]))
-	profile.loadout.equip(ItemSystem.create_item(item_rules, "starter-shirt", "shirt", 2, rng, "", STARTER_LOOKS["shirt"]))
-	profile.loadout.equip(ItemSystem.create_item(item_rules, "starter-shoes", "shoes", 0, rng, "", STARTER_LOOKS["shoes"]))
+	# The Sword & Shield card wears the original starter set (same ids and rolls as before cards had gear).
+	var first: Loadout = profile.card_gear["sword_shield"]["loadout"]
+	first.equip(ItemSystem.create_item(item_rules, "starter-weapon", "weapon", 1, rng, "blade", STARTER_LOOKS["weapon"]))
+	first.equip(ItemSystem.create_item(item_rules, "starter-shirt", "shirt", 2, rng, "", STARTER_LOOKS["shirt"]))
+	first.equip(ItemSystem.create_item(item_rules, "starter-shoes", "shoes", 0, rng, "", STARTER_LOOKS["shoes"]))
+	profile.card_gear["sword_shield"]["skill_build"] = preload("res://logic/skill_build.gd").initial("blade")
 	profile.ensure_starter_weapons(item_rules, rng)
 	profile.ensure_starter_armor(item_rules, rng)
+	profile.ensure_starter_cards(item_rules)
 	profile.armor_migration_version = 2
-	profile.skill_build = preload("res://logic/skill_build.gd").initial("blade")
 	return profile
+
+
+## The card the transition stand-ins (`loadout`, `skill_build`) and card-less commands use: the Sword & Shield
+## card, which holds the account's pre-card gear and build. Fixed (not squad[0]) so the online rooms and
+## the sim, which still read `loadout`/`skill_build` until plan step 4, see the same character whatever
+## order the squad is in.
+const LEAD_CARD := "sword_shield"
+
+
+func lead_card() -> String:
+	return LEAD_CARD
+
+
+func _lead_gear() -> Dictionary:
+	var card := lead_card()
+	if not card_gear.has(card):
+		card_gear[card] = {"loadout": null, "skill_build": {}}
+	return card_gear[card]
+
+
+## True when `card` is a class card of this profile that has its own gear.
+func has_card(card: String) -> bool:
+	return card_gear.has(card) and card_deck.get("cards", {}).has(card)
+
+
+## The card's worn gear (null for an unknown card). "" = the lead card.
+func loadout_of(card: String = "") -> Loadout:
+	var gear = card_gear.get(lead_card() if card.is_empty() else card)
+	return gear["loadout"] if gear != null else null
+
+
+## The card's skill build ({} for an unknown card). "" = the lead card.
+func build_of(card: String = "") -> Dictionary:
+	var gear = card_gear.get(lead_card() if card.is_empty() else card)
+	return gear["skill_build"] if gear != null else {}
+
+
+## Every card's worn entries, destroyed ones included (one Array per card): for id-uniqueness scans.
+func worn_lists() -> Array:
+	var lists: Array = []
+	for card in card_gear:
+		if card_gear[card]["loadout"] != null:
+			lists.append(card_gear[card]["loadout"]._equipped.values())
+	return lists
+
+
+## Every item any card wears that still exists.
+func worn_items() -> Array:
+	var worn: Array = []
+	for card in card_gear:
+		if card_gear[card]["loadout"] != null:
+			worn.append_array(card_gear[card]["loadout"].items())
+	return worn
+
+
+## The weapon families a class card may hold (data/classes/<id>.json "weapon_families"; Boss 2026-11-11).
+## A class file without the list falls back to its combat weapon id.
+static func weapon_families(card: String) -> Array:
+	var data: Dictionary = CardDeck.class_data(card)
+	var families = data.get("weapon_families", [str(data.get("weapon", ""))])
+	return families if families is Array else []
+
+
+## Whether class card `card` may wear `item` (only the weapon slot is restricted, by class).
+static func card_can_wear(card: String, item: Item) -> bool:
+	return item.slot != "weapon" or weapon_families(card).has(item.weapon_type)
+
+
+## One-time starter set for every class card that has no gear yet (new players, migrated saves, a class
+## added later): a weapon of the class's first family + the starter shirt and shoes, and the class's initial
+## skill build. Ids are "starter-card-v1-<class>-<slot>" (unique across all containers). Rolls use a fixed
+## seed per class so every authority that migrates the same save makes the same items.
+func ensure_starter_cards(item_rules: ItemRules) -> void:
+	for card in CardDeck.classes():
+		if card_gear.has(card):
+			continue
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash("starter-card-v1-" + card)
+		var worn := Loadout.new(item_rules)
+		var families := weapon_families(card)
+		var family := str(families[0]) if not families.is_empty() else ""
+		var looks := {"weapon": family + "_01", "shirt": STARTER_LOOKS["shirt"], "shoes": STARTER_LOOKS["shoes"]}
+		var tiers := {"weapon": 1, "shirt": 2, "shoes": 0}
+		for slot in ["weapon", "shirt", "shoes"]:
+			if slot == "weapon" and family.is_empty():
+				continue
+			var item = ItemSystem.create_item(item_rules, "starter-card-v1-%s-%s" % [card, slot], slot, tiers[slot], rng, family if slot == "weapon" else "", looks[slot])
+			if item != null:
+				worn.equip(item)
+		var style := str(CardDeck.class_data(card).get("weapon", family))
+		card_gear[card] = {"loadout": worn, "skill_build": preload("res://logic/skill_build.gd").initial(style)}
 
 
 ## One starter per missing weapon family, once per account. Earned gear is never removed.
@@ -70,9 +188,9 @@ func ensure_starter_weapons(item_rules: ItemRules, rng: RandomNumberGenerator) -
 	if starter_weapon_kit_version >= 1:
 		return
 	var owned := {}
-	var equipped_weapon = loadout.item_at("weapon", 0)
-	if equipped_weapon != null and not equipped_weapon.destroyed:
-		owned[equipped_weapon.weapon_type] = true
+	for item in worn_items():
+		if item.slot == "weapon":
+			owned[item.weapon_type] = true
 	for item in stash.items + vault.items:
 		if item.slot == "weapon" and not item.destroyed:
 			owned[item.weapon_type] = true
@@ -90,7 +208,7 @@ func ensure_starter_armor(item_rules: ItemRules, rng: RandomNumberGenerator) -> 
 	for item in stash.items + vault.items:
 		if not item.destroyed:
 			owned[item.item_id] = true
-	for item in loadout.items():
+	for item in worn_items():
 		owned[item.item_id] = true
 	var ids: Array = item_rules.catalog.items.keys()
 	ids.sort()
@@ -125,14 +243,18 @@ func create_character(new_name: String) -> String:
 	return problem
 
 
-## Wears the stash item at `stash_index` in its slot (position `slot_index` for paired slots). The
-## piece that was there goes back to the stash. Returns false if it cannot be done.
-func equip_from_stash(stash_index: int, slot_index: int = 0) -> bool:
+## Card `card` ("" = the lead card) wears the stash item at `stash_index` in its slot (position
+## `slot_index` for paired slots). The piece that was there goes back to the stash. Returns false if it
+## cannot be done (unknown card, bad slot, or a weapon family the card's class cannot hold).
+func equip_from_stash(stash_index: int, slot_index: int = 0, card: String = "") -> bool:
 	if stash_index < 0 or stash_index >= stash.items.size():
 		return false
+	var worn := loadout_of(card)
 	var item: Item = stash.items[stash_index]
-	var old := loadout.item_at(item.slot, slot_index)
-	if not loadout.equip(item, slot_index):
+	if worn == null or not card_can_wear(lead_card() if card.is_empty() else card, item):
+		return false
+	var old := worn.item_at(item.slot, slot_index)
+	if not worn.equip(item, slot_index):
 		return false
 	stash.items.remove_at(stash_index)
 	if old != null:
@@ -141,10 +263,11 @@ func equip_from_stash(stash_index: int, slot_index: int = 0) -> bool:
 
 
 ## Takes a worn piece off into the stash. Returns false if the stash is full or nothing is worn there.
-func unequip_to_stash(slot_id: String, slot_index: int = 0) -> bool:
-	if loadout.item_at(slot_id, slot_index) == null or stash.free_slots() < 1:
+func unequip_to_stash(slot_id: String, slot_index: int = 0, card: String = "") -> bool:
+	var worn := loadout_of(card)
+	if worn == null or worn.item_at(slot_id, slot_index) == null or stash.free_slots() < 1:
 		return false
-	stash.items.append(loadout.unequip(slot_id, slot_index))
+	stash.items.append(worn.unequip(slot_id, slot_index))
 	return true
 
 
@@ -154,7 +277,13 @@ func to_dict() -> Dictionary:
 	# exactly even for a profile whose appearance was never set up through the character creator.
 	var saved_appearance := appearance.duplicate()
 	saved_appearance["blink_mode"] = "auto"
-	return {"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
+	var saved_gear := {}
+	for card in card_gear:
+		saved_gear[card] = {"loadout": card_gear[card]["loadout"].to_dict(), "skill_build": card_gear[card]["skill_build"].duplicate(true)}
+	# "loadout"/"skill_build" below are the lead card's copies, kept for readers that still need them
+	# (server runner/rooms, plaza, admin); plan step 7 removes them. from_dict reads only "card_gear".
+	return {"card_gear": saved_gear, "card_fashion": card_fashion.duplicate(true),
+		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
 		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "beta_kit_version": beta_kit_version, "bonus_stash_slots": bonus_stash_slots,
@@ -172,8 +301,7 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	p.vault = Inventory.from_dict(d["vault"], stacks) if d.has("vault") else Inventory.new(camp.bank_slots, stacks)
 	if p.vault == null: return null
 	p.vault.capacity = camp.bank_slots
-	p.loadout = Loadout.from_dict(d["loadout"], item_rules)
-	if p.stash == null or p.loadout == null:
+	if p.stash == null:
 		return null
 	p.camp_level = int(d["camp_level"])
 	p.farm = d.get("farm",{}).duplicate(true)
@@ -203,11 +331,50 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	p.beta_kit_version = maxi(0, int(d.get("beta_kit_version", 0)))
 	p.bonus_stash_slots = clampi(int(d.get("bonus_stash_slots", 0)), 0, 1000)
 	p.card_deck = preload("res://logic/card_deck.gd").repaired(d.get("card_deck"), preload("res://logic/cosmetic_options.gd").load_default())  # old saves get the starter cards
-	if d.has("skill_build"):
-		if not d.skill_build is Dictionary: return null
-		p.skill_build = d.skill_build.duplicate(true)
-		if p.skill_build.has("v"): p.skill_build["v"] = int(p.skill_build["v"])  # plain JSON loses int vs float
+	if d.has("card_gear"):
+		if not d.card_gear is Dictionary: return null
+		for card in d.card_gear:
+			var entry = d.card_gear[card]
+			if not entry is Dictionary or not entry.get("loadout") is Dictionary: return null
+			var worn = Loadout.from_dict(entry["loadout"], item_rules)
+			if worn == null: return null
+			var build = _decode_build(entry.get("skill_build"), worn)
+			if build == null: return null
+			p.card_gear[str(card)] = {"loadout": worn, "skill_build": build}  # a class no longer in data keeps its gear
 	else:
-		var weapon = p.loadout.item_at("weapon", 0)
-		p.skill_build = preload("res://logic/skill_build.gd").initial(weapon.weapon_type if weapon != null else "")
+		# Migration (Boss 2026-11-11): the account's old worn gear and skill build go to the Sword & Shield card.
+		if not d.get("loadout") is Dictionary: return null
+		var worn = Loadout.from_dict(d["loadout"], item_rules)
+		if worn == null: return null
+		var build = _decode_build(d.get("skill_build"), worn)
+		if build == null: return null
+		p.card_gear["sword_shield"] = {"loadout": worn, "skill_build": build}
+	p.ensure_starter_cards(item_rules)  # the other cards (or a class added later) get a starter set once
+	var fashion = d.get("card_fashion", {})
+	if not d.has("card_fashion"):
+		# Migration: the account-wide worn fashion (owned copies only) dresses the Sword & Shield card.
+		fashion = {}
+		for part in preload("res://logic/mall.gd").CARD_PARTS:
+			var id := str(p.appearance.get(part, "none"))
+			if id != "none" and preload("res://logic/mall.gd").owns(p, part, id):
+				fashion[LEAD_CARD] = fashion.get(LEAD_CARD, {})
+				fashion[LEAD_CARD][part] = id
+	if not fashion is Dictionary: return null
+	for card in fashion:
+		if not fashion[card] is Dictionary: return null
+		var worn_fashion := {}
+		for part in fashion[card]:
+			worn_fashion[str(part)] = str(fashion[card][part])
+		p.card_fashion[str(card)] = worn_fashion
 	return p
+
+
+## A saved skill build (plain JSON), or the weapon's initial build when the save has none; null = corrupt.
+static func _decode_build(saved: Variant, worn: Loadout) -> Variant:
+	if saved == null:
+		var weapon = worn.item_at("weapon", 0)
+		return preload("res://logic/skill_build.gd").initial(weapon.weapon_type if weapon != null else "")
+	if not saved is Dictionary: return null
+	var build: Dictionary = saved.duplicate(true)
+	if build.has("v"): build["v"] = int(build["v"])  # plain JSON loses int vs float
+	return build

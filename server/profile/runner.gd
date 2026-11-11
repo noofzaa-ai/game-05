@@ -3,7 +3,7 @@ extends RefCounted
 const Profile := preload("res://logic/profile.gd")
 const Commands := preload("res://logic/commands.gd")
 const Camp := preload("res://logic/camp.gd")
-const ALLOWED := ["card_look", "card_squad", "relic_equip", "mall_buy", "farm_seed", "farm_plant", "farm_harvest", "skill_build", "storage_item", "storage_material", "upgrade", "shop_buy", "shop_sell", "shop_sell_material", "shop_sell_batch", "refine", "equip", "unequip", "discard", "discard_material", "repair", "repair_all", "upgrade_camp", "upgrade_facility", "appearance", "randomize_appearance", "enhance", "upgrade_tier"]
+const ALLOWED := ["card_look", "card_squad", "card_fashion", "relic_equip", "mall_buy", "farm_seed", "farm_plant", "farm_harvest", "skill_build", "storage_item", "storage_material", "upgrade", "shop_buy", "shop_sell", "shop_sell_material", "shop_sell_batch", "refine", "equip", "unequip", "discard", "discard_material", "repair", "repair_all", "upgrade_camp", "upgrade_facility", "appearance", "randomize_appearance", "enhance", "upgrade_tier"]
 var rules = preload("res://logic/item_rules_loader.gd").load_default()
 var camp = preload("res://logic/camp_data_loader.gd").load_default(rules.tiers.size())
 var cosmetics = preload("res://logic/cosmetic_options.gd").load_default()
@@ -28,7 +28,8 @@ func execute(request: Variant) -> Dictionary:
 		if not request.state is Dictionary or not request.state.has_all(["profile", "rng_state"]) or not request.state.profile is Dictionary or not request.state.rng_state is String:
 			return failure("invalid_state")
 		var saved: Dictionary = request.state.profile
-		if not saved.has_all(["v", "stash", "loadout", "camp_level", "facility_levels", "appearance", "name", "created"]): return failure("invalid_state")
+		# A save needs worn gear: per-card "card_gear", or the pre-card "loadout" (migrated to Sword & Shield).
+		if not saved.has_all(["v", "stash", "camp_level", "facility_levels", "appearance", "name", "created"]) or not (saved.has("card_gear") or saved.has("loadout")): return failure("invalid_state")
 		if RegEx.create_from_string("^-?[0-9]{1,20}$").search(request.state.rng_state) == null: return failure("invalid_state")
 		profile = Profile.from_dict(saved, rules, camp)
 		if profile == null: return failure("invalid_state")
@@ -73,7 +74,8 @@ static func failure(reason: String) -> Dictionary:
 ## Only trusted stored profiles enter this runner. Retain the first legacy ID
 ## and all earned items; repair collisions caused by the old wave-chest IDs.
 static func _repair_wave_chest_ids(profile) -> void:
-	var containers: Array = [profile.loadout._equipped.values(), profile.stash.items, profile.vault.items]
+	var containers: Array = profile.worn_lists()  # every class card's worn gear, then the shared stash/vault
+	containers.append_array([profile.stash.items, profile.vault.items])
 	var used := {}
 	for items in containers:
 		for item in items: used[item.id] = true
