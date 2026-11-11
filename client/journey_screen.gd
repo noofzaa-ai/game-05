@@ -6,6 +6,7 @@ extends Control
 ## choice, the camp window, bag banking, and leaving the journey.
 ## Every rule is in logic/journey.gd; this only shows it and passes the player's picks on.
 
+const CardTokens := preload("res://client/card_tokens.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const InkUi := preload("res://client/ink_ui.gd")
 const Journey := preload("res://logic/journey.gd")
@@ -25,6 +26,9 @@ var _buttons: Array[Button] = []
 
 
 func _ready() -> void:
+	if _is_wave_summary():
+		_build_wave_summary()
+		return
 	theme = InkUi.make_theme(InkUi.FONT_SECTION)
 	var back := ColorRect.new()
 	back.color = InkUi.INK
@@ -233,3 +237,56 @@ func _online_changed(_id: int, _result: Dictionary) -> void:
 
 func _open_online_treasure() -> void:
 	GameState.get_session().command({"type": "journey_treasure"})
+
+
+## The auto-battler's end screen uses the class card look (cartoon sky, paper panel, orange button) instead of
+## the old brass route window.
+func _is_wave_summary() -> bool:
+	var j = journey()
+	return j != null and GameState.remote_session == null and bool(j.data.wave_mode) 		and j.state in [Journey.WON, Journey.LOST, Journey.RETREATED, Journey.ABANDONED]
+
+
+func _build_wave_summary() -> void:
+	var j = journey()
+	var s := CardTokens.scale_for(get_viewport().get_visible_rect().size)
+	var sky := TextureRect.new()
+	sky.texture = CardTokens.tex("bg_sky") if CardTokens.tex("bg_sky") != null else CardTokens.sky_gradient()
+	sky.stretch_mode = TextureRect.STRETCH_SCALE
+	sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sky.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(sky)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(center)
+	var panel := PanelContainer.new()
+	CardTokens.panel(panel, CardTokens.panel_paper(s))
+	center.add_child(panel)
+	var pad := MarginContainer.new()
+	CardTokens.margin(pad, 48.0, s)
+	panel.add_child(pad)
+	_box = VBoxContainer.new()
+	_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	CardTokens.gap(_box, 28.0, s)
+	pad.add_child(_box)
+	var won: bool = j.state == Journey.WON
+	var headline := {Journey.WON: "ชนะ!", Journey.LOST: "พ่ายแพ้", Journey.RETREATED: "ถอนทัพ", Journey.ABANDONED: "ออกจากด่าน"}
+	var detail := {Journey.WON: "บอสล้มแล้ว", Journey.LOST: "ทัพล้มก่อนจบเวฟ", Journey.RETREATED: "ถอนทัพกลับแล้ว", Journey.ABANDONED: "ออกจากด่านกลางทาง"}
+	var title := CardTokens.label(str(headline.get(j.state, "")), CardTokens.FONT_SCREEN_TITLE * 2, CardTokens.FRAME if won else CardTokens.ERROR, s, CardTokens.OUTLINE_FRAME)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_box.add_child(title)
+	var stage := CardTokens.label(str(j.data.display_name), CardTokens.FONT_EDITOR_NAME, CardTokens.TEXT_DARK, s, 0, "medium")
+	stage.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_box.add_child(stage)
+	var line := CardTokens.label(str(detail.get(j.state, "")), CardTokens.FONT_TAB, CardTokens.SLATE, s, 0, "body")
+	line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_box.add_child(line)
+	var back := Button.new()
+	back.text = "กลับหน้าการ์ด"
+	back.custom_minimum_size = Vector2(420.0, 96.0) * s
+	CardTokens.button_skin(back, "primary", s)
+	CardTokens.style_text(back, CardTokens.FONT_FIGHT, CardTokens.TEXT_LIGHT, s, CardTokens.OUTLINE_PRIMARY)
+	back.pressed.connect(GameState.end_journey)
+	_box.add_child(back)
+	_buttons.append(back)
+	back.grab_focus.call_deferred()
+

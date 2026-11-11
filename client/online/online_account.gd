@@ -39,7 +39,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if _badge != null:
 		var scene := get_tree().current_scene
-		_badge.visible = scene != null and scene.scene_file_path not in ["res://scenes/title.tscn", "res://scenes/boot.tscn"]
+		# Hidden in the fight and on its summary (Boss 2026-11-11: it covered the wave banner and the boss name).
+		_badge.visible = scene != null and scene.scene_file_path not in ["res://scenes/title.tscn", "res://scenes/boot.tscn", "res://scenes/stage.tscn", "res://scenes/journey.tscn"]
 		_badge.text = status_text()
 	if status != Status.AUTHENTICATED:
 		return
