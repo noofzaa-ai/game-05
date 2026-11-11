@@ -11,7 +11,8 @@ const UiThemes := preload("res://client/ui_themes.gd")
 const TOKEN_FILES := ["ink_ui.gd", "ui_themes.gd", "card_tokens.gd"]
 ## Screens and UI widgets (plus any client/ file that preloads ink_ui.gd).
 const UI_FILES := ["camp_screen.gd", "character_creator.gd", "gear_panel.gd", "hud.gd", "journey_screen.gd", "look_panel.gd",
-	"item_cell.gd", "item_text.gd", "item_icon.gd", "perf_overlay.gd", "paper_doll.gd", "hub.gd", "card_deck_screen.gd", "card_portrait.gd", "card_character_screen.gd"]
+	"item_cell.gd", "item_text.gd", "item_icon.gd", "perf_overlay.gd", "paper_doll.gd", "hub.gd", "card_deck_screen.gd", "card_portrait.gd", "card_character_screen.gd",
+	"hub_item_cell.gd", "hub_item_details.gd", "hub_service_panel.gd", "hub_blacksmith_panel.gd", "hub_storage_panel.gd"]
 ## 3D world / lighting lines in UI files are not UI colors: file -> words that mark such a line.
 const WORLD_LINES := {
 	"hub.gd": ["albedo_color", "light_color", "background_color", "gradient.set_color", "FIRE_COLOR"],

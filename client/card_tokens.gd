@@ -398,6 +398,14 @@ const CHAR_WINDOW_RADIUS := 28.0
 const CHAR_WINDOW_LINE := 5.0
 const CHAR_PIP_SPACING := 2.1
 const CHAR_TOAST_BOTTOM := 70.0  ## character screen: the status line sits this far above the screen foot
+## Hub service panels (client/hub_service_panel.gd and its Blacksmith / Storage panels), reference units.
+const SVC_PANEL := Vector2(1600.0, 900.0)  ## the leather panel over the dimmed hub (spec: 1500x880, a little more for 4 card tabs)
+const SVC_LEATHER := 22.0  ## leather rim around the parchment
+const SVC_PAD := 28.0
+const SVC_HEAD := 72.0  ## header row: medallion, title, gold, Close
+const SVC_ROW_H := 56.0  ## source tabs / picker rows (96 on phones)
+const SVC_SPLIT := 0.52  ## left column (grid) share of the panel width
+const SVC_DETAIL_H := 0.5  ## details box share of the content height (Blacksmith)
 ## Slot "slot:index" -> [column, row] on the 5 x 6 paper-doll (client/gear_panel.gd SLOT_PLACES) plus the off-hand
 ## between Weapon and Back (Boss 2026-11-11: Sword & Shield only).
 const CHAR_SLOT_PLACES := {
@@ -583,6 +591,40 @@ const STRINGS := {
 	"err_item_not_owned": ["ไม่พบชิ้นนี้", "That piece is gone"],
 	"err_no_session": ["ยังไม่เชื่อมต่อ", "Not connected"],
 	"err_invalid_card": ["การ์ดไม่ถูกต้อง", "Unknown card"],
+	# hub service panels (Blacksmith, Storage)
+	"gold": ["ทอง", "Gold"],
+	"upgrade": ["อัปเกรด", "Upgrade"],
+	"upgrade_tier": ["เลื่อนขั้น", "Upgrade tier"],
+	"repair_all": ["ซ่อมทั้งหมด", "Repair all"],
+	"repair_all_hint": ["ซ่อมทุกชิ้นที่การ์ดนี้สวม", "Repairs everything this card wears"],
+	"smith_pick": ["เลือกชิ้นอุปกรณ์", "Pick a piece"],
+	"smith_none": ["คลังยังไม่มีอุปกรณ์", "No gear in Storage yet"],
+	"smith_refine_line": ["ตีบวก -> +%d: %s · โอกาส %d%%", "Refine to +%d: %s  ·  %d%% chance"],
+	"smith_refine_fail": ["(พลาด: เหลือ +%d)", "(fail: drops to +%d)"],
+	"smith_upgrade_line": ["อัปเกรด: %s · %s · ใช้ไป %d / %d", "Upgrade: %s  ·  %s  ·  %d / %d used"],
+	"smith_upgrade_add": ["เพิ่มค่าสถานะรองใหม่ 1 แถว", "adds a new substat row"],
+	"smith_upgrade_boost": ["เพิ่มค่าสถานะรองแบบสุ่ม 1 แถว", "boosts one random substat"],
+	"smith_repair_line": ["ซ่อม: %s · คืน %d แต้ม", "Repair: %s  ·  restores %d points"],
+	"upgraded_add": ["อัปเกรดแล้ว: ได้ %s ใหม่", "Upgraded: new %s row"],
+	"upgraded_boost": ["อัปเกรดแล้ว: %s +%s", "Upgraded: %s +%s"],
+	"repaired_for": ["ซ่อมแล้ว (%s)", "Repaired (%s)"],
+	"repaired_all": ["ซ่อม %d ชิ้น ใช้ %d ทอง · ข้าม %d", "Repaired %d piece(s) for %d gold  ·  skipped %d"],
+	"store_tab_stash": ["คลัง", "Storage"],
+	"store_tab_vault": ["ห้องนิรภัย", "Vault"],
+	"wear_on": ["ใส่ให้การ์ด...", "Wear on card..."],
+	"wear_on_title": ["ใส่ให้การ์ดใบไหน?", "Wear it on which card?"],
+	"worn_on": ["%s สวมแล้ว", "Worn by %s"],
+	"to_vault": ["ไปห้องนิรภัย", "To vault"],
+	"to_stash": ["ไปคลัง", "To Storage"],
+	"moved_to_vault": ["ย้ายไปห้องนิรภัยแล้ว", "Moved to the vault"],
+	"moved_to_stash": ["ย้ายไปคลังแล้ว", "Moved to Storage"],
+	"discard": ["ทิ้ง", "Discard"],
+	"discard_confirm": ["ทิ้ง %s? ทิ้งแล้วเอาคืนไม่ได้", "Discard %s? It can't be undone."],
+	"discarded": ["ทิ้งแล้ว", "Discarded"],
+	"err_storage_full": ["ห้องนิรภัยเต็ม", "The vault is full"],
+	"err_backpack_full": ["คลังเต็ม", "Storage is full"],
+	"err_item_not_in_container": ["ชิ้นนี้ไม่ได้อยู่ในคลัง", "That piece isn't in Storage"],
+	"err_invalid_container": ["ทำที่นี่ไม่ได้", "Not possible here"],
 }
 
 

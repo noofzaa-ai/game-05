@@ -15,6 +15,8 @@ const CardPortrait := preload("res://client/card_portrait.gd")
 const CardFrame := preload("res://client/card_frame.gd")
 const CardHolo := preload("res://client/card_holo.gd")
 const CardCharacterScreen := preload("res://client/card_character_screen.gd")
+const HubBlacksmithPanel := preload("res://client/hub_blacksmith_panel.gd")
+const HubStoragePanel := preload("res://client/hub_storage_panel.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
 const CampScreen := preload("res://client/camp_screen.gd")
 const GraphicsPanel := preload("res://client/graphics_panel.gd")
@@ -84,6 +86,7 @@ var _cards := {}  ## class id -> HubCard
 var _service_layer: Control
 var _service_open := ""
 var _character: CardCharacterScreen  ## the card character screen (spec §4), over the hub
+var _panels := {}  ## service id -> the open-able service panel (hub_service_panel.gd), built on first use
 
 var _editor_layer: Control
 var _editor_back: Button
@@ -926,6 +929,7 @@ func _build_character_screen() -> void:
 		_character.visible = false
 		_mode = "deck"
 		_open_editor(id))
+	_character.blacksmith_requested.connect(open_blacksmith_on)
 	_character.changed.connect(func() -> void:
 		if GameState.profile != null:
 			set_gold(GameState.profile.stash.gold))
@@ -1237,18 +1241,41 @@ func _on_menu(entry: MenuEntry) -> void:
 ## window the old Bag button opened; the rest are "Coming soon" for now.
 func open_service(service: String) -> void:
 	match service:
+		"blacksmith", "storage":
+			_service_panel(service).open()
 		"tailor":
 			var squad := _squad()
 			var id := str(squad[0]) if not squad.is_empty() else (str(_class_ids[0]) if not _class_ids.is_empty() else "")
 			if not id.is_empty():
 				_open_editor(id)
-		"storage":
-			if auto_wire:
-				_open_bag()
-			else:
-				_show_soon(service)
 		_:
 			_show_soon(service)
+
+
+## The Blacksmith / Storage panel (built once, over the hub and the character screen, under the toast).
+func _service_panel(service: String) -> Control:
+	if not _panels.has(service):
+		var panel: Control = HubBlacksmithPanel.new() if service == "blacksmith" else HubStoragePanel.new()
+		panel.visible = false
+		panel.reduced_motion = reduced_motion
+		panel.send = _send
+		add_child(panel)
+		move_child(panel, _toast.get_index())
+		panel.changed.connect(func() -> void:
+			if GameState.profile != null:
+				set_gold(GameState.profile.stash.gold))
+		panel.closed.connect(func() -> void:
+			if _mode == "character":
+				_character.refresh()
+			else:
+				_sync_from_profile_if_wired())
+		_panels[service] = panel
+	return _panels[service]
+
+
+## The character screen's Blacksmith button: the Blacksmith panel over it, opened on that piece (spec §5 depth 2).
+func open_blacksmith_on(item_id: String) -> void:
+	_service_panel("blacksmith").open_on(item_id)
 
 
 func _show_soon(service: String) -> void:

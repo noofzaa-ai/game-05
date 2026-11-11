@@ -22,11 +22,14 @@ const Stats := preload("res://logic/stats.gd")
 const Refine := preload("res://logic/refine.gd")
 const Repair := preload("res://logic/repair.gd")
 const Camp := preload("res://logic/camp.gd")
+const SlotCell := preload("res://client/hub_item_cell.gd")
+const HubItemDetails := preload("res://client/hub_item_details.gd")
 
 signal closed()
 signal settings_pressed()
 signal account_pressed()
 signal outfit_requested(class_id: String)  ## the Outfit tab's button: the hub opens its look editor for this card
+signal blacksmith_requested(item_id: String)  ## the details' Blacksmith button: the hub opens its Blacksmith panel on this piece
 signal changed()  ## the profile changed (the hub refreshes gold / cards)
 
 ## (request: Dictionary) -> Dictionary, may be a coroutine (the hub's _send). Unset: commands go nowhere.
@@ -74,19 +77,7 @@ var _stat_keys: Array = []
 var _stat_values: Array = []
 var _slots := {}  ## "slot:index" -> SlotCell
 var _divider: Panel
-var _detail: Panel
-var _detail_cell: SlotCell
-var _detail_title: Label
-var _detail_sub: Label
-var _detail_main: Label
-var _detail_subs: Label
-var _compare: HBoxContainer
-var _dur_key: Label
-var _dur_back: Panel
-var _dur_fill: Panel
-var _dur_text: Label
-var _cost: Label
-var _actions: HBoxContainer
+var _detail: HubItemDetails
 var _store_title: Label
 var _filters: HBoxContainer
 var _filter_buttons := {}
@@ -94,105 +85,6 @@ var _store_scroll: ScrollContainer
 var _store_grid: GridContainer
 var _store_cells: Array = []
 var _hint: Label
-
-
-## One square of the paper-doll or of the Storage grid: the leather slot tile, the real item icon (or the slot's
-## shape), tier pips (1-4 diamonds, colour + count), "+N" refine, a "!" worn mark, the slot name when empty, a
-## locked look, a gold "fits" frame. A Button: focus, keyboard / gamepad accept and touch.
-class SlotCell extends Button:
-	signal activated()
-
-	var key := ""  ## paper-doll "slot:index", "" for storage cells
-	var slot_id := ""
-	var index := 0
-	var item = null
-	var icon_tex: Texture2D
-	var caption := ""
-	var locked := false
-	var fits := false
-	var selected := false
-	var low := false  ## worn down (stats reduced)
-	var s := 1.0
-	var _tile: TextureRect  ## the leather tile, its own canvas item behind the cell (not mixed with the glyph draws)
-
-	func setup() -> void:
-		_tile = CardTokens.art_rect(CardTokens.HUB_SLOT)
-		_tile.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		_tile.show_behind_parent = true
-		add_child(_tile)
-		focus_mode = Control.FOCUS_ALL
-		CardTokens.bare_button(self, 1.0)
-		focus_entered.connect(queue_redraw)
-		focus_exited.connect(queue_redraw)
-		gui_input.connect(_on_input)
-
-	func show_item(p_item, rules, empty_caption: String) -> void:
-		item = p_item
-		caption = empty_caption
-		icon_tex = ItemAssets.icon(item, rules.catalog) if item != null and rules != null else null
-		low = item != null and rules != null and item.durability_ratio() < rules.durability_full_above
-		tooltip_text = ""
-		queue_redraw()
-
-	func _on_input(event: InputEvent) -> void:
-		var button := event as InputEventMouseButton
-		if button == null or not button.pressed:
-			return
-		if button.button_index == MOUSE_BUTTON_RIGHT or (button.button_index == MOUSE_BUTTON_LEFT and button.double_click):
-			activated.emit()
-
-	func _draw() -> void:
-		var rect := Rect2(Vector2.ZERO, size)
-		_tile.texture = CardTokens.tex(CardTokens.HUB_SLOT_SELECTED if selected else CardTokens.HUB_SLOT)
-		_tile.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
-		var font := CardTokens.medium_font()
-		if item != null:
-			var bounds := rect.grow(-size.x * 0.19)
-			if icon_tex != null:
-				var picture := icon_tex.get_size()
-				var fit := minf(bounds.size.x / picture.x, bounds.size.y / picture.y)
-				var fitted := picture * fit
-				draw_texture_rect(icon_tex, Rect2(bounds.get_center() - fitted * 0.5 - Vector2(0.0, size.y * 0.03), fitted), false)
-			else:
-				ItemIcon.draw_icon(self, bounds, ItemIcon.shape_for(item.slot, item.weapon_type), _tier_color(item.tier))
-			var count: int = clampi(item.tier + 1, 1, CardTokens.HUB_TIER.size())
-			var r := size.x * 0.045
-			for i in count:
-				var c := Vector2(size.x * 0.5 + (float(i) - float(count - 1) * 0.5) * r * CardTokens.CHAR_PIP_SPACING, size.y * 0.86)
-				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r - 1.0), c + Vector2(r + 1.0, 0), c + Vector2(0, r + 1.0), c + Vector2(-r - 1.0, 0)]), CardTokens.HUB_OUTLINE)
-				draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)]), _tier_color(item.tier))
-			if item.refine_level > 0:
-				var px := maxi(int(round(size.x * 0.2)), CardTokens.FONT_MIN)
-				var words := "+%d" % item.refine_level
-				var w := font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-				var at := Vector2(size.x * 0.9 - w, size.y * 0.1 + px * 0.8)
-				draw_string_outline(font, at, words, HORIZONTAL_ALIGNMENT_LEFT, -1, px, maxi(2, int(px * 0.15)), CardTokens.HUB_OUTLINE)
-				draw_string(font, at, words, HORIZONTAL_ALIGNMENT_LEFT, -1, px, CardTokens.HUB_REFINE)
-			if low:  # worn down: a red disc with "!" top left (shape + colour)
-				var rr := size.x * 0.1
-				var cc := Vector2(size.x * 0.17, size.y * 0.17)
-				draw_circle(cc, rr + 1.5, CardTokens.HUB_OUTLINE)
-				draw_circle(cc, rr, CardTokens.HUB_BAR_LOW)
-				var mp := maxi(int(rr * 1.7), 8)
-				var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, mp).x
-				draw_string(font, cc + Vector2(-mw * 0.5, mp * 0.36), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, mp, CardTokens.HUB_BADGE_TEXT)
-		elif not caption.is_empty():
-			var px := maxi(int(round(CardTokens.FONT_CHAR_SLOT * s)), CardTokens.FONT_MIN)
-			var shown := caption
-			while shown.length() > 3 and font.get_string_size(shown, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > size.x * 0.86:
-				shown = shown.substr(0, shown.length() - 1)
-			var w := font.get_string_size(shown, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
-			draw_string(font, Vector2((size.x - w) * 0.5, size.y * 0.5 + px * 0.35), shown, HORIZONTAL_ALIGNMENT_LEFT, -1, px, CardTokens.HUB_CREAM if locked else CardTokens.HUB_SLOT_TEXT)
-		if fits:  # fits the selected slot: gold frame + a corner notch (not colour only)
-			var inner := rect.grow(-size.x * 0.06)
-			draw_rect(inner, CardTokens.HUB_FIT_MARK, false, maxf(2.0, 3.0 * s))
-			var k := size.x * 0.22
-			draw_colored_polygon(PackedVector2Array([inner.position, inner.position + Vector2(k, 0.0), inner.position + Vector2(0.0, k)]), CardTokens.HUB_FIT_MARK)
-		if has_focus():
-			draw_style_box(CardTokens.hub_focus(s, 12.0), rect)
-
-	static func _tier_color(tier: int) -> Color:
-		return CardTokens.HUB_TIER[clampi(tier, 0, CardTokens.HUB_TIER.size() - 1)]
 
 
 # ================================================================== build
@@ -345,44 +237,8 @@ func _build_panel() -> void:
 
 
 func _build_detail() -> void:
-	_detail = Panel.new()
-	_detail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_detail = HubItemDetails.new()
 	_equip_page.add_child(_detail)
-	_detail_cell = SlotCell.new()
-	_detail_cell.setup()
-	_detail_cell.focus_mode = Control.FOCUS_NONE
-	_detail_cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_detail_cell.selected = true
-	_detail.add_child(_detail_cell)
-	_detail_title = CardTokens.label("", CardTokens.FONT_CHAR_ITEM, CardTokens.HUB_INK, 1.0)
-	_detail_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_detail.add_child(_detail_title)
-	_detail_sub = CardTokens.label("", CardTokens.FONT_CHAR_LINE, CardTokens.HUB_SUBTEXT, 1.0, 0, "medium")
-	_detail.add_child(_detail_sub)
-	_detail_main = CardTokens.label("", CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, 1.0, 0, "medium")
-	_detail.add_child(_detail_main)
-	_detail_subs = CardTokens.label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, 1.0, 0, "medium")
-	_detail_subs.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_detail_subs.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	_detail.add_child(_detail_subs)
-	_compare = HBoxContainer.new()
-	_compare.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_detail.add_child(_compare)
-	_dur_key = CardTokens.label(CardTokens.t("durability"), CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, 1.0, 0, "medium")
-	_detail.add_child(_dur_key)
-	_dur_back = Panel.new()
-	_dur_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_detail.add_child(_dur_back)
-	_dur_fill = Panel.new()
-	_dur_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_dur_back.add_child(_dur_fill)
-	_dur_text = CardTokens.label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, 1.0, 0, "medium")
-	_detail.add_child(_dur_text)
-	_cost = CardTokens.label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, 1.0, 0, "medium")
-	_cost.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	_detail.add_child(_cost)
-	_actions = HBoxContainer.new()
-	_detail.add_child(_actions)
 
 
 # ================================================================== API
@@ -575,8 +431,7 @@ func _layout_equipment(pw: float, ph: float) -> void:
 	var detail_h := CardTokens.CHAR_DETAIL_BOX_H * s + (button_h - CardTokens.CHAR_ACTION_H * s)
 	_detail.position = Vector2(rx, inner.position.y)
 	_detail.size = Vector2(rw, detail_h)
-	CardTokens.panel(_detail, CardTokens.hub_box(CardTokens.HUB_DETAIL_BACK, CardTokens.HUB_DETAIL_EDGE, 3.0, 18.0, s))
-	_layout_detail(rw, detail_h, button_h)
+	_detail.layout_box(rw, detail_h, button_h, s)
 	var filter_h := CardTokens.tap(CardTokens.CHAR_FILTER_H, _phone) * s
 	var head_y := _detail.position.y + detail_h + CardTokens.CHAR_GAP * s * 0.6
 	_store_title.position = Vector2(rx, head_y)
@@ -596,49 +451,6 @@ func _layout_equipment(pw: float, ph: float) -> void:
 	_store_grid.columns = maxi(1, int((rw + store_gap) / (store_cell + store_gap)))
 	CardTokens.flow_gap(_store_grid, CardTokens.CHAR_STORE_GAP, s)
 	refresh()
-
-
-func _layout_detail(w: float, h: float, button_h: float) -> void:
-	var s := _s
-	var pad := CardTokens.CHAR_PAD * s
-	var icon := minf(CardTokens.CHAR_DETAIL_ICON * s, h - button_h - pad * 3.0)
-	_detail_cell.s = s
-	_detail_cell.position = Vector2(pad, pad)
-	_detail_cell.size = Vector2(icon, icon)
-	var tx := pad * 2.0 + icon
-	var tw := w - tx - pad
-	var y := pad * 0.6
-	for pair in [[_detail_title, CardTokens.FONT_CHAR_ITEM, 1.45, "display"], [_detail_sub, CardTokens.FONT_CHAR_LINE, 1.5, "medium"], [_detail_main, CardTokens.FONT_CHAR_LINE, 1.5, "medium"]]:
-		var l: Label = pair[0]
-		l.position = Vector2(tx, y)
-		l.size = Vector2(tw, float(pair[1]) * float(pair[2]) * s)
-		y += l.size.y
-	CardTokens.hub_text(_detail_title, CardTokens.FONT_CHAR_ITEM, CardTokens.HUB_INK, s)
-	CardTokens.hub_text(_detail_sub, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_SUBTEXT, s, 0, "medium")
-	CardTokens.hub_text(_detail_main, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "medium")
-	_detail_subs.position = Vector2(tx, y)
-	_detail_subs.size = Vector2(tw, CardTokens.FONT_CHAR_LINE * 1.3 * s)
-	CardTokens.hub_text(_detail_subs, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
-	_compare.position = Vector2(tx, y + _detail_subs.size.y)
-	_compare.size = Vector2(tw, CardTokens.FONT_CHAR_LINE * 1.3 * s)
-	CardTokens.gap(_compare, 12.0, s)
-	var bar_y := maxf(pad + icon + pad * 0.5, _compare.position.y + _compare.size.y)
-	var key_w := 130.0 * s
-	_dur_key.position = Vector2(pad, bar_y)
-	_dur_key.size = Vector2(key_w, CardTokens.CHAR_BAR_H * s * 1.4)
-	CardTokens.hub_text(_dur_key, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, s, 0, "medium")
-	_dur_back.position = Vector2(pad + key_w, bar_y + CardTokens.CHAR_BAR_H * s * 0.2)
-	_dur_back.size = Vector2(minf(370.0 * s, w * 0.4), CardTokens.CHAR_BAR_H * s)
-	CardTokens.panel(_dur_back, CardTokens.hub_bar(CardTokens.HUB_BAR_BACK, s))
-	_dur_text.position = Vector2(_dur_back.position.x + _dur_back.size.x + pad, bar_y)
-	_dur_text.size = Vector2(140.0 * s, _dur_key.size.y)
-	CardTokens.hub_text(_dur_text, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
-	_cost.position = Vector2(_dur_text.position.x + _dur_text.size.x, bar_y)
-	_cost.size = Vector2(maxf(w - _cost.position.x - pad, 0.0), _dur_key.size.y)
-	CardTokens.hub_text(_cost, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, s, 0, "medium")
-	_actions.position = Vector2(pad, h - pad * 0.7 - button_h)
-	_actions.size = Vector2(w - pad * 2.0, button_h)
-	CardTokens.gap(_actions, 18.0, s)
 
 
 func _layout_other(pw: float, ph: float) -> void:
@@ -780,12 +592,6 @@ func _find_stash(p, id: String):
 
 
 func _refresh_detail(p, rules, worn, stash_item, fits_count: int) -> void:
-	for child in _actions.get_children():
-		_actions.remove_child(child)
-		child.queue_free()
-	for child in _compare.get_children():
-		_compare.remove_child(child)
-		child.queue_free()
 	var item = stash_item
 	var from_stash: bool = stash_item != null
 	var slot_id := _sel_slot.split(":")[0] if not _sel_slot.is_empty() else ""
@@ -793,124 +599,45 @@ func _refresh_detail(p, rules, worn, stash_item, fits_count: int) -> void:
 	var slot_open: bool = slot_id.is_empty() or rules.slot_open_for(slot_id, card)
 	if item == null and not slot_id.is_empty() and slot_open:
 		item = worn.item_at(slot_id, slot_index)
-	_detail_cell.show_item(item, rules, "" if item != null else (CardTokens.slot_name(slot_id) if slot_open else CardTokens.t("slot_locked")))
-	_detail_cell.locked = not slot_open and item == null
-	var has := item != null
-	for node in [_dur_key, _dur_back, _dur_text, _cost]:
-		node.visible = has
-	if not has:
-		_detail_title.text = CardTokens.slot_name(slot_id) if not slot_id.is_empty() else CardTokens.t("pick_piece")
+	if item == null:
+		var heading := CardTokens.slot_name(slot_id) if not slot_id.is_empty() else CardTokens.t("pick_piece")
+		var caption := CardTokens.slot_name(slot_id) if slot_open else CardTokens.t("slot_locked")
 		if not slot_open:
 			var names: Array = []
 			for id in rules.slot(slot_id).get("classes", []):
 				names.append(CardTokens.class_name_of(str(id)))
-			_detail_sub.text = CardTokens.t("slot_locked")
-			_detail_main.text = CardTokens.t("slot_closed_line") % ", ".join(names)
-			_detail_subs.text = ""
+			_detail.show_empty(heading, CardTokens.t("slot_locked"), CardTokens.t("slot_closed_line") % ", ".join(names), "", caption, true)
 		elif slot_id.is_empty():
-			_detail_sub.text = ""
-			_detail_main.text = ""
-			_detail_subs.text = ""
+			_detail.show_empty(heading, "", "", "", caption)
 		else:
-			_detail_sub.text = CardTokens.t("vs_empty")
-			_detail_main.text = CardTokens.t("fits_count") % fits_count if fits_count > 0 else CardTokens.t("fits_none")
-			_detail_subs.text = "" if not p.stash.items.is_empty() else CardTokens.t("storage_empty")
+			_detail.show_empty(heading, CardTokens.t("vs_empty"), CardTokens.t("fits_count") % fits_count if fits_count > 0 else CardTokens.t("fits_none"), "" if not p.stash.items.is_empty() else CardTokens.t("storage_empty"), caption)
 		return
-	# name + refine, slot · tier, main stat (refine share), substats
-	var entry: Dictionary = rules.catalog.entry(item.item_id)
-	var name := str(entry.get("name", CardTokens.slot_name(item.slot)))
-	_detail_title.text = name + ("  +%d" % item.refine_level if item.refine_level > 0 else "")
-	var tier_id := str(rules.tiers[clampi(item.tier, 0, rules.tiers.size() - 1)]["id"])
-	_detail_sub.text = "%s  ·  %s  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), "◆".repeat(item.tier + 1)]
-	var factor: float = rules.durability_factor(item.durability_ratio())
-	var main: float = item.main_value(rules) * factor
-	var refine_part: float = item.base_value(rules) * float(rules.refine.get("bonus_per_level", 0.0)) * float(item.refine_level) * factor
-	var label := str(ItemText.STAT_LABELS.get(item.main_stat, item.main_stat))
-	_detail_main.text = "%s  %s" % [label, _num(main)] + ("  " + CardTokens.t("refine_share") % _num(refine_part) if refine_part > 0.0 else "")
-	var subs: Array[String] = []
-	for n in item.substats.size():
-		subs.append(ItemText.substat_text(item, rules, n))
-	_detail_subs.text = "  ·  ".join(subs)
+	_detail.show_item(item, rules)
 	if from_stash:
-		_fill_compare(item, worn, rules)
-	# durability: bar + number
-	var ratio: float = item.durability_ratio()
-	_dur_fill.size = Vector2(_dur_back.size.x * ratio, _dur_back.size.y)
-	CardTokens.panel(_dur_fill, CardTokens.hub_bar(CardTokens.HUB_BAR_LOW if ratio < rules.durability_full_above else CardTokens.HUB_BAR_FILL, _s))
-	_dur_text.text = CardTokens.t("durability_of") % [int(round(item.durability)), int(round(item.max_durability))]
+		var index := int(_sel_slot.split(":")[1]) if _sel_slot.begins_with(item.slot + ":") else 0
+		_detail.fill_compare(item, worn.item_at(item.slot, index), rules)
 	# costs and actions
 	var camp = GameState.camp_data
 	var refine_offer: Dictionary = Refine.quote(item, rules, camp)
 	var repair_cost: Dictionary = Repair.quote(item, camp, Camp.repair_discount(p, camp))
 	var costs: Array[String] = []
 	if refine_offer.get("ok", false):
-		costs.append("%s: %s" % [CardTokens.t("refine"), _cost_text(refine_offer["cost"], camp)])
+		costs.append("%s: %s" % [CardTokens.t("refine"), HubItemDetails.cost_text(refine_offer["cost"], camp)])
 	elif str(refine_offer.get("reason", "")) == "max_level":
 		costs.append(CardTokens.t("refine_max"))
-	costs.append("%s: %s" % [CardTokens.t("repair"), _cost_text(repair_cost, camp)] if str(repair_cost["kind"]) != "none" else CardTokens.t("like_new"))
-	_cost.text = "  ·  ".join(costs)
+	costs.append("%s: %s" % [CardTokens.t("repair"), HubItemDetails.cost_text(repair_cost, camp)] if str(repair_cost["kind"]) != "none" else CardTokens.t("like_new"))
+	_detail.cost.text = "  ·  ".join(costs)
 	if from_stash:
 		var problem: String = preload("res://logic/profile.gd").slot_problem(card, item, rules)
-		var wear := _action(CardTokens.t("equip"), _equip.bind(item.id, item.slot))
+		var wear := _detail.add_action(CardTokens.t("equip"), _equip.bind(item.id, item.slot))
 		wear.tooltip_text = CardTokens.error_text(problem) if not problem.is_empty() else ""
 	else:
-		_action(CardTokens.t("unequip"), _unequip.bind(item.slot, slot_index))
-	var refine_button := _action(CardTokens.t("refine"), _refine.bind(item.id, item.refine_level))
+		_detail.add_action(CardTokens.t("unequip"), _unequip.bind(item.slot, slot_index))
+	var refine_button := _detail.add_action(CardTokens.t("refine"), _refine.bind(item.id, item.refine_level))
 	refine_button.disabled = not refine_offer.get("ok", false) and str(refine_offer.get("reason", "")) in ["invalid_item", "max_level"]
-	var repair_button := _action(CardTokens.t("repair"), _repair.bind(item.id))
+	var repair_button := _detail.add_action(CardTokens.t("repair"), _repair.bind(item.id))
 	repair_button.disabled = str(repair_cost["kind"]) == "none"
-
-
-func _fill_compare(item, worn, rules) -> void:
-	var index := 0
-	if _sel_slot.begins_with(item.slot + ":"):
-		index = int(_sel_slot.split(":")[1])
-	var old = worn.item_at(item.slot, index)
-	var head := CardTokens.label(CardTokens.t("vs_worn"), CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, _s, 0, "medium")
-	_compare.add_child(head)
-	if old == null:
-		head.text += " " + CardTokens.t("vs_empty")
-		return
-	var a: Dictionary = item.stat_totals(rules)
-	var b: Dictionary = old.stat_totals(rules)
-	var shown := 0
-	for stat in rules.stat_ids:
-		var d := float(a.get(stat, 0.0)) - float(b.get(stat, 0.0))
-		if absf(d) < 0.05 or shown >= 4:
-			continue
-		var up := d > 0.0
-		var words := "%s %s%s" % [ItemText.STAT_LABELS.get(stat, stat), "▲ +" if up else "▼ ", _num(d)]
-		_compare.add_child(CardTokens.label(words, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_GOOD if up else CardTokens.HUB_BAD, _s, 0, "medium"))
-		shown += 1
-
-
-func _action(text: String, callback: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.focus_mode = Control.FOCUS_ALL
-	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	b.custom_minimum_size = Vector2(0.0, _actions.size.y)
-	CardTokens.hub_plate_button(b, _s)
-	CardTokens.hub_text(b, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, _s)
-	b.pressed.connect(callback)
-	_actions.add_child(b)
-	return b
-
-
-static func _num(value: float) -> String:
-	if absf(value - roundf(value)) < 0.05:
-		return str(int(roundf(value)))
-	return String.num(snappedf(value, 0.1), 1)
-
-
-static func _cost_text(cost: Dictionary, camp) -> String:
-	var parts: Array[String] = []
-	if int(cost.get("gold", 0)) > 0:
-		parts.append(CardTokens.t("cost_gold") % int(cost["gold"]))
-	var needed: Dictionary = cost.get("materials", {})
-	for id in needed:
-		parts.append("%d %s" % [int(needed[id]), str(camp.materials.get(id, {}).get("name", id))])
-	return CardTokens.t("cost_free") if parts.is_empty() else ", ".join(parts)
+	_detail.add_action(CardTokens.t("svc_blacksmith"), func() -> void: blacksmith_requested.emit(item.id))
 
 
 # ================================================================== input
