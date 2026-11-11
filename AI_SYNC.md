@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-12 | ui-programmer via PO | feature/class-weapons-card-screen | หน้าตัวละครของการ์ด `client/card_character_screen.gd` (แท็บ Equipment: 15 ช่องรวม off-hand, ค่าสถานะ, รายละเอียด, คลังกลาง, ใส่/ถอด/ตีบวก/ซ่อม ผ่านคำสั่งที่มี card) · Outfit/Skills ยังเป็นตัวว่าง · เทสต์ 2156/83 ชุดเดิม
+
 - 2026-11-12 | gameplay-programmer+PO | feature/class-weapons-card-screen | ของลดตามขนาดทัพ `loot_by_squad` [0.33,0.67,1.0] (drop/gold/material/relic/challenge/treasure) · loot.json ดรอป x1.5 · กระเป๋า 16 ช่อง · ทัพ 2 ตัว power 1.0 · เทสต์ 2154/83 ชุดเดิม
 
 - 2026-11-12 | ui-programmer via PO | feature/class-weapons-card-screen | หน้าฮับใหม่ในเกม (ฉากซากปรักหักพัง, กรอบหนัง 4 คลาส, เมนูซ้าย 6 อัน, แถบทัพ, FIGHT, อังกฤษ, Taviraj/Sarabun, ปุ่ม >=96px บนมือถือ) `card_deck_screen.gd`/`card_tokens.gd`/`card_portrait.gd` + `art/ui/class_cards/` · เมนูอื่นยัง Coming soon · ระวัง: `godot --import` crash แล้วแก้ .import ราว 3,200 ไฟล์ในเครื่อง ไม่ได้ commit · เทสต์ 2134/83

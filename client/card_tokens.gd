@@ -378,6 +378,53 @@ const CHAR_PIP := 5.0
 const CHAR_SWITCH_H := 40.0
 const CHAR_GAP := 16.0
 const CHAR_PAD := 20.0
+## Character screen, Equipment tab (reference units, see _mock_character_1080.png)
+const CHAR_PANEL_W := 1840.0
+const CHAR_PANEL_H := 930.0
+const CHAR_CONTENT := Rect2(90.0, 175.0, 90.0, 80.0)  ## inner margins of the panel: left, top, right, bottom
+const CHAR_DOLL_OFFSET := Vector2(10.0, -6.0)  ## slot grid origin from the inner top-left
+const CHAR_RIGHT_GAP := 40.0  ## slot grid to the right column
+const CHAR_DIVIDER := 2.0
+const CHAR_DETAIL_BOX_H := 345.0
+const CHAR_DETAIL_ICON := 150.0
+const CHAR_STORE_CELL := 92.0
+const CHAR_STORE_GAP := 12.0
+const CHAR_FILTER_H := 44.0
+const CHAR_FILTER_W := 120.0
+const CHAR_SWITCH_W := 230.0
+const CHAR_SWITCH_Y := 118.0
+const CHAR_HINT_Y := 1060.0
+const CHAR_WINDOW_RADIUS := 28.0
+const CHAR_WINDOW_LINE := 5.0
+const CHAR_PIP_SPACING := 2.1
+const CHAR_TOAST_BOTTOM := 70.0  ## character screen: the status line sits this far above the screen foot
+## Slot "slot:index" -> [column, row] on the 5 x 6 paper-doll (client/gear_panel.gd SLOT_PLACES) plus the off-hand
+## between Weapon and Back (Boss 2026-11-11: Sword & Shield only).
+const CHAR_SLOT_PLACES := {
+	"earring:0": [0, 0], "earring:1": [1, 0], "necklace:0": [2, 0], "ring:0": [3, 0], "ring:1": [4, 0],
+	"hat:0": [0, 1], "shirt:0": [0, 2], "pants:0": [0, 3], "shoes:0": [0, 4],
+	"armband:0": [4, 1], "bracelet:0": [4, 2], "bracelet:1": [4, 3],
+	"weapon:0": [1, 5], "offhand:0": [2, 5], "back:0": [3, 5],
+}
+## Storage filters: id -> slots (empty = everything).
+const CHAR_FILTERS: Array[Dictionary] = [
+	{"id": "all", "slots": []},
+	{"id": "weapon", "slots": ["weapon", "offhand"]},
+	{"id": "armor", "slots": ["hat", "shirt", "pants", "shoes", "armband", "back"]},
+	{"id": "trinket", "slots": ["necklace", "earring", "bracelet", "ring"]},
+]
+const CHAR_STATS: Array[String] = ["HP", "ATK", "DEF", "CRIRATE"]
+## The parchment part of hub_menu_plate.png (art px) used as the action-button plate; 9-slice margins l, t, r, b.
+const HUB_PLATE_REGION := Rect2(182.0, 29.0, 518.0, 149.0)
+const HUB_PLATE_MARGINS: Array[float] = [24.0, 24.0, 56.0, 24.0]
+const HUB_TAB_LIT := Color(1.0, 0.86, 0.6, 0.28)  ## over the active tab plate
+const HUB_TAB_DIM := Color(0.16, 0.08, 0.03, 0.32)  ## over an idle tab plate
+const HUB_FIT_MARK := Color(1.0, 0.8, 0.36, 0.95)  ## storage piece that fits the selected slot
+const HUB_STAT_KEY := Color("CDB48C")
+const HUB_DETAIL_BACK := Color(0.98, 0.93, 0.82, 0.55)
+const HUB_DETAIL_EDGE := Color("8A5A34")
+const HUB_DIVIDER := Color("B08A5C")
+const HUB_WINDOW_EDGE := Color("6B3F22")
 
 # ------------------------------------------------------------------ 3D portrait (card_portrait.gd)
 const PORTRAIT_MAX_PIXELS := Vector2(440.0, 620.0)
@@ -502,6 +549,40 @@ const STRINGS := {
 	"err_not_available_here": ["ทำตอนนี้ไม่ได้", "Not available here"],
 	"err_unknown": ["ทำไม่สำเร็จ", "That didn't work"],
 	"waiting": ["รอเซิร์ฟเวอร์…", "Waiting for the server..."],
+	"slot_offhand": ["มือรอง", "Off-hand"],
+	"slot_locked": ["ล็อก", "Locked"],
+	"slot_closed_line": ["ช่องนี้ใช้ได้เฉพาะ %s", "Only %s can use this slot."],
+	"stat_HP": ["HP", "HP"], "stat_ATK": ["ATK", "ATK"], "stat_DEF": ["DEF", "DEF"], "stat_CRIRATE": ["คริ", "CRIT"],
+	"refine_share": ["(+%s จากตีบวก)", "(+%s refine)"],
+	"tier_normal": ["ธรรมดา", "Normal"], "tier_rare": ["หายาก", "Rare"], "tier_epic": ["มหากาพย์", "Epic"], "tier_legendary": ["ตำนาน", "Legendary"],
+	"durability_of": ["%d / %d", "%d / %d"],
+	"cost_gold": ["%d ทอง", "%d gold"],
+	"cost_free": ["ฟรี", "free"],
+	"refine_max": ["ตีบวกสูงสุดแล้ว", "Max refine"],
+	"like_new": ["ไม่ต้องซ่อม", "Like new"],
+	"vs_worn": ["เทียบกับที่สวม:", "vs worn:"],
+	"vs_empty": ["ช่องนี้ยังว่าง", "slot is empty"],
+	"fits_count": ["ในคลังมี %d ชิ้นที่ใส่ช่องนี้ได้ (มีกรอบทอง)", "%d piece(s) in Storage fit this slot (gold frame)."],
+	"fits_none": ["ในคลังยังไม่มีชิ้นที่ใส่ช่องนี้ได้", "Nothing in Storage fits this slot yet."],
+	"storage_empty": ["คลังว่าง มอนสเตอร์ดรอปอุปกรณ์", "Storage is empty. Monsters drop gear."],
+	"refined_ok": ["ตีบวกสำเร็จ: +%d", "Refined to +%d"],
+	"refine_failed": ["ตีบวกไม่สำเร็จ: เหลือ +%d", "Refine failed: now +%d"],
+	"repaired_ok": ["ซ่อมแล้ว", "Repaired"],
+	"char_hint_touch": ["แตะ = รายละเอียด · แตะสองครั้ง = สวม / ถอด · Q / E = เปลี่ยนการ์ด · Esc / B = กลับ", "Tap a piece = details  ·  Double-tap = wear / take off  ·  Q / E = switch card  ·  Esc / B = back"],
+	"err_slot_closed": ["การ์ดนี้ใช้ช่องนี้ไม่ได้", "This card can't use that slot"],
+	"err_no_free_copy": ["ทุกชิ้นถูกการ์ดอื่นใส่อยู่", "Every copy is worn by another card"],
+	"err_cannot_afford": ["เงินหรือวัสดุไม่พอ", "Not enough gold or materials"],
+	"err_nothing_to_repair": ["ไม่ต้องซ่อม", "Nothing to repair"],
+	"err_no_workbench": ["ยังไม่มีโต๊ะช่าง", "The workbench is not built"],
+	"err_max_level": ["สูงสุดแล้ว", "Already at the maximum"],
+	"err_not_configured": ["ยังไม่เปิดใช้", "Not available yet"],
+	"err_item_destroyed": ["ชิ้นนี้พังแล้ว", "That piece is destroyed"],
+	"err_nothing_worn": ["ไม่ได้สวมอะไรอยู่", "Nothing is worn there"],
+	"err_conflict": ["ข้อมูลเปลี่ยน ลองใหม่", "Something changed, try again"],
+	"err_invalid_item": ["ทำกับชิ้นนี้ไม่ได้", "That can't be done to this piece"],
+	"err_item_not_owned": ["ไม่พบชิ้นนี้", "That piece is gone"],
+	"err_no_session": ["ยังไม่เชื่อมต่อ", "Not connected"],
+	"err_invalid_card": ["การ์ดไม่ถูกต้อง", "Unknown card"],
 }
 
 
@@ -762,6 +843,37 @@ static func grey_material() -> ShaderMaterial:
 		_grey = ShaderMaterial.new()
 		_grey.shader = shader
 	return _grey
+
+
+## The leather/parchment plate of hub_menu_plate.png as a button skin (action buttons of the hub panels).
+static func hub_plate_button(button: Button, s: float) -> void:
+	var image := tex(HUB_MENU_PLATE)
+	if image == null:
+		hub_button(button, s)
+		return
+	var tints := {"normal": HUB_WHITE, "hover": HUB_HOVER, "pressed": HUB_PRESSED, "disabled": HUB_LOCKED}
+	for state in tints:
+		var box := StyleBoxTexture.new()
+		box.texture = image
+		box.region_rect = HUB_PLATE_REGION
+		box.texture_margin_left = HUB_PLATE_MARGINS[0]
+		box.texture_margin_top = HUB_PLATE_MARGINS[1]
+		box.texture_margin_right = HUB_PLATE_MARGINS[2]
+		box.texture_margin_bottom = HUB_PLATE_MARGINS[3]
+		box.modulate_color = tints[state]
+		button.add_theme_stylebox_override(state, box)
+	button.add_theme_stylebox_override("hover_pressed", button.get_theme_stylebox("pressed"))
+	button.add_theme_stylebox_override("focus", hub_focus(s, 14.0))
+
+
+## A plain coloured rounded box (tab tints, the detail box) built from tokens.
+static func hub_box(fill: Color, edge: Color, line: float, radius: float, s: float) -> StyleBoxFlat:
+	return flat(fill, edge, line, radius, s)
+
+
+## The words of an error reason from logic/commands.gd ("err_<reason>"), or the generic line.
+static func error_text(reason: String) -> String:
+	return t("err_" + reason) if STRINGS.has("err_" + reason) else t("err_unknown")
 
 
 static func slot_name(slot_id: String) -> String:

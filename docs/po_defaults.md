@@ -14,4 +14,6 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-12 | Run bag size | 12 -> 16 slots (`data/camp/camp.json` run_slots) | the squad dropped ~12.3 items/run but a full 12-slot bag lost 3.8 of them; 16 keeps them without other balance changes | `data/camp/camp.json`
 - 2026-11-12 | Duo difficulty | wave_power_by_squad[1] 1.26 -> 1.0 (duo was winning only 25% vs squad 80%) | not re-measured yet; tune by sim | `data/journeys/goblin_waves.json`
 - 2026-11-12 | Online wave chest | not scaled by squad size yet (server/rooms/room.gd) | online rooms still use the old one-profile model (plan step 7) | `server/rooms/room.gd` _open_goblin_chest -> journey.treasure_drop()
+- 2026-11-12 | Double-tap a gear piece | equips/unequips at once (no confirm) | spec section 4, fast on phones | `client/card_character_screen.gd`
+- 2026-11-12 | Empty equipment slot look | slot name only (as the mock) | approved mock | `client/card_character_screen.gd`
 

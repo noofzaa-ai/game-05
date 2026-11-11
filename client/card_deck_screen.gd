@@ -14,6 +14,7 @@ const CardDeck := preload("res://logic/card_deck.gd")
 const CardPortrait := preload("res://client/card_portrait.gd")
 const CardFrame := preload("res://client/card_frame.gd")
 const CardHolo := preload("res://client/card_holo.gd")
+const CardCharacterScreen := preload("res://client/card_character_screen.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
 const CampScreen := preload("res://client/camp_screen.gd")
 const GraphicsPanel := preload("res://client/graphics_panel.gd")
@@ -82,6 +83,7 @@ var _stage_label: Label
 var _cards := {}  ## class id -> HubCard
 var _service_layer: Control
 var _service_open := ""
+var _character: CardCharacterScreen  ## the card character screen (spec §4), over the hub
 
 var _editor_layer: Control
 var _editor_back: Button
@@ -792,6 +794,7 @@ func _ready() -> void:
 	_build_editor_layer()
 	_build_overlays()
 	_build_service_layer()
+	_build_character_screen()
 	resized.connect(_layout)
 	_layout()
 	if auto_wire:
@@ -905,6 +908,54 @@ func _build_service_layer() -> void:
 	_service_layer.visible = false
 	add_child(_service_layer)
 	move_child(_service_layer, _toast.get_index())  # under the toast
+
+
+## The full-screen card character screen (Equipment / Outfit / Skills), opened by tapping a hub card.
+func _build_character_screen() -> void:
+	_character = CardCharacterScreen.new()
+	_character.visible = false
+	_character.reduced_motion = reduced_motion
+	add_child(_character)
+	move_child(_character, _service_layer.get_index())  # under the service panels and the toast
+	_character.send = _send
+	_character.notify = _character_toast
+	_character.closed.connect(_on_character_closed)
+	_character.settings_pressed.connect(func() -> void: settings_pressed.emit())
+	_character.account_pressed.connect(func() -> void: service_pressed.emit("account"))
+	_character.outfit_requested.connect(func(id: String) -> void:
+		_character.visible = false
+		_mode = "deck"
+		_open_editor(id))
+	_character.changed.connect(func() -> void:
+		if GameState.profile != null:
+			set_gold(GameState.profile.stash.gold))
+
+
+## A status line of the character screen: the toast, at the foot of the screen (its top bar holds the switcher).
+func _character_toast(text: String) -> void:
+	toast(text)
+	_toast.position.y = size.y - _toast.size.y - CardTokens.CHAR_TOAST_BOTTOM * _s
+
+
+## Opens the character screen of `class_id` (the hub stays under it, hidden).
+func open_character(class_id: String) -> void:
+	if _mode != "deck" or not _class_ids.has(class_id):
+		return
+	_mode = "character"
+	_deck_layer.visible = false
+	_character.open(class_id, _class_ids, _deck)
+
+
+func _on_character_closed() -> void:
+	if _mode == "character":
+		_mode = "deck"
+	_deck_layer.visible = true
+	_sync_from_profile_if_wired()
+
+
+func _sync_from_profile_if_wired() -> void:
+	if auto_wire:
+		_sync_from_profile()
 
 
 # ================================================================== layout
@@ -1436,7 +1487,7 @@ func _on_card_pressed(class_id: String) -> void:
 		await tween.finished
 		card.set_selected(false)
 		card.pop = 1.0
-	_open_editor(class_id)
+	open_character(class_id)
 
 
 func _open_editor(class_id: String) -> void:
@@ -1953,6 +2004,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _service_layer.visible:
 		_close_service()
+	elif _mode == "character":
+		return  # the character screen handles its own Back
 	elif _picker_layer.visible:
 		_close_picker(true)
 	elif _confirm_layer.visible:
