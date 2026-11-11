@@ -126,6 +126,7 @@ Today only `blade` items exist in the catalog; `greatsword/longbow/magic` are `c
 2. One shared bag/inventory for the whole account (ID). Each card has only its own equipment slots. An item is either in the shared bag/stash or worn by exactly one card. Squad loot goes into the shared bag (one drop per kill; re-tune drop rates after).
 3. Weapon slot restricted by class (weapon families in class data).
 4. Relics: undecided, may be cut entirely. Do not build per-card relic logic or relic UI; leave the account-wide relic code untouched.
+6. Off-hand slot (Boss 2026-11-11): add an `offhand` equipment slot usable ONLY by the sword_shield class (shields: stats, refine, drops). Other classes have it closed (greatsword two-handed; longbow/magic later). The class-attached shield visual is replaced by the equipped shield.
 5. Fashion is worn per card. Ownership is per piece: buying one piece lets exactly ONE card wear it at a time (buy 2 to dress 2 cards). Owned fashion becomes a counted inventory, not a set of unlocked ids.
 
 ## Open questions for the Boss (default in brackets) - answered above
