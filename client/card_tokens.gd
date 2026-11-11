@@ -405,7 +405,13 @@ const SVC_PAD := 28.0
 const SVC_HEAD := 72.0  ## header row: medallion, title, gold, Close
 const SVC_ROW_H := 56.0  ## source tabs / picker rows (96 on phones)
 const SVC_SPLIT := 0.52  ## left column (grid) share of the panel width
-const SVC_DETAIL_H := 0.5  ## details box share of the content height (Blacksmith)
+const SVC_DETAIL_H := 0.5
+const SHOP_DETAIL_H := 0.62  ## Shop: details box share of the content height (materials under it)
+const SVC_GOLD_W := 0.14  ## header money line width, share of the panel (Tailor: wider, it adds diamonds)
+const TAILOR_SPLIT := 0.36  ## the character window's share of the Tailor width
+const TAILOR_TILE := Vector2(170.0, 200.0)  ## a fashion piece tile (icon + name)
+const TAILOR_CHIP := Vector2(250.0, 64.0)  ## a look choice (hair / colour / makeup)
+const TAILOR_SWATCH := 36.0  ## colour disc on eye / skin chips  ## details box share of the content height (Blacksmith)
 ## Slot "slot:index" -> [column, row] on the 5 x 6 paper-doll (client/gear_panel.gd SLOT_PLACES) plus the off-hand
 ## between Weapon and Back (Boss 2026-11-11: Sword & Shield only).
 const CHAR_SLOT_PLACES := {
@@ -625,6 +631,58 @@ const STRINGS := {
 	"err_backpack_full": ["คลังเต็ม", "Storage is full"],
 	"err_item_not_in_container": ["ชิ้นนี้ไม่ได้อยู่ในคลัง", "That piece isn't in Storage"],
 	"err_invalid_container": ["ทำที่นี่ไม่ได้", "Not possible here"],
+	# Tailor
+	"diamonds": ["เพชร", "Diamonds"],
+	"tailor_hair": ["ผม", "Hair"],
+	"tailor_eyes": ["สีตา", "Eyes"],
+	"tailor_skin": ["สีผิว", "Skin"],
+	"tailor_makeup": ["แต่งตา", "Makeup"],
+	"tailor_base_outfit": ["ชุดพื้นฐาน", "Base outfit"],
+	"tailor_fashion": ["ชุดแฟชั่น", "Fashion"],
+	"tailor_back": ["ของบนหลัง", "Back item"],
+	"tailor_look_line": ["ตอนนี้: %s · แตะเพื่อเปลี่ยน (ฟรี)", "Now: %s  ·  tap a choice to change it (free)"],
+	"tailor_pick_piece": ["แตะชิ้นแฟชั่นเพื่อซื้อหรือใส่", "Tap a piece to buy or wear it"],
+	"tailor_owned_mark": ["มี %d", "Owned %d"],
+	"tailor_copies": ["มี %d ชิ้น · ว่าง %d", "Owned %d  ·  free %d"],
+	"tailor_worn_by": ["ใส่อยู่: %s", "Worn by: %s"],
+	"tailor_buy": ["ซื้อ (%d เพชร)", "Buy (%d diamonds)"],
+	"tailor_wear": ["ใส่ให้การ์ดนี้", "Wear on this card"],
+	"tailor_take_off": ["ถอดออก", "Take off"],
+	"tailor_changed": ["เปลี่ยนเป็น %s แล้ว", "Changed to %s"],
+	"tailor_bought": ["ซื้อ %s แล้ว (มี %d)", "Bought %s (you own %d)"],
+	"tailor_wearing": ["%s ใส่ %s แล้ว", "%s now wears %s"],
+	"tailor_took_off": ["ถอด %s แล้ว", "Took off %s"],
+	"eye_color_turquoise": ["ฟ้า", "Turquoise"], "eye_color_green": ["เขียว", "Green"], "eye_color_violet": ["ม่วง", "Violet"], "eye_color_brown": ["น้ำตาล", "Brown"],
+	"skin_fair": ["ขาว", "Fair"], "skin_natural": ["ธรรมชาติ", "Natural"], "skin_tan": ["แทน", "Tan"], "skin_deep": ["เข้ม", "Deep"],
+	"err_cosmetic_not_owned": ["ยังไม่มีชิ้นนี้ ซื้อก่อน", "You don't own this piece yet"],
+	"err_not_enough_diamonds": ["เพชรไม่พอ", "Not enough diamonds"],
+	"err_already_owned": ["มีครบทุกการ์ดแล้ว", "You already own one for every card"],
+	"err_invalid_cosmetic": ["ใช้ชิ้นนี้ไม่ได้", "That piece isn't available"],
+	# Shop
+	"shop_tab_buy": ["ซื้อ", "Buy"],
+	"shop_tab_sell": ["ขาย", "Sell"],
+	"shop_empty_stock": ["ร้านยังไม่มีของขายตอนนี้", "The merchant has nothing for sale right now."],
+	"shop_empty_stock_line": ["กลับมาใหม่ภายหลัง", "Come back later."],
+	"shop_buy_for": ["ซื้อ (%d ทอง)", "Buy (%d gold)"],
+	"shop_sell_for": ["ขาย (%d ทอง)", "Sell (%d gold)"],
+	"shop_sell_marked": ["ขายที่เลือก %d ชิ้น (%d ทอง)", "Sell %d marked (%d gold)"],
+	"shop_mark": ["เลือก", "Mark"],
+	"shop_unmark": ["ไม่เลือก", "Unmark"],
+	"shop_price_line": ["ราคาขาย: %d ทอง", "Sells for %d gold"],
+	"shop_marked_line": ["เลือกไว้ %d ชิ้น รวม %d ทอง", "%d marked  ·  %d gold"],
+	"shop_materials": ["วัสดุ", "Materials"],
+	"shop_sell_material": ["ขาย %d %s (%d ทอง)", "Sell %d %s (%d gold)"],
+	"shop_sold": ["ขายแล้ว ได้ %d ทอง", "Sold for %d gold"],
+	"shop_bought": ["ซื้อ %s แล้ว", "Bought %s"],
+	"shop_nothing_to_sell": ["คลังว่าง ไม่มีของจะขาย", "Storage is empty: nothing to sell"],
+	"shop_not_sellable": ["ขายชิ้นนี้ไม่ได้", "This piece can't be sold"],
+	"err_not_sellable": ["ขายชิ้นนี้ไม่ได้", "That can't be sold"],
+	"err_price_changed": ["ราคาเปลี่ยน ลองใหม่", "The price changed, try again"],
+	"err_gold_limit": ["ทองเต็มแล้ว", "You can't hold more gold"],
+	"err_stash_full": ["คลังเต็ม", "Storage is full"],
+	"err_invalid_product": ["ไม่มีสินค้านี้", "That isn't for sale"],
+	"err_invalid_count": ["จำนวนไม่ถูกต้อง", "Wrong amount"],
+	"err_invalid_material": ["ไม่มีวัสดุนี้", "Unknown material"],
 }
 
 

@@ -16,6 +16,7 @@ signal changed()  ## the profile changed (the hub refreshes gold / cards)
 ## (request: Dictionary) -> Dictionary, may be a coroutine (the hub's _send).
 var send: Callable
 var service := ""
+var full_screen := false  ## Tailor: the panel fills the safe area (spec §2: "Tailor may be full screen")
 var reduced_motion := false
 var s := 1.0
 var phone := false
@@ -98,7 +99,7 @@ func _layout() -> void:
 	s = CardTokens.scale_for(size)
 	phone = CardTokens.is_phone(size)
 	var side := CardTokens.hub_safe_x(size, s)
-	var want := CardTokens.SVC_PANEL * s
+	var want := CardTokens.SVC_PANEL * s if not full_screen else size
 	_box.size = Vector2(minf(want.x, size.x - side * 2.0), minf(want.y, size.y - CardTokens.HUB_SAFE.y * s * 2.0))
 	_box.position = (size - _box.size) * 0.5
 	CardTokens.panel(_box, CardTokens.hub_leather(s))
@@ -118,7 +119,7 @@ func _layout() -> void:
 	_close.position = Vector2(_paper.size.x - pad - close_w, pad * 0.5)
 	CardTokens.hub_plate_button(_close, s)
 	CardTokens.hub_text(_close, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, s)
-	_gold.size = Vector2(_paper.size.x * 0.14, head)
+	_gold.size = Vector2(_paper.size.x * CardTokens.SVC_GOLD_W, head)
 	_gold.position = Vector2(_close.position.x - pad - _gold.size.x, pad * 0.5)
 	CardTokens.hub_text(_gold, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "medium")
 	# the outcome line sits in the header, between the title and the gold (always in view, never under buttons)
@@ -141,7 +142,7 @@ func _profile():
 func refresh() -> void:
 	var p = _profile()
 	if p != null and _gold != null:
-		_gold.text = "%s  %d" % [CardTokens.t("gold"), p.stash.gold]
+		_gold.text = currency_text(p)
 
 
 func say(text: String, good: bool = true) -> void:
@@ -253,3 +254,8 @@ func layout_body(_area: Vector2) -> void:
 
 func first_focus() -> Control:
 	return _close
+
+
+## The header's money line (Tailor adds diamonds).
+func currency_text(p) -> String:
+	return "%s  %d" % [CardTokens.t("gold"), p.stash.gold]

@@ -28,7 +28,7 @@ const HubItemDetails := preload("res://client/hub_item_details.gd")
 signal closed()
 signal settings_pressed()
 signal account_pressed()
-signal outfit_requested(class_id: String)  ## the Outfit tab's button: the hub opens its look editor for this card
+signal outfit_requested(class_id: String)  ## the Outfit tab: the hub opens its Tailor for this card
 signal blacksmith_requested(item_id: String)  ## the details' Blacksmith button: the hub opens its Blacksmith panel on this piece
 signal changed()  ## the profile changed (the hub refreshes gold / cards)
 
@@ -277,6 +277,9 @@ func switch_card(step: int) -> void:
 
 
 func select_tab(tab: String) -> void:
+	if tab == "outfit":  # the Outfit tab is the Tailor for this card (hub_tailor_panel.gd, over this screen)
+		outfit_requested.emit(card)
+		return
 	_tab = tab
 	_refresh_tabs()
 
