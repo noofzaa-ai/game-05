@@ -120,7 +120,15 @@ Today only `blade` items exist in the catalog; `greatsword/longbow/magic` are `c
 4. Which state is per card vs account (relics, fashion wearing, skill build).
 5. Weapon slot restricted by class `weapon_families`.
 
-## Open questions for the Boss (default in brackets)
+## Boss answers (2026-11-11) - these override the defaults below
+
+1. Migration: PO decides -> existing gear goes to the Sword & Shield card; the other 3 cards get a starter set.
+2. One shared bag/inventory for the whole account (ID). Each card has only its own equipment slots. An item is either in the shared bag/stash or worn by exactly one card. Squad loot goes into the shared bag (one drop per kill; re-tune drop rates after).
+3. Weapon slot restricted by class (weapon families in class data).
+4. Relics: undecided, may be cut entirely. Do not build per-card relic logic or relic UI; leave the account-wide relic code untouched.
+5. Fashion is worn per card. Ownership is per piece: buying one piece lets exactly ONE card wear it at a time (buy 2 to dress 2 cards). Owned fashion becomes a counted inventory, not a set of unlocked ids.
+
+## Open questions for the Boss (default in brackets) - answered above
 
 1. Who gets the existing gear on migration? [Sword & Shield card; the other 3 cards get a starter set.]
 2. Loot after a fight: one shared bag for the squad, one drop per kill? [Yes, shared bag; re-tune drop rates after.]
