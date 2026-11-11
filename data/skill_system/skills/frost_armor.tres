@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "frost_armor"
-display_name = "เกราะเยือกแข็ง"
+display_name = "Frost Armor"
+display_name_th = "เกราะเยือกแข็ง"
 number = 12
 behavior = "armor"
 tags = Array[String](["buff", "duration"])

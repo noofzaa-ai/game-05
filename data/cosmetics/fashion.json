@@ -3,117 +3,140 @@
   "styles": [
     {
       "id": "none",
-      "name": "แสดงชุดต่อสู้ที่สวมใส่",
+      "name": "Show equipped armor",
+      "name_th": "แสดงชุดต่อสู้ที่สวมใส่",
       "asset_id": "none"
     },
     {
       "id": "red",
-      "name": "แจ็กเก็ตแดง + ยีนส์",
+      "name": "Red Jacket + Jeans",
+      "name_th": "แจ็กเก็ตแดง + ยีนส์",
       "asset_id": "red"
     },
     {
       "id": "purple",
-      "name": "เสื้อกระต่าย + กระโปรงม่วง",
+      "name": "Bunny Top + Purple Skirt",
+      "name_th": "เสื้อกระต่าย + กระโปรงม่วง",
       "asset_id": "purple"
     },
     {
       "id": "black",
-      "name": "แจ็กเก็ตดำ + กางเกงลายทาง",
+      "name": "Black Jacket + Striped Pants",
+      "name_th": "แจ็กเก็ตดำ + กางเกงลายทาง",
       "asset_id": "black"
     },
     {
       "id": "mono",
-      "name": "ชุดผู้ชายขาวดำ · เสื้อ Z",
+      "name": "Mono Menswear - Z Tee",
+      "name_th": "ชุดผู้ชายขาวดำ · เสื้อ Z",
       "asset_id": "mono"
     },
     {
       "id": "fem",
-      "name": "ชุดผู้หญิงลาเวนเดอร์ · ดาว + ตาราง",
+      "name": "Lavender Dress - Stars + Plaid",
+      "name_th": "ชุดผู้หญิงลาเวนเดอร์ · ดาว + ตาราง",
       "asset_id": "fem"
     },
     {
       "id": "black_zip",
-      "name": "ชุดดำ · แจ็กเก็ตซิป",
+      "name": "Black Set - Zip Jacket",
+      "name_th": "ชุดดำ · แจ็กเก็ตซิป",
       "asset_id": "black_zip"
     },
     {
       "id": "black_bow",
-      "name": "ชุดดำ · เกาะอกโบ",
+      "name": "Black Set - Bow Tube Top",
+      "name_th": "ชุดดำ · เกาะอกโบ",
       "asset_id": "black_bow"
     },
     {
       "id": "white_ribbon",
-      "name": "ชุดขาวดำ · เสื้อผูกโบ",
+      "name": "Mono Set - Ribbon Blouse",
+      "name_th": "ชุดขาวดำ · เสื้อผูกโบ",
       "asset_id": "white_ribbon"
     },
     {
       "id": "white_corset",
-      "name": "ชุดขาวดำ · คอร์เซ็ตกระโปรง",
+      "name": "Mono Set - Corset Skirt",
+      "name_th": "ชุดขาวดำ · คอร์เซ็ตกระโปรง",
       "asset_id": "white_corset"
     },
     {
       "id": "cocoa_knit",
-      "name": "ชุดถักน้ำตาล · กระโปรงพลีต",
+      "name": "Cocoa Knit - Pleated Skirt",
+      "name_th": "ชุดถักน้ำตาล · กระโปรงพลีต",
       "asset_id": "cocoa_knit"
     },
     {
       "id": "white_tee_cargo",
-      "name": "เสื้อยืดขาวพิมพ์ลาย · ขาสั้นคาร์โก้",
+      "name": "Print Tee - Cargo Shorts",
+      "name_th": "เสื้อยืดขาวพิมพ์ลาย · ขาสั้นคาร์โก้",
       "asset_id": "white_tee_cargo"
     },
     {
       "id": "white_tee_shorts",
-      "name": "เสื้อยืดขาวเรียบ · ขาสั้นพับขา",
+      "name": "Plain Tee - Rolled Shorts",
+      "name_th": "เสื้อยืดขาวเรียบ · ขาสั้นพับขา",
       "asset_id": "white_tee_shorts"
     },
     {
       "id": "black_khaki",
-      "name": "เชิ้ตดำ · กางเกงกากี",
+      "name": "Black Shirt - Khaki Pants",
+      "name_th": "เชิ้ตดำ · กางเกงกากี",
       "asset_id": "black_khaki"
     },
     {
       "id": "leather_hoodie",
-      "name": "หนังดำ + ฮู้ดเทา · ยีนส์ฟอก",
+      "name": "Leather + Gray Hoodie - Washed Jeans",
+      "name_th": "หนังดำ + ฮู้ดเทา · ยีนส์ฟอก",
       "asset_id": "leather_hoodie"
     },
     {
       "id": "bat_club",
-      "name": "Bat Club · ฮู้ดดำม่วง",
+      "name": "Bat Club - Purple Hoodie",
+      "name_th": "Bat Club · ฮู้ดดำม่วง",
       "asset_id": "bat_club"
     },
     {
       "id": "pumpkin_night",
-      "name": "Pumpkin Night · เอี๊ยมฟักทอง",
+      "name": "Pumpkin Night - Overalls",
+      "name_th": "Pumpkin Night · เอี๊ยมฟักทอง",
       "asset_id": "pumpkin_night"
     },
     {
       "id": "little_ghost",
-      "name": "Little Ghost · เคปผีน้อย",
+      "name": "Little Ghost - Cape",
+      "name_th": "Little Ghost · เคปผีน้อย",
       "asset_id": "little_ghost"
     },
     {
       "id": "moon_witch",
-      "name": "Moon Witch · แม่มดจันทร์",
+      "name": "Moon Witch",
+      "name_th": "Moon Witch · แม่มดจันทร์",
       "asset_id": "moon_witch"
     },
     {
       "id": "bat_club_male",
-      "name": "Bat Club ผู้ชาย",
+      "name": "Bat Club (Male)",
+      "name_th": "Bat Club ผู้ชาย",
       "asset_id": "bat_club_male"
     },
     {
       "id": "pumpkin_night_male",
-      "name": "Pumpkin Night ผู้ชาย",
+      "name": "Pumpkin Night (Male)",
+      "name_th": "Pumpkin Night ผู้ชาย",
       "asset_id": "pumpkin_night_male"
     },
     {
       "id": "little_ghost_male",
-      "name": "Little Ghost ผู้ชาย",
+      "name": "Little Ghost (Male)",
+      "name_th": "Little Ghost ผู้ชาย",
       "asset_id": "little_ghost_male"
     },
     {
       "id": "moon_witch_male",
-      "name": "Moon Wizard ผู้ชาย",
+      "name": "Moon Wizard (Male)",
+      "name_th": "Moon Wizard ผู้ชาย",
       "asset_id": "moon_witch_male"
     }
   ]

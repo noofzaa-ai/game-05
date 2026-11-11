@@ -243,7 +243,7 @@ func _fill_mall(p, part: String) -> void:
 		var mark := ""
 		if owned > 0:
 			mark = CardTokens.t("tailor_owned_mark") % owned
-		_option(fashion_name(id) + ("\n" + mark if not mark.is_empty() else ""), _fashion_icon(part, id), "", id == wearing, select_piece.bind(id), id == picked)
+		_option(fashion_name(id, part) + ("\n" + mark if not mark.is_empty() else ""), _fashion_icon(part, id), "", id == wearing, select_piece.bind(id), id == picked)
 	if picked.is_empty():
 		picked = wearing if wearing != "none" else ""
 	_fill_strip(p, part, wearing)
@@ -267,7 +267,7 @@ func _fill_strip(p, part: String, wearing: String) -> void:
 	var on: Array = Mall.cards_wearing(p, part, id)
 	var names: Array = on.map(func(c) -> String: return CardTokens.class_name_of(str(c)))
 	var price := int(Mall.config().get("prices", {}).get(part, 0))
-	_strip_name.text = fashion_name(id)
+	_strip_name.text = fashion_name(id, part)
 	var line := CardTokens.t("tailor_copies") % [owned, free]
 	if not names.is_empty():
 		line += "   ·   " + CardTokens.t("tailor_worn_by") % ", ".join(names)
@@ -286,10 +286,13 @@ func _fill_strip(p, part: String, wearing: String) -> void:
 	HubItemDetails.fit_buttons(_strip_buttons, s)
 
 
-## The fashion piece's English display name: from the id (the data names are Thai for now).
-static func fashion_name(id: String) -> String:
-	var key := "fashion_" + id
-	return CardTokens.t(key) if CardTokens.STRINGS.has(key) else id.replace("_", " ").capitalize()
+## The fashion piece's display name: the English `name` of its data/cosmetics choice (Thai is kept in `name_th`,
+## tools/items/cosmetic_names.py). Fashion and Back share some ids (bat_club ...), so the part picks the list.
+static func fashion_name(id: String, part := "fashion") -> String:
+	var choice: Dictionary = ItemAssets.cosmetics().entry(part, id)
+	if not choice.is_empty() and not str(choice.get("name", "")).is_empty():
+		return str(choice["name"])
+	return id.replace("_", " ").capitalize()
 
 
 static func _fashion_icon(part: String, id: String) -> Texture2D:
@@ -398,11 +401,11 @@ func _set_look(part: String, choice: String) -> void:
 func _buy(part: String, id: String) -> void:
 	var result := await run({"type": "mall_buy", "part": part, "choice": id})
 	if result.get("ok", false):
-		say(CardTokens.t("tailor_bought") % [fashion_name(id), int(result.get("owned", 1))])
+		say(CardTokens.t("tailor_bought") % [fashion_name(id, part), int(result.get("owned", 1))])
 
 
 func _wear(part: String, id: String) -> void:
 	var old := str(Mall.card_look(_profile(), card).get(part, "none"))
 	var result := await run({"type": "card_fashion", "class": card, "part": part, "choice": id})
 	if result.get("ok", false):
-		say(CardTokens.t("tailor_took_off") % fashion_name(old) if id == "none" else CardTokens.t("tailor_wearing") % [CardTokens.class_name_of(card), fashion_name(id)])
+		say(CardTokens.t("tailor_took_off") % fashion_name(old, part) if id == "none" else CardTokens.t("tailor_wearing") % [CardTokens.class_name_of(card), fashion_name(id, part)])

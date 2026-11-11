@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "thorn_trap"
-display_name = "กับดักหนาม"
+display_name = "Thorn Trap"
+display_name_th = "กับดักหนาม"
 number = 3
 behavior = "trap"
 tags = Array[String](["place", "area", "hit", "duration"])

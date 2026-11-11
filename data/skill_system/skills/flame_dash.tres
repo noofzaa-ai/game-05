@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "flame_dash"
-display_name = "พุ่งเพลิง"
+display_name = "Flame Dash"
+display_name_th = "พุ่งเพลิง"
 number = 8
 behavior = "trail"
 tags = Array[String](["dash", "area", "hit", "duration"])

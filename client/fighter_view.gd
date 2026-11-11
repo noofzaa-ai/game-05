@@ -206,6 +206,8 @@ func show_state(body: SimBody, fighter: Fighter, data: CombatData = null) -> voi
 			_tint_own_materials(fighter, data, warning)
 			return
 	else:
+		if _nose == null:  # _ready stopped early (the character model script failed to load): nothing to draw
+			return
 		_nose.position = Vector3(0.45 * facing.x, 1.4, 0.45 * facing.y)
 
 	var color := base_color

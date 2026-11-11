@@ -3,17 +3,20 @@
   "styles": [
     {
       "id": "auto",
-      "name": "อัตโนมัติ · สุ่มจังหวะ",
+      "name": "Auto - Random Timing",
+      "name_th": "อัตโนมัติ · สุ่มจังหวะ",
       "asset_id": "auto"
     },
     {
       "id": "open",
-      "name": "เปิดตาค้าง",
+      "name": "Always Open",
+      "name_th": "เปิดตาค้าง",
       "asset_id": "open"
     },
     {
       "id": "closed",
-      "name": "หลับตาค้าง",
+      "name": "Always Closed",
+      "name_th": "หลับตาค้าง",
       "asset_id": "closed"
     }
   ]

@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "ice_wall"
-display_name = "กำแพงน้ำแข็ง"
+display_name = "Ice Wall"
+display_name_th = "กำแพงน้ำแข็ง"
 number = 11
 behavior = "wall"
 tags = Array[String](["place", "area", "hit", "duration"])

@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "blood_shield"
-display_name = "โล่โลหิต"
+display_name = "Blood Shield"
+display_name_th = "โล่โลหิต"
 number = 4
 behavior = "shield"
 tags = Array[String](["buff", "duration"])

@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "blood_pierce"
-display_name = "แทงทะลวงโลหิต"
+display_name = "Blood Pierce"
+display_name_th = "แทงทะลวงโลหิต"
 number = 2
 behavior = "blood"
 tags = Array[String](["melee", "hit"])

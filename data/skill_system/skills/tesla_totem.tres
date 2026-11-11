@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "tesla_totem"
-display_name = "โทเท็มสายฟ้า"
+display_name = "Tesla Totem"
+display_name_th = "โทเท็มสายฟ้า"
 number = 16
 behavior = "totem"
 tags = Array[String](["place", "projectile", "hit", "duration"])

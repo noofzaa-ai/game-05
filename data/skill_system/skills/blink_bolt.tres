@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "blink_bolt"
-display_name = "วาร์ปสายฟ้า"
+display_name = "Blink Bolt"
+display_name_th = "วาร์ปสายฟ้า"
 number = 15
 behavior = "blink"
 tags = Array[String](["dash", "area", "hit"])

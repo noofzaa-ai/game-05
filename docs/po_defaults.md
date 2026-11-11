@@ -20,4 +20,6 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-12 | Visible weapon | follows the class armor's weapon, not the equipped item | every catalog weapon is still a blade; showing it would put a sword on the archer/mage | `client/characters/studio05_character_model.gd`
 - 2026-11-12 | Iris style option on cards | add it (7 Studio styles) | Studio parity rule: keep source options | `logic/card_deck.gd` + Tailor
 - 2026-11-12 | Card makeup "none" | maps to the Studio's natural / no-makeup set | Studio parity | `client/characters/studio05_character_model.gd`
+- 2026-11-12 | Trinkets in the shop | none until trinket items exist in the catalog (no art yet) | avoid placeholder items | `data/items/shop.json`
+- 2026-11-12 | Shop prices | flat 1000 gold at tier 1 (existing `logic/shop.gd` rule) | unchanged rule; tune later | `data/items/shop.json`, `logic/shop.gd`
 

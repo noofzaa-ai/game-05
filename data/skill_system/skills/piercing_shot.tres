@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "piercing_shot"
-display_name = "ลูกศรทะลวง"
+display_name = "Piercing Shot"
+display_name_th = "ลูกศรทะลวง"
 number = 19
 behavior = "piercing"
 tags = Array[String](["projectile", "hit"])

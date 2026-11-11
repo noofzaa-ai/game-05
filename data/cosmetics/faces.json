@@ -3,47 +3,56 @@
   "faces": [
     {
       "id": "original",
-      "name": "ทรงเดิม",
+      "name": "Original",
+      "name_th": "ทรงเดิม",
       "asset_id": ""
     },
     {
       "id": "01",
-      "name": "01 · ตาเปิด คม",
+      "name": "01 - Open, Sharp",
+      "name_th": "01 · ตาเปิด คม",
       "asset_id": "res://art/fashion/eyes/eye_01.svg"
     },
     {
       "id": "02",
-      "name": "02 · ตาปรือ",
+      "name": "02 - Sleepy",
+      "name_th": "02 · ตาปรือ",
       "asset_id": "res://art/fashion/eyes/eye_02.svg"
     },
     {
       "id": "03",
-      "name": "03 · ตาโค้งนุ่ม",
+      "name": "03 - Soft Curve",
+      "name_th": "03 · ตาโค้งนุ่ม",
       "asset_id": "res://art/fashion/eyes/eye_03.svg"
     },
     {
       "id": "04",
-      "name": "04 · ตาเฉียง",
+      "name": "04 - Slanted",
+      "name_th": "04 · ตาเฉียง",
       "asset_id": "res://art/fashion/eyes/eye_04.svg"
     },
     {
       "id": "05",
-      "name": "05 · ตากลมหวาน",
+      "name": "05 - Sweet Round",
+      "name_th": "05 · ตากลมหวาน",
       "asset_id": "res://art/fashion/eyes/eye_05.svg"
     },
     {
       "id": "06",
-      "name": "06 · ตากลมโต",
+      "name": "06 - Big Round",
+      "name_th": "06 · ตากลมโต",
       "asset_id": "res://art/fashion/eyes/eye_06.svg"
     },
     {
       "id": "07",
-      "name": "07 · ตาแมว รูม่านตาตั้ง",
+      "name": "07 - Cat Eye, Slit Pupil",
+      "name_th": "07 · ตาแมว รูม่านตาตั้ง",
       "asset_id": "res://art/fashion/eyes/eye_07.svg"
     },
     {
       "id": "08",
-      "name": "08 · ตาคมดุ",
+      "name": "08 - Fierce",
+      "name_th": "08 · ตาคมดุ",
       "asset_id": "res://art/fashion/eyes/eye_08.svg"
     }
   ]

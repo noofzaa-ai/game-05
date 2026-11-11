@@ -2,7 +2,8 @@ class_name ZorxSkillData
 extends Resource
 
 @export var id: String = ""
-@export var display_name: String = ""
+@export var display_name: String = ""  ## English, shown in game (plain ASCII: the web font)
+@export var display_name_th: String = ""  ## the Thai name, kept
 @export var tags: Array[String] = []
 @export var slots: Array[String] = ["shape", "effect"]
 @export var built_in_statuses: Array[String] = []

@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "storm_blades"
-display_name = "ใบมีดพายุ"
+display_name = "Storm Blades"
+display_name_th = "ใบมีดพายุ"
 number = 1
 behavior = "storm"
 tags = Array[String](["melee", "hit", "dash"])

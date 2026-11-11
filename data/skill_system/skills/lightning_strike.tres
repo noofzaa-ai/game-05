@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "lightning_strike"
-display_name = "เรียกฟ้าผ่า"
+display_name = "Lightning Strike"
+display_name_th = "เรียกฟ้าผ่า"
 number = 14
 behavior = "strike"
 tags = Array[String](["area", "hit"])

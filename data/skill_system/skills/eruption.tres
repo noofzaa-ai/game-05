@@ -3,7 +3,8 @@
 [resource]
 script = ExtResource("1")
 id = "eruption"
-display_name = "ปะทุ"
+display_name = "Eruption"
+display_name_th = "ปะทุ"
 number = 7
 behavior = "consume_burn"
 tags = Array[String](["area", "hit"])

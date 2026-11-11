@@ -109,7 +109,7 @@ classes show no shield.
 | Anime face, iris presets, makeup 0/1/2, relaxed lid, shut line, brow | anime-face.js, iris-presets.js, eye-makeup.js | toon shader part 1 | ported (new 2026-11-11 version) |
 | Blink | blink.js | `_update_blink` in `apply_pose` (driven by the game clock) | ported |
 | Hair colour default per hair (A/B `#6F657F`, C–G white) | index.html updateColors | `_hair_linear` | ported |
-| Iris style → default colour | index.html irisSelect | `set_appearance` (`iris_style`) | ported in the model; **no card option yet** (see OPEN) |
+| Iris style → default colour | index.html irisSelect | `set_appearance` (`iris_style`) | ported; card option `iris_style` (Tailor Eyes tab) — CLOSED 2026-11-12 |
 | Screen-space 1.5 px outline `#171224` (SVG feMorphology) | index.html filter | not ported (game uses its own `ink_outline` hull) | OPEN (as before) |
 | In-place run (hips Z locked) | loadInPlaceRun | hips x/z locked when sampling | ported (as before) |
 | Great Sword run keeps the `gs_run` arm grip on `gs_run_2` | keepGreatSwordGrip | game uses `gs_run` for running | equivalent arms; legs/bounce differ from `gs_run_2` — OPEN |
@@ -117,12 +117,10 @@ classes show no shield.
 
 ## 6. OPEN parity differences
 
-1. **Card options not yet exposed**: iris style (0,1,3,6,7,9,10) and makeup "natural" are wired in the model, but the card
-   data (`logic/card_deck.gd` MAKEUPS/PARTS, owned by the PO/logic side) has no iris part and maps the card's makeup
-   "none" to Anime Soft (unchanged look). Needs a logic change: add `iris` part, and a decision whether "none" = Studio "natural".
-2. **Outfit choice "none" now means the class outfit** (the Studio's "ชุดประจำคลาส"); "silver" = Silk + class weapons only.
-   The starter cards for Great Sword / Longbow / Magic are `silver`, so they start in the silk, not the class armor.
-   Decide whether starters should switch to the class outfit.
+1. ~~**Card options not yet exposed**~~ CLOSED 2026-11-12: the card has an `iris_style` part (7 Studio styles,
+   `logic/card_deck.gd`, Tailor Eyes tab) and the card's makeup "none" maps to the Studio "natural" set (`docs/po_defaults.md`).
+2. ~~**Outfit choice "none" = class outfit; starters were `silver`**~~ CLOSED 2026-11-12: the Great Sword / Longbow / Magic
+   starters now wear the class armor (`logic/card_deck.gd` STARTERS, `docs/po_defaults.md`).
 3. **Game item weapon is hidden** whenever the class gear draws a weapon (all four classes). The item weapon still sits in
    the socket for swing trails; weapon visuals no longer change with the equipped weapon item.
 4. Great Sword run uses `gs_run`, Studio preview uses `gs_run_2` with `gs_run` arms.

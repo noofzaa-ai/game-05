@@ -4,22 +4,26 @@
   "colors": [
     {
       "id": "fair",
-      "name": "ขาว",
+      "name": "Fair",
+      "name_th": "ขาว",
       "color": "#f0d7c2"
     },
     {
       "id": "natural",
-      "name": "ธรรมชาติ",
+      "name": "Natural",
+      "name_th": "ธรรมชาติ",
       "color": "#ddbfae"
     },
     {
       "id": "tan",
-      "name": "แทน",
+      "name": "Tan",
+      "name_th": "แทน",
       "color": "#b98b6d"
     },
     {
       "id": "deep",
-      "name": "เข้ม",
+      "name": "Deep",
+      "name_th": "เข้ม",
       "color": "#80583e"
     }
   ]

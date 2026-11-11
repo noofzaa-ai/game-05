@@ -3,12 +3,14 @@
   "styles": [
     {
       "id": "on",
-      "name": "แสดง",
+      "name": "Show",
+      "name_th": "แสดง",
       "asset_id": "on"
     },
     {
       "id": "off",
-      "name": "ซ่อน",
+      "name": "Hide",
+      "name_th": "ซ่อน",
       "asset_id": "off"
     }
   ]
