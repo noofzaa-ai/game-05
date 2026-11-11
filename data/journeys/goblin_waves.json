@@ -30,7 +30,7 @@
   "goblin_base_quarry"
  ],
  "boss": {
-  "hp_mult": 1.3,
+  "hp_mult": 1.7,
   "poise_mult": 2.0,
   "label": "BOSS"
  },
@@ -401,7 +401,7 @@
   },
   {
    "level": 4,
-   "power": 0.85,
+   "power": 1.15,
    "enemies": [
     {
      "type": "goblin_chief",
@@ -439,5 +439,7 @@
  "_waves": "Wave mode (Boss 2026-11-10, auto-battler): the 12 stages are the 12 waves of ONE fight (goblin_base_gate board, first of arena_maps); each arrives when the field is clear, the last is the Chief's wave; monster counts x1.5 (wave_count_scale) except the boss. No portals or camps in this mode. Set wave_mode false for the old 12-stage road.",
  "_design_waves": "Wave mode (Boss 2026-11-10, auto-battler): the 12 stages below are the 12 WAVES of one fight on one board (one of arena_maps, by seed); each wave arrives when the field is clear; wave 12 is the Chief with its escorts. Monster counts x wave_count_scale (1.5) except the boss. No portals or camps. ink_road.json stays the old 12-stage road.",
  "wave_heal_fraction": 0.4,
- "wave_power_scale": 0.6
+ "_tuning_waves": "Auto-battler difficulty (2026-11-11, tools/balance/class_sim.gd, 40 seeds, pilot reaction 0.85): wave power depends on squad size (wave_power_by_squad, index 0 = solo; wave_power_scale is the fallback). Squad of 3 at 1.26: starter squad wins ~72%, ~1 knock-down per run, the boss wave hurts most (~2000 damage vs ~800-1000 for waves 7-11), 10 of 11 losses at the boss. Solo at 0.5: each class ~65-85%. Boss wave power 0.85 -> 1.15 and boss hp_mult 1.3 -> 1.7 make the Chief the peak. The squad number is steep: 1.20 -> ~80%+, 1.28 -> 70%, 1.35 -> 55%. Party HP scaling (combat coop hp_multiplier) is applied once by PartyJourney (was twice before). Placeholder until the Boss plays.",
+ "wave_power_scale": 1.26,
+ "wave_power_by_squad": [0.5, 1.26, 1.26]
 }

@@ -367,7 +367,7 @@
     "special": "Cleaving Rush",
     "ultimate": "Giant's Fall"
    },
-   "speed": 1.5,
+   "speed": 1.15,
    "reach": 1.9,
    "width": 1.6,
    "power": 1.7,
@@ -376,9 +376,9 @@
    "stun": 1.3,
    "stamina": 1.4,
    "overrides": {
-    "heavy": {
-     "advance": 1.2
-    },
+    "light_1": {"effects": [{"id": "fortify", "target": "self"}]},
+    "light_3": {"effects": [{"id": "weaken", "chance": 50}, {"id": "regen", "target": "self"}]},
+    "heavy": {"advance": 1.2, "effects": [{"id": "fortify", "target": "self"}]},
     "run_heavy": {
      "advance": 6.5
     },

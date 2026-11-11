@@ -447,6 +447,8 @@ func _release_waves() -> void:
 		fighter.stats["HP"] = float(fighter.stats["HP"]) * float(entry.get("hp_scale", 1.0))
 		fighter.stats["ATK"] = float(fighter.stats["ATK"]) * float(entry.get("atk_scale", 1.0))
 		fighter.hp = fighter.max_hp()
+		fighter.max_poise *= float(entry.get("poise_scale", 1.0))  # wave-mode boss: journey boss poise_mult
+		fighter.poise = fighter.max_poise
 		ids.append(id)
 	_waves_released += 1
 	events.append({"type": "wave_arrived", "wave": _waves_released + 1, "enemies": ids})

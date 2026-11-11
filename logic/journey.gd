@@ -271,14 +271,14 @@ func _populate_waves(sim: GameSim, map, first_enemy_id: int) -> Array[int]:
 	for id in sim.fighters:
 		if sim.fighters[id].team != "enemy":
 			players += 1
-	var coop_scale := 1.0
-	if sim.combat != null and not sim.combat.coop.is_empty() and players >= 1 and players <= sim.combat.coop["hp_multiplier"].size():
-		coop_scale = float(sim.combat.coop["hp_multiplier"][players - 1])
+	var squad_power := data.wave_power_for(players)
+	# No party HP scaling here: PartyJourney.populate multiplies every enemy on the field and in the queued
+	# waves by combat coop hp_multiplier once (scaling here too counted it twice: 4.84x for a squad of 3).
 	sim.wave_heal_fraction = data.wave_heal_fraction
 	var next_id := first_enemy_id
 	for wave in range(1, data.stage_count + 1):
 		var fight: Dictionary = data.stages[wave - 1]
-		var power := float(fight.get("power", 1.0)) * data.wave_power_scale
+		var power := float(fight.get("power", 1.0)) * squad_power
 		var entries: Array = []
 		var placed := 0
 		for enemy in fight.get("enemies", []):
@@ -290,8 +290,11 @@ func _populate_waves(sim: GameSim, map, first_enemy_id: int) -> Array[int]:
 				spot += Vector3(-0.8 * float(row), 0.0, (0.9 if row % 2 == 0 else -0.9) * float(row))
 				if is_boss:
 					spot = Vector3(5.2, 0.05, 0.0)
-				var hp_scale := power * coop_scale * (float(data.boss.get("hp_mult", 1.0)) if is_boss else 1.0)
-				entries.append({"id": next_id, "position": spot, "type": str(enemy["type"]), "level": int(enemy.get("level", fight["level"])), "hp_scale": hp_scale, "atk_scale": power})
+				var hp_scale := power * (float(data.boss.get("hp_mult", 1.0)) if is_boss else 1.0)
+				var entry := {"id": next_id, "position": spot, "type": str(enemy["type"]), "level": int(enemy.get("level", fight["level"])), "hp_scale": hp_scale, "atk_scale": power}
+				if is_boss:
+					entry["poise_scale"] = float(data.boss.get("poise_mult", 1.0))
+				entries.append(entry)
 				next_id += 1
 				placed += 1
 		if wave == 1:
@@ -301,6 +304,8 @@ func _populate_waves(sim: GameSim, map, first_enemy_id: int) -> Array[int]:
 				fighter.stats["HP"] = float(fighter.stats["HP"]) * float(entry["hp_scale"])
 				fighter.stats["ATK"] = float(fighter.stats["ATK"]) * float(entry["atk_scale"])
 				fighter.hp = fighter.max_hp()
+				fighter.max_poise *= float(entry.get("poise_scale", 1.0))
+				fighter.poise = fighter.max_poise
 		else:
 			sim.queue_wave(entries)
 	return []

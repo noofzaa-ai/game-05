@@ -42,10 +42,13 @@ func _init() -> void:
 	combat = CombatLoader.load_default()
 	var seeds := 8
 	var only := ""
+	var first := 0  ## first=N: start at seed index N (lets several processes split one measurement)
 	no_skills = OS.get_cmdline_user_args().has("noskills")
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("seeds="):
 			seeds = int(arg.substr(6))
+		elif arg.begins_with("first="):
+			first = int(arg.substr(6))
 		elif arg.begins_with("only="):
 			only = arg.substr(5)
 	var scenarios := []
@@ -69,7 +72,10 @@ func _init() -> void:
 		var deaths := 0
 		var ults := 0
 		var timeouts := 0
-		for s in seeds:
+		var wave_taken := []
+		wave_taken.resize(13)
+		wave_taken.fill(0.0)
+		for s in range(first, first + seeds):
 			var result := play(scenario["classes"], 1000 + s * 17)
 			if result["won"]:
 				wins += 1
@@ -78,6 +84,8 @@ func _init() -> void:
 				timeouts += 1
 			waves_total += int(result["waves"])
 			waves_min = mini(waves_min, int(result["waves"]))
+			for w in 13:
+				wave_taken[w] += result["wave_taken"][w]
 			for m in result["members"]:
 				dealt += m["dealt"] + m["skill_dealt"]
 				taken += m["taken"]
@@ -92,6 +100,7 @@ func _init() -> void:
 					per_class[key]["n"] += 1
 		print("%-19s | %3d%% | %5.1f / %2d    | %7s | %9.0f | %9.0f | %6.2f | %4.1f | %d" % [scenario["name"], 100 * wins / seeds, float(waves_total) / seeds, waves_min,
 			("%.0f" % (clear_ticks / 60.0 / wins)) if wins > 0 else "-", dealt / seeds, taken / seeds, float(deaths) / seeds, float(ults) / seeds, timeouts])
+		print("  taken per wave 1..12: %s" % [", ".join(range(1, 13).map(func(w): return "%.0f" % (wave_taken[w] / seeds)))])
 	print("")
 	print("member (per run avg)              | weapon dmg | skill dmg | casts | dmg taken | kills | deaths | ults | gauge-full s | attacking% | walking% | casting%")
 	for key in per_class:
@@ -154,6 +163,9 @@ func play(classes: Array, seed: int) -> Dictionary:
 		memories[id] = Pilot.new_memory(id * 7919 + 1 + seed)
 		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0}
 	var waves := 1
+	var wave_taken := []
+	wave_taken.resize(13)
+	wave_taken.fill(0.0)
 	var tick := 0
 	var gauge_max := float(combat.rules["ultimate_gauge_max"])
 	while tick < MAX_TICKS and sim.living_enemy_count() + sim.pending_wave_count() > 0:
@@ -175,6 +187,7 @@ func play(classes: Array, seed: int) -> Dictionary:
 						members[a]["dealt"] += float(event["damage"])
 					if members.has(t) and not members.has(a):
 						members[t]["taken"] += float(event["damage"])
+						wave_taken[waves] += float(event["damage"])
 				"skill_hit", "skill_dot":
 					var a := int(event.get("attacker", -1))
 					var t := int(event.get("target", -1))
@@ -182,6 +195,7 @@ func play(classes: Array, seed: int) -> Dictionary:
 						members[a]["skill_dealt"] += float(event["damage"])
 					if members.has(t) and not members.has(a):
 						members[t]["taken"] += float(event["damage"])
+						wave_taken[waves] += float(event["damage"])
 				"skill_cast":
 					if members.has(int(event.get("player", -1))):
 						members[int(event["player"])]["casts"] += 1
@@ -189,14 +203,16 @@ func play(classes: Array, seed: int) -> Dictionary:
 					var t := int(event.get("target", -1))
 					if members.has(t):
 						members[t]["taken"] += float(event["damage"])
+						wave_taken[waves] += float(event["damage"])
 				"killed":
 					var t := int(event.get("target", -1))
 					if members.has(t):
 						members[t]["deaths"] += 1
 					elif members.has(int(event.get("by", -1))):
 						members[int(event["by"])]["kills"] += 1
-				"eliminated":
-					pass
+				"downed":  # a squad member falls (co-op): counted as a death here, revived or not
+					if members.has(int(event.get("player", -1))):
+						members[int(event["player"])]["deaths"] += 1
 				"attack_started":
 					var p := int(event.get("player", -1))
 					if members.has(p) and str(event.get("move", "")).ends_with("ultimate"):
@@ -221,4 +237,4 @@ func play(classes: Array, seed: int) -> Dictionary:
 		if sim.fighters[id].is_alive() and not sim.fighters[id].incapacitated:
 			alive += 1
 	var cleared: bool = sim.living_enemy_count() + sim.pending_wave_count() == 0 and alive > 0
-	return {"won": cleared, "ticks": tick, "timeout": tick >= MAX_TICKS, "waves": 12 if cleared else waves, "members": members.values()}
+	return {"won": cleared, "ticks": tick, "timeout": tick >= MAX_TICKS, "waves": 12 if cleared else waves, "members": members.values(), "wave_taken": wave_taken}
