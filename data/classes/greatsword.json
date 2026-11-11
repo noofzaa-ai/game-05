@@ -1,7 +1,7 @@
 {
  "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. 'animations' is the GLB the clips are read from (same 102-joint rig as the body files), 'clip_marks' its timing marks. weapon_visible/weapon_scale/off_hand: what the hands hold for the look (the combat 'weapon' id keeps owning the stats). Advance (travel) distances live in the weapon's overrides in data/combat/weapons.json.",
  "id": "greatsword",
- "weapon": "blade",
+ "weapon": "greatsword",
  "animations": "res://art/characters/studio05/classes/greatsword.glb",
  "clip_marks": "res://art/characters/studio05/classes/greatsword_clips.json",
  "moves": {

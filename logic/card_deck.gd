@@ -23,7 +23,8 @@ const STARTERS := {
 	"longbow": {"hair": "e", "outfit": "silver"},
 	"magic": {"hair": "f", "outfit": "silver"},
 }
-const STARTER_SQUAD: Array[String] = ["sword_shield", "greatsword", "magic"]
+## The squad a new player starts with (Boss 2026-11-11): Sword & Shield, Great Sword, Bow. Magic is meant to unlock after a few quests (not built yet: the card exists and can already be picked).
+const STARTER_SQUAD: Array[String] = ["sword_shield", "greatsword", "longbow"]
 
 static var _class_cache := {}
 

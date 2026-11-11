@@ -353,6 +353,488 @@
      "advance": 4.0
     }
    }
+  },
+  "greatsword": {
+   "class_only": true,
+   "name": "Great Sword",
+   "summary": "Slow, wide and heavy: long reach, big knockback, hits hard.",
+   "color": [
+    0.9,
+    0.35,
+    0.2
+   ],
+   "skill_names": {
+    "special": "Cleaving Rush",
+    "ultimate": "Giant's Fall"
+   },
+   "speed": 1.5,
+   "reach": 1.9,
+   "width": 1.6,
+   "power": 1.7,
+   "knockback": 1.5,
+   "launch": 1.2,
+   "stun": 1.3,
+   "stamina": 1.4,
+   "overrides": {
+    "heavy": {
+     "advance": 1.2
+    },
+    "run_heavy": {
+     "advance": 6.5
+    },
+    "run_light": {
+     "advance": 5.5
+    },
+    "air_heavy": {
+     "advance": 0.8
+    },
+    "air": {
+     "advance": 4.0
+    }
+   }
+  },
+  "longbow": {
+   "class_only": true,
+   "name": "Longbow",
+   "summary": "Shoots arrows from far away. Weak up close.",
+   "color": [
+    0.4,
+    0.85,
+    0.4
+   ],
+   "skill_names": {
+    "special": "Arrow Volley",
+    "ultimate": "Rain of Arrows"
+   },
+   "speed": 1.2,
+   "reach": 1.0,
+   "width": 1.0,
+   "power": 1.0,
+   "knockback": 0.8,
+   "launch": 0.6,
+   "stun": 0.8,
+   "stamina": 1.0,
+   "overrides": {
+    "light_1": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      }
+     ]
+    },
+    "light_2": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      }
+     ]
+    },
+    "light_3": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      },
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 10
+      }
+     ]
+    },
+    "heavy": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      },
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": -8
+      },
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 8
+      }
+     ]
+    },
+    "air": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      }
+     ]
+    },
+    "air_heavy": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      }
+     ],
+     "advance": 0.0,
+     "dive": 0.0
+    },
+    "run_light": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      }
+     ],
+     "advance": 0.0
+    },
+    "run_heavy": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      },
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": -8
+      },
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 8
+      }
+     ],
+     "advance": 0.0
+    },
+    "special": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": -14
+      },
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 0
+      },
+      {
+       "projectile": "goblin_arrow",
+       "offset": [
+        0.4,
+        0.85,
+        0.15
+       ],
+       "angle": 14
+      }
+     ]
+    }
+   }
+  },
+  "magic": {
+   "class_only": true,
+   "name": "Magic",
+   "summary": "Casts homing bolts from a distance.",
+   "color": [
+    0.7,
+    0.45,
+    1.0
+   ],
+   "skill_names": {
+    "special": "Arcane Burst",
+    "ultimate": "Star Fall"
+   },
+   "speed": 1.25,
+   "reach": 1.0,
+   "width": 1.0,
+   "power": 1.1,
+   "knockback": 0.8,
+   "launch": 0.6,
+   "stun": 1.0,
+   "stamina": 1.0,
+   "overrides": {
+    "light_1": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      }
+     ]
+    },
+    "light_2": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      }
+     ]
+    },
+    "light_3": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 12
+      }
+     ]
+    },
+    "heavy": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": -10
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 10
+      }
+     ]
+    },
+    "air": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      }
+     ]
+    },
+    "air_heavy": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      }
+     ],
+     "advance": 0.0,
+     "dive": 0.0
+    },
+    "run_light": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      }
+     ],
+     "advance": 0.0
+    },
+    "run_heavy": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": -10
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 0
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 10
+      }
+     ],
+     "advance": 0.0
+    },
+    "special": {
+     "melee": false,
+     "spawns": [
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": -18
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": -6
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 6
+      },
+      {
+       "projectile": "goblin_bolt",
+       "offset": [
+        0.8,
+        0.8,
+        -0.1
+       ],
+       "angle": 18
+      }
+     ]
+    }
+   }
   }
  }
 }

@@ -21,6 +21,7 @@ var loot
 var journey
 var run
 var _sim: GameSim
+var squad_classes: Array = []  ## auto-battler: class id of squad member 1, 2, 3 (fighter id - 1); the class picks the fighting style
 var _auto_memory: Dictionary = {}
 const AutoPilot := preload("res://logic/auto_pilot.gd")
 var _map
@@ -136,6 +137,9 @@ func begin_stage(map, combat_data, trip_journey = null, player_id: int = 1, firs
 	for id in fighters:
 		if fighters[id].team == "enemy":
 			enemy_types[id] = fighters[id].enemy_type
+		elif not squad_classes.is_empty():
+			var class_weapon := str(preload("res://logic/card_deck.gd").class_data(str(squad_classes[(id - 1) % squad_classes.size()])).get("weapon", ""))
+			_sim.set_class_style(id, class_weapon)
 	return {"bosses": bosses, "enemy_types": enemy_types}
 
 

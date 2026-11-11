@@ -276,7 +276,9 @@ func _physics_frame(_delta: float) -> void:
 		_result = "defeated"
 	if _session.is_coop():
 		var follow_id := _local_player_id
-		if player.eliminated:
+		if _focus_id >= 0 and _views.has(_focus_id) and _session.fighters[_focus_id].is_alive():
+			follow_id = _focus_id  # the squad card the player picked (squad_panel.gd): the camera closes on that fighter
+		elif player.eliminated:
 			for id in _journey.player_ids():
 				if _session.fighters[id].is_alive():
 					follow_id = id
@@ -699,6 +701,7 @@ func _build_effects_and_hud() -> void:
 		_hud.auto_battle = true
 		_squad_panel = preload("res://client/squad_panel.gd").new()
 		add_child(_squad_panel)
+		_squad_panel.selected.connect(func(id: int) -> void: _focus_id = id)
 	if _boss_id >= 0:  # style the boss bar to the map once (the Chief's bar matches its floating goblin bar)
 		_hud.set_boss_style(_enemy_bars.resolve(_map_id, _map_atmosphere, "boss"))
 	_hud.set_help(help_text(_journey != null))
@@ -1177,6 +1180,7 @@ func _show_telegraph(id: int, shape: Dictionary, clock: float) -> void:
 
 ## Counts down to the portals, fills the one the player stands in, and keeps the prompts current.
 var _squad_panel: CanvasLayer
+var _focus_id := -1  ## auto-battle: the fighter the camera follows when zoomed in (-1 = the local player)
 var _wave_now := 1  ## wave-mode journeys: the wave on the field (arrivals come as "wave_arrived" events)
 var _auto_rested := false  ## the squad already used this camp's fire
 

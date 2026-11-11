@@ -16,10 +16,13 @@ const Fighter := preload("res://logic/fighter.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 
 const REACH := 1.5  ## stop walking and start swinging inside this distance (metres, body to body)
+const BLADE_REACH := 1.45  ## the weapon reach number REACH was tuned for (data/combat/weapons.json blade)
+const SHOOT_RANGE := 6.0  ## a class that shoots (its light move fires projectiles) stops this far from the target
 const RUN_DISTANCE := 5.0  ## run (spends stamina) when the target is further than this
 const SWING_EVERY := 9  ## ticks between presses of an attack button
 const HEAVY_EVERY := 4  ## every Nth press is a heavy
 const SKILL_RANGE := 7.0
+const ULTIMATE_RANGE := 3.4  ## the ultimate strikes a box this far ahead: a shooter waits for the enemy to come this close
 const SKILL_RETRY_TICKS := 150  ## after trying a slot, wait this long before trying it again
 const GUARD_REACH := 3.0
 const CHARGER_REACH := 8.0
@@ -93,7 +96,8 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 		return input
 
 	var toward: Vector2 = _flat(sim.bodies[nearest].position - at)
-	if nearest_distance > REACH:
+	var engage := _engage_range(combat, me)
+	if nearest_distance > engage:
 		input.move = toward.normalized()
 		input.run = nearest_distance > RUN_DISTANCE and me.energy > 25.0
 		return input
@@ -101,7 +105,7 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	input.aim = toward
 	if me.state != Fighter.State.IDLE and me.state != Fighter.State.ATTACK:
 		return input
-	if me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE:
+	if me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
 		input.ultimate = true
 		return input
 	var slot := _ready_skill_slot(sim, me, id, memory, tick)
@@ -116,6 +120,16 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 		else:
 			input.light = true
 	return input
+
+
+## How close this fighter walks before it starts attacking: shooters stand off, long weapons start earlier.
+static func _engage_range(combat, me: Fighter) -> float:
+	var style: Dictionary = combat.styles.get(me.style, {})
+	var light: Dictionary = combat.moves.get(str(style.get("ground_light", "")), {})
+	if not light.get("spawns", []).is_empty():
+		return SHOOT_RANGE
+	var reach := float(combat.weapons.get(me.style, {}).get("params", {}).get("reach", BLADE_REACH))
+	return REACH * maxf(1.0, reach / BLADE_REACH)
 
 
 ## The next skill-build slot worth trying (round robin), or -1. The sim reports no cooldown to read, so

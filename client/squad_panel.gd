@@ -1,6 +1,7 @@
 extends CanvasLayer
 ## The squad's info in an auto-battle fight (Boss 2026-11-10): one card per fighter at the bottom of the
-## upright screen with its name, health and ultimate gauge. Nothing here can be pressed: nobody steers.
+## screen with its name, health and ultimate gauge. Nobody steers: a card (click, or key 1-3) only picks which
+## fighter the camera follows when zoomed in.
 
 const InkUi := preload("res://client/ink_ui.gd")
 const Fighter := preload("res://logic/fighter.gd")
@@ -10,7 +11,10 @@ const GAP := 8.0
 const MAX_CARD_WIDTH := 260.0
 const NAMES := {"sword_shield": "Sword & Shield", "greatsword": "Great Sword", "longbow": "Longbow", "magic": "Magic"}
 
+signal selected(id: int)  ## the player picked this fighter for the camera
+
 var _root: Control
+var _selected := -1
 var _cards: Dictionary = {}  ## fighter id -> {"panel", "name", "hp_fill", "hp_text", "ult_fill", "gauge_back"}
 var _order: Array = []
 
@@ -51,6 +55,25 @@ func update_from(fighters: Dictionary, local_id: int, combat_data) -> void:
 		card["ult_fill"].size.x = card["bar_width"] * gauge
 		card["ult_fill"].color = InkUi.ULT_READY_TEXT if gauge >= 1.0 else InkUi.ULT
 		card["panel"].modulate.a = 1.0 if fighter.is_alive() else 0.45
+		card["panel"].color = InkUi.HUD_PANEL.lightened(0.25) if id == _selected else InkUi.HUD_PANEL
+
+
+func select(id: int) -> void:
+	if _cards.has(id):
+		_selected = id
+		selected.emit(id)
+
+
+func _on_card_input(event: InputEvent, id: int) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		select(id)
+
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode >= KEY_1 and event.keycode <= KEY_9:
+		var index: int = event.keycode - KEY_1
+		if index < _order.size():
+			select(_order[index])
 
 
 func _rebuild() -> void:
@@ -62,7 +85,8 @@ func _rebuild() -> void:
 		index += 1
 		var panel := ColorRect.new()
 		panel.color = InkUi.HUD_PANEL
-		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		panel.mouse_filter = Control.MOUSE_FILTER_STOP
+		panel.gui_input.connect(_on_card_input.bind(id))
 		_root.add_child(panel)
 		var name_label := Label.new()
 		name_label.text = "%d  %s" % [index, NAMES.get(str(classes.get(id, "sword_shield")), "Sword & Shield")]

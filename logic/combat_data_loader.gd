@@ -619,7 +619,8 @@ static func _parse_weapons(text: String, data: CombatData) -> void:
 			"ultimate_skill": ultimate_skill,
 			"grounded_shots_only": bool(weapon.get("grounded_shots_only",false)),
 		}
-		data.weapon_ids.append(str(weapon_id))
+		if not bool(weapon.get("class_only", false)):  # class weapons are fighting styles for the squad only: no loot, no gear
+			data.weapon_ids.append(str(weapon_id))
 
 
 ## The names shown when the weapon's special skill and ultimate are used (a missing one gets a plain default).

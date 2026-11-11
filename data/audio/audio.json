@@ -141,7 +141,58 @@
 			"cooldown_ms": 40,
 			"priority": 4
 		},
+		"swing_greatsword_light": {
+			"files": [
+				"res://audio/sfx/swing_blade_light_1.ogg",
+				"res://audio/sfx/swing_blade_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"swing_longbow_light": {
+			"files": [
+				"res://audio/sfx/swing_blade_light_1.ogg",
+				"res://audio/sfx/swing_blade_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"swing_magic_light": {
+			"files": [
+				"res://audio/sfx/swing_blade_light_1.ogg",
+				"res://audio/sfx/swing_blade_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
 		"swing_blade_heavy": {
+			"files": [
+				"res://audio/sfx/swing_blade_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_greatsword_heavy": {
+			"files": [
+				"res://audio/sfx/swing_blade_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_longbow_heavy": {
+			"files": [
+				"res://audio/sfx/swing_blade_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_magic_heavy": {
 			"files": [
 				"res://audio/sfx/swing_blade_heavy.ogg"
 			],
@@ -468,6 +519,30 @@
 			"cooldown_ms": 100,
 			"priority": 8
 		},
+		"skill_cast_greatsword": {
+			"files": [
+				"res://audio/sfx/skill_cast_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
+		"skill_cast_longbow": {
+			"files": [
+				"res://audio/sfx/skill_cast_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
+		"skill_cast_magic": {
+			"files": [
+				"res://audio/sfx/skill_cast_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
 		"skill_impact_blade": {
 			"files": [
 				"res://audio/sfx/skill_impact_blade.ogg"
@@ -476,7 +551,55 @@
 			"cooldown_ms": 60,
 			"priority": 8
 		},
+		"skill_impact_greatsword": {
+			"files": [
+				"res://audio/sfx/skill_impact_blade.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
+		"skill_impact_longbow": {
+			"files": [
+				"res://audio/sfx/skill_impact_blade.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
+		"skill_impact_magic": {
+			"files": [
+				"res://audio/sfx/skill_impact_blade.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
 		"ultimate_blade": {
+			"files": [
+				"res://audio/sfx/ultimate_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"ultimate_greatsword": {
+			"files": [
+				"res://audio/sfx/ultimate_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"ultimate_longbow": {
+			"files": [
+				"res://audio/sfx/ultimate_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"ultimate_magic": {
 			"files": [
 				"res://audio/sfx/ultimate_blade.ogg"
 			],

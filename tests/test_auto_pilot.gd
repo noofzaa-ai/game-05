@@ -29,6 +29,8 @@ func run(ctx) -> void:
 		ctx.check("%d auto unit(s) keep someone alive" % count, result.alive > 0)
 	# Same seed, same input stream: replays are exact.
 	_wave_checks(ctx)
+	_class_checks(ctx)
+	_card_select_checks(ctx)
 	var a := _play_first_stage(1, 99)
 	var b := _play_first_stage(1, 99)
 	ctx.check("the pilot is deterministic for a given seed", a.ticks == b.ticks and is_equal_approx(a.hp, b.hp))
@@ -121,3 +123,70 @@ func _wave_checks(ctx) -> void:
 			if sim.fighters[id].is_alive(): alive += 1
 		if alive == 0: break
 	ctx.check("the squad clears all 12 waves, the Chief included (ticks %d)" % tick, sim.living_enemy_count() + sim.pending_wave_count() == 0 and boss_seen)
+
+
+## Classes (data/classes/*.json "weapon" -> data/combat/weapons.json): each class fights in its own style.
+func _class_checks(ctx) -> void:
+	var f := F.make(41)
+	var combat = f.combat
+	ctx.check("class weapons are styles but never loot weapons", combat.styles.has("longbow") and combat.styles.has("magic") and combat.styles.has("greatsword") and not combat.weapon_ids.has("longbow") and combat.weapon_ids.has("blade"))
+	ctx.check("longbow and magic shoot, the great sword and blade swing", not combat.moves["longbow_light_1"]["spawns"].is_empty() and not combat.moves["magic_light_1"]["spawns"].is_empty() and combat.moves["greatsword_light_1"]["spawns"].is_empty() and combat.moves["blade_light_1"]["spawns"].is_empty())
+	ctx.check("a shooter stops at range, a melee class at reach", is_equal_approx(Pilot._engage_range(combat, _fighter("longbow")), Pilot.SHOOT_RANGE) and is_equal_approx(Pilot._engage_range(combat, _fighter("blade")), Pilot.REACH) and Pilot._engage_range(combat, _fighter("greatsword")) > Pilot.REACH)
+	for seed in [31, 32]:
+		var data = JourneyData.load_by_id("goblin_waves", combat.enemies.keys())
+		var trips := {1: F.make(seed).run, 2: F.make(seed + 1).run, 3: F.make(seed + 2).run}
+		var journey = Party.start_party(data, trips, f.rules, f.loot, combat.weapon_ids, seed)
+		while journey.state != journey.IN_STAGE and not journey.is_over():
+			if journey.state == journey.CHOOSING:
+				journey.choose(0)
+		var map = Map.load_by_id(str(journey.current.map))
+		var world := World.new()
+		world.half_width = map.half_width
+		world.half_depth = map.half_depth
+		for solid in map.solids:
+			world.add_solid(solid.box)
+		var sim := Sim.new(world, combat, F.rng(seed))
+		journey.populate(sim, map, 1, 100)
+		var classes := ["greatsword", "longbow", "magic"]
+		for i in 3:
+			sim.set_class_style(i + 1, classes[i])
+		ctx.check("the class sets the fighter's style (seed %d)" % seed, sim.fighters[1].style == "greatsword" and sim.fighters[2].style == "longbow" and sim.fighters[3].style == "magic")
+		var memories := {}
+		for id in journey.player_ids():
+			memories[id] = Pilot.new_memory(id)
+		var tick := 0
+		var arrows_seen := false
+		while tick < 60 * 600 and (sim.living_enemy_count() + sim.pending_wave_count() > 0):
+			for id in journey.player_ids():
+				sim.set_input(id, SimInput.decode(Pilot.decide(sim, combat, id, memories[id], tick, 0.9).encode()))
+			sim.tick()
+			tick += 1
+			for shot in sim.projectiles:
+				if shot["team"] == "player":
+					arrows_seen = true
+			var alive := 0
+			for id in journey.player_ids():
+				if sim.fighters[id].is_alive(): alive += 1
+			if alive == 0: break
+		ctx.check("great sword + longbow + magic fire their shots (seed %d)" % seed, arrows_seen)
+		ctx.check("great sword + longbow + magic clear the 12 waves (seed %d, ticks %d)" % [seed, tick], sim.living_enemy_count() + sim.pending_wave_count() == 0)
+
+
+func _fighter(style: String) -> Fighter:
+	var fighter := Fighter.new()
+	fighter.style = style
+	return fighter
+
+
+## Picking a squad card tells the stage which fighter the camera follows.
+func _card_select_checks(ctx) -> void:
+	var panel = preload("res://client/squad_panel.gd").new()
+	var picked := []
+	panel.selected.connect(func(id: int) -> void: picked.append(id))
+	panel.select(2)
+	ctx.check("selecting a card that does not exist is ignored", picked.is_empty())
+	panel._cards[2] = {}
+	panel.select(2)
+	ctx.check("selecting a squad card reports its fighter id", picked == [2])
+	panel.free()
+

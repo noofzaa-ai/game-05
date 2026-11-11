@@ -15,7 +15,7 @@ func run(ctx) -> void:
 	var deck := Deck.initial(cosmetics)
 	ctx.check("a new deck is valid", Deck.validate(deck, cosmetics) == "")
 	ctx.check("every class has its own card", deck["cards"].size() == classes.size())
-	ctx.check("the starter squad is three cards", deck["squad"] == ["sword_shield", "greatsword", "magic"])
+	ctx.check("the starter squad is three cards", deck["squad"] == ["sword_shield", "greatsword", "longbow"])
 	ctx.check("the starter cards differ", deck["cards"]["sword_shield"] != deck["cards"]["greatsword"])
 
 	# One card changes, the others stay.

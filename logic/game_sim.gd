@@ -110,6 +110,7 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 	runs[id] = run
 	preload("res://logic/relic_effects.gd").attach(fighters[id],run.profile)
 	fighters[id].style = run.loadout().weapon_style(combat.styles.keys())  # the weapon decides the fighting style
+	_apply_class_style(id)
 	_refresh_run_stats(id)
 	fighters[id].hp = fighters[id].max_hp()
 	fighters[id].energy = fighters[id].max_energy()
@@ -120,12 +121,30 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 		skill_system.attach(id, run.profile.skill_build)
 
 
+## Auto-battler: the squad member's class decides the fighting style (data/classes/<class>.json "weapon" is a
+## weapon id of data/combat/weapons.json, for example "longbow" shoots). `class_styles`: player id -> style.
+var class_styles: Dictionary = {}
+
+
+func set_class_style(id: int, style: String) -> void:
+	if combat == null or not combat.styles.has(style):
+		return
+	class_styles[id] = style
+	_apply_class_style(id)
+
+
+func _apply_class_style(id: int) -> void:
+	if class_styles.has(id) and fighters.has(id):
+		fighters[id].style = class_styles[id]
+
+
 ## Call after the worn gear changed in the middle of a trip (at a rest point): the weapon may have
 ## changed the fighting style, and the stats come from the gear.
 func gear_changed(id: int) -> void:
 	if not runs.has(id) or not fighters.has(id):
 		return
 	fighters[id].style = runs[id].loadout().weapon_style(combat.styles.keys())
+	_apply_class_style(id)
 	_refresh_run_stats(id)
 	if skill_system != null:
 		var build: Dictionary = runs[id].profile.skill_build
