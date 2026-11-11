@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-12 | PO | feature/class-weapons-card-screen | ดาบโล่โชว์โล่จากชุดเกราะ Studio แทนโล่กลมวาดด้วยโค้ด (`shield_kind`: procedural ใช้เฉพาะเมื่อชุดไม่มีโล่) ค่าตีบวกโล่ยังมาจากช่อง offhand · เทสต์ 2194/82
+
 - 2026-11-12 | gameplay-programmer via PO | feature/class-weapons-card-screen | ชื่ออังกฤษ: แฟชั่น/cosmetics (`tools/items/cosmetic_names.py`, ไทยเก็บใน name_th), สกิล (`display_name` + `display_name_th`) · สต็อกร้าน 11 ชิ้น (ดาบ 2, โล่, เกราะ 8) · กัน `_nose` Nil ใน fighter_view · เทสต์ 2194/82
 
 - 2026-11-12 | gameplay-programmer via PO | feature/class-weapons-card-screen | การ์ดเริ่มต้นใส่ชุดเกราะคลาส · ตัวเลือกม่านตา 7 แบบ (`data/cosmetics/iris_styles.json`, part `iris_style`) ใน Tailor · makeup none = natural · ชื่อเกราะ/เซ็ตเป็นอังกฤษ (`tools/items/armor_names.py`, เก็บไทยใน name_th) · เทสต์ 2194/82

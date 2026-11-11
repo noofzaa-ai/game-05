@@ -390,7 +390,9 @@ func shield_kind() -> String:
 	if not _offhand.is_empty():
 		if not str(_offhand.get("path", "")).is_empty():
 			return "file"
-		if bool(_offhand.get("procedural", false)):
+		# Boss 2026-11-12: the class armor's own Studio shield beats the flat procedural round_shield
+		# (the starter shield has no model file); the refine aura still follows the off-hand item.
+		if bool(_offhand.get("procedural", false)) and _gear_shield.is_empty():
 			return "procedural"
 	if not _gear_shield.is_empty():
 		return "class"
