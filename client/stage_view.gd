@@ -253,6 +253,8 @@ func _physics_frame(_delta: float) -> void:
 			if f.state == Fighter.State.DOWNED: status.text = "P%d DOWN %.1fs\nRevive %d%%" % [id, f.bleedout_left / 60.0, 100 * f.revive_progress / int(_combat_data.coop.revive_ticks)]
 			elif f.eliminated: status.text = "P%d OUT" % id
 	work_started=_work_mark("fighter_visuals",work_started)
+	if _rig != null and _rig.arena:
+		_rig.action_points = _action_points()
 	if _skill_presenter != null: _skill_presenter.update_from(_session.fighters,_session.bodies,_views)
 	_update_hitbox_views()
 	for trigger in _zone_triggers:
@@ -1452,3 +1454,28 @@ func _aim_skill(frame) -> void:
 		if delta.length()<nearest:
 			nearest=delta.length();direction=Vector2(delta.x,delta.z)
 	if direction!=Vector2.ZERO:frame.aim=direction.normalized();frame.aim_distance=nearest
+
+
+## Auto-battle camera framing: the living enemies and the squad members fighting near them (a shooter far
+## behind is left out so the camera can close in); everyone alive when no enemy is left.
+const ACTION_NEAR := 4.5
+func _action_points() -> Array[Vector3]:
+	var enemies: Array[Vector3] = []
+	var squad: Array[Vector3] = []
+	for id in _views:
+		if not _session.fighters[id].is_alive():
+			continue
+		if _session.fighters[id].team == "enemy":
+			enemies.append(_views[id].position)
+		else:
+			squad.append(_views[id].position)
+	if enemies.is_empty():
+		return squad
+	var points: Array[Vector3] = enemies.duplicate()
+	for member in squad:
+		for enemy in enemies:
+			if member.distance_to(enemy) <= ACTION_NEAR:
+				points.append(member)
+				break
+	return points
+

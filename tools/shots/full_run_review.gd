@@ -33,6 +33,7 @@ func run() -> void:
 	Engine.time_scale = float(OS.get_environment("SPEED")) if OS.get_environment("SPEED") != "" else 3.0
 	var start := Time.get_ticks_msec()
 	var last_pending := -1
+	var mid_shot_done := {}
 	while Time.get_ticks_msec() - start < 900000:
 		await process_frame
 		var secs := (Time.get_ticks_msec() - start) / 1000.0
@@ -49,6 +50,20 @@ func run() -> void:
 						alive += 1
 				print("RUN wave %d/12 squad_alive=%d t=%.0fs" % [12 - pending, alive, secs])
 				await snap("wave%02d" % (12 - pending))
+			# Late in a wave (1-2 enemies left) the auto camera should have closed in on the fight.
+			var enemies := 0
+			for id in sim.fighters:
+				if sim.fighters[id].team == "enemy" and sim.fighters[id].hp > 0:
+					enemies += 1
+			var wave := 12 - pending
+			if enemies > 0 and enemies <= 2 and wave % 4 == 0 and not mid_shot_done.has(wave):
+				mid_shot_done[wave] = true
+				var rig = scene.get("_rig") if scene != null else null
+				if rig != null:
+					print("RUN camera view=%s overrides=%d points=%d scale=%.2f" % [rig.chosen.get("name", ""), rig._overrides.size(), rig.action_points.size(), rig._auto_scale])
+				for i in 40:
+					await process_frame
+				await snap("wave%02d_late" % wave)
 		if scene != null and scene.scene_file_path == gs.JOURNEY_SCENE:
 			for i in 90:
 				await process_frame

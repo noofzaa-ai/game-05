@@ -109,5 +109,30 @@ func run(ctx) -> void:
 	for i in 120:
 		arena_rig._process(1.0 / 60.0)
 	ctx.check("and stops at the arena's edge", absf(arena_rig._camera.position.z - (10.0 + arena_offset.z)) < 0.2)
+	# Auto-battle board: the untouched overview closes in on a fight in one corner, and a manual zoom turns it off.
+	var board_rig := CameraRig.new()
+	board_rig.arena = true
+	board_rig.min_x = -8.0
+	board_rig.max_x = 8.0
+	board_rig.min_z = -4.5
+	board_rig.max_z = 4.5
+	ctx.root.add_child(board_rig)
+	var overview_distance: float = (board_rig.view()["position"] - board_rig.view()["look"]).length()
+	board_rig.action_points = [Vector3(4.0, 0.0, 1.0), Vector3(6.0, 0.0, 2.0), Vector3(5.0, 0.0, 0.0)]
+	for i in 600:
+		board_rig._process(1.0 / 60.0)
+	var framed: Dictionary = board_rig.view()
+	var framed_distance: float = (framed["position"] - framed["look"]).length()
+	ctx.check("arena auto-framing closes in on a small fight (%.1f -> %.1f m)" % [overview_distance, framed_distance], framed_distance < overview_distance * 0.75)
+	ctx.check("and slides toward it (look x %.1f)" % framed["look"].x, framed["look"].x > 2.0)
+	board_rig.action_points = [Vector3(-8.0, 0.0, -4.5), Vector3(8.0, 0.0, 4.5)]
+	for i in 600:
+		board_rig._process(1.0 / 60.0)
+	var spread_distance: float = (board_rig.view()["position"] - board_rig.view()["look"]).length()
+	ctx.check("a fight spread over the board pulls back to show the whole board (%.1f m)" % spread_distance, spread_distance > overview_distance * 0.8 and absf(board_rig.view()["look"].x) < 0.5)
+	board_rig.action_points = [Vector3(4.0, 0.0, 1.0)]
+	board_rig._orbit(Vector2.ZERO, 0.9)
+	ctx.check("a manual zoom turns the auto-framing off", board_rig._auto_frame().is_empty())
+	board_rig.queue_free()
 	ctx.check("a lane stage keeps the camera on its lane", absf(rig._camera.position.z - rig._offset.z) < 0.01)
 	ctx.check("the top-down preset looks steeply down", CameraRig.PRESETS[KEY_9]["offset"].y > CameraRig.PRESETS[KEY_9]["offset"].z * 1.5)

@@ -54,6 +54,16 @@ const ARENA_VIEW := {"name": "Arena", "offset": Vector3(0.0, 16.5, 14.0), "look_
 const ARENA_CLOSEST := 3.2  ## closest camera distance to the fighter (metres)
 var arena := false
 var _max_radius := 28.0
+## Auto-battle framing (Boss 2026-11-11, fighters looked tiny at the overview): while the view is the untouched
+## ARENA_VIEW, the camera slides to the fight and closes in until every living fighter (`action_points`, set
+## each frame by the stage) still fits, never closer than ARENA_AUTO_MIN of the overview distance.
+## A manual zoom/orbit or an override turns it off.
+const ARENA_AUTO_MIN := 0.55
+const ARENA_AUTO_PAD := 1.5  ## metres kept around the outermost fighters
+const ARENA_OVERVIEW_MARGIN := 1.4  ## the overview frames about this much of the board's size (measured from shots)
+const ARENA_AUTO_SPEED := 1.5  ## how quickly the framing follows (slower than FOLLOW_SPEED: no jitter)
+var action_points: Array[Vector3] = []
+var _auto_scale := 1.0
 
 var _camera: Camera3D
 var _shake_strength := 0.0
@@ -99,8 +109,14 @@ func _process(delta: float) -> void:
 		var radius: float = (chosen["offset"] - look).length()
 		var closeness := smoothstep(0.0, 1.0, clampf((_max_radius - radius) / maxf(_max_radius - ARENA_CLOSEST * 2.0, 0.1), 0.0, 1.0))
 		var aim := Vector3.ZERO.lerp(focus, closeness)
-		_x = lerpf(_x, aim.x, minf(1.0, FOLLOW_SPEED * delta))
-		_z = lerpf(_z, aim.z, minf(1.0, FOLLOW_SPEED * delta))
+		var framing := _auto_frame()
+		var follow := minf(1.0, FOLLOW_SPEED * delta)
+		if not framing.is_empty():
+			aim = framing["centre"]
+			follow = minf(1.0, ARENA_AUTO_SPEED * delta)
+		_auto_scale = lerpf(_auto_scale, float(framing.get("scale", 1.0)), minf(1.0, ARENA_AUTO_SPEED * delta))
+		_x = lerpf(_x, aim.x, follow)
+		_z = lerpf(_z, aim.z, follow)
 	elif target != null:
 		_x = lerpf(_x, clampf(target.position.x, min_x, max_x), minf(1.0, FOLLOW_SPEED * delta))
 		_z = lerpf(_z, clampf(target.position.z, min_z, max_z) if follow_depth else 0.0, minf(1.0, FOLLOW_SPEED * delta))
@@ -115,7 +131,27 @@ func follow_point() -> Vector3:
 
 ## Where the camera actually is and aims right now (before shake): {"position", "look", "fov"}.
 func view() -> Dictionary:
-	return {"position": follow_point() + _offset, "look": follow_point() + _look, "fov": _fov}
+	return {"position": follow_point() + _look + (_offset - _look) * _auto_scale, "look": follow_point() + _look, "fov": _fov}
+
+
+## The auto-battle framing for the current fighters: {"centre": Vector3, "scale": float}, or {} when it is off.
+func _auto_frame() -> Dictionary:
+	if not arena or action_points.is_empty() or has_override() or str(chosen.get("name", "")) != str(ARENA_VIEW["name"]):
+		return {}
+	var low := Vector2(INF, INF)
+	var high := Vector2(-INF, -INF)
+	for point in action_points:
+		low = Vector2(minf(low.x, point.x), minf(low.y, point.z))
+		high = Vector2(maxf(high.x, point.x), maxf(high.y, point.z))
+	# The overview shows more than the board (the fence and island around it): compare with what it shows.
+	var board := Vector2(maxf(max_x - min_x, 0.1), maxf(max_z - min_z, 0.1)) * ARENA_OVERVIEW_MARGIN
+	var spread := high - low + Vector2.ONE * ARENA_AUTO_PAD * 2.0
+	var scale := clampf(maxf(spread.x / board.x, spread.y / board.y), ARENA_AUTO_MIN, 1.0)
+	# At the full overview the camera sits over the board's centre; the closer it frames, the more it centres the fight.
+	var middle := (low + high) * 0.5
+	var pull := (1.0 - scale) / (1.0 - ARENA_AUTO_MIN)
+	var centre := Vector3(clampf(middle.x, min_x, max_x), 0.0, clampf(middle.y, min_z, max_z)) * pull
+	return {"centre": centre, "scale": scale}
 
 
 ## A view tone (a copy of the world's Environment with other adjustments) for this camera only,
@@ -196,7 +232,7 @@ func _update(blend: float) -> void:
 	_offset = _offset.lerp(preset["offset"], blend)
 	_look = _look.lerp(preset.get("look", Vector3(0.0, preset["look_y"], 0.0)), blend)
 	_fov = lerpf(_fov, preset["fov"], blend)
-	_camera.position = follow_point() + _offset
+	_camera.position = follow_point() + _look + (_offset - _look) * _auto_scale
 	var aim := follow_point() + _look
 	if not _camera.position.is_equal_approx(aim):
 		var up := Vector3.UP if absf((aim - _camera.position).normalized().y) < 0.999 else Vector3.FORWARD

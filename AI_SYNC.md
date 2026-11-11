@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-11 | PO | feature/class-weapons-card-screen | กล้องกระดานซูม/เลื่อนตามจุดที่สู้อัตโนมัติ (`camera_rig.gd` `_auto_frame`, `stage_view.gd` `_action_points`; หมุน/ซูมเองแล้วปิด) แตะ `stage_view.gd` · เทสต์ 2065/83 ชุดเดิม
+
 - 2026-11-11 | PO | feature/class-weapons-card-screen | ซ่อนป้ายสถานะออนไลน์ในฉากสู้/หน้าสรุป (`online_account.gd`) · หน้าสรุปโหมดเวฟใช้สไตล์การ์ตูนของหน้าการ์ด (`journey_screen.gd` `_build_wave_summary`) · เทสต์ 2061/83 ชุดเดิม
 
 - 2026-11-11 | PO | feature/class-weapons-card-screen | ลองเล่นเต็ม 12 เวฟในหน้าต่างจริง (`tools/shots/full_run_review.gd`) ชนะสบาย ทัพไม่ล้ม · อัปเดต PROGRESS
