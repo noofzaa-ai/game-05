@@ -1,0 +1,24 @@
+[
+  {
+    "path": "/v2/account",
+    "method": "GET",
+    "headers": [
+      "HTTP/2 502 ",
+      "content-type: text/plain; charset=UTF-8",
+      "server: cloudflare"
+    ],
+    "body_length": 16,
+    "challenge": false
+  },
+  {
+    "path": "/v2/rpc/zorx_social_v1",
+    "method": "POST",
+    "headers": [
+      "HTTP/2 502 ",
+      "content-type: text/plain; charset=UTF-8",
+      "server: cloudflare"
+    ],
+    "body_length": 16,
+    "challenge": false
+  }
+]

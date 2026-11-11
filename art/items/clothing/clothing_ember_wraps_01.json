@@ -1,0 +1,17 @@
+{
+  "id": "clothing_ember_wraps_01",
+  "name": "นักสู้เพลิง · ผ้าพันแขน",
+  "asset_version": 1,
+  "triangle_count": 200,
+  "set_triangle_budget": 1500,
+  "slot": "arms",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "outfit_ember_fighter_01",
+  "thumbnail": "clothing_ember_wraps_01.png",
+  "binding": "GameRig57; shorts blend hip and thigh; wraps LowerArm; sandals Foot",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

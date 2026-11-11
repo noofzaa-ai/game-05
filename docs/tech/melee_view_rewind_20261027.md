@@ -1,0 +1,11 @@
+# Melee contact aligned with displayed monsters
+
+caf6484fe127 reports: interpolation render tick was12.25/22.24ticks behind latest received authority, while player locally predicted forward. Server used current enemy box, so visible melee contact could miss. This patch is gameplay hit validation, not an FPS fix.
+
+INPUT optionally appends one uint32 viewed-world-tick per redundant input frame. Existing packets remain valid; exact-size checks remain strict. Client captures each original input's render tick once and retransmits that same value; padding carries no view hint. Transport caps requested view to an acknowledged server snapshot, Room rejects future/stale hints. No position, hit ID, damage or client-provided collider is accepted.
+
+Room stores enemy AABBs from actual authority simulation for38ticks max, epoch scoped. At each applied input uses a requested history sample only within36ticks600ms; held fallback retains the last valid view only within the same bound. Own authoritative attacker state/hitbox is current; only the target lookup uses historical enemy AABB. Melee aim assist uses the same target history. Current target life/team/invulnerability and per-attack hit IDs still govern damage; no target teleports, no duplicate hit, no PvP rewind. Missing/expired view falls back to current collision, never arbitrary extended range. Remote prediction contact pause uses bounded locally captured visual AABBs only (no damage authority).
+
+Interpolation delay reduced200–400ms to50–100ms (3–6ticks). Long stalls still hold after bounded extrapolation, may visibly step; this tradeoff favors combat relevance. Rewind counters/rejected view counts appear in report. Projectiles, area skills, damage coefficients and item/reward authority unchanged; skill-specific compensation is not claimed.
+
+Native checks: visible historical enemy in sword box while current enemy5m away => current querymiss, compensatedqueryhit; target position unchanged. Legacy/new INPUT roundtrip; old/future timestamps discarded; per-epochbounded history. Fiveweaponinputparity, outgoinghitstop, authoritycorrection, Room queue and codec regressions. Real Web combat acceptance remains pending; no claim a stationary contract proves arbitrary moving-target combat.

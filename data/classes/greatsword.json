@@ -1,0 +1,40 @@
+{
+ "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. 'animations' is the GLB the clips are read from (same 102-joint rig as the body files), 'clip_marks' its timing marks. weapon_visible/weapon_scale/off_hand: what the hands hold for the look (the combat 'weapon' id keeps owning the stats). Advance (travel) distances live in the weapon's overrides in data/combat/weapons.json.",
+ "id": "greatsword",
+ "weapon": "blade",
+ "animations": "res://art/characters/studio05/classes/greatsword.glb",
+ "clip_marks": "res://art/characters/studio05/classes/greatsword_clips.json",
+ "moves": {
+  "light_1": "gs_slash",
+  "light_2": "gs_slash_2",
+  "light_3": "gs_slash_3",
+  "light_4": "gs_slash_4",
+  "heavy": "gs_attack",
+  "run_light": "gs_slash_5",
+  "run_heavy": "gs_slide_attack",
+  "air_light": "gs_jump_attack",
+  "air_heavy": "gs_jump_attack",
+  "kick": "gs_kick",
+  "flying_kick": "gs_kick_2",
+  "ultimate": "gs_high_spin_attack",
+  "special": "gs_spell_cast",
+  "charge": "gs_slide_attack"
+ },
+ "states": {
+  "idle": "gs_idle",
+  "run": "gs_run",
+  "guard": "gs_blocking_2",
+  "slide": "gs_crouching",
+  "hurt": "gs_impact",
+  "launched": "gs_impact_2",
+  "air": "gs_jump"
+ },
+ "off_hand": "none",
+ "weapon_visible": true,
+ "weapon_scale": 1.6,
+ "hair_options": [
+  "c",
+  "e",
+  "f"
+ ]
+}

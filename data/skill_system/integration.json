@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "enabled": true,
+  "reskill_gold": 100,
+  "points_per_room": 1,
+  "boss_bonus_points": 1,
+  "max_points": 12,
+  "weapon_starts": {
+    "blade": "katana"
+  },
+  "default_skills": [
+    "fire_ring",
+    "fireball",
+    "frost_armor",
+    "blink_bolt"
+  ],
+  "stamina": {
+    "storm_blades": 14,
+    "blood_pierce": 14,
+    "thorn_trap": 12,
+    "blood_shield": 10,
+    "fire_ring": 12,
+    "fireball": 10,
+    "eruption": 16,
+    "flame_dash": 14,
+    "ice_lance": 10,
+    "shatter_smash": 16,
+    "ice_wall": 14,
+    "frost_armor": 14,
+    "chain_lightning": 14,
+    "lightning_strike": 16,
+    "blink_bolt": 14,
+    "tesla_totem": 18,
+    "ground_slam": 14,
+    "riposte": 10,
+    "piercing_shot": 12,
+    "war_cry": 16
+  },
+  "reference_atk": 20,
+  "impact": {
+    "_comment": "How hard each skill-tree blow lands. tier 0 none, 1 light, 2 medium, 3 heavy. Hit-stop is in 60 Hz ticks, same as weapon moves (light swing 4, heavy 8 in data/combat/combat.json); it never stacks (max of pending). Periodic hits (burn/bleed ticks, flame_dash ground trail, tesla_totem auto-fire) get none. The client draws skill_hit/<tier> and skill_impact/<tier> from data/combat/vfx.json.",
+    "default_tier": 1,
+    "reflect_tier": 1,
+    "tiers": {
+      "storm_blades": 1,
+      "blood_pierce": 2,
+      "thorn_trap": 2,
+      "blood_shield": 0,
+      "fire_ring": 2,
+      "fireball": 2,
+      "eruption": 3,
+      "flame_dash": 1,
+      "ice_lance": 1,
+      "shatter_smash": 3,
+      "ice_wall": 1,
+      "frost_armor": 0,
+      "chain_lightning": 2,
+      "lightning_strike": 3,
+      "blink_bolt": 2,
+      "tesla_totem": 1,
+      "ground_slam": 3,
+      "riposte": 2,
+      "piercing_shot": 2,
+      "war_cry": 2,
+      "basic_attack": 0
+    },
+    "target_hitstop": [
+      0,
+      4,
+      6,
+      10
+    ],
+    "caster_hitstop": [
+      0,
+      0,
+      2,
+      4
+    ],
+    "crit_hitstop_bonus": 2,
+    "max_hitstop": 12
+  }
+}

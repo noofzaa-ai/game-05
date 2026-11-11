@@ -1,0 +1,16 @@
+{
+  "id": "clothing_plum_officer_gloves_01",
+  "name": "ชุดนายทหารม่วง · แขนเสื้อและถุงมือ",
+  "asset_version": 1,
+  "triangle_count": 318,
+  "set_triangle_budget": 1500,
+  "slot": "arms",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "cloth_plum_officer_01",
+  "thumbnail": "clothing_plum_officer_gloves_01.png",
+  "cloth_simulation": false,
+  "hide_head": false,
+  "hide_hair": false,
+  "binding": "GameRig57: normalized torso; separate thigh-following tails; articulated gloves; stockings and boot ankles blend leg joints"
+}

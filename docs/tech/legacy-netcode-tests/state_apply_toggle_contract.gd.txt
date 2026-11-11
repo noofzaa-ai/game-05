@@ -1,0 +1,35 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var source=preload("res://data/perf/scenario.gd").new()
+ var session=preload("res://client/perf/state_apply_toggle.gd").new(null,source.rules,source.camp)
+ session.connected=true;session.admission={"diagnostic":true}
+ session._accept_state(source.state(),Time.get_ticks_msec());session._presented_epoch=1
+ assert(session._uses_replay() and session.lag_replay_ticks>0)
+ var replays_before:int=session.lag_replay_ticks
+ var initial_profile=session.profile.to_dict()
+ var authoritative=source.state()
+ session.set_discard(true)
+ assert(session.discard_enabled and session._prediction==null and session._sim._ai.size()>0)
+ var decode_before:int=session.lag_decode_us
+ var reconcile_before:int=session.lag_reconciles
+ source.advance()
+ session._receive(Wire.packet(Wire.STATE,10,{"base":0,"garbage":"ignored"}),Time.get_ticks_msec())
+ assert(session.discarded_states==1 and session.last_state_sequence==10)
+ assert(session.lag_decode_us==decode_before and session.lag_reconciles==reconcile_before)
+ session._receive(Wire.packet(Wire.PONG,11,{"nonce":0,"tick":100,"input_ack":99,"event_sequence":3}),Time.get_ticks_msec())
+ assert(session.worker_ack==99 and session.worker_tick==100 and session.event_ack==3)
+ session._step_impl(preload("res://logic/sim_input.gd").new())
+ assert(session.local_ticks==1 and session.sent_inputs==1 and session._sim.tick_count==int(authoritative.tick)+1)
+ session.set_discard(false)
+ assert(not session.discard_enabled and session.sync_pending and session.baselines.is_empty())
+ var state=source.state()
+ session._receive(Wire.packet(Wire.STATE,12,preload("res://logic/net_state.gd").difference(state,{},0,0)),Time.get_ticks_msec())
+ session.physics_begin()
+ assert(not session.sync_pending and session._prediction!=null and session.lag_replay_ticks>replays_before)
+ assert(session.profile.to_dict()==initial_profile)
+ session.set_discard(true);assert(session.discard_enabled)
+ var panel=preload("res://client/perf/state_apply_toggle_panel.gd").new();panel.free()
+ print("STATE APPLY TOGGLE PASS:A production replayON;B skips STATE decode/reconcile,local AI+real input packets+PONG clock;A full-sync restores profile;A/B repeat")
+ quit()

@@ -1,0 +1,52 @@
+{
+  "_comment": "Content packs for the split web build (tools/web/build_web.ps1). Order = mount order. Paths not listed, and every script/scene/data file anywhere, stay in the core pack. Audio stays in core: the Audio autoload preloads its cues before any pack can load. GPU textures are split further into one pack per format (name.s3tc / name.etc2).",
+  "packs": [
+    {
+      "name": "characters",
+      "include": [
+        "res://art/characters/",
+        "res://art/animations/",
+        "res://art/rig/",
+        "res://art/cosmetics/",
+        "res://art/skills/",
+        "res://art/skill_system/",
+        "res://art/fashion/"
+      ]
+    },
+    {
+      "name": "items",
+      "include": [
+        "res://art/items/clothing/",
+        "res://art/items/hair/",
+        "res://art/items/faces/",
+        "res://art/items/icons/",
+        "res://art/items/",
+        "res://art/armor/",
+        "res://art/relics/"
+      ]
+    },
+    {
+      "name": "weapons",
+      "include": [
+        "res://art/items/weapons/",
+        "res://art/weapons/"
+      ]
+    },
+    {
+      "name": "monsters",
+      "include": [
+        "res://art/monsters/"
+      ]
+    },
+    {
+      "name": "stages",
+      "include": [
+        "res://art/stages/",
+        "res://art/environment/",
+        "res://art/props/",
+        "res://art/npcs/",
+        "res://art/maps/"
+      ]
+    }
+  ]
+}

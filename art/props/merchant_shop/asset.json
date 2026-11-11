@@ -1,0 +1,21 @@
+{
+  "source": "merchance_shop.glb",
+  "source_sha256": "25c431c426f2e87493a7dc293c860a56cf70a083b044ee13e1c426d8e8611d41",
+  "game_size_xyz": [
+    4.8,
+    2.1749981750473224,
+    2.3437512585176035
+  ],
+  "triangles": 3975,
+  "texture_budget": {
+    "color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  },
+  "position": [
+    9.4,
+    0,
+    4.4
+  ],
+  "bytes": 1348948
+}

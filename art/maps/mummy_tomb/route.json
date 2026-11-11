@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "id": "mummy_ascent",
+  "state": "presentation order only;not consumed by Journey runtime",
+  "maps": [
+    {
+      "order": 1,
+      "map": "mummy_arena_a",
+      "name": "Mummy \u2014 Pyramid Approach",
+      "next": "mummy_arena_b"
+    },
+    {
+      "order": 2,
+      "map": "mummy_arena_b",
+      "name": "Mummy \u2014 Inner Burial Hall",
+      "next": "mummy_arena_c"
+    },
+    {
+      "order": 3,
+      "map": "mummy_arena_c",
+      "name": "Mummy \u2014 Apex Solar Chamber",
+      "next": null
+    }
+  ]
+}

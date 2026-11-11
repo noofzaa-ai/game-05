@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://client/skills/mcp_skill_visual.gd" id="1"]
+[node name="Status_chill" type="Node3D"]
+script = ExtResource("1")
+asset_path = "res://art/skill_system/mcp_vfx/frost_armor/effect.tscn"
+asset_scale = 0.23
+tint = Color(0.427451, 0.862745, 0.980392, 1)

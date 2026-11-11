@@ -1,0 +1,28 @@
+extends SceneTree
+func _initialize()->void:
+ var clock=preload("res://client/session/control_clock.gd").new()
+ # A past late burst remains in p10, although newer input is already 10 ticks early.
+ clock.observe({"epoch":2,"sequence":1,"samples":60,"margin_low":-4,"margin_recent":8,"margin_latest":10,"late_total":40,"measurement_age_ms":0},100)
+ clock.update_rate(100)
+ if clock.rate>=1.0:
+  print("FAIL: stale low-tail/late counter accelerates despite newest input 10 ticks early; rate=",clock.rate);quit(1);return
+ # A current late arrival must still recover; no input IDs or DT are changed.
+ clock.observe({"epoch":2,"sequence":2,"samples":60,"margin_low":-4,"margin_recent":3,"margin_latest":0,"late_total":41,"measurement_age_ms":0},200)
+ clock.update_rate(200)
+ if not is_equal_approx(clock.rate,1.05):quit(2);return
+ clock.observe({"epoch":2,"sequence":3,"samples":60,"margin_low":-4,"margin_recent":2,"margin_latest":2,"late_total":41,"measurement_age_ms":0},300)
+ clock.update_rate(300)
+ if not is_equal_approx(clock.rate,1.0):quit(3);return
+ # Ages add: 800ms old at snapshot creation +400ms since feedback receipt is stale.
+ clock.observe({"epoch":2,"sequence":4,"samples":60,"margin_low":-4,"margin_recent":0,"margin_latest":0,"late_total":42,"measurement_age_ms":800},400)
+ clock.update_rate(800)
+ if not is_equal_approx(clock.rate,1.0):quit(4);return
+ var room=preload("res://server/rooms/room.gd").new();room.connected[1]=true;room.clock_tick=100
+ var now:=Time.get_ticks_msec()
+ room.observe_input_packet(1,96,now-900);room.observe_input_packet(1,110,now)
+ var metrics:Dictionary=room.delivery_metrics(1)
+ if metrics.margin_low!=-4 or metrics.margin_latest!=10 or metrics.margin_recent!=10 or metrics.margin_recent_samples!=1:quit(5);return
+ clock.clear();clock.observe(metrics,now);clock.update_rate(now)
+ if clock.rate>=1.0:quit(6);return
+ print("MARGIN OVERSHOOT PASS: current early arrival brakes despite old late tail; late recovers; target steady; composed age neutral")
+ quit()

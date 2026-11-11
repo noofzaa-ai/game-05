@@ -1,0 +1,42 @@
+{
+ "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. Add a class = add a file here, drop its clips next to the body, point 'animations' at them. 'weapon' is the combat weapon id in data/combat/weapons.json (its overrides hold the class's advance distances: advance = clip hip travel in metres * 7.2, see client/characters/studio05_character_model.gd).",
+ "id": "sword_shield",
+ "weapon": "blade",
+ "animations": "res://art/characters/studio05/our_character_lowpoly_toon_hair_a_5k.glb",
+ "clip_marks": "res://art/characters/studio05/clips.json",
+ "moves": {
+  "light_1": "slash",
+  "light_2": "slash_3",
+  "light_3": "slash_5",
+  "light_4": "attack_4",
+  "heavy": "slash_4",
+  "run_light": "slash_2",
+  "run_heavy": "attack_3",
+  "air_light": "slash_5",
+  "air_heavy": "slash_4",
+  "kick": "kick",
+  "flying_kick": "kick",
+  "ultimate": "attack_2",
+  "special": "slash_2",
+  "charge": "attack_3"
+ },
+ "states": {
+  "idle": "idle",
+  "run": "run",
+  "guard": "block_idle",
+  "slide": "crouching",
+  "hurt": "impact",
+  "launched": "impact_2",
+  "air": "jump"
+ },
+ "off_hand": "round_shield",
+ "weapon_visible": true,
+ "weapon_scale": 1.0,
+ "hair_options": [
+  "a",
+  "b",
+  "c",
+  "e",
+  "f"
+ ]
+}

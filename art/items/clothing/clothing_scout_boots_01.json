@@ -1,0 +1,15 @@
+{
+  "id": "clothing_scout_boots_01",
+  "name": "เกราะลาดตระเวน · สนับแข้งและรองเท้า",
+  "asset_version": 2,
+  "triangle_count": 324,
+  "set_triangle_budget": 1500,
+  "slot": "shoes",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_navy_scout_01",
+  "thumbnail": "clothing_scout_boots_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "legacy_ids": []
+}

@@ -1,0 +1,51 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+class Admission:
+ extends RefCounted
+ var room_id=""
+ func join(_account,id:String)->Dictionary:
+  room_id=id
+  return {"ok":true,"room":id,"url":"unused","ticket":"test","player_id":1,"diagnostic":true}
+class Probe:
+ extends "res://client/perf/state_apply_toggle.gd"
+ # Exercise admission transitions without a remote account or external writes.
+ func _handle_reconnect_result(result:Dictionary)->void:
+  admission=result;connected=false;_deliberate_close=false
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var source=preload("res://data/perf/scenario.gd").new()
+ var direct=Probe.new(null,source.rules,source.camp)
+ direct.connected=true;direct._accept_state(source.state(),Time.get_ticks_msec());direct._presented_epoch=1
+ var panel=preload("res://client/perf/state_apply_toggle_panel.gd").new();panel.session=direct;root.add_child(panel)
+ panel.mode_buttons[2].pressed.emit() # The actual C button, directly from initial A.
+ assert(direct.local_socket_closed and direct.discard_enabled and not direct.connected and direct.local_sim_generation==1)
+ direct._poll_impl(0);panel._process(0)
+ assert(direct.debug_metrics().phase=="C_socket_closed" and panel.mode_buttons[2].button_pressed and panel.copy_button.text=="Copy C report")
+ panel.queue_free()
+ var session=Probe.new(null,source.rules,source.camp)
+ session.admission={"room":"same-room123","diagnostic":true}
+ session.connected=true;session._accept_state(source.state(),Time.get_ticks_msec());session._presented_epoch=1
+ session.set_discard(true)
+ var sim=session._sim;var ai=sim._ai;var profile=session.profile;var random_state:int=sim.rng.state
+ var generation:int=session.local_sim_generation
+ session.set_socket_closed()
+ assert(session.local_socket_closed and session.socket_switching and not session.connected)
+ assert(session._sim==sim and session._sim._ai==ai and session.profile==profile and sim.rng.state==random_state)
+ session._poll_impl(0)
+ assert(not session.socket_switching and session.socket.get_ready_state()==WebSocketPeer.STATE_CLOSED)
+ var received:int=session.received_packets;var sent:int=session.sent_inputs;var bytes_in:int=session.bytes_in;var bytes_out:int=session.bytes_out
+ var before:int=session.local_ticks
+ for i in range(120):session._step_impl(preload("res://logic/sim_input.gd").new());session._poll_impl(0)
+ assert(session.local_ticks==before+120 and session._sim==sim and session.local_sim_generation==generation)
+ assert(session.received_packets==received and session.sent_inputs==sent and session.bytes_in==bytes_in and session.bytes_out==bytes_out)
+ var auth=Admission.new();session.room_client=auth
+ session.set_discard(true)
+ assert(auth.room_id=="same-room123" and session.socket_switching and not session.local_socket_closed)
+ session._accept_admission({"ok":true})
+ assert(session.connected and session.socket_switching)
+ session._receive(Wire.packet(Wire.PONG,50,{"nonce":0,"tick":200,"input_ack":199,"event_sequence":5}),Time.get_ticks_msec())
+ assert(not session.socket_switching and session.worker_tick==200 and session.worker_ack==199)
+ assert(session._sim==sim and session.profile==profile and session.local_sim_generation==generation)
+ assert(session.debug_metrics().mode=="real_room_state_apply_toggle")
+ print("STATE SOCKET TOGGLE PASS:B/C same sim/AI/profile/RNG,120C ticks with0packets/bytes/input sends;resume joins same room,waitsPONG beforeB measurement;no account writes")
+ quit()

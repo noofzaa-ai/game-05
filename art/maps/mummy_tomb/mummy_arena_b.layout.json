@@ -1,0 +1,410 @@
+{
+  "version": 2,
+  "stage": 2,
+  "name": "Mummy \u2014 Inner Burial Hall",
+  "triangles": 26296,
+  "kit_instances": 36,
+  "render_objects": 1,
+  "render_surfaces": 8,
+  "placements": [
+    {
+      "part": "wall_panel",
+      "position": [
+        -13.8,
+        0,
+        -8
+      ],
+      "yaw": -90,
+      "scale": 1.3,
+      "solid": true
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        -13.8,
+        0,
+        0
+      ],
+      "yaw": -90,
+      "scale": 1.3,
+      "solid": true
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        -13.8,
+        0,
+        7
+      ],
+      "yaw": -90,
+      "scale": 1.3,
+      "solid": true
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        13.8,
+        0,
+        -8
+      ],
+      "yaw": 90,
+      "scale": 1.3,
+      "solid": true
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        13.8,
+        0,
+        0
+      ],
+      "yaw": 90,
+      "scale": 1.3,
+      "solid": true
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        13.8,
+        0,
+        7
+      ],
+      "yaw": 90,
+      "scale": 1.3,
+      "solid": true
+    },
+    {
+      "part": "pillar",
+      "position": [
+        -6.5,
+        0,
+        -3.8
+      ],
+      "yaw": 0,
+      "scale": 1.15,
+      "solid": true
+    },
+    {
+      "part": "pillar",
+      "position": [
+        -6.5,
+        0,
+        3.8
+      ],
+      "yaw": 0,
+      "scale": 1.15,
+      "solid": true
+    },
+    {
+      "part": "pillar",
+      "position": [
+        6.5,
+        0,
+        -3.8
+      ],
+      "yaw": 0,
+      "scale": 1.15,
+      "solid": true
+    },
+    {
+      "part": "pillar",
+      "position": [
+        6.5,
+        0,
+        3.8
+      ],
+      "yaw": 0,
+      "scale": 1.15,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        -12.2,
+        0,
+        -7.8
+      ],
+      "yaw": -90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        -12.2,
+        0,
+        -2.5
+      ],
+      "yaw": -90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        -12.2,
+        0,
+        3
+      ],
+      "yaw": -90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        -12.2,
+        0,
+        7.8
+      ],
+      "yaw": -90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "brazier",
+      "position": [
+        -9.3,
+        0,
+        -6
+      ],
+      "yaw": 0,
+      "scale": 1,
+      "solid": true
+    },
+    {
+      "part": "brazier",
+      "position": [
+        -9.3,
+        0,
+        6
+      ],
+      "yaw": 0,
+      "scale": 1,
+      "solid": true
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        -11.8,
+        0,
+        -9.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        -11.8,
+        0,
+        9.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "chest",
+      "position": [
+        -10.4,
+        0,
+        8.5
+      ],
+      "yaw": -10,
+      "scale": 0.85,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        12.2,
+        0,
+        -7.8
+      ],
+      "yaw": 90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        12.2,
+        0,
+        -2.5
+      ],
+      "yaw": 90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        12.2,
+        0,
+        3
+      ],
+      "yaw": 90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        12.2,
+        0,
+        7.8
+      ],
+      "yaw": 90,
+      "scale": 0.88,
+      "solid": true
+    },
+    {
+      "part": "brazier",
+      "position": [
+        9.3,
+        0,
+        -6
+      ],
+      "yaw": 0,
+      "scale": 1,
+      "solid": true
+    },
+    {
+      "part": "brazier",
+      "position": [
+        9.3,
+        0,
+        6
+      ],
+      "yaw": 0,
+      "scale": 1,
+      "solid": true
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        11.8,
+        0,
+        -9.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        11.8,
+        0,
+        9.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "chest",
+      "position": [
+        10.4,
+        0,
+        8.5
+      ],
+      "yaw": 10,
+      "scale": 0.85,
+      "solid": true
+    },
+    {
+      "part": "stairs",
+      "position": [
+        -1.55,
+        0,
+        -11.8
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        -0.52,
+        0,
+        -11.8
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        0.52,
+        0,
+        -11.8
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        1.55,
+        0,
+        -11.8
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "obelisk",
+      "position": [
+        -3.1,
+        0,
+        -11.9
+      ],
+      "yaw": 0,
+      "scale": 1.5,
+      "solid": false
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        -6.1,
+        1.1,
+        -11.6
+      ],
+      "yaw": 0,
+      "scale": 1.25,
+      "solid": false
+    },
+    {
+      "part": "obelisk",
+      "position": [
+        3.1,
+        0,
+        -11.9
+      ],
+      "yaw": 0,
+      "scale": 1.5,
+      "solid": false
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        6.1,
+        1.1,
+        -11.6
+      ],
+      "yaw": 0,
+      "scale": 1.25,
+      "solid": false
+    }
+  ],
+  "shared_textures": "../../props/mummy_tomb/",
+  "map": "res://data/maps/mummy_arena_b.json",
+  "state": "scene2 ordered draft;runtime route integration pending"
+}

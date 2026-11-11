@@ -1,0 +1,340 @@
+{
+  "selects": {
+    "outfit-style": [
+      {
+        "id": "red",
+        "name": "แจ็กเก็ตแดง + ยีนส์"
+      },
+      {
+        "id": "purple",
+        "name": "เสื้อกระต่าย + กระโปรงม่วง"
+      },
+      {
+        "id": "black",
+        "name": "แจ็กเก็ตดำ + กางเกงลายทาง"
+      },
+      {
+        "id": "mono",
+        "name": "ชุดผู้ชายขาวดำ · เสื้อ Z"
+      },
+      {
+        "id": "fem",
+        "name": "ชุดผู้หญิงลาเวนเดอร์ · ดาว + ตาราง"
+      },
+      {
+        "id": "black_zip",
+        "name": "ชุดดำ · แจ็กเก็ตซิป"
+      },
+      {
+        "id": "black_bow",
+        "name": "ชุดดำ · เกาะอกโบ"
+      },
+      {
+        "id": "white_ribbon",
+        "name": "ชุดขาวดำ · เสื้อผูกโบ"
+      },
+      {
+        "id": "white_corset",
+        "name": "ชุดขาวดำ · คอร์เซ็ตกระโปรง"
+      },
+      {
+        "id": "cocoa_knit",
+        "name": "ชุดถักน้ำตาล · กระโปรงพลีต"
+      },
+      {
+        "id": "white_tee_cargo",
+        "name": "เสื้อยืดขาวพิมพ์ลาย · ขาสั้นคาร์โก้"
+      },
+      {
+        "id": "white_tee_shorts",
+        "name": "เสื้อยืดขาวเรียบ · ขาสั้นพับขา"
+      },
+      {
+        "id": "black_khaki",
+        "name": "เชิ้ตดำ · กางเกงกากี"
+      },
+      {
+        "id": "leather_hoodie",
+        "name": "หนังดำ + ฮู้ดเทา · ยีนส์ฟอก"
+      },
+      {
+        "id": "bat_club",
+        "name": "Bat Club · ฮู้ดดำม่วง"
+      },
+      {
+        "id": "pumpkin_night",
+        "name": "Pumpkin Night · เอี๊ยมฟักทอง"
+      },
+      {
+        "id": "little_ghost",
+        "name": "Little Ghost · เคปผีน้อย"
+      },
+      {
+        "id": "moon_witch",
+        "name": "Moon Witch · แม่มดจันทร์"
+      },
+      {
+        "id": "bat_club_male",
+        "name": "Bat Club ผู้ชาย"
+      },
+      {
+        "id": "pumpkin_night_male",
+        "name": "Pumpkin Night ผู้ชาย"
+      },
+      {
+        "id": "little_ghost_male",
+        "name": "Little Ghost ผู้ชาย"
+      },
+      {
+        "id": "moon_witch_male",
+        "name": "Moon Wizard ผู้ชาย"
+      }
+    ],
+    "hair-style": [
+      {
+        "id": "red",
+        "name": "หน้าม้ายาว + หางม้าดำ"
+      },
+      {
+        "id": "purple",
+        "name": "บ๊อบชมพูอมม่วง"
+      },
+      {
+        "id": "black",
+        "name": "ผมยาวลอนชมพูม่วง"
+      },
+      {
+        "id": "vintage_swept_quiff",
+        "name": "วินเทจยกผม · ปัดเฉียงเป็นช่อ"
+      },
+      {
+        "id": "vintage_pompadour",
+        "name": "วินเทจสั้น · ปอมปาดัวร์เฟด"
+      },
+      {
+        "id": "mens_short",
+        "name": "ผมผู้ชายแสกปัด · ท้ายทอยสั้น"
+      },
+      {
+        "id": "two_block",
+        "name": "ทูบล็อก · ท้ายทอยยาว"
+      },
+      {
+        "id": "short_bob",
+        "name": "บ๊อบสั้นน้ำตาล · แสกปัดข้าง"
+      },
+      {
+        "id": "swept_highlight",
+        "name": "ผมปัดข้างน้ำตาลไฮไลต์ทอง"
+      },
+      {
+        "id": "medium_layers",
+        "name": "ผมน้ำตาลซอยเลเยอร์ · หน้าม้าโค้ง"
+      }
+    ],
+    "hat-style": [
+      {
+        "id": "none",
+        "name": "ไม่ใส่หมวก"
+      },
+      {
+        "id": "black",
+        "name": "หมวกหนังดำ"
+      },
+      {
+        "id": "cat",
+        "name": "หูแมว"
+      },
+      {
+        "id": "moon_witch",
+        "name": "หมวกแม่มด · จันทร์เสี้ยว"
+      },
+      {
+        "id": "pumpkin_night",
+        "name": "หมวกฟักทอง"
+      },
+      {
+        "id": "little_ghost",
+        "name": "หมวกผีน้อย"
+      },
+      {
+        "id": "bat_club",
+        "name": "ที่คาดหูค้างคาว"
+      },
+      {
+        "id": "fantasy_01",
+        "name": "01 · แม่มดส้มจันทร์เสี้ยว"
+      },
+      {
+        "id": "fantasy_02",
+        "name": "02 · ทรงสูงงาช้างขนนก"
+      },
+      {
+        "id": "fantasy_03",
+        "name": "03 · นักสำรวจเข็มทิศ"
+      },
+      {
+        "id": "fantasy_04",
+        "name": "04 · เบเรต์ฟักทอง"
+      },
+      {
+        "id": "fantasy_05",
+        "name": "05 · พ่อมดน้ำเงินดาวทอง"
+      },
+      {
+        "id": "fantasy_06",
+        "name": "06 · โบว์เลอร์แดงค้างคาว"
+      },
+      {
+        "id": "fantasy_07",
+        "name": "07 · หมวกแหลมเขียวใบไม้"
+      },
+      {
+        "id": "fantasy_08",
+        "name": "08 · บักเก็ตม่วงผีน้อย"
+      },
+      {
+        "id": "fantasy_09",
+        "name": "09 · โจรสลัดสามมุม"
+      },
+      {
+        "id": "fantasy_10",
+        "name": "10 · ปีกเหลืองดอกไม้"
+      },
+      {
+        "id": "fantasy_11",
+        "name": "11 · นิวส์บอยดำจันทร์เสี้ยว"
+      },
+      {
+        "id": "fantasy_12",
+        "name": "12 · ทรงสูงน้ำเงินอัญมณี"
+      }
+    ],
+    "back-style": [
+      {
+        "id": "none",
+        "name": "ไม่ใส่อุปกรณ์หลัง"
+      },
+      {
+        "id": "angel_wings",
+        "name": "ปีกขนนกขาว · กระพือเบาๆ"
+      },
+      {
+        "id": "panda_backpack",
+        "name": "เป้แพนด้าขาวดำ · สองสาย"
+      },
+      {
+        "id": "teddy_backpack",
+        "name": "เป้ตุ๊กตาหมี · สองสาย"
+      },
+      {
+        "id": "cocoa_knit",
+        "name": "กระเป๋าหมีน้ำตาล"
+      },
+      {
+        "id": "bat_club",
+        "name": "กระเป๋าค้างคาวดำ"
+      },
+      {
+        "id": "pumpkin_night",
+        "name": "กระเป๋าฟักทอง"
+      },
+      {
+        "id": "little_ghost",
+        "name": "กระเป๋าผีน้อย"
+      },
+      {
+        "id": "moon_witch",
+        "name": "กระเป๋าแม่มดม่วง"
+      }
+    ],
+    "eye-style": [
+      {
+        "id": "original",
+        "name": "ทรงเดิม"
+      },
+      {
+        "id": "01",
+        "name": "01 · ตาเปิด คม"
+      },
+      {
+        "id": "02",
+        "name": "02 · ตาปรือ"
+      },
+      {
+        "id": "03",
+        "name": "03 · ตาโค้งนุ่ม"
+      },
+      {
+        "id": "04",
+        "name": "04 · ตาเฉียง"
+      },
+      {
+        "id": "05",
+        "name": "05 · ตากลมหวาน"
+      },
+      {
+        "id": "06",
+        "name": "06 · ตากลมโต"
+      },
+      {
+        "id": "07",
+        "name": "07 · ตาแมว รูม่านตาตั้ง"
+      },
+      {
+        "id": "08",
+        "name": "08 · ตาคมดุ"
+      }
+    ],
+    "blink-mode": [
+      {
+        "id": "auto",
+        "name": "อัตโนมัติ · สุ่มจังหวะ"
+      },
+      {
+        "id": "open",
+        "name": "เปิดตาค้าง"
+      },
+      {
+        "id": "closed",
+        "name": "หลับตาค้าง"
+      }
+    ],
+    "speed": [
+      {
+        "id": "1",
+        "name": "ปกติ"
+      },
+      {
+        "id": "0.5",
+        "name": "ช้า ½ เท่า"
+      },
+      {
+        "id": "0.25",
+        "name": "ช้า ¼ เท่า"
+      }
+    ]
+  },
+  "visibility": [
+    "shirt",
+    "pants",
+    "shoes",
+    "head",
+    "hair",
+    "mask"
+  ],
+  "skin_default": "#ddbfae",
+  "eye_default": "#21b7cf",
+  "toon_ramp": [
+    70,
+    145,
+    220,
+    255
+  ],
+  "outline_color": [
+    0.1,
+    0.07,
+    0.15
+  ],
+  "outline_alpha": 0.8
+}

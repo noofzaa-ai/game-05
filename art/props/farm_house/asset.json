@@ -1,0 +1,63 @@
+{
+  "converter": "Godot 4.7.2-stable (official) native FBXDocument",
+  "foot_y": 0,
+  "game_size": [
+    4.8,
+    3.381603,
+    2.874362
+  ],
+  "source": "/Users/user/godot-project/assets/farm.fbx",
+  "source_size": [
+    0.935139,
+    0.658806,
+    0.559985
+  ],
+  "triangles": 4914,
+  "width_m": 4.8,
+  "source_sha256": "b921beeb4c7ceff633a68832745e9b3332f9cf74919f101496c8feff4b3fd2ac",
+  "source_bytes": 31629388,
+  "glb_bytes": 1673128,
+  "texture_budget": {
+    "color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  },
+  "normal_strength": 1,
+  "placement_preview": {
+    "position": [
+      24,
+      0,
+      -3.3
+    ],
+    "rotation_y_degrees": -90,
+    "live_placement": false
+  },
+  "data_maps": "Original FBX embedded PNGs; MR packed G=roughness, B=metallic; native importer omitted these bindings so restored explicitly",
+  "textures": [
+    {
+      "name": "0",
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "Material_normal",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "farm_mr",
+      "size": [
+        512,
+        512
+      ]
+    }
+  ],
+  "gpu_texture_file_bytes": {
+    "s3tc": 1223548,
+    "etc2": 1223548
+  }
+}

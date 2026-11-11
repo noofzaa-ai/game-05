@@ -1,0 +1,62 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
+[application]
+
+config/name="zorx"
+run/main_scene="res://scenes/boot.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+
+NetworkTime="*res://addons/netfox/network-time.gd"
+NetworkTimeSynchronizer="*res://addons/netfox/network-time-synchronizer.gd"
+NetworkRollback="*res://addons/netfox/rollback/network-rollback.gd"
+NetworkEvents="*res://addons/netfox/network-events.gd"
+NetworkPerformance="*res://addons/netfox/network-performance.gd"
+
+ToonStyle="*res://client/toon_style.gd"
+
+Graphics="*res://client/graphics_runtime.gd"
+
+Nakama="*res://addons/com.heroiclabs.nakama/Nakama.gd"
+Online="*res://client/online/online_account.gd"
+GameState="*res://client/game_state.gd"
+Audio="*res://client/audio/audio_director.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=2
+
+[netfox]
+
+time/tickrate=60
+time/sync_to_physics=false
+time/max_ticks_per_frame=8
+events/enabled=false
+rollback/history_limit=64
+rollback/input_redundancy=4
+rollback/display_offset=0
+rollback/input_delay=0
+rollback/enable_diff_states=false

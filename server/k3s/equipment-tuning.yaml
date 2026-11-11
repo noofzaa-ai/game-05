@@ -1,0 +1,189 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zorx-equipment-tuning
+  namespace: zorx-staging
+data:
+  equipment_tuning.json: |
+    {
+      "version": 1,
+      "refine": {
+        "enabled": true,
+        "max_level": 12,
+        "bonus_per_level": 0.013,
+        "cost": {
+          "gold": 100,
+          "materials": {}
+        },
+        "success_chance": 1.0,
+        "success_chances": [
+          1,
+          1,
+          1,
+          0.8,
+          0.7,
+          0.6,
+          0.5,
+          0.4,
+          0.3,
+          0.2,
+          0.1,
+          0.05
+        ],
+        "failure_floors": [
+          0,
+          0,
+          0,
+          4,
+          4,
+          4,
+          7,
+          7,
+          7,
+          10,
+          10,
+          10
+        ]
+      },
+      "upgrade": {
+        "enabled": true,
+        "max_attempts": 5,
+        "max_substats": 4,
+        "cost": {
+          "gold": 100,
+          "materials": {}
+        },
+        "increments": {
+          "HP": [
+            10,
+            15,
+            20,
+            25
+          ],
+          "ATK": [
+            1,
+            1.5,
+            2,
+            2.5
+          ],
+          "DEF": [
+            0.8,
+            1.2,
+            1.6,
+            2
+          ],
+          "ATKSPD": [
+            0.2,
+            0.3,
+            0.4,
+            0.5
+          ],
+          "MOVESPD": [
+            0.1,
+            0.15,
+            0.2,
+            0.25
+          ],
+          "CRIRATE": [
+            0.2,
+            0.3,
+            0.4,
+            0.5
+          ],
+          "CRIDMG": [
+            0.5,
+            0.75,
+            1,
+            1.25
+          ],
+          "EFFECT_ACC": [
+            0.3,
+            0.45,
+            0.6,
+            0.75
+          ],
+          "EFFECT_RES": [
+            0.3,
+            0.45,
+            0.6,
+            0.75
+          ],
+          "HPREGEN": [
+            0.05,
+            0.075,
+            0.1,
+            0.125
+          ],
+          "STAREGEN": [
+            0.025,
+            0.05,
+            0.075,
+            0.1
+          ],
+          "ULTREGEN": [
+            0.005,
+            0.01,
+            0.015,
+            0.02
+          ],
+          "STAMINA": [
+            0.5,
+            0.75,
+            1,
+            1.25
+          ]
+        }
+      },
+      "mobility": {
+        "enabled": true,
+        "base_move_multiplier": 1.0,
+        "base_dodge_multiplier": 1.0,
+        "slot_weights": {
+          "shirt": 0.4,
+          "pants": 0.25,
+          "shoes": 0.15,
+          "hat": 0.1,
+          "armband": 0.1
+        },
+        "armor_penalties": {
+          "heavy": 0.3,
+          "light": 0.15,
+          "cloth": 0.05
+        },
+        "set_classes": {
+          "armor_obsidian_gold": "heavy",
+          "armor_obsidian_leather": "light",
+          "armor_obsidian_cloth": "cloth",
+          "armor_royal_gold": "heavy",
+          "armor_royal_leather": "light",
+          "armor_royal_cloth": "cloth",
+          "armor_ash_steel": "heavy",
+          "armor_ash_leather": "light",
+          "armor_ash_cloth": "cloth"
+        },
+        "item_classes": {},
+        "weapon_penalties": {
+          "fists": 0.0,
+          "dagger": 0.0,
+          "blade": 0.05,
+          "spear": 0.08,
+          "hammer": 0.12
+        }
+      },
+      "armor": {
+        "class_base_multipliers": {
+          "heavy": {
+            "HP": 1.0,
+            "DEF": 1.0
+          },
+          "light": {
+            "HP": 0.7,
+            "DEF": 0.6
+          },
+          "cloth": {
+            "HP": 0.4,
+            "DEF": 0.25
+          }
+        }
+      }
+    }

@@ -1,0 +1,203 @@
+{
+	"version": 1,
+	"id": "goblin_arena_c",
+	"name": "Goblin Quarry",
+	"_design": "Third fight arena (Boss 2026-10-14: a goblin quarry, same 28 x 21 m as the other two). A worked-out stone pit the goblins squat in: grey cut floor streaked with ochre water stains, stepped rock benches outside the walkable box and a high cut face across the north with two ramps hacked through it - the exit portals stand on the ramps, flagged by skull posts and red rags. Landmark: the quarry winch, a timber A-frame with a cracked boulder hanging in a rope net and a brazier at its foot, dead centre on the north face; a rusty rail line runs from the north-east ramp across the pit to a parked ore cart, so the eye always knows which way the pit works. Cover is cut stone: four blocks spread wide, a spoil heap east and a tipped ore cart north-west; the middle stays open for the knight (sixth spot) to march into. Glow mushrooms in the wall shade and a small fire south-west give the night its warm and cold lights. Built by tools/blender/build_goblin_stages.py (art and this file come from one layout; edit the script, not this file).",
+	"modes": [
+		"pve"
+	],
+	"kind": "fight",
+	"camera_style": "top_down",
+	"atmosphere": "ink",
+	"art_scene": "res://art/maps/goblin_forest/goblin_arena_c.glb",
+	"art_mood": "night",
+	"bounds": {
+		"half_width": 14.0,
+		"half_depth": 10.5
+	},
+	"spawn": [
+		0.0,
+		0.05,
+		8.6
+	],
+	"exit_portals": [
+		[
+			-5.0,
+			0.05,
+			-8.6
+		],
+		[
+			5.0,
+			0.05,
+			-8.6
+		]
+	],
+	"solids": [
+		{
+			"center": [
+				0,
+				-0.2,
+				0
+			],
+			"size": [
+				28.0,
+				0.4,
+				21.0
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				-7.4,
+				0.75,
+				-4.4
+			],
+			"size": [
+				1.7,
+				1.5,
+				1.7
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				6.8,
+				0.75,
+				-5.2
+			],
+			"size": [
+				1.5,
+				1.5,
+				1.5
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				2.2,
+				0.75,
+				1.6
+			],
+			"size": [
+				1.6,
+				1.5,
+				1.4
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				-2.1,
+				0.75,
+				-6.8
+			],
+			"size": [
+				2.0,
+				1.5,
+				1.1
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				10.6,
+				0.75,
+				2.6
+			],
+			"size": [
+				2.2,
+				1.5,
+				2.0
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				-11.0,
+				0.75,
+				1.4
+			],
+			"size": [
+				1.5,
+				1.5,
+				1.5
+			],
+			"material": "ink"
+		}
+	],
+	"enemy_spawns": [
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				-4.8,
+				0.05,
+				2.6
+			]
+		},
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				4.6,
+				0.05,
+				2.0
+			]
+		},
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				0.6,
+				0.05,
+				-1.4
+			]
+		},
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				-8.8,
+				0.05,
+				-1.0
+			]
+		},
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				8.8,
+				0.05,
+				-2.8
+			]
+		},
+		{
+			"type": "goblin_knight",
+			"level": 1,
+			"position": [
+				2.8,
+				0.05,
+				-6.4
+			]
+		},
+		{
+			"type": "goblin_archer",
+			"level": 1,
+			"position": [
+				12.0,
+				0.05,
+				-6.8
+			]
+		},
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				-11.8,
+				0.05,
+				-6.4
+			]
+		}
+	],
+	"rest_points": []
+}

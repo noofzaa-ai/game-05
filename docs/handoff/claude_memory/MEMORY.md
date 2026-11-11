@@ -1,0 +1,9 @@
+- [Boss communication rules](boss-communication-rules.md) — Thai + "Boss" with user, English with agents
+- [Zorx team roles](zorx-team-roles.md) — 8 agents, models, scopes
+- [Save progress before context runs out](save-progress-before-context-runs-out.md) — keep PROGRESS.md handoff current
+- [Artifact update only on Boss order](artifact-update-only-on-boss-order.md) — never republish web playtest during dev
+- [Remind Boss pending decisions](remind-boss-pending-decisions.md) — nudge Boss about the 9 open questions until answered
+- [Idle stances from model team](pending-idle-stances-from-model-team.md) — weapon stances arrived 10-08; unarmed idle is ours (chibi_anims.py)
+- [Python edits keep line endings](python-edits-keep-line-endings.md) — Windows python write_text makes CRLF; use bytes/newline=''
+- [Boss token budget](boss-token-budget.md) — keep agent work narrow; no heavy Blender loops
+- [Verify art in game view](verify-art-in-game-view.md) — check stances in real camp/game view front/side/back; never oversell

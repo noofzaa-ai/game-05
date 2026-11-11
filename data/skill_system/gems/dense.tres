@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ZorxGemData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://data/skill_system/scripts/gem_data.gd" id="1"]
+[ext_resource type="Script" path="res://data/skill_system/scripts/stat_mod.gd" id="2"]
+
+[sub_resource type="Resource" id="Mod0"]
+script = ExtResource("2")
+stat = "radius"
+op = 1
+value = 0.7
+scope_tags = Array[String]([])
+
+[sub_resource type="Resource" id="Mod1"]
+script = ExtResource("2")
+stat = "damage"
+op = 1
+value = 1.4
+scope_tags = Array[String]([])
+
+[resource]
+script = ExtResource("1")
+id = "dense"
+display_name = "อัดแน่น"
+slot = "shape"
+requires_tags = Array[String](["area"])
+status_id = ""
+behavior = ""
+group = "size"
+
+mods = Array[ExtResource("2")]([SubResource("Mod0"), SubResource("Mod1")])

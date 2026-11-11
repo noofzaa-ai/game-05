@@ -1,0 +1,30 @@
+{
+  "idle": {
+    "length": 4.8,
+    "loop": true
+  },
+  "run": {
+    "length": 0.5833333333333334,
+    "loop": true
+  },
+  "shoot": {
+    "length": 0.9666666666666667,
+    "loop": false,
+    "windup_end": 0.5666666666666667,
+    "strike_end": 0.6
+  },
+  "volley": {
+    "length": 1.2666666666666666,
+    "loop": false,
+    "windup_end": 0.7333333333333333,
+    "strike_end": 0.7666666666666667
+  },
+  "hit": {
+    "length": 0.5,
+    "loop": false
+  },
+  "death": {
+    "length": 2.2,
+    "loop": false
+  }
+}

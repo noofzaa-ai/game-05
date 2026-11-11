@@ -1,0 +1,106 @@
+{
+	"version": 1,
+	"id": "goblin_rest_camp",
+	"name": "Goblin Rest Camp",
+	"_design": "Safe rest stop between fights (no monsters; Boss 2026-10-14: grown to 19.6 x 15 m, ~1.3x). A green clearing round a calm campfire with three logs to sit on, a lantern post, two canvas tents, a supply crate stack, a hide-drying rack and a firewood stack; fireflies, flowers and warm light. The rest point is the campfire (`campfire` + a rest point there). The two exit portals stand north as in the fight arenas, so every stage reads the same way: come in south, leave north. Built by tools/blender/build_goblin_stages.py (art and this file come from one layout; edit the script, not this file).",
+	"modes": [
+		"pve"
+	],
+	"kind": "rest",
+	"camera_style": "top_down",
+	"atmosphere": "ink",
+	"art_scene": "res://art/maps/goblin_forest/goblin_rest_camp.glb",
+	"art_mood": "camp",
+	"bounds": {
+		"half_width": 9.8,
+		"half_depth": 7.5
+	},
+	"spawn": [
+		0.0,
+		0.05,
+		5.9
+	],
+	"exit_portals": [
+		[
+			-3.9,
+			0.05,
+			-5.6
+		],
+		[
+			3.9,
+			0.05,
+			-5.6
+		]
+	],
+	"solids": [
+		{
+			"center": [
+				0,
+				-0.2,
+				0
+			],
+			"size": [
+				19.6,
+				0.4,
+				15.0
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				7.0,
+				0.6,
+				-3.0
+			],
+			"size": [
+				1.2,
+				1.2,
+				1.7
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				-6.7,
+				0.75,
+				-0.8
+			],
+			"size": [
+				1.0,
+				1.5,
+				1.8
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				6.4,
+				0.6,
+				3.8
+			],
+			"size": [
+				1.1,
+				1.2,
+				1.6
+			],
+			"material": "ink"
+		}
+	],
+	"enemy_spawns": [],
+	"rest_points": [
+		{
+			"id": "campfire",
+			"position": [
+				0.0,
+				0.05,
+				1.6
+			],
+			"radius": 2.0
+		}
+	],
+	"campfire": [
+		0.0,
+		0.05,
+		-0.6
+	]
+}

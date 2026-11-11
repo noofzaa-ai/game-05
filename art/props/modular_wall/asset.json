@@ -1,0 +1,82 @@
+{
+  "source": "/Users/user/godot-project/assets/wall_modular.fbx",
+  "source_sha256": "c67a5c5c96e976575652b0c290c4eaa0599105d970d7e52d55c5ba9b257a77b3",
+  "source_bytes": 33520396,
+  "glb_bytes": 1791044,
+  "triangles": 3122,
+  "foot_y": 0,
+  "texture_budget": {
+    "color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  },
+  "converter": "Godot 4.7.2 native FBXDocument; original embedded MR restored",
+  "parts": {
+    "Corner": {
+      "triangles": 558,
+      "size_m": [
+        1.6000008583068848,
+        1.4374933242797852,
+        1.362491250038147
+      ]
+    },
+    "DoubleGate": {
+      "triangles": 521,
+      "size_m": [
+        2.274994373321533,
+        1.350000023841858,
+        0.26250410079956055
+      ]
+    },
+    "CrossRail": {
+      "triangles": 458,
+      "size_m": [
+        2.0844998359680176,
+        0.9250002503395081,
+        0.3544628918170929
+      ]
+    },
+    "Rail": {
+      "triangles": 448,
+      "size_m": [
+        2.0465750694274902,
+        0.8874966502189636,
+        0.3134928047657013
+      ]
+    },
+    "ShortRail": {
+      "triangles": 448,
+      "size_m": [
+        1.025858998298645,
+        0.8624959588050842,
+        0.3128710091114044
+      ]
+    },
+    "LanternPost": {
+      "triangles": 324,
+      "size_m": [
+        0.5874946117401123,
+        1.7499924898147583,
+        1.124993920326233
+      ]
+    },
+    "Gate": {
+      "triangles": 289,
+      "size_m": [
+        1.0875020027160645,
+        1.350000023841858,
+        0.23750339448451996
+      ]
+    },
+    "Post": {
+      "triangles": 76,
+      "size_m": [
+        0.48750439286231995,
+        1.350000023841858,
+        0.4874979555606842
+      ]
+    }
+  },
+  "placement": "Rail and Post separately batched; open entrances",
+  "post_height_m": 1.35
+}

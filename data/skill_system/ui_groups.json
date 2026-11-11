@@ -1,0 +1,7 @@
+[
+ {"name":"โลหิต / หนาม","skills":["storm_blades","blood_pierce","thorn_trap","blood_shield"]},
+ {"name":"ไฟ","skills":["fire_ring","fireball","eruption","flame_dash"]},
+ {"name":"น้ำแข็ง","skills":["ice_lance","shatter_smash","ice_wall","frost_armor"]},
+ {"name":"สายฟ้า","skills":["chain_lightning","lightning_strike","blink_bolt","tesla_totem"]},
+ {"name":"กายภาพ / สนับสนุน","skills":["ground_slam","riposte","piercing_shot","war_cry"]}
+]

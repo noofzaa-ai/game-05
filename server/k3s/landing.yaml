@@ -1,0 +1,73 @@
+# Google credentials/session key belong in Secret/landing-auth, never in this file.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: landing
+  namespace: zorx-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: landing}
+  template:
+    metadata:
+      labels: {app: landing}
+    spec:
+      automountServiceAccountToken: false
+      securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000}
+      containers:
+      - name: landing
+        image: wiyazard:30500/zorx-landing:google-entry
+        ports:
+        - {name: http, containerPort: 4173}
+        envFrom:
+        - secretRef: {name: landing-auth}
+        env:
+        - {name: PORT, value: '4173'}
+        - {name: PUBLIC_ORIGIN, value: 'https://zorx.daiyooo.com'}
+        - {name: GAME_ORIGIN, value: 'https://zorxplay.daiyooo.com'}
+        - {name: NAKAMA_URL, value: 'http://nakama:7350'}
+        - {name: NAKAMA_PUBLIC_ORIGIN, value: 'https://zorxapi.daiyooo.com'}
+        resources:
+          requests: {cpu: 50m, memory: 64Mi}
+          limits: {cpu: 500m, memory: 256Mi}
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities: {drop: [ALL]}
+        readinessProbe:
+          httpGet: {path: /auth/session, port: http}
+          initialDelaySeconds: 2
+          periodSeconds: 5
+        livenessProbe:
+          httpGet: {path: /auth/session, port: http}
+          initialDelaySeconds: 10
+          periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata: {name: landing, namespace: zorx-staging}
+spec:
+  selector: {app: landing}
+  ports:
+  - {name: http, port: 80, targetPort: http}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: landing
+  namespace: zorx-staging
+  annotations:
+    traefik.ingress.kubernetes.io/router.priority: '100'
+    traefik.ingress.kubernetes.io/router.middlewares: zorx-staging-origin-budget@kubernetescrd,zorx-staging-origin-buffer@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: zorx.daiyooo.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: landing
+            port: {name: http}

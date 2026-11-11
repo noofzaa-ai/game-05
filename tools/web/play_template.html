@@ -1,0 +1,401 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zone of Relic eXplore · ZORX</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@700;800&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap">
+<style>
+/* Layout: the game canvas fills the frame; a single ink-wash card sits over it until the player starts. */
+:root {
+  --ink: #15171a;        /* page + canvas ground */
+  --wash: #1f2428;       /* card surface */
+  --paper: #e9e4d8;      /* main text, rice-paper tone */
+  --muted: #9aa39c;      /* secondary text, grey-green mist */
+  --seal: #c8452f;       /* vermilion seal accent, used once on the button */
+  --line: #3a4247;
+  --display: "Shippori Mincho B1", "Noto Serif Thai", Georgia, serif;
+  --body: "IBM Plex Sans Thai", "Noto Sans Thai", system-ui, sans-serif;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; } /* (#gate sets display: grid; a plain server has no page skeleton to hide it) */
+html, body { height: 100%; }
+body { margin: 0; background: var(--ink); color: var(--paper); font-family: var(--body); overflow: hidden; touch-action: none; }
+#canvas { display: block; position: fixed; inset: 0; width: 100%; height: 100%; outline: none; }
+@supports (height: 100dvh) {
+  /* Keep canvas geometry aligned with expanding/collapsing browser toolbars. */
+  #canvas { height: 100dvh !important; }
+}
+#gate {
+  position: fixed; inset: 0; display: grid; place-items: center; overflow-y: auto;
+  padding-inline: 16px; padding-block: 24px;
+  background: radial-gradient(ellipse at 50% 35%, #263036 0%, var(--ink) 70%);
+}
+.card {
+  position: relative;
+  width: min(560px, 100%); background: var(--wash); border: 1px solid var(--line); border-radius: 6px;
+  padding-inline: clamp(18px, 4vw, 32px); padding-block: 28px; display: grid; gap: 20px;
+}
+h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(34px, 7vw, 48px); letter-spacing: 0.04em; line-height: 1; text-wrap: balance; }
+.sub { margin: 6px 0 0; color: var(--muted); font-size: 15px; line-height: 1.6; }
+.keys { display: grid; grid-template-columns: auto 1fr; gap: 7px 14px; margin: 0; font-size: 14px; }
+.keys dt { justify-self: end; }
+.keys dd { margin: 0; color: var(--muted); line-height: 1.5; }
+kbd {
+  display: inline-block; min-width: 1.6em; text-align: center; padding: 1px 6px; border-radius: 3px;
+  border: 1px solid var(--line); border-bottom-width: 2px; font: 600 12px/1.6 var(--body); color: var(--paper); background: var(--ink);
+}
+.label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.note { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.6; }
+button {
+  justify-self: start; font: 600 16px var(--body); color: #fff6ee; background: var(--seal); border: 0; border-radius: 4px;
+  padding: 11px 26px; cursor: pointer;
+}
+button:disabled { opacity: 0.6; cursor: progress; }
+button:focus-visible { outline: 2px solid var(--paper); outline-offset: 3px; }
+#controls-close { position:absolute; right:8px; top:8px; width:48px; height:48px; padding:0; background:#0b1920; color:#efc564; border:2px solid #c7a350; clip-path:polygon(15% 0,85% 0,100% 15%,100% 85%,85% 100%,15% 100%,0 85%,0 15%); font-size:34px; }
+#status { font-size: 13px; color: var(--muted); min-height: 1.4em; margin: 0; font-variant-numeric: tabular-nums; }
+#status.err { color: #f0a090; white-space: pre-line; }
+progress { width: 100%; height: 6px; accent-color: var(--seal); }
+#help {
+  display: none;
+  position: fixed; right: 12px; top: calc(12px + env(safe-area-inset-top, 0px)); z-index: 2;
+  font: 600 13px var(--body); padding: 6px 12px; background: rgba(21,23,26,0.75); color: var(--paper); border: 1px solid var(--line);
+}
+@media (hover: hover) and (pointer: fine) {
+  html.desktop-controls #help:not([hidden]) { display: none; }
+}
+@media (any-pointer: coarse) { #help { display: none !important; } }
+
+/* Loading gate: reuse existing camp artwork, with live accessible text/progress. */
+#gate { box-sizing:border-box; background:linear-gradient(#020b13a6,#020b13bd),url('__LOADING_BACKGROUND__') center/cover no-repeat; padding:28px; }
+#gate::before { content:""; position:fixed; inset:12px; border:1px solid #deb66b; box-shadow:inset 0 0 0 4px #05131b,inset 0 0 0 5px #8c703e; border-radius:20px; pointer-events:none; }
+#gate .card { width:min(760px,100%); box-sizing:border-box; background:transparent; border:0; border-radius:0; padding:24px 28px; text-align:center; justify-items:center; gap:24px; }
+#gate h1 { font-family:Georgia,var(--display); font-size:clamp(60px,9vw,112px); color:#f6e7c5; letter-spacing:.08em; text-shadow:0 4px 18px #000; }
+#gate .game-full-name { margin:8px 0 18px; font-family:Georgia,var(--display); font-size:clamp(18px,2.4vw,28px); color:#ecd49c; letter-spacing:.08em; }
+.beta-badge { display:inline-block; padding:4px 22px; border:1px solid #deb66b; border-radius:16px; color:#e7be72; letter-spacing:.15em; font-family:Georgia,serif; }
+.loading-copy p { margin:0 0 8px; color:#f2dfb9; font-size:clamp(18px,2.4vw,28px); }
+.loading-copy small { color:#b4b6a6; font-size:clamp(12px,1.4vw,16px); }
+#gate progress { box-sizing:border-box; width:100%; height:24px; padding:3px; border:1px solid #d8ae62; border-radius:12px; background:#06121b; accent-color:#e8be6b; }
+#gate progress::-webkit-progress-bar { background:#06121b; border-radius:8px; }
+#gate progress::-webkit-progress-value { background:linear-gradient(90deg,#bb873c,#f5d88d); border-radius:8px; }
+#gate progress::-moz-progress-bar { background:linear-gradient(90deg,#bb873c,#f5d88d); border-radius:8px; }
+#gate #status { color:#eedbb4; font-size:18px; }
+#gate #status.err { color:#ffb1a0; }
+#gate #start { justify-self:center; background:linear-gradient(#e8c774,#9b6527); border:1px solid #e9bf64; color:#20180b; min-height:48px; }
+#gate #download-size { color:#e8c77f; font-size:15px; margin:0; font-variant-numeric:tabular-nums; }
+#gate .download-note { color:#a7b0ac; font-size:12px; margin:0; }
+#gate .build-info { color:#a4abac; font-size:10px; margin:0; }
+@media(max-height:550px) {
+ #gate {padding:20px;}
+ #gate .card {gap:6px;padding:8px 24px;}
+ #gate h1 {font-size:48px;}
+ #gate .game-full-name {margin:0 0 4px;font-size:16px;}
+ #gate .beta-badge {font-size:12px;padding:2px 16px;}
+ #gate .loading-copy p {font-size:16px;margin-bottom:2px;}
+ #gate .loading-copy small {font-size:11px;}
+ #gate progress {height:16px;}
+ #gate #status {font-size:14px;line-height:1.2;}
+ #gate #download-size {font-size:12px;}
+ #gate .download-note {font-size:10px;}
+ #gate .build-info {display:none;}
+}
+</style>
+
+<canvas id="canvas" tabindex="0"></canvas>
+
+<div id="gate">
+  <div class="card">
+    <button id="controls-close" type="button" aria-label="ปิดคู่มือควบคุม" hidden>×</button>
+    <div>
+      <h1>ZORX</h1>
+      <p class="game-full-name">Zone of Relic eXplore</p>
+      <span class="beta-badge">BETA TEST</span>
+    </div>
+    <div class="loading-copy"><p>เกมอยู่ระหว่างการทดสอบ Beta Test</p><small>ขอบคุณที่ร่วมทดสอบและเป็นส่วนหนึ่งของการพัฒนา</small></div>
+    <progress id="bar" hidden></progress>
+    <p id="status"></p>
+    <p id="download-size" aria-live="polite">ขนาดดาวน์โหลด: กำลังตรวจสอบ…</p>
+    <p class="download-note">โหลดครั้งแรก · ครั้งต่อไปอาจโหลดน้อยลงหากมีแคช</p>
+    <button id="start" type="button">เริ่มเล่น</button>
+    <p class="build-info">BETA-TEST · Build __BUILD_ID__</p>
+  </div>
+</div>
+<button id="help" type="button" hidden>ปุ่มควบคุม</button>
+
+<style>
+@media (any-pointer: coarse) { #help { display: none !important; } }
+#landscape-required { display:none; position:fixed; inset:0; z-index:10000; background:#0b0d14; color:#f0e8d6; align-items:center; justify-content:center; text-align:center; padding:24px; font:20px sans-serif; touch-action:none; }
+@media (any-pointer:coarse) and (orientation:portrait) { #landscape-required { display:flex; } }
+</style>
+<div id="landscape-required" role="status">หมุนมือถือเป็นแนวนอนเพื่อเล่น<br>Rotate your phone to landscape</div>
+
+<style>
+#pc-controls { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:28px; background:#02091399; backdrop-filter:blur(5px); }
+.controls-window { position:relative; box-sizing:border-box; width:min(1120px,96vw); max-height:92dvh; padding:24px 30px 18px; background:linear-gradient(135deg,#101f27f5,#041016fa); color:#eee7d3; border:2px solid #c6a25b; box-shadow:0 0 0 5px #09131b,0 0 0 7px #94703d,0 15px 70px #000b; border-radius:12px; }
+.controls-window h2 { font-size:clamp(24px,3.2vw,40px); margin:0; color:#fff0cd; }
+.controls-sub { color:#9daeb8; margin:0 0 12px; font-size:15px; }
+.controls-body { display:grid; grid-template-columns:1fr 1fr; gap:30px; max-height:64dvh; overflow:auto; padding-right:6px; }
+.controls-col + .controls-col { border-left:1px solid #8a744b; padding-left:28px; }
+.controls-window h3 { margin:10px 0 14px; color:#e7c27d; font-size:23px; border-top:1px solid #7b663d; padding-top:12px; }
+.controls-window h3:first-child { border-top:0; padding-top:0; }
+.controls-window dl { display:grid; grid-template-columns:max-content 1fr; gap:12px 18px; margin:0 0 20px; align-items:center; font-size:17px; }
+.controls-window dt,.controls-window dd { margin:0; justify-self:start; }
+.controls-window dd { color:#f1eada; }
+.controls-window small { color:#9daeb8; font-size:13px; display:block; }
+.controls-window kbd { color:#fff; background:linear-gradient(#293e4e,#12212d); border:2px solid #52697a; border-bottom-width:4px; border-radius:5px; min-width:34px; padding:5px 9px; font:600 17px var(--body); box-shadow:0 2px 5px #0008; }
+.controls-footer { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-top:14px; border-top:1px solid #9d7b44; padding-top:14px; }
+.controls-footer button { background:linear-gradient(#e8c774,#9b6527); border:2px solid #e9bf64; color:#20180b; min-height:48px; font-weight:700; }
+#pc-controls-exit { position:absolute; right:-10px; top:-12px; width:52px; height:52px; padding:0; color:#f1c46d; background:#081923; border:2px solid #ecc374; font:700 36px var(--body); clip-path:polygon(18% 0,82% 0,100% 18%,100% 82%,82% 100%,18% 100%,0 82%,0 18%); }
+@media(max-height:650px) { .controls-window {padding:14px 24px;} .controls-window dl{gap:7px 14px;font-size:15px;} .controls-window kbd{font-size:14px;padding:2px 7px;} .controls-window h3{font-size:19px;margin:7px 0;} }
+</style>
+<section id="pc-controls" hidden role="dialog" aria-modal="true" aria-labelledby="pc-controls-title">
+ <div class="controls-window">
+  <button id="pc-controls-exit" type="button" aria-label="ปิดปุ่มควบคุม">×</button>
+  <h2 id="pc-controls-title">⌨ ปุ่มควบคุม</h2>
+  <p class="controls-sub">ZORX · PC Controls</p>
+  <div class="controls-body">
+   <div class="controls-col">
+    <h3>การเคลื่อนที่</h3>
+    <dl><dt><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></dt><dd>เดิน <small>ใช้ปุ่มลูกศรได้เช่นกัน</small></dd>
+    <dt><kbd>Shift</kbd></dt><dd>วิ่ง (กดค้าง)</dd><dt><kbd>Space</kbd></dt><dd>กระโดด</dd></dl>
+    <h3>การต่อสู้</h3>
+    <dl><dt><kbd>คลิกซ้าย</kbd></dt><dd>โจมตีเบา</dd><dt><kbd>คลิกขวา</kbd></dt><dd>โจมตีหนัก</dd>
+    <dt><kbd>F</kbd></dt><dd>ป้องกัน (กดค้าง)</dd><dt><kbd>C</kbd></dt><dd>หลบ</dd>
+    <dt><kbd>1</kbd> <kbd>2</kbd></dt><dd>ท่าพิเศษ / ไม้ตาย</dd></dl>
+   </div>
+   <div class="controls-col">
+    <h3>กล้องและระบบ</h3>
+    <dl><dt><kbd>6</kbd> – <kbd>9</kbd></dt><dd>มุมกล้องสำเร็จรูป</dd><dt><kbd>MMB</kbd> / <kbd>Alt</kbd> + ลากซ้าย</dt><dd>หมุนกล้องรอบตัว / ก้ม–เงย</dd><dt>ล้อเมาส์</dt><dd>ซูมเข้า–ออก</dd><dt><kbd>Q</kbd></dt><dd>ใช้จุดพัก <small>ยืนในวงแหวน</small></dd>
+    <dt><kbd>R</kbd> / <kbd>Esc</kbd></dt><dd>เล่นใหม่ / กลับ <small>ขึ้นกับโหมดและสถานะของห้อง</small></dd>
+    <dt><kbd>E</kbd></dt><dd>เปิดหีบ / ใช้กองไฟ</dd><dt><kbd>F2</kbd></dt><dd>แสดงเฟรมเรต (FPS)</dd></dl>
+    <h3>จัดการตัวละคร</h3>
+    <dl><dt><kbd>Bag</kbd></dt><dd>เปลี่ยนอาวุธและชุด · ดูออฟ</dd><dt><kbd>Customize</kbd></dt><dd>หน้า ผม และสีผิว</dd></dl>
+    <small>เปิดจากเมนูในแคมป์ · เกมออนไลน์ยังดำเนินต่อขณะเปิดคู่มือ</small>
+   </div>
+  </div>
+  <div class="controls-footer"><small><kbd>Esc</kbd> ปิดหน้าต่าง</small><button id="pc-controls-return" type="button">กลับไปเล่น ›</button></div>
+ </div>
+</section>
+<script>
+// Split web build (tools/web/build_web.ps1, docs/tech/web_hosting.md). packs.json (never cached) names
+// this build's files; every other file name carries a content hash, so caches never mix builds.
+// The engine (engine.<hash>.wasm) and the core pack (core.<hash>.pck.wasm) are served here when Godot
+// asks for index.wasm / index.pck; the content packs are then loaded by the game (client/pack_loader.gd),
+// which reads window.zorxBoot. Files may be gzip-wrapped (the artifact host's 15 MB per-file cap).
+// PACK_BASE: where packs.json and the packs live ('' = next to this page). Set at build time only
+// (build_web.ps1 -PackBase), never from the URL: the packs carry the game's code.
+window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
+(function () {
+  const realFetch = window.fetch.bind(window);
+  window.zorxRealFetch = realFetch;
+  window.fetch = function (input, init) {
+    const url = typeof input === 'string' ? input : (input && input.url) || '';
+    const boot = window.zorxBoot;
+    let target = null;
+    if (boot && /index\.wasm(\?|$)/.test(url)) target = boot.manifest.engine;
+    else if (boot && /index\.pck(\?|$)/.test(url)) target = boot.manifest.core;
+    if (!target) return realFetch(input, init);
+    const type = /\.pck\./.test(target) ? 'application/octet-stream' : 'application/wasm';
+    return realFetch(new URL(target, boot.base).href, init).then(async (res) => {
+      if (!res.ok) return res;
+      let buf = await res.arrayBuffer();
+      const head = new Uint8Array(buf, 0, 2);
+      if (head[0] === 0x1f && head[1] === 0x8b) {
+        const stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
+        buf = await new Response(stream).arrayBuffer();
+      }
+      return new Response(buf, { status: 200, headers: { 'Content-Type': type } });
+    });
+  };
+})();
+</script>
+<script src="index.js?v=__BUILD_ID__"></script>
+<script>
+(function () {
+  // Preserve only this explicit diagnostic across a login round trip on the same tab.
+  const probeParams = new URLSearchParams(location.search);
+  try {
+    const pendingReplay = sessionStorage.getItem('zorxPendingReplayProbe') === '1';
+    if (!probeParams.has('real_room_probe') && !probeParams.has('replay_probe') && (pendingReplay || sessionStorage.getItem('zorxPendingRealRoomProbe') === '1')) {
+      const restored = new URL(location.href);
+      restored.searchParams.set(pendingReplay ? 'replay_probe' : 'real_room_probe', '1');
+      history.replaceState(null, '', restored.href);
+    }
+    sessionStorage.removeItem('zorxPendingRealRoomProbe');
+    sessionStorage.removeItem('zorxPendingReplayProbe');
+  } catch (_) {}
+  const GODOT_CONFIG = __GODOT_CONFIG__;
+  const engine = new Engine(GODOT_CONFIG);
+  const gate = document.getElementById('gate');
+  const start = document.getElementById('start');
+  const status = document.getElementById('status');
+  const bar = document.getElementById('bar');
+  const downloadSize = document.getElementById('download-size');
+  let downloadTotal = 0;
+  function megabytes(bytes) { return (bytes / 1000000).toFixed(1); }
+  const help = document.getElementById('help');
+  const controlsClose = document.getElementById('controls-close');
+  controlsClose.addEventListener('click', function () { if (started) { gate.hidden = true; canvas.focus(); } });
+  const canvas = document.getElementById('canvas');
+  const touchControls = navigator.maxTouchPoints > 0 || 'ontouchstart' in window ||
+    window.matchMedia('(any-pointer: coarse)').matches || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (touchControls) help.remove();
+  else document.documentElement.classList.add('desktop-controls');
+
+  function fail(err) {
+    console.error(err);
+    status.className = 'err';
+    status.textContent = 'เปิดเกมไม่สำเร็จ: ' + (err && err.message ? err.message : String(err)) + '\nลองรีเฟรชหน้า หรือเปิดด้วย Chrome / Edge / Firefox รุ่นล่าสุด';
+    bar.hidden = true;
+    start.disabled = false;
+    start.hidden = false;
+    start.textContent = 'ลองอีกครั้ง';
+  }
+
+  const missing = Engine.getMissingFeatures({ threads: false });
+  if (missing.length) {
+    fail(new Error('เบราว์เซอร์นี้ขาดความสามารถที่เกมต้องใช้: ' + missing.join(', ')));
+    start.disabled = true;
+  }
+
+  function showProgress(fraction) {
+    fraction = Math.max(0, Math.min(1, fraction));
+    bar.max = 1; bar.value = fraction;
+    status.textContent = 'กำลังโหลดเกม… ' + Math.round(fraction * 100) + '%';
+    if (downloadTotal > 0) {
+      const text = 'ดาวน์โหลดประมาณ ' + megabytes(downloadTotal * fraction) + ' / ' + megabytes(downloadTotal) + ' MB';
+      if (downloadSize.textContent !== text) downloadSize.textContent = text;
+    }
+  }
+
+  function loadManifest() {
+    const base = new URL(window.ZORX_PACK_BASE || './', location.href).href;
+    return window.zorxRealFetch(new URL('packs.json', base).href, { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) throw new Error('packs.json: HTTP ' + res.status);
+      return res.json();
+    }).then(function (manifest) {
+      window.zorxBoot = { base: base, manifest: manifest };
+      document.querySelector('.build-info').textContent = 'BETA-TEST · Build ' + manifest.build;
+      return manifest;
+    });
+  }
+
+  let started = false;
+  let loading = false;
+  let authenticated = false;
+  const website = 'https://zorx.daiyooo.com';
+  start.hidden = true;
+  async function authenticate() {
+    status.textContent = 'กำลังตรวจสอบบัญชีเกม…';
+    const response = await window.zorxRealFetch(website + '/auth/game-session', {
+      method: 'POST', credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(15000)
+    });
+    if (response.status === 401) {
+      try {
+        if (new URLSearchParams(location.search).get('replay_probe') === '1') { sessionStorage.setItem('zorxPendingReplayProbe', '1'); }
+        if (new URLSearchParams(location.search).get('real_room_probe') === '1') {
+          sessionStorage.setItem('zorxPendingRealRoomProbe', '1');
+        }
+      } catch (_) {}
+      location.replace(website + '/?play=1');
+      return false;
+    }
+    if (!response.ok) throw new Error('เชื่อมบัญชีเกมไม่ได้ กรุณาลองใหม่');
+    const session = await response.json();
+    if (typeof session.token !== 'string' || typeof session.refresh_token !== 'string' ||
+        typeof session.user_id !== 'string' || session.api_origin !== 'https://zorxapi.daiyooo.com') {
+      throw new Error('ข้อมูลบัญชีเกมไม่ถูกต้อง');
+    }
+    // In-memory bridge only, never put bearer credentials in the URL or localStorage.
+    window.zorxGoogleSession = session;
+    window.zorxGoogleRequired = true;
+    window.zorxAutoEnter = true;
+    authenticated = true;
+    return true;
+  }
+  async function launch() {
+    if (loading) return;
+    if (!authenticated) {
+      loading = true;
+      try { if (!await authenticate()) return; }
+      catch (error) { start.hidden = false; fail(error); return; }
+      finally { loading = false; }
+    }
+    loading = true;
+    if (started) { loading = false; gate.hidden = true; help.hidden = touchControls; canvas.focus(); return; }
+    // Best-effort physical lock; the CSS + Godot portrait gates remain authoritative on iOS.
+    if (navigator.maxTouchPoints > 0) {
+      const lock = () => screen.orientation && screen.orientation.lock ? screen.orientation.lock('landscape').catch(() => {}) : Promise.resolve();
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().then(lock).catch(() => {});
+      } else { lock(); }
+    }
+    start.disabled = true;
+    status.className = '';
+    status.textContent = 'กำลังโหลด…';
+    bar.hidden = false;
+    bar.removeAttribute('value');
+    loadManifest().then(function (manifest) {
+      // one bar for both steps: engine + core (before the engine runs), then the content packs (in the game)
+      const first = (manifest.engine_bytes || 1) + (manifest.core_bytes || 1);
+      const packs = manifest.packs || [];
+      const formats = new Set(packs.map(function (p) { return p.format || ''; }).filter(Boolean)).size || 1;
+      let all = first + packs.reduce(function (n, p) { return n + (p.bytes || 0) / (p.format ? formats : 1); }, 0);
+      downloadTotal = all;
+      showProgress(0);
+      return new Promise(function (resolve, reject) {
+        // The engine knows this GPU's exact texture variant; replace the initial estimate.
+        window.zorxBootPlan = function (packBytes) {
+          all = first + Math.max(0, packBytes);
+          downloadTotal = all;
+          showProgress(first / all);
+        };
+        window.zorxBootProgress = function (done, total) {
+          all = first + Math.max(0, total);
+          downloadTotal = all;
+          showProgress((first + Math.min(done, total)) / Math.max(all, 1));
+        };
+        window.zorxBootDone = resolve;
+        window.zorxBootFail = function (msg) { reject(new Error(msg)); };
+        engine.startGame({
+          onProgress: function (current, total) {
+            if (current > 0 && total > 0) showProgress(first / all * current / total);
+          },
+        }).catch(reject);
+      });
+    }).then(function () {
+      started = true;
+      loading = false;
+      gate.hidden = true;
+      help.hidden = touchControls;
+      start.disabled = false;
+      start.textContent = 'กลับไปเล่น';
+      canvas.focus();
+    }, function (err) { loading = false; started = false; start.hidden = false; fail(err); });
+  }
+  start.addEventListener('click', launch);
+  if (!missing.length) launch();
+
+  const controlsPanel = document.getElementById('pc-controls');
+  const controlsExit = document.getElementById('pc-controls-exit');
+  function closeControls() { controlsPanel.hidden = true; canvas.focus(); }
+  window.zorxShowControls = function () {
+    if (touchControls || !started) return;
+    controlsPanel.hidden = false;
+    canvas.blur();
+    controlsExit.focus();
+  };
+  controlsExit.addEventListener('click', closeControls);
+  document.getElementById('pc-controls-return').addEventListener('click', closeControls);
+  window.addEventListener('keydown', function (event) {
+    if (controlsPanel.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeControls(); }
+    else if (event.key === 'Tab') {
+      const last = document.getElementById('pc-controls-return');
+      if (event.shiftKey && document.activeElement === controlsExit) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); controlsExit.focus(); }
+    }
+    event.stopImmediatePropagation();
+  }, true);
+  help.addEventListener('click', window.zorxShowControls);
+})();
+</script>

@@ -1,0 +1,28 @@
+extends SceneTree
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var interp=preload("res://client/session/remote_interpolation.gd").new()
+ var previous:=0.0;var backward:=0;var max_jump:=0.0
+ for tick in range(360):
+  # Snapshot20Hz; one burst delay per90ticks, authoritative server-tick positions.
+  if tick%3==0 and tick%90 not in [0,3,6]:
+   interp.push({"epoch":1,"tick":tick,"entities":{1:[[Vector3.ZERO]],100:[[Vector3(tick*.01,0,0)]]}})
+  interp.advance(1.0/60.0,1)
+  if tick==60:previous=interp.positions.get(100,Vector3.ZERO).x
+  if tick>60:
+   var x:float=interp.positions.get(100,Vector3.ZERO).x
+   if x<previous-.000001:backward+=1
+   max_jump=maxf(max_jump,x-previous)
+   previous=x
+ print("INTERP TRACE backward=",backward," maxstep=",max_jump)
+ assert(backward==0 and max_jump<.03 and not interp.positions.has(1))
+ var remote=preload("res://client/session/remote_session.gd").new()
+ var source=preload("res://data/perf/scenario.gd").new()
+ remote.rules=source.rules;remote.camp=source.camp;remote._accept_state(source.state(),Time.get_ticks_msec())
+ var before=remote.bodies[100].position
+ remote.remote_interpolation.push({"epoch":1,"tick":3,"entities":{100:[[before+Vector3.RIGHT]]}})
+ remote._deliberate_close=true;remote.poll(1.0/60.0)
+ assert(remote.bodies[100].position==before) # Presentation never writes authoritative/prediction bodies.
+ assert(interp.delay_ticks>=3 and interp.delay_ticks<=6 and interp.samples.size()<=64)
+ print("REMOTE INTERPOLATION PASS:20Hz+jitter monotonic visual clock,renderstep<.03m,own actor excluded,simulation bodies unchanged,bounded buffer;underrun=",interp.underruns,"/",interp.frames)
+ quit()

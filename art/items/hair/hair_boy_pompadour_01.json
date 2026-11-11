@@ -1,0 +1,92 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_boy_pompadour_01",
+  "display_name": "เด็กผู้ชาย · ผมปอมปาดัวร์ 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "pompadour",
+  "geometry": {
+    "triangle_count": 390,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "Pompadour_Cap",
+      "Pompadour_Front_Sweep",
+      "Pompadour_Side_Lock_L",
+      "Pompadour_Side_Lock_R"
+    ]
+  },
+  "material": {
+    "name": "Pompadour clay",
+    "base_color_linear_rgba": [
+      0.12,
+      0.035,
+      0.008,
+      1.0
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.84,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "Pompadour_Side_Lock_R",
+        "Pompadour_Side_Lock_L",
+        "Pompadour_Front_Sweep",
+        "Pompadour_Cap"
+      ],
+      "triangle_count": 390,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.163,
+          -0.148,
+          -0.186
+        ],
+        "max": [
+          0.163,
+          0.164,
+          0.16
+        ]
+      },
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Pompadour clay.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.84
+        }
+      ],
+      "external_images": []
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0,
+      "lighting": "reduced neutral key/fill/rim"
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

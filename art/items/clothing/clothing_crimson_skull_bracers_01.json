@@ -1,0 +1,17 @@
+{
+  "id": "clothing_crimson_skull_bracers_01",
+  "name": "เกราะกะโหลกแดงทอง · ปลอกแขน",
+  "asset_version": 1,
+  "slot": "arms",
+  "set_id": "armor_crimson_skull_01",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "triangle_count": 216,
+  "set_triangle_budget": 1500,
+  "thumbnail": "clothing_crimson_skull_bracers_01.png",
+  "hide_hair": false,
+  "hide_head": false,
+  "binding": "GameRig57; rigid armor plates; independent thighs; hip-blended cloth; Foot boots",
+  "cloth_simulation": false,
+  "legacy_ids": []
+}

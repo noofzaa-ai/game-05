@@ -1,0 +1,17 @@
+{
+  "id": "clothing_amethyst_sabatons_01",
+  "name": "เกราะอเมทิสต์ · ขาและเท้า",
+  "asset_version": 1,
+  "triangle_count": 348,
+  "set_triangle_budget": 1500,
+  "slot": "shoes",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_amethyst_lancer_01",
+  "thumbnail": "clothing_amethyst_sabatons_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

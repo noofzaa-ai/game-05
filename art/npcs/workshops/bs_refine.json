@@ -1,0 +1,19 @@
+{
+  "id": "bs_refine",
+  "height_m": 1.5,
+  "source": "/Users/user/godot-project/test01/assets/bs_refine.fbx",
+  "source_sha256": "1d8c8cd438f667fb02b2c41bcc17626aefb1c372e81e6d07727a380fa85b5ff3",
+  "triangles": 10673,
+  "bones": 28,
+  "clips": [
+    "Idle",
+    "Walk"
+  ],
+  "source_rig_preserved": true,
+  "motion": "in place, gentle procedural FK walk; no foot-contact IK",
+  "texture_caps": {
+    "albedo": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  }
+}

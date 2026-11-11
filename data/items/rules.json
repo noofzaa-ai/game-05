@@ -1,0 +1,112 @@
+{
+	"version": 1,
+
+	"_comment": "Equipment rules. Every number here is a PLACEHOLDER to be tuned by the director; the structure is what matters. Stat names are the director's: HP ATK DEF ATKSPD MOVESPD CRIRATE CRIDMG EFFECT_ACC EFFECT_RES.",
+
+	"stats": {
+		"HP": {"base": 1000, "unit": "flat"},
+		"ATK": {"base": 100, "unit": "flat"},
+		"DEF": {"base": 50, "unit": "flat"},
+		"ATKSPD": {"base": 0, "unit": "percent"},
+		"MOVESPD": {"base": 0, "unit": "percent"},
+		"CRIRATE": {"base": 5, "unit": "percent"},
+		"CRIDMG": {"base": 150, "unit": "percent"},
+		"EFFECT_ACC": {"base": 0, "unit": "percent"},
+		"EFFECT_RES": {"base": 0, "unit": "percent"},
+		"HPREGEN": {"base": 0, "unit": "per_second"},
+		"STAREGEN": {"base": 32, "unit": "per_second"},
+		"ULTREGEN": {"base": 0, "unit": "per_second"},
+		"STAMINA": {"base": 100, "unit": "flat"}
+	},
+
+	"tiers": [
+		{"id": "normal", "color": "white", "substat_count": 1},
+		{"id": "rare", "color": "blue", "substat_count": 2},
+		{"id": "epic", "color": "purple", "substat_count": 3},
+		{"id": "legendary", "color": "gold", "substat_count": 4}
+	],
+
+	"_slots_comment": "main_stat per slot is a placeholder guess, awaiting the director.",
+	"slots": [
+		{"id": "weapon", "count": 1, "main_stat": "ATK"},
+		{"id": "hat", "count": 1, "main_stat": "HP"},
+		{"id": "shirt", "count": 1, "main_stat": "DEF"},
+		{"id": "pants", "count": 1, "main_stat": "HP"},
+		{"id": "armband", "count": 1, "main_stat": "DEF"},
+		{"id": "shoes", "count": 1, "main_stat": "MOVESPD"},
+		{"id": "necklace", "count": 1, "main_stat": "STAMINA"},
+		{"id": "earring", "count": 2, "main_stat": "EFFECT_ACC"},
+		{"id": "bracelet", "count": 2, "main_stat": "ATKSPD"},
+		{"id": "ring", "count": 2, "main_stat": "EFFECT_RES"},
+		{"id": "back", "count": 1, "main_stat": "CRIDMG"}
+	],
+
+	"main_stat_by_tier": {
+		"HP": [200, 350, 550, 800],
+		"ATK": [20, 35, 55, 80],
+		"DEF": [15, 27, 42, 60],
+		"ATKSPD": [3, 5, 8, 12],
+		"MOVESPD": [3, 5, 8, 12],
+		"CRIRATE": [3, 5, 8, 12],
+		"CRIDMG": [6, 10, 16, 24],
+		"EFFECT_ACC": [4, 7, 11, 16],
+		"EFFECT_RES": [4, 7, 11, 16],
+		"HPREGEN": [1, 2, 3.5, 5],
+		"STAREGEN": [2, 3.5, 5.5, 8],
+		"ULTREGEN": [0.2, 0.35, 0.55, 0.8],
+		"STAMINA": [10, 18, 28, 40]
+	},
+
+	"substat": {
+		"range": {
+			"HP": [40, 80],
+			"ATK": [4, 8],
+			"DEF": [3, 6],
+			"ATKSPD": [1, 2],
+			"MOVESPD": [1, 2],
+			"CRIRATE": [1, 2],
+			"CRIDMG": [2, 4],
+			"EFFECT_ACC": [1, 3],
+			"EFFECT_RES": [1, 3],
+			"HPREGEN": [0.3, 0.6],
+			"STAREGEN": [0.8, 1.6],
+			"ULTREGEN": [0.05, 0.1],
+			"STAMINA": [3, 6]
+		},
+		"tier_multiplier": [1.0, 1.4, 1.9, 2.5],
+		"boost_step": 0.1
+	},
+
+	"_durability_comment": "Equipment wears out. armor_wear_per_full_hp = durability points every worn non-weapon item loses when the wearer takes damage equal to its whole max HP (a smaller hit costs a proportional share). weapon_wear_per_hit = points the weapon loses per hit it lands. death_wear = points every worn item loses when the wearer dies. At or above full_stats_above (a fraction of max durability) an item gives its full stats; below that its stats fall steadily to broken_factor of their value at 0 durability. It never breaks for good from wear: repair (see data/camp/camp.json) brings it back.",
+	"durability": {
+		"max": 100,
+		"full_stats_above": 0.3,
+		"broken_factor": 0.5,
+		"armor_wear_per_full_hp": 25,
+		"weapon_wear_per_hit": 0.3,
+		"death_wear": 20
+	},
+
+	"enhancement": {
+		"max_level": 10,
+		"main_stat_bonus_per_level": 0.08,
+		"table": [
+			{"levels": [1, 3], "success": 1.0, "stay": 0.0, "down": 0.0, "break": 0.0},
+			{"levels": [4, 6], "success": 0.7, "stay": 0.2, "down": 0.1, "break": 0.0},
+			{"levels": [7, 8], "success": 0.5, "stay": 0.25, "down": 0.2, "break": 0.05},
+			{"levels": [9, 10], "success": 0.3, "stay": 0.3, "down": 0.25, "break": 0.15}
+		],
+		"protection": {"break": "stay", "down": "stay"}
+	},
+
+	"refine": {
+		"enabled": true,
+		"max_level": 10,
+		"bonus_per_level": 0.013,
+		"cost": {
+			"gold": 100,
+			"materials": {}
+		},
+		"success_chance": 1.0
+	}
+}

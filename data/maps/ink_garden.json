@@ -1,0 +1,74 @@
+{
+	"version": 1,
+	"id": "ink_garden",
+	"name": "Ink Garden (wide arena)",
+	"_design": "Stage 1 (level 1). Laid out for the default camera 8 (High): it sees about 18 units up-screen (north, -z) but only about 4.5 down-screen, so the player starts in the south-west and every monster starts north or east of the route, in view. Tall trees only stand outside the walkable bounds (north edge and sides), never south of where people fight. Rocks are compact (monsters walk around them) and kept in the north half; the south band is open ground to circle and dodge. Every monster heads for the player at once (no aggro radius yet), so pacing comes from distance: 2 grunts at the gate, then 3 grunts and the charger, the slow brute arrives last. (2026-10-12: the furthest monster, north-east, is a goblin archer: the first ranged monster, met after the goblins.)",
+	"modes": ["pve"],
+	"camera_style": "top_down",
+	"atmosphere": "ink",
+	"bounds": {"half_width": 24.0, "half_depth": 16.0},
+	"spawn": [-21.0, 0.05, 11.0],
+	"solids": [
+		{"center": [0, -0.2, 0], "size": [48, 0.4, 32], "material": "ink"},
+		{"center": [-12, 0.75, -4], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [-5, 0.75, -10], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [0, 0.75, -1], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [7, 0.75, -7], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [14, 0.75, -1], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [18, 0.75, -11], "size": [1.7, 1.5, 1.7], "material": "ink"}
+	],
+	"props": [
+		{"kind": "rock", "position": [-12, 0, -4], "scale": 1.8},
+		{"kind": "rock", "position": [-5, 0, -10], "scale": 1.8},
+		{"kind": "rock", "position": [0, 0, -1], "scale": 1.8},
+		{"kind": "rock", "position": [7, 0, -7], "scale": 1.8},
+		{"kind": "rock", "position": [14, 0, -1], "scale": 1.8},
+		{"kind": "rock", "position": [18, 0, -11], "scale": 1.8},
+
+		{"kind": "plum", "position": [-21, 0, -17.5], "scale": 1.8},
+		{"kind": "plum", "position": [-12, 0, -17], "scale": 1.7},
+		{"kind": "plum", "position": [-2, 0, -17.5], "scale": 1.9},
+		{"kind": "plum", "position": [8, 0, -17], "scale": 1.7},
+		{"kind": "plum", "position": [18, 0, -17.5], "scale": 1.8},
+		{"kind": "pine", "position": [-15, 0, -18.5], "scale": 1.6},
+		{"kind": "pine", "position": [3, 0, -19], "scale": 1.7},
+		{"kind": "pine", "position": [13, 0, -18.5], "scale": 1.5},
+		{"kind": "pine", "position": [23, 0, -18], "scale": 1.6},
+
+		{"kind": "pine", "position": [-26.5, 0, -11], "scale": 1.6},
+		{"kind": "pine", "position": [-26.5, 0, -3], "scale": 1.4},
+		{"kind": "plum", "position": [-27, 0, 5], "scale": 1.7},
+		{"kind": "pine", "position": [-26.5, 0, 12], "scale": 1.5},
+		{"kind": "pine", "position": [26.5, 0, -8], "scale": 1.5},
+		{"kind": "plum", "position": [27, 0, 1], "scale": 1.8},
+		{"kind": "pine", "position": [26.5, 0, 9], "scale": 1.6},
+
+		{"kind": "bush", "position": [-9, 0, -13], "scale": 1.3, "count": 4, "radius": 2.0},
+		{"kind": "bush", "position": [11, 0, -14], "scale": 1.3, "count": 4, "radius": 2.0},
+		{"kind": "bush", "position": [-14, 0, 16.5], "scale": 1.2, "count": 4, "radius": 2.0},
+		{"kind": "bush", "position": [4, 0, 16.5], "scale": 1.2, "count": 3, "radius": 1.8},
+		{"kind": "bush", "position": [19, 0, 16.5], "scale": 1.2, "count": 4, "radius": 2.0},
+		{"kind": "rock", "position": [-6, 0, 17.5], "scale": 0.9},
+		{"kind": "rock", "position": [12, 0, 17.5], "scale": 0.8},
+
+		{"kind": "pond", "position": [-7, 0, 11], "scale": 3.0},
+		{"kind": "pond", "position": [10, 0, 12], "scale": 2.4},
+		{"kind": "petals", "position": [-4, 0, -2], "count": 260, "radius": 11, "scale": 1.0},
+		{"kind": "petals", "position": [10, 0, 3], "count": 200, "radius": 9, "scale": 1.0},
+		{"kind": "petals", "position": [-17, 0, 9], "count": 120, "radius": 6, "scale": 1.0},
+		{"kind": "petals", "position": [18, 0, -8], "count": 110, "radius": 5, "scale": 1.0}
+	],
+	"enemy_spawns": [
+		{"type": "goblin", "level": 1, "position": [-13, 0.05, 9]},
+		{"type": "goblin", "level": 1, "position": [-12, 0.05, 4]},
+		{"type": "goblin", "level": 1, "position": [0, 0.05, -6]},
+		{"type": "goblin", "level": 1, "position": [4, 0.05, 1]},
+		{"type": "goblin", "level": 1, "position": [-6, 0.05, -13]},
+		{"type": "goblin", "level": 1, "position": [9, 0.05, -13]},
+		{"type": "goblin_archer", "level": 1, "position": [21, 0.05, -13]}
+	],
+	"rest_points": [
+		{"id": "garden_bridge", "position": [-3, 0.05, 11], "radius": 2.0},
+		{"id": "plum_shrine", "position": [15, 0.05, 9], "radius": 2.0}
+	]
+}

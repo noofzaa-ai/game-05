@@ -1,0 +1,254 @@
+from __future__ import annotations
+
+import json
+import math
+import os
+import sys
+from mathutils import Vector
+
+import bmesh
+import bpy
+
+PROJECT_ROOT = "/Users/user/godot-project/test01"
+REFERENCE_GLB = os.path.join(PROJECT_ROOT, "art/characters/chibi-studio/hair_head_reference.glb")
+OUTPUT_DIR = os.path.join(PROJECT_ROOT, "art/characters/chibi-studio/hair")
+ASSET_ID = "hair_boy_bowl_cut_01"
+OUTPUT_GLB = os.path.join(OUTPUT_DIR, ASSET_ID + ".glb")
+OUTPUT_JSON = os.path.join(OUTPUT_DIR, ASSET_ID + ".json")
+PREVIEW_PREFIX = os.path.join(OUTPUT_DIR, "preview_" + ASSET_ID + "_")
+PREVIEW_VIEWS = ("front", "side", "back", "top")
+
+
+def fail(message: str) -> None:
+    raise RuntimeError(message)
+
+
+def reset_scene() -> None:
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    scene = bpy.context.scene
+    scene.unit_settings.system = "METRIC"
+    scene.unit_settings.scale_length = 1.0
+    scene.unit_settings.length_unit = "METERS"
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+
+def identity(obj: bpy.types.Object) -> bool:
+    return obj.location.length <= 1e-4 and all(abs(v) <= 1e-4 for v in obj.rotation_euler) and all(abs(v - 1) <= 1e-4 for v in obj.scale)
+
+
+def descendants(root: bpy.types.Object) -> list[bpy.types.Object]:
+    result, stack = [], list(root.children)
+    while stack:
+        obj = stack.pop()
+        result.append(obj)
+        stack.extend(obj.children)
+    return result
+
+
+def import_reference() -> list[bpy.types.Object]:
+    before = set(bpy.context.scene.objects)
+    bpy.ops.import_scene.gltf(filepath=REFERENCE_GLB)
+    imported = [o for o in bpy.context.scene.objects if o not in before]
+    marker = bpy.data.objects.get("hair_attach")
+    if marker is None or marker not in imported or not identity(marker):
+        fail("Reference hair_attach missing or non-identity")
+    bpy.data.objects.remove(marker, do_unlink=True)
+    refroot = bpy.data.objects.get("HairRoot")
+    if refroot:
+        refroot.name = "ReferenceRoot"
+    return [o for o in imported if o != marker]
+
+
+def material() -> bpy.types.Material:
+    mat = bpy.data.materials.new("Bowl cut ink")
+    mat.use_nodes = True
+    mat.diffuse_color = (0.018, 0.055, 0.16, 1)
+    mat.use_backface_culling = True
+    shader = mat.node_tree.nodes.get("Principled BSDF")
+    shader.inputs["Base Color"].default_value = (0.018, 0.055, 0.16, 1)
+    shader.inputs["Metallic"].default_value = 0.0
+    shader.inputs["Roughness"].default_value = 0.9
+    return mat
+
+
+def closed_mesh(name: str, verts: list[tuple[float, float, float]], faces: list[tuple[int, ...]], root, mat):
+    mesh = bpy.data.meshes.new(name + " Mesh")
+    mesh.from_pydata(verts, [], faces)
+    mesh.validate(verbose=False)
+    mesh.update(calc_edges=True)
+    bm = bmesh.new(); bm.from_mesh(mesh); bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(mesh); bm.free()
+    for p in mesh.polygons: p.use_smooth = False
+    obj = bpy.data.objects.new(name, mesh); bpy.context.collection.objects.link(obj); obj.parent = root
+    obj.location = (0, 0, 0); obj.rotation_euler = (0, 0, 0); obj.scale = (1, 1, 1)
+    obj.data.materials.append(mat); obj["asset_type"] = "hair_mesh"; obj["faceted"] = True
+    return obj
+
+
+def loft_ellipse(name, rings, segments, root, mat):
+    verts = []
+    for z, rx, ry, cy in rings:
+        for i in range(segments):
+            t = 2 * math.pi * i / segments
+            verts.append((rx * math.sin(t), cy - ry * math.cos(t), z))
+    faces = []
+    for r in range(len(rings) - 1):
+        for i in range(segments):
+            a = r * segments + i; b = r * segments + (i + 1) % segments
+            faces.append((a, b, b + segments, a + segments))
+    faces.append(tuple(reversed(range(segments))))
+    last = (len(rings) - 1) * segments
+    faces.append(tuple(last + i for i in range(segments)))
+    return closed_mesh(name, verts, faces, root, mat)
+
+
+def bowl_cap(root, mat):
+    rings = [(-0.025, .165, .151, .004), (.035, .169, .154, .006), (.095, .158, .145, .012), (.15, .132, .124, .022), (.19, .078, .078, .032), (.205, .025, .028, .04)]
+    return loft_ellipse("Bowl_Cap", rings, 24, root, mat)
+
+
+def annular_rim(root, mat):
+    # A closed, solid ring gives the characteristic level bowl line all around.
+    seg = 24; verts = []
+    for z, rx, ry, cy in [(-0.012, .169, .155, .004), (-0.045, .169, .155, .004)]:
+        for inner, scale in ((False, 1.0), (True, .90)):
+            for i in range(seg):
+                t = 2 * math.pi * i / seg
+                rr_x = rx * scale; rr_y = ry * scale
+                verts.append((rr_x * math.sin(t), cy - rr_y * math.cos(t), z))
+    # index helper: layer 0 outer top, 1 inner top, 2 outer bottom, 3 inner bottom
+    faces = []
+    for i in range(seg):
+        j = (i + 1) % seg
+        faces += [(i, j, seg + j, seg + i), (2*seg+i, 3*seg+i, 3*seg+j, 2*seg+j)]
+        faces += [(i, 2*seg+i, 2*seg+j, j), (seg+i, seg+j, 3*seg+j, 3*seg+i)]
+    return closed_mesh("Bowl_Level_Rim", verts, faces, root, mat)
+
+
+def front_fringe(root, mat):
+    # Broad straight-across fringe, with a slightly faceted brow contour and closed ends.
+    n = 9; verts = []
+    for i in range(n):
+        x = -.158 + .316 * i / (n - 1); y = -.164 + .012 * (abs(x) / .158) ** 2
+        top = -.014 + .004 * (abs(x) / .158) ** 2; bottom = -.046
+        verts += [(x, y, top), (x, y, bottom), (x, y + .018, top), (x, y + .018, bottom)]
+    faces = []
+    for i in range(n - 1):
+        a = 4*i; b = 4*(i+1)
+        faces += [(a, b, b+1, a+1), (a+2, a+3, b+3, b+2), (a, a+2, b+2, b), (a+1, b+1, b+3, a+3)]
+    faces += [(0, 1, 3, 2), (4*(n-1), 4*(n-1)+2, 4*(n-1)+3, 4*(n-1)+1)]
+    return closed_mesh("Bowl_Straight_Fringe", verts, faces, root, mat)
+
+
+def side_tabs(root, mat):
+    # Short solid temple pieces terminate above the ears; no face/neck coverage.
+    objs = []
+    for side in (-1, 1):
+        outline = [(side*.163, -.098, -.018), (side*.166, -.064, -.024), (side*.154, -.052, -.068), (side*.137, -.080, -.062)]
+        th = .018; verts = [(x, y-th/2, z) for x,y,z in outline] + [(x, y+th/2, z) for x,y,z in outline]
+        n = len(outline); faces = [tuple(range(n)), tuple(reversed(range(n,2*n)))]
+        faces += [(i, (i+1)%n, n+(i+1)%n, n+i) for i in range(n)]
+        objs.append(closed_mesh("Bowl_Side_Tab_L" if side < 0 else "Bowl_Side_Tab_R", verts, faces, root, mat))
+    return objs
+
+
+def create_asset():
+    root = bpy.data.objects.new("HairRoot", None); bpy.context.collection.objects.link(root)
+    root.location = (0,0,0); root.rotation_euler = (0,0,0); root.scale = (1,1,1)
+    metadata = {"asset_type":"hair", "spec_version":"1.0", "id":ASSET_ID, "display_name":"เด็กผู้ชาย · โบว์ลคัท 01", "fit_profile":"chibi-sculpt-v1", "target_socket":"attach_head", "units":"meters", "up_axis":"+Y", "forward_axis":"+Z", "attachment_mode":"rigid"}
+    for k,v in metadata.items(): root[k] = v
+    marker = bpy.data.objects.new("hair_attach", None); bpy.context.collection.objects.link(marker); marker.parent = root
+    marker.location = (0,0,0); marker.rotation_euler = (0,0,0); marker.scale = (1,1,1); marker["marker_type"] = "hair_attach"
+    mat = material(); meshes = [bowl_cap(root,mat), annular_rim(root,mat), front_fringe(root,mat)]
+    for obj in meshes:
+        bpy.context.view_layer.objects.active = obj; obj.select_set(True); bpy.ops.object.transform_apply(location=False, rotation=True, scale=True); obj.select_set(False)
+    return root, meshes, metadata, mat
+
+
+def tri_count(objs):
+    total = 0
+    for o in objs:
+        o.data.calc_loop_triangles(); total += len(o.data.loop_triangles)
+    return total
+
+
+def assert_closed(objs):
+    for o in objs:
+        bm = bmesh.new(); bm.from_mesh(o.data); bad = [e for e in bm.edges if len(e.link_faces) != 2]; bm.free()
+        if bad: fail("Open/non-manifold mesh %s: %d boundary edges" % (o.name, len(bad)))
+
+
+def export(root):
+    bpy.ops.object.select_all(action="DESELECT"); root.select_set(True)
+    for c in descendants(root): c.select_set(True)
+    bpy.context.view_layer.objects.active = root
+    bpy.ops.export_scene.gltf(filepath=OUTPUT_GLB, export_format="GLB", use_selection=True, export_apply=True, export_yup=True, export_animations=False, export_cameras=False, export_lights=False, export_materials="EXPORT", export_extras=True)
+    if not os.path.isfile(OUTPUT_GLB) or os.path.getsize(OUTPUT_GLB) == 0: fail("GLB export failed")
+
+
+def bbox(objs):
+    pts = [o.matrix_world @ v.co for o in objs if o.type == "MESH" for v in o.data.vertices]
+    return tuple(min(p[i] for p in pts) for i in range(3)), tuple(max(p[i] for p in pts) for i in range(3))
+
+
+def reimport(expected):
+    before = set(bpy.context.scene.objects); bpy.ops.import_scene.gltf(filepath=OUTPUT_GLB)
+    imported = [o for o in bpy.context.scene.objects if o not in before]; roots = [o for o in imported if o.name == "HairRoot"]
+    if len(roots) != 1: fail("Expected one HairRoot after re-import: %s" % [o.name for o in roots])
+    root = roots[0]; desc = descendants(root); meshes = [o for o in desc if o.type == "MESH"]; markers = [o for o in desc if o.name == "hair_attach"]
+    if len(markers) != 1 or not identity(root) or not identity(markers[0]): fail("Root/marker structure or transforms invalid")
+    if any(o.type in {"CAMERA","LIGHT","ARMATURE","CURVE"} for o in imported): fail("Forbidden object in GLB")
+    if any(not identity(o) for o in meshes): fail("Mesh transform not applied")
+    actual = tri_count(meshes)
+    if actual != expected: fail("Triangle mismatch %d vs %d" % (actual, expected))
+    mats = []
+    for o in meshes:
+        for s in o.material_slots:
+            if s.material and s.material not in mats: mats.append(s.material)
+    reports=[]
+    for m in mats:
+        if not m.use_backface_culling: fail("Double-sided material: "+m.name)
+        shader=m.node_tree.nodes.get("Principled BSDF")
+        reports.append({"name":m.name,"double_sided":not m.use_backface_culling,"metallic":round(shader.inputs["Metallic"].default_value,4),"roughness":round(shader.inputs["Roughness"].default_value,4)})
+        if any(n.type == "TEX_IMAGE" and n.image for n in m.node_tree.nodes): fail("External texture node found")
+    mins,maxs=bbox(meshes)
+    if mins[2] < -.44: fail("Lowest mesh z below -0.44: %f" % mins[2])
+    return {"root_name":"HairRoot","marker_name":"hair_attach","mesh_names":[o.name for o in meshes],"triangle_count":actual,"bounding_box_blender_import":{"min":[round(v,6) for v in mins],"max":[round(v,6) for v in maxs]},"lowest_y_contract_note":"Blender re-import is Z-up; exported GLB Y-up vertical minimum is recorded from source Z minimum.","object_types":sorted({o.type for o in imported}),"forbidden_objects_present":False,"materials":reports,"external_images":[]}
+
+
+def look_at(obj,target): obj.rotation_euler=(target-obj.location).to_track_quat("-Z","Y").to_euler()
+
+
+def previews(reference):
+    scene=bpy.context.scene; scene.render.engine="BLENDER_EEVEE"; scene.render.resolution_x=512; scene.render.resolution_y=512; scene.render.resolution_percentage=100; scene.render.image_settings.file_format="PNG"; scene.render.film_transparent=False; scene.view_settings.view_transform="AgX"; scene.view_settings.look="AgX - Medium High Contrast"; scene.view_settings.exposure=-1.0
+    scene.world=bpy.data.worlds.new("Bowl Preview World"); scene.world.color=(.018,.018,.018)
+    cam=bpy.data.objects.new("Preview Camera",bpy.data.cameras.new("Preview Camera")); bpy.context.collection.objects.link(cam); scene.camera=cam; cam.data.lens=58; cam.data.sensor_width=36
+    def light(name,loc,energy,size):
+        d=bpy.data.lights.new(name,"AREA"); d.energy=energy; d.shape="DISK"; d.size=size; o=bpy.data.objects.new(name,d); bpy.context.collection.objects.link(o); o.location=loc; look_at(o,Vector((0,0,-.08)))
+    light("Key",(-.55,-.65,.55),24,.55); light("Fill",(.60,-.35,.10),8,.45); light("Rim",(.15,.55,.45),16,.50)
+    for o in bpy.context.scene.objects:
+        if o.name.startswith("__source_"): o.hide_render=True; o.hide_viewport=True
+    target=Vector((0,0,-.08)); views={"front":((0,-.92,-.08),58),"side":((.92,.02,-.08),58),"back":((0,.92,-.08),58),"top":((0,-.02,.90),62)}
+    for view,(loc,lens) in views.items(): cam.location=loc; cam.data.lens=lens; look_at(cam,target); scene.render.filepath=PREVIEW_PREFIX+view+".png"; bpy.ops.render.render(write_still=True)
+
+
+def write_json(tris, report):
+    data={"asset_type":"hair","spec_version":"1.0","id":ASSET_ID,"display_name":"เด็กผู้ชาย · โบว์ลคัท 01","fit_profile":"chibi-sculpt-v1","target_socket":"attach_head","units":"meters","up_axis":"+Y","forward_axis":"+Z","attachment_mode":"rigid","style":"90s revival bowl cut","geometry":{"triangle_count":tris,"budget":"200-800 triangles","faceted":True,"closed_meshes":True,"mesh_names":report["mesh_names"]},"material":{"name":"Bowl cut ink","base_color_linear_rgba":[.018,.055,.16,1],"double_sided":False,"metallic":0.0,"roughness":.9,"textures":[]},"validation":{"reference_head_used_without_transform":True,"reimport":report,"preview_color_management":{"view_transform":"AgX","look":"AgX - Medium High Contrast","exposure":-1.0,"lighting":"reduced neutral key/fill/rim"},"preview_views":[PREVIEW_PREFIX+v+".png" for v in PREVIEW_VIEWS]}}
+    with open(OUTPUT_JSON,"w",encoding="utf-8") as f: json.dump(data,f,ensure_ascii=False,indent=2); f.write("\n")
+
+
+def main():
+    if not os.path.isfile(REFERENCE_GLB): fail("Missing reference GLB")
+    reset_scene(); reference=import_reference(); root,meshes,meta,mat=create_asset(); assert_closed(meshes); tris=tri_count(meshes)
+    if not 200 <= tris <= 800: fail("Triangle budget violation: %d" % tris)
+    export(root)
+    for o in [root]+descendants(root): o.name="__source_"+o.name
+    report=reimport(tris); previews(reference)
+    for v in PREVIEW_VIEWS:
+        p=PREVIEW_PREFIX+v+".png"
+        if not os.path.isfile(p) or os.path.getsize(p)==0: fail("Missing preview "+p)
+    write_json(tris,report); print("BOWL_BUILD_OK"); print("GLB:",OUTPUT_GLB); print("JSON:",OUTPUT_JSON); print("TRIANGLES:",tris); print("REIMPORT:",json.dumps(report,ensure_ascii=False,sort_keys=True)); print("PREVIEWS:",", ".join(PREVIEW_PREFIX+v+".png" for v in PREVIEW_VIEWS))
+
+
+if __name__ == "__main__":
+    try: main()
+    except Exception as exc: print("BOWL_BUILD_FAILED:",exc,file=sys.stderr); raise

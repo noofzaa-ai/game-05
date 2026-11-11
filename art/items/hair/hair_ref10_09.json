@@ -1,0 +1,24 @@
+{
+  "id": "hair_ref10_09",
+  "name": "สไตลิสต์ 09 · ผมซอยเขียวเทาปลายน้ำเงิน",
+  "display_name": "สไตลิสต์ 09 · ผมซอยเขียวเทาปลายน้ำเงิน",
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "asset_version": 1,
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "attachment_mode": "rigid",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "triangle_count": 478,
+  "triangle_budget": 500,
+  "thumbnail": "hair_ref10_09.png",
+  "reference_row": 2,
+  "reference_column": 4,
+  "geometry": {
+    "triangle_count": 478,
+    "closed_meshes": true
+  },
+  "reference": "art/source/hair/ref10_20261007/reference.png"
+}

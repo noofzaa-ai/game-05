@@ -1,0 +1,26 @@
+{
+  "default": "natural",
+  "allow_custom": true,
+  "colors": [
+    {
+      "id": "fair",
+      "name": "ขาว",
+      "color": "#f0d7c2"
+    },
+    {
+      "id": "natural",
+      "name": "ธรรมชาติ",
+      "color": "#ddbfae"
+    },
+    {
+      "id": "tan",
+      "name": "แทน",
+      "color": "#b98b6d"
+    },
+    {
+      "id": "deep",
+      "name": "เข้ม",
+      "color": "#80583e"
+    }
+  ]
+}

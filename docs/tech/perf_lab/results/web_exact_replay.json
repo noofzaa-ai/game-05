@@ -1,0 +1,526 @@
+{
+  "order": [
+    "B",
+    "N",
+    "R",
+    "P",
+    "P",
+    "R",
+    "R",
+    "P"
+  ],
+  "hardware": {
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"
+  },
+  "report": {
+    "graphics": {
+      "antialiasing": 2,
+      "combat_vfx": true,
+      "decorative_lights": true,
+      "fog": true,
+      "glow": true,
+      "outline": true,
+      "render_scale": 0.5,
+      "shadows": true,
+      "ultimate_camera": true,
+      "ultimate_vfx": true
+    },
+    "input_contract": "worker v2 consumes tick-addressed production Wire.inputs with currenttick+24 bound; RemoteSession._step_impl drives D/E/F/H; synthetic profile/noauth/noDB; metadata refreshed every snapshot",
+    "results": [
+      {
+        "accept_total_ms": 0,
+        "apply_total_ms": 0,
+        "construct_count": 0,
+        "construct_total_ms": 0,
+        "drain_ms": {
+          "max": 0.1,
+          "mean": 0.00386819484240688,
+          "over50": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0.1
+        },
+        "draw_calls": {
+          "max": 1602,
+          "mean": 899.65329512894,
+          "over50": 698,
+          "p50": 807,
+          "p95": 1347,
+          "p99": 1569
+        },
+        "frame_ms": {
+          "max": 133.3,
+          "mean": 17.1521489971347,
+          "over50": 4,
+          "p50": 16.7,
+          "p95": 18.7,
+          "p99": 28.2
+        },
+        "frames": 698,
+        "ingest_total_ms": 0,
+        "input_packets": 0,
+        "live_prediction_total_ms": 0,
+        "max_queue": 0,
+        "mode": "B",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 0,
+        "replay_total_ms": 0,
+        "server": {},
+        "tape_packets": 0,
+        "tick_ms": {
+          "max": 13.6,
+          "mean": 1.19756446991405,
+          "over50": 0,
+          "p50": 1.1,
+          "p95": 1.4,
+          "p99": 4
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 45.8,
+          "mean": 0.585386819484242,
+          "over50": 0,
+          "p50": 0.5,
+          "p95": 0.8,
+          "p99": 1.4
+        }
+      },
+      {
+        "accept_total_ms": 1962.7,
+        "apply_total_ms": 152.7,
+        "construct_count": 241,
+        "construct_total_ms": 189.8,
+        "drain_ms": {
+          "max": 41.6,
+          "mean": 3.06944818304172,
+          "over50": 0,
+          "p50": 0,
+          "p95": 10.1,
+          "p99": 10.8
+        },
+        "draw_calls": {
+          "max": 36,
+          "mean": 36,
+          "over50": 0,
+          "p50": 36,
+          "p95": 36,
+          "p99": 36
+        },
+        "frame_ms": {
+          "max": 44.5,
+          "mean": 16.6912516823689,
+          "over50": 0,
+          "p50": 16.7,
+          "p95": 18.6,
+          "p99": 18.7
+        },
+        "frames": 743,
+        "ingest_total_ms": 753.4,
+        "input_packets": 712,
+        "live_prediction_total_ms": 426.1,
+        "max_queue": 5,
+        "mode": "N",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 2854,
+        "replay_total_ms": 1455.1,
+        "server": {
+          "bytes": 369536,
+          "done": true,
+          "encode_total_ms": 1594.858,
+          "input_driven": true,
+          "received_inputs": 695,
+          "skill_casts": 3,
+          "tick_max_ms": 60.315,
+          "tick_p50_ms": 3.094,
+          "tick_p95_ms": 3.503,
+          "ticks": 720,
+          "used_input_ticks": 657,
+          "worker_version": 2
+        },
+        "tape_packets": 298,
+        "tick_ms": {
+          "max": 1.5,
+          "mean": 0.758008075370121,
+          "over50": 0,
+          "p50": 0.8,
+          "p95": 1,
+          "p99": 1
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 0.1,
+          "mean": 0.00161507402422611,
+          "over50": 0,
+          "p50": 0,
+          "p95": 0,
+          "p99": 0.1
+        }
+      },
+      {
+        "accept_total_ms": 2144.8,
+        "apply_total_ms": 162.5,
+        "construct_count": 241,
+        "construct_total_ms": 198.6,
+        "drain_ms": {
+          "max": 39.7,
+          "mean": 3.56632653061224,
+          "over50": 0,
+          "p50": 0,
+          "p95": 11.5,
+          "p99": 13.4
+        },
+        "draw_calls": {
+          "max": 1502,
+          "mean": 887.600583090379,
+          "over50": 685,
+          "p50": 807,
+          "p95": 1347,
+          "p99": 1436
+        },
+        "frame_ms": {
+          "max": 52.1,
+          "mean": 17.2819241982507,
+          "over50": 1,
+          "p50": 16.3,
+          "p95": 25.4,
+          "p99": 29.3
+        },
+        "frames": 686,
+        "ingest_total_ms": 814.5,
+        "input_packets": 0,
+        "live_prediction_total_ms": 475.7,
+        "max_queue": 0,
+        "mode": "R",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 2908,
+        "replay_total_ms": 1601.3,
+        "server": {},
+        "tape_packets": 298,
+        "tick_ms": {
+          "max": 2.8,
+          "mean": 0.845481049562681,
+          "over50": 0,
+          "p50": 0.8,
+          "p95": 1.1,
+          "p99": 1.9
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 5,
+          "mean": 0.554518950437319,
+          "over50": 0,
+          "p50": 0.5,
+          "p95": 0.8,
+          "p99": 1.3
+        }
+      },
+      {
+        "accept_total_ms": 961.7,
+        "apply_total_ms": 155.7,
+        "construct_count": 241,
+        "construct_total_ms": 190.5,
+        "drain_ms": {
+          "max": 24.6,
+          "mean": 1.78132956152758,
+          "over50": 0,
+          "p50": 0,
+          "p95": 6.5,
+          "p99": 8.1
+        },
+        "draw_calls": {
+          "max": 1502,
+          "mean": 889.83026874116,
+          "over50": 707,
+          "p50": 807,
+          "p95": 1347,
+          "p99": 1436
+        },
+        "frame_ms": {
+          "max": 35.6,
+          "mean": 16.7725601131542,
+          "over50": 0,
+          "p50": 16.6,
+          "p95": 20.1,
+          "p99": 24.7
+        },
+        "frames": 707,
+        "ingest_total_ms": 530.1,
+        "input_packets": 0,
+        "live_prediction_total_ms": 182.6,
+        "max_queue": 0,
+        "mode": "P",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 2877,
+        "replay_total_ms": 445.5,
+        "server": {},
+        "tape_packets": 298,
+        "tick_ms": {
+          "max": 1,
+          "mean": 0.40961810466761,
+          "over50": 0,
+          "p50": 0.4,
+          "p95": 0.6,
+          "p99": 0.7
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 4.8,
+          "mean": 0.566760961810468,
+          "over50": 0,
+          "p50": 0.6,
+          "p95": 0.8,
+          "p99": 1.1
+        }
+      },
+      {
+        "accept_total_ms": 1023,
+        "apply_total_ms": 159.9,
+        "construct_count": 241,
+        "construct_total_ms": 193.2,
+        "drain_ms": {
+          "max": 24.4,
+          "mean": 1.88328611898017,
+          "over50": 0,
+          "p50": 0,
+          "p95": 6.5,
+          "p99": 7.9
+        },
+        "draw_calls": {
+          "max": 1469,
+          "mean": 887.508498583569,
+          "over50": 706,
+          "p50": 807,
+          "p95": 1347,
+          "p99": 1436
+        },
+        "frame_ms": {
+          "max": 35,
+          "mean": 16.8059490084986,
+          "over50": 0,
+          "p50": 16.7,
+          "p95": 20.1,
+          "p99": 23.7
+        },
+        "frames": 706,
+        "ingest_total_ms": 551.6,
+        "input_packets": 0,
+        "live_prediction_total_ms": 185.6,
+        "max_queue": 0,
+        "mode": "P",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 3085,
+        "replay_total_ms": 489.9,
+        "server": {},
+        "tape_packets": 298,
+        "tick_ms": {
+          "max": 0.9,
+          "mean": 0.41657223796034,
+          "over50": 0,
+          "p50": 0.4,
+          "p95": 0.6,
+          "p99": 0.7
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 5,
+          "mean": 0.583852691218131,
+          "over50": 0,
+          "p50": 0.6,
+          "p95": 0.8,
+          "p99": 1.3
+        }
+      },
+      {
+        "accept_total_ms": 2349.9,
+        "apply_total_ms": 166.5,
+        "construct_count": 240,
+        "construct_total_ms": 203.5,
+        "drain_ms": {
+          "max": 34.9,
+          "mean": 3.97955223880597,
+          "over50": 0,
+          "p50": 0,
+          "p95": 12.6,
+          "p99": 17.8
+        },
+        "draw_calls": {
+          "max": 1469,
+          "mean": 882.24328358209,
+          "over50": 670,
+          "p50": 807,
+          "p95": 1346,
+          "p99": 1436
+        },
+        "frame_ms": {
+          "max": 60.2,
+          "mean": 17.710447761194,
+          "over50": 4,
+          "p50": 16.3,
+          "p95": 27.1,
+          "p99": 42.8
+        },
+        "frames": 670,
+        "ingest_total_ms": 870.6,
+        "input_packets": 0,
+        "live_prediction_total_ms": 492.9,
+        "max_queue": 0,
+        "mode": "R",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 3146,
+        "replay_total_ms": 1777.1,
+        "server": {},
+        "tape_packets": 298,
+        "tick_ms": {
+          "max": 5.7,
+          "mean": 0.8955223880597,
+          "over50": 0,
+          "p50": 0.8,
+          "p95": 1.4,
+          "p99": 2.5
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 4.5,
+          "mean": 0.57,
+          "over50": 0,
+          "p50": 0.5,
+          "p95": 0.9,
+          "p99": 1.4
+        }
+      },
+      {
+        "accept_total_ms": 2343.3,
+        "apply_total_ms": 169.6,
+        "construct_count": 241,
+        "construct_total_ms": 205.3,
+        "drain_ms": {
+          "max": 34.8,
+          "mean": 4.01417797888386,
+          "over50": 0,
+          "p50": 0,
+          "p95": 13.5,
+          "p99": 19.3
+        },
+        "draw_calls": {
+          "max": 1469,
+          "mean": 898.188536953243,
+          "over50": 663,
+          "p50": 807,
+          "p95": 1352,
+          "p99": 1436
+        },
+        "frame_ms": {
+          "max": 50.3,
+          "mean": 17.8912518853695,
+          "over50": 1,
+          "p50": 16.4,
+          "p95": 28.4,
+          "p99": 38
+        },
+        "frames": 663,
+        "ingest_total_ms": 876.7,
+        "input_packets": 0,
+        "live_prediction_total_ms": 487.4,
+        "max_queue": 0,
+        "mode": "R",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 3121,
+        "replay_total_ms": 1772.8,
+        "server": {},
+        "tape_packets": 298,
+        "tick_ms": {
+          "max": 4.2,
+          "mean": 0.895022624434389,
+          "over50": 0,
+          "p50": 0.8,
+          "p95": 1.7,
+          "p99": 2.7
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 4.4,
+          "mean": 0.56742081447964,
+          "over50": 0,
+          "p50": 0.5,
+          "p95": 0.9,
+          "p99": 1.3
+        }
+      },
+      {
+        "accept_total_ms": 986.4,
+        "apply_total_ms": 156.3,
+        "construct_count": 241,
+        "construct_total_ms": 192.8,
+        "drain_ms": {
+          "max": 23.9,
+          "mean": 1.83865905848787,
+          "over50": 0,
+          "p50": 0,
+          "p95": 6.4,
+          "p99": 9.7
+        },
+        "draw_calls": {
+          "max": 1502,
+          "mean": 889.202567760342,
+          "over50": 701,
+          "p50": 807,
+          "p95": 1347,
+          "p99": 1436
+        },
+        "frame_ms": {
+          "max": 34.4,
+          "mean": 16.9081312410842,
+          "over50": 0,
+          "p50": 16.7,
+          "p95": 20.5,
+          "p99": 29.4
+        },
+        "frames": 701,
+        "ingest_total_ms": 542.8,
+        "input_packets": 0,
+        "live_prediction_total_ms": 181.9,
+        "max_queue": 0,
+        "mode": "P",
+        "renderer": "Godot Web GLCompatibility",
+        "repeat": 0,
+        "replay_ticks": 2976,
+        "replay_total_ms": 459.4,
+        "server": {},
+        "tape_packets": 298,
+        "tick_ms": {
+          "max": 1.3,
+          "mean": 0.409843081312412,
+          "over50": 0,
+          "p50": 0.4,
+          "p95": 0.6,
+          "p99": 1
+        },
+        "vfx": "optimized",
+        "view_ms": {
+          "max": 4.2,
+          "mean": 0.577175463623396,
+          "over50": 0,
+          "p50": 0.5,
+          "p95": 0.9,
+          "p99": 1.3
+        }
+      }
+    ],
+    "status": "running",
+    "synthetic": true,
+    "version": 3,
+    "viewport": [
+      1335,
+      720
+    ]
+  }
+}

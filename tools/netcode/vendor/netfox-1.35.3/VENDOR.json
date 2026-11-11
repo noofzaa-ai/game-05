@@ -1,0 +1,7 @@
+{
+  "source": "https://github.com/foxssake/netfox",
+  "tag": "v1.35.3",
+  "commit": "c7fc6ea52b4e9087c980d9ca1f8c3826e3a6caa4",
+  "archive_sha256": "715c837a0232c258110c586e0b9bccdee11783180f26af6137b1a41f7ca78f46",
+  "status": "isolated compatibility evaluation; not enabled in production"
+}

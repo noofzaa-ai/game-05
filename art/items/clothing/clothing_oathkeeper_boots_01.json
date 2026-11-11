@@ -1,0 +1,17 @@
+{
+  "id": "clothing_oathkeeper_boots_01",
+  "name": "เกราะพิทักษ์ · ขาและเท้า",
+  "asset_version": 1,
+  "triangle_count": 244,
+  "set_triangle_budget": 1500,
+  "slot": "shoes",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_azure_oathkeeper_01",
+  "thumbnail": "clothing_oathkeeper_boots_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

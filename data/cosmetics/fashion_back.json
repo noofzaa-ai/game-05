@@ -1,0 +1,55 @@
+{
+  "default": "none",
+  "styles": [
+    {
+      "id": "none",
+      "name": "ไม่ใส่อุปกรณ์หลัง",
+      "asset_id": ""
+    },
+    {
+      "id": "angel_wings",
+      "name": "ปีกขนนกขาว · กระพือเบาๆ",
+      "asset_id": "res://art/fashion/back/angel_wings.glb"
+    },
+    {
+      "id": "angel_wings_black",
+      "name": "ปีกขนนกดำ · กระพือเบาๆ",
+      "asset_id": "res://art/fashion/back/angel_wings_black.glb"
+    },
+    {
+      "id": "panda_backpack",
+      "name": "เป้แพนด้าขาวดำ · สองสาย",
+      "asset_id": "res://art/fashion/back/panda_backpack.glb"
+    },
+    {
+      "id": "teddy_backpack",
+      "name": "เป้ตุ๊กตาหมี · สองสาย",
+      "asset_id": "res://art/fashion/back/teddy_backpack.glb"
+    },
+    {
+      "id": "cocoa_knit",
+      "name": "กระเป๋าหมีน้ำตาล",
+      "asset_id": "res://art/fashion/back/cocoa_knit.glb"
+    },
+    {
+      "id": "bat_club",
+      "name": "กระเป๋าค้างคาวดำ",
+      "asset_id": "res://art/fashion/back/bat_club.glb"
+    },
+    {
+      "id": "pumpkin_night",
+      "name": "กระเป๋าฟักทอง",
+      "asset_id": "res://art/fashion/back/pumpkin_night.glb"
+    },
+    {
+      "id": "little_ghost",
+      "name": "กระเป๋าผีน้อย",
+      "asset_id": "res://art/fashion/back/little_ghost.glb"
+    },
+    {
+      "id": "moon_witch",
+      "name": "กระเป๋าแม่มดม่วง",
+      "asset_id": "res://art/fashion/back/moon_witch.glb"
+    }
+  ]
+}

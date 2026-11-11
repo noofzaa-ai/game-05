@@ -1,0 +1,18 @@
+extends SceneTree
+func _initialize()->void:
+ var clock=preload("res://client/session/control_clock.gd").new()
+ var input=preload("res://logic/sim_input.gd").new()
+ clock.rate=.95
+ var count:=0;var attacks:=0
+ for i in 600:
+  input.light=i==0
+  for frame in clock.advance(input,1.0/60.0,23,13):
+   count+=1
+   if frame.light:attacks+=1
+ assert(count>=569 and count<=571 and attacks==1)
+ assert(is_equal_approx(clock.rate,.95))
+ clock.clear();clock.rate=1.05;count=0
+ for i in 600:count+=clock.advance(input,1.0/60.0,4,13).size()
+ assert(count>=629 and count<=631 and is_equal_approx(clock.rate,1.05))
+ print("CONTROL CLOCK PASS: bounded rate, fixed tick scheduling, queued action consumed once")
+ quit()

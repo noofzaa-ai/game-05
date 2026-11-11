@@ -1,0 +1,45 @@
+{
+  "spec": {
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "name": "registry",
+            "args": [
+              "/etc/docker/registry/config.yml"
+            ],
+            "env": [
+              {
+                "name": "REGISTRY_STORAGE_MAINTENANCE_READONLY_ENABLED",
+                "$patch": "delete"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "zorx-registry-config",
+                "mountPath": "/etc/docker/registry",
+                "readOnly": true
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/v2/",
+                "port": 5000
+              },
+              "initialDelaySeconds": 2,
+              "periodSeconds": 2
+            }
+          }
+        ],
+        "volumes": [
+          {
+            "name": "zorx-registry-config",
+            "configMap": {
+              "name": "zorx-registry-config"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

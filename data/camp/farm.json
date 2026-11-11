@@ -1,0 +1,24 @@
+{
+  "plots": 4,
+  "required_level": 2,
+  "crops": {
+    "carrot": {
+      "name": "แครอท",
+      "seconds": 900,
+      "seed_price": 20,
+      "yield": 3
+    },
+    "potato": {
+      "name": "มันฝรั่ง",
+      "seconds": 1800,
+      "seed_price": 30,
+      "yield": 3
+    },
+    "herb": {
+      "name": "สมุนไพร",
+      "seconds": 2700,
+      "seed_price": 40,
+      "yield": 3
+    }
+  }
+}

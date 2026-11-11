@@ -1,0 +1,33 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var source=preload("res://data/perf/scenario.gd").new()
+ var remote=preload("res://client/session/remote_session.gd").new(null,source.rules,source.camp)
+ remote.connected=true;remote._accept_state(source.state(),1000)
+ var count:int=remote.lag_reconciles
+ source.advance();var state=source.state();state["ack"]=0
+ remote._draining_states=true
+ remote._receive(Wire.packet(Wire.STATE,1,preload("res://logic/net_state.gd").difference(state,{},0,0)),1001)
+ remote._flush_latest_state();remote._draining_states=false
+ assert(remote.lag_reconciles==count and remote.server_state.tick==0)
+ remote.physics_begin()
+ assert(remote.lag_reconciles==count+1 and remote.server_state.tick==state.tick)
+ remote._accept_state(state,1002)
+ assert(remote.lag_reconciles==count+1) # Old/same tick rejected, not ACK-gated.
+ var history=preload("res://client/session/prediction_history.gd").new();history.clear(1)
+ source.advance();state=source.state();state["ack"]=0
+ history.capture(source.sim,1,state.tick,preload("res://logic/sim_input.gd").new().encode(),source.profile.skill_build)
+ assert(history.compare(state,1,state.tick+10).is_empty() and history.matches==1)
+ state.entities[1][0][0]+=Vector3(.1,0,0)
+ state.entities[1][1][Wire.FIGHTER_FIELDS.find("skill_view")]["casting"]=true
+ var diff=history.compare(state,1,state.tick+10)
+ assert(diff.reason=="unexpected" and diff.field=="skill.casting" and diff.compared_history_tick==state.tick and diff.input_ack==0)
+ history.last_compared_tick=state.tick-1
+ history.authoritative_event({"tick":state.tick,"sequence":1,"event":{"type":"hit","target":1}},1)
+ diff=history.compare(state,1,state.tick+10)
+ assert(diff.reason=="server_event")
+ for i in range(200):history.capture(source.sim,1,i,PackedByteArray(),{})
+ assert(history.rows.size()==128 and history.logs.size()<=32)
+ print("RECONCILE HISTORY PASS:receive deferred to physics;old snapshots ignored;compare world tick not ACK;skill before position;server event evidence;128history/32logs bounded")
+ quit()

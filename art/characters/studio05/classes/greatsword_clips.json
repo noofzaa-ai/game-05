@@ -1,0 +1,262 @@
+{
+ "gs_180_turn": {
+  "length": 0.8,
+  "loop": false
+ },
+ "gs_180_turn_2": {
+  "length": 0.5667,
+  "loop": false
+ },
+ "gs_attack": {
+  "length": 1.2,
+  "loop": false,
+  "windup_end": 0.383,
+  "strike_end": 0.603,
+  "begin": 0.0,
+  "finish": 1.2
+ },
+ "gs_blocking": {
+  "length": 0.5167,
+  "loop": false
+ },
+ "gs_blocking_2": {
+  "length": 0.9667,
+  "loop": false
+ },
+ "gs_blocking_3": {
+  "length": 0.5167,
+  "loop": false
+ },
+ "gs_casting": {
+  "length": 4.8,
+  "loop": false,
+  "windup_end": 2.1,
+  "strike_end": 2.32,
+  "begin": 1.7,
+  "finish": 2.92
+ },
+ "gs_crouching": {
+  "length": 0.6833,
+  "loop": false
+ },
+ "gs_crouching_2": {
+  "length": 0.7167,
+  "loop": false
+ },
+ "gs_crouching_3": {
+  "length": 1.85,
+  "loop": false
+ },
+ "gs_crouching_4": {
+  "length": 0.3833,
+  "loop": false
+ },
+ "gs_crouching_5": {
+  "length": 1.4167,
+  "loop": false
+ },
+ "gs_crouching_6": {
+  "length": 0.4833,
+  "loop": false
+ },
+ "gs_death": {
+  "length": 2.4167,
+  "loop": false
+ },
+ "gs_death_2": {
+  "length": 2.6,
+  "loop": false
+ },
+ "gs_draw_a_great_sword_1": {
+  "length": 0.5167,
+  "loop": false
+ },
+ "gs_draw_a_great_sword_2": {
+  "length": 0.8,
+  "loop": false
+ },
+ "gs_high_spin_attack": {
+  "length": 1.8833,
+  "loop": false,
+  "windup_end": 0.333,
+  "strike_end": 0.553,
+  "begin": 0.0,
+  "finish": 1.153
+ },
+ "gs_idle": {
+  "length": 2.0167,
+  "loop": true
+ },
+ "gs_idle_2": {
+  "length": 3.7167,
+  "loop": true
+ },
+ "gs_idle_3": {
+  "length": 3.6667,
+  "loop": true
+ },
+ "gs_idle_4": {
+  "length": 3.7667,
+  "loop": true
+ },
+ "gs_idle_5": {
+  "length": 7.5667,
+  "loop": true
+ },
+ "gs_impact": {
+  "length": 0.8667,
+  "loop": false
+ },
+ "gs_impact_2": {
+  "length": 1.2,
+  "loop": false
+ },
+ "gs_impact_3": {
+  "length": 1.2667,
+  "loop": false
+ },
+ "gs_impact_4": {
+  "length": 0.6667,
+  "loop": false
+ },
+ "gs_impact_5": {
+  "length": 0.9667,
+  "loop": false
+ },
+ "gs_jump": {
+  "length": 0.65,
+  "loop": false
+ },
+ "gs_jump_2": {
+  "length": 0.9167,
+  "loop": false
+ },
+ "gs_jump_attack": {
+  "length": 2.1833,
+  "loop": false,
+  "windup_end": 0.05,
+  "strike_end": 0.153,
+  "begin": 0.0,
+  "finish": 0.753
+ },
+ "gs_kick": {
+  "length": 1.5167,
+  "loop": false,
+  "windup_end": 0.567,
+  "strike_end": 0.787,
+  "begin": 0.167,
+  "finish": 1.387
+ },
+ "gs_kick_2": {
+  "length": 1.75,
+  "loop": false,
+  "windup_end": 0.25,
+  "strike_end": 0.47,
+  "begin": 0.0,
+  "finish": 1.07
+ },
+ "gs_power_up": {
+  "length": 3.5167,
+  "loop": false,
+  "windup_end": 0.417,
+  "strike_end": 0.637,
+  "begin": 0.017,
+  "finish": 1.237
+ },
+ "gs_run": {
+  "length": 0.7333,
+  "loop": true
+ },
+ "gs_run_2": {
+  "length": 0.6167,
+  "loop": true
+ },
+ "gs_slash": {
+  "length": 1.2833,
+  "loop": false,
+  "windup_end": 0.467,
+  "strike_end": 0.687,
+  "begin": 0.067,
+  "finish": 1.283
+ },
+ "gs_slash_2": {
+  "length": 3.5333,
+  "loop": false,
+  "windup_end": 0.567,
+  "strike_end": 0.787,
+  "begin": 0.167,
+  "finish": 1.387
+ },
+ "gs_slash_3": {
+  "length": 1.8333,
+  "loop": false,
+  "windup_end": 0.633,
+  "strike_end": 0.853,
+  "begin": 0.233,
+  "finish": 1.453
+ },
+ "gs_slash_4": {
+  "length": 1.8,
+  "loop": false,
+  "windup_end": 0.167,
+  "strike_end": 0.387,
+  "begin": 0.0,
+  "finish": 0.987
+ },
+ "gs_slash_5": {
+  "length": 1.45,
+  "loop": false,
+  "windup_end": 0.183,
+  "strike_end": 0.403,
+  "begin": 0.0,
+  "finish": 1.003
+ },
+ "gs_slide_attack": {
+  "length": 2.1333,
+  "loop": false,
+  "windup_end": 1.167,
+  "strike_end": 1.387,
+  "begin": 0.767,
+  "finish": 1.987
+ },
+ "gs_spell_cast": {
+  "length": 1.1333,
+  "loop": false,
+  "windup_end": 0.183,
+  "strike_end": 0.403,
+  "begin": 0.0,
+  "finish": 1.003
+ },
+ "gs_strafe": {
+  "length": 1.1,
+  "loop": true
+ },
+ "gs_strafe_2": {
+  "length": 1.1667,
+  "loop": true
+ },
+ "gs_strafe_3": {
+  "length": 0.5833,
+  "loop": true
+ },
+ "gs_strafe_4": {
+  "length": 0.65,
+  "loop": true
+ },
+ "gs_turn": {
+  "length": 0.7333,
+  "loop": false
+ },
+ "gs_turn_2": {
+  "length": 0.8333,
+  "loop": false
+ },
+ "gs_walk": {
+  "length": 1.3667,
+  "loop": true
+ },
+ "gs_walk_2": {
+  "length": 1.3,
+  "loop": true
+ }
+}

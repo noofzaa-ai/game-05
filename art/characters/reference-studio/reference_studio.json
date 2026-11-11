@@ -1,0 +1,154 @@
+{
+  "BlockBlade": {
+    "length": 0.8,
+    "loop": false
+  },
+  "BlockDagger": {
+    "length": 0.65,
+    "loop": false
+  },
+  "BlockHammer": {
+    "length": 1.05,
+    "loop": false
+  },
+  "BlockSpear": {
+    "length": 0.9,
+    "loop": false
+  },
+  "DashBlade": {
+    "length": 0.5666666666666667,
+    "loop": false
+  },
+  "DashDagger": {
+    "length": 0.4,
+    "loop": false
+  },
+  "DashHammer": {
+    "length": 0.9666666666666667,
+    "loop": false
+  },
+  "DashSpear": {
+    "length": 0.7,
+    "loop": false
+  },
+  "PoseBlade": {
+    "length": 3.0,
+    "loop": true
+  },
+  "PoseDagger": {
+    "length": 3.0,
+    "loop": true
+  },
+  "PoseHammer": {
+    "length": 1.6,
+    "loop": true
+  },
+  "PoseSpear": {
+    "length": 3.0,
+    "loop": true
+  },
+  "Run": {
+    "length": 0.6666666666666666,
+    "loop": true
+  },
+  "Run2": {
+    "length": 0.45,
+    "loop": true
+  },
+  "Run2Blade": {
+    "length": 0.48333333333333334,
+    "loop": true
+  },
+  "Run2Dagger": {
+    "length": 0.45,
+    "loop": true
+  },
+  "Run2Hammer": {
+    "length": 0.5400000254313151,
+    "loop": true
+  },
+  "Run2Spear": {
+    "length": 0.45,
+    "loop": true
+  },
+  "RunBlade": {
+    "length": 0.7166666666666667,
+    "loop": true
+  },
+  "RunDagger": {
+    "length": 0.65,
+    "loop": true
+  },
+  "RunHammer": {
+    "length": 0.8133333206176758,
+    "loop": true
+  },
+  "RunSpear": {
+    "length": 0.6666666666666666,
+    "loop": true
+  },
+  "StandBlade": {
+    "length": 3.0,
+    "loop": true
+  },
+  "StandDagger": {
+    "length": 3.0,
+    "loop": true
+  },
+  "StandHammer": {
+    "length": 1.6,
+    "loop": true
+  },
+  "StandSpear": {
+    "length": 3.0,
+    "loop": true
+  },
+  "Walk": {
+    "length": 1.0,
+    "loop": true
+  },
+  "WalkBlade": {
+    "length": 1.2,
+    "loop": true
+  },
+  "WalkDagger": {
+    "length": 1.1333333333333333,
+    "loop": true
+  },
+  "WalkHammer": {
+    "length": 1.1800000508626303,
+    "loop": true
+  },
+  "WalkSpear": {
+    "length": 1.0,
+    "loop": true
+  },
+  "BladeSolarSlamUltimate": {
+    "length": 4.340000405162573,
+    "loop": false
+  },
+  "DaggerShadowExtractionUltimate": {
+    "length": 3.999999998261531,
+    "loop": false
+  },
+  "SpearThunderSkyThrowUltimate": {
+    "length": 4.19999974394838,
+    "loop": false
+  },
+  "HammerGroundDragPreview": {
+    "length": 5.579999795680245,
+    "loop": false
+  },
+  "HitBack": {
+    "length": 0.6166666666666667,
+    "loop": false
+  },
+  "HitFront": {
+    "length": 0.6166666666666667,
+    "loop": false
+  },
+  "Jump": {
+    "length": 1.4833333333333334,
+    "loop": false
+  }
+}

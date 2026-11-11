@@ -1,0 +1,55 @@
+{
+  "default": "mens_short",
+  "styles": [
+    {
+      "id": "red",
+      "name": "หน้าม้ายาว + หางม้าดำ",
+      "asset_id": "res://art/fashion/hair/red.glb"
+    },
+    {
+      "id": "purple",
+      "name": "บ๊อบชมพูอมม่วง",
+      "asset_id": "res://art/fashion/hair/purple.glb"
+    },
+    {
+      "id": "black",
+      "name": "ผมยาวลอนชมพูม่วง",
+      "asset_id": "res://art/fashion/hair/black.glb"
+    },
+    {
+      "id": "vintage_swept_quiff",
+      "name": "วินเทจยกผม · ปัดเฉียงเป็นช่อ",
+      "asset_id": "res://art/fashion/hair/vintage_swept_quiff.glb"
+    },
+    {
+      "id": "vintage_pompadour",
+      "name": "วินเทจสั้น · ปอมปาดัวร์เฟด",
+      "asset_id": "res://art/fashion/hair/vintage_pompadour.glb"
+    },
+    {
+      "id": "mens_short",
+      "name": "ผมผู้ชายแสกปัด · ท้ายทอยสั้น",
+      "asset_id": "res://art/fashion/hair/mens_short.glb"
+    },
+    {
+      "id": "two_block",
+      "name": "ทูบล็อก · ท้ายทอยยาว",
+      "asset_id": "res://art/fashion/hair/two_block.glb"
+    },
+    {
+      "id": "short_bob",
+      "name": "บ๊อบสั้นน้ำตาล · แสกปัดข้าง",
+      "asset_id": "res://art/fashion/hair/short_bob.glb"
+    },
+    {
+      "id": "swept_highlight",
+      "name": "ผมปัดข้างน้ำตาลไฮไลต์ทอง",
+      "asset_id": "res://art/fashion/hair/swept_highlight.glb"
+    },
+    {
+      "id": "medium_layers",
+      "name": "ผมน้ำตาลซอยเลเยอร์ · หน้าม้าโค้ง",
+      "asset_id": "res://art/fashion/hair/medium_layers.glb"
+    }
+  ]
+}

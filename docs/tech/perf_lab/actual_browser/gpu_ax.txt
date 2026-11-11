@@ -1,0 +1,2 @@
+There has been no change in the accessibility tree for Window: "GPU Internals 🔊".
+The focused UI element is 302 HTML content GPU Internals, URL: chrome://gpu/

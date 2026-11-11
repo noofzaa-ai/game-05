@@ -1,0 +1,50 @@
+{
+  "default": "original",
+  "faces": [
+    {
+      "id": "original",
+      "name": "ทรงเดิม",
+      "asset_id": ""
+    },
+    {
+      "id": "01",
+      "name": "01 · ตาเปิด คม",
+      "asset_id": "res://art/fashion/eyes/eye_01.svg"
+    },
+    {
+      "id": "02",
+      "name": "02 · ตาปรือ",
+      "asset_id": "res://art/fashion/eyes/eye_02.svg"
+    },
+    {
+      "id": "03",
+      "name": "03 · ตาโค้งนุ่ม",
+      "asset_id": "res://art/fashion/eyes/eye_03.svg"
+    },
+    {
+      "id": "04",
+      "name": "04 · ตาเฉียง",
+      "asset_id": "res://art/fashion/eyes/eye_04.svg"
+    },
+    {
+      "id": "05",
+      "name": "05 · ตากลมหวาน",
+      "asset_id": "res://art/fashion/eyes/eye_05.svg"
+    },
+    {
+      "id": "06",
+      "name": "06 · ตากลมโต",
+      "asset_id": "res://art/fashion/eyes/eye_06.svg"
+    },
+    {
+      "id": "07",
+      "name": "07 · ตาแมว รูม่านตาตั้ง",
+      "asset_id": "res://art/fashion/eyes/eye_07.svg"
+    },
+    {
+      "id": "08",
+      "name": "08 · ตาคมดุ",
+      "asset_id": "res://art/fashion/eyes/eye_08.svg"
+    }
+  ]
+}

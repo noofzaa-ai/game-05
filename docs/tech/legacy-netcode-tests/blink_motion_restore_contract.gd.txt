@@ -1,0 +1,33 @@
+extends SceneTree
+const Build=preload("res://logic/skill_build.gd")
+const Wire=preload("res://logic/net_wire.gd")
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ for gem in ["","charge","echo","quickcast"]:
+  var manager=preload("res://server/rooms/manager.gd").new()
+  var rng=RandomNumberGenerator.new();rng.seed=17
+  var p=preload("res://logic/profile.gd").new_player(manager.rules,manager.camp,rng)
+  p.skill_build.skills[3].shape=gem
+  if not Build.validate(p.skill_build).is_empty():continue
+  assert(manager.create("blinkrestore123",123,[{"id":1,"profile":p.to_dict()}]).ok)
+  var room=manager.rooms["blinkrestore123"].room
+  for id in room.sim.bodies.keys():
+   if id!=1:room.sim.bodies.erase(id);room.sim.fighters.erase(id);room.sim._inputs.erase(id);room.sim._ai.erase(id)
+  var remote=preload("res://client/session/remote_session.gd").new(null,manager.rules,manager.camp,manager.loot)
+  remote._accept_state(room.public_state(1),1000)
+  var input=preload("res://logic/sim_input.gd").new();input.skill_slot=3;input.aim=Vector2.RIGHT;input.aim_distance=3
+  var bytes=input.encode();room.input(1,1,bytes);room.tick()
+  var snapshot:Dictionary=room.public_state(1)
+  assert(not Wire.encode(preload("res://logic/net_state.gd").difference(snapshot,{},0,room.acknowledged[1]),262144).is_empty())
+  var predicted=remote.make_sim(snapshot,remote._map)
+  predicted.prediction_motion=preload("res://logic/skills/motion_prediction.gd").new()
+  predicted.prediction_motion.setup(predicted,1,p.skill_build,predicted.fighters[1].skill_view)
+  for tick in range(2,121):
+   var frame=preload("res://logic/sim_input.gd").new();frame.move=Vector2(0,1)
+   room.input(1,tick,frame.encode());room.tick()
+   predicted.set_input(1,frame);predicted.tick(1)
+   assert(predicted.bodies[1].position.distance_to(room.sim.bodies[1].position)<.002)
+   assert(predicted.fighters[1].skill_view.casting==room.sim.fighters[1].skill_view.casting)
+   assert(predicted.projectiles.is_empty() and predicted.areas.is_empty())
+  print("BLINK RESTORE PASS gem=",gem," 120ticks phase/position parity;bounded Wire state, no projectile/area authority")
+ quit()

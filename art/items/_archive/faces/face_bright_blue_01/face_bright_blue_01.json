@@ -1,0 +1,20 @@
+{
+  "id": "face_bright_blue_01",
+  "name": "ตากลมฟ้า · ยิ้มละมุน",
+  "asset_version": 9,
+  "socket": "attach_head",
+  "attachment_mode": "rigid",
+  "fit_profile": "chibi-sculpt-v1",
+  "thumbnail": "face_bright_blue_01.png",
+  "triangle_count": 248,
+  "replaces_head": false,
+  "hide_hair": false,
+  "triangle_budget": 250,
+  "eye_relief": "domed sclera 0.022 m center; fitted iris; eyelid ridge 0.010 m above base head",
+  "facial_animation": false,
+  "reference_expression": "top-left blue eyes and small smile",
+  "head_surface_revision": "triangular_chin_panel_v2",
+  "feature_relief": "raised ridges for brows and smile; domed eyes",
+  "face_layout_revision": "face_features_up_025_v7",
+  "face_features_raise_m": 0.025
+}

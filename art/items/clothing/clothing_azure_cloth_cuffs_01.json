@@ -1,0 +1,17 @@
+{
+  "id": "clothing_azure_cloth_cuffs_01",
+  "name": "ชุดผ้าคราม · ปลอกแขนทอ",
+  "asset_version": 1,
+  "triangle_count": 88,
+  "set_triangle_budget": 1500,
+  "slot": "arms",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "outfit_azure_cloth_01",
+  "thumbnail": "clothing_azure_cloth_cuffs_01.png",
+  "binding": "blended cloth torso; split panels Hips/one thigh; cuffs LowerArm; boots Foot and gaiters LowerLeg",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

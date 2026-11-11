@@ -1,0 +1,25 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_girl_ponytail_01",
+  "display_name": "Girl Ponytail 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "triangles": 486,
+  "triangles_by_mesh": {
+    "HairCap": 258,
+    "HairFringe": 52,
+    "HairSideLocks": 24,
+    "PonytailRigid": 124,
+    "PonytailTie": 28
+  },
+  "source_reference": "hair_head_reference.glb",
+  "physics": false,
+  "armature": false,
+  "asset_version": 1,
+  "legacy_ids": []
+}

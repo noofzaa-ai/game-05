@@ -1,0 +1,327 @@
+{
+  "apiVersion": "v1",
+  "kind": "List",
+  "items": [
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "zorx-registry-config",
+        "namespace": "registry"
+      },
+      "data": {
+        "config.yml": "version: 0.1\nlog:\n  fields:\n    service: registry\nstorage:\n  cache:\n    blobdescriptor: inmemory\n  filesystem:\n    rootdirectory: /var/lib/registry\n  delete:\n    enabled: true\n  maintenance:\n    readonly:\n      enabled: false\nhttp:\n  addr: :5000\n  headers:\n    X-Content-Type-Options: [nosniff]\nhealth:\n  storagedriver:\n    enabled: true\n    interval: 10s\n    threshold: 3\n",
+        "config-readonly.yml": "version: 0.1\nlog:\n  fields:\n    service: registry\nstorage:\n  cache:\n    blobdescriptor: inmemory\n  filesystem:\n    rootdirectory: /var/lib/registry\n  delete:\n    enabled: true\n  maintenance:\n    readonly:\n      enabled: true\nhttp:\n  addr: :5000\n  headers:\n    X-Content-Type-Options: [nosniff]\nhealth:\n  storagedriver:\n    enabled: true\n    interval: 10s\n    threshold: 3\n"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ServiceAccount",
+      "metadata": {
+        "name": "zorx-registry-retention",
+        "namespace": "registry"
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRole",
+      "metadata": {
+        "name": "zorx-registry-retention-read"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "apps"
+          ],
+          "resources": [
+            "deployments",
+            "statefulsets",
+            "daemonsets",
+            "replicasets"
+          ],
+          "verbs": [
+            "list"
+          ]
+        },
+        {
+          "apiGroups": [
+            "batch"
+          ],
+          "resources": [
+            "jobs",
+            "cronjobs"
+          ],
+          "verbs": [
+            "list"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "ClusterRoleBinding",
+      "metadata": {
+        "name": "zorx-registry-retention-read"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "zorx-registry-retention",
+          "namespace": "registry"
+        }
+      ],
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "ClusterRole",
+        "name": "zorx-registry-retention-read"
+      }
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "Role",
+      "metadata": {
+        "name": "zorx-registry-retention",
+        "namespace": "registry"
+      },
+      "rules": [
+        {
+          "apiGroups": [
+            "apps"
+          ],
+          "resources": [
+            "deployments"
+          ],
+          "resourceNames": [
+            "docker-registry"
+          ],
+          "verbs": [
+            "get",
+            "patch"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods"
+          ],
+          "verbs": [
+            "list",
+            "delete"
+          ]
+        },
+        {
+          "apiGroups": [
+            ""
+          ],
+          "resources": [
+            "pods/exec"
+          ],
+          "verbs": [
+            "get",
+            "create"
+          ]
+        }
+      ]
+    },
+    {
+      "apiVersion": "rbac.authorization.k8s.io/v1",
+      "kind": "RoleBinding",
+      "metadata": {
+        "name": "zorx-registry-retention",
+        "namespace": "registry"
+      },
+      "subjects": [
+        {
+          "kind": "ServiceAccount",
+          "name": "zorx-registry-retention",
+          "namespace": "registry"
+        }
+      ],
+      "roleRef": {
+        "apiGroup": "rbac.authorization.k8s.io",
+        "kind": "Role",
+        "name": "zorx-registry-retention"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "ConfigMap",
+      "metadata": {
+        "name": "zorx-registry-retention",
+        "namespace": "registry"
+      },
+      "data": {
+        "image_retention_policy.json": "{\n  \"repositories\": [\"zorx-web\", \"zorx-landing\", \"zorx-nakama\", \"zorx-name-validator\", \"zorx-room-worker\"],\n  \"registry_aliases\": [\"wiyazard:30500\", \"192.168.1.74:30500\"],\n  \"keep_latest\": 10,\n  \"minimum_age_days\": 14,\n  \"keep_tag_patterns\": [\"latest\", \"stable\", \"main\", \"develop\", \"prod*\", \"local-*\"],\n  \"apply_enabled\": true\n}\n"
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "CronJob",
+      "metadata": {
+        "name": "zorx-registry-retention",
+        "namespace": "registry"
+      },
+      "spec": {
+        "schedule": "30 3 * * *",
+        "timeZone": "Asia/Bangkok",
+        "concurrencyPolicy": "Forbid",
+        "startingDeadlineSeconds": 120,
+        "successfulJobsHistoryLimit": 3,
+        "failedJobsHistoryLimit": 3,
+        "jobTemplate": {
+          "spec": {
+            "backoffLimit": 0,
+            "activeDeadlineSeconds": 900,
+            "ttlSecondsAfterFinished": 604800,
+            "template": {
+              "spec": {
+                "serviceAccountName": "zorx-registry-retention",
+                "restartPolicy": "Never",
+                "securityContext": {
+                  "runAsNonRoot": true,
+                  "runAsUser": 65532,
+                  "seccompProfile": {
+                    "type": "RuntimeDefault"
+                  }
+                },
+                "containers": [
+                  {
+                    "name": "maintenance",
+                    "image": "wiyazard:30500/zorx-registry-maintenance:retention-20261018-4@sha256:fc6153494df8fc3f9cf7c8db036840e99ea0d470f17da17a241dc2dd3b20314c",
+                    "args": [],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "readOnlyRootFilesystem": true,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "20m",
+                        "memory": "64Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "192Mi"
+                      }
+                    },
+                    "volumeMounts": [
+                      {
+                        "name": "policy",
+                        "mountPath": "/policy",
+                        "readOnly": true
+                      }
+                    ]
+                  }
+                ],
+                "volumes": [
+                  {
+                    "name": "policy",
+                    "configMap": {
+                      "name": "zorx-registry-retention"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "apiVersion": "batch/v1",
+      "kind": "CronJob",
+      "metadata": {
+        "name": "zorx-registry-retention-recovery",
+        "namespace": "registry"
+      },
+      "spec": {
+        "schedule": "*/5 * * * *",
+        "timeZone": "Asia/Bangkok",
+        "concurrencyPolicy": "Forbid",
+        "startingDeadlineSeconds": 120,
+        "successfulJobsHistoryLimit": 3,
+        "failedJobsHistoryLimit": 3,
+        "jobTemplate": {
+          "spec": {
+            "backoffLimit": 0,
+            "activeDeadlineSeconds": 300,
+            "ttlSecondsAfterFinished": 604800,
+            "template": {
+              "spec": {
+                "serviceAccountName": "zorx-registry-retention",
+                "restartPolicy": "Never",
+                "securityContext": {
+                  "runAsNonRoot": true,
+                  "runAsUser": 65532,
+                  "seccompProfile": {
+                    "type": "RuntimeDefault"
+                  }
+                },
+                "containers": [
+                  {
+                    "name": "maintenance",
+                    "image": "wiyazard:30500/zorx-registry-maintenance:retention-20261018-4@sha256:fc6153494df8fc3f9cf7c8db036840e99ea0d470f17da17a241dc2dd3b20314c",
+                    "args": [
+                      "--watchdog"
+                    ],
+                    "securityContext": {
+                      "allowPrivilegeEscalation": false,
+                      "readOnlyRootFilesystem": true,
+                      "capabilities": {
+                        "drop": [
+                          "ALL"
+                        ]
+                      }
+                    },
+                    "resources": {
+                      "requests": {
+                        "cpu": "20m",
+                        "memory": "64Mi"
+                      },
+                      "limits": {
+                        "cpu": "250m",
+                        "memory": "192Mi"
+                      }
+                    },
+                    "volumeMounts": [
+                      {
+                        "name": "policy",
+                        "mountPath": "/policy",
+                        "readOnly": true
+                      }
+                    ]
+                  }
+                ],
+                "volumes": [
+                  {
+                    "name": "policy",
+                    "configMap": {
+                      "name": "zorx-registry-retention"
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

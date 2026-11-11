@@ -1,0 +1,48 @@
+extends SceneTree
+func _initialize() -> void: call_deferred("_run")
+func _run() -> void:
+	var manager=preload("res://server/rooms/manager.gd").new()
+	assert(manager.ready())
+	var source=preload("res://data/perf/scenario.gd").new()
+	var result=manager.create("12345678abcd",12345,[{"id":1,"profile":source.profile.to_dict()}])
+	assert(result.get("ok",false))
+	var room=manager.rooms["12345678abcd"].room
+	room.require_scene_ready()
+	var state:Dictionary=room.public_state(1)
+	var local=preload("res://client/perf/real_room_discard.gd").new(null,manager.rules,manager.camp,manager.loot)
+	local.admission={"diagnostic":true,"diagnostic_seed":"3039"}
+	local._accept_state(state,Time.get_ticks_msec())
+	assert(local.active and local._prediction==null)
+	assert(local._sim.bodies[1].position==room.sim.bodies[1].position)
+	assert(local._sim.fighters.size()==room.sim.fighters.size())
+	var initial_hp:float=local._sim.fighters[1].hp
+	state.entities[1][1][preload("res://logic/net_wire.gd").FIGHTER_FIELDS.find("hp")]=1.0
+	var patch=preload("res://logic/net_state.gd").difference(state,{},0,0)
+	local._receive(preload("res://logic/net_wire.gd").packet(2,99,patch),Time.get_ticks_msec())
+	assert(local._sim.fighters[1].hp==initial_hp and local.last_state_sequence==99)
+	assert(local.discarded_states==1)
+	local._presented_epoch=local._epoch
+	local._step_impl(preload("res://logic/sim_input.gd").new())
+	assert(local._sim.tick_count==1 and local.lag_replay_ticks==0)
+	local.set_local_only(true)
+	assert(local.local_only and local.socket.get_ready_state()==WebSocketPeer.STATE_CLOSED)
+	local._step_impl(preload("res://logic/sim_input.gd").new())
+	assert(local._sim.tick_count==2 and local.sent_inputs==0)
+	var panel=preload("res://client/perf/real_room_ab_panel.gd").new();panel.free()
+	# Only diagnostic disconnects pause the actual room through its existing scene gate.
+	room.scene_ready(1,room.epoch)
+	assert(not room.scene_loading())
+	var transport=preload("res://server/rooms/transport.gd").new(self,manager)
+	transport.bindings["12345678abcd"]={"peers":{1:1},"offline":{},"diagnostic":false}
+	transport.peers[1]={"room":"12345678abcd","slot":1}
+	transport._drop(1,100)
+	assert(not room.scene_loading())
+	room.presence(1,true);room.scene_ready(1,room.epoch)
+	transport.bindings["12345678abcd"].diagnostic=true
+	transport.bindings["12345678abcd"].peers[1]=2
+	transport.peers[2]={"room":"12345678abcd","slot":1}
+	transport._drop(2,200)
+	assert(room.scene_loading())
+	print("REAL ROOM DISCARD PASS: actual Room initial snapshot, real AI, local tick, state payload discarded, no prediction")
+	print("REAL ROOM AB PASS: socket closed +local tick;normal disconnect not paused;diagnostic disconnect paused")
+	quit()

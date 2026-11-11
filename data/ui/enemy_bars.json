@@ -1,0 +1,76 @@
+{
+	"version": 1,
+	"_doc": "Floating enemy health bar styles, keyed by map. The client (client/enemy_bars.gd) resolves a map to a style: first by map id (`by_map`), then by the map's atmosphere (`by_atmosphere`), then `default`. Each style has a base look plus optional `elite` and `boss` overrides (a richer frame for a goblin knight / the Chief and the HUD boss bar). Colours are RGBA arrays 0..1; a null colour means 'take the matching InkUi token' (resolved in code so a chosen theme still drives the frame). Readability note: every bar sits on a dark back plate with a dark outline so it reads on both the bright golden ground and the dark ink ground from the steep camera; meaning never rests on colour alone (the frame shape and the notch mark carry it).",
+
+	"styles": {
+		"goblin": {
+			"_doc": "Stage-1 goblin family. Fits Night Brass (tarnished bronze frame, dark glassy back) but feels goblin/wild: a crude lashed-plank frame, a mossy-to-rust fill (not the player's clean red), a notch 'fang' mark on the left cap. Works on the golden valley and the ink maps.",
+			"frame_shape": "crude",
+			"frame": [0.42, 0.30, 0.16, 1.0],
+			"back": [0.06, 0.07, 0.05, 0.86],
+			"fill": [0.52, 0.60, 0.24, 1.0],
+			"fill_low": [0.74, 0.42, 0.18, 1.0],
+			"trail": [0.30, 0.14, 0.08, 1.0],
+			"outline": [0.03, 0.04, 0.03, 1.0],
+			"low_flash": [0.95, 0.58, 0.20, 1.0],
+			"mark": "fang",
+			"elite": {
+				"_doc": "Goblin knight: a richer, brighter bronze frame with studs, so the elite reads apart from the grunts at a glance.",
+				"frame_shape": "studded",
+				"frame": [0.60, 0.44, 0.22, 1.0],
+				"fill": [0.46, 0.56, 0.22, 1.0],
+				"mark": "fang_double"
+			},
+			"boss": {
+				"_doc": "The Goblin Chief and the HUD boss bar on a goblin map: the richest frame (studs plus corner teeth) in warm bronze-gold, a deeper mossy fill, a bone/skull mark.",
+				"frame_shape": "chief",
+				"frame": [0.74, 0.56, 0.28, 1.0],
+				"fill": [0.40, 0.54, 0.20, 1.0],
+				"fill_low": [0.80, 0.38, 0.16, 1.0],
+				"mark": "skull"
+			}
+		},
+
+		"brass": {
+			"_doc": "The default for every other map: the plain Night Brass family. Frame and low-HP colours come from the InkUi tokens (null), the fill is the HUD HP red, so unthemed maps keep the current look and a chosen theme still drives it.",
+			"frame_shape": "plain",
+			"frame": null,
+			"back": null,
+			"fill": null,
+			"fill_low": null,
+			"trail": null,
+			"outline": null,
+			"low_flash": null,
+			"mark": "none",
+			"elite": {
+				"frame_shape": "studded"
+			},
+			"boss": {
+				"frame_shape": "studded"
+			}
+		}
+	},
+
+	"_tiers_doc": "Which bar tier an enemy type uses (base look if unlisted). Keeps elite/boss framing data-driven and out of fighter_view.",
+	"tiers": {
+		"goblin_knight": "elite",
+		"goblin_chief": "boss"
+	},
+
+	"by_map": {
+		"ink_garden": "goblin",
+		"shrine_wall": "goblin",
+		"brush_ring": "goblin",
+		"sunward_valley": "goblin",
+		"goblin_arena_a": "goblin",
+		"goblin_arena_b": "goblin",
+		"goblin_rest_camp": "goblin"
+	},
+
+	"by_atmosphere": {
+		"golden": "brass",
+		"ink": "brass"
+	},
+
+	"default": "brass"
+}

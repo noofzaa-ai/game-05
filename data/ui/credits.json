@@ -1,0 +1,25 @@
+{
+	"version": 1,
+	"_doc": "The Staff / Credits panel on the title screen (client/title_screen.gd). `team`: the roles that make the game. `credits`: every outside work the game ships, copied from audio/CREDITS.md and art/fonts/CREDITS.md (keep them in step: a new outside sound, font, model or library needs a line here AND in its CREDITS.md). Player-facing words only.",
+	"team": [
+		{"role": "Director", "who": "Boss"},
+		{"role": "Producer", "who": "PO"},
+		{"role": "UX / UI Design", "who": "zorx team"},
+		{"role": "Combat Design", "who": "zorx team"},
+		{"role": "Level Design", "who": "zorx team"},
+		{"role": "Character Art", "who": "zorx team"},
+		{"role": "Animation", "who": "zorx team"},
+		{"role": "Technical Art", "who": "zorx team"},
+		{"role": "Sound & Music", "who": "zorx team"},
+		{"role": "Quality Assurance", "who": "zorx team"},
+		{"role": "Character, Gear & Item Models", "who": "Studio model team"}
+	],
+	"credits": [
+		{"what": "Music", "who": "Original compositions by the zorx team, played with instrument samples from VSCO 2 Community Edition by Versilian Studios", "licence": "Samples: CC0 1.0"},
+		{"what": "Sound effects & ambience", "who": "Made from scratch by the zorx team", "licence": "Our own work"},
+		{"what": "Sarabun (text font)", "who": "Suppakit Chalermlarp / Cadson Demak, from Google Fonts", "licence": "SIL Open Font License 1.1"},
+		{"what": "Taviraj (title font)", "who": "Cadson Demak, from Google Fonts", "licence": "SIL Open Font License 1.1"},
+		{"what": "Early animation clips", "who": "Universal Animation Library by Quaternius, via Mesh2Motion", "licence": "CC0 1.0"},
+		{"what": "Engine", "who": "Godot Engine, by Juan Linietsky, Ariel Manzur and contributors", "licence": "MIT License"}
+	]
+}

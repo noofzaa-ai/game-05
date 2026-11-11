@@ -1,0 +1,25 @@
+extends SceneTree
+## Correctness only: both modes receive identical wire bytes; neither touches gameplay.
+func _initialize() -> void:
+	var source = preload("res://data/perf/scenario.gd").new()
+	var discard = preload("res://client/perf/packet_probe.gd").new()
+	var decode = preload("res://client/perf/packet_probe.gd").new()
+	discard.mode = 1; decode.mode = 2
+	var before := {}
+	var sequence := 0
+	for i in range(40):
+		for tick in range(3): source.advance()
+		var state: Dictionary = source.state()
+		var patch = preload("res://logic/net_state.gd").difference(state, before, sequence, source.sim.tick_count)
+		sequence += 1
+		var packet = preload("res://logic/net_wire.gd").packet(2, sequence, patch)
+		assert(not packet.is_empty())
+		discard.ingest(packet); decode.ingest(packet)
+		assert(source.state() == state)
+		assert(decode.baselines[sequence] == state or decode.baselines[sequence].entities == state.entities)
+		before = state.duplicate(true)
+	assert(discard.packets == 40 and discard.states == 0 and discard.baselines.is_empty())
+	assert(decode.states == 40 and decode.invalid == 0 and decode.baselines.size() == 32)
+	assert(discard.bytes == decode.bytes)
+	print("PACKET PROBE ISOLATION PASS: 40 identical delta packets, bounded decode, no gameplay mutation")
+	quit()

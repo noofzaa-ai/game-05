@@ -1,0 +1,66 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+class NoReuseHistory:
+ extends "res://client/session/prediction_history.gd"
+ func can_reuse(_state:Dictionary,_id:int)->bool:return false
+class ClockRemote:
+ extends "res://client/session/remote_session.gd"
+ var now_ms:=10000
+ var outbound:Array=[]
+ func _input_now_ms()->int:return now_ms
+ func _queue_packet(packet:PackedByteArray,_now:int)->void:outbound.append(packet)
+ func make_sim(state:Dictionary,map):
+  var sim=super.make_sim(state,map)
+  sim.world.solids.clear();sim.world.half_width=100;sim.world.half_depth=100
+  return sim
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var rtt:=300
+ for arg in OS.get_cmdline_user_args():
+  if arg.begins_with("--rtt-ms="):rtt=arg.trim_prefix("--rtt-ms=").to_int()
+ var one_way:int=ceili(rtt*30.0/1000.0)
+ var manager=preload("res://server/rooms/manager.gd").new()
+ var rules=manager.rules;var camp=manager.camp
+ var rng=RandomNumberGenerator.new();rng.seed=20261027
+ var profile=preload("res://logic/profile.gd").new_player(rules,camp,rng)
+ assert(manager.create("latencytest123",123,[{"id":1,"profile":profile.to_dict()}],true,1).ok)
+ var room=manager.rooms["latencytest123"].room
+ room.sim.world.solids.clear();room.sim.world.half_width=100;room.sim.world.half_depth=100
+ room.sim.bodies[1].position=Vector3.ZERO
+ var client=ClockRemote.new(null,rules,camp,manager.loot)
+ if "--force-rebase" in OS.get_cmdline_user_args():client.prediction_history=NoReuseHistory.new()
+ client.connected=true;client._accept_state(room.public_state(1,true),10000);client._presented_epoch=client._epoch;client.rtt_ms=rtt
+ var inbound:Array=[];var outbound:Array=[];var reverse:=0;var pauses:=0;var regressions:=0;var missed:=0;var previous=client.bodies[1].position
+ var max_pull:=0.0;var previous_target:int=client._target_tick
+ for tick in range(1,601):
+  if "--rtt-drop" in OS.get_cmdline_user_args() and tick>=250:
+   client.rtt_ms=163;one_way=5
+  client.now_ms=10000+roundi(tick*1000.0/60)
+  # Deterministic one-way9ticks, plus bounded jitter on snapshots. Correctness only, not performance.
+  while not inbound.is_empty() and inbound[0][0]<=tick:
+   var row=inbound.pop_front();client._accept_state(row[1],client.now_ms)
+  if client._target_tick<previous_target:regressions+=1
+  var input=preload("res://logic/sim_input.gd").new();input.move=Vector2.RIGHT
+  client.advance_controls(input,1.0/60.0) if "--scheduled" in OS.get_cmdline_user_args() else client._step_impl(input)
+  for bytes in client.outbound:outbound.append([tick+one_way,bytes])
+  client.outbound.clear()
+  while not outbound.is_empty() and outbound[0][0]<=tick:
+   var packet=Wire.parse(outbound.pop_front()[1])
+   if packet.kind!=Wire.INPUT:continue
+   var data=Wire.read_inputs(packet.body)
+   room.observe_input_packet(1,data.tick,client.now_ms)
+   for i in data.frames.size():room.input(1,data.tick-i,data.frames[i])
+  if tick>60 and not room.queued[1].has(room.clock_tick+1):missed+=1
+  room.tick()
+  if tick%3==0:
+   var delay:=one_way+(12 if tick%90==0 else 0)
+   inbound.append([tick+delay,room.public_state(1,true).duplicate(true)])
+  if tick>90:
+   var dx:float=client.bodies[1].position.x-previous.x
+   if dx<-.001:reverse+=1;max_pull=maxf(max_pull,-dx)
+   if absf(dx)<.00001:pauses+=1
+  previous=client.bodies[1].position;previous_target=client._target_tick
+ print("REMOTE MOVEMENT LATENCY:",rtt,"msRTT+jitter reverse=",reverse," max_pull_m=",max_pull," pauses=",pauses," target_regressions=",regressions," server_missing_inputs=",missed," lead_trim=",client.lead_trim_ticks," reuses=",client.prediction_reuses," rebases=",client.prediction_rebases," replay_ticks=",client.lag_replay_ticks," desired_lead=",client.desired_lead_ticks," snapshot_lead=",client._target_tick-int(client.server_state.tick)," rate=",client.control_clock.rate)
+ assert(reverse==0 and pauses<=client.control_clock.waits+client.lead_trim_ticks and regressions==0 and missed==0)
+ if "--rtt-drop" in OS.get_cmdline_user_args():assert(client.desired_lead_ticks==13 and client.control_clock.rate>=.95 and client.control_clock.rate<=1.05)
+ quit()

@@ -1,0 +1,61 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_boy_pompadour_01",
+  "display_name": "เด็กผู้ชาย · ผมปอมปาดัวร์ 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "pompadour",
+  "geometry": {
+    "triangle_count": 312,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "mesh_names": [
+      "Pompadour_Cap",
+      "Pompadour_Front_Sweep",
+      "Pompadour_Side_Lock_L",
+      "Pompadour_Side_Lock_R"
+    ]
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot.001",
+      "marker_name": "hair_attach.002",
+      "mesh_names": [
+        "Pompadour_Side_Lock_R.001",
+        "Pompadour_Side_Lock_L.001",
+        "Pompadour_Front_Sweep.001",
+        "Pompadour_Cap.001"
+      ],
+      "triangle_count": 312,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.166,
+          -0.152,
+          -0.205
+        ],
+        "max": [
+          0.17,
+          0.164,
+          0.133
+        ]
+      },
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_pompadour_01_top.png"
+    ]
+  }
+}

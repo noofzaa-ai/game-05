@@ -1,0 +1,17 @@
+{
+  "id": "clothing_mage_robe_01",
+  "name": "ชุดจอมเวท · ชายคลุมยาว",
+  "asset_version": 1,
+  "triangle_count": 248,
+  "set_triangle_budget": 1500,
+  "slot": "pants",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_violet_mage_01",
+  "thumbnail": "clothing_mage_robe_01.png",
+  "binding": "robe panels blend Hips/thigh/calf separately per leg; head and sleeve pieces use their named bones",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

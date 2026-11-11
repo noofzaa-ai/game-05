@@ -1,0 +1,127 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_girl_modern_shag_01",
+  "display_name": "เด็กผู้หญิง · โมเดิร์นแช็ก 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "modern_shag",
+  "geometry": {
+    "triangle_count": 498,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "Shag_Cap",
+      "Shag_Curtain_Bang_L",
+      "Shag_Curtain_Bang_R",
+      "Shag_Upper_Layer_L",
+      "Shag_Upper_Layer_R",
+      "Shag_Mid_Layer_L",
+      "Shag_Mid_Layer_R",
+      "Shag_Back_Layer_C",
+      "Shag_Back_Layer_L",
+      "Shag_Back_Layer_R",
+      "Shag_Crown_L",
+      "Shag_Crown_C",
+      "Shag_Crown_R"
+    ]
+  },
+  "material": {
+    "name": "Modern shag plum",
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.8,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "Shag_Upper_Layer_R",
+        "Shag_Upper_Layer_L",
+        "Shag_Mid_Layer_R",
+        "Shag_Mid_Layer_L",
+        "Shag_Curtain_Bang_R",
+        "Shag_Curtain_Bang_L",
+        "Shag_Crown_R",
+        "Shag_Crown_L",
+        "Shag_Crown_C",
+        "Shag_Cap",
+        "Shag_Back_Layer_R",
+        "Shag_Back_Layer_L",
+        "Shag_Back_Layer_C"
+      ],
+      "triangle_count": 498,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.192,
+          -0.159,
+          -0.33
+        ],
+        "max": [
+          0.192,
+          0.152,
+          0.17
+        ]
+      },
+      "bounding_box_glb_y_up": {
+        "min": [
+          -0.192,
+          -0.33,
+          -0.152
+        ],
+        "max": [
+          0.192,
+          0.17,
+          0.159
+        ],
+        "lowest_y": -0.33
+      },
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Modern shag plum.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.8
+        }
+      ],
+      "root_extras": {
+        "asset_type": "hair",
+        "spec_version": "1.0",
+        "id": "hair_girl_modern_shag_01",
+        "display_name": "เด็กผู้หญิง · โมเดิร์นแช็ก 01",
+        "fit_profile": "chibi-sculpt-v1",
+        "target_socket": "attach_head",
+        "units": "meters",
+        "up_axis": "+Y",
+        "forward_axis": "+Z",
+        "attachment_mode": "rigid"
+      }
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_modern_shag_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_modern_shag_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_modern_shag_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_modern_shag_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

@@ -1,0 +1,80 @@
+{
+  "id": "tailor_modular_draft",
+  "source": "/Users/user/godot-project/test01/assets/tailor_assets_split.fbx",
+  "source_sha256": "2b9518b6af5ce460e4b23c767f6b3fa48d25b04a30ea93985923c2eab4268343",
+  "source_bytes": 20352524,
+  "scale": 3.8083942016716024,
+  "parts": [
+    {
+      "name": "central_section",
+      "triangles": 734,
+      "assembly_location_blender": [
+        -0.14939188957214355,
+        0.22682033479213715,
+        0.08645812422037125
+      ],
+      "dimensions": [
+        1.732636570930481,
+        1.705223560333252,
+        1.5791126489639282
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "foundation",
+      "triangles": 1107,
+      "assembly_location_blender": [
+        -0.039731115102767944,
+        0.08426068723201752,
+        -0.0012681294465437531
+      ],
+      "dimensions": [
+        4.200000286102295,
+        2.2425575256347656,
+        0.21932156383991241
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "left_section",
+      "triangles": 520,
+      "assembly_location_blender": [
+        -1.100696325302124,
+        0.043137677013874054,
+        0.08097781240940094
+      ],
+      "dimensions": [
+        1.8368151187896729,
+        2.160311698913574,
+        1.738120675086975
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "right_section",
+      "triangles": 598,
+      "assembly_location_blender": [
+        1.2350736856460571,
+        -0.08297153562307358,
+        0.08645811676979065
+      ],
+      "dimensions": [
+        1.376239538192749,
+        1.6997358798980713,
+        0.9376000165939331
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    }
+  ],
+  "triangles": 2959,
+  "status": "assembly review draft, not deployed; fused source spatial cuts require review before arbitrary rearrangement",
+  "texture_caps": {
+    "albedo": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  }
+}

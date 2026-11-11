@@ -1,0 +1,140 @@
+{
+  "type": "attack",
+  "playback": "loop",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "SkillLab piercing_shot_projectile v1",
+  "duration": 1,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.3,
+    "exposure": 1.1
+  },
+  "layers": [
+    {
+      "id": "1b07fbc8-589c-4d18-a888-b2fdc7d764cd",
+      "type": "flash",
+      "name": "แสงแกนกลาง",
+      "enabled": false,
+      "seed": 713,
+      "color": "#ffcf86",
+      "secondary": "#fff8e8",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0,
+      "duration": 1,
+      "size": 1.1,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 3,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "d215bb27-a0da-4c3a-af2f-3c5b7f1f7657",
+      "type": "beam",
+      "name": "ลำแสงพุ่งหน้า",
+      "enabled": true,
+      "seed": 850,
+      "color": "#ffcf86",
+      "secondary": "#fff8e8",
+      "style": "lance",
+      "motion": "burst",
+      "start": 0,
+      "duration": 1,
+      "size": 0.12,
+      "spread": 0,
+      "rise": 1.3,
+      "speed": 1,
+      "energy": 2.2,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        -0.65
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "1c8cc752-a37d-4d5a-bbbd-b0c50d6daebc",
+      "type": "beam",
+      "name": "ริ้วพันรอบลำแสง",
+      "enabled": true,
+      "seed": 987,
+      "color": "#ffcf86",
+      "secondary": "#fff8e8",
+      "style": "helix",
+      "motion": "burst",
+      "start": 0,
+      "duration": 1,
+      "size": 0.08,
+      "spread": 0,
+      "rise": 1.3,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.65,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        -0.65
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "e645b2c0-581b-45e1-bb96-ef8738babc34",
+      "type": "sparks",
+      "name": "ละอองพลัง",
+      "enabled": false,
+      "seed": 1124,
+      "color": "#ffcf86",
+      "secondary": "#fff8e8",
+      "style": "glint",
+      "motion": "burst",
+      "start": 0,
+      "duration": 1,
+      "size": 0.045,
+      "spread": 2.5,
+      "rise": 1.4,
+      "speed": 1.2,
+      "energy": 3,
+      "opacity": 1,
+      "scale": 1,
+      "count": 55,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

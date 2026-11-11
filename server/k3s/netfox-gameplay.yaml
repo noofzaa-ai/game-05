@@ -1,0 +1,57 @@
+# Optional v2 gameplay endpoint; same authenticated Room authority and admission budget.
+apiVersion: v1
+kind: Service
+metadata:
+  name: room-netfox
+  namespace: zorx-staging
+spec:
+  selector:
+    app: headless
+  ports:
+    - name: gameplay
+      port: 8061
+      targetPort: 8061
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: room-netfox-ingress
+  namespace: zorx-staging
+spec:
+  podSelector:
+    matchLabels:
+      app: headless
+  policyTypes: [Ingress]
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8061
+      from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: traefik
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: room-netfox
+  namespace: zorx-staging
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: zorx-staging-room-admission-budget@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: zorxapi.daiyooo.com
+      http:
+        paths:
+          - path: /room-v2
+            pathType: Prefix
+            backend:
+              service:
+                name: room-netfox
+                port:
+                  name: gameplay

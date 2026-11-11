@@ -1,0 +1,17 @@
+{
+  "id": "clothing_infernal_tassets_01",
+  "name": "เกราะรัตติกาล · ชายชุด",
+  "asset_version": 1,
+  "triangle_count": 155,
+  "set_triangle_budget": 1500,
+  "slot": "pants",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_crimson_infernal_01",
+  "thumbnail": "clothing_infernal_tassets_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

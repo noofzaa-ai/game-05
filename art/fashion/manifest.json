@@ -1,0 +1,194 @@
+{
+  "version": 1,
+  "default": {
+    "fashion": "red",
+    "hair_style": "mens_short",
+    "fashion_hat": "none",
+    "fashion_back": "none",
+    "face": "original"
+  },
+  "outfits": {
+    "red": {
+      "shirt": "res://art/fashion/outfits/red_shirt.glb",
+      "armband": "res://art/fashion/outfits/red_armband.glb",
+      "pants": "res://art/fashion/outfits/red_pants.glb",
+      "shoes": "res://art/fashion/outfits/red_shoes.glb"
+    },
+    "purple": {
+      "shirt": "res://art/fashion/outfits/purple_shirt.glb",
+      "armband": "res://art/fashion/outfits/purple_armband.glb",
+      "pants": "res://art/fashion/outfits/purple_pants.glb",
+      "shoes": "res://art/fashion/outfits/purple_shoes.glb"
+    },
+    "black": {
+      "shirt": "res://art/fashion/outfits/black_shirt.glb",
+      "armband": "res://art/fashion/outfits/black_armband.glb",
+      "pants": "res://art/fashion/outfits/black_pants.glb",
+      "shoes": "res://art/fashion/outfits/black_shoes.glb"
+    },
+    "mono": {
+      "shirt": "res://art/fashion/outfits/mono_shirt.glb",
+      "armband": "res://art/fashion/outfits/mono_armband.glb",
+      "pants": "res://art/fashion/outfits/mono_pants.glb",
+      "shoes": "res://art/fashion/outfits/mono_shoes.glb"
+    },
+    "fem": {
+      "shirt": "res://art/fashion/outfits/fem_shirt.glb",
+      "armband": "res://art/fashion/outfits/fem_armband.glb",
+      "pants": "res://art/fashion/outfits/fem_pants.glb",
+      "shoes": "res://art/fashion/outfits/fem_shoes.glb"
+    },
+    "black_zip": {
+      "shirt": "res://art/fashion/outfits/black_zip_shirt.glb",
+      "armband": "res://art/fashion/outfits/black_zip_armband.glb",
+      "pants": "res://art/fashion/outfits/black_zip_pants.glb",
+      "shoes": "res://art/fashion/outfits/black_zip_shoes.glb"
+    },
+    "black_bow": {
+      "shirt": "res://art/fashion/outfits/black_bow_shirt.glb",
+      "armband": "res://art/fashion/outfits/black_bow_armband.glb",
+      "pants": "res://art/fashion/outfits/black_bow_pants.glb",
+      "shoes": "res://art/fashion/outfits/black_bow_shoes.glb"
+    },
+    "white_ribbon": {
+      "shirt": "res://art/fashion/outfits/white_ribbon_shirt.glb",
+      "armband": "res://art/fashion/outfits/white_ribbon_armband.glb",
+      "pants": "res://art/fashion/outfits/white_ribbon_pants.glb",
+      "shoes": "res://art/fashion/outfits/white_ribbon_shoes.glb"
+    },
+    "white_corset": {
+      "shirt": "res://art/fashion/outfits/white_corset_shirt.glb",
+      "armband": "res://art/fashion/outfits/white_corset_armband.glb",
+      "pants": "res://art/fashion/outfits/white_corset_pants.glb",
+      "shoes": "res://art/fashion/outfits/white_corset_shoes.glb"
+    },
+    "cocoa_knit": {
+      "shirt": "res://art/fashion/outfits/cocoa_knit_shirt.glb",
+      "armband": "res://art/fashion/outfits/cocoa_knit_armband.glb",
+      "pants": "res://art/fashion/outfits/cocoa_knit_pants.glb",
+      "shoes": "res://art/fashion/outfits/cocoa_knit_shoes.glb"
+    },
+    "white_tee_cargo": {
+      "shirt": "res://art/fashion/outfits/white_tee_cargo_shirt.glb",
+      "armband": "res://art/fashion/outfits/white_tee_cargo_armband.glb",
+      "pants": "res://art/fashion/outfits/white_tee_cargo_pants.glb",
+      "shoes": "res://art/fashion/outfits/white_tee_cargo_shoes.glb"
+    },
+    "white_tee_shorts": {
+      "shirt": "res://art/fashion/outfits/white_tee_shorts_shirt.glb",
+      "armband": "res://art/fashion/outfits/white_tee_shorts_armband.glb",
+      "pants": "res://art/fashion/outfits/white_tee_shorts_pants.glb",
+      "shoes": "res://art/fashion/outfits/white_tee_shorts_shoes.glb"
+    },
+    "black_khaki": {
+      "shirt": "res://art/fashion/outfits/black_khaki_shirt.glb",
+      "armband": "res://art/fashion/outfits/black_khaki_armband.glb",
+      "pants": "res://art/fashion/outfits/black_khaki_pants.glb",
+      "shoes": "res://art/fashion/outfits/black_khaki_shoes.glb"
+    },
+    "leather_hoodie": {
+      "shirt": "res://art/fashion/outfits/leather_hoodie_shirt.glb",
+      "armband": "res://art/fashion/outfits/leather_hoodie_armband.glb",
+      "pants": "res://art/fashion/outfits/leather_hoodie_pants.glb",
+      "shoes": "res://art/fashion/outfits/leather_hoodie_shoes.glb"
+    },
+    "bat_club": {
+      "shirt": "res://art/fashion/outfits/bat_club_shirt.glb",
+      "armband": "res://art/fashion/outfits/bat_club_armband.glb",
+      "pants": "res://art/fashion/outfits/bat_club_pants.glb",
+      "shoes": "res://art/fashion/outfits/bat_club_shoes.glb"
+    },
+    "pumpkin_night": {
+      "shirt": "res://art/fashion/outfits/pumpkin_night_shirt.glb",
+      "armband": "res://art/fashion/outfits/pumpkin_night_armband.glb",
+      "pants": "res://art/fashion/outfits/pumpkin_night_pants.glb",
+      "shoes": "res://art/fashion/outfits/pumpkin_night_shoes.glb"
+    },
+    "little_ghost": {
+      "shirt": "res://art/fashion/outfits/little_ghost_shirt.glb",
+      "armband": "res://art/fashion/outfits/little_ghost_armband.glb",
+      "pants": "res://art/fashion/outfits/little_ghost_pants.glb",
+      "shoes": "res://art/fashion/outfits/little_ghost_shoes.glb"
+    },
+    "moon_witch": {
+      "shirt": "res://art/fashion/outfits/moon_witch_shirt.glb",
+      "armband": "res://art/fashion/outfits/moon_witch_armband.glb",
+      "pants": "res://art/fashion/outfits/moon_witch_pants.glb",
+      "shoes": "res://art/fashion/outfits/moon_witch_shoes.glb"
+    },
+    "bat_club_male": {
+      "shirt": "res://art/fashion/outfits/bat_club_male_shirt.glb",
+      "armband": "res://art/fashion/outfits/bat_club_male_armband.glb",
+      "pants": "res://art/fashion/outfits/bat_club_male_pants.glb",
+      "shoes": "res://art/fashion/outfits/bat_club_male_shoes.glb"
+    },
+    "pumpkin_night_male": {
+      "shirt": "res://art/fashion/outfits/pumpkin_night_male_shirt.glb",
+      "armband": "res://art/fashion/outfits/pumpkin_night_male_armband.glb",
+      "pants": "res://art/fashion/outfits/pumpkin_night_male_pants.glb",
+      "shoes": "res://art/fashion/outfits/pumpkin_night_male_shoes.glb"
+    },
+    "little_ghost_male": {
+      "shirt": "res://art/fashion/outfits/little_ghost_male_shirt.glb",
+      "armband": "res://art/fashion/outfits/little_ghost_male_armband.glb",
+      "pants": "res://art/fashion/outfits/little_ghost_male_pants.glb",
+      "shoes": "res://art/fashion/outfits/little_ghost_male_shoes.glb"
+    },
+    "moon_witch_male": {
+      "shirt": "res://art/fashion/outfits/moon_witch_male_shirt.glb",
+      "armband": "res://art/fashion/outfits/moon_witch_male_armband.glb",
+      "pants": "res://art/fashion/outfits/moon_witch_male_pants.glb",
+      "shoes": "res://art/fashion/outfits/moon_witch_male_shoes.glb"
+    }
+  },
+  "hair": {
+    "red": "res://art/fashion/hair/red.glb",
+    "purple": "res://art/fashion/hair/purple.glb",
+    "black": "res://art/fashion/hair/black.glb",
+    "vintage_swept_quiff": "res://art/fashion/hair/vintage_swept_quiff.glb",
+    "vintage_pompadour": "res://art/fashion/hair/vintage_pompadour.glb",
+    "mens_short": "res://art/fashion/hair/mens_short.glb",
+    "two_block": "res://art/fashion/hair/two_block.glb",
+    "short_bob": "res://art/fashion/hair/short_bob.glb",
+    "swept_highlight": "res://art/fashion/hair/swept_highlight.glb",
+    "medium_layers": "res://art/fashion/hair/medium_layers.glb"
+  },
+  "hats": {
+    "none": "",
+    "fantasy_01": "res://art/fashion/hats/fantasy_01.glb",
+    "fantasy_02": "res://art/fashion/hats/fantasy_02.glb",
+    "fantasy_03": "res://art/fashion/hats/fantasy_03.glb",
+    "fantasy_04": "res://art/fashion/hats/fantasy_04.glb",
+    "fantasy_05": "res://art/fashion/hats/fantasy_05.glb",
+    "fantasy_06": "res://art/fashion/hats/fantasy_06.glb",
+    "fantasy_07": "res://art/fashion/hats/fantasy_07.glb",
+    "fantasy_08": "res://art/fashion/hats/fantasy_08.glb",
+    "fantasy_09": "res://art/fashion/hats/fantasy_09.glb",
+    "fantasy_10": "res://art/fashion/hats/fantasy_10.glb",
+    "fantasy_11": "res://art/fashion/hats/fantasy_11.glb",
+    "fantasy_12": "res://art/fashion/hats/fantasy_12.glb",
+    "black": "res://art/fashion/hats/black.glb",
+    "cat": "res://art/fashion/hats/cat.glb",
+    "bat_club": "res://art/fashion/hats/bat_club.glb",
+    "pumpkin_night": "res://art/fashion/hats/pumpkin_night.glb",
+    "little_ghost": "res://art/fashion/hats/little_ghost.glb",
+    "moon_witch": "res://art/fashion/hats/moon_witch.glb"
+  },
+  "backs": {
+    "none": "",
+    "cocoa_knit": "res://art/fashion/back/cocoa_knit.glb",
+    "bat_club": "res://art/fashion/back/bat_club.glb",
+    "pumpkin_night": "res://art/fashion/back/pumpkin_night.glb",
+    "little_ghost": "res://art/fashion/back/little_ghost.glb",
+    "moon_witch": "res://art/fashion/back/moon_witch.glb",
+    "teddy_backpack": "res://art/fashion/back/teddy_backpack.glb",
+    "panda_backpack": "res://art/fashion/back/panda_backpack.glb",
+    "angel_wings": "res://art/fashion/back/angel_wings.glb",
+    "angel_wings_black": "res://art/fashion/back/angel_wings_black.glb"
+  },
+  "head": {
+    "red": "res://art/fashion/head/red.glb"
+  },
+  "mask": {},
+  "base": "res://art/fashion/reference_player.glb"
+}

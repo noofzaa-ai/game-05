@@ -1,0 +1,8 @@
+{
+  "initial_diamonds": 9999,
+  "prices": {
+    "fashion": 150,
+    "fashion_hat": 50,
+    "fashion_back": 100
+  }
+}

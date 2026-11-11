@@ -1,0 +1,5 @@
+The following is a diff from the previous accessibility tree for Window: "zorx 🔊" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+~0 standard window zorx - Audio playing - High memory usage - 929 MB - Google Chrome - Wanwit (thairathonline.co.th), URL: zorxplay.daiyooo.com/, Secondary Actions: Raise
+~	1 container zorx - Audio playing - High memory usage - 929 MB - Google Chrome - Wanwit (thairathonline.co.th), URL: zorxplay.daiyooo.com/
+~					198 tab (selected, settable, boolean) zorx - Audio playing - High memory usage - 929 MB, Value: on
+The focused UI element is 676 container Performance panel

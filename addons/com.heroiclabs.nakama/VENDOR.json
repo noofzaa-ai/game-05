@@ -1,0 +1,6 @@
+{
+  "upstream": "https://github.com/heroiclabs/nakama-godot",
+  "tag": "v3.4.0",
+  "archive_sha256": "540c7ff3556ef114188b93750626fe93cd5e5d151c5850061eb7a163ba7c6f3e",
+  "modifications": []
+}

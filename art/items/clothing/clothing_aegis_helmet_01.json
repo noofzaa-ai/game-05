@@ -1,0 +1,17 @@
+{
+  "id": "clothing_aegis_helmet_01",
+  "name": "เกราะเอจิส · หมวกหงอนแดง",
+  "asset_version": 1,
+  "triangle_count": 182,
+  "set_triangle_budget": 1500,
+  "slot": "head",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_white_blue_aegis_01",
+  "thumbnail": "clothing_aegis_helmet_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "hide_hair": true,
+  "hide_head": false,
+  "legacy_ids": []
+}

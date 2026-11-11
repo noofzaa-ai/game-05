@@ -1,0 +1,89 @@
+{
+  "carrot_stage_1.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 35848
+  },
+  "carrot_stage_2.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 63739
+  },
+  "carrot_stage_3.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 84880
+  },
+  "carrot_icon.png": {
+    "size": 128,
+    "root": null,
+    "bytes": 12445
+  },
+  "potato_stage_1.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 38947
+  },
+  "potato_stage_2.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 48138
+  },
+  "potato_stage_3.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 61352
+  },
+  "potato_icon.png": {
+    "size": 128,
+    "root": null,
+    "bytes": 14062
+  },
+  "herb_stage_1.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 29383
+  },
+  "herb_stage_2.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 61767
+  },
+  "herb_stage_3.png": {
+    "size": 256,
+    "root": [
+      128,
+      240
+    ],
+    "bytes": 96151
+  },
+  "herb_icon.png": {
+    "size": 128,
+    "root": null,
+    "bytes": 18568
+  }
+}

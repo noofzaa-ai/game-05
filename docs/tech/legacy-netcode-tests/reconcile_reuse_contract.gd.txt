@@ -1,0 +1,30 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var source=preload("res://data/perf/scenario.gd").new()
+ var remote=preload("res://client/session/remote_session.gd").new(null,source.rules,source.camp)
+ remote.connected=true;remote._accept_state(source.state(),Time.get_ticks_msec())
+ # Exact predicted continuation at a known world tick, with future input already simulated.
+ var state=source.state();state.tick=2;state["ack"]=2
+ var carrier=remote.make_sim(state,remote._map)
+ remote._prediction=carrier;remote._target_tick=6;carrier.tick_count=6
+ remote.prediction_history.capture(carrier,1,2,preload("res://logic/sim_input.gd").new().encode(),source.profile.skill_build)
+ assert(remote.prediction_history.can_reuse(state,1))
+ var replays:int=remote.lag_replay_ticks
+ remote._accept_state(state,Time.get_ticks_msec())
+ assert(remote._prediction==carrier and remote.prediction_reuses==1 and remote.lag_replay_ticks==replays)
+ # Even a field outside old movement-only diagnostics must veto a skip.
+ var changed=state.duplicate(true);changed.tick=3
+ remote.prediction_history.capture(carrier,1,3,preload("res://logic/sim_input.gd").new().encode(),source.profile.skill_build)
+ changed.entities[1][1][Wire.FIGHTER_FIELDS.find("poise")]-=1
+ assert(not remote.prediction_history.can_reuse(changed,1))
+ remote._accept_state(changed,Time.get_ticks_msec())
+ assert(remote._prediction!=carrier and remote.prediction_rebases>=2)
+ # HP-only authority changes are not fabricated hit events.
+ var history=preload("res://client/session/prediction_history.gd").new();history.clear(1)
+ history.capture(carrier,1,3,preload("res://logic/sim_input.gd").new().encode(),source.profile.skill_build)
+ var hurt=state.duplicate(true);hurt.tick=3;hurt.entities[1][1][Wire.FIGHTER_FIELDS.find("hp")]-=1
+ assert(history.compare(hurt,1,6).reason=="authority_health_change")
+ print("RECONCILE REUSE PASS:exact continuation keeps carrier/zero historical replay;poise change rebases;HP-only classified separately")
+ quit()

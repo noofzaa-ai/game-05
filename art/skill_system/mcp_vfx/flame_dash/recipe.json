@@ -1,0 +1,110 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "SkillLab flame_dash VFX v1",
+  "duration": 2,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.25,
+    "exposure": 1.15
+  },
+  "layers": [
+    {
+      "id": "47205412-2c84-459e-9885-835be9d82855",
+      "type": "wave",
+      "name": "วงแสงบนพื้น",
+      "enabled": false,
+      "seed": 713,
+      "color": "#ff6825",
+      "secondary": "#ffd18e",
+      "style": "petals",
+      "width": 0.09,
+      "motion": "pulse",
+      "start": 0,
+      "duration": 2,
+      "size": 1,
+      "spread": 0.85,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.55,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "a89c8290-db52-4b8d-9008-b4b87bb5bb8b",
+      "type": "flame",
+      "name": "เปลวระเบิด",
+      "enabled": true,
+      "seed": 850,
+      "color": "#ff6825",
+      "secondary": "#ffd18e",
+      "style": "tongue",
+      "motion": "pulse",
+      "start": 0,
+      "duration": 2,
+      "size": 0.22,
+      "spread": 0.6,
+      "rise": 1.5,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.55,
+      "scale": 1,
+      "count": 3,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "485ab8c5-332b-455f-a545-7b6fd443a75f",
+      "type": "smoke",
+      "name": "ควันฟุ้ง",
+      "enabled": true,
+      "seed": 987,
+      "color": "#ff6825",
+      "secondary": "#ffd18e",
+      "style": "cloud",
+      "motion": "orbit",
+      "start": 0,
+      "duration": 2,
+      "size": 0.35,
+      "spread": 0.8,
+      "rise": 1.6,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.23,
+      "scale": 1,
+      "count": 24,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

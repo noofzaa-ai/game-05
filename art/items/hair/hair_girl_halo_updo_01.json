@@ -1,0 +1,137 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_girl_halo_updo_01",
+  "display_name": "เด็กผู้หญิง · ฮาโลอัพดู 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "faceted halo updo",
+  "geometry": {
+    "triangle_count": 508,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "HaloUpdo_Geometric_Bun",
+      "HaloUpdo_Faceted_Halo",
+      "HaloUpdo_CenterPart_Seam",
+      "HaloUpdo_CenterPart_R",
+      "HaloUpdo_CenterPart_L",
+      "HaloUpdo_Cap"
+    ]
+  },
+  "material": {
+    "name": "Halo updo deep plum + rose gold",
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.84,
+    "textures": [],
+    "materials": [
+      {
+        "name": "Halo updo deep plum",
+        "base_color_linear_rgba": [
+          0.18,
+          0.035,
+          0.22,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.84
+      },
+      {
+        "name": "Halo updo rose gold",
+        "base_color_linear_rgba": [
+          0.42,
+          0.16,
+          0.035,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.78
+      },
+      {
+        "name": "Halo updo center part",
+        "base_color_linear_rgba": [
+          0.075,
+          0.012,
+          0.09,
+          1.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.84
+      }
+    ]
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "HaloUpdo_Geometric_Bun",
+        "HaloUpdo_Faceted_Halo",
+        "HaloUpdo_CenterPart_Seam",
+        "HaloUpdo_CenterPart_R",
+        "HaloUpdo_CenterPart_L",
+        "HaloUpdo_Cap"
+      ],
+      "triangle_count": 508,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.161,
+          -0.155,
+          -0.167741
+        ],
+        "max": [
+          0.161,
+          0.17104,
+          0.102
+        ],
+        "minimum_y": -0.155
+      },
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Halo updo deep plum.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.84
+        },
+        {
+          "name": "Halo updo rose gold.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.78
+        },
+        {
+          "name": "Halo updo center part.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.84
+        }
+      ],
+      "external_images": []
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_halo_updo_01_front.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_halo_updo_01_side.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_halo_updo_01_back.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_halo_updo_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

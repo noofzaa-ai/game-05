@@ -1,0 +1,5 @@
+# Netfox direct correction measurement — 2026-10-31
+
+Latest Boss reports10:03–10:05Thai use event-batchworker; event/controlpackets1–5/sec,no inputrejections exceptstartup,native clockreference0–2tickdifference. AppRTT66–133ms latest106. This does not establish why movement feels laggy. NetfoxCPUcolumns were notconnected; zero is missingmeasurement, notproofnoCPUcost.
+
+Web659a8eeb9299 onRelicUIf8082c6b7f9a:3scripts only actor/synchronizer/session. Records correction at same previouslypredictedtick, avoiding countingnormalforwardmovement; count/max/last/tick andfighterstate transition. Wiresprediction/restorecumulativeCPU into reportbuckets, addsmetadata decodeCPU/snapshotage. No simulation/smoothing/latency tuningchanged. ActualRoomsoloPASS,measuredmax0.1m/2corrections; no inputrejections. FullsuitepriorFAILremains. Publiccoreexact/rolloutSUCCESS. ActualWebnewreport pending; notalagfixclaim. Originalmaps,RelicUI,engine/contentbyteidentical. RollbackWebRelicUI338bd15c; records/tmp/zorx-netfox-measure-release.

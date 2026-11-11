@@ -1,0 +1,16 @@
+{
+  "id": "clothing_golden_scroll_m_shoes_01",
+  "name": "เกลียวทอง M · เสื้อเปิดกางเกงพอง · รองเท้าเกราะลายทอง",
+  "asset_version": 2,
+  "slot": "shoes",
+  "set_id": "outfit_golden_scroll_m_01",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "triangle_count": 346,
+  "set_triangle_budget": 1500,
+  "thumbnail": "clothing_golden_scroll_m_shoes_01.png",
+  "binding": "GameRig57; torso blend; independent left/right thigh panels; knee and ankle blends",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false
+}

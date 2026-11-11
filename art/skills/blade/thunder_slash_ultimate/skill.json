@@ -1,0 +1,116 @@
+{
+  "id": "blade_thunder_slash_ultimate",
+  "name": "อัลติ · คมอสนี",
+  "weapon_type": "blade",
+  "slot": "ultimate",
+  "rig_profile": "chibi-studio-57",
+  "animation": "BladeThunderSlashUltimate",
+  "duration_s": 3.4,
+  "motion": "motion.glb",
+  "vfx": "vfx.glb",
+  "asset_version": 3,
+  "vfx_triangles": 4746,
+  "vfx_triangle_budget": 5000,
+  "in_place": true,
+  "playback": "once",
+  "coordinate_space": "caster_origin_y_up",
+  "attack": {
+    "schema_version": 1,
+    "slot": "ultimate",
+    "direction": "forward",
+    "asset_forward_axis": [
+      0,
+      0,
+      1
+    ],
+    "up_axis": [
+      0,
+      1,
+      0
+    ],
+    "lock_direction_on_cast": true,
+    "range_body_lengths": 2.0,
+    "body_length_definition": "standing_body_height_excluding_hair_equipment",
+    "caster_motion": "in_place",
+    "delivery": "traveling_wave",
+    "hit_shape": "forward_box",
+    "near_body_lengths": 0.05,
+    "width_body_lengths": 1.1,
+    "height_body_lengths": 1.0,
+    "max_hits_per_target_per_cast": 1,
+    "vfx_space": "frozen_cast_origin",
+    "vfx_motion": "authored_in_glb",
+    "damage_owner": "game",
+    "reference_body_height_m": 1.506733275949955,
+    "range_m": 3.01346655189991
+  },
+  "flight": {
+    "release_time_s": 1.14,
+    "arrival_time_s": 1.7,
+    "center_start_body_lengths": 0.18,
+    "center_end_body_lengths": 1.8,
+    "front_extent_body_lengths": 0.2,
+    "ease": "smoothstep"
+  },
+  "visual": {
+    "trail_color": "#8beaff",
+    "light_color": "#58cfff",
+    "blade_aura": "lightning",
+    "trail_end_time_s": 1.65,
+    "aura_end_time_s": 2.2,
+    "light_end_time_s": 2.3,
+    "density_profile": "dense_directional_mist_v1",
+    "bloom_strength": 0.32,
+    "vfx_fade_end_time_s": 2.3,
+    "mist_count": 140,
+    "flying_flecks": 320,
+    "secondary_ribbons": 28,
+    "fine_spray_or_chips": 32,
+    "light_intensity": 0
+  },
+  "markers": [
+    "trail_start",
+    "trail_end",
+    "effect_point"
+  ],
+  "timeline": [
+    {
+      "time_s": 0,
+      "label": "ย่อเข่าขวา เหยียดขาซ้าย ก้มชาร์จ"
+    },
+    {
+      "time_s": 0.58,
+      "label": "มือขวาเก็บดาบชิดลำตัวซ้าย"
+    },
+    {
+      "time_s": 1.14,
+      "label": "ฟาดปล่อยคมสายฟ้า"
+    },
+    {
+      "time_s": 1.7,
+      "label": "สายฟ้าถึงระยะ 2 ช่วงตัว"
+    },
+    {
+      "time_s": 1.86,
+      "label": "ค่อย ๆ เงยหน้าและกลับมายืน"
+    }
+  ],
+  "gameplay_events": [
+    {
+      "time_s": 1.43,
+      "name": "thunder_slash_hit",
+      "range_factor": 0.5
+    },
+    {
+      "time_s": 1.7,
+      "name": "thunder_impact",
+      "range_factor": 1.0
+    }
+  ],
+  "control": {
+    "locomotion_resume_time_s": 1.14,
+    "blend_out_s": 0.12,
+    "vfx_clock": "independent_cast",
+    "release_actor_heading": true
+  }
+}

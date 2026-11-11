@@ -1,0 +1,14 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var source=preload("res://data/perf/scenario.gd").new()
+ var history=preload("res://client/session/prediction_history.gd").new();history.clear(1)
+ source.advance();history.capture(source.sim,1,source.sim.tick_count,PackedByteArray(),source.profile.skill_build)
+ var state=source.state();state.entities[1][1][Wire.FIGHTER_FIELDS.find("hp")]-=.02
+ assert(history.compare(state,1,10).is_empty())
+ state.entities[1][1][Wire.FIGHTER_FIELDS.find("move_frame")]+=3.0
+ var diff=history.compare(state,1,10)
+ assert(diff.field=="fighter.move_frame" and diff.reason=="unexpected" and diff.health_evidence.is_empty())
+ print("PREDICTION REASON PASS:0.02HPnoise ignored;move_frame divergence not hidden as expectedhealthchange;fixed tick combat_context retained")
+ quit()

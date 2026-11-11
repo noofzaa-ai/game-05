@@ -1,0 +1,105 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_boy_curtains_01",
+  "display_name": "เด็กผู้ชาย · เคิร์ทเทน 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "90s heartthrob curtains",
+  "geometry": {
+    "triangle_count": 386,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "Curtains_Cap",
+      "Curtains_Fringe_L",
+      "Curtains_Fringe_R",
+      "Curtains_Side_L",
+      "Curtains_Side_R",
+      "Curtains_Back_Mass"
+    ]
+  },
+  "material": {
+    "name": "Curtains espresso",
+    "base_color_linear_rgba": [
+      0.055,
+      0.018,
+      0.008,
+      1.0
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.86,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "status": "incomplete_blender_reimport_after_round_limit",
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "Curtains_Back_Mass",
+        "Curtains_Cap",
+        "Curtains_Fringe_L",
+        "Curtains_Fringe_R",
+        "Curtains_Side_L",
+        "Curtains_Side_R"
+      ],
+      "triangle_count": 386,
+      "bounding_box_glb_y_up": {
+        "min": [
+          -0.163,
+          -0.265,
+          -0.178
+        ],
+        "max": [
+          0.163,
+          0.161,
+          0.046
+        ]
+      },
+      "lowest_glb_y": -0.265,
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Curtains espresso",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.86
+        }
+      ],
+      "external_images": [],
+      "hairroot_extras_verified": true,
+      "verification_method": "post-export GLB JSON/accessor parser; Blender re-import not completed"
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0,
+      "lighting": "reduced neutral key/fill/rim"
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_curtains_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_curtains_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_curtains_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_curtains_01_top.png"
+    ],
+    "preview_views_present": false,
+    "unverified": [
+      "Blender re-import identity and transform check",
+      "Visual inspection of four preview views"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

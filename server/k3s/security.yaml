@@ -1,0 +1,33 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: origin-budget
+  namespace: zorx-staging
+spec:
+  rateLimit:
+    average: 100
+    burst: 200
+    sourceCriterion:
+      requestHost: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: room-admission-budget
+  namespace: zorx-staging
+spec:
+  rateLimit:
+    average: 4
+    burst: 8
+    sourceCriterion:
+      requestHost: true
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: origin-buffer
+  namespace: zorx-staging
+spec:
+  buffering:
+    maxRequestBodyBytes: 65536
+    memRequestBodyBytes: 65536

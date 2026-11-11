@@ -1,0 +1,178 @@
+{
+ "lb_aim_overdraw": {
+  "length": 3.7833,
+  "loop": false,
+  "windup_end": 0.05,
+  "strike_end": 0.153,
+  "begin": 0.0,
+  "finish": 0.753
+ },
+ "lb_aim_recoil": {
+  "length": 0.7,
+  "loop": false,
+  "windup_end": 0.1,
+  "strike_end": 0.32,
+  "begin": 0.0,
+  "finish": 0.7
+ },
+ "lb_aim_walk_back": {
+  "length": 1.4833,
+  "loop": true
+ },
+ "lb_aim_walk_forward": {
+  "length": 1.2,
+  "loop": true
+ },
+ "lb_aim_walk_left": {
+  "length": 1.2167,
+  "loop": true
+ },
+ "lb_aim_walk_right": {
+  "length": 1.3167,
+  "loop": true
+ },
+ "lb_block": {
+  "length": 2,
+  "loop": false
+ },
+ "lb_death_backward_01": {
+  "length": 3.1167,
+  "loop": false
+ },
+ "lb_death_forward_01": {
+  "length": 3.1833,
+  "loop": false
+ },
+ "lb_disarm_bow": {
+  "length": 1.1,
+  "loop": false
+ },
+ "lb_dive_forward": {
+  "length": 1.65,
+  "loop": false
+ },
+ "lb_dodge_backward": {
+  "length": 1.6333,
+  "loop": false
+ },
+ "lb_dodge_forward": {
+  "length": 1,
+  "loop": false
+ },
+ "lb_dodge_left": {
+  "length": 0.9667,
+  "loop": false
+ },
+ "lb_dodge_right": {
+  "length": 0.9667,
+  "loop": false
+ },
+ "lb_draw_arrow": {
+  "length": 1.0333,
+  "loop": false,
+  "windup_end": 0.25,
+  "strike_end": 0.47,
+  "begin": 0.0,
+  "finish": 1.033
+ },
+ "lb_equip_bow": {
+  "length": 0.9,
+  "loop": false
+ },
+ "lb_fall_a_land_to_run_forward": {
+  "length": 0.9333,
+  "loop": true
+ },
+ "lb_fall_a_land_to_standing_idle_01": {
+  "length": 0.7,
+  "loop": true
+ },
+ "lb_idle_01": {
+  "length": 5.1,
+  "loop": true
+ },
+ "lb_idle_02_looking": {
+  "length": 3.2,
+  "loop": true
+ },
+ "lb_idle_03_examine": {
+  "length": 5.1,
+  "loop": true
+ },
+ "lb_melee_kick": {
+  "length": 1.4333,
+  "loop": false,
+  "windup_end": 0.45,
+  "strike_end": 0.67,
+  "begin": 0.05,
+  "finish": 1.27
+ },
+ "lb_melee_punch": {
+  "length": 1,
+  "loop": false,
+  "windup_end": 0.167,
+  "strike_end": 0.387,
+  "begin": 0.0,
+  "finish": 0.987
+ },
+ "lb_react_small_from_front": {
+  "length": 1.2833,
+  "loop": false
+ },
+ "lb_react_small_from_headshot": {
+  "length": 0.9833,
+  "loop": false
+ },
+ "lb_run_back": {
+  "length": 0.6667,
+  "loop": true
+ },
+ "lb_run_forward": {
+  "length": 0.8833,
+  "loop": true
+ },
+ "lb_run_forward_stop": {
+  "length": 0.9167,
+  "loop": true
+ },
+ "lb_run_left": {
+  "length": 0.6833,
+  "loop": true
+ },
+ "lb_run_right": {
+  "length": 0.7667,
+  "loop": true
+ },
+ "lb_turn_90_left": {
+  "length": 1.2667,
+  "loop": false
+ },
+ "lb_turn_90_right": {
+  "length": 1.1167,
+  "loop": false
+ },
+ "lb_unarmed_idle_01": {
+  "length": 5.1,
+  "loop": true
+ },
+ "lb_walk_back": {
+  "length": 1.4833,
+  "loop": true
+ },
+ "lb_walk_forward": {
+  "length": 1.2,
+  "loop": true
+ },
+ "lb_walk_left": {
+  "length": 1.2167,
+  "loop": true
+ },
+ "lb_walk_right": {
+  "length": 1.2167,
+  "loop": true
+ },
+ "lb_fall_a": {
+  "length": 1.0667,
+  "loop": true
+ }
+}

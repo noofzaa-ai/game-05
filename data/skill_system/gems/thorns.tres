@@ -1,0 +1,30 @@
+[gd_resource type="Resource" script_class="ZorxGemData" load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://data/skill_system/scripts/gem_data.gd" id="1"]
+[ext_resource type="Script" path="res://data/skill_system/scripts/stat_mod.gd" id="2"]
+
+[sub_resource type="Resource" id="Mod0"]
+script = ExtResource("2")
+stat = "thorns"
+op = 2
+value = 0.3
+scope_tags = Array[String]([])
+
+[sub_resource type="Resource" id="Mod1"]
+script = ExtResource("2")
+stat = "duration"
+op = 1
+value = 0.8
+scope_tags = Array[String]([])
+
+[resource]
+script = ExtResource("1")
+id = "thorns"
+display_name = "หนามสะท้อน"
+slot = "effect"
+requires_tags = Array[String](["buff"])
+status_id = ""
+behavior = ""
+group = "utility"
+
+mods = Array[ExtResource("2")]([SubResource("Mod0"), SubResource("Mod1")])

@@ -1,0 +1,20 @@
+{
+  "default": "auto",
+  "styles": [
+    {
+      "id": "auto",
+      "name": "อัตโนมัติ · สุ่มจังหวะ",
+      "asset_id": "auto"
+    },
+    {
+      "id": "open",
+      "name": "เปิดตาค้าง",
+      "asset_id": "open"
+    },
+    {
+      "id": "closed",
+      "name": "หลับตาค้าง",
+      "asset_id": "closed"
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+--- a/server/index.mjs
++++ b/server/index.mjs
+@@ -94,7 +94,7 @@
+         try{const input=await readJson(req);if(!['ban','unban'].includes(input.op))return json(res,400,{error:'invalid_action'});return json(res,200,await adminCall(session,{op:input.op,target:input.target,reason:input.reason}));}
+         catch(e){return json(res,400,{error:['invalid_action','user_not_found','action_failed','admin_not_configured'].includes(e.message)?e.message:'request_failed'});}
+       }
+-      if(req.method==='GET' && ['/admin/api/status','/admin/api/users','/admin/api/audit'].includes(url.pathname)){
++      if(req.method==='GET' && ['/admin/api/status','/admin/api/users','/admin/api/audit','/admin/api/feedback'].includes(url.pathname)){
+         try{return json(res,200,await adminCall(session,{op:url.pathname.split('/').pop(),search:url.searchParams.get('search')||'',cursor:url.searchParams.get('cursor')||''}));}
+         catch{return json(res,503,{error:'admin_unavailable'});}
+       }
+--- a/admin/index.html
++++ b/admin/index.html
+@@ -2,6 +2,7 @@
+ <header><a href="/">✧ ZORX</a><h1>Admin</h1><span id="identity"></span><button id="logout">ออกจากระบบ</button></header>
+ <main><p class="notice">จัดการผู้ใช้และติดตามระบบ · สิทธิ์ตรวจสอบที่เซิร์ฟเวอร์ทุกคำขอ</p><p id="message" role="status"></p>
+ <section><div class="title"><h2>สถานะระบบ</h2><button id="refresh">อัปเดต</button><label><input id="auto" type="checkbox"> ทุก 15 วินาที</label></div><small id="updated"></small><div class="cards" id="metrics"></div></section>
++<section><div class="title"><h2>Feedback จากผู้เล่น</h2><button id="feedback-refresh">อัปเดต Feedback</button></div><div id="feedback" aria-live="polite"></div><button id="feedback-next" hidden>ดูข้อความก่อนหน้า</button></section>
+ <section><h2>ผู้ใช้</h2><form id="search-form"><input id="search" placeholder="ค้นหา username / ชื่อ / UUID" maxlength="80"><button>ค้นหา</button></form><p class="notice">ระงับบัญชีเพื่อปิดการเข้าสู่ระบบ · ยังไม่ใช่การเตะผู้เล่นออกจากห้องที่กำลังเล่นทันที</p><div class="table-wrap"><table><thead><tr><th>ผู้ใช้</th><th>สถานะ</th><th>สร้างเมื่อ</th><th>จัดการ</th></tr></thead><tbody id="users"></tbody></table></div><button id="next" hidden>หน้าถัดไป</button></section>
+ <section><div class="title"><h2>ประวัติการจัดการ</h2><button id="audit-refresh">อัปเดตประวัติ</button></div><div id="audit"></div><button id="audit-next" hidden>ดูต่อ</button></section>
+ </main><dialog id="action-dialog"><form id="action-form"><h2 id="action-title"></h2><p id="action-target"></p><label>เหตุผล <textarea id="reason" required minlength="3" maxlength="200"></textarea></label><div class="title"><button type="button" id="cancel">ยกเลิก</button><button id="confirm">ยืนยัน</button></div></form></dialog><script src="/admin/admin.js"></script></body></html>
+--- a/admin/admin.js
++++ b/admin/admin.js
+@@ -9,3 +9,7 @@
+ $('refresh').onclick=status;$('next').onclick=()=>users(true);$('audit-refresh').onclick=()=>audit();$('audit-next').onclick=()=>audit(true);$('search-form').onsubmit=e=>{e.preventDefault();users();};$('cancel').onclick=()=>$('action-dialog').close();$('action-form').onsubmit=async e=>{e.preventDefault();$('confirm').disabled=true;try{await api('action',{...selected,reason:$('reason').value});$('action-dialog').close();await Promise.all([users(),status(),audit()]);msg('บันทึกแล้ว');}catch(e){msg(e.message);$('action-dialog').close();}finally{$('confirm').disabled=false;}};
+ $('logout').onclick=async()=>{await fetch('/auth/logout',{method:'POST'});location.assign('/');};setInterval(()=>{if($('auto').checked)status();},15000);
+ api('me').then(v=>{$('identity').textContent=v.email;return Promise.all([status(),users(),audit()]);}).catch(e=>msg(e.message));
++
++let feedbackCursor='';
++async function feedback(next=false){try{const s=await api('feedback?cursor='+encodeURIComponent(next?feedbackCursor:''));if(!next)$('feedback').replaceChildren();for(const f of s.feedback){const card=node('article','');card.className='feedback-card';card.append(node('strong',f.name||'ผู้เล่น'),node('small',stamp(f.at)+' · '+f.player_id+' · '+f.platform+' · '+f.version),node('p',f.message));$('feedback').append(card);}if(!next&&!s.feedback.length)$('feedback').append(node('p','ยังไม่มี Feedback จากผู้เล่น'));feedbackCursor=s.next||'';$('feedback-next').hidden=!feedbackCursor;}catch(e){msg(e.message);}}
++$('feedback-refresh').onclick=()=>feedback();$('feedback-next').onclick=()=>feedback(true);feedback();
+--- a/admin/admin.css
++++ b/admin/admin.css
+@@ -1 +1,3 @@
+ :root{color-scheme:dark;font-family:system-ui,sans-serif;background:#080f18;color:#e8e5df}*{box-sizing:border-box}body{margin:0}header{padding:20px 5%;display:flex;align-items:center;gap:20px;border-bottom:1px solid #645739;flex-wrap:wrap}header a{color:#e7c579;text-decoration:none;font-weight:bold}h1{font-size:20px;margin:0}#identity{margin-left:auto;font-size:13px;color:#bcb8ac}main{max-width:1200px;margin:auto;padding:24px}section{border:1px solid #343e49;border-radius:12px;background:#101b26;margin:20px 0;padding:20px}h2{font-size:18px;margin:0 0 16px}.title{display:flex;align-items:center;gap:16px;flex-wrap:wrap}.title h2{margin:0;flex:1}.notice,small{color:#aeb7bf;font-size:13px}button,input,textarea{font:inherit;border:1px solid #75613a;border-radius:6px;padding:10px 14px;background:#1b2934;color:#eee}button{cursor:pointer}button:hover{border-color:#e4bd6b}button:disabled{opacity:.5;cursor:wait}input{min-width:0}form{display:flex;gap:10px}#search{flex:1}textarea{display:block;width:100%;min-height:100px;margin:10px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:15px}.card{background:#172631;border-radius:8px;padding:16px}.card strong{display:block;font-size:25px;margin-top:8px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left}td,th{padding:12px;border-bottom:1px solid #30404e}td small{display:block;word-break:break-all}.badge{color:#8ee4bb}.banned{color:#ff9f91}#message{color:#f0c77a;min-height:20px}#audit p{border-bottom:1px solid #30404e;padding:10px;overflow-wrap:anywhere}dialog{max-width:480px;width:90%;border:1px solid #a98c52;border-radius:12px;background:#101b26;color:#eee}dialog::backdrop{background:#000a}#action-form{display:block}#action-target{overflow-wrap:anywhere}@media(max-width:600px){main{padding:12px}section{padding:14px}header{gap:10px}#identity{margin:0;width:100%}.cards{grid-template-columns:1fr 1fr}}
++
++.feedback-card{border-bottom:1px solid #30404e;padding:14px 0}.feedback-card small{display:block;overflow-wrap:anywhere;margin:6px 0}.feedback-card p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}
+--- a/server/test_admin.mjs
++++ b/server/test_admin.mjs
+@@ -6,17 +6,21 @@
+ const secret='qa-only-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+ const cookie=email=>{const iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',createHash('sha256').update(secret).digest(),iv);const value={kind:'session',exp:Date.now()+3600000,user:{email},game:{user_id:'11111111-1111-4111-8111-111111111111'}};const body=Buffer.concat([cipher.update(JSON.stringify(value)),cipher.final()]);return 'zorx_session='+Buffer.concat([iv,cipher.getAuthTag(),body]).toString('base64url');};
+ let calls=0;
+-const backend=http.createServer(async(req,res)=>{let body='';for await(const p of req)body+=p;const input=JSON.parse(JSON.parse(body));assert.equal(input.secret,'t'.repeat(40));assert.equal(input.actor.email,'wanwit.phbn@gmail.com');calls++;res.setHeader('Content-Type','application/json');res.end(JSON.stringify({payload:JSON.stringify({ok:true,total:3,banned:0,worker:{ok:true},users:[],events:[]})}));});
++const backend=http.createServer(async(req,res)=>{let body='';for await(const p of req)body+=p;const input=JSON.parse(JSON.parse(body));assert.equal(input.secret,'t'.repeat(40));assert.equal(input.actor.email,'wanwit.phbn@gmail.com');calls++;res.setHeader('Content-Type','application/json');res.end(JSON.stringify({payload:JSON.stringify({ok:true,total:3,banned:0,worker:{ok:true},users:[],events:[],feedback:[{message:'<script>plain text</script>'}]})}));});
+ await new Promise(r=>backend.listen(14176,'127.0.0.1',r));
+ const child=spawn(process.execPath,['server/index.mjs'],{cwd:new URL('../',import.meta.url),env:{...process.env,PORT:'14174',PUBLIC_ORIGIN:'http://127.0.0.1:14174',SESSION_SECRET:secret,NAKAMA_URL:'http://127.0.0.1:14176',ZORX_ADMIN_TOKEN:'t'.repeat(40),ZORX_ADMIN_HTTP_KEY:'k'.repeat(32)}});
++let startupErrors='';child.stderr.on('data',chunk=>{startupErrors+=chunk;});
+ try{
+- await new Promise((resolve,reject)=>{child.stdout.once('data',resolve);child.once('error',reject);child.once('exit',code=>reject(Error('server exit'+code)));});
++ await new Promise((resolve,reject)=>{child.stdout.once('data',resolve);child.once('error',reject);child.once('exit',code=>reject(Error('server exit'+code+' '+startupErrors)));});
+  const req=(path,options={})=>fetch('http://127.0.0.1:14174'+path,{redirect:'manual',...options});
+  assert.equal((await req('/admin/api/status')).status,401);
+  const denied=await req('/admin',{headers:{Cookie:cookie('attacker@example.test')}});assert.equal(denied.status,403);assert.match(await denied.text(),/เลือกบัญชี Google ใหม่/);
+  const headers={Cookie:cookie('wanwit.phbn@gmail.com')};
+  let r=await req('/admin',{headers});assert.equal(r.status,200);assert.equal(r.headers.get('cache-control'),'no-store');assert.match(r.headers.get('content-security-policy'),/frame-ancestors 'none'/);
+  r=await req('/admin/api/status',{headers});assert.equal(r.status,200);assert.equal((await r.json()).total,3);
++ r=await req('/admin/api/feedback',{headers});assert.equal(r.status,200);assert.equal((await r.json()).feedback[0].message,'<script>plain text</script>');
++ assert.equal((await req('/admin/api/feedback')).status,401);
++ assert.equal((await req('/admin/api/feedback',{headers:{Cookie:cookie('attacker@example.test')}})).status,403);
+  const before=calls;
+  assert.equal((await req('/admin/api/action',{method:'POST',headers:{...headers,Origin:'https://attacker.test','Content-Type':'application/json'},body:'{"op":"ban"}'})).status,403);assert.equal(calls,before);
+  assert.equal((await req('/admin/api/action',{method:'POST',headers:{...headers,Origin:'http://127.0.0.1:14174','Content-Type':'application/json'},body:JSON.stringify({op:'ban',target:'22222222-2222-4222-8222-222222222222',reason:'isolated QA'})})).status,200);

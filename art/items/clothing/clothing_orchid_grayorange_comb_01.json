@@ -1,0 +1,18 @@
+{
+  "id": "clothing_orchid_grayorange_comb_01",
+  "name": "ชุดผ้ากล้วยไม้ เทาลายส้ม · ปิ่นดอกไม้",
+  "asset_version": 1,
+  "triangle_count": 64,
+  "set_triangle_budget": 1500,
+  "slot": "head",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "outfit_orchid_grayorange_01",
+  "thumbnail": "clothing_orchid_grayorange_comb_01.png",
+  "binding": "GameRig57; normalized cloth weights; torso spine blend; split leg panels; ankle blend",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": [],
+  "color_variant_of": "clothing_orchid_comb_01"
+}

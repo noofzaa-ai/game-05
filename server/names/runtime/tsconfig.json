@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "none",
+    "strict": true,
+    "skipLibCheck": true,
+    "typeRoots": [
+      "./node_modules"
+    ],
+    "types": [
+      "nakama-runtime"
+    ],
+    "outFile": "../../../build/names-runtime/index.js"
+  },
+  "files": [
+    "src/main.ts",
+    "src/profile.ts",
+    "src/security.ts",
+    "src/rooms.ts",
+    "src/social.ts",
+    "src/google_auth.ts",
+    "src/admin.ts",
+    "src/feedback.ts",
+    "src/diagnostics.ts",
+    "src/plaza.ts",
+    "src/admin_metrics.ts",
+    "src/security_events.ts"
+  ]
+}

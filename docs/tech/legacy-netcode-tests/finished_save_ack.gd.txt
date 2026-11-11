@@ -1,0 +1,38 @@
+extends SceneTree
+func _initialize() -> void:
+ var session=preload("res://client/session/remote_session.gd").new()
+ session._epoch=2;session._last_reconciled_tick=123
+ session.server_state={"tick":123,"epoch":2,"meta":{"status":"finished","cloud_saved":false}}
+ var signals:=[0]
+ session.route_changed.connect(func():signals[0]+=1)
+ var snapshot:Dictionary=session.server_state.duplicate(true)
+ snapshot.meta.cloud_saved=true
+ session._accept_state(snapshot,1000)
+ assert(session.saved and session.can_return_to_hub())
+ assert(session.lag_replay_ticks==0 and session._sim==null and signals[0]==1)
+ session._accept_state(snapshot,1001);assert(signals[0]==1)
+ for change in ["older_tick","older_epoch","not_finished"]:
+  session.saved=false
+  var rejected:Dictionary=snapshot.duplicate(true)
+  if change=="older_tick":rejected.tick=122
+  elif change=="older_epoch":rejected.epoch=1
+  else:rejected.meta.status="playing"
+  session._accept_state(rejected,1002)
+  assert(not session.saved)
+ session.saved=false;session.ready=true
+ session._latest_state=snapshot.duplicate(true)
+ session._flush_latest_state()
+ assert(session.saved and session.can_return_to_hub())
+ assert(session._physics_state.is_empty() and session.lag_replay_ticks==0)
+ session.saved=false
+ var stale=snapshot.duplicate(true);stale.tick=122
+ session._latest_state=stale;session._flush_latest_state()
+ assert(not session.saved)
+ session.saved=false
+ var wire=preload("res://logic/net_wire.gd")
+ var patch={"base":0,"tick":123,"epoch":2,"ack":0,"entities":{},"remove":[],"meta":{"set":[[["status"],"finished"],[["cloud_saved"],true]],"delete":[]}}
+ for key in ["map","run","profiles","state","stage","current","choices","players","path","treasure_pending"]:patch.meta.set.append([[key],{}])
+ session._receive(wire.packet(wire.STATE,1,patch),1003)
+ assert(session.saved and session.can_return_to_hub() and session._physics_state.is_empty())
+ print("FINISHED SAVE ACK PASS: same-tick persisted receipt unlocks return; no replay; stale/playing rejected")
+ quit()

@@ -1,0 +1,21 @@
+{
+  "source": "tailor.glb",
+  "source_sha256": "bab88c83c285c3f2663bf26209d561734698502559fbca7970fb1c74c2c278b9",
+  "game_size_xyz": [
+    4.8,
+    1.8677055437265235,
+    2.988329638342845
+  ],
+  "triangles": 3498,
+  "texture_budget": {
+    "color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  },
+  "position": [
+    -8.6,
+    0,
+    -4.6
+  ],
+  "bytes": 1195536
+}

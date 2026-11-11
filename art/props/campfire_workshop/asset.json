@@ -1,0 +1,161 @@
+{
+  "id": "campfire_modular_01",
+  "source": "/Users/user/godot-project/test01/assets/campfire_assets_split.fbx",
+  "source_sha256": "0f90004f5c700346f9928fc79d7832b13f051a950c5a8609ce0d4d74661f1462",
+  "source_bytes": 19782780,
+  "source_triangles": 1459,
+  "parts": [
+    {
+      "id": "stone_large",
+      "triangles": 74,
+      "dimensions_blender_xyz": [
+        0.8006999492645264,
+        0.8971680402755737,
+        0.39070403575897217
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "log_long",
+      "triangles": 76,
+      "dimensions_blender_xyz": [
+        0.993644118309021,
+        0.5836439728736877,
+        0.3328200578689575
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "stone_small",
+      "triangles": 54,
+      "dimensions_blender_xyz": [
+        0.617408037185669,
+        0.636699914932251,
+        0.3183480203151703
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "log_short",
+      "triangles": 72,
+      "dimensions_blender_xyz": [
+        0.6704639792442322,
+        0.43893998861312866,
+        0.32799601554870605
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "stump",
+      "triangles": 124,
+      "dimensions_blender_xyz": [
+        0.5547040104866028,
+        0.5691720247268677,
+        0.4292919635772705
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "firewood_crossed",
+      "triangles": 260,
+      "dimensions_blender_xyz": [
+        0.9116399884223938,
+        1.1238760948181152,
+        0.3087039887905121
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "log_round",
+      "triangles": 77,
+      "dimensions_blender_xyz": [
+        0.7476440072059631,
+        0.5595239996910095,
+        0.3087040185928345
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "flame",
+      "triangles": 410,
+      "dimensions_blender_xyz": [
+        0.564348042011261,
+        0.5884680151939392,
+        0.7910559773445129
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "firewood_stack_upper",
+      "triangles": 194,
+      "dimensions_blender_xyz": [
+        0.6752879619598389,
+        0.684935986995697,
+        0.32799607515335083
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "grass",
+      "triangles": 56,
+      "dimensions_blender_xyz": [
+        0.356935977935791,
+        0.164000004529953,
+        0.33281996846199036
+      ],
+      "pivot": "bottom_center"
+    },
+    {
+      "id": "firewood_stack_lower",
+      "triangles": 62,
+      "dimensions_blender_xyz": [
+        0.6029360294342041,
+        0.602940022945404,
+        0.1881159543991089
+      ],
+      "pivot": "bottom_center"
+    }
+  ],
+  "scale_from_source": 4.0,
+  "texture_caps": {
+    "albedo": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  },
+  "levels": [
+    {
+      "level": 1,
+      "id": "campfire_level_1",
+      "triangles": 1642,
+      "fire_anchor_godot": [
+        0,
+        0.25,
+        0
+      ],
+      "gameplay_unlocks": "not configured; visual proposal only"
+    },
+    {
+      "level": 2,
+      "id": "campfire_level_2",
+      "triangles": 2730,
+      "fire_anchor_godot": [
+        0,
+        0.25,
+        0
+      ],
+      "gameplay_unlocks": "not configured; visual proposal only"
+    },
+    {
+      "level": 3,
+      "id": "campfire_level_3",
+      "triangles": 3654,
+      "fire_anchor_godot": [
+        0,
+        0.25,
+        0
+      ],
+      "gameplay_unlocks": "not configured; visual proposal only"
+    }
+  ],
+  "status": "prepared assets and native visual proposal, not placed in Hub or deployed"
+}

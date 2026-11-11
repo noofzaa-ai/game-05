@@ -1,0 +1,242 @@
+{
+ "180_turn": {
+  "length": 2,
+  "loop": false
+ },
+ "180_turn_2": {
+  "length": 2.0833,
+  "loop": false
+ },
+ "attack": {
+  "length": 5.8333,
+  "loop": false,
+  "windup_end": 2.9,
+  "strike_end": 3.12,
+  "begin": 2.5,
+  "finish": 3.72
+ },
+ "attack_2": {
+  "length": 3.2917,
+  "loop": false,
+  "windup_end": 1.525,
+  "strike_end": 1.745,
+  "begin": 1.125,
+  "finish": 2.345
+ },
+ "attack_3": {
+  "length": 4.375,
+  "loop": false,
+  "windup_end": 1.817,
+  "strike_end": 2.037,
+  "begin": 1.417,
+  "finish": 3.6
+ },
+ "attack_4": {
+  "length": 2.5417,
+  "loop": false,
+  "windup_end": 0.65,
+  "strike_end": 0.87,
+  "begin": 0.25,
+  "finish": 1.47
+ },
+ "block": {
+  "length": 1.4583,
+  "loop": false
+ },
+ "block_2": {
+  "length": 1.7083,
+  "loop": false
+ },
+ "block_idle": {
+  "length": 3.5,
+  "loop": true
+ },
+ "casting": {
+  "length": 7.4167,
+  "loop": false,
+  "windup_end": 4.233,
+  "strike_end": 4.453,
+  "begin": 3.833,
+  "finish": 5.053
+ },
+ "casting_2": {
+  "length": 2.5833,
+  "loop": false,
+  "windup_end": 0.067,
+  "strike_end": 0.287,
+  "begin": 0.0,
+  "finish": 0.887
+ },
+ "crouch": {
+  "length": 1.4167,
+  "loop": false
+ },
+ "crouch_block": {
+  "length": 1.2917,
+  "loop": false
+ },
+ "crouch_block_2": {
+  "length": 2.0417,
+  "loop": false
+ },
+ "crouch_block_idle": {
+  "length": 1.2917,
+  "loop": true
+ },
+ "crouch_idle": {
+  "length": 6.0833,
+  "loop": true
+ },
+ "crouching": {
+  "length": 1.25,
+  "loop": false
+ },
+ "crouching_2": {
+  "length": 1.5417,
+  "loop": false
+ },
+ "crouching_3": {
+  "length": 1.625,
+  "loop": false
+ },
+ "death": {
+  "length": 5.75,
+  "loop": false
+ },
+ "death_2": {
+  "length": 9.7917,
+  "loop": false
+ },
+ "idle": {
+  "length": 9.2083,
+  "loop": true
+ },
+ "idle_2": {
+  "length": 18.8333,
+  "loop": true
+ },
+ "idle_3": {
+  "length": 21.7083,
+  "loop": true
+ },
+ "idle_4": {
+  "length": 6.375,
+  "loop": true
+ },
+ "impact": {
+  "length": 1.9583,
+  "loop": false
+ },
+ "impact_2": {
+  "length": 2.4167,
+  "loop": false
+ },
+ "impact_3": {
+  "length": 1.7917,
+  "loop": false
+ },
+ "jump": {
+  "length": 2.125,
+  "loop": false
+ },
+ "jump_2": {
+  "length": 2.4583,
+  "loop": false
+ },
+ "kick": {
+  "length": 3,
+  "loop": false,
+  "windup_end": 1.192,
+  "strike_end": 1.412,
+  "begin": 0.792,
+  "finish": 2.012
+ },
+ "power_up": {
+  "length": 5.9583,
+  "loop": false,
+  "windup_end": 1.192,
+  "strike_end": 1.412,
+  "begin": 0.792,
+  "finish": 2.012
+ },
+ "run": {
+  "length": 1.7917,
+  "loop": true
+ },
+ "run_2": {
+  "length": 1.375,
+  "loop": true
+ },
+ "slash": {
+  "length": 3.7917,
+  "loop": false,
+  "windup_end": 1.442,
+  "strike_end": 1.662,
+  "begin": 1.042,
+  "finish": 2.262
+ },
+ "slash_2": {
+  "length": 8.875,
+  "loop": false,
+  "windup_end": 2.15,
+  "strike_end": 2.37,
+  "begin": 1.75,
+  "finish": 4.0
+ },
+ "slash_3": {
+  "length": 4.2083,
+  "loop": false,
+  "windup_end": 1.983,
+  "strike_end": 2.203,
+  "begin": 1.583,
+  "finish": 2.803
+ },
+ "slash_4": {
+  "length": 6.125,
+  "loop": false,
+  "windup_end": 3.4,
+  "strike_end": 3.62,
+  "begin": 3.0,
+  "finish": 4.22
+ },
+ "slash_5": {
+  "length": 3.4583,
+  "loop": false,
+  "windup_end": 1.358,
+  "strike_end": 1.578,
+  "begin": 0.958,
+  "finish": 2.178
+ },
+ "strafe": {
+  "length": 2.875,
+  "loop": true
+ },
+ "strafe_2": {
+  "length": 3.2917,
+  "loop": true
+ },
+ "strafe_3": {
+  "length": 1.6667,
+  "loop": true
+ },
+ "strafe_4": {
+  "length": 1.7917,
+  "loop": true
+ },
+ "turn": {
+  "length": 2.3333,
+  "loop": false
+ },
+ "turn_2": {
+  "length": 2.3333,
+  "loop": false
+ },
+ "walk": {
+  "length": 2.75,
+  "loop": true
+ },
+ "walk_2": {
+  "length": 3.1667,
+  "loop": true
+ }
+}

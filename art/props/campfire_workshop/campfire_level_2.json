@@ -1,0 +1,283 @@
+{
+  "level": 2,
+  "id": "campfire_level_2",
+  "placements": [
+    {
+      "component": "stone_large",
+      "position_blender": [
+        1.2,
+        0.0,
+        0
+      ],
+      "rotation_z": 0.0,
+      "scale": 0.86
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        0.9708203932499369,
+        0.7053423027509678,
+        0
+      ],
+      "rotation_z": 0.6283185307179586,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        0.37082039324993693,
+        1.141267819554184,
+        0
+      ],
+      "rotation_z": 1.2566370614359172,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_large",
+      "position_blender": [
+        -0.3708203932499368,
+        1.1412678195541843,
+        0
+      ],
+      "rotation_z": 1.8849555921538759,
+      "scale": 0.86
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        -0.9708203932499367,
+        0.7053423027509679,
+        0
+      ],
+      "rotation_z": 2.5132741228718345,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        -1.2,
+        1.4695761589768238e-16,
+        0
+      ],
+      "rotation_z": 3.141592653589793,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_large",
+      "position_blender": [
+        -0.9708203932499369,
+        -0.7053423027509677,
+        0
+      ],
+      "rotation_z": 3.7699111843077517,
+      "scale": 0.86
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        -0.37082039324993704,
+        -1.141267819554184,
+        0
+      ],
+      "rotation_z": 4.39822971502571,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        0.37082039324993665,
+        -1.1412678195541843,
+        0
+      ],
+      "rotation_z": 5.026548245743669,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_large",
+      "position_blender": [
+        0.9708203932499367,
+        -0.705342302750968,
+        0
+      ],
+      "rotation_z": 5.654866776461628,
+      "scale": 0.86
+    },
+    {
+      "component": "firewood_crossed",
+      "position_blender": [
+        0,
+        0,
+        0
+      ],
+      "rotation_z": 0,
+      "scale": 1.12
+    },
+    {
+      "component": "flame",
+      "position_blender": [
+        0,
+        0,
+        0.13
+      ],
+      "rotation_z": 0,
+      "scale": 1.2
+    },
+    {
+      "component": "firewood_crossed",
+      "position_blender": [
+        0.15,
+        0.08,
+        0.12
+      ],
+      "rotation_z": 0.6,
+      "scale": 0.88
+    },
+    {
+      "component": "log_long",
+      "position_blender": [
+        -2.45,
+        3.0003846579110154e-16,
+        0
+      ],
+      "rotation_z": 4.71238898038469,
+      "scale": 1.0
+    },
+    {
+      "component": "log_long",
+      "position_blender": [
+        2.45,
+        0.0,
+        0
+      ],
+      "rotation_z": 1.5707963267948966,
+      "scale": 1.0
+    },
+    {
+      "component": "stump",
+      "position_blender": [
+        -0.9,
+        -2.2,
+        0
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "firewood_stack_lower",
+      "position_blender": [
+        0.6,
+        2.3000000000000003,
+        0
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "firewood_stack_upper",
+      "position_blender": [
+        0.6,
+        2.3000000000000003,
+        0.16
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "firewood_stack_lower",
+      "position_blender": [
+        0.98,
+        2.3000000000000003,
+        0
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "firewood_stack_upper",
+      "position_blender": [
+        0.98,
+        2.3000000000000003,
+        0.16
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        2.744186417955477,
+        0.5562741262261715,
+        0
+      ],
+      "rotation_z": 0.2,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        1.2760596212284727,
+        2.4923225800586586,
+        0
+      ],
+      "rotation_z": 1.0975979010256551,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        -1.1529660971561349,
+        2.55160129699147,
+        0
+      ],
+      "rotation_z": 1.9951958020513103,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        -2.7137848281599046,
+        0.6894721941087392,
+        0
+      ],
+      "rotation_z": 2.8927937030769657,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        -2.2310682324371767,
+        -1.6918435336075417,
+        0
+      ],
+      "rotation_z": 3.790391604102621,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        -0.0683117521912361,
+        -2.799166573198631,
+        0
+      ],
+      "rotation_z": 4.687989505128276,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        2.1458848707605034,
+        -1.7986600905788672,
+        0
+      ],
+      "rotation_z": 5.585587406153931,
+      "scale": 0.65
+    }
+  ],
+  "triangles": 2730,
+  "fire_anchor_godot": [
+    0,
+    0.25,
+    0
+  ],
+  "gameplay_unlocks": "not configured; visual proposal only"
+}

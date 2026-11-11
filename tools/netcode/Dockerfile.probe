@@ -1,0 +1,8 @@
+# Exact Godot binary is independently SHA256-verified by prepare_linux_probe.py.
+FROM debian:bookworm-slim@sha256:7c7b2c966bc9ee8cedfeef67e0e279108992c77681fa595db4a9d65c06ccc587
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libfontconfig1 libx11-6 libxcursor1 libxinerama1 libxi6 libxrandr2 libgl1 libasound2 libpulse0 libwayland-client0 libwayland-cursor0 libwayland-egl1 libxkbcommon0 && rm -rf /var/lib/apt/lists/*
+COPY Godot_v4.7.2-stable_linux.x86_64 /usr/local/bin/godot
+RUN chmod 755 /usr/local/bin/godot
+ENV HOME=/tmp/godot-home XDG_DATA_HOME=/tmp/godot-data
+WORKDIR /project
+ENTRYPOINT ["/usr/local/bin/godot"]

@@ -1,0 +1,69 @@
+{
+  "v": 1,
+  "adventurers": {
+    "arun": {
+      "name": "อรุณ",
+      "seed": 43017,
+      "personality": "นักดาบใจเย็น ชอบช่วยเพื่อน",
+      "appearance": {
+        "fashion": "red",
+        "fashion_display": "on"
+      },
+      "camp_route": [
+        [
+          -3,
+          -17
+        ],
+        [
+          3,
+          -17
+        ],
+        [
+          3,
+          -23
+        ],
+        [
+          -3,
+          -23
+        ]
+      ],
+      "skills": [
+        "fire_ring",
+        "fireball",
+        "frost_armor",
+        "blink_bolt"
+      ]
+    }
+  },
+  "randomization": {
+    "names": [
+      "อรุณ",
+      "นที",
+      "เมฆา",
+      "ธารา",
+      "อคิน",
+      "ไอริน",
+      "ลลิน",
+      "ริน",
+      "วายุ",
+      "ตะวัน",
+      "พายัพ",
+      "สายหมอก"
+    ],
+    "weapon_families": [
+      "blade",
+      "dagger",
+      "spear",
+      "hammer",
+      "bow"
+    ],
+    "armor_slots": [
+      "hat",
+      "shirt",
+      "armband",
+      "pants",
+      "shoes"
+    ],
+    "max_tier": 2
+  }
+}

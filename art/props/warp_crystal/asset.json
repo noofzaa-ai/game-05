@@ -1,0 +1,51 @@
+{
+  "source": "crystal.fbx",
+  "source_sha256": "fb7b7741040104b60a72e0b8c5de1a911fa0215233849a50836072f7ac3f284c",
+  "triangles": 1706,
+  "game_size_xyz": [
+    4.800000192670563,
+    4.915664570344042,
+    3.6915649028251964
+  ],
+  "textures": [
+    {
+      "name": "texture_pbr_20250901.png",
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_metallic.png",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_normal.png",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_roughness.png",
+      "size": [
+        512,
+        512
+      ]
+    }
+  ],
+  "texture_budget": {
+    "base_color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  },
+  "rotor_pivot_game": [
+    0.019275277853012085,
+    2.1689138412475586,
+    -1.3266761302947998
+  ],
+  "rotor_node": "CrystalRotor"
+}

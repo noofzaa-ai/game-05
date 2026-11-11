@@ -1,0 +1,2 @@
+There has been no change in the accessibility tree for Window: "zorx 🔊".
+The focused UI element is 146 text entry area (settable) Console prompt, Value: Press cmd i to turn on code suggestions Press cmd x to disable code suggestions

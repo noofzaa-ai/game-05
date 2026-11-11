@@ -1,0 +1,140 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "SkillLab ice_lance VFX v1",
+  "duration": 1.25,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.3,
+    "exposure": 1.1
+  },
+  "layers": [
+    {
+      "id": "0ae32bc5-554d-4edf-a09e-a800ca49f2de",
+      "type": "debris",
+      "name": "ผลึกพุ่งจากพื้น",
+      "enabled": true,
+      "seed": 713,
+      "color": "#73dfff",
+      "secondary": "#f1fdff",
+      "style": "crystal",
+      "motion": "eruption",
+      "start": 0.078125,
+      "duration": 0.9375,
+      "size": 0.44,
+      "spread": 1.9,
+      "rise": 2.7,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 22,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "fd72a7aa-db95-42ab-958e-1e13107320d3",
+      "type": "debris",
+      "name": "เกล็ดน้ำแข็งแตก",
+      "enabled": true,
+      "seed": 850,
+      "color": "#73dfff",
+      "secondary": "#f1fdff",
+      "style": "shard",
+      "motion": "burst",
+      "start": 0.21484375000000003,
+      "duration": 0.6640625,
+      "size": 0.04,
+      "spread": 3.1,
+      "rise": 2.2,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 20,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "5b4a1054-26b3-4a7b-88db-9f6bc27ab390",
+      "type": "smoke",
+      "name": "ไอเย็นต่ำ",
+      "enabled": true,
+      "seed": 987,
+      "color": "#73dfff",
+      "secondary": "#f1fdff",
+      "style": "wisps",
+      "motion": "burst",
+      "start": 0.1171875,
+      "duration": 1.0546875,
+      "size": 0.8,
+      "spread": 2.3,
+      "rise": 0.25,
+      "speed": 1,
+      "energy": 0.18,
+      "opacity": 0.18,
+      "scale": 1,
+      "count": 24,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "515b8337-01dd-44d5-be28-26b9fbf7615e",
+      "type": "flash",
+      "name": "แสงแกนกลาง",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#73dfff",
+      "secondary": "#f1fdff",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0.15625,
+      "duration": 0.234375,
+      "size": 1.2,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.2,
+      "opacity": 0.65,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

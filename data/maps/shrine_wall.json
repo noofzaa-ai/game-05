@@ -1,0 +1,116 @@
+{
+	"version": 1,
+	"id": "shrine_wall",
+	"name": "Pine Shrine Wall (harder)",
+	"_design": "Stage 2 (monster levels 2-3, a step up from the Ink Garden). A pine-ridge shrine: the player starts in the south yard (painted ink ground), a broken shrine wall with five 3-unit gates (plus open ends at both sides) runs across the whole stage, and north of it lies a pale paved shrine yard with a reflecting pool under an ancient plum. Every monster starts north of the player and heads for them at once (no aggro radius yet), so the gates are choke points: hold a gate and they come through one or two at a time, or get flanked from two gates. The wall is only 1.5 high so monsters behind it stay readable from camera 8, and its segments are at most 8 long so the detouring AI always finds a gate. The second rest point is inside the shrine yard: healing means pushing through the wall. Entering the yard pulls the camera back a little (camera zone) so the final fight with two brutes reads as a whole. Tall trees stand only outside the walkable bounds, never south of a fight. Monsters (2026-10-12): four level-2 goblins come first; the shrine yard holds a level-3 goblin mage (east), a level-3 goblin knight (west, the yard fight) and a goblin archer in the far north-east corner (the wall blocks arrows, so it only shoots through gates or once the player is in the yard).",
+	"modes": ["pve"],
+	"camera_style": "top_down",
+	"atmosphere": "ink",
+	"bounds": {"half_width": 30.0, "half_depth": 20.0},
+	"spawn": [-26.0, 0.05, 15.0],
+	"solids": [
+		{"center": [0, -0.2, 11.25], "size": [60, 0.4, 17.5], "material": "ink"},
+		{"center": [0, -0.2, -8.75], "size": [60, 0.4, 22.5], "material": "dirt"},
+
+		{"center": [-25.5, 0.75, 2], "size": [4.0, 1.5, 1.0], "material": "stone"},
+		{"center": [-16.5, 0.75, 2], "size": [8.0, 1.5, 1.0], "material": "stone"},
+		{"center": [-5.5, 0.75, 2], "size": [8.0, 1.5, 1.0], "material": "stone"},
+		{"center": [5.5, 0.75, 2], "size": [8.0, 1.5, 1.0], "material": "stone"},
+		{"center": [16.5, 0.75, 2], "size": [8.0, 1.5, 1.0], "material": "stone"},
+		{"center": [25.5, 0.75, 2], "size": [4.0, 1.5, 1.0], "material": "stone"},
+
+		{"center": [-20, 0.75, 11], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [-2, 0.75, 14], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [14, 0.75, 10], "size": [1.7, 1.5, 1.7], "material": "ink"},
+
+		{"center": [-8, 0.75, -9], "size": [1.5, 1.5, 1.5], "material": "dirt"},
+		{"center": [8, 0.75, -9], "size": [1.5, 1.5, 1.5], "material": "dirt"},
+		{"center": [-20, 0.75, -8], "size": [1.5, 1.5, 1.5], "material": "dirt"},
+		{"center": [20, 0.75, -9], "size": [1.5, 1.5, 1.5], "material": "dirt"},
+		{"center": [-4, 0.75, -17], "size": [1.5, 1.5, 1.5], "material": "dirt"},
+		{"center": [4, 0.75, -17], "size": [1.5, 1.5, 1.5], "material": "dirt"}
+	],
+	"camera_zones": [
+		{
+			"center": [0, 2.0, -9.25],
+			"size": [60, 6.0, 21.5],
+			"camera": {"name": "Zone: shrine yard", "offset": [0, 9.0, 8.0], "look_y": 0.5, "fov": 52.0},
+			"lock": false
+		}
+	],
+	"props": [
+		{"kind": "rock", "position": [-20, 0, 11], "scale": 1.9},
+		{"kind": "rock", "position": [-2, 0, 14], "scale": 1.9},
+		{"kind": "rock", "position": [14, 0, 10], "scale": 2.0},
+		{"kind": "rock", "position": [-8, 0, -9], "scale": 1.9},
+		{"kind": "rock", "position": [8, 0, -9], "scale": 1.9},
+		{"kind": "rock", "position": [-20, 0, -8], "scale": 2.0},
+		{"kind": "rock", "position": [20, 0, -9], "scale": 1.9},
+		{"kind": "rock", "position": [-4, 0, -17], "scale": 1.8},
+		{"kind": "rock", "position": [4, 0, -17], "scale": 1.8},
+
+		{"kind": "rock", "position": [-23.3, 0, 2.4], "scale": 0.9},
+		{"kind": "rock", "position": [-12.7, 0, 2.5], "scale": 0.8},
+		{"kind": "rock", "position": [-1.7, 0, 2.4], "scale": 0.9},
+		{"kind": "rock", "position": [9.3, 0, 2.5], "scale": 0.8},
+		{"kind": "rock", "position": [12.8, 0, 2.4], "scale": 0.9},
+		{"kind": "rock", "position": [23.7, 0, 2.5], "scale": 0.8},
+		{"kind": "bush", "position": [-25.5, 0, 3.4], "scale": 1.1, "count": 3, "radius": 1.5},
+		{"kind": "bush", "position": [-16, 0, 3.4], "scale": 1.1, "count": 3, "radius": 2.5},
+		{"kind": "bush", "position": [6, 0, 3.4], "scale": 1.1, "count": 3, "radius": 2.5},
+		{"kind": "bush", "position": [18, 0, 3.4], "scale": 1.1, "count": 3, "radius": 2.0},
+
+		{"kind": "plum", "position": [0, 0, -22.5], "scale": 2.6},
+		{"kind": "pine", "position": [-7, 0, -22], "scale": 1.9},
+		{"kind": "pine", "position": [7, 0, -22], "scale": 1.9},
+		{"kind": "pine", "position": [-14, 0, -21.5], "scale": 1.7},
+		{"kind": "pine", "position": [14, 0, -21.5], "scale": 1.7},
+		{"kind": "pine", "position": [-20, 0, -22], "scale": 1.8},
+		{"kind": "pine", "position": [20, 0, -22], "scale": 1.8},
+		{"kind": "pine", "position": [-27, 0, -21.5], "scale": 1.6},
+		{"kind": "pine", "position": [27, 0, -21.5], "scale": 1.6},
+		{"kind": "pine", "position": [-10.5, 0, -24], "scale": 2.0},
+		{"kind": "pine", "position": [10.5, 0, -24], "scale": 2.0},
+
+		{"kind": "pine", "position": [-32.5, 0, -15], "scale": 1.7},
+		{"kind": "pine", "position": [-32.5, 0, -7], "scale": 1.5},
+		{"kind": "pine", "position": [-32.5, 0, 1], "scale": 1.8},
+		{"kind": "pine", "position": [-32.5, 0, 9], "scale": 1.6},
+		{"kind": "pine", "position": [-32.5, 0, 16], "scale": 1.5},
+		{"kind": "pine", "position": [32.5, 0, -15], "scale": 1.6},
+		{"kind": "pine", "position": [32.5, 0, -6], "scale": 1.8},
+		{"kind": "pine", "position": [32.5, 0, 2], "scale": 1.5},
+		{"kind": "pine", "position": [32.5, 0, 10], "scale": 1.7},
+		{"kind": "pine", "position": [32.5, 0, 17], "scale": 1.6},
+
+		{"kind": "bush", "position": [-20, 0, 20.5], "scale": 1.2, "count": 4, "radius": 2.0},
+		{"kind": "bush", "position": [0, 0, 20.5], "scale": 1.2, "count": 3, "radius": 2.0},
+		{"kind": "bush", "position": [18, 0, 20.5], "scale": 1.2, "count": 4, "radius": 2.0},
+		{"kind": "rock", "position": [-10, 0, 21.5], "scale": 0.9},
+		{"kind": "rock", "position": [9, 0, 21.5], "scale": 0.8},
+		{"kind": "bush", "position": [-10, 0, -19], "scale": 1.2, "count": 3, "radius": 1.5},
+		{"kind": "bush", "position": [10, 0, -19], "scale": 1.2, "count": 3, "radius": 1.5},
+
+		{"kind": "pond", "position": [0, 0, -9], "scale": 4.0},
+		{"kind": "pond", "position": [-12, 0, 16], "scale": 2.0},
+		{"kind": "petals", "position": [0, 0, -15], "count": 220, "radius": 8, "scale": 1.0},
+		{"kind": "petals", "position": [0, 0, -6], "count": 90, "radius": 10, "scale": 1.0},
+		{"kind": "petals", "position": [-24, 0, 13], "count": 60, "radius": 5, "scale": 1.0}
+	],
+	"enemy_spawns": [
+		{"type": "goblin", "level": 2, "position": [-18, 0.05, 15]},
+		{"type": "goblin", "level": 2, "position": [-15, 0.05, 8]},
+
+		{"type": "goblin", "level": 2, "position": [-14, 0.05, -2]},
+		{"type": "goblin", "level": 2, "position": [5, 0.05, -5]},
+
+		{"type": "goblin_mage", "level": 3, "position": [13, 0.05, -6]},
+		{"type": "goblin_knight", "level": 3, "position": [-12, 0.05, -12]},
+
+		{"type": "goblin_archer", "level": 2, "position": [25, 0.05, -16]}
+	],
+	"rest_points": [
+		{"id": "wall_gate", "position": [-8, 0.05, 9], "radius": 2.0},
+		{"id": "shrine_pool", "position": [9, 0.05, -13], "radius": 2.0}
+	]
+}

@@ -1,0 +1,9 @@
+# Camp farm — source prototype 2026-10-28
+Camp Lv2 opens four plots to the right. Walk within2.3m and press E or click/tap soil to open management. No dig/sow actor animation. Panel uses real account command authority; local-only sessions remain local.
+
+`data/camp/farm.json` configures crops, growth durations and provisional seed prices. Seeds are purchased one at a time, planted atomically, and consumed. Harvest validates authority UTC and clears plot once. Profile `farm` stores seeds, plots and produce independently of combat inventory; no food benefits yet. Server runner supplies UTC in trusted context; request schema rejects caller timestamps and crop/yield overrides. Existing profile CAS/request receipts govern concurrency and retries.
+
+Authority and client must release together. Snapshot cache and client merge lists include farm. Old profiles default empty, no free seeds or account reset. Scene growth uses low-poly procedural placeholders at four time stages; these are not approved final crop art or mockup parity. Plants update only when stage/content signature changes. Full-screen landscape panel native844x390 rendered. Actual online/mobile interaction and shared visitors remain unverified. Main hub private plot state follows local owner; shared camp visitation of owner farms is not yet implemented.
+
+## Sprite art update 2026-11-02
+Replaced procedural sphere placeholders with supplied-design RGBA Sprite3D plants: three crops × three visible stages. Four root Node3D anchors per plot, fixed-Y camera facing, scene shading, shared root128/240. Crop and harvest icons extracted from toned authoring sheet; farm panel uses harvest icons. Native contact sheet and representative camp render required; see art/props/farm_crops/README.md. No farming rules, yield storage, authority, timer or network semantics changed.

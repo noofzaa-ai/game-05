@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://client/skills/mcp_skill_visual.gd" id="1"]
+[node name="storm_blades" type="Node3D"]
+script = ExtResource("1")
+asset_path = "res://art/skill_system/mcp_vfx/storm_blades/effect.tscn"
+asset_scale = 0.65
+tint = Color(0.7686274509803922,0.1843137254901961,0.3803921568627451,1)

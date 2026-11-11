@@ -1,0 +1,17 @@
+{
+  "id": "clothing_raven_greaves_01",
+  "name": "เกราะอีกา · ขาและเท้า",
+  "asset_version": 1,
+  "triangle_count": 292,
+  "set_triangle_budget": 1500,
+  "slot": "shoes",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_obsidian_raven_01",
+  "thumbnail": "clothing_raven_greaves_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

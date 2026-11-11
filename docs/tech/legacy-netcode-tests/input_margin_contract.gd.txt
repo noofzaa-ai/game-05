@@ -1,0 +1,23 @@
+extends SceneTree
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var clock=preload("res://client/session/control_clock.gd").new()
+ clock.observe({"epoch":1,"sequence":1,"samples":20,"margin_low":-2,"late_total":3,"measurement_age_ms":0},100)
+ clock.update_rate(100);assert(is_equal_approx(clock.rate,1.05))
+ var input=preload("res://logic/sim_input.gd").new()
+ clock.advance(input,1.0/60.0,50,4)
+ assert(is_equal_approx(clock.rate,1.05)) # Old snapshot cannot slow late inputs.
+ clock.observe({"epoch":1,"sequence":2,"samples":20,"margin_low":2,"late_total":3,"measurement_age_ms":0},200)
+ clock.update_rate(200);assert(is_equal_approx(clock.rate,1.0))
+ clock.observe({"epoch":1,"sequence":3,"samples":20,"margin_low":9,"late_total":3,"measurement_age_ms":0},300)
+ clock.update_rate(300);assert(is_equal_approx(clock.rate,.95))
+ clock.update_rate(2000);assert(is_equal_approx(clock.rate,1.0))
+ var room=preload("res://server/rooms/room.gd").new();room.connected[1]=true;room.clock_tick=100
+ var now:=Time.get_ticks_msec()
+ room.observe_input_packet(1,102,now);room.observe_input_packet(1,102,now+1)
+ room.clock_tick=105;room.observe_input_packet(1,104,now+50)
+ var metrics:Dictionary=room.delivery_metrics(1)
+ assert(metrics.sequence==2 and metrics.late_total==1 and metrics.margin_low==-1)
+ assert(metrics.packet_gap_max_ms==50)
+ print("INPUT MARGIN PASS: packet newest once, server arrival margin, late accelerates despite old snapshot, target margin steady, stale neutral")
+ quit()

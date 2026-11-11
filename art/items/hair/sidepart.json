@@ -1,0 +1,11 @@
+{
+  "name": "แสกข้าง",
+  "socket": "attach_head",
+  "fit_profile": "chibi-sculpt-v1",
+  "thumbnail": "sidepart.png",
+  "id": "hair_sidepart_01",
+  "asset_version": 1,
+  "legacy_ids": [
+    "sidepart"
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_girl_afro_puff_split_bangs_01",
+  "display_name": "เด็กผู้หญิง · อโฟรพัฟหน้าม้าแยก 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "afro puff with split bangs",
+  "geometry": {
+    "triangle_count": 514,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "Afro_Scalp_Shell_BVH",
+      "Afro_Side_Back_Wrap_BVH",
+      "Afro_Split_Bang_R",
+      "Afro_Split_Bang_L",
+      "Afro_Puff_L",
+      "Afro_Puff_R"
+    ]
+  },
+  "material": {
+    "name": "Original hair neutral clay",
+    "baseColorFactor": [
+      0.5799999833106995,
+      0.5699999928474426,
+      0.5299999713897705,
+      1.0
+    ],
+    "base_color_linear_rgba": [
+      0.5799999833106995,
+      0.5699999928474426,
+      0.5299999713897705,
+      1.0
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.8500000238418579,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "measured_nape_rear_z_blender": -0.366,
+    "lowest_rear_hair_z_blender": -0.37,
+    "clearance_min_calculated_m": 0.006,
+    "clearance_min_calculated_mm": 6.0,
+    "hair_vertices_inside_reference_head": 0,
+    "coverage_rays": {
+      "sample_count": 0,
+      "uncovered_count": "not rerun after Blender ceiling",
+      "method": "pending independent QA"
+    },
+    "source_bbox_blender_z": {
+      "min": -0.37,
+      "max": 0.04155857275168359
+    },
+    "preview_target_blender_z": -0.12,
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_afro_puff_split_bangs_01_front.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_afro_puff_split_bangs_01_side.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_afro_puff_split_bangs_01_back.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_girl_afro_puff_split_bangs_01_top.png"
+    ],
+    "build_note": "Manual standard-library GLB fallback after three Blender attempts; Blender preview re-render pending independent QA."
+  },
+  "asset_version": 2,
+  "legacy_ids": []
+}

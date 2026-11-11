@@ -1,0 +1,15 @@
+{
+  "default": "on",
+  "styles": [
+    {
+      "id": "on",
+      "name": "แสดง",
+      "asset_id": "on"
+    },
+    {
+      "id": "off",
+      "name": "ซ่อน",
+      "asset_id": "off"
+    }
+  ]
+}

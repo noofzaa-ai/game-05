@@ -1,0 +1,133 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_boy_textured_crop_01",
+  "display_name": "เด็กผู้ชาย · เท็กซ์เจอร์ครอป 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "textured_crop",
+  "geometry": {
+    "triangle_count": 442,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "TexturedCrop_Top_RC",
+      "TexturedCrop_Top_R",
+      "TexturedCrop_Top_LC",
+      "TexturedCrop_Top_L",
+      "TexturedCrop_Top_C",
+      "TexturedCrop_Top_Back",
+      "TexturedCrop_Side_R",
+      "TexturedCrop_Side_L",
+      "TexturedCrop_Fringe_RC",
+      "TexturedCrop_Fringe_R",
+      "TexturedCrop_Fringe_LC",
+      "TexturedCrop_Fringe_L",
+      "TexturedCrop_Fringe_C",
+      "TexturedCrop_Cap"
+    ]
+  },
+  "material": {
+    "name": "Textured Crop chestnut",
+    "base_color_linear_rgba": [
+      0.13,
+      0.035,
+      0.012,
+      1.0
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.86,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "TexturedCrop_Top_RC",
+        "TexturedCrop_Top_R",
+        "TexturedCrop_Top_LC",
+        "TexturedCrop_Top_L",
+        "TexturedCrop_Top_C",
+        "TexturedCrop_Top_Back",
+        "TexturedCrop_Side_R",
+        "TexturedCrop_Side_L",
+        "TexturedCrop_Fringe_RC",
+        "TexturedCrop_Fringe_R",
+        "TexturedCrop_Fringe_LC",
+        "TexturedCrop_Fringe_L",
+        "TexturedCrop_Fringe_C",
+        "TexturedCrop_Cap"
+      ],
+      "triangle_count": 442,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.164,
+          -0.168,
+          -0.19
+        ],
+        "max": [
+          0.164,
+          0.148,
+          0.184
+        ]
+      },
+      "bounding_box_glb_space": {
+        "min": [
+          -0.164,
+          -0.19,
+          -0.148
+        ],
+        "max": [
+          0.164,
+          0.184,
+          0.168
+        ]
+      },
+      "lowest_glb_y": -0.19,
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Textured Crop chestnut.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.86
+        }
+      ],
+      "external_images": []
+    },
+    "quality_checks": {
+      "cap_and_locks_closed": true,
+      "face_opening_kept_clear": true,
+      "short_side_profile": true,
+      "layered_angular_top": true,
+      "short_diagonal_fringe": true,
+      "lowest_glb_y_at_least_-0.44": true
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0,
+      "lighting": "reduced neutral key/fill/rim"
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_textured_crop_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_textured_crop_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_textured_crop_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_textured_crop_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

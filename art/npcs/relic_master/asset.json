@@ -1,0 +1,25 @@
+{
+  "converter": "Godot 4.7.2-stable (official) native FBXDocument",
+  "foot_y": 0,
+  "game_size": "(0.96328, 1.8, 0.629297)",
+  "height_m": 1.8,
+  "meshes": [
+    "mesh_rep_0_ori_repair_001"
+  ],
+  "source": "/Users/user/godot-project/assets/relic_master.fbx",
+  "source_size": "(0.843733, 1.576613, 0.551199)",
+  "triangles": 6232,
+  "source_bytes": 26737356,
+  "source_sha256": "a2c4d8401e478cd6aac872d230522af51d955419ec3fbc9070e4c3bf0ebdec6d",
+  "glb_bytes": 1911816,
+  "texture_budget": {
+    "color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  },
+  "materials": "Original embedded MR restored(G=roughness,B=metallic), normal1, muted metallic0.35",
+  "gpu_bytes_per_format": {
+    "s3tc": 1223548,
+    "etc2": 1223548
+  }
+}

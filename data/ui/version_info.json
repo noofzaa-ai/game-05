@@ -1,0 +1,124 @@
+{
+	"version": 1,
+	"_doc": "The player-facing development log shown on the title screen's Version Info screen (client/version_info.gd loads it, client/title_screen.gd shows it). One entry per milestone; the client sorts them newest first by `id` (dotted numbers), so the order in this file does not matter. The newest entry's id and date are also the small version number at the bottom of the title screen. Sections: new / changes / fixes / in_progress (any may be missing; at least one must have a line). `th` is an optional one-line Thai summary. Keep it player-facing: what is in the game, no file names or code words. ADD A VERSION: copy the top entry, raise `id`, set `date`, write the lines.",
+	"versions": [
+		{
+			"id": "0.4",
+			"name": "Title & Thai",
+			"date": "2026-10-13",
+			"th": "หน้าเริ่มเกมใหม่ บันทึกเวอร์ชัน รายชื่อทีมงาน และตัวอักษรภาษาไทยแสดงผลได้ทุกที่",
+			"sections": {
+				"new": [
+					"A title screen: Start, Version Info, Settings, Staff and Exit.",
+					"This Version Info screen: what changed in each version of the game.",
+					"Staff and credits: the team, the music samples and the fonts.",
+					"Thai text now shows everywhere, on the web too (Sarabun for text, Taviraj for titles).",
+					"Enemy health bars match their world: goblins get a rough bronze frame with a fang mark, knights a studded frame, the Chief a skull."
+				],
+				"changes": [
+					"Every word on screen uses the new fonts, including the English text.",
+					"The goblin knight fights one-handed and walks noticeably slower than other goblins, so you can see him coming. His overhead blow now takes a step in.",
+					"The boss fight comes in two waves: an archer and a mage join when the Goblin Chief drops below about a third of his health. The Chief has less health to make up for it."
+				],
+				"fixes": [],
+				"in_progress": [
+					"Settings (camera angle, sound volume, key bindings).",
+					"Touch controls for phones.",
+					"Saving your character and items between sessions (needs a server).",
+					"A new, larger open map and more skills for every weapon."
+				]
+			}
+		},
+		{
+			"id": "0.3",
+			"name": "Goblin Season",
+			"date": "2026-10-12",
+			"th": "ครอบครัวก็อบลินบุกทุกด่าน ทั้งนักธนู จอมเวท อัศวิน และหัวหน้าก็อบลิน พร้อมธีมหน้าจอ Night Brass",
+			"sections": {
+				"new": [
+					"Goblins: the first real monster, with its own look and its own way of moving. They jab fast, leap at you, step back after attacking and run away when badly hurt.",
+					"The goblin family: the Archer keeps its distance and shoots, the Mage throws bolts, curses the ground and blinks away, the Knight is big and armoured, and the Goblin Chief leads them as the boss.",
+					"Arrows, magic bolts and cursed circles on the ground that explode after a warning. Guard and dodge work against them.",
+					"Full attack sets (three light hits and a heavy blow) for every weapon: sword, hammer, spear, twin daggers and bare fists.",
+					"Night Brass look for every screen: dark glass panels, engraved brass lines and a set of brass line icons.",
+					"Item rarity shown as gems: one to four gems and a richer frame per tier, so it never relies on colour alone.",
+					"New health, stamina and ultimate bars, a boss bar, and a warning pulse when your health is low."
+				],
+				"changes": [
+					"Goblins replace all the older test monsters in every stage and on the journey.",
+					"Each weapon's attacks step and turn the body instead of only moving the arm.",
+					"The web version loads in several smaller parts and fetches only the textures your device can use."
+				],
+				"fixes": [
+					"The journey map could show an empty screen after picking Journey.",
+					"An error when a defeated monster disappeared after you left a stage.",
+					"Feet sliding and knees knocking together during sword attacks."
+				],
+				"in_progress": [
+					"Thai text on the web (it still shows as boxes in this version)."
+				]
+			}
+		},
+		{
+			"id": "0.2",
+			"name": "Wardrobe",
+			"date": "2026-10-09",
+			"th": "ชุด อาวุธ และของสวมใส่กว่า 150 ชิ้น พร้อมโบนัสเซ็ต หน้าสร้างตัวละคร และการแต่งหน้า ผม สีผิว",
+			"sections": {
+				"new": [
+					"More than 150 pieces of gear with their own models: swords, katanas, twin daggers, spears, hammers and full outfits.",
+					"Outfit sets: wearing more pieces of one set gives extra bonuses.",
+					"Character creator on your first start: pick a name, a face, a hairstyle, hair colour and skin tone, or roll a random look.",
+					"Look tab at the camp: change your face, 32 hairstyles, 9 hair colours and 8 skin tones at any time, for free.",
+					"Item pictures in the inventory, sword trails that follow the real blade, and a loot list on screen when something drops.",
+					"Practice Field: a stage with no monsters for trying out weapons and outfits.",
+					"Your character now stands at the campfire in their own gear and looks.",
+					"The camp keeps your bag safe on the journey, and you can leave a journey early (the bag of that trip is lost)."
+				],
+				"changes": [
+					"The hero is now a chibi character built for this game.",
+					"Ultimate skills strike forward in a wave instead of around you.",
+					"Softer character lighting, smooth ink outlines and anti-aliasing, so characters look much cleaner.",
+					"Calmer idle stances: each weapon is carried low at the side and sways with the body. Walking uses the run animation, slowed down.",
+					"Wristbands use one slot: 14 equipment slots in total.",
+					"Repairs cost less and monsters drop more gold and ore."
+				],
+				"fixes": [
+					"Skin showing through tight outfits when moving.",
+					"The sword pointing backwards at the moment of a hit.",
+					"Damage numbers stacking on top of each other."
+				],
+				"in_progress": []
+			}
+		},
+		{
+			"id": "0.1",
+			"name": "First Steps",
+			"date": "2026-10-05",
+			"th": "ต้นแบบแรกของเกม ต่อสู้ อุปกรณ์ แคมป์ และการเดินทาง 12 ด่าน",
+			"sections": {
+				"new": [
+					"The campfire at night, where every trip starts.",
+					"Fighting: light and heavy attacks, combos, guarding, dodging, running attacks, jump attacks, a special skill and an ultimate, all limited by stamina.",
+					"Five weapon styles, each with its own reach and speed: fists, sword, dagger, spear and hammer.",
+					"Fifteen buffs and debuffs, such as Rage, Haste, Burn, Poison, Slow and Stun.",
+					"Gear: equipment slots, four rarity tiers, extra stats, and enhancing up to +10 (with a chance to fail).",
+					"Loot, a bag for the trip and the camp stash: what you carry is lost if you fall, what you bring home is yours.",
+					"Wear and repairs, camp upgrades and rest points inside stages.",
+					"The 12-stage journey: choose combat, a harder challenge or treasure, rest at camps, face a boss at the end.",
+					"Ink-painted stages with a high camera that follows you in every direction.",
+					"Hit effects for every action, sound effects, ambience, and our own music for the campfire and the stages."
+				],
+				"changes": [
+					"Controls: left click light attack, right click heavy, F guard, C dodge, Shift run, Space jump, 1 and 2 skills, 6 to 9 camera.",
+					"Eight-direction facing and attacks, for the top-down camera.",
+					"Stamina costs lowered after the first play test."
+				],
+				"fixes": [
+					"Two fighters hitting each other at the same moment could stop the game."
+				],
+				"in_progress": []
+			}
+		}
+	]
+}

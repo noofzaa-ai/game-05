@@ -1,0 +1,10 @@
+{
+  "name": "zorx-nakama-name-bridge",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {"build": "tsc -p tsconfig.json", "test": "node test_runtime.cjs"},
+  "devDependencies": {
+    "nakama-runtime": "https://codeload.github.com/heroiclabs/nakama-common/tar.gz/refs/tags/v1.44.2",
+    "typescript": "5.9.3"
+  }
+}

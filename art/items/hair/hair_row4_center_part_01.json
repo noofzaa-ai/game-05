@@ -1,0 +1,55 @@
+{
+  "id": "hair_row4_center_part_01",
+  "name": "แสกกลางดำ · เคิร์ทเทน",
+  "display_name": "แสกกลางดำ · เคิร์ทเทน",
+  "asset_version": 1,
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "triangle_count": 488,
+  "triangle_budget": 500,
+  "thumbnail": "preview_hair_row4_center_part_01_threequarter.png",
+  "reference_row": 4,
+  "reference_column": 3,
+  "geometry": {
+    "triangle_count": 488,
+    "budget": 500,
+    "bbox_blender": {
+      "min": [
+        -0.19104966521263123,
+        -0.17721281945705414,
+        -0.32763826847076416
+      ],
+      "max": [
+        0.19388557970523834,
+        0.18502995371818542,
+        0.027130449190735817
+      ]
+    }
+  },
+  "construction": {
+    "reference_transform_unchanged": true,
+    "clearance_target_mm": 6.5,
+    "sample_min_clearance_mm": {
+      "Hair_Scalp": 6.839466746896505,
+      "Inner_sweep_L": 19.552448764443398,
+      "Outer_sweep_L": 8.090795949101448,
+      "Inner_sweep_R": 19.552448764443398,
+      "Outer_sweep_R": 9.055480360984802
+    }
+  },
+  "validation": {
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_center_part_01_front.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_center_part_01_threequarter.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_center_part_01_side.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_center_part_01_back.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_center_part_01_top.png"
+    ]
+  }
+}

@@ -1,0 +1,50 @@
+The following is a diff from the previous accessibility tree for Window: "zorx 🔊" with ~ and + representing changed and added elements, respectively. Removed elements are summarized by ID range.
+Removed element IDs: 291-292, 546-547
+~0 standard window zorx - Audio playing - High memory usage - 888 MB - Google Chrome - Wanwit (thairathonline.co.th), URL: zorxplay.daiyooo.com/, Secondary Actions: Raise
+~	1 container zorx - Audio playing - High memory usage - 888 MB - Google Chrome - Wanwit (thairathonline.co.th), URL: zorxplay.daiyooo.com/
++																676 container Repeated 8 times
++																	677 text 8
++																678 container Repeated 16 times
++																	679 text 16
++																			680 text TypeError: Failed to fetch
++																			681 text     at 
++																			682 text window.fetch
++																			683 text  (
++																			684 link (index):196:25, Help: https://zorxplay.daiyooo.com/:196:25
++																				685 text (index):196:25
++																			686 text )
++																			687 text     at 
++																			688 text Object.create
++																			689 text  (
++																			690 link index.js?v=48cbbab5c2f2:1:187617, Help: https://zorxplay.daiyooo.com/index.js?v=48cbbab5c2f2:1:187617
++																				691 text index.js?v=48cbbab5c2f2:1:187617
++																			692 text )
++																			693 text     at 
++																			694 text _godot_js_fetch_create
++																			695 text  (
++																			696 link index.js?v=48cbbab5c2f2:1:188630, Help: https://zorxplay.daiyooo.com/index.js?v=48cbbab5c2f2:1:188630
++																				697 text index.js?v=48cbbab5c2f2:1:188630
++																			698 text )
++																			699 text     at 
++																			700 link 096bca0a:0x1e291b7, Help: wasm://wasm/096bca0a:0x1e291b7
++																				701 text 096bca0a:0x1e291b7
++																			702 text     at 
++																			703 link 096bca0a:0xf5fe7e, Help: wasm://wasm/096bca0a:0xf5fe7e
++																				704 text 096bca0a:0xf5fe7e
++																			705 text     at 
++																			706 link 096bca0a:0x1f172e7, Help: wasm://wasm/096bca0a:0x1f172e7
++																				707 text 096bca0a:0x1f172e7
++																			708 text     at 
++																			709 link 096bca0a:0x70032, Help: wasm://wasm/096bca0a:0x70032
++																				710 text 096bca0a:0x70032
++																			711 text     at 
++																			712 link 096bca0a:0xf37ef3, Help: wasm://wasm/096bca0a:0xf37ef3
++																				713 text 096bca0a:0xf37ef3
++																			714 text     at 
++																			715 link 096bca0a:0xf38833, Help: wasm://wasm/096bca0a:0xf38833
++																				716 text 096bca0a:0xf38833
++																			717 text     at 
++																			718 link 096bca0a:0x1efa750, Help: wasm://wasm/096bca0a:0x1efa750
++																				719 text 096bca0a:0x1efa750
+~					198 tab (selected, settable, boolean) zorx - Audio playing - High memory usage - 888 MB, Value: on
+The focused UI element is 17 HTML content DevTools, URL: devtools://devtools/bundled/devtools_app.html?remoteBase=https://chrome-devtools-frontend.appspot.com/serve_file/@0e66b94549a8bd85f03fbdf189b752d6e7b63c32/&targetType=tab&can_dock=true&panel=console

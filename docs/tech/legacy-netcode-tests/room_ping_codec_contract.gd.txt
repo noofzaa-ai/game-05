@@ -1,0 +1,39 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+class Socket:
+ extends RefCounted
+ var outbound_buffer_size=524288
+ var close_code=0
+ var reason=""
+ var packets:Array=[]
+ func get_ready_state()->int:return WebSocketPeer.STATE_OPEN
+ func get_current_outbound_buffered_amount()->int:return 0
+ func put_packet(bytes:PackedByteArray)->int:packets.append(bytes);return OK
+ func close(code:int=1000,text:String="")->void:close_code=code;reason=text
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var manager=preload("res://server/rooms/manager.gd").new()
+ var source=preload("res://data/perf/scenario.gd").new()
+ assert(manager.create("pingtest1234",123,[{"id":1,"profile":source.profile.to_dict()}]).ok)
+ var transport=preload("res://server/rooms/transport.gd").new(self,manager)
+ var socket=Socket.new()
+ var peer={"room":"pingtest1234","slot":1,"ws":socket,"in_seq":0,"out_seq":0}
+ transport.peers[1]=peer
+ transport.bindings["pingtest1234"]={"diagnostic":true}
+ for n in range(1,121):
+  transport._receive(1,Wire.packet(Wire.PING,n,{"nonce":n*1000}),n*1000)
+  if socket.close_code!=0:
+   print("PING FAILURE ",socket.close_code," ",socket.reason);quit(2);return
+  assert(socket.packets.size()==n)
+  var reply=Wire.parse(socket.packets.back())
+  var value=Wire.decode(reply.body).value
+  assert(reply.kind==Wire.PONG and value.nonce==n*1000 and value.echo_stage=="transport")
+  assert(peer.diagnostic_echo.nonce==n*1000)
+ # The normal production response keeps its original shape.
+ transport.bindings["pingtest1234"]["diagnostic"]=false
+ transport._receive(1,Wire.packet(Wire.PING,121,{"nonce":121000}),121000)
+ var normal=Wire.decode(Wire.parse(socket.packets.back()).body).value
+ assert(not normal.has("echo_stage") and normal.has("input_ack"))
+ assert(socket.close_code==0)
+ print("ROOM PING CODEC PASS:120 diagnostic PINGs through real transport/codec, nonce/PONG/queued echo intact, no1009;normal PONG unchanged")
+ quit()

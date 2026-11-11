@@ -1,0 +1,135 @@
+{
+  "id": "blade_earth_split_ultimate",
+  "name": "อัลติ · ดาบผ่าธรณี",
+  "weapon_type": "blade",
+  "slot": "ultimate",
+  "rig_profile": "chibi-studio-57",
+  "animation": "BladeEarthSplitUltimate",
+  "duration_s": 3.4,
+  "motion": "motion.glb",
+  "vfx": "vfx.glb",
+  "asset_version": 3,
+  "vfx_triangles": 4400,
+  "vfx_triangle_budget": 5000,
+  "in_place": true,
+  "playback": "once",
+  "attack": {
+    "schema_version": 1,
+    "slot": "ultimate",
+    "direction": "forward",
+    "asset_forward_axis": [
+      0,
+      0,
+      1
+    ],
+    "up_axis": [
+      0,
+      1,
+      0
+    ],
+    "lock_direction_on_cast": true,
+    "range_body_lengths": 2.0,
+    "body_length_definition": "standing_body_height_excluding_hair_equipment",
+    "caster_motion": "in_place",
+    "delivery": "traveling_wave",
+    "hit_shape": "forward_box",
+    "near_body_lengths": 0.05,
+    "width_body_lengths": 1.1,
+    "height_body_lengths": 1.0,
+    "max_hits_per_target_per_cast": 1,
+    "vfx_space": "frozen_cast_origin",
+    "vfx_motion": "authored_in_glb",
+    "damage_owner": "game",
+    "reference_body_height_m": 1.506733275949955,
+    "range_m": 3.01346655189991
+  },
+  "flight": {
+    "release_time_s": 1.14,
+    "arrival_time_s": 1.7,
+    "center_start_body_lengths": 0.18,
+    "center_end_body_lengths": 1.8,
+    "front_extent_body_lengths": 0.2,
+    "ease": "smoothstep"
+  },
+  "hand_usage": "two_handed",
+  "weapon_pose": {
+    "reference_asset": "weapon_blade_03",
+    "grip_secondary_local_m": [
+      0.0,
+      -0.06737596541643143,
+      0.0
+    ],
+    "grip_radius_m": 0.01924,
+    "blade_base_from_grip_m": 0.09332147240638733,
+    "blade_tip_from_grip_m": 0.5322457551956177,
+    "buried_blade_fraction": 0.5,
+    "grip_height_above_ground_m": 0.3127836138010025,
+    "reference_ground_height_m": 0.016266725957393646,
+    "blade_point_forward_m": 0.24
+  },
+  "visual": {
+    "blade_aura": "earth",
+    "trail_color": "#b69b69",
+    "light_color": "#c6ac7c",
+    "trail_end_time_s": 1.24,
+    "aura_end_time_s": 1.28,
+    "light_end_time_s": 1.97,
+    "reference_ground_height_m": 0.016266725957393646,
+    "density_profile": "dense_directional_mist_v1",
+    "bloom_strength": 0.08,
+    "vfx_fade_end_time_s": 3.1,
+    "mist_count": 140,
+    "flying_flecks": 320,
+    "secondary_ribbons": 28,
+    "fine_spray_or_chips": 32,
+    "light_intensity": 0,
+    "mist_palette": "pale_soil"
+  },
+  "markers": [
+    "grip_main",
+    "grip_secondary",
+    "trail_start",
+    "trail_end",
+    "effect_point"
+  ],
+  "timeline": [
+    {
+      "time_s": 0,
+      "label": "ยกดาบสองมือที่อก ปลายชี้ลง"
+    },
+    {
+      "time_s": 0.58,
+      "label": "กำสองมือเตรียมปัก"
+    },
+    {
+      "time_s": 1.14,
+      "label": "ย่อปักดาบจมครึ่งใบ รอยแยกเริ่มลาม"
+    },
+    {
+      "time_s": 1.7,
+      "label": "รอยแยกถึง 2 ช่วงตัว"
+    },
+    {
+      "time_s": 1.86,
+      "label": "ถอนดาบและกลับยืน"
+    }
+  ],
+  "gameplay_events": [
+    {
+      "time_s": 1.43,
+      "name": "earth_fissure_hit",
+      "range_factor": 0.5
+    },
+    {
+      "time_s": 1.7,
+      "name": "earth_rupture",
+      "range_factor": 1.0
+    }
+  ],
+  "control": {
+    "locomotion_resume_time_s": 1.14,
+    "blend_out_s": 0.12,
+    "vfx_clock": "independent_cast",
+    "release_actor_heading": true
+  }
+}

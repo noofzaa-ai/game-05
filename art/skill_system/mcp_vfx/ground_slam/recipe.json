@@ -1,0 +1,172 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "SkillLab ground_slam VFX v1",
+  "duration": 1.7,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.35,
+    "exposure": 1.1
+  },
+  "layers": [
+    {
+      "id": "89e02810-9815-45d1-b293-4b4e7a2d45b2",
+      "type": "wave",
+      "name": "รอยแผ่นดินแยก",
+      "enabled": false,
+      "seed": 1543,
+      "color": "#b49b6e",
+      "secondary": "#ffe6af",
+      "style": "fissure",
+      "width": 0.035,
+      "motion": "fracture",
+      "start": 0.15657894736842104,
+      "duration": 1.3421052631578947,
+      "size": 1,
+      "spread": 4,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 0.95,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "1079d4bc-baf0-4ff9-97fe-daceaae6ef2e",
+      "type": "debris",
+      "name": "ก้อนดินยกตามรอยแยก",
+      "enabled": true,
+      "seed": 1543,
+      "color": "#b49b6e",
+      "secondary": "#ffe6af",
+      "style": "rock",
+      "motion": "fracture",
+      "start": 0.15657894736842104,
+      "duration": 1.0736842105263158,
+      "size": 0.15,
+      "spread": 4,
+      "rise": 1.2,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 16,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "88d7c56d-f022-4a2a-ba08-cd6a55d6e3f3",
+      "type": "debris",
+      "name": "เศษหินแตกกระจาย",
+      "enabled": true,
+      "seed": 987,
+      "color": "#b49b6e",
+      "secondary": "#ffe6af",
+      "style": "rock",
+      "motion": "burst",
+      "start": 0.2236842105263158,
+      "duration": 0.9842105263157895,
+      "size": 0.09,
+      "spread": 4.5,
+      "rise": 2.7,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 65,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "663fd346-5654-4083-8b6a-3d23071c0181",
+      "type": "smoke",
+      "name": "ฝุ่นพุ่งตามรอยแยก",
+      "enabled": true,
+      "seed": 1543,
+      "color": "#b49b6e",
+      "secondary": "#ffe6af",
+      "style": "dust",
+      "motion": "fracture",
+      "start": 0.15657894736842104,
+      "duration": 1.2526315789473683,
+      "size": 0.6,
+      "spread": 4,
+      "rise": 0.9,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 0.23,
+      "scale": 1,
+      "count": 24,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "304b5717-bd59-4f4c-85da-f34c267920fe",
+      "type": "sparks",
+      "name": "ประกายใต้รอยแตก",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#b49b6e",
+      "secondary": "#ffe6af",
+      "style": "glint",
+      "motion": "burst",
+      "start": 0.20131578947368423,
+      "duration": 0.6710526315789473,
+      "size": 0.025,
+      "spread": 3,
+      "rise": 1,
+      "speed": 1.2,
+      "energy": 0.7,
+      "opacity": 1,
+      "scale": 1,
+      "count": 50,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

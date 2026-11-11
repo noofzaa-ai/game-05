@@ -1,0 +1,107 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_girl_long_layers_01",
+  "display_name": "เด็กผู้หญิง · ซูเปอร์โมเดลเลเยอร์ 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "supermodel blowout long layers",
+  "geometry": {
+    "triangle_count": 792,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "Layers_Scalp_Collar",
+      "Layers_Face_Frame_R_2",
+      "Layers_Face_Frame_R_1",
+      "Layers_Face_Frame_L_2",
+      "Layers_Face_Frame_L_1",
+      "Layers_Crown_Sweep_R",
+      "Layers_Crown_Sweep_L",
+      "Layers_Crown_Cap",
+      "Layers_Back_Upper",
+      "Layers_Back_Mid",
+      "Layers_Back_Lower"
+    ]
+  },
+  "material": {
+    "name": "Long layers champagne",
+    "base_color_linear_rgba": [
+      0.22,
+      0.055,
+      0.012,
+      1
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.82,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "Layers_Scalp_Collar",
+        "Layers_Face_Frame_R_2",
+        "Layers_Face_Frame_R_1",
+        "Layers_Face_Frame_L_2",
+        "Layers_Face_Frame_L_1",
+        "Layers_Crown_Sweep_R",
+        "Layers_Crown_Sweep_L",
+        "Layers_Crown_Cap",
+        "Layers_Back_Upper",
+        "Layers_Back_Mid",
+        "Layers_Back_Lower"
+      ],
+      "triangle_count": 792,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.173,
+          -0.151,
+          -0.382
+        ],
+        "max": [
+          0.173,
+          0.191,
+          0.25
+        ]
+      },
+      "lowest_y_contract_note": "Blender re-import is Z-up; exported GLB Y-up vertical minimum is recorded from source Z minimum.",
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Long layers champagne.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.82
+        }
+      ],
+      "external_images": []
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0,
+      "lighting": "reduced neutral key/fill/rim"
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_long_layers_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_long_layers_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_long_layers_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_long_layers_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

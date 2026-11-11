@@ -1,0 +1,3423 @@
+{
+  "scope": "Static source/asset/code inventory only; not visual parity acceptance.",
+  "source_url": "http://127.0.0.1:8872/art/characters/mmorpg-reference-base/red_jacket/index.html",
+  "selects": {
+    "outfit-style": [
+      {
+        "value": "red",
+        "label": "แจ็กเก็ตแดง + ยีนส์"
+      },
+      {
+        "value": "purple",
+        "label": "เสื้อกระต่าย + กระโปรงม่วง"
+      },
+      {
+        "value": "black",
+        "label": "แจ็กเก็ตดำ + กางเกงลายทาง"
+      },
+      {
+        "value": "mono",
+        "label": "ชุดผู้ชายขาวดำ · เสื้อ Z"
+      },
+      {
+        "value": "fem",
+        "label": "ชุดผู้หญิงลาเวนเดอร์ · ดาว + ตาราง"
+      },
+      {
+        "value": "black_zip",
+        "label": "ชุดดำ · แจ็กเก็ตซิป"
+      },
+      {
+        "value": "black_bow",
+        "label": "ชุดดำ · เกาะอกโบ"
+      },
+      {
+        "value": "white_ribbon",
+        "label": "ชุดขาวดำ · เสื้อผูกโบ"
+      },
+      {
+        "value": "white_corset",
+        "label": "ชุดขาวดำ · คอร์เซ็ตกระโปรง"
+      },
+      {
+        "value": "cocoa_knit",
+        "label": "ชุดถักน้ำตาล · กระโปรงพลีต"
+      },
+      {
+        "value": "white_tee_cargo",
+        "label": "เสื้อยืดขาวพิมพ์ลาย · ขาสั้นคาร์โก้"
+      },
+      {
+        "value": "white_tee_shorts",
+        "label": "เสื้อยืดขาวเรียบ · ขาสั้นพับขา"
+      },
+      {
+        "value": "black_khaki",
+        "label": "เชิ้ตดำ · กางเกงกากี"
+      },
+      {
+        "value": "leather_hoodie",
+        "label": "หนังดำ + ฮู้ดเทา · ยีนส์ฟอก"
+      },
+      {
+        "value": "bat_club",
+        "label": "Bat Club · ฮู้ดดำม่วง"
+      },
+      {
+        "value": "pumpkin_night",
+        "label": "Pumpkin Night · เอี๊ยมฟักทอง"
+      },
+      {
+        "value": "little_ghost",
+        "label": "Little Ghost · เคปผีน้อย"
+      },
+      {
+        "value": "moon_witch",
+        "label": "Moon Witch · แม่มดจันทร์"
+      },
+      {
+        "value": "bat_club_male",
+        "label": "Bat Club ผู้ชาย"
+      },
+      {
+        "value": "pumpkin_night_male",
+        "label": "Pumpkin Night ผู้ชาย"
+      },
+      {
+        "value": "little_ghost_male",
+        "label": "Little Ghost ผู้ชาย"
+      },
+      {
+        "value": "moon_witch_male",
+        "label": "Moon Wizard ผู้ชาย"
+      }
+    ],
+    "hair-style": [
+      {
+        "value": "red",
+        "label": "หน้าม้ายาว + หางม้าดำ"
+      },
+      {
+        "value": "purple",
+        "label": "บ๊อบชมพูอมม่วง"
+      },
+      {
+        "value": "black",
+        "label": "ผมยาวลอนชมพูม่วง"
+      },
+      {
+        "value": "vintage_swept_quiff",
+        "label": "วินเทจยกผม · ปัดเฉียงเป็นช่อ"
+      },
+      {
+        "value": "vintage_pompadour",
+        "label": "วินเทจสั้น · ปอมปาดัวร์เฟด"
+      },
+      {
+        "value": "mens_short",
+        "label": "ผมผู้ชายแสกปัด · ท้ายทอยสั้น"
+      },
+      {
+        "value": "two_block",
+        "label": "ทูบล็อก · ท้ายทอยยาว"
+      },
+      {
+        "value": "short_bob",
+        "label": "บ๊อบสั้นน้ำตาล · แสกปัดข้าง"
+      },
+      {
+        "value": "swept_highlight",
+        "label": "ผมปัดข้างน้ำตาลไฮไลต์ทอง"
+      },
+      {
+        "value": "medium_layers",
+        "label": "ผมน้ำตาลซอยเลเยอร์ · หน้าม้าโค้ง"
+      }
+    ],
+    "hat-style": [
+      {
+        "value": "none",
+        "label": "ไม่ใส่หมวก"
+      },
+      {
+        "value": "black",
+        "label": "หมวกหนังดำ"
+      },
+      {
+        "value": "cat",
+        "label": "หูแมว"
+      },
+      {
+        "value": "moon_witch",
+        "label": "หมวกแม่มด · จันทร์เสี้ยว"
+      },
+      {
+        "value": "pumpkin_night",
+        "label": "หมวกฟักทอง"
+      },
+      {
+        "value": "little_ghost",
+        "label": "หมวกผีน้อย"
+      },
+      {
+        "value": "bat_club",
+        "label": "ที่คาดหูค้างคาว"
+      },
+      {
+        "value": "fantasy_01",
+        "label": "01 · แม่มดส้มจันทร์เสี้ยว"
+      },
+      {
+        "value": "fantasy_02",
+        "label": "02 · ทรงสูงงาช้างขนนก"
+      },
+      {
+        "value": "fantasy_03",
+        "label": "03 · นักสำรวจเข็มทิศ"
+      },
+      {
+        "value": "fantasy_04",
+        "label": "04 · เบเรต์ฟักทอง"
+      },
+      {
+        "value": "fantasy_05",
+        "label": "05 · พ่อมดน้ำเงินดาวทอง"
+      },
+      {
+        "value": "fantasy_06",
+        "label": "06 · โบว์เลอร์แดงค้างคาว"
+      },
+      {
+        "value": "fantasy_07",
+        "label": "07 · หมวกแหลมเขียวใบไม้"
+      },
+      {
+        "value": "fantasy_08",
+        "label": "08 · บักเก็ตม่วงผีน้อย"
+      },
+      {
+        "value": "fantasy_09",
+        "label": "09 · โจรสลัดสามมุม"
+      },
+      {
+        "value": "fantasy_10",
+        "label": "10 · ปีกเหลืองดอกไม้"
+      },
+      {
+        "value": "fantasy_11",
+        "label": "11 · นิวส์บอยดำจันทร์เสี้ยว"
+      },
+      {
+        "value": "fantasy_12",
+        "label": "12 · ทรงสูงน้ำเงินอัญมณี"
+      }
+    ],
+    "back-style": [
+      {
+        "value": "none",
+        "label": "ไม่ใส่อุปกรณ์หลัง"
+      },
+      {
+        "value": "angel_wings",
+        "label": "ปีกขนนกขาว · กระพือเบาๆ"
+      },
+      {
+        "value": "panda_backpack",
+        "label": "เป้แพนด้าขาวดำ · สองสาย"
+      },
+      {
+        "value": "teddy_backpack",
+        "label": "เป้ตุ๊กตาหมี · สองสาย"
+      },
+      {
+        "value": "cocoa_knit",
+        "label": "กระเป๋าหมีน้ำตาล"
+      },
+      {
+        "value": "bat_club",
+        "label": "กระเป๋าค้างคาวดำ"
+      },
+      {
+        "value": "pumpkin_night",
+        "label": "กระเป๋าฟักทอง"
+      },
+      {
+        "value": "little_ghost",
+        "label": "กระเป๋าผีน้อย"
+      },
+      {
+        "value": "moon_witch",
+        "label": "กระเป๋าแม่มดม่วง"
+      }
+    ],
+    "eye-style": [
+      {
+        "value": "original",
+        "label": "ทรงเดิม"
+      },
+      {
+        "value": "01",
+        "label": "01 · ตาเปิด คม"
+      },
+      {
+        "value": "02",
+        "label": "02 · ตาปรือ"
+      },
+      {
+        "value": "03",
+        "label": "03 · ตาโค้งนุ่ม"
+      },
+      {
+        "value": "04",
+        "label": "04 · ตาเฉียง"
+      },
+      {
+        "value": "05",
+        "label": "05 · ตากลมหวาน"
+      },
+      {
+        "value": "06",
+        "label": "06 · ตากลมโต"
+      },
+      {
+        "value": "07",
+        "label": "07 · ตาแมว รูม่านตาตั้ง"
+      },
+      {
+        "value": "08",
+        "label": "08 · ตาคมดุ"
+      }
+    ],
+    "blink-mode": [
+      {
+        "value": "auto",
+        "label": "อัตโนมัติ · สุ่มจังหวะ"
+      },
+      {
+        "value": "open",
+        "label": "เปิดตาค้าง"
+      },
+      {
+        "value": "closed",
+        "label": "หลับตาค้าง"
+      }
+    ],
+    "speed": [
+      {
+        "value": "1",
+        "label": "ปกติ"
+      },
+      {
+        "value": "0.5",
+        "label": "ช้า ½ เท่า"
+      },
+      {
+        "value": "0.25",
+        "label": "ช้า ¼ เท่า"
+      }
+    ]
+  },
+  "controls": [
+    {
+      "tag": "input",
+      "id": "skin-color",
+      "type": "color",
+      "value": "#ddbfae",
+      "aria-label": "เลือกสีผิว"
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-skin": "#f0d7c2",
+      "aria-label": "สีผิวขาว"
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-skin": "#ddbfae",
+      "aria-label": "สีผิวธรรมชาติ"
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-skin": "#b98b6d",
+      "aria-label": "สีผิวแทน"
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-skin": "#80583e",
+      "aria-label": "สีผิวเข้ม"
+    },
+    {
+      "tag": "input",
+      "id": "eye-color",
+      "type": "color",
+      "value": "#21b7cf",
+      "aria-label": "เลือกสีตา",
+      "disabled": null
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-eye-color": "#21b7cf"
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-eye-color": "#55a95d"
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-eye-color": "#9761c9"
+    },
+    {
+      "tag": "button",
+      "type": "button",
+      "data-eye-color": "#a46636"
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "data-wear": "shirt",
+      "checked": null
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "data-wear": "pants",
+      "checked": null
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "data-wear": "shoes",
+      "checked": null
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "data-wear": "head",
+      "checked": null
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "data-wear": "hair",
+      "checked": null
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "data-wear": "mask",
+      "checked": null
+    },
+    {
+      "tag": "input",
+      "type": "checkbox",
+      "id": "bones"
+    },
+    {
+      "tag": "input",
+      "id": "timeline",
+      "type": "range",
+      "min": "0",
+      "max": "1",
+      "step": "0.001",
+      "value": "0"
+    },
+    {
+      "tag": "button",
+      "data-phase": "0"
+    },
+    {
+      "tag": "button",
+      "data-phase": ".25"
+    },
+    {
+      "tag": "button",
+      "data-phase": ".5"
+    },
+    {
+      "tag": "button",
+      "data-phase": ".75"
+    },
+    {
+      "tag": "button",
+      "data-view": "game"
+    },
+    {
+      "tag": "button",
+      "data-view": "front"
+    },
+    {
+      "tag": "button",
+      "data-view": "face"
+    },
+    {
+      "tag": "button",
+      "data-view": "side"
+    },
+    {
+      "tag": "button",
+      "data-view": "back"
+    },
+    {
+      "tag": "button",
+      "data-view": "top"
+    },
+    {
+      "tag": "button",
+      "data-view": "hairback"
+    },
+    {
+      "tag": "button",
+      "data-view": "hairside"
+    }
+  ],
+  "source_files": [
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/index.html",
+      "sha256": "d67cfceb1f2e10435f629c13c0a29b37f42a8f09216004e8d6401812e1bd6654"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/game_bridge.mjs",
+      "sha256": "167fa0aeba32148b24b5265c93471c25657ba14149ec3aa612e72786c525788d"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/hair_hat_seams.mjs",
+      "sha256": "2bbab6d143abe13a0c60811179b1fc20606d1d24df7c5c9f0bef03ff934eb705"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/blink_controller.mjs",
+      "sha256": "5c9985221933fb3cf0d08abb46b61ffc878c303a68bbe2af3431f62e5eebd21d"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/wing_motion.mjs",
+      "sha256": "87eb8a1c5366548b2144b6cdf362f91331e3729df5494d6338157b1cbcbb7e6c"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/hat_fitting.mjs",
+      "sha256": "33722333e1808b7f8f56da29cfd163782312f5674db3110ea34188aaf447d2c5"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/back_equipment_fit.mjs",
+      "sha256": "ee4e63f70ff1d10ae9642c4b25a889b5a61675d1f08c1ccdbf4864fa4478e31c"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/outfit_report.json",
+      "sha256": "95fc155730cf7ea4576b3ed6e25d446d74deb54c20bb95ca58ab56587aaea2f4"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/hair_validation.json",
+      "sha256": "b1633b9ccb42fb9a9a1adc37875c576c7dc295fc2d8e35805ef2f3c73041b86b"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/hat_cavities.json",
+      "sha256": "b3b7e629e0f23325f2053853185b9737e12cd0176f38969e05e5e18fdb02e360"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/face_subdivision.json",
+      "sha256": "ea86f8aa04cbe5e4923cdf2b0a423e380c8749abad14d26b6d3292a5a6e62371"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/hat_surface_validation.json",
+      "sha256": "85189e5dcc741a8ab1414f75851406529c9a4c70553cab5c8ce506f84a5d890e"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/hat_fit_profiles.json",
+      "sha256": "d63408926599be30212730f41b535aa6628c555bcca832fdd192485e3b4dda69"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/validation.json",
+      "sha256": "174adf7d30545c8bd31244c5f476e1f15c1db83b1ba818b90ce8ef29d4a8941a"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/eye_styles.js",
+      "sha256": "0fbd8d9832012084d451b7c9fc5b4728ebb6403f67d0a72f7a2c55a5d300d1c8"
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/purple_plaid/viewer_camera.js",
+      "sha256": "465d8824cc9a99f7c496aef51e326faa337d977b78198752e5d9f3c7f4a665cf"
+    }
+  ],
+  "original_assets": [
+    {
+      "path": "art/characters/mmorpg-reference-base/reference_base.glb",
+      "bytes": 130808,
+      "sha256": "8cf40bb45325e340ff47b150df1a8f34bf44b8b17496327b545d943a89a17a66",
+      "skins": [],
+      "mesh_groups": {
+        "body": 16
+      },
+      "morphs": [
+        {
+          "mesh": "Base_Body",
+          "targets": 1
+        }
+      ],
+      "animations": []
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/little_ghost/reference_character_little_ghost.glb",
+      "bytes": 205292,
+      "sha256": "4d571b711f13a4d6a1adef498c94d26b71d0f4282225b045cb407521d3dabbcd",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 10,
+        "shirt": 14,
+        "shoes": 10,
+        "hat": 6
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/white_tee_cargo/reference_character_white_tee_cargo.glb",
+      "bytes": 208248,
+      "sha256": "70165376fe63d0f0408cf772fb836d2901297e48e714fae01236e6ce7ab0284a",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 9,
+        "shirt": 7,
+        "shoes": 24
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/medium_layers_hair/reference_medium_layers_hair.glb",
+      "bytes": 648276,
+      "sha256": "360bc8b4d7a479296574133a8d7e136e3def9d8da9a983608a8e268753ac847a",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "hair": 45
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/white_tee_shorts/reference_character_white_tee_shorts.glb",
+      "bytes": 199160,
+      "sha256": "b8ee4d07df46b40f60cee7f714f323fe2e17757cb044b3029a81c58c1b3a737b",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 7,
+        "shirt": 8,
+        "shoes": 24
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/red_jacket/reference_character_red_jacket.glb",
+      "bytes": 731808,
+      "sha256": "c05799af403a7cb20c00479816f462b105ff8255fb5c4bd3962b807f0b175024",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "body": 3,
+        "shoes": 20,
+        "head": 4,
+        "pants": 4,
+        "hair": 20,
+        "shirt": 10,
+        "face": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/purple_plaid/wardrobe_body.glb",
+      "bytes": 127380,
+      "sha256": "6813fad66b6bb6acb38ef9eedc8b0df93ae0dfce82e21be2185daf256865b0fa",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "body": 1
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/purple_plaid/reference_character_purple_plaid.glb",
+      "bytes": 868892,
+      "sha256": "e53dc2afb76b8310a755c76909fe44b082ab6005a191903e1106c353eb757706",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "body": 10,
+        "pants": 10,
+        "head": 5,
+        "shoes": 12,
+        "shirt": 7,
+        "hair": 29
+      },
+      "morphs": [
+        {
+          "mesh": "Ten pleat purple plaid skirt",
+          "targets": 20
+        }
+      ],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 244
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/mens_monochrome/reference_character_mens_monochrome.glb",
+      "bytes": 165656,
+      "sha256": "32e1c8f71de60e37b350fd5cfe49220b214e6c67862f0bb075b12e150fb608f5",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 3,
+        "shirt": 10,
+        "shoes": 12
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/vintage_pompadour_hair/reference_vintage_pompadour_hair.glb",
+      "bytes": 619264,
+      "sha256": "49fd3cabd296c410bac16fc844588e4f01321252887a1ed9d8f6819fbde5a25a",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "hair": 3
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/moon_witch/reference_character_moon_witch.glb",
+      "bytes": 209480,
+      "sha256": "a66d814afb16a9ee73c29acd90a649b5e633b4479a0db1c1d31070965e59ef15",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 8,
+        "hat": 5,
+        "shirt": 17,
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/white_ribbon/reference_character_white_ribbon.glb",
+      "bytes": 162604,
+      "sha256": "8ed03fffad6db76500bce9a2e921ba27fea60c7878bb1ceb582213cdb915b877",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shoes": 6,
+        "shirt": 11,
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/fantasy_hats/fantasy_hats.glb",
+      "bytes": 311988,
+      "sha256": "8ce37b8f17b368bd9fa516c0acab26990d595e4effb875bcc86a69b4e50c14d1",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "hat": 72
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/bat_club/reference_character_bat_club.glb",
+      "bytes": 202112,
+      "sha256": "e245bcafed95fb0cabea283b9169eaaff9d1ec7e06e4332a1a2ab736e0a3e45a",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 11,
+        "shoes": 10,
+        "shirt": 8,
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/short_chestnut_bob_hair/reference_short_chestnut_bob_hair.glb",
+      "bytes": 727596,
+      "sha256": "b29d39286fe5e7b75fc7ae0b18e8a564be117808d672ba3c71ef271259012969",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "hair": 39
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/mens_swept_highlight_hair/reference_mens_swept_highlight_hair.glb",
+      "bytes": 780544,
+      "sha256": "9d93ad90e56a875e6d44d7d0bac046819cf3a7a833024908ba2dc9620dbc62d2",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "hair": 41
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/womens_lavender/reference_character_womens_lavender.glb",
+      "bytes": 184876,
+      "sha256": "199b665f10054a263e7872c0cbe75f7b7bf3e25833af695581b3ffd3ec28881b",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shirt": 12,
+        "pants": 8,
+        "shoes": 6
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/bat_club_male/reference_character_bat_club_male.glb",
+      "bytes": 192860,
+      "sha256": "045a827a2f4e4981187af562331518bf54aadc594d77ce91b616aafc10b1b12a",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shirt": 10,
+        "shoes": 10,
+        "pants": 13,
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/pumpkin_night.glb",
+      "bytes": 227412,
+      "sha256": "410e556ccd18cf94de95afa2cdd2481a76cc385e584acaa7ab60b1606f39f544",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "accessory": 4
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/angel_wings.glb",
+      "bytes": 156772,
+      "sha256": "50130b7b6e8eaf7f226f8a0280758e6265e027401384d0249dfe6c0b76be90f5",
+      "skins": [
+        85
+      ],
+      "mesh_groups": {
+        "accessory": 2
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "WingsIdle",
+          "channels": 4
+        },
+        {
+          "name": "WingsRun",
+          "channels": 4
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/little_ghost.glb",
+      "bytes": 199456,
+      "sha256": "de3f7431c51fbf8b15a293126b3e00a6cd4b4f7708f3bde614705ee8c0e4ec6f",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "accessory": 4
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/panda_backpack.glb",
+      "bytes": 1371192,
+      "sha256": "50dc32d8adc81b4fe46685f3acc6960b9a88015ffa232152253272a3f745093e",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "accessory": 25
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/teddy_backpack.glb",
+      "bytes": 274912,
+      "sha256": "58fca654e11c665bcee2332035851fd2e3ebe96d61496d549bdff40dbe414dbe",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "accessory": 25
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/bat_club.glb",
+      "bytes": 197752,
+      "sha256": "b09cab4c3b48f53cb9f3703735e1f8f3684f63ee998e0dcde3fcaaefe548e6fb",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "accessory": 6
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/moon_witch.glb",
+      "bytes": 203672,
+      "sha256": "872610e94f39e1871f34935cff5afd5e9ea8af56be451f841ab6cb9684e00bc5",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "accessory": 4
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/cocoa_knit.glb",
+      "bytes": 195516,
+      "sha256": "e025210c76bb5bbbebd7cac80f10f46f2095bfd39821ee98289f56fe676ffe85",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "accessory": 9
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/teddy_backpack/fitted_outfits/moon_witch_male.glb",
+      "bytes": 189972,
+      "sha256": "6d8d0bc3c61fd40bc05f24cfc93c27f466b5dd87a7dd30bc4033c42043358696",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "hat": 5,
+        "shoes": 10,
+        "pants": 9,
+        "shirt": 10
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/teddy_backpack/fitted_outfits/little_ghost.glb",
+      "bytes": 194812,
+      "sha256": "562d0de96e1a4e5e8e6bdd542f6440d3e0621020a0c43e9c986bc567ed0d0ca4",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 10,
+        "shirt": 14,
+        "shoes": 10,
+        "hat": 6
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/back_accessories/teddy_backpack/fitted_outfits/moon_witch.glb",
+      "bytes": 199008,
+      "sha256": "7009e5e08335973ac4b6eff023a482f52431204272b04e6d84310a93f47a518e",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "pants": 8,
+        "hat": 5,
+        "shirt": 17,
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/black_cap/reference_character_black_cap.glb",
+      "bytes": 1067852,
+      "sha256": "c17f6b39552c9205f5493f4760e180389dd1b3e8751875909a1d627a090b3062",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "body": 3,
+        "pants": 7,
+        "shirt": 14,
+        "shoes": 4,
+        "hair": 59,
+        "hat": 3,
+        "face": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/supplied_head_fit/reference_base_supplied_head.glb",
+      "bytes": 129216,
+      "sha256": "d0d7f677afd5ac1afe2a5aba2e733089ea0e097c849e2eed3f25447750e04b9c",
+      "skins": [],
+      "mesh_groups": {
+        "body": 10
+      },
+      "morphs": [
+        {
+          "mesh": "Base_Body",
+          "targets": 1
+        }
+      ],
+      "animations": []
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/black_zip/reference_character_black_zip.glb",
+      "bytes": 177024,
+      "sha256": "d84f27654afd798d4ea7014b748c948a9e3f678525906c5b7267554c81ab72a6",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shoes": 18,
+        "shirt": 9,
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/mens_two_block_hair/reference_mens_two_block_hair.glb",
+      "bytes": 372024,
+      "sha256": "9d107bab6caf7b41e7e40420b7dcd3f6c843f940c9357668222414460631bc71",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "hair": 34
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/white_corset/reference_character_white_corset.glb",
+      "bytes": 176588,
+      "sha256": "a6efe887b447bb3b87dffad8cb54722650d8af6fdda2bd55b04eaba8397b693c",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shirt": 20,
+        "pants": 5,
+        "shoes": 6
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/leather_hoodie/reference_character_leather_hoodie.glb",
+      "bytes": 322548,
+      "sha256": "6660d367d8ee259212105cac958ef83585545087e882ff5f9ab0a72603a18e95",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shirt": 23,
+        "pants": 5,
+        "shoes": 12
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/mens_short_hair/reference_mens_short_hair.glb",
+      "bytes": 370648,
+      "sha256": "a6c70894f3ad57186ef47029a4ccfb27e131d79a2b1d292b63a9e8dd5d8adddb",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "hair": 33
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/little_ghost_male/reference_character_little_ghost_male.glb",
+      "bytes": 188960,
+      "sha256": "1d977c5feae4e1b5c72933431fdab386c4a2b407d0f52eb48f628f5dffbfffe6",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shirt": 10,
+        "shoes": 10,
+        "pants": 9,
+        "hat": 6
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/vintage_swept_quiff_hair/reference_vintage_swept_quiff_hair.glb",
+      "bytes": 718780,
+      "sha256": "98664314e4974d6c65f8d7bc52eeae06db0fc0ec9f4519d88f219825af69e180",
+      "skins": [
+        87
+      ],
+      "mesh_groups": {
+        "hair": 9
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 261
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/family_v2/character_reference.glb",
+      "bytes": 187488,
+      "sha256": "4143b966cca82d9df303a9e99cb84f3ac4f9877776d3c909ca666613ca793bbf",
+      "skins": [],
+      "mesh_groups": {
+        "body": 42
+      },
+      "morphs": [
+        {
+          "mesh": "brown_green__Base_Body",
+          "targets": 1
+        }
+      ],
+      "animations": []
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/black_khaki/reference_character_black_khaki.glb",
+      "bytes": 164484,
+      "sha256": "c380229606d14a16f3479b83db4cf420dc1858a56694e32537e3a1c34fc8cdaf",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shirt": 8,
+        "pants": 5,
+        "shoes": 12
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/pumpkin_night_male/reference_character_pumpkin_night_male.glb",
+      "bytes": 209368,
+      "sha256": "60edaca7487fcfbb4d516edf60f594601cdeffbf5dc780bfbea512196e3e0c15",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "hat": 6,
+        "shoes": 14,
+        "pants": 11,
+        "shirt": 13
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/moon_witch_male/reference_character_moon_witch_male.glb",
+      "bytes": 189856,
+      "sha256": "ddec71ae6483ae4f296f49008aa27d0cbd7136bc4faf9632a6dbd9060f093c22",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "hat": 5,
+        "shoes": 10,
+        "pants": 9,
+        "shirt": 10
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/cocoa_knit/reference_character_cocoa_knit.glb",
+      "bytes": 197268,
+      "sha256": "5695e95ab724a5c0fda7328726d15c59359b09c04ec6e4fd8c134038936790a7",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shoes": 6,
+        "shirt": 9,
+        "pants": 9
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/pumpkin_night/reference_character_pumpkin_night.glb",
+      "bytes": 235360,
+      "sha256": "aad08de34926d943f932ff94ec1aa389abf50774cf6a07bda6c484d8476c8bf0",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "hat": 6,
+        "shirt": 21,
+        "shoes": 14,
+        "pants": 10
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/black_bow/reference_character_black_bow.glb",
+      "bytes": 159284,
+      "sha256": "479bd50283ad0c4acdb16b92d5a9bb703fb2454a45a5d93d5058571320f06540",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "shirt": 4,
+        "shoes": 18,
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/rigged_run/reference_character_run.glb",
+      "bytes": 267564,
+      "sha256": "3ef135ed05e0bd9e510ecb77e9293632413fcd472c32108b093ecb857f7cbdc6",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "body": 10
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    },
+    {
+      "path": "art/characters/mmorpg-reference-base/rigged_run/revisions/before_right_thigh/reference_character_run.glb",
+      "bytes": 279676,
+      "sha256": "8f1e067372b0460eaa144a508640004c592aaae5e0ca1b795a4b32978aba129a",
+      "skins": [
+        81
+      ],
+      "mesh_groups": {
+        "body": 10
+      },
+      "morphs": [
+        {
+          "mesh": "Base_Body",
+          "targets": 1
+        }
+      ],
+      "animations": [
+        {
+          "name": "Run",
+          "channels": 243
+        }
+      ]
+    }
+  ],
+  "game_assets": [
+    {
+      "path": "zorx/art/fashion/reference_player.glb",
+      "bytes": 14600708,
+      "sha256": "487133de59af2c91dc9aefaffc5d2f605882f4bb73256a6ee4b0930fd4102e23",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "body": 2,
+        "face": 5
+      },
+      "morphs": [],
+      "animations": [
+        {
+          "name": "Blade_dodge",
+          "channels": 186
+        },
+        {
+          "name": "Blade_guard",
+          "channels": 186
+        },
+        {
+          "name": "Blade_heavy",
+          "channels": 186
+        },
+        {
+          "name": "Blade_idle",
+          "channels": 186
+        },
+        {
+          "name": "Blade_light_1",
+          "channels": 186
+        },
+        {
+          "name": "Blade_light_2",
+          "channels": 186
+        },
+        {
+          "name": "Blade_light_3",
+          "channels": 186
+        },
+        {
+          "name": "Blade_run",
+          "channels": 186
+        },
+        {
+          "name": "Blade_ultimate",
+          "channels": 186
+        },
+        {
+          "name": "BladeSolarSlamUltimate",
+          "channels": 186
+        },
+        {
+          "name": "BlockBlade",
+          "channels": 186
+        },
+        {
+          "name": "BlockDagger",
+          "channels": 186
+        },
+        {
+          "name": "BlockHammer",
+          "channels": 186
+        },
+        {
+          "name": "BlockSpear",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_dodge",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_guard",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_heavy",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_idle",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_light_1",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_light_2",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_light_3",
+          "channels": 186
+        },
+        {
+          "name": "Dagger_run",
+          "channels": 186
+        },
+        {
+          "name": "DaggerShadowExtractionUltimate",
+          "channels": 186
+        },
+        {
+          "name": "DashBlade",
+          "channels": 186
+        },
+        {
+          "name": "DashDagger",
+          "channels": 186
+        },
+        {
+          "name": "DashHammer",
+          "channels": 186
+        },
+        {
+          "name": "DashSpear",
+          "channels": 186
+        },
+        {
+          "name": "DonorRun",
+          "channels": 261
+        },
+        {
+          "name": "Hammer_dodge",
+          "channels": 186
+        },
+        {
+          "name": "Hammer_guard",
+          "channels": 186
+        },
+        {
+          "name": "Hammer_heavy",
+          "channels": 186
+        },
+        {
+          "name": "Hammer_idle",
+          "channels": 186
+        },
+        {
+          "name": "Hammer_light_1",
+          "channels": 186
+        },
+        {
+          "name": "Hammer_light_2",
+          "channels": 186
+        },
+        {
+          "name": "Hammer_light_3",
+          "channels": 186
+        },
+        {
+          "name": "Hammer_run",
+          "channels": 186
+        },
+        {
+          "name": "HammerGroundDragPreview",
+          "channels": 186
+        },
+        {
+          "name": "HitBack",
+          "channels": 186
+        },
+        {
+          "name": "HitFront",
+          "channels": 186
+        },
+        {
+          "name": "Jump",
+          "channels": 186
+        },
+        {
+          "name": "PoseBlade",
+          "channels": 186
+        },
+        {
+          "name": "PoseDagger",
+          "channels": 186
+        },
+        {
+          "name": "PoseHammer",
+          "channels": 186
+        },
+        {
+          "name": "PoseSpear",
+          "channels": 186
+        },
+        {
+          "name": "Run",
+          "channels": 186
+        },
+        {
+          "name": "Run2",
+          "channels": 186
+        },
+        {
+          "name": "Run2Blade",
+          "channels": 186
+        },
+        {
+          "name": "Run2Dagger",
+          "channels": 186
+        },
+        {
+          "name": "Run2Hammer",
+          "channels": 186
+        },
+        {
+          "name": "Run2Spear",
+          "channels": 186
+        },
+        {
+          "name": "RunBlade",
+          "channels": 186
+        },
+        {
+          "name": "RunDagger",
+          "channels": 186
+        },
+        {
+          "name": "RunHammer",
+          "channels": 186
+        },
+        {
+          "name": "RunSpear",
+          "channels": 186
+        },
+        {
+          "name": "SecondaryHairRun",
+          "channels": 18
+        },
+        {
+          "name": "Spear_dodge",
+          "channels": 186
+        },
+        {
+          "name": "Spear_guard",
+          "channels": 186
+        },
+        {
+          "name": "Spear_heavy",
+          "channels": 186
+        },
+        {
+          "name": "Spear_idle",
+          "channels": 186
+        },
+        {
+          "name": "Spear_light_1",
+          "channels": 186
+        },
+        {
+          "name": "Spear_light_2",
+          "channels": 186
+        },
+        {
+          "name": "Spear_light_3",
+          "channels": 186
+        },
+        {
+          "name": "Spear_run",
+          "channels": 186
+        },
+        {
+          "name": "SpearThunderSkyThrowUltimate",
+          "channels": 186
+        },
+        {
+          "name": "StandBlade",
+          "channels": 186
+        },
+        {
+          "name": "StandDagger",
+          "channels": 186
+        },
+        {
+          "name": "StandHammer",
+          "channels": 186
+        },
+        {
+          "name": "StandSpear",
+          "channels": 186
+        },
+        {
+          "name": "Walk",
+          "channels": 186
+        },
+        {
+          "name": "WalkBlade",
+          "channels": 186
+        },
+        {
+          "name": "WalkDagger",
+          "channels": 186
+        },
+        {
+          "name": "WalkHammer",
+          "channels": 186
+        },
+        {
+          "name": "WalkSpear",
+          "channels": 186
+        },
+        {
+          "name": "WingsIdle",
+          "channels": 4
+        },
+        {
+          "name": "WingsRun",
+          "channels": 4
+        }
+      ]
+    },
+    {
+      "path": "zorx/art/fashion/back/pumpkin_night.glb",
+      "bytes": 42956,
+      "sha256": "ea0fdcde35ab965308440c4cd68037aa93679445ae3e24b9f522c48a469f513f",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/back/angel_wings.glb",
+      "bytes": 77472,
+      "sha256": "576ddce4b7157f81877761d3b3b5f0109428b714dfa6bf37a85aeb0369c081f4",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 2
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/back/little_ghost.glb",
+      "bytes": 43556,
+      "sha256": "1997bfef45ec16e3f63b571c8807fa862032394ea145c48de9db8f102a5ea96e",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/back/panda_backpack.glb",
+      "bytes": 1304420,
+      "sha256": "d11045e2d8fb8bf503a53cec59096b60d0c6b4dad2f54281a3086ba6f04c2bd1",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 25
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/back/teddy_backpack.glb",
+      "bytes": 208264,
+      "sha256": "e94a17ef06006969b26b3d722da44713c8a94dfb54f10f4e542a029460a10ac0",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 25
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/back/bat_club.glb",
+      "bytes": 46192,
+      "sha256": "e4f6e2aed3b4896cb85b13d049bccb59e85a799dfcd4661c87a6f710c999a240",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/back/moon_witch.glb",
+      "bytes": 43312,
+      "sha256": "8b60d03537924976330485c28f8cbd9c1e05d9c85449058fae8cc45393116d8c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/back/cocoa_knit.glb",
+      "bytes": 64444,
+      "sha256": "bb5711a7b6ae812159f5443bf054422ea7dde13dc32cf2ea80b53d5045fc8e7b",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "accessory": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/pumpkin_night.glb",
+      "bytes": 47808,
+      "sha256": "53b334eb7b1ef9892a81240d238f28dfb23da538cbbe8a25b55783f31b65258e",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/cat.glb",
+      "bytes": 40780,
+      "sha256": "2622b0afbf069bd0f718918477746a1b63798f9d9b8ab246dd836c456bdf3af0",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "head": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_01.glb",
+      "bytes": 62996,
+      "sha256": "c9b863d34c78deb255ad1f16269610e09171ec08f55048a2a9f0c40446b78269",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/little_ghost.glb",
+      "bytes": 47084,
+      "sha256": "f1c868eece4d9a8e65e85620f76e964977eda1f20c8ddde60e75db81dab0487b",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_02.glb",
+      "bytes": 54824,
+      "sha256": "0d28f493062e224c18aa340285e6bde128e1ff61d0431a16b5ffe72242ca46fd",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_03.glb",
+      "bytes": 62232,
+      "sha256": "ec0f0814746b5e602ea61e79311fbc3f4a9f78be88cae6ece1646e8d0820efab",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_07.glb",
+      "bytes": 47672,
+      "sha256": "15dd81b77cb159a0d3ad78186b96914765e3e64a67448950312120f7333d82c7",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 3
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_06.glb",
+      "bytes": 53484,
+      "sha256": "e54dffa0ce0d4ce5f5efa78b40f34d2acbc3c41d99a5a70a4b36bd27b3dcc51b",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_12.glb",
+      "bytes": 53352,
+      "sha256": "9a82c3bdd0407986eeaf4de0669098ea9885fd6fa62ce4afd3e3e43388e26dbf",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_04.glb",
+      "bytes": 53556,
+      "sha256": "1f56b26762145738ced50aa61bd4a3a0b6e96fc0668bf046377d776ea909b87c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_10.glb",
+      "bytes": 63472,
+      "sha256": "fb303fcf678a8efc6e7299bd8f148f295b8f6eee5c5000e62db10caa0551c492",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_11.glb",
+      "bytes": 68924,
+      "sha256": "9b78c3558ce9c60970fbe0874c464db6fbf7254a8e7988d389d1d0dd0f9263d4",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 13
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_05.glb",
+      "bytes": 61168,
+      "sha256": "5ac2be81a7b71be863471daffea7ee722670cc624f350299f4c6ea2d91b69b06",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_08.glb",
+      "bytes": 55396,
+      "sha256": "f1886322bf2008aa7da987e8ca374798b8a6eb0f9aaeef634508e02f435d1965",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/fantasy_09.glb",
+      "bytes": 55648,
+      "sha256": "bbbcac4589894d0686fac6bd46eef398e176d2570ae689419373b730845b8fe4",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/bat_club.glb",
+      "bytes": 43240,
+      "sha256": "bbde003d8794d8d292573ff4980bcd69c27c2fdad18964f938f4d82c99ea2a2d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/moon_witch.glb",
+      "bytes": 44932,
+      "sha256": "673a01ba1ec873be7579e949952abd9ad75d353155e42e3439a2d7858048ef5b",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hats/black.glb",
+      "bytes": 45520,
+      "sha256": "7168ab0913cb32c71a17b185a307d9faa97987b3d8b939b2cf8a05073dd1034c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hat": 3
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/body/continuous.glb",
+      "bytes": 131408,
+      "sha256": "4db7d289d3eb7e512b2e47a4e0401c096ce1c9f55986f6d1508152e84012b07b",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "body": 1
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/head/red.glb",
+      "bytes": 35828,
+      "sha256": "8440a7b992915452bf1715481649fa4c45aa3e247d411c225b08cde635196fae",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "head": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_shorts_shirt.glb",
+      "bytes": 75816,
+      "sha256": "db8ba8934719ea02ac6eaf3b1298ceca59d6ef9060d5f3a053daa6d27f0ecefc",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/red_pants.glb",
+      "bytes": 57404,
+      "sha256": "a257ec6aedeb1f01a3ef8391aa2bd42632be5a7e784f38a7e6fe30eaa02ad69a",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_pants.glb",
+      "bytes": 69408,
+      "sha256": "c7bf8fa0b1fbf50f085433349bb13423fe5325c7642ff5a5da12e93890d8b1c1",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 11
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/fem_shoes.glb",
+      "bytes": 44472,
+      "sha256": "281368b6cbab39f5cbd55a441944c14bfb54a39d3c0e5c5edd75e945b00aa51c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_zip_shirt.glb",
+      "bytes": 59724,
+      "sha256": "e98ebb2147e8fda10e02140f11ece8f7871de21d6ba547c1a496d02227203cf7",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/cocoa_knit_shoes.glb",
+      "bytes": 46876,
+      "sha256": "b57f095b5563d80612a5f518d60d55e8eca5f5458044ce491b951b030387df0e",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_ribbon_pants.glb",
+      "bytes": 52704,
+      "sha256": "b8ed74a8397ae7e5b36a3fb2cdaa35911c4c2ec0e451541346ad399a7dabb05d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_shirt.glb",
+      "bytes": 71040,
+      "sha256": "960764cfc18ec730ef147766f30fc3b51070d08e83dd596750cd9ff2e0fde4f0",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 13
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_male_shoes.glb",
+      "bytes": 52476,
+      "sha256": "4d42e84814afaa16bdfd8c972bb5a94d2ef9176625c011892eb1ef9e0d574488",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_armband.glb",
+      "bytes": 55364,
+      "sha256": "41ab20b2a6c38c9f70542287eb2735bf7dbbe563a3524cb2581510040711e263",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_shirt.glb",
+      "bytes": 65216,
+      "sha256": "b3a782c59a16ce84b2b7fbefc5da6bda2db6a073a80dec931f3c527cee6eea27",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 7
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_ribbon_armband.glb",
+      "bytes": 48572,
+      "sha256": "ee108c7b0ce034c04a7111f28453b43ca74c53818808826cdc910f348b5bedf2",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_shorts_armband.glb",
+      "bytes": 54192,
+      "sha256": "36db65e2177734335674ee5f4a48475d43883d81b6c18ce344170021a5311693",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_shoes.glb",
+      "bytes": 52224,
+      "sha256": "02871b518ce229ceb4d903059a7e5a6b18f543a5fae7fe99eb4850cff4d7252f",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_cargo_pants.glb",
+      "bytes": 67028,
+      "sha256": "cddc1a1413c3d3a2e923a56a489933bbc1e7008af26c1a9c76aefe5d58635dff",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_male_armband.glb",
+      "bytes": 46564,
+      "sha256": "d9056b148eb614bb74d620079021b25b77143a427a1b0f3cad0380570650d66f",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_male_pants.glb",
+      "bytes": 62472,
+      "sha256": "be2afab6b0794345a0a43c646b80d1db452be5d26f0660ea28885356dc2fc0a6",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 11
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_khaki_shirt.glb",
+      "bytes": 61160,
+      "sha256": "25a8390f09b8bb10731b6fd3e0001ded0d10ea22a36784a4c3ec65f3e58d8ffa",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/mono_shirt.glb",
+      "bytes": 59544,
+      "sha256": "624da5e9d954aa02a92605258f609d0a9ae954a408e63e8670c538ee5eef5f28",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_armband.glb",
+      "bytes": 52412,
+      "sha256": "4851ce73834f7c01225301c3ae0f3cbc1d14c749d5db9b2cf96c2bb668ac24a9",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/mono_armband.glb",
+      "bytes": 48892,
+      "sha256": "69eab651b6ac59c6711a9cd7b5194d530c5c8c4fdf55224b1204aed61344f202",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_bow_shirt.glb",
+      "bytes": 64500,
+      "sha256": "fc29e883e36bb347e42ac1d6c93c3efced1901df1139b5c59c4454276bd642b3",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_male_shirt.glb",
+      "bytes": 60304,
+      "sha256": "3ecd1e311b6eb0eab9ec67ea1ce77e889befb148d853a5d1191a26fa21633b2d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/red_armband.glb",
+      "bytes": 52188,
+      "sha256": "248727714b7260c8debc4466653aa7bdd893a7c4bd525abf03f173ad9bf155ca",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_male_shirt.glb",
+      "bytes": 59956,
+      "sha256": "8d8ff6fd63add4b8f33ae64b55717afa37ed210acd0b56f4cfe0f5a7e6571cfd",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_cargo_shoes.glb",
+      "bytes": 76804,
+      "sha256": "a93fe81261c29fe8d1a93024187eb2a87678fa125e8d5628bd6e6d01766f97f5",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 24
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_pants.glb",
+      "bytes": 76800,
+      "sha256": "2d91895c9cf1e941ba68451be1bd6c2b3ba173a631d01a799d4a33f34c1a0003",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_armband.glb",
+      "bytes": 54136,
+      "sha256": "aeb9f219c965badfd5470614239e39980a17e3e44ebf04d61f89d3f6b63e9b4c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_male_shoes.glb",
+      "bytes": 62988,
+      "sha256": "65cc1f98c42a617e27439c9aa91cd80cd185f740b769c5d092515be4b7d633c7",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 14
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/leather_hoodie_shirt.glb",
+      "bytes": 83796,
+      "sha256": "6149baee409601fc5e627a16ca68eee2600b7d3ba666c3135f6172f814e34f49",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 20
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_shirt.glb",
+      "bytes": 87264,
+      "sha256": "3600de29aed0a3d22848cebbd18645d1a3c4a1353e0847d7f2c5907b07f9322c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 20
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/red_shoes.glb",
+      "bytes": 65308,
+      "sha256": "de74ed24584be52754cc0f10061990ef3c66921a4b16b9970d957fc3bd7af347",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 20
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_shoes.glb",
+      "bytes": 53164,
+      "sha256": "dd24e29dc0ae1e011c833373b7ea0369a330a2be2ec9e5ecdeed049a7938b370",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/fem_pants.glb",
+      "bytes": 62412,
+      "sha256": "f36fc27c2b0008d0b53e0de976adf49efa15d5677c6ef035cbf17adc1b209fe2",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_zip_armband.glb",
+      "bytes": 48560,
+      "sha256": "8566d317e09f455955fd737478e672f5d68ffa8242cf0fd144db1a0f17c058f5",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_ribbon_shoes.glb",
+      "bytes": 53916,
+      "sha256": "148f35cf42970f871ef77dbe0a15cdbf39ef3be67c39ab4d9e9a669e5f63ca04",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 7
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/cocoa_knit_pants.glb",
+      "bytes": 73096,
+      "sha256": "a9e4b8a465cbe49908ce8bb21424845959ed859fe78aa69fc71cd372478b4cb0",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_armband.glb",
+      "bytes": 46540,
+      "sha256": "8273d5122186ee97dda3530c460b05e14014a753b2dc255607c30822fb0bbb2c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_male_pants.glb",
+      "bytes": 66296,
+      "sha256": "5d3b3c1c77727971ad423ea1378633d18ddf46b3d4dfa66a2c2f4462d847ce25",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 13
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_male_armband.glb",
+      "bytes": 46756,
+      "sha256": "5b1904ed25555ae944fb3d3ecc41b1b2f5e1762482598a1793789ab0f97725fa",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/purple_shirt.glb",
+      "bytes": 78440,
+      "sha256": "4179bd26e168bb8221c29b9861a2dbaa969dedfd788adf3f1bec11ae4d984422",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_corset_shirt.glb",
+      "bytes": 76088,
+      "sha256": "39d1f11eaf76fd9c3bf3f1062576af02a889a581df9317a5fe7b60ccceeae8cf",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 19
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/leather_hoodie_armband.glb",
+      "bytes": 52800,
+      "sha256": "9f484da07ac7ebe2c7b134366015f65866b5c59977f01868dd4cd823751668a3",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_armband.glb",
+      "bytes": 49424,
+      "sha256": "1b690f9456a8bd387aa8240327d7ab842aca55e0f21366981361702614bcdcc7",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 7
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_male_shoes.glb",
+      "bytes": 53236,
+      "sha256": "a928d7a37268466270134c826a9b06f38c9bd802d269164334dbe005887278ab",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_cargo_shirt.glb",
+      "bytes": 81660,
+      "sha256": "7680405963b9869a42dbd8c1590fdbff376a2c0cabe69b36c119ca99f4820f35",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_male_shoes.glb",
+      "bytes": 52284,
+      "sha256": "4fe21c3b491f7abcc42972ae9f8a2e7a5e138090c430af9a64c2e3f7491e8b63",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_bow_shoes.glb",
+      "bytes": 65212,
+      "sha256": "5917cedbe558b3f116b05c698a103debe45298a07174fded1d931db228b10ce4",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 18
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_male_armband.glb",
+      "bytes": 46776,
+      "sha256": "ce9f704cdbc30dd59ba48b33b34e3aab3eaca3971c97b1d6960f5647eb82111d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/mono_pants.glb",
+      "bytes": 43852,
+      "sha256": "1adc5e34ac8d9713817dca2d560c62ee5108b4480b95a15c0d53ed026d60a4fd",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 3
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_shoes.glb",
+      "bytes": 62884,
+      "sha256": "bdac88928594d43436f6aca92461a0b6813f4ac2f1f15610b36724072d946e0c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 14
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/leather_hoodie_shoes.glb",
+      "bytes": 56516,
+      "sha256": "90205a19d1a6e27b9478c6a8efa592c3e6e029f4d658158329b56dbb6aebb0de",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 12
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/cocoa_knit_armband.glb",
+      "bytes": 53084,
+      "sha256": "8cc587dbc844780ff462a2d6bf1104b58f7034db5ff488b1791ebdca7920f89d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_male_shirt.glb",
+      "bytes": 67224,
+      "sha256": "129a217edae5e7eacaf0201ab4b7104c76e9235e46e4426b6b9855b2ad4dc2ca",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 12
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_khaki_pants.glb",
+      "bytes": 48344,
+      "sha256": "d162d5a9e03abe661a8513089496ec62c3bf29c0e29f859c651e236d3d55d350",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_zip_pants.glb",
+      "bytes": 48512,
+      "sha256": "94c53c524e9aa2c947b6738e23827e0a9b27fd784f9b0bc3a6031d18da18a31c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/purple_armband.glb",
+      "bytes": 71856,
+      "sha256": "a6bb19166a38545478f3d96a8598801f201bb9d3a09171e63c0ac8fe5e814ebb",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_ribbon_shirt.glb",
+      "bytes": 61644,
+      "sha256": "71bd1dbe88b1ee1c74c78f144eee6cf6f93345270514f23ea5d1bfba3a5dcbbe",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/fem_armband.glb",
+      "bytes": 53980,
+      "sha256": "100e909e57466a63f124489282cd2fc694bfe147f2aec7d4016f7597a8dde0b5",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 7
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/red_shirt.glb",
+      "bytes": 66964,
+      "sha256": "793ecf509d6546d78cdb6e102d215d9adeefac124c0420fdf9debf87d11431bc",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_shorts_pants.glb",
+      "bytes": 64072,
+      "sha256": "4a05ba7577e0221f2d8e3e1e273e17055c6d9fd2dd458c34f81c23f7ca86630a",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_shirt.glb",
+      "bytes": 65852,
+      "sha256": "bee1ce4bb0859c26b7e1745d917c002dbc0f792a7e37d5bc3a9fa8c0a146ff59",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 11
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_corset_shoes.glb",
+      "bytes": 47308,
+      "sha256": "aa7f606fe3a480ea3b5a0cf64f842f35511c45b2cb00d57ad740b2bef745c3e0",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_pants.glb",
+      "bytes": 53540,
+      "sha256": "6cd966c6017030bb88c9a3c5395ce177ebb79c2f8c39ae4fca0922ab9ac832f9",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 7
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/purple_shoes.glb",
+      "bytes": 63240,
+      "sha256": "e4afddd97a4946b7b3c62b13a8eb923b82e983ad912e2975f3e2df65b707382d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 12
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_pants.glb",
+      "bytes": 82068,
+      "sha256": "36e0586c9f42ac19f7e81691f9a8e7b7f0aaa3d64d61eea83995199701ea0d7e",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 12
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/fem_shirt.glb",
+      "bytes": 73120,
+      "sha256": "43b90790a47d20f96772b3ea3a6cce704065ba8d546aabdc4690af2fbfab4f68",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 11
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_zip_shoes.glb",
+      "bytes": 65128,
+      "sha256": "616426d07d07171e3a6aa891430ca54ba0d3d796f6691607f39f7a3cf976445e",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 18
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/cocoa_knit_shirt.glb",
+      "bytes": 63776,
+      "sha256": "afbcac6bd44ca7d9b8c5a85101961becc1f30044df3ca0262706fb1702e0b4ce",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 8
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_shorts_shoes.glb",
+      "bytes": 76944,
+      "sha256": "144c930217ed5bd0250d70d3865d046412c43ea701d02899315caece9d1b491c",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 24
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_male_armband.glb",
+      "bytes": 48892,
+      "sha256": "78e3055adf756a7fe23761f46eb68a12902f1b967deb359e343ec63b6afaff0f",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_corset_pants.glb",
+      "bytes": 49520,
+      "sha256": "c6c4f3d9b58ffce7fbe1714440ff2a4dc542afb9411db3d54ca457874ea8dbde",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_male_shirt.glb",
+      "bytes": 60320,
+      "sha256": "390bccdf45f3e79652ad12c8733632030a604ef24d6ac170524f54ef1acb87ea",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_shoes.glb",
+      "bytes": 40772,
+      "sha256": "253641ff9a88b5010e0081623c731a694ef99e8431bd1172bd84e7341a854209",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 4
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/bat_club_shoes.glb",
+      "bytes": 52392,
+      "sha256": "ee5ab7ac4a85889951737695e0a8c1d499f4216118f1049d1262f77fcdb2206a",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 10
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/purple_pants.glb",
+      "bytes": 163320,
+      "sha256": "3f11c6f19303a117a75e07c43de58896fcba1869ef5ae881b630dadfc1d4777f",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 11
+      },
+      "morphs": [
+        {
+          "mesh": "Ten pleat purple plaid skirt.001",
+          "targets": 20
+        }
+      ],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/little_ghost_male_pants.glb",
+      "bytes": 57660,
+      "sha256": "333c357b4426ab650e1e44b3c4d40dc00516782f4a121f24cc5196515410ddf0",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_khaki_armband.glb",
+      "bytes": 54184,
+      "sha256": "9ee130263f906c6ca8045fb03ee99adfd0422aef46fd4a3efd7378fb38332a06",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_shirt.glb",
+      "bytes": 67456,
+      "sha256": "6d13992799d5e1db311359aa861d79693a42f66424be4957c13dfd0b4ae475ca",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shirt": 12
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_bow_armband.glb",
+      "bytes": 53156,
+      "sha256": "6848d191cd1e024531ed556169644eb3599d7c8e56285c9fda9d7df0bdb2a0cd",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 1
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/moon_witch_male_pants.glb",
+      "bytes": 60688,
+      "sha256": "9a5efcd9af6f4cc72628af2dfbb82437e374763fbe921651a39b690d48b61626",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_bow_pants.glb",
+      "bytes": 56384,
+      "sha256": "a136e72aef40e158e0b6c4f3234b3063ffa2deaea172b0f6a4c3212ecb85ee10",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 6
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_tee_cargo_armband.glb",
+      "bytes": 54184,
+      "sha256": "a455c68dd03ab964ce2c38ecf1a26cca9403a8ad6474d5510f9d611d2f35d8de",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/mono_shoes.glb",
+      "bytes": 56564,
+      "sha256": "ed786581b95b2e92ab923f9ab33a4a5f9ac66a44f10c4995e0adf89c41e1aa32",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 12
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/leather_hoodie_pants.glb",
+      "bytes": 175360,
+      "sha256": "dc807251601350593140a9a00fb8d03c68ba3da7fe8e9d8abd0a802914924fce",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/pumpkin_night_pants.glb",
+      "bytes": 74384,
+      "sha256": "c095444e539de3cc87680c7d8b057eddfb66ff4d3bb91b10ab0b4e39e8a70e1d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "pants": 11
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/white_corset_armband.glb",
+      "bytes": 48572,
+      "sha256": "050ae59a9b99b452cc8cee7fb300c19b242e1422135d61c9017c24916abcdc71",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "armband": 5
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/outfits/black_khaki_shoes.glb",
+      "bytes": 55892,
+      "sha256": "08d1022bfff88e0944c996eaf905e5dc7753733b3c2c3de68cb9c9e5b7bbb418",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "shoes": 12
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/short_bob.glb",
+      "bytes": 655924,
+      "sha256": "d0cf855d163223131e2277d0ec3431971c7137dd15062a24bb29a10fc787e862",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 39
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/purple.glb",
+      "bytes": 208172,
+      "sha256": "4450a36a2a375d471710dc6ca8f6ac265bd1749e7a0a67f8a2475a1db717afc0",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 29
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/red.glb",
+      "bytes": 160584,
+      "sha256": "4759523856bcca8176ad98662d70ad15a79cb4fb3c441ec02a7ce104b29f221d",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 20
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/vintage_swept_quiff.glb",
+      "bytes": 642952,
+      "sha256": "ddbf50bc1585a32f52c24c7809733b7a4e4dc04119706fc98c038ac39ba1ec10",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 9
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/medium_layers.glb",
+      "bytes": 577508,
+      "sha256": "ab77b191dd4885d6c2768eb87cc2ed983a3feebdbb9a224aacd690ef71dda7b8",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 45
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/swept_highlight.glb",
+      "bytes": 709196,
+      "sha256": "9f48f65f7df915ec075dee34e0ed9e00071574f87bc53fe7763cb643f2378969",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 41
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/two_block.glb",
+      "bytes": 299712,
+      "sha256": "5d248f5600faac7c0460cdedf8fa93442a03db21ee43b3b4346462f93d53c192",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 34
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/mens_short.glb",
+      "bytes": 298084,
+      "sha256": "40faa2c318e46d15c4f0c24212ffc7408d2963c5bcbf2ffbc73f03256e835e6a",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 33
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/black.glb",
+      "bytes": 512396,
+      "sha256": "fdc9b5d7a37c27cbcc190bb84cfbab172d952662aeb542070c682c0a161442f3",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 59
+      },
+      "morphs": [],
+      "animations": []
+    },
+    {
+      "path": "zorx/art/fashion/hair/vintage_pompadour.glb",
+      "bytes": 542620,
+      "sha256": "b2ad539e5524ce701d99682effddb829ad4aa692f0ca3dda7aa436f9ca20a15f",
+      "skins": [
+        93
+      ],
+      "mesh_groups": {
+        "hair": 3
+      },
+      "morphs": [],
+      "animations": []
+    }
+  ]
+}

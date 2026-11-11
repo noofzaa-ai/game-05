@@ -1,0 +1,44 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+class QueuedSocket:
+ extends RefCounted
+ var inbound:Array=[]
+ var packets:Array=[]
+ var outbound_buffer_size:=524288
+ func poll()->void:pass
+ func get_ready_state()->int:return WebSocketPeer.STATE_OPEN
+ func get_available_packet_count()->int:return inbound.size()
+ func get_packet()->PackedByteArray:return inbound.pop_front()
+ func was_string_packet()->bool:return false
+ func get_current_outbound_buffered_amount()->int:return 0
+ func put_packet(bytes:PackedByteArray)->int:packets.append(bytes);return OK
+ func close(_code:int=1000,_reason:String="")->void:pass
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ print("CHECK worker script")
+ assert(load("res://server/rooms/worker.gd").can_instantiate())
+ for receive_first in [false,true]:
+  print("CHECK order ",receive_first)
+  var manager=preload("res://server/rooms/manager.gd").new()
+  var rng=RandomNumberGenerator.new();rng.seed=55
+  var profile=preload("res://logic/profile.gd").new_player(manager.rules,manager.camp,rng)
+  assert(manager.create("pollordertest",55,[{"id":1,"profile":profile.to_dict()}],true,1).ok)
+  var room=manager.rooms["pollordertest"].room
+  var transport=preload("res://server/rooms/transport.gd").new(self,manager)
+  transport.enabled=true
+  var socket=QueuedSocket.new()
+  transport.peers[1]={"ws":socket,"socket":StreamPeerTCP.new(),"since":0,"room":"pollordertest","slot":1,"verifying":false,"in_seq":0,"out_seq":0,"baseline":0,"event_ack":0,"states":{},"state_times":{},"rtt_ms":0.0,"last_send":0,"rate_at":0,"rate":0}
+  var input=preload("res://logic/sim_input.gd").new();input.move=Vector2.RIGHT
+  socket.inbound.append(Wire.inputs(1,0,0,1,[input.encode()],room.epoch))
+  if receive_first:transport.poll(16,false)
+  print("CHECK tick ",receive_first)
+  room.tick()
+  if not receive_first:transport.poll(16,false)
+  transport.flush_states(50)
+  assert(room.clock_tick==1)
+  assert(room.acknowledged[1]==(1 if receive_first else 0))
+  assert(int(room.input_missing.get(1,0))==(0 if receive_first else 1))
+  var state=Wire.decode(Wire.parse(socket.packets.back()).body).value
+  assert(state.tick==1 and state.ack==(1 if receive_first else 0))
+ print("RECEIVE BEFORE TICK PASS: waiting input rejected by old order, consumed by new order; post-step snapshot tick/ACK match; no world clock delay")
+ quit()

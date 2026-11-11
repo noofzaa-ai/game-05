@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perf-lab
+  namespace: zorx-staging
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: perf-lab}
+  template:
+    metadata:
+      labels: {app: perf-lab}
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - name: web
+        image: wiyazard:30500/zorx-perf-web:20261026-1@sha256:a6f7ff9798e307293430dfebc8d5e7d1b34c787e5acd798bd3705b7aa802fa9d
+        ports: [{containerPort: 8080, name: http}]
+        resources:
+          requests: {cpu: 50m, memory: 32Mi}
+          limits: {cpu: '1', memory: 128Mi}
+        readinessProbe:
+          httpGet: {path: /healthz, port: http}
+      - name: synthetic-room
+        image: wiyazard:30500/zorx-perf-worker:20261026-1@sha256:804c308522eb5744aa3ff2531ae2de5e0684499dd1b56532c2e01190a9e21414
+        ports: [{containerPort: 8060, name: ws}]
+        env:
+        - {name: HOME, value: /tmp/home}
+        - {name: XDG_DATA_HOME, value: /tmp/data}
+        resources:
+          requests: {cpu: 100m, memory: 128Mi}
+          limits: {cpu: '1', memory: 512Mi}
+        securityContext:
+          readOnlyRootFilesystem: true
+          allowPrivilegeEscalation: false
+          capabilities: {drop: [ALL]}
+        volumeMounts: [{name: temporary, mountPath: /tmp}]
+        readinessProbe:
+          tcpSocket: {port: ws}
+      volumes: [{name: temporary, emptyDir: {}}]
+---
+apiVersion: v1
+kind: Service
+metadata: {name: perf-lab, namespace: zorx-staging}
+spec:
+  selector: {app: perf-lab}
+  ports:
+  - {name: http, port: 8080, targetPort: http}
+  - {name: ws, port: 8060, targetPort: ws}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata: {name: perf-lab, namespace: zorx-staging}
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: zorxplay.daiyooo.com
+    http:
+      paths:
+      - path: /perf-lab/
+        pathType: Prefix
+        backend:
+          service: {name: perf-lab, port: {name: http}}
+      - path: /perf-lab-ws
+        pathType: Prefix
+        backend:
+          service: {name: perf-lab, port: {name: ws}}

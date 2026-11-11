@@ -1,0 +1,243 @@
+{
+  "converter": "Godot4.7.2 native FBXDocument; welded connected-component split; original MR restored",
+  "exported_triangles": 50000.0,
+  "grouped_piece_count": 10.0,
+  "map_scene_bytes": 122376.0,
+  "ordering": "front view: upper row left-to-right, then lower row left-to-right",
+  "original_source_untouched": true,
+  "parts": [
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/hut.glb",
+      "bytes": 356800.0,
+      "foot_y": 0.0,
+      "height_m": 3.4,
+      "id": "hut",
+      "normalization_scale": 15.0932009791094,
+      "path": "art_source/props/goblin_base/kit_parts/hut.glb",
+      "runtime_bytes": 119142,
+      "runtime_path": "meshes/hut.res",
+      "source_bounds_size": [
+        0.193107023835182,
+        0.225266993045807,
+        0.232543006539345
+      ],
+      "source_center": [
+        -0.301250517368317,
+        0.384040504693985,
+        0.0789225026965141
+      ],
+      "triangles": 7580.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/gate.glb",
+      "bytes": 132748.0,
+      "foot_y": 0.0,
+      "height_m": 3.4,
+      "id": "gate",
+      "normalization_scale": 15.7085971006479,
+      "path": "art_source/props/goblin_base/kit_parts/gate.glb",
+      "runtime_bytes": 46588,
+      "runtime_path": "meshes/gate.res",
+      "source_bounds_size": [
+        0.160908997058868,
+        0.216441988945007,
+        0.0405359975993633
+      ],
+      "source_center": [
+        -0.104895502328873,
+        0.382079005241394,
+        0.0683069974184036
+      ],
+      "triangles": 2774.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/palisade.glb",
+      "bytes": 135120.0,
+      "foot_y": 0.0,
+      "height_m": 2.1,
+      "id": "palisade",
+      "normalization_scale": 11.8809193913888,
+      "path": "art_source/props/goblin_base/kit_parts/palisade.glb",
+      "runtime_bytes": 47484,
+      "runtime_path": "meshes/palisade.res",
+      "source_bounds_size": [
+        0.16541899740696,
+        0.176753997802734,
+        0.0459070019423962
+      ],
+      "source_center": [
+        0.0737094953656197,
+        0.362127006053925,
+        0.0675124973058701
+      ],
+      "triangles": 2792.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/corner.glb",
+      "bytes": 171552.0,
+      "foot_y": 0.0,
+      "height_m": 2.1,
+      "id": "corner",
+      "normalization_scale": 11.4517547043016,
+      "path": "art_source/props/goblin_base/kit_parts/corner.glb",
+      "runtime_bytes": 59420,
+      "runtime_path": "meshes/corner.res",
+      "source_bounds_size": [
+        0.149059981107712,
+        0.183378010988235,
+        0.0918060019612312
+      ],
+      "source_center": [
+        0.253023982048035,
+        0.357978999614716,
+        0.0839360058307648
+      ],
+      "triangles": 3608.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/tower.glb",
+      "bytes": 314696.0,
+      "foot_y": 0.0,
+      "height_m": 4.2,
+      "id": "tower",
+      "normalization_scale": 17.8708979336357,
+      "path": "art_source/props/goblin_base/kit_parts/tower.glb",
+      "runtime_bytes": 105398,
+      "runtime_path": "meshes/tower.res",
+      "source_bounds_size": [
+        0.166748970746994,
+        0.235018968582153,
+        0.200007006525993
+      ],
+      "source_center": [
+        0.429187476634979,
+        0.390747487545013,
+        0.0558015033602714
+      ],
+      "triangles": 6306.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/cauldron.glb",
+      "bytes": 380796.0,
+      "foot_y": 0.0,
+      "height_m": 2.0,
+      "id": "cauldron",
+      "normalization_scale": 8.3489188054213,
+      "path": "art_source/props/goblin_base/kit_parts/cauldron.glb",
+      "runtime_bytes": 127188,
+      "runtime_path": "meshes/cauldron.res",
+      "source_bounds_size": [
+        0.189507976174355,
+        0.239551976323128,
+        0.731467008590698
+      ],
+      "source_center": [
+        -0.299971997737885,
+        0.123658992350101,
+        -0.159137487411499
+      ],
+      "triangles": 8140.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/crate.glb",
+      "bytes": 326636.0,
+      "foot_y": 0.0,
+      "height_m": 1.4,
+      "id": "crate",
+      "normalization_scale": 5.59232744020113,
+      "path": "art_source/props/goblin_base/kit_parts/crate.glb",
+      "runtime_bytes": 108222,
+      "runtime_path": "meshes/crate.res",
+      "source_bounds_size": [
+        0.163218006491661,
+        0.25034299492836,
+        0.469569027423859
+      ],
+      "source_center": [
+        -0.116955004632473,
+        0.12517149746418,
+        -0.199125528335571
+      ],
+      "triangles": 7128.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/drum.glb",
+      "bytes": 303680.0,
+      "foot_y": 0.0,
+      "height_m": 1.2,
+      "id": "drum",
+      "normalization_scale": 10.0969308732441,
+      "path": "art_source/props/goblin_base/kit_parts/drum.glb",
+      "runtime_bytes": 100364,
+      "runtime_path": "meshes/drum.res",
+      "source_bounds_size": [
+        0.171663999557495,
+        0.118847995996475,
+        0.179652988910675
+      ],
+      "source_center": [
+        0.067669004201889,
+        0.062952995300293,
+        -0.0564124993979931
+      ],
+      "triangles": 6070.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/weapon_rack.glb",
+      "bytes": 177972.0,
+      "foot_y": 0.0,
+      "height_m": 1.8,
+      "id": "weapon_rack",
+      "normalization_scale": 7.8931448812385,
+      "path": "art_source/props/goblin_base/kit_parts/weapon_rack.glb",
+      "runtime_bytes": 60934,
+      "runtime_path": "meshes/weapon_rack.res",
+      "source_bounds_size": [
+        0.159244015812874,
+        0.228045985102654,
+        0.0390599966049194
+      ],
+      "source_center": [
+        0.249810010194778,
+        0.124529995024204,
+        0.0627119988203049
+      ],
+      "triangles": 3468.0
+    },
+    {
+      "authoring_glb": "art_source/props/goblin_base/kit_parts/banner.glb",
+      "bytes": 106672.0,
+      "foot_y": 0.0,
+      "height_m": 3.0,
+      "id": "banner",
+      "normalization_scale": 11.8800131990579,
+      "path": "art_source/props/goblin_base/kit_parts/banner.glb",
+      "runtime_bytes": 38144,
+      "runtime_path": "meshes/banner.res",
+      "source_bounds_size": [
+        0.142091989517212,
+        0.252524971961975,
+        0.049114003777504
+      ],
+      "source_center": [
+        0.408906996250153,
+        0.133878499269485,
+        0.159916996955872
+      ],
+      "triangles": 2134.0
+    }
+  ],
+  "runtime_mesh_bytes": 1557920.0,
+  "shared_texture_bytes": 2140045.0,
+  "source": "/Users/user/godot-project/assets/gobbin_base.fbx",
+  "source_bytes": 39705228.0,
+  "source_connected_components": 14.0,
+  "source_sha256": "e97b30fd3976e6a2c9a845e0702696e833186d6212cdcaa0c522ebdabb38fa88",
+  "source_triangles": 50000.0,
+  "status": "prepared_for_goblin_base_maps",
+  "texture_budget": {
+    "colour": 1024.0,
+    "metallic_roughness": 512.0,
+    "normal": 512.0
+  }
+}

@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://client/skills/mcp_skill_visual.gd" id="1"]
+[node name="Gem_leech" type="Node3D"]
+script = ExtResource("1")
+asset_path = "res://art/skill_system/bleed/effect.tscn"
+asset_scale = 1.4
+visual_offset = Vector3(0,0.7,0)
+override_tint = true
+tint = Color(0.9019607843137255,0.4235294117647059,0.615686274509804,1)

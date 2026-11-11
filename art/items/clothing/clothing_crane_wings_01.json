@@ -1,0 +1,17 @@
+{
+  "id": "clothing_crane_wings_01",
+  "name": "ชุดกระเรียน · ปีกประดับหัว",
+  "asset_version": 1,
+  "triangle_count": 78,
+  "set_triangle_budget": 1500,
+  "slot": "head",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "outfit_crimson_crane_01",
+  "thumbnail": "clothing_crane_wings_01.png",
+  "binding": "blended cloth torso and elbows; split skirt Hips/thigh; head ornaments Head; boots Foot/LowerLeg",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

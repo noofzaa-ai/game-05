@@ -1,0 +1,337 @@
+{
+	"version": 1,
+
+	"_comment": "Combat rules and MONSTER data. Frame counts are simulation ticks (60 per second). Numbers are placeholders to tune by feel. MONSTER STRENGTH is meant to track the player: level-1 monsters are balanced against the starter gear (about ATK 135, DEF 92, HP 1120): a grunt dies in about 3 combos, a charger in about 5, a brute in about 11 heavy hits, and a monster light hit takes about 4-6% of the player's HP, a heavy or slam about 11-16%. enemy_level_scaling = how much a monster grows per level above 1, so a stage for better gear just sets a higher level on its spawns (map enemy_spawns[].level). The player's weapons (fists, sword, dagger, spear, hammer and their moves) are in weapons.json. A move chains into on_light / on_heavy when that button was pressed during the move and the active frames are over. invuln_from/invuln_to (inclusive/exclusive, in move frames) make the fighter untouchable during that part of the move. telegraph = the client warns the player during the wind-up. advance = forward rush speed during the swing.",
+
+	"rules": {
+		"defense_constant": 100,
+		"min_damage": 1,
+		"down_ticks": 45,
+		"wakeup_invulnerable_ticks": 25,
+		"guard_damage_reduction": 0.7,
+		"guard_knockback_factor": 0.4,
+		"dodge_ticks": 18,
+		"dodge_invulnerable_ticks": 12,
+		"dodge_cooldown": 90,
+		"dodge_speed": 18.0,
+		"ultimate_gauge_max": 100,
+		"gauge_per_hit_dealt": 4,
+		"gauge_per_hit_taken": 0,
+		"energy_regen_delay_ticks": 22,
+		"jump_energy": 5,
+		"guard_energy_per_power": 11,
+		"run_energy_per_second": 7,
+		"run_resume_energy": 20,
+		"dodge_energy": 11,
+		"combo_window_ticks": 100,
+		"run_attack_min_ticks": 10,
+		"run_attack_grace_ticks": 8,
+		"poise_damage_per_power": 20,
+		"poise_regen_delay_ticks": 150,
+		"enemy_max_attackers": 2,
+		"attack_assist_range": 2.2,
+		"enemy_level_scaling": {"HP": 0.15, "ATK": 0.1, "DEF": 0.08},
+		"default_stats": {
+			"HP": 1000, "ATK": 100, "DEF": 50, "ATKSPD": 0, "MOVESPD": 0,
+			"CRIRATE": 5, "CRIDMG": 150, "EFFECT_ACC": 0, "EFFECT_RES": 0,
+			"HPREGEN": 0, "STAREGEN": 32, "ULTREGEN": 0, "STAMINA": 100
+		}
+	},
+
+	"_coop_comment": "M2 prototype, enabled only for explicit 2-4 player sessions. ADR HP scaling; revive/bleedout values are initial test tuning pending playtest. Stand still near a downed ally to revive; no extra button/codec bit is needed.",
+	"coop": {
+		"max_players": 4,
+		"hp_multiplier": [1.0, 1.6, 2.2, 2.8],
+		"spawn_spacing": 1.2,
+		"downed_ticks": 600,
+		"revive_ticks": 120,
+		"revive_radius": 2.0,
+		"revive_hp_fraction": 0.3,
+		"revive_invulnerable_ticks": 60
+	},
+
+	"styles": {
+		"brute": {"ground_light": "brute_swipe", "ground_heavy": "brute_slam", "air_light": "brute_swipe", "special": "brute_roar"},
+		"charger": {"ground_light": "charger_bite", "ground_heavy": "charger_rush", "air_light": "charger_bite", "special": "charger_frenzy"},
+		"goblin": {"ground_light": "goblin_jab", "ground_heavy": "goblin_lunge", "air_light": "goblin_jab", "special": "goblin_lunge"},
+		"goblin_chief": {"ground_light": "goblin_chief_jab", "ground_heavy": "goblin_chief_lunge", "air_light": "goblin_chief_jab", "special": "goblin_chief_lunge"},
+		"goblin_archer": {"ground_light": "goblin_archer_shot", "ground_heavy": "goblin_archer_shot", "air_light": "goblin_archer_shot", "special": "goblin_archer_volley"},
+		"goblin_mage": {"ground_light": "goblin_mage_bolt", "ground_heavy": "goblin_mage_blink", "air_light": "goblin_mage_bolt", "special": "goblin_mage_hex"},
+		"goblin_knight": {"ground_light": "goblin_knight_cleave", "ground_heavy": "goblin_knight_overhead", "air_light": "goblin_knight_cleave", "special": "goblin_knight_overhead"}
+	},
+
+	"_ranged_comment": "RANGED ATTACKS (logic/projectiles.gd). A move fires through its 'spawns' list: {projectile: id | area: id | blink: meters, frame: move frame (default = its startup, the strike), offset: [forward, up, side (+ = the shooter's right)] from the feet in meters, measured on the clip's release frame (2026-10-12: archer arrow tip at frame 34 of shoot / 44 of volley, mage crystal at frame 30 of cast, where the staff has thrust forward), angle: degrees off the facing}. A move with spawns hits only through them (melee: true to also swing). Damage, guard, dodge and effects are the melee rules with the move's power. PROJECTILES: look = how the client draws it (arrow, bolt), speed m/s, range m it flies, radius m, pierce = extra targets it passes through, gravity m/s2 down and lift = m/s up at release (an arrow's slight arc), homing = degrees per second it turns toward its target (0 = none, weak = 30-60), walls = stops at walls and the floor, aim_cone = it aims straight at the nearest opponent within this many degrees of the facing (free aim; otherwise straight ahead). It can be guarded from the front (unless the move ignores_guard) and i-frames let it fly through. AREAS: a circle marked on the ground at the opponent the caster faces (within range and aim_cone), radius m, delay = ticks of warning before it goes off (at least 20; the circle fills up meanwhile), active = ticks it hurts (each opponent once), height m it reaches up, guardable (false: step out or dodge).",
+
+	"projectiles": {
+		"goblin_arrow": {"look": "arrow", "speed": 16.0, "range": 13.0, "radius": 0.15, "pierce": 0, "gravity": 3.0, "lift": 0.9, "homing": 0.0, "walls": true, "aim_cone": 30},
+		"goblin_bolt": {"look": "bolt", "speed": 8.5, "range": 11.0, "radius": 0.28, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 45.0, "walls": true, "aim_cone": 40},
+		"player_jade_arrow": {
+			"look": "jade_arrow",
+			"speed": 5,
+			"range": 8,
+			"radius": 0.1,
+			"pierce": 0,
+			"gravity": 0,
+			"lift": 0,
+			"homing": 0,
+			"walls": true,
+			"aim_cone": 0
+		},
+		"player_jade_arrow_heavy": {
+			"look": "jade_arrow",
+			"speed": 5,
+			"range": 8,
+			"radius": 0.1,
+			"pierce": 0,
+			"gravity": 0,
+			"lift": 0,
+			"homing": 0,
+			"walls": true,
+			"aim_cone": 0
+		}
+	},
+
+	"areas": {
+		"goblin_hex": {"look": "hex_circle", "radius": 1.6, "delay": 66, "active": 3, "height": 2.2, "range": 9.0, "aim_cone": 70, "guardable": false}
+	},
+
+	"moves": {
+		"brute_swipe": {
+			"startup": 14, "active": 3, "recovery": 20, "power": 1.0,
+			"hit_offset": [1.1, 0.9, 0.0], "hit_size": [1.6, 1.2, 1.6],
+			"knockback": 5.0, "launch": 0.0, "hitstun": 16, "hitstop": 4
+		},
+		"brute_slam": {
+			"startup": 30, "active": 5, "recovery": 38, "power": 2.6,
+			"hit_offset": [1.3, 0.9, 0.0], "hit_size": [2.2, 1.6, 2.2],
+			"knockback": 9.0, "launch": 6.5, "hitstun": 36, "hitstop": 8, "telegraph": true,
+			"effects": [{"id": "sunder"}]
+		},
+		"brute_roar": {
+			"startup": 30, "active": 4, "recovery": 30, "power": 0.3, "cooldown": 600,
+			"hit_offset": [0.0, 0.9, 0.0], "hit_size": [3.4, 1.8, 3.4],
+			"knockback": 3.0, "launch": 0.0, "hitstun": 12, "hitstop": 4, "telegraph": true,
+			"effects": [{"id": "rage", "target": "self"}, {"id": "weaken"}]
+		},
+		"charger_bite": {
+			"startup": 10, "active": 3, "recovery": 18, "power": 0.8,
+			"hit_offset": [0.9, 0.9, 0.0], "hit_size": [1.3, 1.0, 1.4],
+			"knockback": 4.0, "launch": 0.0, "hitstun": 14, "hitstop": 3,
+			"effects": [{"id": "poison", "chance": 35}]
+		},
+		"charger_frenzy": {
+			"startup": 24, "active": 1, "recovery": 22, "power": 0.0, "cooldown": 700,
+			"hit_offset": [0.5, 0.9, 0.0], "hit_size": [1.0, 1.0, 1.0],
+			"knockback": 0.0, "launch": 0.0, "hitstun": 0, "hitstop": 0,
+			"effects": [{"id": "haste", "target": "self"}]
+		},
+		"charger_rush": {
+			"startup": 26, "active": 16, "recovery": 34, "power": 2.0,
+			"hit_offset": [0.7, 0.9, 0.0], "hit_size": [1.4, 1.5, 1.5],
+			"knockback": 8.0, "launch": 0.0, "hitstun": 24, "hitstop": 6,
+			"advance": 38.0, "telegraph": true,
+			"effects": [{"id": "slow", "chance": 60}]
+		},
+		"goblin_jab": {
+			"startup": 10, "active": 4, "recovery": 16, "power": 0.75,
+			"hit_offset": [0.8, 0.6, 0.0], "hit_size": [1.2, 0.9, 1.2],
+			"knockback": 2.5, "launch": 0.0, "hitstun": 12, "hitstop": 3
+		},
+		"goblin_lunge": {
+			"startup": 30, "active": 10, "recovery": 34, "power": 2.0, "cooldown": 360,
+			"hit_offset": [1.0, 0.7, 0.0], "hit_size": [1.4, 1.0, 1.4],
+			"knockback": 6.0, "launch": 0.0, "hitstun": 22, "hitstop": 6, "telegraph": true,
+			"effects": [{"id": "wound", "chance": 50}]
+		},
+		"goblin_chief_jab": {
+			"startup": 11, "active": 4, "recovery": 17, "power": 0.8,
+			"hit_offset": [1.35, 1.0, 0.0], "hit_size": [1.9, 1.4, 1.9],
+			"knockback": 3.5, "launch": 0.0, "hitstun": 14, "hitstop": 4
+		},
+		"goblin_archer_shot": {
+			"startup": 34, "active": 2, "recovery": 22, "power": 0.85,
+			"hit_offset": [0.5, 0.7, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 2.5, "launch": 0.0, "hitstun": 14, "hitstop": 3, "telegraph": false,
+			"spawns": [{"projectile": "goblin_arrow", "offset": [0.30, 0.42, 0.19]}]
+		},
+		"goblin_archer_volley": {
+			"startup": 44, "active": 2, "recovery": 30, "power": 0.8, "cooldown": 420,
+			"hit_offset": [0.5, 0.7, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 2.0, "launch": 0.0, "hitstun": 12, "hitstop": 3, "telegraph": true,
+			"spawns": [
+				{"projectile": "goblin_arrow", "offset": [0.25, 0.46, 0.16], "angle": -14},
+				{"projectile": "goblin_arrow", "offset": [0.25, 0.46, 0.16]},
+				{"projectile": "goblin_arrow", "offset": [0.25, 0.46, 0.16], "angle": 14}
+			]
+		},
+		"goblin_mage_bolt": {
+			"startup": 28, "active": 2, "recovery": 26, "power": 0.85,
+			"hit_offset": [0.5, 0.8, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 3.0, "launch": 0.0, "hitstun": 16, "hitstop": 4,
+			"spawns": [{"projectile": "goblin_bolt", "frame": 30, "offset": [1.08, 0.5, -0.18]}]
+		},
+		"goblin_mage_hex": {
+			"startup": 30, "active": 2, "recovery": 36, "power": 2.0, "cooldown": 300,
+			"hit_offset": [0.5, 0.8, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 5.0, "launch": 4.0, "hitstun": 26, "hitstop": 6, "telegraph": true,
+			"spawns": [{"area": "goblin_hex"}],
+			"effects": [{"id": "slow", "chance": 70}]
+		},
+		"goblin_mage_blink": {
+			"startup": 8, "active": 2, "recovery": 18, "power": 0.0, "invuln_from": 6, "invuln_to": 12,
+			"hit_offset": [0.5, 0.8, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 0.0, "launch": 0.0, "hitstun": 0, "hitstop": 0,
+			"spawns": [{"blink": -4.0, "frame": 8}]
+		},
+		"goblin_knight_cleave": {
+			"startup": 26, "active": 6, "recovery": 32, "power": 1.6, "telegraph": true,
+			"hit_offset": [1.55, 0.95, 0.0], "hit_size": [2.4, 1.4, 2.8],
+			"knockback": 6.0, "launch": 0.0, "hitstun": 22, "hitstop": 6
+		},
+		"goblin_knight_overhead": {
+			"startup": 42, "active": 5, "recovery": 46, "power": 3.0, "cooldown": 360, "telegraph": true,
+			"hit_offset": [1.8, 0.95, 0.0], "hit_size": [1.9, 1.7, 1.9],
+			"knockback": 9.0, "launch": 5.0, "hitstun": 36, "hitstop": 9, "advance": 6.0,
+			"effects": [{"id": "sunder"}]
+		},
+		"goblin_chief_lunge": {
+			"startup": 32, "active": 10, "recovery": 36, "power": 2.1, "cooldown": 300,
+			"hit_offset": [1.7, 1.1, 0.0], "hit_size": [2.3, 1.6, 2.3],
+			"knockback": 8.0, "launch": 0.0, "hitstun": 26, "hitstop": 7, "telegraph": true,
+			"effects": [{"id": "wound", "chance": 70}]
+		}
+	},
+
+	"_goblin_comment": "The goblin's own twin-dagger moves (not the player's dagger set), timed to the animator's clips (art/animations/goblin.json): goblin_jab = attack_1 (marks 0.20/0.43/0.90 s; 10/4/16 frames, so the clip plays about 1.8x fast), goblin_lunge = attack_2 (marks 0.60/0.92/1.80 s; 30/10/34 frames = 0.5 s telegraphed wind-up). Both move only as the clips do (advance 0, Boss 2026-10-10: a realistic lunge): the lunge's hit box sits 0.3 m further out to match the clip's pounce, so it lands from the same striking spot as the jab. body_height 0.98 = it is hit only where its body is. flee_hp/flee_ticks: below 30% health it runs away for 1.25 s, once, then comes back. The Goblin Chief (the journey boss) is the same model and clips 1.3x bigger and darker (model_tint), with its own moves scaled to its reach. MOVESPD -12 (3.3 m/s) keeps the run clip's feet planted (authored for 2.44 m/s, played 0.6-1.4x).",
+
+	"_monster_comment": "A monster may use any weapon style from weapons.json (the grunt uses fists, so it also has the fists skill: it sometimes works itself into a Rage). Monster stamina is only used by that skill. skill_chance (percent) = how often its AI uses the style's special skill instead of its normal attack. Monsters' buffs and debuffs are the same effects the player uses (effects.json); EFFECT_RES makes a monster hard to stun, shock or poison. model (optional) = a .glb facing +Z, feet at the bottom; it is scaled so its full bounds (hats, horns, crowns included) are model_height meters, while body_height is the body the rules hit; an untextured model is tinted like the capsule (state colors), a textured one keeps its texture and the state tints multiply it; without one the monster is a capsule. animations (optional) = its animation set .glb (idle, run, attack_1, attack_2, hit, death + a .json of windup_end/strike_end/length marks next to it); if that file is missing the model's own clips are used, and with none the model is static. clips = which clip each of its moves plays (default attack_1); standin_clips (optional) = what to play while the set does not have that clip yet (every goblin variant has its own clips since 2026-10-12). nock_mesh = a mesh of the model shown only while a firing move winds up (the archer's arrow on the string). ai.retreat_ticks = after each attack it backs off from the player this long (hit and run).",
+
+	"enemies": {
+		"mummy": {
+			"role": "Mummy: regular melee undead. Core combat stats and movement/attack speed tuned to1.5x the normal Goblin baseline; unarmed strikes, no retreat or ranged skill.",
+			"_design": "Boss2026-10-21: base combat stats1.5x normal Goblin at the same level. HP450/ATK150/DEF45;MOVESPD32 gives1.32x base walk versus Goblin0.88x (=1.5x). ATKSPD50 gives1.5x move-frame speed;AI cooldowns40–73ticks from Goblin60–110 divided by1.5 (integer rounding). Zero CRIRATE/poise stay zero. Fists moves remain provisional; exact hit damage/DPS also depends on move power,timing and target DEF. Rig1.80m,bespoke clips and separate map pending.",
+			"style": "fists",
+			"color": [
+				0.72,
+				0.67,
+				0.54
+			],
+			"model": "res://art/monsters/mummy/mummy.glb",
+			"model_height": 1.8,
+			"body_height": 1.8,
+			"stats": {
+				"HP": 450,
+				"ATK": 150,
+				"DEF": 45,
+				"MOVESPD": 32,
+				"ATKSPD": 50,
+				"CRIRATE": 0
+			},
+			"poise": 0,
+			"ai": {
+				"attack_range": 1.3,
+				"cooldown_min": 40,
+				"cooldown_max": 73,
+				"attack_input": "light",
+				"wait_range": 3.2,
+				"skill_chance": 0,
+				"retreat_ticks": 0,
+				"flee_hp": 0
+			}
+		},
+		"dummy_grunt": {
+			"role": "Grunt: walks up and jabs. Beat it with combos.",
+			"style": "fists",
+			"color": [0.75, 0.3, 0.3],
+			"model": "res://art/monsters/monster_01.glb",
+			"model_height": 1.4,
+			"stats": {"HP": 500, "ATK": 105, "DEF": 50, "MOVESPD": -40, "CRIRATE": 0},
+			"poise": 0,
+			"ai": {"attack_range": 1.3, "cooldown_min": 50, "cooldown_max": 90, "attack_input": "light", "wait_range": 3.2, "skill_chance": 20}
+		},
+		"brute": {
+			"role": "Brute: slow, tough, raises its arms before a huge slam. DODGE the slam.",
+			"style": "brute",
+			"color": [0.45, 0.25, 0.6],
+			"stats": {"HP": 1800, "ATK": 130, "DEF": 90, "MOVESPD": -60, "CRIRATE": 0, "EFFECT_RES": 40},
+			"poise": 100,
+			"ai": {"attack_range": 1.9, "cooldown_min": 110, "cooldown_max": 190, "attack_input": "heavy", "wait_range": 3.6, "skill_chance": 35}
+		},
+		"charger": {
+			"role": "Charger: crouches, then rushes in a straight line. GUARD it or step out of the lane.",
+			"style": "charger",
+			"color": [0.8, 0.7, 0.2],
+			"stats": {"HP": 900, "ATK": 135, "DEF": 70, "MOVESPD": 10, "CRIRATE": 0, "EFFECT_RES": 20},
+			"poise": 30,
+			"ai": {"attack_range": 7.0, "attack_min_range": 3.4, "cooldown_min": 150, "cooldown_max": 240, "attack_input": "heavy", "wait_range": 5.2, "skill_chance": 30}
+		},
+		"goblin": {
+			"role": "Goblin: small, twitchy, comes in packs. Darts in, stabs, hops back; glows before a leaping lunge. Catch it as it lands.",
+			"style": "goblin",
+			"color": [0.45, 0.62, 0.3],
+			"model": "res://art/monsters/goblin/goblin.glb",
+			"animations": "res://art/animations/goblin.glb",
+			"clips": {"goblin_jab": "attack_1", "goblin_lunge": "attack_2"},
+			"model_height": 0.98,
+			"body_height": 0.98,
+			"stats": {"HP": 300, "ATK": 100, "DEF": 30, "MOVESPD": -12, "CRIRATE": 0},
+			"poise": 0,
+			"ai": {"attack_range": 1.7, "cooldown_min": 60, "cooldown_max": 110, "attack_input": "light", "wait_range": 3.6, "skill_chance": 25, "retreat_ticks": 26, "flee_hp": 0.3, "flee_ticks": 75}
+		},
+		"goblin_chief": {
+			"role": "Goblin Chief: crowned, nearly twice a goblin's size, twin cleavers. It stands its ground: a quick chop and a telegraphed leaping lunge with long reach; it shrugs off light hits. DODGE the lunge.",
+			"style": "goblin_chief",
+			"color": [0.35, 0.45, 0.25],
+			"model": "res://art/monsters/goblin_chief/goblin_chief.glb",
+			"animations": "res://art/animations/goblin_chief.glb",
+			"clips": {"goblin_chief_jab": "attack_1", "goblin_chief_lunge": "attack_2"},
+			"model_height": 1.94,
+			"body_height": 1.69,
+			"stats": {"HP": 1500, "ATK": 125, "DEF": 60, "MOVESPD": -15, "CRIRATE": 0, "EFFECT_RES": 30},
+			"poise": 60,
+			"ai": {"attack_range": 2.7, "cooldown_min": 70, "cooldown_max": 120, "attack_input": "light", "wait_range": 4.2, "skill_chance": 35}
+		},
+		"goblin_archer": {
+			"role": "Goblin Archer: hangs back and shoots. It draws before each arrow (no '!': only the 3-arrow volley warns, Boss 2026-10-10); sidestep or guard it, then close in: it backs away but cannot fight up close.",
+			"style": "goblin_archer",
+			"color": [0.5, 0.55, 0.3],
+			"model": "res://art/monsters/goblin_archer/goblin_archer.glb",
+			"animations": "res://art/animations/goblin_archer.glb",
+			"clips": {"goblin_archer_shot": "shoot", "goblin_archer_volley": "volley"},
+			"nock_mesh": "arrow",
+			"model_height": 1.24,
+			"body_height": 1.04,
+			"stats": {"HP": 220, "ATK": 95, "DEF": 20, "MOVESPD": -12, "CRIRATE": 0},
+			"poise": 0,
+			"ai": {"attack_range": 11.0, "cooldown_min": 100, "cooldown_max": 160, "attack_input": "light", "wait_range": 7.0, "skill_chance": 25, "keep_range": 7.0, "retreat_range": 4.0, "strafe": 0.45, "flee_hp": 0.3, "flee_ticks": 60}
+		},
+		"goblin_mage": {
+			"role": "Goblin Mage: keeps away, throws slow homing bolts and marks the ground where you stand: the circle fills, then bursts. Keep moving; it blinks away when you reach it.",
+			"style": "goblin_mage",
+			"color": [0.45, 0.35, 0.65],
+			"model": "res://art/monsters/goblin_mage/goblin_mage.glb",
+			"animations": "res://art/animations/goblin_mage.glb",
+			"clips": {"goblin_mage_bolt": "cast", "goblin_mage_hex": "cast_aoe", "goblin_mage_blink": "blink"},
+			"model_height": 1.48,
+			"body_height": 0.98,
+			"stats": {"HP": 240, "ATK": 110, "DEF": 25, "MOVESPD": -18, "CRIRATE": 0, "EFFECT_RES": 20},
+			"poise": 0,
+			"ai": {"attack_range": 10.0, "cooldown_min": 110, "cooldown_max": 170, "attack_input": "light", "wait_range": 7.5, "skill_chance": 45, "keep_range": 7.5, "retreat_range": 4.5, "strafe": 0.35, "escape_input": "heavy", "escape_range": 2.6, "escape_cooldown": 360, "flee_hp": 0.25, "flee_ticks": 60}
+		},
+		"goblin_knight": {
+			"role": "Goblin Knight: slow, armored, a greatsword taller than itself held ONE-HANDED (the goblin's fists can never meet on one hilt; the off-hand swings free). It never retreats or flees: a heavy, deliberate advance that closes the distance by never backing off, poise 140 so light hits do not stagger it. Each swing is wound up a long time ('!'): the side cleave, and an overhead that steps forward as it falls (advance) so it still catches a player who stands still. Dodge through a swing or step back, then hit it while it recovers.",
+			"_design": "One-handed grip is what the animator's clips do now (tools/blender/goblin_family_clips.py: 'one hilt, so the greatsword is swung one-handed, grip_offhand stays unused'); the run clip is already a heavy armoured stomp with the blade dragged behind. No skeleton/arm change. No two-hand assumptions live in data: move ids (cleave/overhead) and VFX keys (vfx.json windup/swing/<move>) are grip-neutral. SPEED: MOVESPD -48 => 3.8 * 0.52 = 1.98 m/s, about 59% of a goblin's 3.34 m/s (goblin MOVESPD -12). run_clip_speed 1.55: the client plays the walk clip at speed / (run_clip_speed * model_fit); knight model_fit ~= 1.28, so 1.55 * 1.28 = 1.98 m/s reference => the heavy stomp plays at ~1.0x (its authored deliberate cadence) at the knight's own slow speed, instead of being pinned near the 0.6x clamp floor of the shared 2.44 reference (which caps how slow a monster can be shown).",
+			"style": "goblin_knight",
+			"color": [0.4, 0.42, 0.45],
+			"model": "res://art/monsters/goblin_knight/goblin_knight.glb",
+			"animations": "res://art/animations/goblin_knight.glb",
+			"clips": {"goblin_knight_cleave": "slash_heavy", "goblin_knight_overhead": "overhead"},
+			"model_height": 1.61,
+			"body_height": 1.25,
+			"run_clip_speed": 1.55,
+			"stats": {"HP": 1100, "ATK": 120, "DEF": 80, "MOVESPD": -48, "CRIRATE": 0, "EFFECT_RES": 30},
+			"poise": 140,
+			"ai": {"attack_range": 3.1, "cooldown_min": 90, "cooldown_max": 150, "attack_input": "light", "wait_range": 4.0, "skill_chance": 35}
+		}
+	}
+}

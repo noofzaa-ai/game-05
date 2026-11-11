@@ -1,0 +1,40 @@
+{
+ "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. 'animations' is the GLB the clips are read from (same 102-joint rig as the body files), 'clip_marks' its timing marks. weapon_visible/weapon_scale/off_hand: what the hands hold for the look (the combat 'weapon' id keeps owning the stats). Advance (travel) distances live in the weapon's overrides in data/combat/weapons.json.",
+ "id": "magic",
+ "weapon": "blade",
+ "animations": "res://art/characters/studio05/classes/magic.glb",
+ "clip_marks": "res://art/characters/studio05/classes/magic_clips.json",
+ "moves": {
+  "light_1": "mg_spell_1h_magic_attack_01",
+  "light_2": "mg_spell_1h_magic_attack_02",
+  "light_3": "mg_spell_1h_magic_attack_03",
+  "light_4": "mg_spell_2h_magic_attack_01",
+  "heavy": "mg_spell_2h_magic_attack_03",
+  "run_light": "mg_spell_1h_cast_spell_01",
+  "run_heavy": "mg_spell_2h_magic_attack_05",
+  "air_light": "mg_lite_1h_magic_attack_01",
+  "air_heavy": "mg_spell_2h_magic_attack_02",
+  "kick": "mg_spell_1h_magic_attack_02",
+  "flying_kick": "mg_spell_1h_magic_attack_02",
+  "ultimate": "mg_spell_2h_magic_area_attack_02",
+  "special": "mg_spell_2h_cast_spell_01",
+  "charge": "mg_spell_2h_magic_attack_04"
+ },
+ "states": {
+  "idle": "mg_loco_idle",
+  "run": "mg_loco_run_forward",
+  "guard": "mg_spell_idle",
+  "slide": "mg_loco_sprint_forward",
+  "hurt": "mg_lite_react_small_from_front",
+  "launched": "mg_lite_react_large_from_front",
+  "air": "mg_loco_jump"
+ },
+ "off_hand": "none",
+ "weapon_visible": false,
+ "weapon_scale": 1.0,
+ "hair_options": [
+  "c",
+  "e",
+  "f"
+ ]
+}

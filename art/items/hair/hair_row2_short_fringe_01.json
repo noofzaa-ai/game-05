@@ -1,0 +1,55 @@
+{
+  "id": "hair_row2_short_fringe_01",
+  "name": "ผมสั้น · หน้าม้าโค้ง",
+  "display_name": "ผมสั้น · หน้าม้าโค้ง",
+  "asset_version": 2,
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "triangle_count": 488,
+  "triangle_budget": 500,
+  "thumbnail": "preview_hair_row2_short_fringe_01_threequarter.png",
+  "reference_row": 2,
+  "reference_column": 3,
+  "geometry": {
+    "triangle_count": 488,
+    "budget": 500,
+    "bbox_blender": {
+      "min": [
+        -0.18898633122444153,
+        -0.18107810616493225,
+        -0.31003493070602417
+      ],
+      "max": [
+        0.19278955459594727,
+        0.18344566226005554,
+        0.02513044886291027
+      ]
+    }
+  },
+  "construction": {
+    "reference_transform_unchanged": true,
+    "clearance_target_mm": 6.5,
+    "sample_min_clearance_mm": {
+      "Hair_Scalp": 6.803408730775118,
+      "Fringe_1": 20.936425775289536,
+      "Fringe_2": 12.576732784509659,
+      "Fringe_3": 12.424534186720848,
+      "Fringe_4": 19.864996895194054
+    }
+  },
+  "validation": {
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_short_fringe_01_front.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_short_fringe_01_threequarter.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_short_fringe_01_side.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_short_fringe_01_back.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_short_fringe_01_top.png"
+    ]
+  }
+}

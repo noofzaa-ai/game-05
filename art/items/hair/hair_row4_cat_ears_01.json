@@ -1,0 +1,61 @@
+{
+  "id": "hair_row4_cat_ears_01",
+  "name": "ผมสั้นเทาม่วง · หูแมว",
+  "display_name": "ผมสั้นเทาม่วง · หูแมว",
+  "asset_version": 1,
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "triangle_count": 488,
+  "triangle_budget": 500,
+  "thumbnail": "preview_hair_row4_cat_ears_01_threequarter.png",
+  "reference_row": 4,
+  "reference_column": 5,
+  "geometry": {
+    "triangle_count": 488,
+    "budget": 500,
+    "bbox_blender": {
+      "min": [
+        -0.24203814566135406,
+        -0.17680610716342926,
+        -0.3364512622356415
+      ],
+      "max": [
+        0.24045830965042114,
+        0.18577241897583008,
+        0.14300000667572021
+      ]
+    }
+  },
+  "construction": {
+    "reference_transform_unchanged": true,
+    "clearance_target_mm": 6.5,
+    "sample_min_clearance_mm": {
+      "Hair_Scalp": 6.862563546746969,
+      "Cat_fringe_1": 20.942291244864464,
+      "Cat_fringe_2": 12.267399579286575,
+      "Cat_fringe_3": 18.096037209033966,
+      "Cat_fringe_4": 33.6047038435936,
+      "Cat_ear_-1": 29.762744903564453,
+      "Cat_ear_inner_-1": 55.18454685807228,
+      "Cat_side_fur_-1": 19.08683031797409,
+      "Cat_ear_1": 29.796620830893517,
+      "Cat_ear_inner_1": 54.739613085985184,
+      "Cat_side_fur_1": 19.78985220193863
+    }
+  },
+  "validation": {
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_cat_ears_01_front.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_cat_ears_01_threequarter.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_cat_ears_01_side.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_cat_ears_01_back.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row4_cat_ears_01_top.png"
+    ]
+  }
+}

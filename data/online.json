@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "enabled": false,
+  "host": "zorxapi.daiyooo.com",
+  "port": 443,
+  "scheme": "https",
+  "client_key": ""
+}

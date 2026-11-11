@@ -1,0 +1,31 @@
+{
+  "R": {
+    "accept_total_ms": 2343.3,
+    "replay_total_ms": 1772.8,
+    "live_prediction_total_ms": 487.4,
+    "replay_ticks": 3121,
+    "frame_p95_ms": 27.1,
+    "frame_mean_ms": 17.710447761194,
+    "replay_us_per_tick": 564.8760330578513
+  },
+  "P": {
+    "accept_total_ms": 986.4,
+    "replay_total_ms": 459.4,
+    "live_prediction_total_ms": 182.6,
+    "replay_ticks": 2976,
+    "frame_p95_ms": 20.1,
+    "frame_mean_ms": 16.8059490084986,
+    "replay_us_per_tick": 154.8488008342023
+  },
+  "p95_reduction_percent": 25.83025830258302,
+  "replay_reduction_percent": 74.08619133574007,
+  "web_build": "fb2e23b49840",
+  "tape_packets": 298,
+  "browser": {
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"
+  },
+  "normal_game_deployed": true,
+  "normal_game_build": "48cbbab5c2f2"
+}

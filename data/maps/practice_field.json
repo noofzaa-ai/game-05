@@ -1,0 +1,34 @@
+{
+	"version": 1,
+	"id": "practice_field",
+	"name": "Practice Field (no monsters)",
+	"_design": "A test stage with no monsters (Boss 2026-10-06): a wide flat field to watch running, walking, turning and the swing animations of every weapon and outfit. Nothing attacks and the stage never ends; Esc goes back to the campfire. A few rocks and trees near the edges give the eye something to judge speed against; the rest point by the spawn (Q) opens the bag and gear to change outfits on the spot.",
+	"modes": ["pve"],
+	"camera_style": "top_down",
+	"atmosphere": "ink",
+	"bounds": {"half_width": 30.0, "half_depth": 20.0},
+	"spawn": [0.0, 0.05, 4.0],
+	"solids": [
+		{"center": [0, -0.2, 0], "size": [60, 0.4, 40], "material": "ink"},
+		{"center": [-20, 0.75, -10], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [20, 0.75, -10], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [-20, 0.75, 12], "size": [1.7, 1.5, 1.7], "material": "ink"},
+		{"center": [20, 0.75, 12], "size": [1.7, 1.5, 1.7], "material": "ink"}
+	],
+	"props": [
+		{"kind": "rock", "position": [-20, 0, -10], "scale": 1.8},
+		{"kind": "rock", "position": [20, 0, -10], "scale": 1.8},
+		{"kind": "rock", "position": [-20, 0, 12], "scale": 1.8},
+		{"kind": "rock", "position": [20, 0, 12], "scale": 1.8},
+		{"kind": "pine", "position": [-27, 0, -17], "scale": 1.4},
+		{"kind": "pine", "position": [27, 0, -17], "scale": 1.4},
+		{"kind": "plum", "position": [0, 0, -18], "scale": 1.5},
+		{"kind": "bush", "position": [-10, 0, -15], "scale": 1.0},
+		{"kind": "bush", "position": [10, 0, -15], "scale": 1.0},
+		{"kind": "petals", "position": [0, 0, -6], "count": 160, "radius": 10, "scale": 1.0}
+	],
+	"enemy_spawns": [],
+	"rest_points": [
+		{"id": "practice_rest", "position": [-4, 0.05, 6], "radius": 2.0}
+	]
+}

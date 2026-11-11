@@ -1,0 +1,183 @@
+{
+  "level": 1,
+  "id": "campfire_level_1",
+  "placements": [
+    {
+      "component": "stone_large",
+      "position_blender": [
+        0.95,
+        0.0,
+        0
+      ],
+      "rotation_z": 0.0,
+      "scale": 0.86
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        0.6717514421272202,
+        0.67175144212722,
+        0
+      ],
+      "rotation_z": 0.7853981633974483,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        5.817072295949927e-17,
+        0.95,
+        0
+      ],
+      "rotation_z": 1.5707963267948966,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_large",
+      "position_blender": [
+        -0.67175144212722,
+        0.6717514421272202,
+        0
+      ],
+      "rotation_z": 2.356194490192345,
+      "scale": 0.86
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        -0.95,
+        1.1634144591899854e-16,
+        0
+      ],
+      "rotation_z": 3.141592653589793,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        -0.6717514421272203,
+        -0.67175144212722,
+        0
+      ],
+      "rotation_z": 3.9269908169872414,
+      "scale": 1.0
+    },
+    {
+      "component": "stone_large",
+      "position_blender": [
+        -1.745121688784978e-16,
+        -0.95,
+        0
+      ],
+      "rotation_z": 4.71238898038469,
+      "scale": 0.86
+    },
+    {
+      "component": "stone_small",
+      "position_blender": [
+        0.6717514421272199,
+        -0.6717514421272203,
+        0
+      ],
+      "rotation_z": 5.497787143782138,
+      "scale": 1.0
+    },
+    {
+      "component": "firewood_crossed",
+      "position_blender": [
+        0,
+        0,
+        0
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "flame",
+      "position_blender": [
+        0,
+        0,
+        0.13
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "log_long",
+      "position_blender": [
+        -2.0,
+        2.4492935982947064e-16,
+        0
+      ],
+      "rotation_z": 4.71238898038469,
+      "scale": 1.0
+    },
+    {
+      "component": "stump",
+      "position_blender": [
+        -0.9,
+        -1.75,
+        0
+      ],
+      "rotation_z": 0,
+      "scale": 1
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        2.3031564579269177,
+        0.46687292736839386,
+        0
+      ],
+      "rotation_z": 0.2,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        0.2676919463483215,
+        2.334703626129074,
+        0
+      ],
+      "rotation_z": 1.4566370614359172,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        -2.137713736569042,
+        0.9760532672370009,
+        0
+      ],
+      "rotation_z": 2.7132741228718347,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        -1.5888716937655283,
+        -1.7314695321462235,
+        0
+      ],
+      "rotation_z": 3.969911184307752,
+      "scale": 0.65
+    },
+    {
+      "component": "grass",
+      "position_blender": [
+        1.1557370260593312,
+        -2.0461602885882457,
+        0
+      ],
+      "rotation_z": 5.226548245743669,
+      "scale": 0.65
+    }
+  ],
+  "triangles": 1642,
+  "fire_anchor_godot": [
+    0,
+    0.25,
+    0
+  ],
+  "gameplay_unlocks": "not configured; visual proposal only"
+}

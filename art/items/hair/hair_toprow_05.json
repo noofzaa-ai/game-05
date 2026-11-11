@@ -1,0 +1,24 @@
+{
+  "id": "hair_toprow_05",
+  "name": "ผมยาวประบ่า · แสกกลาง",
+  "display_name": "ผมยาวประบ่า · แสกกลาง",
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "asset_version": 1,
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "attachment_mode": "rigid",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "triangle_count": 468,
+  "triangle_budget": 500,
+  "thumbnail": "hair_toprow_05.png",
+  "reference_row": 1,
+  "reference_column": 5,
+  "geometry": {
+    "triangle_count": 468,
+    "closed_meshes": true
+  },
+  "reference": "art/source/hair/toprow_20261007/reference.png"
+}

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ZorxSkillData" load_steps=3 format=3]
+[ext_resource type="Script" path="res://data/skill_system/scripts/skill_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "flame_dash"
+display_name = "พุ่งเพลิง"
+number = 8
+behavior = "trail"
+tags = Array[String](["dash", "area", "hit", "duration"])
+built_in_statuses = Array[String](["burn"])
+authored_radius_m = 1
+base_stats = {"damage": 8, "radius": 1, "cast_time": 0.1, "cooldown": 6, "repeat": 1, "repeat_delay": 1, "repeat_damage_mul": 1, "area_mul": 1, "burn_damage_mul": 1, "leech": 0, "target_range": 12, "hit_height": 2.5, "projectile_count": 1, "chain": 0, "pierce": 0, "knockback": 0, "duration": 3, "range": 3, "projectile_speed": 16, "status_stacks": 1, "stun_build": 0, "regen": 0, "thorns": 0, "consume_mul": 1, "dash_distance": 6, "trail_width": 1.5, "tick_damage": 4, "tick_interval": 0.5}

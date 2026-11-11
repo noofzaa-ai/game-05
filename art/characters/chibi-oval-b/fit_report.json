@@ -1,0 +1,34 @@
+{
+  "draft": true,
+  "surface": "continuous 48x28 oval; full skull rebuilt to match reference",
+  "lower_head_rebuilt": true,
+  "closed_manifold": true,
+  "head_bounds_blender": {
+    "min": [
+      -0.15800000727176666,
+      -0.1439584493637085,
+      1.184999942779541
+    ],
+    "max": [
+      0.15800000727176666,
+      0.14499999582767487,
+      1.5230000019073486
+    ]
+  },
+  "head_triangles": 2592,
+  "faces": [
+    "face_anime_bored_01",
+    "face_annoyed_01",
+    "face_devious_01",
+    "face_err_01",
+    "face_playful_01",
+    "face_prankster_01",
+    "face_sad_01",
+    "face_shout_01",
+    "face_smile_01",
+    "face_soft_smile_01",
+    "face_vampire_01"
+  ],
+  "hair": "draft copies; rear lower cap fitted to oval skull, original production GLBs unchanged",
+  "rig": "unchanged rest skeleton; draft static export, production clips external"
+}

@@ -1,0 +1,40 @@
+{
+ "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. 'animations' is the GLB the clips are read from (same 102-joint rig as the body files), 'clip_marks' its timing marks. weapon_visible/weapon_scale/off_hand: what the hands hold for the look (the combat 'weapon' id keeps owning the stats). Advance (travel) distances live in the weapon's overrides in data/combat/weapons.json.",
+ "id": "longbow",
+ "weapon": "blade",
+ "animations": "res://art/characters/studio05/classes/longbow.glb",
+ "clip_marks": "res://art/characters/studio05/classes/longbow_clips.json",
+ "moves": {
+  "light_1": "lb_aim_recoil",
+  "light_2": "lb_aim_recoil",
+  "light_3": "lb_aim_recoil",
+  "light_4": "lb_draw_arrow",
+  "heavy": "lb_aim_overdraw",
+  "run_light": "lb_aim_recoil",
+  "run_heavy": "lb_aim_overdraw",
+  "air_light": "lb_aim_recoil",
+  "air_heavy": "lb_aim_overdraw",
+  "kick": "lb_melee_kick",
+  "flying_kick": "lb_melee_kick",
+  "ultimate": "lb_aim_overdraw",
+  "special": "lb_draw_arrow",
+  "charge": "lb_aim_overdraw"
+ },
+ "states": {
+  "idle": "lb_idle_01",
+  "run": "lb_run_forward",
+  "guard": "lb_block",
+  "slide": "lb_dodge_forward",
+  "hurt": "lb_react_small_from_front",
+  "launched": "lb_react_small_from_headshot",
+  "air": "lb_fall_a"
+ },
+ "off_hand": "none",
+ "weapon_visible": false,
+ "weapon_scale": 1.0,
+ "hair_options": [
+  "c",
+  "e",
+  "f"
+ ]
+}

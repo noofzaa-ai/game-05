@@ -1,0 +1,292 @@
+{
+  "version": "mcp_vfx_v1",
+  "source": "game-vfx MCP",
+  "skills": {
+    "storm_blades": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/storm_blades/effect.glb",
+      "scale": 0.65,
+      "duration": 1.1,
+      "loop": false,
+      "phases": {},
+      "job": "681ea93e-11e0-4c0f-be36-c84d53d9f55f",
+      "source_skill": "storm_blades",
+      "preset_name": "SkillLab storm_blades VFX v1"
+    },
+    "blood_pierce": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/blood_pierce/effect.glb",
+      "scale": 0.65,
+      "duration": 0.9,
+      "loop": false,
+      "phases": {},
+      "job": "521db3cf-98a2-425e-aab9-03e26e814cea",
+      "source_skill": "blood_pierce",
+      "preset_name": "SkillLab blood_pierce VFX v1"
+    },
+    "thorn_trap": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/thorn_trap/effect.glb",
+      "scale": 0.32,
+      "duration": 1.5,
+      "loop": false,
+      "phases": {},
+      "job": "2373e32e-6981-40f3-9393-4340b70d47b9",
+      "source_skill": "thorn_trap",
+      "preset_name": "SkillLab thorn_trap VFX v1"
+    },
+    "blood_shield": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/blood_shield/effect.glb",
+      "scale": 0.65,
+      "duration": 3,
+      "loop": true,
+      "phases": {},
+      "job": "6d8fc27c-d0f3-4e8a-83b4-da848586ec09",
+      "source_skill": "blood_shield",
+      "preset_name": "SkillLab blood_shield VFX v1"
+    },
+    "fire_ring": {
+      "impact": "/experiments/skill_lab/assets/fire_ring/effect.glb",
+      "scale": 0.6672387126563173,
+      "duration": 1.8,
+      "source": "existing MCP"
+    },
+    "fireball": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/fireball/effect.glb",
+      "scale": 0.26,
+      "duration": 1.4,
+      "loop": false,
+      "phases": {
+        "projectile": "/experiments/skill_lab/assets/mcp_vfx/fireball_projectile/effect.glb"
+      },
+      "job": "f60512c8-0fe8-4be5-9965-b554c016fcfe",
+      "source_skill": "fireball",
+      "preset_name": "SkillLab fireball VFX v1"
+    },
+    "eruption": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/eruption/effect.glb",
+      "scale": 0.32,
+      "duration": 1.7,
+      "loop": false,
+      "phases": {},
+      "job": "4e61df74-b8a3-4e7e-9d99-c7d53ee8e614",
+      "source_skill": "eruption",
+      "preset_name": "SkillLab eruption VFX v1"
+    },
+    "flame_dash": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/flame_dash/effect.glb",
+      "scale": 1.2,
+      "duration": 2,
+      "loop": true,
+      "phases": {},
+      "job": "47835cd1-b042-4542-b9d1-7759a81a18e6",
+      "source_skill": "flame_dash",
+      "preset_name": "SkillLab flame_dash VFX v1"
+    },
+    "ice_lance": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/ice_lance/effect.glb",
+      "scale": 0.3,
+      "duration": 1.25,
+      "loop": false,
+      "phases": {
+        "projectile": "/experiments/skill_lab/assets/mcp_vfx/ice_lance_projectile/effect.glb"
+      },
+      "job": "42ae3360-aa64-4552-85c5-5bdd9b6bed8c",
+      "source_skill": "ice_lance",
+      "preset_name": "SkillLab ice_lance VFX v1"
+    },
+    "shatter_smash": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/shatter_smash/effect.glb",
+      "scale": 0.36,
+      "duration": 1.6,
+      "loop": false,
+      "phases": {},
+      "job": "79387ab4-abb3-40f3-aa31-00e952df1044",
+      "source_skill": "shatter_smash",
+      "preset_name": "SkillLab shatter_smash VFX v1"
+    },
+    "ice_wall": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/shatter_smash/effect.glb",
+      "scale": 0.65,
+      "duration": 1.6,
+      "loop": true,
+      "phases": {},
+      "job": "79387ab4-abb3-40f3-aa31-00e952df1044",
+      "source_skill": "shatter_smash",
+      "preset_name": "SkillLab shatter_smash VFX v1",
+      "axis_scale": [
+        1,
+        1,
+        0.15
+      ]
+    },
+    "frost_armor": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/frost_armor/effect.glb",
+      "scale": 0.65,
+      "duration": 3,
+      "loop": true,
+      "phases": {},
+      "job": "de01b67c-edd2-4747-a6de-cd6ae1874871",
+      "source_skill": "frost_armor",
+      "preset_name": "SkillLab frost_armor VFX v1"
+    },
+    "chain_lightning": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/chain_lightning/effect.glb",
+      "scale": 0.35,
+      "duration": 0.9,
+      "loop": false,
+      "phases": {
+        "beam": "/experiments/skill_lab/assets/mcp_vfx/chain_lightning_beam/effect.glb"
+      },
+      "job": "fe7c458c-47c8-44f3-88fa-0a144ee329aa",
+      "source_skill": "chain_lightning",
+      "preset_name": "SkillLab chain_lightning VFX v1"
+    },
+    "lightning_strike": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/lightning_strike/effect.glb",
+      "scale": 0.4,
+      "duration": 1.3,
+      "loop": false,
+      "phases": {},
+      "job": "4bfa3a7a-d004-402f-8825-583c26e36435",
+      "source_skill": "lightning_strike",
+      "preset_name": "SkillLab lightning_strike VFX v1"
+    },
+    "blink_bolt": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/blink_bolt/effect.glb",
+      "scale": 0.32,
+      "duration": 1,
+      "loop": false,
+      "phases": {},
+      "job": "db57e65b-835f-47a0-b5eb-ce4d2b00cada",
+      "source_skill": "blink_bolt",
+      "preset_name": "SkillLab blink_bolt VFX v1"
+    },
+    "tesla_totem": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/tesla_totem/effect.glb",
+      "scale": 1.15,
+      "duration": 3,
+      "loop": true,
+      "phases": {
+        "projectile": "/experiments/skill_lab/assets/mcp_vfx/tesla_totem_projectile/effect.glb"
+      },
+      "job": "e8a1b8d6-350d-4e69-879b-be7c86320d21",
+      "source_skill": "tesla_totem",
+      "preset_name": "SkillLab tesla_totem VFX v1"
+    },
+    "ground_slam": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/ground_slam/effect.glb",
+      "scale": 0.25,
+      "duration": 1.7,
+      "loop": false,
+      "phases": {},
+      "job": "a6fb12fd-cd70-4213-a185-743f329ad454",
+      "source_skill": "ground_slam",
+      "preset_name": "SkillLab ground_slam VFX v1"
+    },
+    "riposte": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/riposte/effect.glb",
+      "scale": 0.65,
+      "duration": 0.85,
+      "loop": false,
+      "phases": {},
+      "job": "6ed12f17-8580-45ea-a77b-5f76e4025a83",
+      "source_skill": "riposte",
+      "preset_name": "SkillLab riposte VFX v1"
+    },
+    "piercing_shot": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/piercing_shot/effect.glb",
+      "scale": 0.45,
+      "duration": 0.9,
+      "loop": false,
+      "phases": {
+        "projectile": "/experiments/skill_lab/assets/mcp_vfx/piercing_shot_projectile/effect.glb"
+      },
+      "job": "a1b5c86c-f9af-49ed-b457-b81c1f6bb073",
+      "source_skill": "piercing_shot",
+      "preset_name": "SkillLab piercing_shot VFX v1"
+    },
+    "war_cry": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/war_cry/effect.glb",
+      "scale": 0.5,
+      "duration": 2,
+      "loop": true,
+      "phases": {},
+      "job": "f5df48d2-5c43-4211-81ea-4b9418d82e3c",
+      "source_skill": "war_cry",
+      "preset_name": "SkillLab war_cry VFX v1",
+      "offset": [
+        0,
+        0.7,
+        0
+      ]
+    }
+  },
+  "scope": "Only owned S01-S20; no ultimate catalogs",
+  "statuses": {
+    "burn": {
+      "impact": "/experiments/skill_lab/assets/burn/effect.glb",
+      "scale": 0.28,
+      "duration": 1.2
+    },
+    "bleed": {
+      "impact": "/experiments/skill_lab/assets/bleed/effect.glb",
+      "scale": 0.25,
+      "duration": 1.2
+    },
+    "chill": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/frost_armor/effect.glb",
+      "scale": 0.23,
+      "duration": 3
+    },
+    "freeze": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/shatter_smash/effect.glb",
+      "scale": 0.25,
+      "duration": 1.6
+    },
+    "shock": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/tesla_totem/effect.glb",
+      "scale": 0.32,
+      "duration": 3
+    },
+    "stun": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/war_cry/effect.glb",
+      "scale": 0.28,
+      "duration": 2
+    }
+  },
+  "gem_effects": {
+    "leech": {
+      "impact": "/experiments/skill_lab/assets/bleed/effect.glb",
+      "scale": 1.4,
+      "duration": 0.45,
+      "tint": "e66c9d",
+      "offset": [
+        0,
+        0.7,
+        0
+      ]
+    },
+    "regen": {
+      "impact": "/experiments/skill_lab/assets/burn/effect.glb",
+      "scale": 1.25,
+      "duration": 1.2,
+      "tint": "75e3a3",
+      "offset": [
+        0,
+        0.2,
+        0
+      ],
+      "instances": 3,
+      "spread": 0.35
+    },
+    "thorns": {
+      "impact": "/experiments/skill_lab/assets/mcp_vfx/thorn_trap/effect.glb",
+      "scale": 0.26,
+      "duration": 1.5,
+      "tint": "e5a0f0",
+      "offset": [
+        0,
+        0.15,
+        0
+      ]
+    }
+  }
+}

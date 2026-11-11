@@ -1,0 +1,47 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),crypto=require('node:crypto');
+const c={};vm.createContext(c);vm.runInContext(fs.readFileSync(require('node:path').resolve(__dirname,'../../../build/names-runtime/index.js'),'utf8'),c);
+const rows=new Map();let serial=0;
+const key=r=>[r.collection,r.userId,r.key].join('|'),copy=r=>JSON.parse(JSON.stringify(r));
+const nk={uuidv4:()=>crypto.randomUUID(),sha256Hash:s=>crypto.createHash('sha256').update(s).digest('hex'),storageRead:ids=>ids.map(r=>rows.get(key(r))).filter(Boolean).map(copy),multiUpdate(a,writes,deletes){for(const w of writes||[]){const old=rows.get(key(w));if(w.version==='*'?!!old:!old||old.version!==w.version)throw Error('CAS');}for(const w of writes||[])rows.set(key(w),{...copy(w),version:String(++serial)});for(const d of deletes||[])rows.delete(key(d));}};
+const env={ZORX_ROOM_WS_URL:'wss://example.test/room',ZORX_NAMES_TOKEN:'test-only'},uid='test-user',ctx={userId:uid,env};
+function put(collection,k,value){rows.set([collection,uid,k].join('|'),{collection,key:k,userId:uid,value,version:String(++serial)});}
+put(c.PROFILE_COLLECTION,c.PROFILE_KEY,{v:1,revision:1,profile:{v:1,gold:42},rng_state:'123',receipts:[]});
+put(c.CHARACTER_COLLECTION,c.CHARACTER_NAME_KEY,{v:1,name:'Tester',canonical:'tester',hash:'a'.repeat(64)});
+const call=(name,context,p)=>JSON.parse(c[name](context,{},nk,JSON.stringify(p)));
+assert.equal(call('roomCreate',ctx,{v:1,capacity:2,diagnostic:true}).error,'invalid_payload');
+function exercise(diagnostic){
+ const ticket=call('roomCreate',ctx,{v:1,capacity:1,...(diagnostic?{diagnostic:true}:{})});assert.equal(ticket.ok,true);assert.equal(ticket.diagnostic,diagnostic);
+ if(diagnostic)assert.match(ticket.diagnostic_seed,/^[a-f0-9]{15}$/);
+ const back=p=>call('roomBackend',{env},{v:1,secret:env.ZORX_NAMES_TOKEN,room:ticket.room,worker:'staging-0',process:'0'.repeat(32),...p});
+ const admitted=back({op:'redeem',ticket:ticket.ticket});assert.equal(admitted.ok,true);
+ assert.equal(back({op:'start',fence:admitted.fence}).ok,true);
+ if(!diagnostic)assert.equal(call('roomCancel',ctx,{v:1,diagnostic:true}).error,'in_match');
+ assert.equal(back({op:'heartbeat',fence:admitted.fence}).ok,true);
+ assert.equal(back({op:'finish',fence:admitted.fence,profiles:{1:{v:1,gold:999}}}).ok,true);
+ const state=rows.get([c.PROFILE_COLLECTION,uid,c.PROFILE_KEY].join('|')).value;
+ assert.equal(state.active_room,undefined);assert.equal(state.profile.gold,diagnostic?42:999);
+}
+exercise(true);exercise(false);
+const recover=call('roomCreate',ctx,{v:1,capacity:1,diagnostic:true});assert.equal(recover.ok,true);
+const rowkey=[c.ROOM_COLLECTION,c.SYSTEM_OWNER,recover.room].join('|');
+rows.get(rowkey).value.started=true;rows.get(rowkey).value.expires=0;
+assert.equal(call('roomCancel',ctx,{v:1,diagnostic:true}).ok,true);
+assert.equal(rows.get([c.PROFILE_COLLECTION,uid,c.PROFILE_KEY].join('|')).value.active_room,undefined);
+assert.equal(rows.get([c.PROFILE_COLLECTION,uid,c.PROFILE_KEY].join('|')).value.profile.gold,999);
+assert.equal(call('roomCreate',ctx,{v:1,capacity:1,diagnostic:true}).ok,true);
+console.log('DIAGNOSTIC EXIT PASS:expired started diagnostic released;new room opens;normal active room protected');
+console.log('DIAGNOSTIC ROOM PASS: no-save enforced; fence released; normal rooms persist');
+const currentKey=[c.PROFILE_COLLECTION,uid,c.PROFILE_KEY].join('|');
+const expiredId=rows.get(currentKey).value.active_room.id;
+rows.get(currentKey).value.active_room.expires=0;rows.get(currentKey).value.active_room.started=true;
+rows.get([c.ROOM_COLLECTION,c.SYSTEM_OWNER,expiredId].join('|')).value.expires=0;
+let recoveryCalls=0;
+nk.httpRequest=(url)=>{if(url.endsWith('/recover')){recoveryCalls++;throw Error('diagnostic must not recover rewards');}return {code:200,body:JSON.stringify({v:1,ok:true,refine:{},upgrade:{}})};};
+assert.equal(call('profileGet',ctx,{v:1}).ok,true);
+assert.equal(recoveryCalls,0);assert.equal(rows.get(currentKey).value.active_room,undefined);assert.equal(rows.get(currentKey).value.profile.gold,999);
+console.log('DIAGNOSTIC EXPIRY PASS:profile refresh clears stale lock without recovery mutation');
+const normalExpiry=call('roomCreate',ctx,{v:1,capacity:1});assert.equal(normalExpiry.ok,true);
+rows.get(currentKey).value.active_room.expires=0;rows.get(currentKey).value.active_room.started=true;
+nk.httpRequest=(url)=>{if(url.endsWith('/recover')){recoveryCalls++;return {code:200,body:JSON.stringify({ok:true,profile:{v:1,gold:888},rng_state:'456'})};}return {code:200,body:JSON.stringify({v:1,ok:true,refine:{},upgrade:{}})};};
+assert.equal(call('profileGet',ctx,{v:1}).ok,true);assert.equal(recoveryCalls,1);assert.equal(rows.get(currentKey).value.profile.gold,888);
+console.log('NORMAL EXPIRY REGRESSION PASS:normal rooms still invoke authoritative recovery');

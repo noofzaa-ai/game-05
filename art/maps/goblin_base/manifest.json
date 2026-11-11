@@ -1,0 +1,37 @@
+{
+  "goblin_base_chief": {
+    "collision_source": "data/maps/goblin_base_chief.json",
+    "draw_surfaces": 15,
+    "terrain": "vertex-painted grass/dirt + MultiMesh grass tufts/ferns, no extra textures; visual floor duplicate hidden by GoblinGround",
+    "textures": "one shared kit colour1024/normal512/MR512",
+    "triangles_instanced": 57780
+  },
+  "goblin_base_courtyard": {
+    "collision_source": "data/maps/goblin_base_courtyard.json",
+    "draw_surfaces": 14,
+    "terrain": "vertex-painted grass/dirt + MultiMesh grass tufts/ferns, no extra textures; visual floor duplicate hidden by GoblinGround",
+    "textures": "one shared kit colour1024/normal512/MR512",
+    "triangles_instanced": 53158
+  },
+  "goblin_base_gate": {
+    "collision_source": "data/maps/goblin_base_gate.json",
+    "draw_surfaces": 15,
+    "terrain": "vertex-painted grass/dirt + MultiMesh grass tufts/ferns, no extra textures; visual floor duplicate hidden by GoblinGround",
+    "textures": "one shared kit colour1024/normal512/MR512",
+    "triangles_instanced": 53726
+  },
+  "goblin_base_quarry": {
+    "collision_source": "data/maps/goblin_base_quarry.json",
+    "draw_surfaces": 16,
+    "terrain": "vertex-painted grass/dirt + MultiMesh grass tufts/ferns, no extra textures; visual floor duplicate hidden by GoblinGround",
+    "textures": "one shared kit colour1024/normal512/MR512",
+    "triangles_instanced": 54080
+  },
+  "goblin_base_rest": {
+    "collision_source": "data/maps/goblin_base_rest.json",
+    "draw_surfaces": 16,
+    "terrain": "vertex-painted grass/dirt + MultiMesh grass tufts/ferns, no extra textures; visual floor duplicate hidden by GoblinGround",
+    "textures": "one shared kit colour1024/normal512/MR512",
+    "triangles_instanced": 49524
+  }
+}

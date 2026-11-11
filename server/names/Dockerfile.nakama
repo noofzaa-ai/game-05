@@ -1,0 +1,5 @@
+FROM registry.heroiclabs.com/heroiclabs/nakama:3.37.0@sha256:b475a1d7baf6f27be53abe30a59a29f10860ac3101780e626f90ff60107546a9
+COPY index.js /opt/zorx/modules/index.js
+USER 10001:10001
+ENTRYPOINT ["/nakama/nakama"]
+CMD ["--config", "/run/nakama/config.yml", "--config", "/run/zorx-names/runtime.yml"]

@@ -1,0 +1,182 @@
+[
+  {
+    "case": 47,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "original",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_047.png"
+  },
+  {
+    "case": 48,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "original",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_048.png"
+  },
+  {
+    "case": 49,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "01",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_049.png"
+  },
+  {
+    "case": 50,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "01",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_050.png"
+  },
+  {
+    "case": 51,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "02",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_051.png"
+  },
+  {
+    "case": 52,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "02",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_052.png"
+  },
+  {
+    "case": 53,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "03",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_053.png"
+  },
+  {
+    "case": 54,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "03",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_054.png"
+  },
+  {
+    "case": 55,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "04",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_055.png"
+  },
+  {
+    "case": 56,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "04",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_056.png"
+  },
+  {
+    "case": 57,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "05",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_057.png"
+  },
+  {
+    "case": 58,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "05",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_058.png"
+  },
+  {
+    "case": 59,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "06",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_059.png"
+  },
+  {
+    "case": 60,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "06",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_060.png"
+  },
+  {
+    "case": 61,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "07",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_061.png"
+  },
+  {
+    "case": 62,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "07",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_062.png"
+  },
+  {
+    "case": 63,
+    "choices": {
+      "blink_mode": "open",
+      "eye_color": "#e97e24",
+      "face": "08",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_063.png"
+  },
+  {
+    "case": 64,
+    "choices": {
+      "blink_mode": "closed",
+      "eye_color": "#e97e24",
+      "face": "08",
+      "fashion_hat": "none"
+    },
+    "image": "res://art/fashion/review/case_064.png"
+  }
+]

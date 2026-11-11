@@ -1,0 +1,100 @@
+{
+  "default": "none",
+  "styles": [
+    {
+      "id": "none",
+      "name": "ไม่ใส่หมวก",
+      "asset_id": ""
+    },
+    {
+      "id": "black",
+      "name": "หมวกหนังดำ",
+      "asset_id": "res://art/fashion/hats/black.glb"
+    },
+    {
+      "id": "cat",
+      "name": "หูแมว",
+      "asset_id": "res://art/fashion/hats/cat.glb"
+    },
+    {
+      "id": "moon_witch",
+      "name": "หมวกแม่มด · จันทร์เสี้ยว",
+      "asset_id": "res://art/fashion/hats/moon_witch.glb"
+    },
+    {
+      "id": "pumpkin_night",
+      "name": "หมวกฟักทอง",
+      "asset_id": "res://art/fashion/hats/pumpkin_night.glb"
+    },
+    {
+      "id": "little_ghost",
+      "name": "หมวกผีน้อย",
+      "asset_id": "res://art/fashion/hats/little_ghost.glb"
+    },
+    {
+      "id": "bat_club",
+      "name": "ที่คาดหูค้างคาว",
+      "asset_id": "res://art/fashion/hats/bat_club.glb"
+    },
+    {
+      "id": "fantasy_01",
+      "name": "01 · แม่มดส้มจันทร์เสี้ยว",
+      "asset_id": "res://art/fashion/hats/fantasy_01.glb"
+    },
+    {
+      "id": "fantasy_02",
+      "name": "02 · ทรงสูงงาช้างขนนก",
+      "asset_id": "res://art/fashion/hats/fantasy_02.glb"
+    },
+    {
+      "id": "fantasy_03",
+      "name": "03 · นักสำรวจเข็มทิศ",
+      "asset_id": "res://art/fashion/hats/fantasy_03.glb"
+    },
+    {
+      "id": "fantasy_04",
+      "name": "04 · เบเรต์ฟักทอง",
+      "asset_id": "res://art/fashion/hats/fantasy_04.glb"
+    },
+    {
+      "id": "fantasy_05",
+      "name": "05 · พ่อมดน้ำเงินดาวทอง",
+      "asset_id": "res://art/fashion/hats/fantasy_05.glb"
+    },
+    {
+      "id": "fantasy_06",
+      "name": "06 · โบว์เลอร์แดงค้างคาว",
+      "asset_id": "res://art/fashion/hats/fantasy_06.glb"
+    },
+    {
+      "id": "fantasy_07",
+      "name": "07 · หมวกแหลมเขียวใบไม้",
+      "asset_id": "res://art/fashion/hats/fantasy_07.glb"
+    },
+    {
+      "id": "fantasy_08",
+      "name": "08 · บักเก็ตม่วงผีน้อย",
+      "asset_id": "res://art/fashion/hats/fantasy_08.glb"
+    },
+    {
+      "id": "fantasy_09",
+      "name": "09 · โจรสลัดสามมุม",
+      "asset_id": "res://art/fashion/hats/fantasy_09.glb"
+    },
+    {
+      "id": "fantasy_10",
+      "name": "10 · ปีกเหลืองดอกไม้",
+      "asset_id": "res://art/fashion/hats/fantasy_10.glb"
+    },
+    {
+      "id": "fantasy_11",
+      "name": "11 · นิวส์บอยดำจันทร์เสี้ยว",
+      "asset_id": "res://art/fashion/hats/fantasy_11.glb"
+    },
+    {
+      "id": "fantasy_12",
+      "name": "12 · ทรงสูงน้ำเงินอัญมณี",
+      "asset_id": "res://art/fashion/hats/fantasy_12.glb"
+    }
+  ]
+}

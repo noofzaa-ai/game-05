@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "levels": [
+    {
+      "type": "refine",
+      "level": 1,
+      "asset": "art/props/camp_modular/workshops/refine_lv1.glb",
+      "triangles": 9115,
+      "npc": "bs_refine",
+      "npc_height_m": 1.5,
+      "patrol_local_godot": {
+        "from": [
+          -0.9,
+          0,
+          3.0
+        ],
+        "to": [
+          0.9,
+          0,
+          3.0
+        ]
+      },
+      "runtime_unlock_rules": "not assigned; UpgradeLv1 visual prefab available"
+    },
+    {
+      "type": "refine",
+      "level": 2,
+      "asset": "art/props/camp_modular/workshops/refine_lv2.glb",
+      "triangles": 9115,
+      "npc": "bs_refine",
+      "npc_height_m": 1.5,
+      "patrol_local_godot": {
+        "from": [
+          -0.9,
+          0,
+          3.0
+        ],
+        "to": [
+          0.9,
+          0,
+          3.0
+        ]
+      },
+      "runtime_unlock_rules": "not assigned; UpgradeLv1 visual prefab available"
+    },
+    {
+      "type": "refine",
+      "level": 3,
+      "asset": "art/props/camp_modular/workshops/refine_lv3.glb",
+      "triangles": 9691,
+      "npc": "bs_refine",
+      "npc_height_m": 1.5,
+      "patrol_local_godot": {
+        "from": [
+          -0.9,
+          0,
+          3.0
+        ],
+        "to": [
+          0.9,
+          0,
+          3.0
+        ]
+      },
+      "runtime_unlock_rules": "not assigned; UpgradeLv1 visual prefab available"
+    },
+    {
+      "type": "upgrade",
+      "level": 1,
+      "asset": "art/props/camp_modular/workshops/upgrade_lv1.glb",
+      "triangles": 4258,
+      "npc": "bs_upgrade",
+      "npc_height_m": 1.5,
+      "patrol_local_godot": {
+        "from": [
+          -0.9,
+          0,
+          3.0
+        ],
+        "to": [
+          0.9,
+          0,
+          3.0
+        ]
+      },
+      "runtime_unlock_rules": "not assigned; UpgradeLv1 visual prefab available"
+    },
+    {
+      "type": "upgrade",
+      "level": 2,
+      "asset": "art/props/camp_modular/workshops/upgrade_lv2.glb",
+      "triangles": 4801,
+      "npc": "bs_upgrade",
+      "npc_height_m": 1.5,
+      "patrol_local_godot": {
+        "from": [
+          -0.9,
+          0,
+          3.0
+        ],
+        "to": [
+          0.9,
+          0,
+          3.0
+        ]
+      },
+      "runtime_unlock_rules": "not assigned; UpgradeLv1 visual prefab available"
+    },
+    {
+      "type": "upgrade",
+      "level": 3,
+      "asset": "art/props/camp_modular/workshops/upgrade_lv3.glb",
+      "triangles": 6425,
+      "npc": "bs_upgrade",
+      "npc_height_m": 1.5,
+      "patrol_local_godot": {
+        "from": [
+          -0.9,
+          0,
+          3.0
+        ],
+        "to": [
+          0.9,
+          0,
+          3.0
+        ]
+      },
+      "runtime_unlock_rules": "not assigned; UpgradeLv1 visual prefab available"
+    }
+  ],
+  "shared_textures": "../blacksmith/",
+  "source_preserved": true
+}

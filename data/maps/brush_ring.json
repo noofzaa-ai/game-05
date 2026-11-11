@@ -1,0 +1,137 @@
+{
+	"version": 1,
+	"id": "brush_ring",
+	"name": "Brush Ring (journey boss arena)",
+	"_design": "Journey stage 12 (the boss room). Not listed in index.json: it is reached only through a journey (data/journeys/*.json boss_map). A compact ink arena seen from camera 8: the player enters from the south (z 6), the boss waits up-screen in the middle (spawn spot 0) 7 units ahead, so it, its name tag and its wind-ups are always in view, two escorts start at the east and west flanks (spots 1-2), and the goblin archer and mage start behind the boss to its north-west and north-east (spots 3-4, 2026-10-12), so their shots come from up-screen where the camera sees them. Four low rocks at the corners only, so the centre is open ground to circle the boss and dodge its slam. ART (orc kit, Boss 2026-10-15): the procedural ink props were replaced by the art scene below, built by tools/blender/build_goblin_stages.py (art only: this file stays hand-written and its solids, spawns and floor are unchanged). Night war-chief's court: the horned throne between two bonfires behind the boss, two horned gates and palisade sections on the north wall (the way out), watchtowers on the corners, huts / cage / forge / banners down the sides outside the bounds; the north corner rocks are stone cairns with a skull totem, the south ones moss rocks.",
+	"modes": [
+		"pve"
+	],
+	"camera_style": "top_down",
+	"atmosphere": "ink",
+	"art_scene": "res://art/maps/goblin_forest/brush_ring.glb",
+	"art_mood": "night",
+	"bounds": {
+		"half_width": 16.0,
+		"half_depth": 11.0
+	},
+	"spawn": [
+		0.0,
+		0.05,
+		6.0
+	],
+	"solids": [
+		{
+			"center": [
+				0,
+				-0.2,
+				2
+			],
+			"size": [
+				40,
+				0.4,
+				32
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				-11,
+				0.6,
+				-6
+			],
+			"size": [
+				1.6,
+				1.2,
+				1.6
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				11,
+				0.6,
+				-6
+			],
+			"size": [
+				1.6,
+				1.2,
+				1.6
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				-12,
+				0.6,
+				5
+			],
+			"size": [
+				1.6,
+				1.2,
+				1.6
+			],
+			"material": "ink"
+		},
+		{
+			"center": [
+				12,
+				0.6,
+				5
+			],
+			"size": [
+				1.6,
+				1.2,
+				1.6
+			],
+			"material": "ink"
+		}
+	],
+	"enemy_spawns": [
+		{
+			"type": "goblin_chief",
+			"level": 1,
+			"position": [
+				0,
+				0.05,
+				-1
+			]
+		},
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				-9,
+				0.05,
+				1
+			]
+		},
+		{
+			"type": "goblin",
+			"level": 1,
+			"position": [
+				9,
+				0.05,
+				1
+			]
+		},
+		{
+			"type": "goblin_archer",
+			"level": 1,
+			"position": [
+				-6,
+				0.05,
+				-7
+			]
+		},
+		{
+			"type": "goblin_mage",
+			"level": 1,
+			"position": [
+				6,
+				0.05,
+				-7
+			]
+		}
+	],
+	"rest_points": []
+}

@@ -1,0 +1,89 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_boy_bowl_cut_01",
+  "display_name": "เด็กผู้ชาย · โบว์ลคัท 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "90s revival bowl cut",
+  "geometry": {
+    "triangle_count": 544,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "Bowl_Straight_Fringe",
+      "Bowl_Level_Rim",
+      "Bowl_Cap"
+    ]
+  },
+  "material": {
+    "name": "Bowl cut ink",
+    "base_color_linear_rgba": [
+      0.018,
+      0.055,
+      0.16,
+      1
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.9,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "Bowl_Straight_Fringe",
+        "Bowl_Level_Rim",
+        "Bowl_Cap"
+      ],
+      "triangle_count": 544,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.169,
+          -0.164,
+          -0.046
+        ],
+        "max": [
+          0.169,
+          0.16,
+          0.205
+        ]
+      },
+      "lowest_y_contract_note": "Blender re-import is Z-up; exported GLB Y-up vertical minimum is recorded from source Z minimum.",
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Bowl cut ink.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.9
+        }
+      ],
+      "external_images": []
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0,
+      "lighting": "reduced neutral key/fill/rim"
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_bowl_cut_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_bowl_cut_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_bowl_cut_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_bowl_cut_01_top.png"
+    ]
+  }
+}

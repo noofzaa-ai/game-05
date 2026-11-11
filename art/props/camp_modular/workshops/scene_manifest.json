@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "review_scene": "res://scenes/workshops/review.tscn",
+  "npc_height_m": 1.5,
+  "scenes": {
+    "refine": {
+      "1": "res://scenes/workshops/refine_lv1.tscn",
+      "2": "res://scenes/workshops/refine_lv2.tscn",
+      "3": "res://scenes/workshops/refine_lv3.tscn"
+    },
+    "upgrade": {
+      "1": "res://scenes/workshops/upgrade_lv1.tscn",
+      "2": "res://scenes/workshops/upgrade_lv2.tscn",
+      "3": "res://scenes/workshops/upgrade_lv3.tscn"
+    }
+  },
+  "live_camp_integrated": false,
+  "deployed": false
+}

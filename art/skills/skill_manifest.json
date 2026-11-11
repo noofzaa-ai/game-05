@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "rig_profile": "chibi-studio-57",
+  "in_game": {
+    "blade_ultimate": "blade_inferno_ultimate",
+    "hammer_ultimate": "hammer_ground_drag_ultimate"
+  },
+  "_comment": "Skill packs present in art/skills (imported and shrunk by tools/skills/shrink_skills.py, see IMPORTED.md). in_game: which pack a move shows (move id in data/combat/weapons.json -> skill id); a pack not listed there is in the build but not shown yet.",
+  "skills": [
+    {
+      "id": "blade_earth_slam_ultimate",
+      "name": "อัลติ · ดาบดินถล่ม",
+      "weapon_type": "blade",
+      "asset_version": 3,
+      "resource_path": "res://art/skills/blade/earth_slam_ultimate/blade_earth_slam_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/earth_slam_ultimate/skill.json",
+      "locomotion_resume_time_s": 2.08,
+      "vfx_end_time_s": 4.34
+    },
+    {
+      "id": "blade_earth_split_ultimate",
+      "name": "อัลติ · ดาบผ่าธรณี",
+      "weapon_type": "blade",
+      "asset_version": 3,
+      "resource_path": "res://art/skills/blade/earth_split_ultimate/blade_earth_split_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/earth_split_ultimate/skill.json",
+      "locomotion_resume_time_s": 1.14,
+      "vfx_end_time_s": 3.4
+    },
+    {
+      "id": "blade_inferno_ultimate",
+      "name": "อัลติ · วงสุริยะเพลิง",
+      "weapon_type": "blade",
+      "asset_version": 4,
+      "resource_path": "res://art/skills/blade/inferno_ultimate/blade_inferno_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/inferno_ultimate/skill.json",
+      "locomotion_resume_time_s": 1.04,
+      "vfx_end_time_s": 3.2
+    },
+    {
+      "id": "blade_solar_slam_ultimate",
+      "name": "อัลติ · สุริยะถล่มพิภพ",
+      "weapon_type": "blade",
+      "asset_version": 9,
+      "resource_path": "res://art/skills/blade/solar_slam_ultimate/blade_solar_slam_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/solar_slam_ultimate/skill.json",
+      "locomotion_resume_time_s": 2.08,
+      "vfx_end_time_s": 4.34
+    },
+    {
+      "id": "blade_thunder_slam_ultimate",
+      "name": "อัลติ · ดาบสายฟ้าถล่ม",
+      "weapon_type": "blade",
+      "asset_version": 4,
+      "resource_path": "res://art/skills/blade/thunder_slam_ultimate/blade_thunder_slam_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/thunder_slam_ultimate/skill.json",
+      "locomotion_resume_time_s": 2.08,
+      "vfx_end_time_s": 4.34
+    },
+    {
+      "id": "blade_thunder_slash_ultimate",
+      "name": "อัลติ · คมอสนี",
+      "weapon_type": "blade",
+      "asset_version": 3,
+      "resource_path": "res://art/skills/blade/thunder_slash_ultimate/blade_thunder_slash_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/thunder_slash_ultimate/skill.json",
+      "locomotion_resume_time_s": 1.14,
+      "vfx_end_time_s": 3.4
+    },
+    {
+      "id": "blade_tidal_dash_ultimate",
+      "name": "อัลติ · พุ่งสายน้ำ",
+      "weapon_type": "blade",
+      "asset_version": 3,
+      "resource_path": "res://art/skills/blade/tidal_dash_ultimate/blade_tidal_dash_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/tidal_dash_ultimate/skill.json",
+      "locomotion_resume_time_s": 1.05,
+      "vfx_end_time_s": 2.0
+    },
+    {
+      "id": "blade_tidal_slam_ultimate",
+      "name": "อัลติ · ดาบน้ำถล่ม",
+      "weapon_type": "blade",
+      "asset_version": 3,
+      "resource_path": "res://art/skills/blade/tidal_slam_ultimate/blade_tidal_slam_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/tidal_slam_ultimate/skill.json",
+      "locomotion_resume_time_s": 2.08,
+      "vfx_end_time_s": 4.34
+    },
+    {
+      "id": "blade_verdant_wind_ultimate",
+      "name": "อัลติ · คมวายุใบไม้",
+      "weapon_type": "blade",
+      "asset_version": 3,
+      "resource_path": "res://art/skills/blade/verdant_wind_ultimate/blade_verdant_wind_ultimate.tres",
+      "manifest_path": "res://art/skills/blade/verdant_wind_ultimate/skill.json",
+      "locomotion_resume_time_s": 1.14,
+      "vfx_end_time_s": 3.4
+    }
+  ]
+}

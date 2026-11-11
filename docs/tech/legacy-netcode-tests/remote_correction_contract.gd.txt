@@ -1,0 +1,45 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var source=preload("res://data/perf/scenario.gd").new()
+ var session=preload("res://client/session/remote_session.gd").new(null,source.rules,source.camp)
+ session.connected=true;session._accept_state(source.state(),Time.get_ticks_msec())
+ var raw=preload("res://logic/sim_input.gd").new()
+ raw.move=Vector2.RIGHT;raw.run=true;raw.guard=true;raw.jump=true;raw.light=true;raw.heavy=true;raw.dodge=true;raw.special=true;raw.ultimate=true;raw.skill_slot=2
+ var held=session._held_input(raw)
+ assert(held.move==raw.move and held.run and held.guard and not held.jump and not held.light and not held.heavy and not held.dodge and not held.special and not held.ultimate and held.skill_slot==-1)
+ source.advance()
+ session._target_tick=20;session._accept_state(source.state(),Time.get_ticks_msec())
+ assert(session._target_tick==20) # A delayed state cannot rewind future tick IDs.
+ source.advance()
+ var state=source.state();var actual:Vector3=state.entities[1][0][0]
+ session._sim.bodies[1].position=actual+Vector3(.3,0,0);session._presentation_offset=Vector3.ZERO
+ session._accept_state(state,Time.get_ticks_msec())
+ assert(session.bodies[1].position.distance_to(actual)<.001)
+ assert(session.presentation_position(1).distance_to(actual+Vector3(.3,0,0))<.001)
+ assert(session.smoothed_corrections>0)
+ source.advance()
+ var forced=source.state()
+ forced.entities[1][1][Wire.FIGHTER_FIELDS.find("state")]=preload("res://logic/fighter.gd").State.HITSTUN
+ forced.entities[1][1][Wire.FIGHTER_FIELDS.find("hitstun_left")]=100
+ session._accept_state(forced,Time.get_ticks_msec())
+ assert(session.fighters[1].state==preload("res://logic/fighter.gd").State.HITSTUN)
+ assert(session._presentation_offset.length()>0) # Visual-only blending, authoritative stun unchanged.
+ source.advance();var hit_state=source.state()
+ session._target_tick=int(hit_state.tick)
+ session.prediction_history.capture(source.sim,1,int(hit_state.tick),preload("res://logic/sim_input.gd").new().encode(),{})
+ session.prediction_history.authoritative_event({"tick":hit_state.tick,"sequence":1,"event":{"type":"hit","target":1}},1)
+ hit_state.entities[1][1][Wire.FIGHTER_FIELDS.find("state")]=preload("res://logic/fighter.gd").State.HITSTUN
+ hit_state.entities[1][1][Wire.FIGHTER_FIELDS.find("hitstun_left")]=12
+ session._sim.bodies[1].position=hit_state.entities[1][0][0]+Vector3(2.4,0,0)
+ session._presentation_offset=Vector3.ZERO
+ var snaps_before:int=session.hard_corrections
+ session._accept_state(hit_state,Time.get_ticks_msec())
+ assert(session._presentation_offset.length()>2.3 and session.hard_corrections==snaps_before)
+ source.advance();var dead=source.state()
+ dead.entities[1][1][Wire.FIGHTER_FIELDS.find("state")]=preload("res://logic/fighter.gd").State.DEAD
+ session._accept_state(dead,Time.get_ticks_msec())
+ assert(session._presentation_offset==Vector3.ZERO)
+ print("REMOTE CORRECTION PASS:future tick IDs monotonic;gap padding held-controls only/no action repeat;visual smoothing leaves authoritative body exact;hitstun applies immediately with visual blend;death still snaps")
+ quit()

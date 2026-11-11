@@ -1,0 +1,13 @@
+{
+  "id": "face_v2_shout",
+  "name": "Shout",
+  "asset_version": 1,
+  "socket": "attach_head",
+  "attachment_mode": "rigid",
+  "fit_profile": "chibi-v2",
+  "thumbnail": "face_v2_shout.png",
+  "default": false,
+  "head_surface_revision": "chibi_v2_round_head",
+  "feature_relief": "anime line-art: big iris eyes (own 'Face iris' material), winged lashes, thick brows, tiny nose tick, expression mouth",
+  "facial_animation": false
+}

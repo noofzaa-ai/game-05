@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "price": 1000,
+  "equipment_tier": 0,
+  "include_catalog": false,
+  "include_materials": false,
+  "sell": {
+    "equipment_by_tier": [
+      100,
+      200,
+      400,
+      800
+    ],
+    "material_per_unit": 1
+  },
+  "catalog_items": [
+    "bow_01"
+  ]
+}

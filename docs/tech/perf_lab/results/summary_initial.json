@@ -1,0 +1,74 @@
+[
+  {
+    "mode": "A",
+    "p50": 35.5,
+    "p95": 51.3,
+    "over50": 37,
+    "construct_ms": 8.6,
+    "accept_ms": 342.4,
+    "drain_p95_ms": 2.8
+  },
+  {
+    "mode": "B",
+    "p50": 34.4,
+    "p95": 47.2,
+    "over50": 42,
+    "construct_ms": 0,
+    "accept_ms": 0,
+    "drain_p95_ms": 0.1
+  },
+  {
+    "mode": "C",
+    "p50": 29.6,
+    "p95": 39.5,
+    "over50": 28,
+    "construct_ms": 15.5,
+    "accept_ms": 353.5,
+    "drain_p95_ms": 4.8
+  },
+  {
+    "mode": "D",
+    "p50": 32.1,
+    "p95": 48.4,
+    "over50": 26,
+    "construct_ms": 405.6,
+    "accept_ms": 1081.4,
+    "drain_p95_ms": 9
+  },
+  {
+    "mode": "E",
+    "p50": 40.2,
+    "p95": 61.8,
+    "over50": 99,
+    "construct_ms": 371.3,
+    "accept_ms": 2964.8,
+    "drain_p95_ms": 23.6
+  },
+  {
+    "mode": "R",
+    "p50": 30.4,
+    "p95": 42.3,
+    "over50": 63,
+    "construct_ms": 338.5,
+    "accept_ms": 2481.6,
+    "drain_p95_ms": 16.5
+  },
+  {
+    "mode": "N",
+    "p50": 16.8,
+    "p95": 34.5,
+    "over50": 14,
+    "construct_ms": 273,
+    "accept_ms": 1676.9,
+    "drain_p95_ms": 11.2
+  },
+  {
+    "mode": "Z",
+    "p50": 16.7,
+    "p95": 17.7,
+    "over50": 6,
+    "construct_ms": 0,
+    "accept_ms": 0,
+    "drain_p95_ms": 2.7
+  }
+]

@@ -1,0 +1,45 @@
+{
+  "source": "backsmith_fire.fbx",
+  "triangles": 6035,
+  "game_size_xyz": [
+    4.999999840376114,
+    2.6835341864719204,
+    4.6303492318403805
+  ],
+  "textures": [
+    {
+      "name": "texture_pbr_20250901.png",
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_metallic.png",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_normal.png",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_roughness.png",
+      "size": [
+        512,
+        512
+      ]
+    }
+  ],
+  "source_sha256": "b7e4af75ded06a072ffddaa669de7a14588e832d81d9df80387c352792a94efd",
+  "texture_budget": {
+    "base_color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  }
+}

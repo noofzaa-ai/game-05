@@ -1,0 +1,80 @@
+{
+  "id": "storage_modular_draft",
+  "source": "/Users/user/godot-project/test01/assets/storage_assets_split.fbx",
+  "source_sha256": "d9cc517e24f2b755f567c35afbde3519d3f38e0b4c62b946f3b4dc00c51af47d",
+  "source_bytes": 33754508,
+  "scale": 3.8981072488192434,
+  "parts": [
+    {
+      "name": "right_section",
+      "triangles": 2426,
+      "assembly_location_blender": [
+        1.447400450706482,
+        0.03906889259815216,
+        0.04534272849559784
+      ],
+      "dimensions": [
+        1.4964872598648071,
+        1.3326420783996582,
+        1.6275689601898193
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "central_section",
+      "triangles": 446,
+      "assembly_location_blender": [
+        -0.04635823145508766,
+        0.0308770053088665,
+        0.04534272849559784
+      ],
+      "dimensions": [
+        1.491029977798462,
+        1.349025845527649,
+        1.6275689601898193
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "left_section",
+      "triangles": 1211,
+      "assembly_location_blender": [
+        -1.2834186553955078,
+        0.0363381952047348,
+        0.06719163060188293
+      ],
+      "dimensions": [
+        1.4418747425079346,
+        1.2397931814193726,
+        1.7040303945541382
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "foundation",
+      "triangles": 531,
+      "assembly_location_blender": [
+        0.06014397367835045,
+        0.03906682878732681,
+        0.0016527478583157063
+      ],
+      "dimensions": [
+        4.129000186920166,
+        1.3217155933380127,
+        0.3113107681274414
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    }
+  ],
+  "triangles": 4614,
+  "status": "assembly review draft, not deployed; fused source spatial cuts require review before arbitrary rearrangement",
+  "texture_caps": {
+    "albedo": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  }
+}

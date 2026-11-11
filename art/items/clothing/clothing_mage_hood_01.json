@@ -1,0 +1,17 @@
+{
+  "id": "clothing_mage_hood_01",
+  "name": "ชุดจอมเวท · ฮู้ดมีเขา",
+  "asset_version": 1,
+  "triangle_count": 252,
+  "set_triangle_budget": 1500,
+  "slot": "head",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_violet_mage_01",
+  "thumbnail": "clothing_mage_hood_01.png",
+  "binding": "robe panels blend Hips/thigh/calf separately per leg; head and sleeve pieces use their named bones",
+  "cloth_simulation": false,
+  "hide_hair": true,
+  "hide_head": false,
+  "legacy_ids": []
+}

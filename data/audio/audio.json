@@ -1,0 +1,1370 @@
+{
+	"version": 1,
+	"_comment": "Which sound plays for what. client/audio/audio_director.gd (autoload Audio) reads this; adding or changing a sound is an edit here, not code. cues: name -> files (one is picked at random, not the same twice in a row), bus, volume_db, pitch [min,max], volume_jitter_db, max_voices (copies of this cue at once; the oldest is cut), cooldown_ms (re-triggers sooner are ignored), priority (1-10: lowest loses its voice when the pool is full), positional (false = not quieter with distance), duck_music_db + duck_seconds (stingers dip the music). events: simulation event type -> rules checked in order; a rule plays its cues when every 'when' fact matches (a value, a list of allowed values, or {min,max}); 'stop' ends the list; pitch_from raises the pitch with a numeric fact. {weapon} in a cue name becomes the fighter's move set. Facts are made in client/audio/audio_rules.gd facts(). ui: action -> cue for Audio.play_ui(). auto_ui: what every Button / TabBar plays by itself (a node can set meta audio_ui to another ui action, or to an empty string for silence). music / ambience: id -> looping file. scenes: scene file -> music + ambience (ambience_by_map uses GameState.selected_map_id).",
+	"defaults": {
+		"bus": "SFX",
+		"volume_db": 0.0,
+		"pitch": [
+			0.95,
+			1.05
+		],
+		"volume_jitter_db": 1.0,
+		"max_voices": 3,
+		"cooldown_ms": 0,
+		"priority": 5,
+		"positional": true
+	},
+	"pools": {
+		"SFX": 24,
+		"UI": 6,
+		"Music": 2
+	},
+	"distance": {
+		"near": 7.0,
+		"far": 28.0,
+		"far_db": -14.0,
+		"cull": 40.0
+	},
+	"footsteps": {
+		"walk_cue": "footstep",
+		"run_cue": "footstep_run",
+		"walk_interval": 0.36,
+		"run_interval": 0.25,
+		"min_speed": 0.6
+	},
+	"fade_seconds": 1.5,
+	"cues": {
+		"footstep": {
+			"files": [
+				"res://audio/sfx/footstep_1.ogg",
+				"res://audio/sfx/footstep_2.ogg",
+				"res://audio/sfx/footstep_3.ogg",
+				"res://audio/sfx/footstep_4.ogg"
+			],
+			"volume_db": -6.0,
+			"pitch": [
+				0.92,
+				1.08
+			],
+			"max_voices": 2,
+			"cooldown_ms": 90,
+			"priority": 1
+		},
+		"footstep_run": {
+			"files": [
+				"res://audio/sfx/footstep_run_1.ogg",
+				"res://audio/sfx/footstep_run_2.ogg",
+				"res://audio/sfx/footstep_run_3.ogg",
+				"res://audio/sfx/footstep_run_4.ogg"
+			],
+			"volume_db": -4.0,
+			"pitch": [
+				0.92,
+				1.08
+			],
+			"max_voices": 2,
+			"cooldown_ms": 90,
+			"priority": 1
+		},
+		"jump": {
+			"files": [
+				"res://audio/sfx/jump.ogg"
+			],
+			"volume_db": -3.0,
+			"max_voices": 2,
+			"priority": 2
+		},
+		"land": {
+			"files": [
+				"res://audio/sfx/land.ogg"
+			],
+			"volume_db": -3.0,
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 2
+		},
+		"dodge": {
+			"files": [
+				"res://audio/sfx/dodge.ogg"
+			],
+			"max_voices": 2,
+			"priority": 4
+		},
+		"launch": {
+			"files": [
+				"res://audio/sfx/launch.ogg"
+			],
+			"volume_db": -3.0,
+			"max_voices": 2,
+			"cooldown_ms": 80,
+			"priority": 4
+		},
+		"body_fall": {
+			"files": [
+				"res://audio/sfx/body_fall.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"get_up": {
+			"files": [
+				"res://audio/sfx/get_up.ogg"
+			],
+			"volume_db": -3.0,
+			"max_voices": 2,
+			"priority": 2
+		},
+		"swing_fists_light": {
+			"files": [
+				"res://audio/sfx/swing_fists_light_1.ogg",
+				"res://audio/sfx/swing_fists_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"swing_fists_heavy": {
+			"files": [
+				"res://audio/sfx/swing_fists_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_blade_light": {
+			"files": [
+				"res://audio/sfx/swing_blade_light_1.ogg",
+				"res://audio/sfx/swing_blade_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"swing_blade_heavy": {
+			"files": [
+				"res://audio/sfx/swing_blade_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_dagger_light": {
+			"files": [
+				"res://audio/sfx/swing_dagger_light_1.ogg",
+				"res://audio/sfx/swing_dagger_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"swing_dagger_heavy": {
+			"files": [
+				"res://audio/sfx/swing_dagger_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_spear_light": {
+			"files": [
+				"res://audio/sfx/swing_spear_light_1.ogg",
+				"res://audio/sfx/swing_spear_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"swing_spear_heavy": {
+			"files": [
+				"res://audio/sfx/swing_spear_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_hammer_light": {
+			"files": [
+				"res://audio/sfx/swing_hammer_light_1.ogg",
+				"res://audio/sfx/swing_hammer_light_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"swing_hammer_heavy": {
+			"files": [
+				"res://audio/sfx/swing_hammer_heavy.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_monster": {
+			"files": [
+				"res://audio/sfx/swing_monster.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"swing_grunt": {
+			"files": [
+				"res://audio/sfx/swing_fists_light_1.ogg",
+				"res://audio/sfx/swing_fists_light_2.ogg"
+			],
+			"volume_db": -2.0,
+			"pitch": [
+				0.8,
+				0.88
+			],
+			"max_voices": 3,
+			"cooldown_ms": 60,
+			"priority": 3
+		},
+		"bite_monster": {
+			"files": [
+				"res://audio/sfx/bite_monster.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5
+		},
+		"enemy_windup": {
+			"files": [
+				"res://audio/sfx/enemy_windup.ogg"
+			],
+			"volume_db": 2.0,
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"max_voices": 3,
+			"cooldown_ms": 120,
+			"priority": 9
+		},
+		"monster_roar": {
+			"files": [
+				"res://audio/sfx/monster_roar.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 400,
+			"priority": 7
+		},
+		"monster_frenzy": {
+			"files": [
+				"res://audio/sfx/monster_roar.ogg"
+			],
+			"volume_db": -3.0,
+			"pitch": [
+				1.3,
+				1.4
+			],
+			"max_voices": 2,
+			"cooldown_ms": 400,
+			"priority": 6
+		},
+		"hit_light": {
+			"files": [
+				"res://audio/sfx/hit_light_1.ogg",
+				"res://audio/sfx/hit_light_2.ogg",
+				"res://audio/sfx/hit_light_3.ogg"
+			],
+			"max_voices": 4,
+			"cooldown_ms": 25,
+			"priority": 7
+		},
+		"hit_heavy": {
+			"files": [
+				"res://audio/sfx/hit_heavy_1.ogg",
+				"res://audio/sfx/hit_heavy_2.ogg",
+				"res://audio/sfx/hit_heavy_3.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 35,
+			"priority": 8
+		},
+		"hit_crit": {
+			"files": [
+				"res://audio/sfx/hit_crit_1.ogg",
+				"res://audio/sfx/hit_crit_2.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 50,
+			"priority": 9
+		},
+		"hit_slice": {
+			"files": [
+				"res://audio/sfx/hit_slice.ogg"
+			],
+			"volume_db": -2.0,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"hit_pierce": {
+			"files": [
+				"res://audio/sfx/hit_pierce.ogg"
+			],
+			"volume_db": -2.0,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"hit_crush": {
+			"files": [
+				"res://audio/sfx/hit_crush.ogg"
+			],
+			"volume_db": -2.0,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 4
+		},
+		"armor_absorb": {
+			"files": [
+				"res://audio/sfx/guard_block_2.ogg"
+			],
+			"volume_db": -9.0,
+			"pitch": [
+				1.15,
+				1.25
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 3
+		},
+		"stagger": {
+			"files": [
+				"res://audio/sfx/hit_crush.ogg"
+			],
+			"volume_db": -1.0,
+			"pitch": [
+				0.75,
+				0.8
+			],
+			"max_voices": 2,
+			"cooldown_ms": 200,
+			"priority": 7
+		},
+		"guard_block": {
+			"files": [
+				"res://audio/sfx/guard_block.ogg",
+				"res://audio/sfx/guard_block_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 40,
+			"priority": 8
+		},
+		"guard_break": {
+			"files": [
+				"res://audio/sfx/guard_break.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 150,
+			"priority": 10
+		},
+		"enemy_hurt": {
+			"files": [
+				"res://audio/sfx/enemy_hurt_1.ogg",
+				"res://audio/sfx/enemy_hurt_2.ogg",
+				"res://audio/sfx/enemy_hurt_3.ogg"
+			],
+			"volume_db": -3.0,
+			"pitch": [
+				0.9,
+				1.1
+			],
+			"max_voices": 2,
+			"cooldown_ms": 140,
+			"priority": 3
+		},
+		"enemy_death": {
+			"files": [
+				"res://audio/sfx/enemy_death_1.ogg",
+				"res://audio/sfx/enemy_death_2.ogg"
+			],
+			"max_voices": 3,
+			"cooldown_ms": 80,
+			"priority": 8
+		},
+		"player_down": {
+			"files": [
+				"res://audio/sfx/player_down.ogg"
+			],
+			"max_voices": 1,
+			"priority": 10
+		},
+		"buff_up": {
+			"files": [
+				"res://audio/sfx/buff_up.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 150,
+			"priority": 4
+		},
+		"debuff": {
+			"files": [
+				"res://audio/sfx/debuff.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 150,
+			"priority": 4
+		},
+		"resist": {
+			"files": [
+				"res://audio/sfx/resist.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 150,
+			"priority": 3
+		},
+		"dot_tick": {
+			"files": [
+				"res://audio/sfx/dot_tick.ogg"
+			],
+			"volume_db": -2.0,
+			"max_voices": 2,
+			"cooldown_ms": 200,
+			"priority": 1
+		},
+		"stamina_empty": {
+			"files": [
+				"res://audio/sfx/stamina_empty.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 350,
+			"priority": 6,
+			"positional": false
+		},
+		"skill_cast_fists": {
+			"files": [
+				"res://audio/sfx/skill_cast_fists.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
+		"skill_impact_fists": {
+			"files": [
+				"res://audio/sfx/skill_impact_fists.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
+		"ultimate_fists": {
+			"files": [
+				"res://audio/sfx/ultimate_fists.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"skill_cast_blade": {
+			"files": [
+				"res://audio/sfx/skill_cast_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
+		"skill_impact_blade": {
+			"files": [
+				"res://audio/sfx/skill_impact_blade.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
+		"ultimate_blade": {
+			"files": [
+				"res://audio/sfx/ultimate_blade.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"skill_cast_dagger": {
+			"files": [
+				"res://audio/sfx/skill_cast_dagger.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
+		"skill_impact_dagger": {
+			"files": [
+				"res://audio/sfx/skill_impact_dagger.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
+		"ultimate_dagger": {
+			"files": [
+				"res://audio/sfx/ultimate_dagger.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"skill_cast_spear": {
+			"files": [
+				"res://audio/sfx/skill_cast_spear.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
+		"skill_impact_spear": {
+			"files": [
+				"res://audio/sfx/skill_impact_spear.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
+		"ultimate_spear": {
+			"files": [
+				"res://audio/sfx/ultimate_spear.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"skill_cast_hammer": {
+			"files": [
+				"res://audio/sfx/skill_cast_hammer.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 100,
+			"priority": 8
+		},
+		"skill_impact_hammer": {
+			"files": [
+				"res://audio/sfx/skill_impact_hammer.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 8
+		},
+		"ultimate_hammer": {
+			"files": [
+				"res://audio/sfx/ultimate_hammer.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"ultimate_cast": {
+			"files": [
+				"res://audio/sfx/ultimate_cast.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 200,
+			"priority": 10
+		},
+		"ultimate_boom": {
+			"files": [
+				"res://audio/sfx/ultimate_boom.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 250,
+			"priority": 10
+		},
+		"gold": {
+			"files": [
+				"res://audio/sfx/gold_1.ogg",
+				"res://audio/sfx/gold_2.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 80,
+			"priority": 5,
+			"positional": false
+		},
+		"item_drop": {
+			"files": [
+				"res://audio/sfx/item_drop.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 80,
+			"priority": 5,
+			"positional": false
+		},
+		"rare_drop": {
+			"files": [
+				"res://audio/sfx/ui_upgrade.ogg"
+			],
+			"volume_db": -2.0,
+			"pitch": [
+				1.0,
+				1.0
+			],
+			"max_voices": 1,
+			"cooldown_ms": 300,
+			"priority": 7,
+			"positional": false
+		},
+		"item_pickup": {
+			"files": [
+				"res://audio/sfx/item_pickup.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 80,
+			"priority": 5,
+			"positional": false
+		},
+		"material_pickup": {
+			"files": [
+				"res://audio/sfx/material_pickup.ogg"
+			],
+			"max_voices": 2,
+			"cooldown_ms": 80,
+			"priority": 4,
+			"positional": false
+		},
+		"bag_lost": {
+			"files": [
+				"res://audio/sfx/debuff.ogg"
+			],
+			"volume_db": 2.0,
+			"pitch": [
+				0.65,
+				0.7
+			],
+			"max_voices": 1,
+			"priority": 9,
+			"positional": false
+		},
+		"rest": {
+			"files": [
+				"res://audio/sfx/rest.ogg"
+			],
+			"max_voices": 1,
+			"cooldown_ms": 500,
+			"priority": 6,
+			"positional": false
+		},
+		"ui_hover": {
+			"files": [
+				"res://audio/sfx/ui_hover.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 60,
+			"priority": 5,
+			"positional": false,
+			"volume_db": -4.0
+		},
+		"ui_click": {
+			"files": [
+				"res://audio/sfx/ui_click.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_select": {
+			"files": [
+				"res://audio/sfx/ui_select.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_tab": {
+			"files": [
+				"res://audio/sfx/ui_tab.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_equip": {
+			"files": [
+				"res://audio/sfx/ui_equip.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_unequip": {
+			"files": [
+				"res://audio/sfx/ui_unequip.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_error": {
+			"files": [
+				"res://audio/sfx/ui_error.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_open": {
+			"files": [
+				"res://audio/sfx/ui_open.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_close": {
+			"files": [
+				"res://audio/sfx/ui_close.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_discard": {
+			"files": [
+				"res://audio/sfx/ui_discard.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_repair": {
+			"files": [
+				"res://audio/sfx/ui_repair.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"ui_upgrade": {
+			"files": [
+				"res://audio/sfx/ui_upgrade.ogg"
+			],
+			"bus": "UI",
+			"pitch": [
+				0.98,
+				1.02
+			],
+			"volume_jitter_db": 0.5,
+			"max_voices": 2,
+			"cooldown_ms": 40,
+			"priority": 5,
+			"positional": false
+		},
+		"stinger_stage_clear": {
+			"files": [
+				"res://audio/music/stinger_stage_clear.ogg"
+			],
+			"bus": "Music",
+			"pitch": [
+				1.0,
+				1.0
+			],
+			"volume_jitter_db": 0.0,
+			"max_voices": 1,
+			"cooldown_ms": 3000,
+			"priority": 10,
+			"positional": false,
+			"duck_music_db": -18.0,
+			"duck_seconds": 4.5
+		},
+		"stinger_defeat": {
+			"files": [
+				"res://audio/music/stinger_defeat.ogg"
+			],
+			"bus": "Music",
+			"pitch": [
+				1.0,
+				1.0
+			],
+			"volume_jitter_db": 0.0,
+			"max_voices": 1,
+			"cooldown_ms": 3000,
+			"priority": 10,
+			"positional": false,
+			"duck_music_db": -30.0,
+			"duck_seconds": 6.5
+		}
+	,
+"swing_bow_light": {"files": ["res://audio/sfx/swing_dagger_light_1.ogg", "res://audio/sfx/swing_dagger_light_2.ogg"], "max_voices": 3, "cooldown_ms": 40, "priority": 4},
+"swing_bow_heavy": {"files": ["res://audio/sfx/swing_dagger_heavy.ogg"], "max_voices": 2, "cooldown_ms": 60, "priority": 5},
+"skill_cast_bow": {"files": ["res://audio/sfx/skill_cast_dagger.ogg"], "max_voices": 1, "cooldown_ms": 100, "priority": 8},
+"skill_impact_bow": {"files": ["res://audio/sfx/skill_impact_dagger.ogg"], "max_voices": 2, "cooldown_ms": 60, "priority": 8},
+"ultimate_bow": {"files": ["res://audio/sfx/ultimate_dagger.ogg"], "max_voices": 1, "cooldown_ms": 200, "priority": 10}
+},
+	"events": {
+		"attack_started": [
+			{
+				"when": {
+					"enemy": true,
+					"kind": [
+						"slam",
+						"rush"
+					]
+				},
+				"play": [
+					"enemy_windup"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"enemy": true,
+					"kind": "roar"
+				},
+				"play": [
+					"monster_roar"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"enemy": true,
+					"kind": "frenzy"
+				},
+				"play": [
+					"monster_frenzy"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"enemy": false,
+					"kind": "special"
+				},
+				"play": [
+					"skill_cast_{weapon}"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"enemy": false,
+					"kind": "ultimate"
+				},
+				"play": [
+					"ultimate_cast"
+				],
+				"stop": true
+			}
+		],
+		"attack_active": [
+			{
+				"when": {
+					"enemy": true,
+					"kind": "bite"
+				},
+				"play": [
+					"bite_monster"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"enemy": true,
+					"kind": [
+						"swipe",
+						"slam",
+						"rush"
+					]
+				},
+				"play": [
+					"swing_monster"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"enemy": true
+				},
+				"play": [
+					"swing_grunt"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"kind": "ultimate"
+				},
+				"play": [
+					"ultimate_{weapon}"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"kind": [
+						"heavy",
+						"air_heavy",
+						"run_heavy",
+						"special"
+					]
+				},
+				"play": [
+					"swing_{weapon}_heavy"
+				],
+				"stop": true
+			},
+			{
+				"play": [
+					"swing_{weapon}_light"
+				]
+			}
+		],
+		"hit": [
+			{
+				"when": {
+					"crit": true
+				},
+				"play": [
+					"hit_crit"
+				]
+			},
+			{
+				"when": {
+					"heavy_hit": true
+				},
+				"play": [
+					"hit_heavy"
+				],
+				"pitch_from": {
+					"fact": "attacker_combo",
+					"per": 0.01,
+					"max": 0.08
+				}
+			},
+			{
+				"when": {
+					"heavy_hit": false
+				},
+				"play": [
+					"hit_light"
+				],
+				"pitch_from": {
+					"fact": "attacker_combo",
+					"per": 0.01,
+					"max": 0.08
+				}
+			},
+			{
+				"when": {
+					"weapon": [
+						"blade",
+						"dagger"
+					]
+				},
+				"play": [
+					"hit_slice"
+				]
+			},
+			{
+				"when": {
+					"weapon": "spear"
+				},
+				"play": [
+					"hit_pierce"
+				]
+			},
+			{
+				"when": {
+					"weapon": [
+						"hammer",
+						"fists"
+					],
+					"heavy_hit": true,
+					"enemy": false
+				},
+				"play": [
+					"hit_crush"
+				]
+			},
+			{
+				"when": {
+					"kind": "special",
+					"enemy": false
+				},
+				"play": [
+					"skill_impact_{weapon}"
+				]
+			},
+			{
+				"when": {
+					"kind": "ultimate",
+					"enemy": false
+				},
+				"play": [
+					"ultimate_boom"
+				]
+			},
+			{
+				"when": {
+					"launched": true
+				},
+				"play": [
+					"launch"
+				]
+			},
+			{
+				"when": {
+					"armored": true
+				},
+				"play": [
+					"armor_absorb"
+				]
+			},
+			{
+				"when": {
+					"target_enemy": true,
+					"killed": false
+				},
+				"play": [
+					"enemy_hurt"
+				]
+			}
+		],
+		"projectile_fired": [{"when": {"look": ["arrow", "jade_arrow"]}, "play": ["swing_dagger_light"], "stop": true}, {"when": {"look": "bolt"}, "play": ["skill_cast_dagger"], "stop": true}, {"play": ["swing_monster"]}],
+		"projectile_ended": [{"when": {"reason": "wall"}, "play": ["hit_pierce"]}],
+		"area_placed": [{"play": ["skill_cast_spear"]}],
+		"area_detonated": [{"play": ["skill_impact_hammer"]}],
+		"blinked": [{"play": ["dodge"]}],
+		"blocked": [
+			{
+				"play": [
+					"guard_block"
+				]
+			}
+		],
+		"guard_broken": [
+			{
+				"play": [
+					"guard_break"
+				]
+			}
+		],
+		"poise_broken": [
+			{
+				"play": [
+					"stagger"
+				]
+			}
+		],
+		"killed": [
+			{
+				"when": {
+					"to_local": true
+				},
+				"play": [
+					"player_down",
+					"stinger_defeat"
+				],
+				"stop": true
+			},
+			{
+				"when": {
+					"target_enemy": true
+				},
+				"play": [
+					"enemy_death"
+				]
+			}
+		],
+		"knocked_down": [
+			{
+				"play": [
+					"body_fall"
+				]
+			}
+		],
+		"got_up": [
+			{
+				"play": [
+					"get_up"
+				]
+			}
+		],
+		"jumped": [
+			{
+				"play": [
+					"jump"
+				]
+			}
+		],
+		"landed": [
+			{
+				"play": [
+					"land"
+				]
+			}
+		],
+		"dodge_started": [
+			{
+				"play": [
+					"dodge"
+				]
+			}
+		],
+		"out_of_stamina": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"stamina_empty"
+				]
+			}
+		],
+		"effect_applied": [
+			{
+				"when": {
+					"effect_kind": "buff"
+				},
+				"play": [
+					"buff_up"
+				]
+			},
+			{
+				"when": {
+					"effect_kind": "debuff"
+				},
+				"play": [
+					"debuff"
+				]
+			}
+		],
+		"effect_resisted": [
+			{
+				"play": [
+					"resist"
+				]
+			}
+		],
+		"dot": [
+			{
+				"play": [
+					"dot_tick"
+				]
+			}
+		],
+		"rested": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"rest"
+				]
+			}
+		],
+		"loot": [
+			{
+				"when": {
+					"local": true,
+					"gold": {
+						"min": 1
+					}
+				},
+				"play": [
+					"gold"
+				]
+			},
+			{
+				"when": {
+					"local": true,
+					"item_count": {
+						"min": 1
+					}
+				},
+				"play": [
+					"item_drop"
+				]
+			},
+			{
+				"when": {
+					"local": true,
+					"best_tier": {
+						"min": 2
+					}
+				},
+				"play": [
+					"rare_drop"
+				]
+			},
+			{
+				"when": {
+					"local": true,
+					"material_count": {
+						"min": 1
+					}
+				},
+				"play": [
+					"material_pickup"
+				]
+			}
+		],
+		"downed": [{"play": ["player_down"]}],
+		"revived": [{"play": ["get_up"]}],
+		"eliminated": [{"play": ["body_fall"]}],
+		"team_wiped": [{"play": ["stinger_defeat"]}],
+		"bag_lost": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"bag_lost"
+				]
+			}
+		],
+		"wave_arrived": [
+			{
+				"play": [
+					"monster_roar"
+				]
+			}
+		],
+		"stage_cleared": [
+			{
+				"play": [
+					"stinger_stage_clear"
+				]
+			}
+		]
+	},
+	"ui": {
+		"hover": "ui_hover",
+		"click": "ui_click",
+		"select": "ui_select",
+		"tab": "ui_tab",
+		"equip": "ui_equip",
+		"unequip": "ui_unequip",
+		"error": "ui_error",
+		"open": "ui_open",
+		"close": "ui_close",
+		"discard": "ui_discard",
+		"repair": "ui_repair",
+		"upgrade": "ui_upgrade"
+	},
+	"auto_ui": {
+		"button_pressed": "click",
+		"button_hover": "hover",
+		"tab_clicked": "tab"
+	},
+	"music": {
+		"hub": {
+			"file": "res://audio/music/hub_ember_waltz.ogg",
+			"volume_db": -2.0
+		},
+		"stage": {
+			"file": "res://audio/music/stage_ink_trail.ogg",
+			"volume_db": -4.0
+		}
+	},
+	"ambience": {
+		"campfire": {
+			"file": "res://audio/ambience/ambience_campfire.ogg",
+			"volume_db": 0.0
+		},
+		"ink_garden": {
+			"file": "res://audio/ambience/ambience_ink_garden.ogg",
+			"volume_db": 0.0
+		},
+		"shrine": {
+			"file": "res://audio/ambience/ambience_shrine.ogg",
+			"volume_db": 0.0
+		}
+	},
+	"scenes": {
+		"res://scenes/title.tscn": {
+			"music": "hub",
+			"ambience": "campfire"
+		},
+		"res://scenes/hub.tscn": {
+			"music": "hub",
+			"ambience": "campfire"
+		},
+		"res://scenes/stage.tscn": {
+			"music": "stage",
+			"ambience": "ink_garden",
+			"ambience_by_map": {
+				"ink_garden": "ink_garden",
+				"shrine_wall": "shrine",
+				"sunward_valley": "ink_garden"
+			}
+		}
+	}
+}

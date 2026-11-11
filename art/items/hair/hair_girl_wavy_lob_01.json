@@ -1,0 +1,110 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_girl_wavy_lob_01",
+  "display_name": "เด็กผู้หญิง · ลอบลอน 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "faceted wavy lob with curtain bangs",
+  "geometry": {
+    "triangle_count": 470,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "WavyLob_Cap",
+      "WavyLob_CurtainBang_L",
+      "WavyLob_CurtainBang_R",
+      "WavyLob_Wave_L",
+      "WavyLob_Wave_R",
+      "WavyLob_BackWave"
+    ]
+  },
+  "material": {
+    "name": "Wavy lob plum",
+    "base_color_linear_rgba": [
+      0.095,
+      0.012,
+      0.075,
+      1.0
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.82,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "WavyLob_BackWave",
+        "WavyLob_Cap",
+        "WavyLob_CurtainBang_L",
+        "WavyLob_CurtainBang_R",
+        "WavyLob_Wave_L",
+        "WavyLob_Wave_R"
+      ],
+      "triangle_count": 470,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.17,
+          -0.164,
+          -0.354
+        ],
+        "max": [
+          0.17,
+          0.203,
+          0.043
+        ]
+      },
+      "bounding_box_glb_y_up": {
+        "min": [
+          -0.17,
+          -0.354,
+          -0.203
+        ],
+        "max": [
+          0.17,
+          0.043,
+          0.164
+        ]
+      },
+      "lowest_glb_y": -0.354,
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Wavy lob plum.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.82
+        }
+      ],
+      "external_images": [],
+      "hairroot_extras_verified": true
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0,
+      "lighting": "reduced neutral key/fill/rim"
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_wavy_lob_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_wavy_lob_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_wavy_lob_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_wavy_lob_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

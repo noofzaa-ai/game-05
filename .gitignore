@@ -1,0 +1,40 @@
+# Godot
+.godot/
+*.translation
+
+# Web export output
+build/
+
+# Local tool state (session logs, locks)
+.claude/autoharness/
+**/.claude/autoharness/
+.claude/settings.local.json
+
+# Raw sample library the music was made from (505 MB, CC0 VSCO2; re-download, see audio/CREDITS.md)
+audio_source/
+
+# Hand-offs and leftovers in tests/ (zips from the model team, the old Modly workspace)
+tests/*.zip
+tests/workspace/
+tests/workflows/
+
+# Blender auto-backups
+*.blend1
+
+# Generated junk
+__pycache__/
+*.pyc
+.DS_Store
+
+# Generated PUBLIC Nakama connection settings; never use backend signing/DB secrets.
+data/online.local.json
+
+node_modules/
+
+# Generated source identity is embedded into each build, not committed recursively.
+data/ui/build_info.json
+
+# Not in the game-05 repo (Boss 2026-11-11: keep the repo small). Sources stay on disk / in grislyhub/zorx.
+art_source/
+.cache/
+ex/

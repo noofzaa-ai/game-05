@@ -1,0 +1,117 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_boy_mullet_01",
+  "display_name": "เด็กผู้ชาย · มัลเล็ต 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "modern_mullet",
+  "geometry": {
+    "triangle_count": 374,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "Mullet_Cap",
+      "Mullet_Side_Lock_L",
+      "Mullet_Side_Lock_R",
+      "Mullet_Top_Layer_L",
+      "Mullet_Top_Layer_R",
+      "Mullet_Rear_Panel_C",
+      "Mullet_Rear_Panel_L",
+      "Mullet_Rear_Panel_R"
+    ]
+  },
+  "material": {
+    "name": "Mullet deep teal",
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.86,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "Mullet_Top_Layer_R",
+        "Mullet_Top_Layer_L",
+        "Mullet_Side_Lock_R",
+        "Mullet_Side_Lock_L",
+        "Mullet_Rear_Panel_R",
+        "Mullet_Rear_Panel_L",
+        "Mullet_Rear_Panel_C",
+        "Mullet_Cap"
+      ],
+      "triangle_count": 374,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.162,
+          -0.148,
+          -0.382
+        ],
+        "max": [
+          0.162,
+          0.151,
+          0.157
+        ]
+      },
+      "bounding_box_glb_y_up": {
+        "min": [
+          -0.162,
+          -0.382,
+          -0.151
+        ],
+        "max": [
+          0.162,
+          0.157,
+          0.148
+        ],
+        "lowest_y": -0.382
+      },
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Mullet deep teal.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.86
+        }
+      ],
+      "root_extras": {
+        "asset_type": "hair",
+        "spec_version": "1.0",
+        "id": "hair_boy_mullet_01",
+        "display_name": "เด็กผู้ชาย · มัลเล็ต 01",
+        "fit_profile": "chibi-sculpt-v1",
+        "target_socket": "attach_head",
+        "units": "meters",
+        "up_axis": "+Y",
+        "forward_axis": "+Z",
+        "attachment_mode": "rigid"
+      }
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_mullet_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_mullet_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_mullet_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_boy_mullet_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

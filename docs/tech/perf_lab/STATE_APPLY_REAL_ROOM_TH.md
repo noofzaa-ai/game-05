@@ -1,0 +1,23 @@
+# Same real room: apply state vs receive/discard
+
+User-approved question: with Replay OFF in both phases, does stopping snapshot/event decode+apply remove the observed idle hitching?
+
+Entry: existing authenticated `?replay_probe=1` now selects `state_apply_toggle.gd` (retired Replay ON/OFF UI is no longer selected). Real production Room Worker, own diagnostic solo room, human input, no scripted simulation server. Normal non-query RemoteSession is unchanged. Worker remains pong-key-20261027-1. Nakama continues trusted diagnostic no-save enforcement.
+
+- A Apply state: normal RemoteSession receive/decode/apply/prediction path; historical Replay OFF, one live prediction tick per input.
+- B Discard state: same room/socket remains open; parse STATE headers/ACK only, no state fragment assembly, payload decode, delta reconstruction or apply. EVENTS skipped. Small PONG responses retained to track actual worker ACK/clock and RTT. Human inputs still travel through real Wire.inputs to the actual worker. Client clones latest authoritative profile/run/entities and map collision into local simulation with actual enemy types + local AI. No account writes. Hidden worker AI/RNG internals are unavailable in public snapshots, so B is not a deterministic mirror; local combat may diverge.
+- Return A: clear discarded baselines/fragments/history and request full authoritative state, restore profile/run even if ownership bytes unchanged. Measurements reset after synchronization and on every phase/epoch.
+
+UI: A Apply state, B Discard state, Copy report, Exit test. Both labelled Replay OFF/NO SAVES. Copy needs >=8 seconds after phase synchronization. Collect A15s/B15s/A15s on the same map and graphics, initially standing still; copy each separately. B blocks route/equipment commands (switch A first); Exit cancels diagnostic room normally.
+
+Report: `[REAL ROOM STATE APPLY REPORT v1]`, phase, map/epoch/graphics, p95/max/over50, receive bytes, decode/reconcile, skipped state packets, actual ACK/tick advances, local ticks/input send counts, disconnects. Valid requires >=8s, connected, no sync/disconnects, actual ACK/tick advancement and replay0. Compare same-map samples only. A/B differences isolate the combined state-application/prediction-vs-local-simulation path, not Cloudflare or a single subfunction by themselves.
+
+Correctness validation: `tests/state_apply_toggle_contract.gd` verifies A replay0, B payload decode/reconcile skipped, local AI+input packet path+PONG ACK clock retained, A full sync restores authoritative profile, repeat toggle works. Native correctness is not browser performance proof. Web gameplay acceptance remains pending user real-browser reports.
+
+## C: close only the room WebSocket
+B->C retains the identical running local sim, AI objects, profile/run and RNG; no rebuild or snapshot apply. Local simulation continues while the room socket closes. C measurement starts after STATE_CLOSED; packets/bytes/input sends must remain0. App RTT/worker ACK become stale intentionally. After20seconds auto-resume B (before existing30s offline elimination); user can select B sooner. Rejoin uses same room admission, explicitly scene-ready + PING, and excludes the handshake until PONG arrives. No full snapshot is applied when returning C->B, preserving local sim continuity. Returning A still full-syncs normally. Room Worker remains unchanged; its existing diagnostic disconnect pause is used. Authentication HTTP for rejoin is outside measurement. Unexpected disconnects invalidate results; deliberate C closure is labelled separately.
+
+Collect B15s / C15s / B15s in the same scene and graphics, copying each before C20s auto-return. C report valid only if socket closed, bytes/packets/input sends0, local ticks advancing. Same local_sim_generation across B/C/B confirms no local sim reconstruction. Counters now include step_us, poll_us, received_packets. C is room-WSS isolation, not all browser networking isolation. Native contract uses stubbed admission for transition validation; live browser rejoin/performance still requires actual reports.
+
+## C button correction
+Previous ff1e018e6f37 C handler returned silently from initial A, explaining user C clicks with A_apply_state/local_sim_generation0. C now automatically prepares B local sim once if needed, then closes socket. Direct actual C-button signal from initialA tested native: Cphase/localclosed/gen1 plus UI selectedC and CopyC. UI highlights current phase and labels Copy A/B/C; user can collect C15s then B15s with same local_sim_generation. Existing C20s auto-return remains. This corrects the test control, not game lag.

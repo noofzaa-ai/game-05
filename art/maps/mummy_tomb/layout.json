@@ -1,0 +1,454 @@
+{
+  "version": 2,
+  "stage": 1,
+  "name": "Mummy \u2014 Pyramid Approach",
+  "triangles": 27142,
+  "kit_instances": 40,
+  "render_objects": 1,
+  "render_surfaces": 9,
+  "placements": [
+    {
+      "part": "pillar",
+      "position": [
+        -15.1,
+        0,
+        -10.3
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "pillar",
+      "position": [
+        -15.1,
+        0,
+        -2
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "pillar",
+      "position": [
+        -15.1,
+        0,
+        6.5
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "obelisk",
+      "position": [
+        -5.8,
+        0,
+        11.8
+      ],
+      "yaw": 0,
+      "scale": 1.05,
+      "solid": false
+    },
+    {
+      "part": "brazier",
+      "position": [
+        -7.1,
+        0,
+        10.9
+      ],
+      "yaw": 0,
+      "scale": 0.95,
+      "solid": false
+    },
+    {
+      "part": "pillar",
+      "position": [
+        15.1,
+        0,
+        -10.3
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "pillar",
+      "position": [
+        15.1,
+        0,
+        -2
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "pillar",
+      "position": [
+        15.1,
+        0,
+        6.5
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "obelisk",
+      "position": [
+        5.8,
+        0,
+        11.8
+      ],
+      "yaw": 0,
+      "scale": 1.05,
+      "solid": false
+    },
+    {
+      "part": "brazier",
+      "position": [
+        7.1,
+        0,
+        10.9
+      ],
+      "yaw": 0,
+      "scale": 0.95,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        -2.1,
+        0,
+        -11.5
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        -1.05,
+        0,
+        -11.5
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        0,
+        0,
+        -11.5
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        1.05,
+        0,
+        -11.5
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "stairs",
+      "position": [
+        2.1,
+        0,
+        -11.5
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "coffin",
+      "position": [
+        -8.0,
+        1.1,
+        -14.0
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "torch",
+      "position": [
+        -10.1,
+        0,
+        -13.6
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        -5.4,
+        5.6,
+        -13.1
+      ],
+      "yaw": 0,
+      "scale": 0.8,
+      "solid": false
+    },
+    {
+      "part": "coffin",
+      "position": [
+        8.0,
+        1.1,
+        -14.0
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "torch",
+      "position": [
+        10.1,
+        0,
+        -13.6
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": false
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        5.4,
+        5.6,
+        -13.1
+      ],
+      "yaw": 0,
+      "scale": 0.8,
+      "solid": false
+    },
+    {
+      "part": "altar",
+      "position": [
+        0,
+        1.2,
+        -14.0
+      ],
+      "yaw": 0,
+      "scale": 1.2,
+      "solid": false
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        -16.1,
+        0,
+        -7
+      ],
+      "yaw": -90,
+      "scale": 1.2,
+      "solid": false
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        -16.1,
+        0,
+        0
+      ],
+      "yaw": -90,
+      "scale": 1.2,
+      "solid": false
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        -16.1,
+        0,
+        7
+      ],
+      "yaw": -90,
+      "scale": 1.2,
+      "solid": false
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        -12.0,
+        0,
+        -7.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        -12.0,
+        0,
+        5.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        16.1,
+        0,
+        -7
+      ],
+      "yaw": 90,
+      "scale": 1.2,
+      "solid": false
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        16.1,
+        0,
+        0
+      ],
+      "yaw": 90,
+      "scale": 1.2,
+      "solid": false
+    },
+    {
+      "part": "wall_panel",
+      "position": [
+        16.1,
+        0,
+        7
+      ],
+      "yaw": 90,
+      "scale": 1.2,
+      "solid": false
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        12.0,
+        0,
+        -7.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "anubis_urn",
+      "position": [
+        12.0,
+        0,
+        5.5
+      ],
+      "yaw": 0,
+      "scale": 0.9,
+      "solid": true
+    },
+    {
+      "part": "obelisk",
+      "position": [
+        -7,
+        0,
+        1.8
+      ],
+      "yaw": 0,
+      "scale": 1,
+      "solid": true
+    },
+    {
+      "part": "pillar",
+      "position": [
+        7,
+        0,
+        -1.6
+      ],
+      "yaw": 0,
+      "scale": 0.72,
+      "solid": true
+    },
+    {
+      "part": "altar",
+      "position": [
+        -7.8,
+        0,
+        -5.2
+      ],
+      "yaw": -12,
+      "scale": 1,
+      "solid": true
+    },
+    {
+      "part": "chest",
+      "position": [
+        8.1,
+        0,
+        5.5
+      ],
+      "yaw": 12,
+      "scale": 1,
+      "solid": true
+    },
+    {
+      "part": "coffin",
+      "position": [
+        -10,
+        0,
+        6
+      ],
+      "yaw": 15,
+      "scale": 0.82,
+      "solid": true
+    },
+    {
+      "part": "urn",
+      "position": [
+        10,
+        0,
+        -6.4
+      ],
+      "yaw": 0,
+      "scale": 1.0,
+      "solid": true
+    },
+    {
+      "part": "urn",
+      "position": [
+        10.7,
+        0,
+        -5.6
+      ],
+      "yaw": 0,
+      "scale": 0.75,
+      "solid": false
+    },
+    {
+      "part": "urn",
+      "position": [
+        9.6,
+        0,
+        -5.6
+      ],
+      "yaw": 0,
+      "scale": 0.75,
+      "solid": false
+    }
+  ],
+  "shared_textures": "../../props/mummy_tomb/",
+  "map": "res://data/maps/mummy_arena_a.json",
+  "state": "scene2 ordered draft;runtime route integration pending"
+}

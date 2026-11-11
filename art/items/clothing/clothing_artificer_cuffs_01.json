@@ -1,0 +1,17 @@
+{
+  "id": "clothing_artificer_cuffs_01",
+  "name": "ชุดช่างกล · แขนเสื้อบาน",
+  "asset_version": 1,
+  "triangle_count": 132,
+  "set_triangle_budget": 1500,
+  "slot": "arms",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "cloth_navy_artificer_01",
+  "thumbnail": "clothing_artificer_cuffs_01.png",
+  "binding": "Cloth torso blends spine bones; skirt panels blend Hips and one thigh; ankle shaft blends LowerLeg/Foot; accessories follow named bones",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false,
+  "legacy_ids": []
+}

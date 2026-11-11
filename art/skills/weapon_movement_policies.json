@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "updated": "2026-10-09",
+  "range_body_lengths": 2,
+  "dagger": {"default": "forward_dash"},
+  "spear": {"default": "in_place", "wind": "forward_dash"},
+  "hammer": {"default": "in_place", "earth": "forward_dash"},
+  "body_rotation_owner": "animation_hips_or_root",
+  "actor_heading": "locked_on_cast",
+  "vertical_motion_owner": "animation_hips_visual",
+  "damage_owner": "game"
+}

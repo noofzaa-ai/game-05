@@ -1,0 +1,1046 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+--- test_beta_cleanup.gd
+  PASS  cleanup removes only catalog grant spares
+  PASS  cleanup preserves equipped set and weapon
+  PASS  cleanup preserves earned item exact values
+  PASS  cleanup preserves gold materials appearance and RNG
+  PASS  cleanup retires capacity and marks v2
+  FAIL  cleanup never mutates borrowed storage
+  PASS  cleanup is idempotent
+SCRIPT ERROR: Invalid access to property or key 'profile' on a base object of type 'Dictionary'.
+          at: run (res://tests/test_beta_cleanup.gd:28)
+          GDScript backtrace (most recent call first):
+              [0] run (res://tests/test_beta_cleanup.gd:28)
+              [1] _initialize (res://tests/run_all.gd:84)
+--- test_snapshot_cache.gd
+  FAIL  cached profile matches canonical full kit
+  PASS  unchanged profile reuses immutable tree
+  FAIL  durability invalidates equipped item only
+  PASS  old immutable profile remains unchanged
+  PASS  cached item exact invalidation id
+  PASS  cached item exact invalidation slot
+  PASS  cached item exact invalidation tier
+  PASS  cached item exact invalidation level
+  PASS  cached item exact invalidation main_stat
+  PASS  cached item exact invalidation weapon_type
+  PASS  cached item exact invalidation item_id
+  PASS  cached item exact invalidation destroyed
+  PASS  cached item exact invalidation durability
+  PASS  cached item exact invalidation max_durability
+  PASS  in-place substat edit detected
+  FAIL  inventory order balances appearance facilities synced
+  PASS  serialization cache prunes departed ownership
+  PASS  borrowed snapshot never freezes live journey or boss state
+  PASS  transport snapshot retains stable ownership identities
+  PASS  borrowed snapshots deeply immutable
+  PASS  public caller copy does not mutate transport snapshot
+  PASS  sparse delta retains exact ownership updates
+  PASS  peer stash remains redacted
+  FAIL  client reconciles cached-wire ownership
+  PASS  legacy performance reports ignored without collecting
+--- test_feedback_panel.gd
+  PASS  feedback composer fits camp UI (854.0, 393.0)
+  PASS  feedback empty message disabled
+  PASS  feedback valid message enables submit
+  PASS  feedback overlong message disabled
+  PASS  feedback composer fits camp UI (360.0, 780.0)
+  PASS  feedback empty message disabled
+  PASS  feedback valid message enables submit
+  PASS  feedback overlong message disabled
+  PASS  feedback composer fits camp UI (854.0, 220.0)
+  PASS  feedback empty message disabled
+  PASS  feedback valid message enables submit
+  PASS  feedback overlong message disabled
+--- test_party_online.gd
+  PASS  M5 empty party cannot depart
+  PASS  M5 accepts four slots 4
+  PASS  M5 accepts four slots 2
+  PASS  M5 accepts four slots 1
+  PASS  M5 accepts four slots 3
+  PASS  M5 immutable capacity and leader
+  PASS  M5 only ready leader departs
+  PASS  M5 disconnect resets readiness
+  PASS  M5 leave hands leadership to lowest surviving slot
+  PASS  M5 starts safe waiting camp before capacity
+  PASS  M5 camp has no enemies
+  PASS  M5 camp rejects combat input on authority
+  PASS  M5 admission rebuilds party and changes epoch
+  PASS  M5 unready and nonleader depart denied
+  PASS  M5 departure waits for private backend confirmation
+  PASS  M5 authoritative departure preserves clock
+  PASS  M5 pings are bounded and server positioned
+  PASS  M5 link fragment and plain invite parse identically
+  PASS  M5 malformed invites rejected
+  PASS  M5 ally audio attenuated, self/enemy unchanged
+  PASS  M5 shared boss intro follows server clock
+  PASS  M5 local ultimate takes camera priority
+  PASS  M5 late boss intro does not restart cinematic
+  PASS  M6 cached entity encoding stays byte identical
+  PASS  M6 cached bytes still obey node budget and frame bound
+  PASS  M6 shared delta matches independent calculation
+  PASS  M6 same-tick distinct baselines cannot collide
+  PASS  M6 cached snapshots preserve caller ownership and private filtering
+  PASS  M6 public run skips profile serialization without schema change
+--- test_netcode.gd
+  PASS  M4 binary roundtrip type0
+  PASS  M4 binary roundtrip type1
+  PASS  M4 binary roundtrip type1
+  PASS  M4 binary roundtrip type2
+  PASS  M4 binary roundtrip type2
+  PASS  M4 binary roundtrip type2
+  PASS  M4 binary roundtrip type2
+  PASS  M4 binary roundtrip type2
+  PASS  M4 binary roundtrip type2
+  PASS  M4 binary roundtrip type3
+  PASS  M4 binary roundtrip type4
+  PASS  M4 binary roundtrip type5
+  PASS  M4 binary roundtrip type9
+  PASS  M4 binary roundtrip type6
+  PASS  M4 binary roundtrip type27
+  PASS  M4 all truncated prefixes fail closed
+  PASS  M4 trailing payload rejected
+  PASS  M4 nonfinite encode rejected
+  PASS  M4 unknown tag rejected
+  PASS  M4 invalid UTF8 rejected without engine decoder errors
+  PASS  M4 nested data bounded
+  PASS  M4 strings and arrays bounded
+  PASS  M4 packet header roundtrip
+  PASS  M4 magic/version/length enforced
+  PASS  M4 input binds epoch and newest/history ticks
+  PASS  M4 malformed input history rejected
+  PASS  M4 full snapshot reconstructs all public state
+  PASS  M4 acknowledged delta reconstructs authoritative state
+  PASS  M4 delta smaller than full snapshot
+  PASS  M4 recipient filtering excludes peer stash and RNG
+  PASS  M4 RemoteSession builds typed read views
+  PASS  M4 local movement predicts before server acknowledgement
+  PASS  M4 predicted damage never replaces authoritative HP
+  PASS  M4 reconciliation restores and replays unacknowledged input
+  PASS  M4 replayed older snapshot cannot roll state backward
+  PASS  M4 participant2 keeps correct owner/camera slot
+  PASS  M4 missing baseline requests full without mutation
+  PASS  M4 stage-only command cannot award client-provided loot
+  PASS  M4 stale epoch cannot mutate new stage
+  PASS  M4 partial fragmented state never mutates views
+  PASS  M4 reordered fragments assemble under final baseline sequence
+  PASS  M4 duplicate old fragments cannot roll back state
+  PASS  M4 chunk count and total allocation bounded
+  PASS  M4 partial transfer memory bounded
+  PASS  M4 debug delay uses wall clock without advancing simulation
+  PASS  M4 impairment queues bounded under a paused consumer
+  PASS  M4 bounded 24-tick prediction input admitted
+  PASS  M4 command retry is idempotent and payload reuse denied
+  PASS  M4 cleared-stage snapshot retains physical map after Journey clears current
+  PASS  M4 authoritative route choice changes epoch and builds next simulation
+  FAIL  M4 camp banking/leave and full route lifecycle retain valid public snapshots
+  PASS  M4 terminal settlement is repeatable without duplicate rewards
+  PASS  final leave reply is drained with a closed socket
+  PASS  leave completion is emitted once
+  PASS  expired room stops reconnect and permits Back without inventing a save
+  PASS  lost leave reply plus revoked membership exits safely
+  PASS  transient outages retain reconnect behavior
+--- test_room_worker.gd
+  PASS  scene barrier freezes HP, AI, movement and sim clock party1
+  PASS  scene barrier rejects wrong slot and stale epoch party1
+  PASS  scene barrier rejects gameplay input while loading party1
+  PASS  scene barrier waits for the slowest party1
+  PASS  scene barrier duplicate ACK is idempotent party1
+  PASS  scene barrier starts after all ACKs party1
+  PASS  scene barrier resets every stage and rejects prior ACK party1
+  PASS  scene barrier has a bounded loading lifetime party1
+  PASS  scene barrier freezes HP, AI, movement and sim clock party2
+  PASS  scene barrier rejects wrong slot and stale epoch party2
+  PASS  scene barrier rejects gameplay input while loading party2
+  PASS  scene barrier waits for the slowest party2
+  PASS  scene barrier duplicate ACK is idempotent party2
+  PASS  scene barrier starts after all ACKs party2
+  PASS  scene barrier resets every stage and rejects prior ACK party2
+  PASS  scene barrier has a bounded loading lifetime party2
+  PASS  scene barrier freezes HP, AI, movement and sim clock party4
+  PASS  scene barrier rejects wrong slot and stale epoch party4
+  PASS  scene barrier rejects gameplay input while loading party4
+  PASS  scene barrier waits for the slowest party4
+  PASS  scene barrier duplicate ACK is idempotent party4
+  PASS  scene barrier starts after all ACKs party4
+  PASS  scene barrier resets every stage and rejects prior ACK party4
+  PASS  scene barrier has a bounded loading lifetime party4
+  PASS  M4-1 server-only production data loads
+  PASS  M4-1 room allocates separate party sim/journey
+  PASS  M4-1 second room allocates independently
+  PASS  M4-1 caller-owned profiles not mutated
+  PASS  M4-1 profiles and runs never shared across rooms
+  PASS  M4-1 input accepts only bound participant slot
+  PASS  M4-1 duplicate input idempotent
+  PASS  M4-1 queued input cannot be replaced
+  PASS  M4-1 malformed/future/played tick rejected
+  PASS  M4-1 clock advances both rooms exactly one tick
+  PASS  M4-1 movement stays in its own room
+  PASS  M4-1 only played input gets acknowledged
+  PASS  M4-1 played tick cannot replay attack
+  PASS  M4-1 disconnect clears queued input and denies new input
+  PASS  M4-1 disconnect does not advance input acknowledgement
+  PASS  M4-1 unknown presence cannot create a participant
+  PASS  M4-1 per-frame catch-up bounded to five
+  PASS  M4-1 catch-up retains residual fixed ticks
+  PASS  M4-1 invalid scheduler delta ignored
+  PASS  M4-1 closing one room preserves other
+  PASS  M4-1 empty room retires without financial settlement
+  PASS  M4-1 overload closes instead of stretching dt
+  PASS  M4-1 completed room has finite lifetime
+  PASS  M4-1 fixed ticks independent of render cadence party1
+  PASS  M4-1 fixed ticks independent of render cadence party2
+  PASS  M4-1 fixed ticks independent of render cadence party4
+  PASS  M4-1 bounded rooms per process
+  PASS  M4-1 duplicate room cannot replace active state
+  PASS  M4-1 private control rejects malformed/client-clock requests
+  PASS  M4-1 private control rejects malformed/client-clock requests
+  PASS  M4-1 private control rejects malformed/client-clock requests
+  PASS  M4-1 private control rejects malformed/client-clock requests
+  PASS  M4-1 private control rejects malformed/client-clock requests
+  PASS  M4-1 duplicate player slot rejected
+--- test_online_profiles.gd
+  PASS  M3-4 client cannot command before fetching revision
+  PASS  M3-4 client tracks fetched revision
+  PASS  M3-4 request envelope copies command and omits local profile
+  PASS  M3-4 client advances only on server success
+  PASS  M3-4 conflict stays explicit without local fallback
+  PASS  M3-4 older response cannot roll client revision backward
+  PASS  M3-4 offline commands do not reach backend
+  PASS  M3-4 production configuration loads
+  FAIL  M3-4 server creates starter profile without test kit
+  PASS  M3-4 reserved name projected into profile
+  PASS  M3-4 same trusted seed gives same starter
+  FAIL  M3-4 camp command executes
+  PASS  M3-4 borrowed stored state remains unchanged
+SCRIPT ERROR: Invalid access to property or key 'result' on a base object of type 'Dictionary'.
+          at: run (res://tests/test_online_profiles.gd:25)
+          GDScript backtrace (most recent call first):
+              [0] run (res://tests/test_online_profiles.gd:25)
+              [1] _initialize (res://tests/run_all.gd:84)
+              [2] run (res://tests/test_feedback_panel.gd:23)
+--- test_online_names.gd
+  PASS  server reuses Profile name rule for vector 2089174931
+  PASS  server reuses Profile name rule for vector 4078520110
+  PASS  server reuses Profile name rule for vector 657901025
+  PASS  server reuses Profile name rule for vector 214724094
+  PASS  server reuses Profile name rule for vector 2219718331
+  PASS  server reuses Profile name rule for vector 782064825
+  PASS  server reuses Profile name rule for vector 6753922
+  PASS  server reuses Profile name rule for vector 177693
+  PASS  server reuses Profile name rule for vector 5381
+  PASS  server reuses Profile name rule for vector 4205444254
+  PASS  server reuses Profile name rule for vector 2089995496
+  PASS  server reuses Profile name rule for vector 1589876884
+  PASS  server reuses Profile name rule for vector 933077816
+  PASS  server reuses Profile name rule for vector 10221871
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  server name wire contract rejects malformed or identity-bearing payload
+  PASS  case-only variants share the same server canonical name
+  PASS  name client uses authenticated RPC and never sends a user ID
+  PASS  invalid local name never sends a request
+  PASS  duplicate name is a server result
+  PASS  unrecognized server diagnostics stay out of UI
+  PASS  rate-limited naming returns a friendly UI code
+  PASS  account without a name returns an empty prefill
+  PASS  offline naming does not call backend
+  PASS  creator pre-fills existing account name without making a character
+  PASS  server duplicate leaves local profile uncreated and shows friendly error
+  PASS  online name footer and offline choice fit phone (844, 390)
+  PASS  online name footer and offline choice fit phone (667, 375)
+  PASS  pending online name disables edits and duplicate submission
+  PASS  explicit offline choice creates local character immediately
+  PASS  late server reply after leaving creator is harmless
+  PASS  confirmed server name then commits through LocalSession
+--- test_online_login.gd
+  PASS  Web packaging refuses development caches and backend sources
+  PASS  Web packaging retains runtime SDK and public config
+  PASS  public HTTPS connection settings validate
+  PASS  config rejects credentials and path injection
+  PASS  missing application key leaves offline
+  PASS  plaintext auth cannot target an arbitrary public host
+  PASS  invalid JWT payload types cannot reach SDK parser
+  PASS  device identifiers use fresh cryptographic randomness
+  PASS  malformed token is discarded before SDK parsing
+online account: authenticated (device)
+  PASS  device authentication verifies account before authenticated state
+  PASS  first device login may create one account
+  PASS  session cache persists device identity and refresh token
+online account: authenticated (restored)
+  PASS  valid restored session is checked by server without new login
+online account: authenticated (refresh)
+  PASS  expired access token refreshes with SDK
+online account: authenticated (device)
+  PASS  rejected refresh reauthenticates same registered device without recreation
+online account: offline (account_unavailable)
+  PASS  network/server failure falls back offline without new account
+  PASS  offline status warns about no cloud save
+  PASS  inflight login displays connecting state
+  PASS  late login result cannot override explicit offline choice
+online account: offline (cache_scope_or_format)
+  PASS  backend scope mismatch refuses silent identity replacement
+online account: offline (cache_invalid)
+  PASS  corrupt cache does not create another account
+  PASS  title still provides Start while disconnected
+--- test_coop.gd
+  PASS  M2 party validates two distinct profiles
+  PASS  M2 party refuses a shared profile
+  PASS  M2 explicit party enables co-op and independent runs
+  PASS  M2 safe spawns separate players
+  PASS  M2 solo remains opt-out
+  PASS  M2 party HP uses configured multiplier without extra ATK
+  PASS  M2 party HP uses configured multiplier without extra ATK
+  PASS  M2 party HP uses configured multiplier without extra ATK
+  PASS  M2 party HP uses configured multiplier without extra ATK
+  PASS  M2 four participants receive safe positions
+  PASS  M2 four-player HP multiplier is 2.8
+  PASS  M2 fatal event becomes downed with bag retained
+  PASS  M2 idle ally accumulates revive progress
+  PASS  M2 moving interrupts revive
+  PASS  M2 mid-revive checkpoint restores
+  PASS  M2 restored party checkpoint is exact
+  PASS  M2 revive completes at configured hold and HP
+  PASS  M2 replay from mid-revive remains identical
+  FAIL  M2 JSON Journey roundtrip retains independent player state
+  FAIL  M2 bleedout eliminates and loses only run bag
+  PASS  M2 all down triggers team wipe and remaining bag loss
+  PASS  M2 wipe terminal events happen once
+  PASS  M2 enemy kill awards each participant independently
+  PASS  M2 duplicate kill cannot pay party twice
+  PASS  M2 downed participant remains eligible for loot
+  PASS  M2 eliminated participant receives no new loot
+  PASS  M2 Session exposes both players through read views
+  PASS  M2 local down does not end party Journey
+  PASS  M2 Session ends Journey only on team wipe
+  PASS  M2 default co-op rules validate
+  PASS  M2 rejects impossible revive timing
+  PASS  M2 older solo combat files remain valid
+  PASS  M2 boss reinforcements retain party HP scaling
+  PASS  M2 each participant carries independent HP and gauge
+  PASS  M2 camp heals each surviving participant once
+  PASS  M2 camp populates party without spawning enemies
+  PASS  M2 treasure awards separate Item instances
+  FAIL  M2 party reward metadata survives JSON checkpoint
+  PASS  M2 finish banks every participant independently
+  PASS  M2 custom diagonal spawns cannot overlap body bounds
+  PASS  M2 2 starter bots complete all 12 Journey stages
+  PASS  M2 4 starter bots complete all 12 Journey stages
+--- test_local_session.gd
+  PASS  M1-6 LocalSession matches direct wire-quantized simulation every tick
+  PASS  M1-6 queued input is copied through wire boundary
+  PASS  M1-6 stage ownership commands cannot claim rest access
+  PASS  M1-6 cannot open an invented rest point
+  PASS  M1-6 rest proximity is checked by session
+  PASS  M1-6 real nearby rest point opens
+  PASS  M1-6 menu pauses fixed simulation ticks
+  FAIL  M1-6 equip command changes loadout and live fighting style together
+  PASS  M1-6 rest heals and refills stamina through authority
+  PASS  M1-6 rest cannot be used twice
+  PASS  M1-6 close resumes exactly one tick
+  PASS  M1-6 closed menu loses gear permissions
+  PASS  M1-6 free-stage early return keeps the existing bank policy
+  PASS  M1-6 repeated banking cannot duplicate gold
+  PASS  M1-6 invalid route choice is rejected
+  PASS  M1-6 journey cannot use free-stage banking
+  PASS  M1-6 cannot open camp outside a camp node
+  PASS  M1-6 choice uses authoritative Journey rules
+  PASS  M1-6 route camp can manage equipment
+  PASS  M1-6 camp's already-applied heal is marked once
+  PASS  M1-6 reopening camp does not duplicate consumed rest
+  PASS  M1-6 journey bank command transfers once
+  PASS  M1-6 bank command at empty bag does not duplicate
+  PASS  M1-6 invalid command fails with unchanged owned state
+  PASS  M1-6 camp retreat uses same journey and bag
+  PASS  M1-6 unfinished/finished summary respects lifecycle
+  PASS  M1-6 leaving stage releases sim, run and journey
+  PASS  M1-6 cosmetics use Commands on the same profile
+  PASS  M1-6 command reward and changed ownership are JSON data, not Item objects
+  PASS  M1-6 reopening treasure cannot duplicate a reward
+  PASS  M1-6 preserves old clear-vs-death priority when both occur on the same tick
+--- test_session_architecture.gd
+  PASS  M1-6 res://client/animation_set.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/atmosphere.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/body_fit.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/brass_icons.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/camera_rig.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/camera_trigger.gd does not mutate ownership outside Commands []
+  FAIL  M1-6 res://client/camp_screen.gd does not mutate ownership outside Commands [".add_item("]
+  PASS  M1-6 res://client/character_creator.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/character_foot_name.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/character_light.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/character_model.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/effects.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/enemy_bars.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/exit_portal.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/feedback_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/fighter_view.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/forge_selection.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/game_state.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/gear_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/graphics_options.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/graphics_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/graphics_runtime.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hub.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hub_menu_card.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hub_npc.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hub_shortcut_button.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hub_touch.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hub_world.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hud.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/hud_capsule.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/ink_style.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/ink_ui.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/input_reader.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/item_assets.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/item_cell.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/item_icon.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/item_text.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/journey_screen.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/lag_report.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/look_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/material_icons.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/merchant_sell_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/mobile_combat_art.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/mobile_controls.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/mobile_hud_frame.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/mobile_ui_art.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/network_status.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/npc_guide.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/pack_layout.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/pack_loader.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/paper_doll.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/party_camera.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/party_hud.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/perf_overlay.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/player_info_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/projectile_view.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/refine_equipment.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/refine_visual.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/shop_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skill_catalog_panel.gd does not mutate ownership outside Commands []
+  FAIL  M1-6 res://client/skill_panel.gd does not mutate ownership outside Commands [".add_item("]
+  PASS  M1-6 res://client/stage_props.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/stage_view.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/storage_cell.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/storage_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/test_kit.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/title_backdrop.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/title_screen.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/toon_style.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/treasure_chest.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/ui_themes.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/ultimate_camera.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/version_info.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/warp_crystal.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/warp_gate_screen.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/workshop.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/workshop_npc.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/workshop_review.gd does not mutate ownership outside Commands []
+  FAIL  M1-6 res://client/world_map_screen.gd does not mutate ownership outside Commands [".add_item("]
+  PASS  M1-6 res://client/audio/audio_data.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/audio/audio_director.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/audio/audio_rules.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/characters/bow_visual.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/characters/reference_blink.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/characters/reference_character_model.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/characters/reference_eye_textures.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/characters/reference_fitting.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/characters/reference_skin.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/connection_config.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/http_adapter.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/invite_link.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/name_client.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/network_shim.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/online_account.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/online_roster.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/online_text.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/plaza_chat.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/plaza_client.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/profile_client.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/room_client.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/room_panel.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/session_store.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/social_client.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/online/social_panel.gd does not mutate ownership outside Commands []
+  FAIL  M1-6 res://client/perf/lab.gd does not mutate ownership outside Commands [".add_item("]
+  PASS  M1-6 res://client/perf/remote_probe.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/session/account_session.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/session/local_session.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/session/remote_journey.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/session/remote_session.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skills/mcp_skill_visual.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skills/native_flipbook.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skills/presenter.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skills/round_skill_button.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skills/skill_hud.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skills/skill_visual.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/skills/tree_canvas.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/vfx/blade_trail.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/vfx/skill_vfx.gd does not mutate ownership outside Commands []
+  PASS  M1-6 res://client/vfx/vfx_library.gd does not mutate ownership outside Commands []
+  PASS  M1-6 stage reads/steps Session, not raw GameSim
+  PASS  M1-6 LocalSession quantizes both offline and future remote input identically
+--- test_serialization.gd
+  FAIL  M1-1 every worn slot, rolls, damaged/destroyed gear, wallet and appearance survive JSON
+  PASS  M1-1 computed item stats and stack rules are not persisted
+  FAIL  M1-1 restored profile owns independent items
+  PASS  M1-1 unsupported versions rejected
+  FAIL  M1-1 run bag, death and consumed rests survive JSON
+  FAIL  M1-1 complete journey and reward Item objects survive JSON
+  FAIL  M1-1 restored journey progresses identically
+--- test_commands.gd
+  PASS  M1-2 { "type": "equip", "item": "missing", "source": "stash" } -> item_not_owned
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "equip", "item": "spare", "source": "stash", "index": 999 } -> invalid_slot
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "equip", "item": "spare", "source": "stash", "index": 0.5 } -> invalid_command
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "equip", "item": "spare", "source": "stash", "gold": 9999 } -> invalid_command
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "equip", "item": "spare", "source": "stash" } -> ok
+  PASS  M1-2 { "type": "unequip", "slot": "hat", "destination": "stash" } -> ok
+  PASS  M1-2 { "type": "unequip", "slot": "hat", "destination": "stash" } -> nothing_worn
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "enhance", "item": "spare", "protect": true } -> not_configured
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "upgrade_tier", "item": "spare" } -> not_configured
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "discard", "item": "starter-weapon", "source": "stash" } -> item_not_in_container
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "discard", "item": "spare", "source": "stash" } -> ok
+  PASS  M1-2 { "type": "discard_material", "material": "ore", "count": -1, "source": "stash" } -> invalid_count
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "discard_material", "material": "ore", "count": 1, "source": "stash" } -> ok
+  PASS  M1-2 { "type": "set_name", "name": "!" } -> too_short
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "set_name", "name": " Hero " } -> ok
+  PASS  M1-2 { "type": "appearance", "part": "face", "choice": "unknown" } -> invalid_appearance
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "appearance", "part": "face", "choice": "original" } -> ok
+  PASS  M1-2 { "type": "unknown" } -> unknown_command
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "upgrade_camp" } -> cannot_afford
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "upgrade_facility", "facility": "unknown" } -> unknown_facility
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "upgrade_camp" } -> ok
+  PASS  M1-2 { "type": "upgrade_facility", "facility": "storage" } -> ok
+  PASS  M1-2 { "type": "repair", "item": "starter-weapon" } -> nothing_to_repair
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "repair", "item": "starter-weapon" } -> ok
+  PASS  M1-2 { "type": "repair_all" } -> ok
+  PASS  M1-2 { "type": "repair_all" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "upgrade_camp" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "upgrade_facility", "facility": "storage" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "set_name", "name": "Valid" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "appearance", "part": "face", "choice": "original" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "repair", "item": "starter-weapon" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "unequip", "slot": "weapon", "destination": "bag" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  FAIL  M1-2 { "type": "unequip", "slot": "weapon", "destination": "bag" } -> ok
+  FAIL  M1-2 { "type": "equip", "item": "starter-weapon", "source": "bag" } -> ok
+  PASS  M1-2 { "type": "unequip", "slot": "weapon", "destination": "stash" } -> not_available_here
+  PASS  M1-2 failed command is atomic
+  FAIL  M1-2 { "type": "unequip", "slot": "weapon", "destination": "bag" } -> bag_full
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "unequip", "slot": "weapon", "destination": "bag" } -> trip_over
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "discard_material", "material": "ore", "count": 1, "source": "bag" } -> trip_over
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "equip", "item": "starter-weapon", "source": "stash" } -> item_destroyed
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 { "type": "set_name", "name": "Other" } -> duplicate_item_id
+  PASS  M1-2 failed command is atomic
+  PASS  M1-2 same seed and command produce identical state/results
+--- test_sim_restore.gd
+  PASS  M1-3 checkpoint exercised with live projectile, warning area and boss waves
+  PASS  M1-3 restore pending attacks
+  FAIL  M1-3 projectile/area hits, IDs, wave and events continue identically every tick
+  PASS  M1-3 restores false checkpoint
+  PASS  M1-3 immediate full state equals original false
+  PASS  M1-3 300+restore+300 equals uninterrupted600 false
+  PASS  M1-3 saved snapshot remains immutable after live ticks false
+  PASS  M1-3 AI world references rebound false
+  PASS  M1-3 restores true checkpoint
+  PASS  M1-3 immediate full state equals original true
+  PASS  M1-3 300+restore+300 equals uninterrupted600 true
+  PASS  M1-3 saved snapshot remains immutable after live ticks true
+  PASS  M1-3 AI world references rebound true
+  PASS  M1-3 version rejection leaves target unchanged
+  PASS  M1-3 missing economy dependencies rejected
+--- test_determinism.gd
+  PASS  M1-4 seeded journey bot normal identical every60ticks
+  PASS  M1-4 seeded journey bot boss identical every60ticks
+  PASS  M1/M2 party2 exact replay every60ticks
+  PASS  M1/M2 party4 exact replay every60ticks
+--- test_input_codec.gd
+  FAIL  M1-5 all 256 button combinations and axis signs round-trip in five bytes
+  PASS  M1-5 every signed axis boundary survives
+  PASS  M1-5 malformed length and reserved -128 rejected
+  PASS  M1-5 nonfinite input neutralized and oversized axes clamped
+  PASS  M1-5 long world-space aim preserves heading instead of clamping diagonally
+--- test_mobile_controls.gd
+  PASS  Retina canvas uses CSS-sized touch targets
+  PASS  portrait needs rotation
+  PASS  landscape permits play
+  PASS  square does not gate unnecessarily
+  PASS  touch walking preserves direction
+  PASS  run and guard hold together
+  FAIL  simultaneous attack and ultimate
+  PASS  one-shot attacks not repeated while held
+  PASS  hold actions survive ticks
+  PASS  release clears every finger and queued tap
+  PASS  touch release preserves desktop input
+  PASS  menu never injects combat
+  PASS  touch overlay builds action regions
+  PASS  rotation gate sits above creator, menus and FPS
+  PASS  floating zone covers left area and excludes menus
+  FAIL  large combat hit regions fit (667.0, 375.0)
+  FAIL  large combat hit regions fit (844.0, 390.0)
+  FAIL  large combat hit regions fit (932.0, 430.0)
+ERROR: Index p_y = 700 is out of bounds (height = 682).
+   at: get_pixel (core/io/image.cpp:3690)
+   GDScript backtrace (most recent call first):
+       [0] run (res://tests/test_mobile_controls.gd:65)
+       [1] _initialize (res://tests/run_all.gd:84)
+       [2] run (res://tests/test_online_login.gd:129)
+  FAIL  new atlas backdrop is transparent
+ERROR: Index p_y = 747 is out of bounds (height = 682).
+   at: get_pixel (core/io/image.cpp:3690)
+   GDScript backtrace (most recent call first):
+       [0] run (res://tests/test_mobile_controls.gd:66)
+       [1] _initialize (res://tests/run_all.gd:84)
+       [2] run (res://tests/test_online_login.gd:129)
+  PASS  new atlas button interior stays opaque
+  PASS  combat medallion art is cached
+  PASS  attack is the largest thumb target
+  FAIL  skills arc up from attack
+  PASS  run button removed
+  FAIL  all six centers and sizes match measured reference
+  FAIL  ultimate sits left of skill like reference
+  PASS  heavy is larger than other auxiliary buttons
+  PASS  supplied button PNGs load
+  PASS  art rectangle compensates source transparent margins
+  PASS  round buttons reject bounding-square corners
+  FAIL  radial touch circles do not overlap
+  PASS  live focus/resize cleanup releases stick and guard
+  PASS  joystick starts at touch origin
+  PASS  short drag walks without run
+  FAIL  ordinary full drag stays normal speed
+  PASS  sprint requires extended drag
+  PASS  sprint has a stable return band
+  FAIL  pulling inside return threshold stops sprint
+  PASS  long drag runs at full speed
+  PASS  pulling back returns to walking
+  PASS  lifting stick finger stops walking
+  PASS  walking and guard touches hold independently
+  PASS  lifting movement finger preserves guard finger
+  PASS  cancelled touch releases hold
+  PASS  portrait gate pauses the scene tree
+  PASS  return landscape resumes owned pause
+  PASS  rotation preserves a preexisting pause
+--- test_architecture.gd
+  PASS  logic/ has script files
+  PASS  logic/armor_migration.gd has no client/rendering dependencies []
+  PASS  logic/camp.gd has no client/rendering dependencies []
+  PASS  logic/camp_data.gd has no client/rendering dependencies []
+  PASS  logic/camp_data_loader.gd has no client/rendering dependencies []
+  PASS  logic/combat.gd has no client/rendering dependencies []
+  PASS  logic/combat_data.gd has no client/rendering dependencies []
+  PASS  logic/combat_data_loader.gd has no client/rendering dependencies []
+  PASS  logic/commands.gd has no client/rendering dependencies []
+  PASS  logic/coop.gd has no client/rendering dependencies []
+  PASS  logic/coop_journey.gd has no client/rendering dependencies []
+  PASS  logic/cosmetic_options.gd has no client/rendering dependencies []
+  PASS  logic/effects.gd has no client/rendering dependencies []
+  PASS  logic/enemy_ai.gd has no client/rendering dependencies []
+  PASS  logic/equipment_mobility.gd has no client/rendering dependencies []
+  PASS  logic/fighter.gd has no client/rendering dependencies []
+  PASS  logic/game_sim.gd has no client/rendering dependencies []
+  PASS  logic/inventory.gd has no client/rendering dependencies []
+  PASS  logic/item.gd has no client/rendering dependencies []
+  PASS  logic/item_catalog.gd has no client/rendering dependencies []
+  PASS  logic/item_rules.gd has no client/rendering dependencies []
+  PASS  logic/item_rules_loader.gd has no client/rendering dependencies []
+  PASS  logic/item_system.gd has no client/rendering dependencies []
+  PASS  logic/journey.gd has no client/rendering dependencies []
+  PASS  logic/journey_data.gd has no client/rendering dependencies []
+  PASS  logic/loadout.gd has no client/rendering dependencies []
+  PASS  logic/loot.gd has no client/rendering dependencies []
+  PASS  logic/loot_data.gd has no client/rendering dependencies []
+  PASS  logic/loot_data_loader.gd has no client/rendering dependencies []
+  PASS  logic/map_data.gd has no client/rendering dependencies []
+  PASS  logic/map_loader.gd has no client/rendering dependencies []
+  PASS  logic/movement.gd has no client/rendering dependencies []
+  PASS  logic/net_state.gd has no client/rendering dependencies []
+  PASS  logic/net_wire.gd has no client/rendering dependencies []
+  PASS  logic/party_spawns.gd has no client/rendering dependencies []
+  PASS  logic/party_state.gd has no client/rendering dependencies []
+  PASS  logic/profile.gd has no client/rendering dependencies []
+  PASS  logic/projectiles.gd has no client/rendering dependencies []
+  PASS  logic/refine.gd has no client/rendering dependencies []
+  PASS  logic/repair.gd has no client/rendering dependencies []
+  PASS  logic/run.gd has no client/rendering dependencies []
+  PASS  logic/shop.gd has no client/rendering dependencies []
+  PASS  logic/sim_body.gd has no client/rendering dependencies []
+  PASS  logic/sim_input.gd has no client/rendering dependencies []
+  PASS  logic/sim_world.gd has no client/rendering dependencies []
+  PASS  logic/skill_build.gd has no client/rendering dependencies []
+  PASS  logic/state_codec.gd has no client/rendering dependencies []
+  PASS  logic/stats.gd has no client/rendering dependencies []
+  PASS  logic/storage.gd has no client/rendering dependencies []
+  PASS  logic/test_kit.gd has no client/rendering dependencies []
+  PASS  logic/upgrade.gd has no client/rendering dependencies []
+  PASS  logic/wear.gd has no client/rendering dependencies []
+--- test_movement.gd
+  PASS  falling body lands on the floor
+  PASS  walking right for 1 second moves the walking speed (3.80)
+  PASS  running is 1.75x faster than walking (6.65)
+  PASS  walking into a step stops at the wall
+  PASS  a jump reaches about 1.4 units (got 1.34)
+  PASS  player cannot leave the stage width
+  PASS  player cannot leave the lane depth
+  PASS  stairs can be climbed to the plateau by jumping (best height 3.14)
+  PASS  the low floating platform can be reached by jumping
+  PASS  a jump produces exactly one 'jumped' event
+  PASS  landing produces exactly one 'landed' event
+  PASS  same inputs give identical results
+  PASS  player 1 moved
+  PASS  player 2 stayed
+  PASS  snapshot lists both players
+--- test_map_data.gd
+  PASS  the shipped map is valid []
+  PASS  shipped map has solids and a camera zone
+  PASS  the camera zone keeps its camera settings
+  PASS  the shipped map has 7 monsters, all goblins (Boss 2026-10-10: goblins only)
+  PASS  every enemy a map spawns exists in the combat data
+  PASS  a monster spawn defaults to level 1 and may set a level
+  PASS  a spawn level below 1 is reported
+  PASS  the shipped map has a rest point with a position and a radius
+  PASS  a rest point without an id is reported
+  PASS  two rest points with the same id are reported
+  PASS  a rest point with a zero radius is reported
+  PASS  the wide arena map is valid []
+  PASS  it is a wide top-down arena (48 x 32)
+  PASS  it has a crowd of monsters of known types (7)
+  PASS  it has scenery and every prop kind exists in the client (35 props)
+  PASS  it has rest points and the stage is listed for PvE
+  PASS  the side-view valley keeps the default camera style
+  PASS  an unknown camera style is reported
+  PASS  a prop without a kind is reported
+  PASS  a prop with a zero scale is reported
+  PASS  a spawn without a type is reported
+  PASS  a spawn with a bad position is reported
+  PASS  pve lists the shipped map
+  PASS  pvp has no maps yet
+  PASS  a missing map reports an error instead of crashing
+  PASS  every map listed in index.json is valid
+  PASS  the second stage (shrine wall) is valid []
+  PASS  it is listed for PvE and is a wide top-down stage
+  PASS  its monsters are the goblin family (goblins + archer, mage, knight: Boss-approved plan 2026-10-10), all known (7 monsters: ["goblin", "goblin_mage", "goblin_knight", "goblin_archer"])
+  PASS  its monsters are level 2+ and some reach level 3 (garden tops out at 1)
+  PASS  it is harder: total monster HP 3375 vs 2020, total ATK 820 vs 695
+  PASS  it has two rest points and a camera zone over the shrine yard
+  PASS  its scenery uses only prop kinds the client has (52 props)
+  PASS  practice_field: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  sunward_valley: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  ink_garden: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  shrine_wall: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  goblin_arena_a: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  goblin_arena_b: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  goblin_arena_c: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  goblin_rest_camp: spawns and rest points are in bounds, on the ground, not in solids []
+  PASS  ink_garden: tall trees stand outside the walkable area and never south of it
+  PASS  ink_garden: obstacles stand on the floor, too high to jump on (> 1.41) and low enough to see over (<= 1.8)
+  PASS  ink_garden: every monster reaches a player waiting at the spawn (7/7 within 90 s)
+  PASS  shrine_wall: tall trees stand outside the walkable area and never south of it
+  PASS  shrine_wall: obstacles stand on the floor, too high to jump on (> 1.41) and low enough to see over (<= 1.8)
+  PASS  shrine_wall: every monster reaches a player waiting at the spawn (7/7 within 90 s)
+  PASS  minimal map is valid
+  PASS  unknown extra fields are ignored
+  PASS  broken JSON is reported
+  PASS  a non-object is reported
+  PASS  wrong version is reported
+  PASS  missing id is reported
+  PASS  empty modes is reported
+  PASS  zero-size solid is reported
+  PASS  malformed vector is reported
+  PASS  solids that are not a list are reported
+  PASS  a solid that is not an object is reported without crashing
+  PASS  the practice field is valid and the first PvE stage []
+  PASS  the practice field has no monsters and a rest point
+  PASS  a stage with no monsters never ends by itself
+--- test_goblin_stages.gd
+  PASS  a map without the new fields: fight, no art, no campfire
+  PASS  default exit portals: two spots north of the centre inside the bounds ([(-2.5, 0.05, -4.8), (2.5, 0.05, -4.8)])
+  PASS  the old maps keep loading unchanged (no art prop added)
+  PASS  explicit kind / campfire / exit_portals / art_scene / art_mood are read []
+  PASS  the art scene reaches the client as one art_scene prop
+  PASS  an unknown kind is reported
+  PASS  a campfire on a fight map is reported
+  PASS  monsters on a rest map are reported
+  PASS  an exit portal outside the bounds is reported
+  PASS  an empty exit_portals list is reported
+  PASS  an art_scene that is not a res:// scene file is reported
+  PASS  an unknown art_mood is reported
+  PASS  goblin_arena_a is valid [] and listed in index.json
+  PASS  goblin_arena_a is one arena with room to kite (28 x 21 m = 588 m2, want 540-640, top-down)
+  PASS  goblin_arena_a: its art scene exists (res://art/maps/goblin_forest/goblin_arena_a.glb)
+  PASS  goblin_arena_a: two exit portals, north of the middle, in bounds, not in a solid
+  PASS  goblin_arena_a: a fight map with 8 monster spots of known types
+  PASS  goblin_arena_a: at least 5 cover pieces, spread out (the extra room is used, not empty)
+  PASS  goblin_arena_a: the monster spots use the whole floor (widest pair 23.6 m apart)
+  PASS  goblin_arena_a: tall trees stand outside the walkable area and never south of it
+  PASS  goblin_arena_a: obstacles stand on the floor, too high to jump on (> 1.41) and low enough to see over (<= 1.8)
+  PASS  goblin_arena_a: every monster reaches a player waiting at the spawn (8/8 within 90 s)
+  PASS  goblin_arena_a: the glb's empties match the map (spawn, enemy_0..7, exit_portal_0/1) []
+  PASS  goblin_arena_a: web-cheap art (89435 tris <= 110000, 4 meshes = one per material)
+  PASS  goblin_arena_a: every surface is vertex-coloured and shown with vertex_color_use_as_albedo
+  PASS  goblin_arena_a: a light on its fire
+  PASS  goblin_arena_b is valid [] and listed in index.json
+  PASS  goblin_arena_b is one arena with room to kite (27 x 21 m = 567 m2, want 540-640, top-down)
+  PASS  goblin_arena_b: its art scene exists (res://art/maps/goblin_forest/goblin_arena_b.glb)
+  PASS  goblin_arena_b: two exit portals, north of the middle, in bounds, not in a solid
+  PASS  goblin_arena_b: a fight map with 8 monster spots of known types
+  PASS  goblin_arena_b: at least 5 cover pieces, spread out (the extra room is used, not empty)
+  PASS  goblin_arena_b: the monster spots use the whole floor (widest pair 23.0 m apart)
+  PASS  goblin_arena_b: tall trees stand outside the walkable area and never south of it
+  PASS  goblin_arena_b: obstacles stand on the floor, too high to jump on (> 1.41) and low enough to see over (<= 1.8)
+  PASS  goblin_arena_b: every monster reaches a player waiting at the spawn (8/8 within 90 s)
+  PASS  goblin_arena_b: the glb's empties match the map (spawn, enemy_0..7, exit_portal_0/1) []
+  PASS  goblin_arena_b: web-cheap art (43351 tris <= 110000, 4 meshes = one per material)
+  PASS  goblin_arena_b: every surface is vertex-coloured and shown with vertex_color_use_as_albedo
+  PASS  goblin_arena_b: a light on its fire
+  PASS  goblin_arena_c is valid [] and listed in index.json
+  PASS  goblin_arena_c is one arena with room to kite (28 x 21 m = 588 m2, want 540-640, top-down)
+  PASS  goblin_arena_c: its art scene exists (res://art/maps/goblin_forest/goblin_arena_c.glb)
+  PASS  goblin_arena_c: two exit portals, north of the middle, in bounds, not in a solid
+  PASS  goblin_arena_c: a fight map with 8 monster spots of known types
+  PASS  goblin_arena_c: at least 5 cover pieces, spread out (the extra room is used, not empty)
+  PASS  goblin_arena_c: the monster spots use the whole floor (widest pair 23.8 m apart)
+  PASS  goblin_arena_c: tall trees stand outside the walkable area and never south of it
+  PASS  goblin_arena_c: obstacles stand on the floor, too high to jump on (> 1.41) and low enough to see over (<= 1.8)
+  PASS  goblin_arena_c: every monster reaches a player waiting at the spawn (8/8 within 90 s)
+  PASS  goblin_arena_c: the glb's empties match the map (spawn, enemy_0..7, exit_portal_0/1) []
+  PASS  goblin_arena_c: web-cheap art (48646 tris <= 110000, 4 meshes = one per material)
+  PASS  goblin_arena_c: every surface is vertex-coloured and shown with vertex_color_use_as_albedo
+  PASS  goblin_arena_c: a light on its fire
+  PASS  goblin_rest_camp is valid [] and listed in index.json
+  PASS  goblin_rest_camp is one arena with room to kite (20 x 15 m = 294 m2, want 260-320, top-down)
+  PASS  goblin_rest_camp: its art scene exists (res://art/maps/goblin_forest/goblin_rest_camp.glb)
+  PASS  goblin_rest_camp: two exit portals, north of the middle, in bounds, not in a solid
+  PASS  goblin_rest_camp: a safe rest map (no monsters) with a campfire and a rest point
+  PASS  goblin_rest_camp: the glb's empties match the map (spawn, enemy_0..-1, exit_portal_0/1, campfire) []
+  PASS  goblin_rest_camp: web-cheap art (52217 tris <= 110000, 4 meshes = one per material)
+  PASS  goblin_rest_camp: every surface is vertex-coloured and shown with vertex_color_use_as_albedo
+  PASS  goblin_rest_camp: a light on its fire
+--- test_items.gd
+  PASS  the shipped rule book is valid []
+  PASS  14 equipment slots in total
+  PASS  two earrings, two bracelets, two rings, one armband piece for both arms
+  PASS  weapon and shoes are separate single slots
+  PASS  the necklace gives STAMINA as its main stat
+  PASS  the regeneration stats are not the main stat of any slot (they roll as sub stats)
+  PASS  four tiers: white, blue, purple, gold
+  PASS  sub stat counts follow the tier: 1, 2, 3, 4
+  PASS  enhancement goes up to +10
+  PASS  the thirteen director stats exist
+  PASS  STAMINA (the size of the stamina bar) starts at 100
+  PASS  a character regains stamina at 32 per second by default
+  PASS  odds: +1 to +3 never fail
+  PASS  odds: +10 can break, +4 cannot
+  PASS  broken JSON is reported
+  PASS  wrong version is reported
+  PASS  probabilities that do not add to 1 are reported
+  PASS  an unknown main stat is reported
+  PASS  a missing enhancement level is reported
+  PASS  a tier table of the wrong size is reported
+  PASS  sub stat count matches the tier (1/2/3/4)
+  PASS  sub stats are distinct and never repeat the main stat
+  PASS  sub stat roll quality stays within 0..1
+  PASS  main stat comes from the slot
+  PASS  unknown slot gives no item
+  PASS  unknown tier gives no item
+  PASS  main stat rises with every tier [20.0, 35.0, 55.0, 80.0]
+  PASS  sub stat values stay inside the tier's range
+  PASS  tier-up works from normal
+  PASS  now rare with 2 sub stats
+  PASS  the first sub stat is kept
+  PASS  the kept sub stat is worth more at the higher tier
+  PASS  the main stat grew with the tier
+  PASS  legendary has 4 sub stats
+  PASS  there is no tier above legendary
+  PASS  tier is unchanged after a refused upgrade
+  PASS  a destroyed item cannot be upgraded
+  PASS  +1 to +3 always succeed
+  PASS  main stat is +8% per level (got 68.200 for base 55.000)
+  PASS  each success boosted exactly one sub stat once (total 3)
+  PASS  a success raises one sub stat's value and reports which
+  PASS  a +10 item cannot be enhanced further
+  PASS  enhancement results match the table { "success": 6041, "stay": 5980, "down": 4975, "break": 3004 }
+  PASS  'down' lowers the level by exactly one
+  PASS  a 'down' result was observed at +6 odds
+  PASS  a protection item prevents breaking and level loss
+  PASS  without protection an item can break
+  PASS  a broken item cannot be enhanced again
+  PASS  a broken item cannot be equipped
+  PASS  the same seed always gives the same item history
+  PASS  two rings can be worn
+  PASS  a third ring position does not exist
+  PASS  a negative position does not exist
+  PASS  weapon has one position only
+  PASS  item_at returns what was worn
+  PASS  a character with no gear has the base stats
+  PASS  worn gear adds up into the stats (ATK 135.00)
+  PASS  gear never lowers a stat
+  PASS  a destroyed item stops counting
+  PASS  unequip returns the item and frees the slot
+  FAIL  legendary shoes make the character faster (x1.00)
+  PASS  no gear means normal speed
+  PASS  a higher MOVESPD covers more ground in the simulation (3.80 vs 3.79)
+--- test_item_catalog.gd
+SCRIPT ERROR: Parse Error: Cannot get index "shirt" from "{  }".
+          at: GDScript::reload (res://tests/test_item_catalog.gd:74)
+          GDScript backtrace (most recent call first):
+              [0] _initialize (res://tests/run_all.gd:79)
+              [1] run (res://tests/test_mobile_controls.gd:174)
+SCRIPT ERROR: Parse Error: Cannot get index "pants" from "{  }".
+          at: GDScript::reload (res://tests/test_item_catalog.gd:74)
+          GDScript backtrace (most recent call first):
+              [0] _initialize (res://tests/run_all.gd:79)
+              [1] run (res://tests/test_mobile_controls.gd:174)
+ERROR: Failed to load script "res://tests/test_item_catalog.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+   GDScript backtrace (most recent call first):
+       [0] _initialize (res://tests/run_all.gd:79)
+       [1] run (res://tests/test_mobile_controls.gd:174)
+  FAIL  test_item_catalog.gd loads (it has a script error; see the messages above)
+--- test_combat.gd
+  PASS  the shipped combat data is valid []
+  PASS  the fists style has its three entry moves
+  PASS  light attacks chain into light then heavy
+  PASS  only the heavy move launches
+  PASS  the grunt enemy fills missing stats from the defaults
+  PASS  a move's length is startup + active + recovery
+  PASS  the grunt uses its own model (monster_01)
+  PASS  mummy: its model file exists (or it has none)
+  PASS  dummy_grunt: its model file exists (or it has none)
+  PASS  brute: its model file exists (or it has none)
+  PASS  charger: its model file exists (or it has none)
+  PASS  goblin: its model file exists (or it has none)
+  PASS  goblin_chief: its model file exists (or it has none)
+  PASS  goblin_archer: its model file exists (or it has none)
+  PASS  goblin_mage: its model file exists (or it has none)
+  PASS  goblin_knight: its model file exists (or it has none)
+  PASS  a monster model must be a res:// .glb path with a height above 0
+  PASS  broken JSON is reported
+  PASS  wrong version is reported
+  PASS  the shipped data is valid
+  PASS  a chain to a missing template is reported
+  PASS  zero startup is reported
+  PASS  a monster style naming a missing move is reported
+  PASS  broken weapons JSON is reported
+  PASS  a weapon number of 0 is reported
+  PASS  an override of an unknown move is reported
+  PASS  an override of an unknown field is reported
+  PASS  an enemy with an unknown style is reported
+  PASS  an unknown enemy stat is reported
+  PASS  defense_constant of 0 is reported
+  PASS  dummy_grunt: a light hit takes 3-7% of the starter player's HP (3.9%), a heavy one 9-18% (10.7%)
+  PASS  brute: a light hit takes 3-7% of the starter player's HP (6.1%), a heavy one 9-18% (15.7%)
+  PASS  charger: a light hit takes 3-7% of the starter player's HP (5.0%), a heavy one 9-18% (12.6%)
+  PASS  the starter player needs about 3 combos for a grunt (7 light hits), 5 for a charger (13), 11+ heavies for a brute (10)
+  PASS  level 1 is the base numbers
+  PASS  a higher level makes a monster stronger in HP, ATK and DEF but not in speed
+  PASS  a monster added at a level has that level and its stronger stats
+  PASS  a level of 0 or less counts as level 1
+  PASS  a missing level scaling is reported
+  PASS  level scaling of an unknown stat is reported
+  FAIL  a light attack hits a close enemy once
+  FAIL  the enemy lost health
+  PASS  the enemy is stunned or recovering
+  PASS  an enemy out of reach is not hit
+  PASS  an enemy behind the attacker is not hit
+  PASS  an enemy in a far lane is not hit
+  FAIL  one attack never hits the same target twice (hits: 0)
+  FAIL  damage = ATK x power reduced by DEF (expected 80, got 0)
+  FAIL  damage never drops below the minimum
+  FAIL  a 100% crit doubles damage at CRIDMG 200 (got 0, crit=false)
+  FAIL  0% crit rate never crits (damage 0)
+  FAIL  a hit pushes the target away from the attacker
+  FAIL  the victim turns to face the attacker
+  FAIL  attacks work to the left too (facing mirrors the hit box)
+  FAIL  the victim enters hitstun
+  FAIL  a stunned fighter cannot start an attack
+  PASS  a stunned fighter is not controllable
+  FAIL  tapping light chains the combo []
+  FAIL  hits land back to back as a combo (best combo: 0)
+  FAIL  a light can cancel into the heavy finisher []
+  FAIL  the heavy move launches the target
+  FAIL  a launched target lands, lies down once, then gets up once
+  PASS  the target ends up standing again
+  PASS  a target lying down cannot be hit
+  PASS  the player is in the air after jumping
+  FAIL  light in the air starts the air attack
+  FAIL  in the air the heavy button starts the jump heavy attack instead
+  FAIL  the attacker freezes for a moment after landing a hit (hit-stop)
+  FAIL  ATKSPD 100 makes an attack about twice as fast (1 vs 1 ticks)
+  PASS  teammates never hit each other
+  FAIL  a lethal hit kills the enemy exactly once
+  PASS  health never goes below zero
+  FAIL  clearing the last enemy reports the stage as cleared once
+  FAIL  no enemies are left alive
+  FAIL  a dead fighter cannot act
+  PASS  a dead fighter cannot be hit again
+  PASS  the enemy walks up to the player (8.1 -> 1.0)
+  PASS  the enemy attacks and hurts the player (hits: 6)
+  PASS  the enemy's MOVESPD slows it down
+  PASS  the same seed and inputs give the identical fight
+  PASS  an unguarded hit does damage (107)
+  FAIL  holding guard puts the fighter in guard
+  FAIL  a guarded hit does about 30% of the damage (107 vs 107)
+  FAIL  a blocked hit does not stun
+  FAIL  a blocked hit pushes much less than a clean hit
+  PASS  letting go of guard returns to idle
+  PASS  guard does not protect against hits from behind (107)
+  PASS  guard cannot be raised in the air
+  PASS  chip damage through a guard can still kill
+  FAIL  an ultimate ignores guard (0)
+  FAIL  pressing dodge starts a slide
+  FAIL  with no direction held, the dodge goes the way the fighter faces (moved 0.00)
+  PASS  the slide ends and the fighter is idle again
+  FAIL  holding a direction dodges that way without turning
+  FAIL  untouchable for the first 12 ticks of the dodge only (0)
+  PASS  a second dodge right away is refused (cooldown)
+  FAIL  after the cooldown the dodge works again
+  FAIL  an attack that connects during the dodge's untouchable window does nothing (107)
+  FAIL  dodging out of a guard works
+  PASS  no dodging in the air
+  FAIL  no dodging in the middle of an attack
+  FAIL  the special skill starts its move
+  FAIL  the special puts itself on cooldown
+  FAIL  the special hits and launches
+  PASS  the special cannot be used again during its cooldown
+  FAIL  after the cooldown the special works again
+  FAIL  the special is untouchable during its start-up (0 ticks)
+  PASS  the ultimate needs a full gauge
+  FAIL  dealing a hit fills the gauge a little (0)
+  PASS  taking a hit does not fill the victim's gauge
+  FAIL  with a full gauge the ultimate starts and spends the gauge
+  FAIL  the ultimate keeps the fighter untouchable for most of the animation (0 ticks)
+  PASS  and the immunity is over by the end of the recovery
+  FAIL  the ultimate hits every enemy around it once
+  PASS  every weapon's ultimate strikes forward as far as its pack says (off: [])
+  FAIL  an ultimate does not hit what is behind the user

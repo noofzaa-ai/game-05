@@ -1,0 +1,12 @@
+FROM python:3.12-alpine AS runtime
+RUN pip install --no-cache-dir kubernetes==34.1.0
+WORKDIR /app
+COPY tools/backend/image_retention.py tools/backend/registry_maintenance.py /app/
+
+# A single runtime layer also avoids legacy Docker 20.10 upload-cache stalls.
+FROM scratch
+COPY --from=runtime / /
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+WORKDIR /app
+USER 65532:65532
+ENTRYPOINT ["python3", "-u", "/app/registry_maintenance.py"]

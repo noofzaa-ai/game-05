@@ -1,0 +1,14 @@
+{
+  "default": "natural",
+  "colors": [
+    {"id": "natural", "name": "Style's own", "natural": true, "color": "#3b2a20"},
+    {"id": "black", "name": "Black", "color": "#1c1b1f"},
+    {"id": "dark_brown", "name": "Dark Brown", "color": "#3b2a20"},
+    {"id": "brown", "name": "Brown", "color": "#6b4630"},
+    {"id": "auburn", "name": "Auburn", "color": "#8c3b22"},
+    {"id": "blonde", "name": "Blonde", "color": "#d9b56a"},
+    {"id": "silver", "name": "Silver", "color": "#d8d8de"},
+    {"id": "ink_blue", "name": "Ink Blue", "color": "#2e4a7d"},
+    {"id": "jade_green", "name": "Jade Green", "color": "#2f7d62"}
+  ]
+}

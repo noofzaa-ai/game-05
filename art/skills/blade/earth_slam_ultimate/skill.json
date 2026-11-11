@@ -1,0 +1,288 @@
+{
+  "id": "blade_earth_slam_ultimate",
+  "name": "อัลติ · ดาบดินถล่ม",
+  "weapon_type": "blade",
+  "element": "earth",
+  "slot": "ultimate",
+  "rig_profile": "chibi-studio-57",
+  "animation": "BladeEarthSlamUltimate",
+  "duration_s": 4.34,
+  "motion": "motion.glb",
+  "vfx": "vfx.glb",
+  "asset_version": 3,
+  "updated": "2026-10-11",
+  "motion_asset_version": 2,
+  "vfx_asset_version": 2,
+  "vfx_triangles": 9675,
+  "vfx_triangle_budget": 10000,
+  "coordinate_space": "caster_origin_y_up",
+  "in_place": true,
+  "playback": "once",
+  "attack": {
+    "schema_version": 1,
+    "slot": "ultimate",
+    "direction": "forward",
+    "asset_forward_axis": [
+      0,
+      0,
+      1
+    ],
+    "up_axis": [
+      0,
+      1,
+      0
+    ],
+    "lock_direction_on_cast": true,
+    "range_body_lengths": 2.0,
+    "body_length_definition": "standing_body_height_excluding_hair_equipment",
+    "caster_motion": "forward_dash",
+    "delivery": "dash_trail",
+    "hit_shape": "forward_box",
+    "near_body_lengths": 0.05,
+    "width_body_lengths": 1.1,
+    "height_body_lengths": 1.0,
+    "max_hits_per_target_per_cast": 1,
+    "vfx_space": "frozen_cast_origin",
+    "vfx_motion": "authored_in_glb",
+    "damage_owner": "game",
+    "reference_body_height_m": 1.506733275949955,
+    "range_m": 3.01346655189991
+  },
+  "flight": {
+    "release_time_s": 1.7,
+    "arrival_time_s": 1.86,
+    "center_start_body_lengths": 0,
+    "center_end_body_lengths": 2,
+    "front_extent_body_lengths": 0,
+    "ease": "smoothstep"
+  },
+  "movement": {
+    "kind": "forward_dash",
+    "distance_body_lengths": 2,
+    "start_time_s": 1.7,
+    "end_time_s": 1.86,
+    "ease": "smoothstep",
+    "motion_owner": "godot_runtime",
+    "collision": "stop",
+    "animation_root_motion": false
+  },
+  "footwork": {
+    "takeoff": "left_after_right_step",
+    "first_contact_time_s": 1.86,
+    "second_contact_time_s": 2.02,
+    "landing": "right_then_left_into_crouch"
+  },
+  "body_motion": {
+    "visual_jump_height_m": 2.0,
+    "launch_time_s": 0.36,
+    "apex_time_s": 0.7,
+    "hover_end_time_s": 1.7,
+    "vertical_motion_owner": "animation_hips",
+    "root_horizontal_displacement_m": 0,
+    "hover_duration_s": 1.0
+  },
+  "markers": [
+    "grip_main",
+    "trail_start",
+    "trail_end",
+    "effect_point"
+  ],
+  "control": {
+    "locomotion_resume_time_s": 2.08,
+    "blend_out_s": 0.12,
+    "vfx_clock": "independent_cast",
+    "release_actor_heading": true
+  },
+  "visual": {
+    "density_profile": "earth_slam_shattered_stone_v1",
+    "bloom_strength": 0.2,
+    "vfx_fade_end_time_s": 4.14,
+    "impact_time_s": 1.86,
+    "blast_center_gltf_m": [
+      0,
+      0,
+      3.01346655189991
+    ],
+    "decorative_radius_m": 3.2,
+    "decorative_dust_center_radius_m": 6.4,
+    "decorative_debris_radius_m": 8.2,
+    "measured_envelope": {
+      "debris_max_center_radius_m": 7.6230248363467465,
+      "debris_max_center_height_m": 2.21513295173645,
+      "dust_max_center_radius_m": 6.396941848463221,
+      "measurement": "all_authored_translation_samples; center positions, excludes particle radius"
+    },
+    "decorative_diameter_body_lengths": 4.247599825499952,
+    "decorations_affect_damage": false,
+    "visual_footprint_exception": "user_2026-10-10_earth_variant_of_wide_slam",
+    "boulders": 48,
+    "rocks": 96,
+    "chips": 220,
+    "grit": 144,
+    "dust_puffs": 240,
+    "billow_cards": 40,
+    "dust_volumes": 12,
+    "fractured_plates": 24,
+    "earth_spires": 18,
+    "debris_collision": "decorative_only",
+    "flight_ribbon_start_time_s": 1.7,
+    "flight_ribbon_end_time_s": 1.91,
+    "authored_blade_trails": true,
+    "trail_end_time_s": 0,
+    "aura_end_time_s": 0,
+    "trail_color": "#dbc38a",
+    "light_color": "#e0be78",
+    "light_intensity": 0,
+    "light_end_time_s": 2.34,
+    "reference_ground_height_m": 0.016266725957393646,
+    "contact_flash": {
+      "marker": "trail_end",
+      "time_s": 1.86,
+      "blender_carrier_local_m": [
+        -0.10271021723747253,
+        -0.6119900345802307,
+        0.05821603909134865
+      ],
+      "blender_cast_ground_m": [
+        -0.10271021723747253,
+        -3.6254565715789795,
+        0.041949313133955
+      ],
+      "gltf_cast_ground_m": [
+        -0.10271021723747253,
+        0.041949313133955,
+        3.6254565715789795
+      ],
+      "blender_requested_carrier_local_m": [
+        -0.10000000149011612,
+        -0.6399999856948853,
+        0.03026672638952732
+      ],
+      "ground_reference_height_m": 0.016266725957393646,
+      "height_above_reference_ground_m": 0.041949313133955,
+      "horizontal_offset_from_dash_endpoint_m": 0.6205491071149669,
+      "right_arm_extension_ratio": 0.9750000222210649,
+      "decorative_contact_only": true
+    },
+    "native_impact_color_rgb": [
+      1,
+      0.79,
+      0.48
+    ],
+    "reference_frame_sequence": [
+      "impact_flash",
+      "ground_eruption",
+      "tumbling_debris",
+      "outward_dust",
+      "settled_stones"
+    ]
+  },
+  "godot_visual": {
+    "id": "blade_earth_slam_presentation",
+    "version": 1,
+    "updated": "2026-10-10",
+    "presentation": "res://art/skills/shared/earth_slam_presentation.gd",
+    "runtime_added_triangles": 0,
+    "runtime_total_triangles": 9675,
+    "runtime_triangle_budget": 10000,
+    "renderer": "Forward+",
+    "glow_environment_required": true,
+    "decorations_affect_damage": false
+  },
+  "gameplay_events": [
+    {
+      "time_s": 1.86,
+      "name": "earth_slam_impact",
+      "range_factor": 1.0
+    }
+  ],
+  "gameplay_payload": {
+    "element": "earth",
+    "damage_owner": "game",
+    "radial_damage": false
+  },
+  "timeline": [
+    {
+      "time_s": 0,
+      "label": "ก้าวขวา เก็บแรงและยกดาบ"
+    },
+    {
+      "time_s": 0.36,
+      "label": "ถีบขาซ้าย กระโดดขึ้นตรง"
+    },
+    {
+      "time_s": 0.7,
+      "label": "ค้างง้างดาบกลางอากาศ"
+    },
+    {
+      "time_s": 1.7,
+      "label": "พุ่งเฉียงลงอย่างรวดเร็วไปจุดเดิม"
+    },
+    {
+      "time_s": 1.86,
+      "label": "ฟาดพื้น แผ่นดินแตกและก้อนหินระเบิดออก"
+    },
+    {
+      "time_s": 2.02,
+      "label": "เท้าซ้ายลงตาม รับแรงในท่าย่อ"
+    },
+    {
+      "time_s": 2.08,
+      "label": "คืนเดิน/วิ่ง ขณะระเบิดยังเล่น"
+    },
+    {
+      "time_s": 2.34,
+      "label": "ก้อนหินหมุนปลิวและฝุ่นแผ่ออกข้าง"
+    },
+    {
+      "time_s": 2.86,
+      "label": "หินตกเด้งและเศษหินกระจาย"
+    },
+    {
+      "time_s": 3.39,
+      "label": "ก้อนหินและฝุ่นเริ่มจาง"
+    },
+    {
+      "time_s": 4.14,
+      "label": "เศษหินและฝุ่นจางหมด"
+    },
+    {
+      "time_s": 4.34,
+      "label": "จบอายุcast"
+    }
+  ],
+  "motion_source_skill": "blade_solar_slam_ultimate",
+  "motion_source_version": 5,
+  "pose_retime": {
+    "apex_s": 0.7,
+    "old_dive_s": 0.96,
+    "new_dive_s": 1.7,
+    "added_duration_s": 0.74,
+    "pose_duration_s": 1.0,
+    "authorization": "user_2026-10-11_one_second_like_spear",
+    "snapshot": ".cache/skill_revisions/blade_slam_before_one_second_pose_20261011"
+  },
+  "camera": {
+    "kind": "blade_slam_pose",
+    "version": 1,
+    "owner_only": true,
+    "current_viewport_only": true,
+    "enter_start_s": 0.48,
+    "enter_end_s": 0.7,
+    "pose_start_s": 0.7,
+    "pose_end_s": 1.7,
+    "return_start_s": 1.54,
+    "return_end_s": 1.84,
+    "yaw_start_deg": 24.0,
+    "yaw_end_deg": 2.0,
+    "radius_start_m": 5.2,
+    "radius_end_m": 4.8,
+    "height_start_m": 3.25,
+    "height_end_m": 3.1,
+    "focus_height_m": 2.7,
+    "fov_start_deg": 42.0,
+    "fov_end_deg": 40.0,
+    "modifies_gameplay_clock": false,
+    "pose_fill_energy": 0.8
+  }
+}

@@ -1,0 +1,192 @@
+{
+  "id": "blacksmith_modular_draft",
+  "source": "/Users/user/godot-project/test01/assets/backsmith_assets_split.fbx",
+  "source_sha256": "2b39a617908cf4b08dcd66e79e3bcb7ce45e77d168023f8a4073ff0a304276ab",
+  "source_bytes": 28257212,
+  "scale": 4.009179196055655,
+  "parts": [
+    {
+      "name": "forge_chimney",
+      "triangles": 1499,
+      "assembly_location_blender": [
+        -0.37126001715660095,
+        -0.1264094114303589,
+        0.11205660551786423
+      ],
+      "dimensions": [
+        1.9989566802978516,
+        1.753182053565979,
+        2.1690902709960938
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "tool_rack",
+      "triangles": 1167,
+      "assembly_location_blender": [
+        -1.4526638984680176,
+        0.07840156555175781,
+        0.10741794109344482
+      ],
+      "dimensions": [
+        0.5570874810218811,
+        1.9443436861038208,
+        1.4637151956558228
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "roof_canopy",
+      "triangles": 702,
+      "assembly_location_blender": [
+        0.7947997450828552,
+        0.4142926037311554,
+        0.9048155546188354
+      ],
+      "dimensions": [
+        2.0481133460998535,
+        1.3053325414657593,
+        0.9830946922302246
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "stone_foundation",
+      "triangles": 2050,
+      "assembly_location_blender": [
+        -0.10637151449918747,
+        -0.2137954980134964,
+        0.00910896249115467
+      ],
+      "dimensions": [
+        4.199999809265137,
+        3.850451946258545,
+        0.3496244251728058
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "anvil_station",
+      "triangles": 540,
+      "assembly_location_blender": [
+        -1.6055899858474731,
+        -0.6152265071868896,
+        0.10893348604440689
+      ],
+      "dimensions": [
+        1.0267866849899292,
+        1.0158659219741821,
+        0.9479864835739136
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "rear_support",
+      "triangles": 1204,
+      "assembly_location_blender": [
+        0.1967504918575287,
+        0.7583743929862976,
+        0.10195335000753403
+      ],
+      "dimensions": [
+        2.971130609512329,
+        0.6827030777931213,
+        2.1573474407196045
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "quench_barrel_right",
+      "triangles": 691,
+      "assembly_location_blender": [
+        1.207288146018982,
+        -0.043226953595876694,
+        0.10736581683158875
+      ],
+      "dimensions": [
+        1.1472184658050537,
+        0.9860416054725647,
+        1.2070715427398682
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "front_workbench",
+      "triangles": 256,
+      "assembly_location_blender": [
+        -0.2347193956375122,
+        -1.48908531665802,
+        0.09649303555488586
+      ],
+      "dimensions": [
+        1.8897225856781006,
+        0.6553965210914612,
+        0.44239288568496704
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "right_support_tools",
+      "triangles": 474,
+      "assembly_location_blender": [
+        1.1470743417739868,
+        0.44160112738609314,
+        0.13472439348697662
+      ],
+      "dimensions": [
+        1.3435640335083008,
+        1.26163649559021,
+        1.392716646194458
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "quench_barrel_left",
+      "triangles": 287,
+      "assembly_location_blender": [
+        -0.9529237747192383,
+        0.026516754180192947,
+        0.11287844181060791
+      ],
+      "dimensions": [
+        0.7045530676841736,
+        0.7373201847076416,
+        0.7919371724128723
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    },
+    {
+      "name": "supply_crates",
+      "triangles": 215,
+      "assembly_location_blender": [
+        1.5081970691680908,
+        -0.6657161712646484,
+        0.10184521973133087
+      ],
+      "dimensions": [
+        0.7659376263618469,
+        0.7454507350921631,
+        0.3551170527935028
+      ],
+      "pivot": "bottom-center",
+      "boundary": "draft spatial face classification; no hidden-side caps generated"
+    }
+  ],
+  "triangles": 9085,
+  "status": "assembly review draft, not deployed; fused source spatial cuts require review before arbitrary rearrangement",
+  "texture_caps": {
+    "albedo": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  }
+}

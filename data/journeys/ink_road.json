@@ -1,0 +1,437 @@
+{
+ "version": 1,
+ "id": "ink_road",
+ "name": "Goblin Base",
+ "_design": "One PvE journey: 12 stages. After each stage the player picks the next from `choices` random nodes (combat / challenge / treasure by node_weights; at least one plain combat is always offered). Stage 1 is a plain fight, a camp lands on one of first_camp_stages and always on last_camp_stage, the last stage is the boss. Each stage entry is the plain fight; `challenge` is the harder fight at that stage (pays challenge_reward on top of the monsters' drops). power scales monster HP and ATK so early stages can be gentler than the level-1 base numbers (the starter-gear player found those too strong). treasure = a guaranteed wearable piece of tier >= min_tier, no fight. camp_banks_bag (Boss 2026-10-09: true): at a camp the bag can be sent to the stash, safe from a later death. Leaving the journey anywhere but a camp loses the bag (Journey.abandon). MONSTER MIX (spawn plan approved by the Boss 2026-10-10, placed 2026-10-12): stages 1-2 goblins only; stage 3 introduces one goblin archer, stage 5 the goblin mage, stage 6 the goblin knight; stages 7-11 mix them: one knight with goblins and one or two ranged ones (archer + mage together only in challenges until stage 11, the combination that costs the most health); the boss is the Goblin Chief with 2 goblins and a level-2 archer and mage. MAPS (exit portals, Boss 2026-10-13): a camp stage is played on camp_map (a safe rest map: no monsters, a campfire); combat and challenge stages use arena_maps once those map files exist and are valid, else combat_maps; a missing camp_map falls back to the first combat map with no monsters. Monsters take the map's spawn spots in list order, so goblins (listed first) start nearest the player and the ranged ones (listed last) furthest back. Measured with tests/journey_sweep.gd (starter gear, full health) before tuning by play. LATE-STAGE TUNING (Boss 2026-10-13): the small arenas made stages 9-11 harder (bot skill 0.6, 100 runs: st9 challenge 25%, st10 82/10%, st11 33/9%), so their power went down (plain 0.8 -> 0.77/0.71/0.72, challenge 0.85 -> 0.74/0.72/0.75): st9 98/52%, st10 92/35%, st11 57/32%, near the numbers on the old big maps (95/50, 95/30, 65/25); the boss is unchanged. ENLARGED ARENAS + ARENA_C (Boss 2026-10-14, 'the stages really are too hard'): the level-designer grew arenas a/b ~1.67x and added goblin_arena_c (now all three are in arena_maps). The bigger floors let the ranged goblins kite, which pushed the late game back up (bot skill 0.6, 100 runs on the a/b/c pool, measured on fight_map_pool not combat_maps: st8 plain 97% / challenge 37%, st9 98/47%, st10 96/39%, st11 52/26%, boss 7/22/40% at 0.3/0.6/0.9). Retuned friendlier (300-run confirm, skill 0.6): plain powers st8 0.75->0.70, st9 0.77->0.72, st10 0.71->0.66, st11 0.72->0.66; challenge powers st8 0.80->0.70, st9 0.74->0.70, st10 0.72->0.64, st11 0.75->0.61; boss hp_mult 1.5->1.3 (power still 0.85). Result: early 100%, late plains st8 96% / st9 99% / st10 97% / st11 71%, challenges st8 64% / st9 64% / st10 57% / st11 57%, boss 35/40/67%. Plain threat still rises st1..11 (st8 3.18 < st9 3.28 < st10 3.42 < st11 3.74) and every challenge stays harder than its plain. STILL SLIGHTLY HARSH: st11 plain sits ~71% (target 75-85%) because its knight+archer+mage mix on the wide floor caps the bot; power is already as low as the rising rule allows. A Boss decision: trim st11 plain to 1 goblin (not 2) to lift it into band, or accept 71%. REGION 2026-10-30: Goblin Base lower-left, distinct new scenery; journey stable ID and all combat/stage/reward tuning preserved.",
+ "stage_count": 12,
+ "choices": 3,
+ "first_camp_stages": [
+  5,
+  6,
+  7
+ ],
+ "last_camp_stage": 11,
+ "camp_heal_fraction": 1.0,
+ "camp_banks_bag": true,
+ "node_weights": {
+  "combat": 6,
+  "challenge": 3,
+  "treasure": 1
+ },
+ "combat_maps": [
+  "goblin_base_gate",
+  "goblin_base_courtyard"
+ ],
+ "boss_map": "goblin_base_chief",
+ "camp_map": "goblin_base_rest",
+ "arena_maps": [
+  "goblin_base_gate",
+  "goblin_base_courtyard",
+  "goblin_base_quarry"
+ ],
+ "boss": {
+  "hp_mult": 1.3,
+  "poise_mult": 2.0,
+  "label": "BOSS"
+ },
+ "challenge_reward": {
+  "table": "brute",
+  "level_bonus": 2,
+  "rolls": 2
+ },
+ "treasure": {
+  "min_tier": "rare",
+  "tier_weights": {
+   "rare": 70,
+   "epic": 25,
+   "legendary": 5
+  }
+ },
+ "stages": [
+  {
+   "level": 1,
+   "power": 0.5,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 4
+    }
+   ],
+   "challenge": {}
+  },
+  {
+   "level": 1,
+   "power": 0.6,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 5
+    }
+   ],
+   "challenge": {
+    "level": 1,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 5
+     }
+    ]
+   }
+  },
+  {
+   "level": 1,
+   "power": 0.65,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 4
+    },
+    {
+     "type": "goblin_archer",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 2,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 4
+     },
+     {
+      "type": "goblin_archer",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 2,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 4
+    },
+    {
+     "type": "goblin_archer",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 2,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 4
+     },
+     {
+      "type": "goblin_archer",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "level": 2,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 4
+    },
+    {
+     "type": "goblin_mage",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 3,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 3
+     },
+     {
+      "type": "goblin_archer",
+      "count": 1
+     },
+     {
+      "type": "goblin_mage",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 2,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 2
+    },
+    {
+     "type": "goblin_knight",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 3,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 2
+     },
+     {
+      "type": "goblin_knight",
+      "count": 1
+     },
+     {
+      "type": "goblin_archer",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 3,
+   "power": 0.72,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 1
+    },
+    {
+     "type": "goblin_knight",
+     "count": 1
+    },
+    {
+     "type": "goblin_archer",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 3,
+    "power": 0.8,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 2
+     },
+     {
+      "type": "goblin_knight",
+      "count": 1
+     },
+     {
+      "type": "goblin_mage",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 3,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 2
+    },
+    {
+     "type": "goblin_knight",
+     "count": 1
+    },
+    {
+     "type": "goblin_mage",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 4,
+    "power": 0.7,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 2
+     },
+     {
+      "type": "goblin_knight",
+      "count": 1
+     },
+     {
+      "type": "goblin_archer",
+      "count": 1
+     },
+     {
+      "type": "goblin_mage",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 3,
+   "power": 0.72,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 2
+    },
+    {
+     "type": "goblin_knight",
+     "count": 1
+    },
+    {
+     "type": "goblin_archer",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 4,
+    "power": 0.7,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 2
+     },
+     {
+      "type": "goblin_knight",
+      "count": 1
+     },
+     {
+      "type": "goblin_archer",
+      "count": 1
+     },
+     {
+      "type": "goblin_mage",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 4,
+   "power": 0.66,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 2
+    },
+    {
+     "type": "goblin_knight",
+     "count": 1
+    },
+    {
+     "type": "goblin_mage",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 5,
+    "power": 0.64,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 2
+     },
+     {
+      "type": "goblin_knight",
+      "count": 1
+     },
+     {
+      "type": "goblin_archer",
+      "count": 1
+     },
+     {
+      "type": "goblin_mage",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 4,
+   "power": 0.66,
+   "enemies": [
+    {
+     "type": "goblin",
+     "count": 2
+    },
+    {
+     "type": "goblin_knight",
+     "count": 1
+    },
+    {
+     "type": "goblin_archer",
+     "count": 1
+    },
+    {
+     "type": "goblin_mage",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 5,
+    "power": 0.61,
+    "enemies": [
+     {
+      "type": "goblin",
+      "count": 3
+     },
+     {
+      "type": "goblin_knight",
+      "count": 1
+     },
+     {
+      "type": "goblin_archer",
+      "count": 1
+     },
+     {
+      "type": "goblin_mage",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 4,
+   "power": 0.85,
+   "enemies": [
+    {
+     "type": "goblin_chief",
+     "count": 1,
+     "boss": true
+    },
+    {
+     "type": "goblin",
+     "count": 2
+    },
+    {
+     "type": "goblin_archer",
+     "count": 1,
+     "level": 2,
+     "wave": 2
+    },
+    {
+     "type": "goblin_mage",
+     "count": 1,
+     "level": 2,
+     "wave": 2
+    }
+   ],
+   "waves": {
+    "_design": "Boss 2026-10-12: the archer and mage come as wave 2, when the Chief drops below boss_hp_below of its HP (or the field is clear), not from the start. Boss 2026-10-14 (friendlier, enlarged arenas): hp_mult 1.5 -> 1.3, power still 0.85; on brush_ring the bot wins 35/40/67% at skill 0.3/0.6/0.9 (was 7/22/40% at hp_mult 1.5 on the big pool). The Chief now goes down for a mid-skill player without being a pushover for a strong one.",
+    "boss_hp_below": 0.35
+   },
+   "challenge": {}
+  }
+ ],
+ "blurb": "บุกฐานก็อบลิน 12 ด่าน และเผชิญหน้าหัวหน้าก็อบลิน",
+ "world_region": "goblin_base"
+}

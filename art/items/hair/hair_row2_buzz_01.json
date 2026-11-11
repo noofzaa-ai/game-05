@@ -1,0 +1,51 @@
+{
+  "id": "hair_row2_buzz_01",
+  "name": "รองทรงเกรียน",
+  "display_name": "รองทรงเกรียน",
+  "asset_version": 2,
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "triangle_count": 360,
+  "triangle_budget": 500,
+  "thumbnail": "preview_hair_row2_buzz_01_threequarter.png",
+  "reference_row": 2,
+  "reference_column": 5,
+  "geometry": {
+    "triangle_count": 360,
+    "budget": 500,
+    "bbox_blender": {
+      "min": [
+        -0.17680464684963226,
+        -0.1436426043510437,
+        -0.3320196568965912
+      ],
+      "max": [
+        0.1828993707895279,
+        0.18007314205169678,
+        -0.0021287219133228064
+      ]
+    }
+  },
+  "construction": {
+    "reference_transform_unchanged": true,
+    "clearance_target_mm": 6.5,
+    "sample_min_clearance_mm": {
+      "Hair_Scalp": 7.107386365532875
+    }
+  },
+  "validation": {
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_buzz_01_front.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_buzz_01_threequarter.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_buzz_01_side.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_buzz_01_back.png",
+      "/Users/user/godot-project/test01/art/items/hair/preview_hair_row2_buzz_01_top.png"
+    ]
+  }
+}

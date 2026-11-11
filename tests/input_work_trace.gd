@@ -1,0 +1,17 @@
+extends SceneTree
+func _initialize()->void:
+ var work=preload("res://client/session/input_work_trace.gd").new()
+ work.record("parent",100000,200000);work.record("child",120000,170000)
+ var gap:Dictionary=work.gap(100000,400000,false)
+ assert(gap.gap_ms==300 and gap.instrumented_union_ms==100 and gap.outside_instrumented_ms==200)
+ assert(gap.longest_scopes[0].label=="parent")
+ var trace=preload("res://client/session/input_trace.gd").new();trace.controls(100)
+ trace.work.record("reconcile",110000,360000);trace.controls(400);trace.capture(18,1,400,400)
+ assert(trace.captures[18].work_gap.instrumented_union_ms==250)
+ trace.controls(403);trace.capture(19,1,403,403)
+ assert(trace.captures[19].work_gap.instrumented_union_ms==250 and trace.captures[19].work_gap_age_ms==3)
+ for i in 300:work.record("bounded",i,i+1)
+ assert(work.spans.size()==256)
+ assert(load("res://client/stage_view.gd").can_instantiate())
+ print("INPUT WORK TRACE PASS: nested union no double count, clipped gap, burst context retained, bounded spans, stage compiles")
+ quit()

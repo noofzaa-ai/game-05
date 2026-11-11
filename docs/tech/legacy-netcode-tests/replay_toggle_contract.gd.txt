@@ -1,0 +1,23 @@
+extends SceneTree
+func _initialize() -> void:call_deferred("_run")
+func _run() -> void:
+	var source=preload("res://data/perf/scenario.gd").new()
+	var session=preload("res://client/perf/replay_toggle.gd").new(null,source.rules,source.camp)
+	session.connected=true
+	session._accept_state(source.state(),Time.get_ticks_msec())
+	assert(session.lag_replay_ticks>0 and session._prediction!=null)
+	var replay_before:int=session.lag_replay_ticks
+	session.set_replay(false)
+	source.advance();session._accept_state(source.state(),Time.get_ticks_msec())
+	assert(session.lag_replay_ticks==replay_before and session._prediction!=null)
+	var ticks_before:int=session.live_prediction_ticks
+	session.step(preload("res://logic/sim_input.gd").new())
+	assert(session.live_prediction_ticks==ticks_before+1)
+	session.set_replay(true)
+	source.advance();session._accept_state(source.state(),Time.get_ticks_msec())
+	assert(session.lag_replay_ticks>replay_before)
+	assert(session.journey!=null and session.profile!=null and session.run!=null)
+	assert(preload("res://client/session/remote_session.gd").new()._uses_replay())
+	var panel=preload("res://client/perf/replay_toggle_panel.gd").new();panel.free()
+	print("REPLAY TOGGLE PASS:ON replay,OFF zero replay +one live tick,ON restores;normal defaultON;route/profile retained")
+	quit()

@@ -1,0 +1,41 @@
+{
+  "v": 1,
+  "items": {
+    "goblin_medallion": {
+      "name": "เหรียญ Goblin",
+      "icon": "res://art/relics/goblin/icons/goblin_medallion.png",
+      "description": "ตีปกติหรือหนักโดนสะสม 1 ชั้น สูงสุด 1 ชั้นต่อ 0.5 วินาที ครบ 5 ชั้น การตีครั้งถัดไปแรงขึ้น 25% แล้วเริ่มสะสมใหม่",
+      "effect": {
+        "kind": "charged_basic",
+        "hits": 5,
+        "stack_interval_ticks": 30,
+        "damage_multiplier": 1.25
+      },
+      "model": "res://art/relics/goblin/models/goblin_medallion.glb"
+    },
+    "goblin_lantern": {
+      "name": "ตะเกียง Goblin",
+      "icon": "res://art/relics/goblin/icons/goblin_lantern.png",
+      "description": "ใช้สกิลสำเร็จ การตีปกติหรือหนักครั้งถัดไปภายใน 4 วินาทีทำให้ติดพิษ รวม 30% ATK ใน 3 วินาที คูลดาวน์ 8 วินาที พิษไม่ซ้อน",
+      "effect": {
+        "kind": "skill_poison",
+        "window_ticks": 240,
+        "cooldown_ticks": 480,
+        "effect_id": "relic_goblin_poison",
+        "duration_ticks": 180,
+        "total_atk": 0.3
+      },
+      "model": "res://art/relics/goblin/models/goblin_lantern.glb"
+    }
+  },
+  "boss_drops": {
+    "goblin_chief": {
+      "chance": 1.0,
+      "count": 1,
+      "pool": [
+        "goblin_medallion",
+        "goblin_lantern"
+      ]
+    }
+  }
+}

@@ -1,0 +1,34 @@
+extends SceneTree
+const Wire=preload("res://logic/net_wire.gd")
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var manager=preload("res://server/rooms/manager.gd").new()
+ var rng=RandomNumberGenerator.new();rng.seed=20261027
+ var profile=preload("res://logic/profile.gd").new_player(manager.rules,manager.camp,rng)
+ assert(manager.create("skilldiff12345",123,[{"id":1,"profile":profile.to_dict()}]).ok)
+ var room=manager.rooms["skilldiff12345"].room
+ # Remove AI/combat targets: compare own phase/locomotion, no unpredictable incoming hits.
+ for id in room.sim.bodies.keys():
+  if id!=1:room.sim.bodies.erase(id);room.sim.fighters.erase(id);room.sim._inputs.erase(id);room.sim._ai.erase(id)
+ var state=room.public_state(1)
+ var remote=preload("res://client/session/remote_session.gd").new(null,manager.rules,manager.camp,manager.loot)
+ remote.connected=true;remote._accept_state(state,1000)
+ remote._prediction=remote.make_sim(state,remote._map)
+ remote._prediction.prediction_motion=preload("res://logic/skills/motion_prediction.gd").new()
+ remote._prediction.prediction_motion.setup(remote._prediction,1,profile.skill_build,remote._prediction.fighters[1].skill_view)
+ remote._target_tick=0;remote._history.clear()
+ var log:Array=[]
+ for tick in range(1,121):
+  var input=preload("res://logic/sim_input.gd").new();input.aim=Vector2(0,-1);input.aim_distance=3
+  if tick==10:input.skill_slot=3 # Default blink_bolt movement skill.
+  var bytes=input.encode();log.append(bytes)
+  room.input(1,tick,bytes);room.tick()
+  remote._history[tick]=bytes;remote._predict_tick(tick,input,false)
+  var snapshot:Dictionary=room.public_state(1)
+  snapshot["ack"]=room.acknowledged[1]
+  remote.prediction_history.compare(snapshot,1,tick)
+ var first:Dictionary=remote.prediction_history.first_diff
+ print("SKILL FIRST DIFF ",JSON.stringify(first))
+ assert(first.is_empty())
+ print("SKILL INPUT LOG PASS:120same encoded human-format inputs;no mismatches across blink phase/locomotion, no enemy hits. Blink parity verified;other skill behaviors remain OPEN")
+ quit()

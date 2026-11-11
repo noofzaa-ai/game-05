@@ -1,0 +1,16 @@
+{
+  "id": "clothing_shinigami_m_shirt_01",
+  "name": "ชินิงามิ M · ดำทอง · เสื้อ",
+  "asset_version": 2,
+  "slot": "shirt",
+  "set_id": "outfit_shinigami_m_01",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "triangle_count": 264,
+  "set_triangle_budget": 1500,
+  "thumbnail": "clothing_shinigami_m_shirt_01.png",
+  "binding": "GameRig57; torso blend; independent left/right thigh panels; knee and ankle blends",
+  "cloth_simulation": false,
+  "hide_hair": false,
+  "hide_head": false
+}

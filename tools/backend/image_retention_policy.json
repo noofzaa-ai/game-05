@@ -1,0 +1,8 @@
+{
+  "repositories": ["zorx-web", "zorx-landing", "zorx-nakama", "zorx-name-validator", "zorx-room-worker"],
+  "registry_aliases": ["wiyazard:30500", "192.168.1.74:30500"],
+  "keep_latest": 10,
+  "minimum_age_days": 14,
+  "keep_tag_patterns": ["latest", "stable", "main", "develop", "prod*", "local-*"],
+  "apply_enabled": true
+}

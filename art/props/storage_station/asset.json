@@ -1,0 +1,45 @@
+{
+  "source": "storage_item.fbx",
+  "source_sha256": "3b66e114523fdc1c77bd4eae868c796c3c359b6bd003279e37263806d952dafc",
+  "triangles": 3607,
+  "game_size_xyz": [
+    4.8,
+    2.010172151532517,
+    1.4747558488235588
+  ],
+  "textures": [
+    {
+      "name": "texture_pbr_20250901.png",
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_metallic.png",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_normal.png",
+      "size": [
+        512,
+        512
+      ]
+    },
+    {
+      "name": "texture_pbr_20250901_roughness.png",
+      "size": [
+        512,
+        512
+      ]
+    }
+  ],
+  "texture_budget": {
+    "base_color": 1024,
+    "normal": 512,
+    "metallic_roughness": 512
+  }
+}

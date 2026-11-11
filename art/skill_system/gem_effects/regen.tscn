@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://client/skills/mcp_skill_visual.gd" id="1"]
+[node name="Gem_regen" type="Node3D"]
+script = ExtResource("1")
+asset_path = "res://art/skill_system/burn/effect.tscn"
+asset_scale = 1.25
+visual_offset = Vector3(0,0.2,0)
+override_tint = true
+tint = Color(0.4588235294117647,0.8901960784313725,0.6392156862745098,1)
+orbit_instances = 3
+orbit_radius = 0.35

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "slot": "ultimate",
+  "direction": "forward",
+  "asset_forward_axis": [0, 0, 1],
+  "up_axis": [0, 1, 0],
+  "lock_direction_on_cast": true,
+  "range_body_lengths": 2.0,
+  "body_length_definition": "standing_body_height_excluding_hair_equipment",
+  "caster_motion": "in_place",
+  "delivery": "traveling_wave",
+  "hit_shape": "forward_box",
+  "near_body_lengths": 0.05,
+  "width_body_lengths": 1.1,
+  "height_body_lengths": 1.0,
+  "max_hits_per_target_per_cast": 1,
+  "vfx_space": "frozen_cast_origin",
+  "vfx_motion": "authored_in_glb",
+  "damage_owner": "game"
+}

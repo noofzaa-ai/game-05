@@ -1,0 +1,230 @@
+{
+ "mg_lite_1h_magic_attack_01": {
+  "length": 2.3,
+  "loop": false,
+  "windup_end": 0.717,
+  "strike_end": 0.937,
+  "begin": 0.317,
+  "finish": 1.537
+ },
+ "mg_lite_2h_magic_area_attack_02": {
+  "length": 3.2667,
+  "loop": false,
+  "windup_end": 1.65,
+  "strike_end": 1.87,
+  "begin": 1.25,
+  "finish": 2.47
+ },
+ "mg_lite_idle": {
+  "length": 1.8833,
+  "loop": true
+ },
+ "mg_lite_idle_02": {
+  "length": 5.2,
+  "loop": true
+ },
+ "mg_lite_jump": {
+  "length": 2.3667,
+  "loop": false
+ },
+ "mg_lite_react_death_backward": {
+  "length": 3.6333,
+  "loop": false
+ },
+ "mg_lite_react_large_from_front": {
+  "length": 1.3833,
+  "loop": false
+ },
+ "mg_lite_react_small_from_front": {
+  "length": 1.2,
+  "loop": false
+ },
+ "mg_lite_run_back": {
+  "length": 0.6333,
+  "loop": true
+ },
+ "mg_lite_run_forward": {
+  "length": 0.75,
+  "loop": true
+ },
+ "mg_lite_turn_left_90": {
+  "length": 1.8833,
+  "loop": false
+ },
+ "mg_lite_turn_right_90": {
+  "length": 1.65,
+  "loop": false
+ },
+ "mg_lite_walk_back": {
+  "length": 1.2167,
+  "loop": true
+ },
+ "mg_lite_walk_forward": {
+  "length": 1.15,
+  "loop": true
+ },
+ "mg_loco_idle": {
+  "length": 1.8833,
+  "loop": true
+ },
+ "mg_loco_jump": {
+  "length": 2.3667,
+  "loop": false
+ },
+ "mg_loco_jump_running": {
+  "length": 1.0667,
+  "loop": true
+ },
+ "mg_loco_jump_running_landing": {
+  "length": 1.3833,
+  "loop": true
+ },
+ "mg_loco_land_to_standing_idle": {
+  "length": 1.1167,
+  "loop": true
+ },
+ "mg_loco_run_back": {
+  "length": 0.6333,
+  "loop": true
+ },
+ "mg_loco_run_forward": {
+  "length": 0.75,
+  "loop": true
+ },
+ "mg_loco_run_left": {
+  "length": 0.7667,
+  "loop": true
+ },
+ "mg_loco_run_right": {
+  "length": 0.7833,
+  "loop": true
+ },
+ "mg_loco_sprint_forward": {
+  "length": 0.5833,
+  "loop": true
+ },
+ "mg_loco_turn_left_90": {
+  "length": 1.8833,
+  "loop": false
+ },
+ "mg_loco_turn_right_90": {
+  "length": 1.65,
+  "loop": false
+ },
+ "mg_loco_walk_back": {
+  "length": 1.2167,
+  "loop": true
+ },
+ "mg_loco_walk_forward": {
+  "length": 1.15,
+  "loop": true
+ },
+ "mg_loco_walk_left": {
+  "length": 1.1667,
+  "loop": true
+ },
+ "mg_loco_walk_right": {
+  "length": 1.2,
+  "loop": true
+ },
+ "mg_spell_1h_cast_spell_01": {
+  "length": 2.2833,
+  "loop": false,
+  "windup_end": 0.433,
+  "strike_end": 0.653,
+  "begin": 0.033,
+  "finish": 1.253
+ },
+ "mg_spell_1h_magic_attack_01": {
+  "length": 2.3,
+  "loop": false,
+  "windup_end": 0.717,
+  "strike_end": 0.937,
+  "begin": 0.317,
+  "finish": 1.537
+ },
+ "mg_spell_1h_magic_attack_02": {
+  "length": 2.2167,
+  "loop": false,
+  "windup_end": 0.417,
+  "strike_end": 0.637,
+  "begin": 0.017,
+  "finish": 1.237
+ },
+ "mg_spell_1h_magic_attack_03": {
+  "length": 2.3,
+  "loop": false,
+  "windup_end": 0.233,
+  "strike_end": 0.453,
+  "begin": 0.0,
+  "finish": 1.053
+ },
+ "mg_spell_2h_cast_spell_01": {
+  "length": 2.1833,
+  "loop": false,
+  "windup_end": 1.1,
+  "strike_end": 1.32,
+  "begin": 0.7,
+  "finish": 1.92
+ },
+ "mg_spell_2h_magic_area_attack_01": {
+  "length": 2.9667,
+  "loop": false,
+  "windup_end": 1.167,
+  "strike_end": 1.387,
+  "begin": 0.767,
+  "finish": 1.987
+ },
+ "mg_spell_2h_magic_area_attack_02": {
+  "length": 3.2667,
+  "loop": false,
+  "windup_end": 1.65,
+  "strike_end": 1.87,
+  "begin": 1.25,
+  "finish": 2.47
+ },
+ "mg_spell_2h_magic_attack_01": {
+  "length": 2.7167,
+  "loop": false,
+  "windup_end": 1.033,
+  "strike_end": 1.253,
+  "begin": 0.633,
+  "finish": 1.853
+ },
+ "mg_spell_2h_magic_attack_02": {
+  "length": 2.65,
+  "loop": false,
+  "windup_end": 1.217,
+  "strike_end": 1.437,
+  "begin": 0.817,
+  "finish": 2.037
+ },
+ "mg_spell_2h_magic_attack_03": {
+  "length": 4.3167,
+  "loop": false,
+  "windup_end": 0.917,
+  "strike_end": 1.137,
+  "begin": 0.517,
+  "finish": 1.737
+ },
+ "mg_spell_2h_magic_attack_04": {
+  "length": 3.3333,
+  "loop": false,
+  "windup_end": 0.867,
+  "strike_end": 1.087,
+  "begin": 0.467,
+  "finish": 1.687
+ },
+ "mg_spell_2h_magic_attack_05": {
+  "length": 3.55,
+  "loop": false,
+  "windup_end": 1.933,
+  "strike_end": 2.153,
+  "begin": 1.533,
+  "finish": 2.753
+ },
+ "mg_spell_idle": {
+  "length": 1.8833,
+  "loop": true
+ }
+}

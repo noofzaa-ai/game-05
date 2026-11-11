@@ -1,0 +1,25 @@
+extends SceneTree
+func _initialize()->void:call_deferred("_run")
+func _run()->void:
+ var source=preload("res://data/perf/scenario.gd").new()
+ var manager=preload("res://server/rooms/manager.gd").new()
+ var raw=source.profile.to_dict()
+ raw.skill_build={"v":1,"start":"","allocated":[],"skills":[]}
+ var rejected=manager.create("rejected1234",123,[{"id":1,"profile":raw}])
+ assert(rejected.get("error")=="skill_build_required")
+ assert(manager.rooms.is_empty())
+ var session=preload("res://client/session/remote_session.gd").new()
+ session._accept_admission({"v":1,"ok":false,"terminal":true,"error":rejected.error})
+ assert(session.error=="skill_build_required" and session._terminal and session._deliberate_close and not session.connected)
+ var game=load("res://client/game_state.gd").new()
+ var account=preload("res://client/session/account_session.gd").new()
+ account.profile=preload("res://logic/profile.gd").from_dict(raw,manager.rules,manager.camp)
+ game.account_session=account;game._solo_connecting=true
+ game._start_solo()
+ assert(not game._solo_connecting and game._solo_started_at==0 and not game.online_error.is_empty())
+ game.free()
+ var normal=preload("res://client/session/remote_session.gd").new()
+ normal._accept_admission({"v":1,"ok":true})
+ assert(normal.connected and not normal._terminal)
+ print("ROOM START REJECTION PASS: invalid build rejects without room, terminal cause retained, no reconnect; successful admission unchanged")
+ quit()

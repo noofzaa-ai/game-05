@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="ZorxPassiveTreeData" load_steps=6 format=3]
+[ext_resource type="Script" path="res://data/skill_system/scripts/passive_tree_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/skill_system/tree/start_spear.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skill_system/tree/f1.tres" id="3"]
+[ext_resource type="Resource" path="res://data/skill_system/tree/f2.tres" id="4"]
+[ext_resource type="Resource" path="res://data/skill_system/tree/f3.tres" id="5"]
+[resource]
+script = ExtResource("1")
+nodes = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])

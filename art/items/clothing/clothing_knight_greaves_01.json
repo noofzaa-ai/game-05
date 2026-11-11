@@ -1,0 +1,15 @@
+{
+  "id": "clothing_knight_greaves_01",
+  "name": "เกราะอัศวิน · ขาและเท้า",
+  "asset_version": 2,
+  "triangle_count": 396,
+  "set_triangle_budget": 1500,
+  "slot": "shoes",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_dark_knight_01",
+  "thumbnail": "clothing_knight_greaves_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "legacy_ids": []
+}

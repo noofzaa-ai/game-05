@@ -1,0 +1,358 @@
+{
+ "version": 1,
+ "_comment": "Player weapons. Every weapon is built from the same TEMPLATES (the fists' moves) scaled by the weapon's numbers, so adding or retuning a weapon means changing a handful of numbers, not 10 moves. speed < 1 is faster (it scales the wind-up and recovery frames). reach scales how far the blow reaches (hit box offset and length), width how wide it is in the lane, power the damage, knockback how far the target is pushed, launch how high it is knocked up, stun how long it is stunned, stamina what the moves cost. 'overrides' then replaces any field of any single move with an absolute value: this is where each weapon gets the flavor of its run and jump attacks (knockback, launch, stun or plain damage). Generated move ids are <weapon>_<template>, for example sword_run_heavy. skill_names are the names shown in the brush-stroke banner when the special skill or ultimate is used.",
+ "templates": {
+  "light_1": {
+   "startup": 4,
+   "active": 3,
+   "recovery": 10,
+   "power": 0.8,
+   "energy_cost": 4.5,
+   "hit_offset": [
+    0.9,
+    0.9,
+    0.0
+   ],
+   "hit_size": [
+    1.3,
+    1.0,
+    1.4
+   ],
+   "knockback": 4.0,
+   "launch": 0.0,
+   "hitstun": 14,
+   "hitstop": 3,
+   "on_light": "light_2",
+   "on_heavy": "heavy"
+  },
+  "light_2": {
+   "startup": 4,
+   "active": 3,
+   "recovery": 10,
+   "power": 0.9,
+   "energy_cost": 4.5,
+   "hit_offset": [
+    0.9,
+    0.9,
+    0.0
+   ],
+   "hit_size": [
+    1.3,
+    1.0,
+    1.4
+   ],
+   "knockback": 4.0,
+   "launch": 0.0,
+   "hitstun": 14,
+   "hitstop": 3,
+   "on_light": "light_3",
+   "on_heavy": "heavy"
+  },
+  "light_3": {
+   "startup": 5,
+   "active": 3,
+   "recovery": 16,
+   "power": 1.2,
+   "energy_cost": 5.5,
+   "hit_offset": [
+    1.0,
+    0.9,
+    0.0
+   ],
+   "hit_size": [
+    1.5,
+    1.1,
+    1.5
+   ],
+   "knockback": 9.0,
+   "launch": 0.0,
+   "hitstun": 18,
+   "hitstop": 5
+  },
+  "heavy": {
+   "startup": 12,
+   "active": 4,
+   "recovery": 22,
+   "power": 2.2,
+   "energy_cost": 11,
+   "hit_offset": [
+    1.1,
+    0.9,
+    0.0
+   ],
+   "hit_size": [
+    1.8,
+    1.3,
+    1.6
+   ],
+   "knockback": 10.0,
+   "launch": 9.0,
+   "hitstun": 40,
+   "hitstop": 7
+  },
+  "air": {
+   "startup": 3,
+   "active": 4,
+   "recovery": 8,
+   "power": 0.9,
+   "energy_cost": 4.5,
+   "hit_offset": [
+    0.8,
+    0.9,
+    0.0
+   ],
+   "hit_size": [
+    1.3,
+    1.2,
+    1.4
+   ],
+   "knockback": 4.0,
+   "launch": 0.0,
+   "hitstun": 16,
+   "hitstop": 3,
+   "advance": 5.0
+  },
+  "air_heavy": {
+   "startup": 8,
+   "active": 10,
+   "recovery": 14,
+   "power": 2.2,
+   "energy_cost": 11,
+   "hit_offset": [
+    0.7,
+    0.2,
+    0.0
+   ],
+   "hit_size": [
+    1.5,
+    1.9,
+    1.6
+   ],
+   "knockback": 5.0,
+   "launch": 0.0,
+   "hitstun": 30,
+   "hitstop": 7,
+   "advance": 6.0,
+   "dive": 14.0
+  },
+  "run_light": {
+   "startup": 6,
+   "active": 6,
+   "recovery": 18,
+   "power": 1.5,
+   "energy_cost": 7,
+   "hit_offset": [
+    0.9,
+    0.9,
+    0.0
+   ],
+   "hit_size": [
+    1.5,
+    1.2,
+    1.6
+   ],
+   "knockback": 8.0,
+   "launch": 0.0,
+   "hitstun": 22,
+   "hitstop": 5,
+   "advance": 16.0
+  },
+  "run_heavy": {
+   "startup": 10,
+   "active": 7,
+   "recovery": 28,
+   "power": 3.0,
+   "energy_cost": 15,
+   "hit_offset": [
+    1.0,
+    0.9,
+    0.0
+   ],
+   "hit_size": [
+    1.9,
+    1.4,
+    1.8
+   ],
+   "knockback": 11.0,
+   "launch": 8.0,
+   "hitstun": 36,
+   "hitstop": 8,
+   "advance": 22.0
+  },
+  "special": {
+   "startup": 8,
+   "active": 4,
+   "recovery": 20,
+   "power": 1.8,
+   "hit_offset": [
+    1.0,
+    1.0,
+    0.0
+   ],
+   "hit_size": [
+    1.6,
+    1.8,
+    1.6
+   ],
+   "knockback": 6.0,
+   "launch": 6.0,
+   "hitstun": 30,
+   "hitstop": 6,
+   "cooldown": 300,
+   "energy_cost": 16,
+   "invuln_from": 0,
+   "invuln_to": 8
+  },
+  "ultimate": {
+   "_comment": "Model team rule (art/skills/ultimate_defaults.json, Boss 2026-10-08): every ultimate strikes FORWARD, 2 body lengths, never around the user. 1 body length = 1.70 m in game (the chibi's 1.5067 m without hair x its 1.128 scale), so the box runs 0.05..2 body lengths ahead (0.085..3.40 m), 1.1 wide (1.87 m), 1.0 high (1.70 m). fixed_reach: the weapon's reach/width do not change it. grow_from: the front edge travels out like the wave, from half the range to all of it over the active frames (each target is hit once). These numbers are what a weapon WITHOUT an imported skill pack uses (the fists): a weapon that has one (data/combat/ultimates.json) gets its startup/active/recovery/box/dash from the pack's own clip, and only the overrides below are kept on top.",
+   "startup": 14,
+   "active": 18,
+   "recovery": 28,
+   "power": 5.0,
+   "hit_offset": [
+    1.7425,
+    0.85,
+    0.0
+   ],
+   "hit_size": [
+    3.315,
+    1.7,
+    1.87
+   ],
+   "fixed_reach": true,
+   "grow_from": 0.5,
+   "knockback": 12.0,
+   "launch": 10.0,
+   "hitstun": 50,
+   "hitstop": 10,
+   "gauge_cost": 100,
+   "invuln_from": 0,
+   "invuln_to": 34,
+   "ignores_guard": true
+  }
+ },
+ "weapons": {
+  "fists": {
+   "name": "Fists",
+   "summary": "Short reach, fast and light. Wins by comboing and stunning. Run attack: a long stagger. Run heavy: an uppercut that pops the target up. Jump heavy: a slam that stuns.",
+   "color": [
+    1.0,
+    0.5,
+    0.1
+   ],
+   "skill_names": {
+    "special": "Raging Fist",
+    "ultimate": "Heaven Palm"
+   },
+   "speed": 1.0,
+   "reach": 1.0,
+   "width": 1.0,
+   "power": 1.0,
+   "knockback": 1.0,
+   "launch": 1.0,
+   "stun": 1.0,
+   "stamina": 1.0,
+   "overrides": {
+    "run_light": {
+     "knockback": 3.0,
+     "hitstun": 36
+    },
+    "run_heavy": {
+     "launch": 11.0,
+     "knockback": 4.0,
+     "effects": [
+      {
+       "id": "stun",
+       "chance": 35
+      }
+     ]
+    },
+    "special": {
+     "effects": [
+      {
+       "id": "rage",
+       "target": "self"
+      }
+     ]
+    },
+    "ultimate": {
+     "effects": [
+      {
+       "id": "regen",
+       "target": "self"
+      }
+     ]
+    },
+    "air_heavy": {
+     "hitstun": 46,
+     "knockback": 2.0
+    }
+   }
+  },
+  "blade": {
+   "name": "Sword",
+   "summary": "Medium-long reach, balanced. Run attack: a hard shove that sends the target flying far. Jump heavy: a plunging cut with good push.",
+   "color": [
+    0.25,
+    0.55,
+    1.0
+   ],
+   "skill_names": {
+    "special": "Ember Slash",
+    "ultimate": "Crimson Heaven Edge"
+   },
+   "speed": 1.1,
+   "reach": 1.45,
+   "width": 1.25,
+   "power": 1.15,
+   "knockback": 1.1,
+   "launch": 1.0,
+   "stun": 1.0,
+   "stamina": 1.1,
+   "overrides": {
+    "run_light": {
+     "knockback": 16.0,
+     "hitstun": 20,
+     "advance": 5.5
+    },
+    "air_heavy": {
+     "knockback": 9.0,
+     "advance": 0.8
+    },
+    "heavy": {
+     "effects": [
+      {
+       "id": "sunder",
+       "chance": 40
+      }
+     ],
+     "advance": 0.8
+    },
+    "special": {
+     "effects": [
+      {
+       "id": "burn"
+      }
+     ]
+    },
+    "ultimate": {
+     "effects": [
+      {
+       "id": "burn"
+      },
+      {
+       "id": "fortify",
+       "target": "self"
+      }
+     ]
+    },
+    "run_heavy": {
+     "advance": 6.5
+    },
+    "air": {
+     "advance": 4.0
+    }
+   }
+  }
+ }
+}

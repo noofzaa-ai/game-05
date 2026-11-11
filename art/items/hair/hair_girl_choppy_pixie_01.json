@@ -1,0 +1,131 @@
+{
+  "asset_type": "hair",
+  "spec_version": "1.0",
+  "id": "hair_girl_choppy_pixie_01",
+  "display_name": "เด็กผู้หญิง · ชอปปี้พิกซี่ 01",
+  "fit_profile": "chibi-sculpt-v1",
+  "target_socket": "attach_head",
+  "units": "meters",
+  "up_axis": "+Y",
+  "forward_axis": "+Z",
+  "attachment_mode": "rigid",
+  "style": "choppy_pixie",
+  "geometry": {
+    "triangle_count": 364,
+    "budget": "200-800 triangles",
+    "faceted": true,
+    "closed_meshes": true,
+    "mesh_names": [
+      "ChoppyPixie_Spike_RC",
+      "ChoppyPixie_Spike_R",
+      "ChoppyPixie_Spike_LC",
+      "ChoppyPixie_Spike_L",
+      "ChoppyPixie_Spike_C",
+      "ChoppyPixie_Spike_BackR",
+      "ChoppyPixie_Spike_BackL",
+      "ChoppyPixie_Side_R",
+      "ChoppyPixie_Side_L",
+      "ChoppyPixie_Short_Front",
+      "ChoppyPixie_Nape",
+      "ChoppyPixie_Diagonal_Front",
+      "ChoppyPixie_Cap"
+    ]
+  },
+  "material": {
+    "name": "Choppy Pixie midnight blue",
+    "base_color_linear_rgba": [
+      0.025,
+      0.055,
+      0.16,
+      1.0
+    ],
+    "double_sided": false,
+    "metallic": 0.0,
+    "roughness": 0.9,
+    "textures": []
+  },
+  "validation": {
+    "reference_head_used_without_transform": true,
+    "reimport": {
+      "root_name": "HairRoot",
+      "marker_name": "hair_attach",
+      "mesh_names": [
+        "ChoppyPixie_Spike_RC",
+        "ChoppyPixie_Spike_R",
+        "ChoppyPixie_Spike_LC",
+        "ChoppyPixie_Spike_L",
+        "ChoppyPixie_Spike_C",
+        "ChoppyPixie_Spike_BackR",
+        "ChoppyPixie_Spike_BackL",
+        "ChoppyPixie_Side_R",
+        "ChoppyPixie_Side_L",
+        "ChoppyPixie_Short_Front",
+        "ChoppyPixie_Nape",
+        "ChoppyPixie_Diagonal_Front",
+        "ChoppyPixie_Cap"
+      ],
+      "triangle_count": 364,
+      "bounding_box_blender_import": {
+        "min": [
+          -0.162,
+          -0.184,
+          -0.2
+        ],
+        "max": [
+          0.158371,
+          0.147,
+          0.214
+        ]
+      },
+      "bounding_box_glb_space": {
+        "min": [
+          -0.162,
+          -0.2,
+          -0.147
+        ],
+        "max": [
+          0.158371,
+          0.214,
+          0.184
+        ]
+      },
+      "lowest_glb_y": -0.2,
+      "object_types": [
+        "EMPTY",
+        "MESH"
+      ],
+      "forbidden_objects_present": false,
+      "materials": [
+        {
+          "name": "Choppy Pixie midnight blue.001",
+          "double_sided": false,
+          "metallic": 0.0,
+          "roughness": 0.9
+        }
+      ],
+      "external_images": []
+    },
+    "quality_checks": {
+      "cap_and_locks_closed": true,
+      "face_opening_kept_clear": true,
+      "short_side_and_nape_profile": true,
+      "layered_pointed_top": true,
+      "one_sided_diagonal_fringe": true,
+      "lowest_glb_y_at_least_-0.44": true
+    },
+    "preview_color_management": {
+      "view_transform": "AgX",
+      "look": "AgX - Medium High Contrast",
+      "exposure": -1.0,
+      "lighting": "reduced neutral key/fill/rim"
+    },
+    "preview_views": [
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_choppy_pixie_01_front.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_choppy_pixie_01_side.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_choppy_pixie_01_back.png",
+      "/Users/user/godot-project/test01/art/characters/chibi-studio/hair/preview_hair_girl_choppy_pixie_01_top.png"
+    ]
+  },
+  "asset_version": 1,
+  "legacy_ids": []
+}

@@ -1,0 +1,18 @@
+{
+  "id": "face_shout_01",
+  "name": "ตะโกน / คิ้วแหว่ง",
+  "asset_version": 6,
+  "socket": "attach_head",
+  "attachment_mode": "rigid",
+  "fit_profile": "chibi-sculpt-v1",
+  "thumbnail": "face_shout_01.png",
+  "default": false,
+  "legacy_ids": [],
+  "head_surface_revision": "triangular_chin_panel_v2",
+  "face_layout_revision": "face_features_up_025_v7",
+  "face_features_raise_m": 0.025,
+  "triangle_count": 82,
+  "triangle_budget": 250,
+  "feature_relief": "raised eyes, lid/brow ridges, bevelled mouths and tongues; fitted to current head",
+  "facial_animation": false
+}

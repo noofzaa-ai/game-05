@@ -1,0 +1,22 @@
+extends SceneTree
+const Transport = preload("res://server/rooms/transport.gd")
+func _initialize():
+ call_deferred("run")
+func run():
+ var transport = Transport.new(self, null)
+ transport.enabled = true
+ assert(transport.listener.listen(14175, "127.0.0.1") == OK)
+ var clients = []
+ for i in range(9):
+  var client = StreamPeerTCP.new()
+  client.connect_to_host("127.0.0.1", 14175)
+  clients.append(client)
+  await create_timer(0.02).timeout
+  transport.poll(100)
+ assert(transport.peers.size() == 8)
+ transport.poll(3200)
+ assert(transport.peers.is_empty())
+ transport.listener.stop()
+ for client in clients: client.disconnect_from_host()
+ print("PASS pending connections capped at8 and hard-released after3seconds")
+ quit()

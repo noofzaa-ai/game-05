@@ -1,0 +1,10 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+[ext_resource type="Script" path="res://data/skill_system/scripts/status_data.gd" id="1"]
+[resource]
+script = ExtResource("1")
+id = "freeze"
+duration_s = 1.5
+damage_per_tick = 0
+max_stacks = 1
+magnitude = 0
+threshold = 0

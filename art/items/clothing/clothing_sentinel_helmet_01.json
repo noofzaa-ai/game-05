@@ -1,0 +1,17 @@
+{
+  "id": "clothing_sentinel_helmet_01",
+  "name": "เกราะองครักษ์ · หมวกปิดหน้า",
+  "asset_version": 2,
+  "triangle_count": 378,
+  "set_triangle_budget": 1500,
+  "slot": "head",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "armor_gilded_sentinel_01",
+  "thumbnail": "clothing_sentinel_helmet_01.png",
+  "binding": "rigid plates; one bone per piece; thigh tassets split left/right",
+  "cloth_simulation": false,
+  "hide_hair": true,
+  "hide_head": true,
+  "legacy_ids": []
+}

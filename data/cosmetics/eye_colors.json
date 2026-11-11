@@ -1,0 +1,26 @@
+{
+  "default": "turquoise",
+  "allow_custom": true,
+  "colors": [
+    {
+      "id": "turquoise",
+      "name": "ฟ้า",
+      "color": "#21b7cf"
+    },
+    {
+      "id": "green",
+      "name": "เขียว",
+      "color": "#55a95d"
+    },
+    {
+      "id": "violet",
+      "name": "ม่วง",
+      "color": "#9761c9"
+    },
+    {
+      "id": "brown",
+      "name": "น้ำตาล",
+      "color": "#a46636"
+    }
+  ]
+}

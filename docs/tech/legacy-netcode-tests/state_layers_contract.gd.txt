@@ -1,0 +1,52 @@
+extends SceneTree
+class ViewStub:
+	extends RefCounted
+	var looks:Dictionary={}
+	func set_looks(value:Dictionary) -> void:looks=value
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
+	var scene = load("res://client/perf/state_layers.tscn")
+	assert(scene != null)
+	var source = preload("res://data/perf/scenario.gd").new()
+	var probe = preload("res://client/perf/remote_probe.gd").new(source.profile,source.rules,source.camp)
+	probe.mode="C"
+	var before := {}
+	var sequence := 0
+	for i in range(40):
+		for tick in range(3):source.advance()
+		var state:Dictionary=source.state()
+		var patch=preload("res://logic/net_state.gd").difference(state,before,sequence,source.sim.tick_count)
+		sequence+=1
+		probe.ingest(preload("res://logic/net_wire.gd").packet(2,sequence,patch))
+		assert(probe._sim != null and probe._sim.tick_count==source.sim.tick_count)
+		assert(probe._sim.bodies[1].position==source.sim.bodies[1].position)
+		assert(probe._prediction==null and probe.lag_replay_ticks==0)
+		before=state.duplicate(true)
+	assert(probe.lag_states==40)
+	var metadata = preload("res://client/perf/remote_probe.gd").new(null,source.rules,source.camp)
+	metadata.mode="M"
+	before={};sequence=0
+	for i in range(40):
+		source.advance()
+		var state:Dictionary=source.state()
+		var patch=preload("res://logic/net_state.gd").difference(state,before,sequence,source.sim.tick_count)
+		sequence+=1
+		metadata.ingest(preload("res://logic/net_wire.gd").packet(2,sequence,patch))
+		assert(metadata.profile!=null and metadata.run!=null)
+		assert(metadata._prediction==null and metadata.lag_replay_ticks==0)
+		assert(metadata._sim.tick_count==source.sim.tick_count)
+		before=state.duplicate(true)
+	assert(metadata.ownership_checks==40 and metadata.ready)
+	var display=scene.instantiate()
+	display.source=source;display.probe=metadata;display.views[1]=ViewStub.new()
+	display._metadata_looks_changed();display._metadata_looks_changed()
+	assert(display.looks_checks==2 and display.dress_calls==1)
+	display.free()
+	var production = preload("res://client/session/remote_session.gd").new()
+	assert(production._uses_prediction())
+	print("STATE LAYERS CONTRACT PASS: scene loads;40 snapshot applies; prediction null; replay zero")
+	print("METADATA CONTRACT PASS:40 production accepts;profile/run decoded;prediction/replay off;production default ON")
+	quit()

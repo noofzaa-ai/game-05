@@ -1,0 +1,11 @@
+# Supplied farm FBX — prepared prop and placement preview
+
+Source: `/Users/user/godot-project/assets/farm.fbx`, SHA256 in asset.json; original untouched.31,629,388 bytes FBX; final GLB1,673,128bytes. These are different formats, not a same-format compression ratio. No Web build/download measurement was made.
+
+4914tri retained. Prepared width4.8m,height3.381603m,depth2.874362m, centered X/Z with lowest mesh point atY0. Original shape/UV preserved; no geometry simplification. Native Godot4.7.2 FBXDocument/FBXState converts the mesh, so no Blender-version model export is used. Installed Blender5.2.2 was used only for read-only inspection and extracting original packed PNG bytes; no .blend or geometry export from it.
+
+Material: embedded color1024, normal512, metallic/roughness512. Original FBX metallic+roughness maps were not bound by the native FBX importer, so preserved original PNGs under art_source/props/farm_house are explicitly packed G=roughness/B=metallic. Normal scale restored to1. No extra maps invented, no upscale. All3PNGimports use VRAM compression, mipmaps; normal is flagged as normal-map data. PC S3TC and mobile ETC2 GPU texture files separately1,223,548bytes each; not a claim about Web download size.
+
+Rebuild: `python3 tools/art/prepare_farm.py`; it calls native converter `prepare_farm.gd`, existing material-slot texture budget tool, then restores MR/normal binding. Reimport Godot, run `python3 tools/art/optimize_npc_textures.py art/props/farm_house`, reimport. Original FBX path is resolved relative to the project. `--use-existing-export` reuses current derivative geometry when only refreshing data maps.
+
+Preview only: world position(24,0,-3.3),Yrotation-90°,door faces west toward the existing four plots. A short path connects the proposed position. tools/shots/farm_house_preview.gd renders actual Godot1280×720 overview+close-up in build/farm-house-{placement,close}-preview.png. Additional tree clearance/terrain flattening is isolated in excluded ex/farm_house_preview/camp_review.glb; the script applies the normal camp vertex-color material setup. Original camp and current live layout are unchanged. No gameplay/collision/world placement committed, no build/deploy.

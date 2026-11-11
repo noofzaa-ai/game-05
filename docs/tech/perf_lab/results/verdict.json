@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "date": "2026-10-27",
+  "web_build": "d1b257c52b2a",
+  "url": "https://zorxplay.daiyooo.com/perf-lab/",
+  "actual_browser": {
+    "renderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+    "vendor": "Google Inc. (Apple)",
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36"
+  },
+  "main_runs": 24,
+  "confirmation_runs": 11,
+  "confirmation_medians": {
+    "C": {
+      "frame_p50_ms": 21.1,
+      "frame_p95_ms": 26.8,
+      "drain_p95_ms": 4.1,
+      "accept_total_ms": 343.3,
+      "construct_total_ms": 14.3,
+      "over50": 1
+    },
+    "D": {
+      "frame_p50_ms": 16.9,
+      "frame_p95_ms": 26.5,
+      "drain_p95_ms": 6,
+      "accept_total_ms": 744.8,
+      "construct_total_ms": 301.4,
+      "over50": 1
+    },
+    "E": {
+      "frame_p50_ms": 18.5,
+      "frame_p95_ms": 31,
+      "drain_p95_ms": 11.6,
+      "accept_total_ms": 1976.6,
+      "construct_total_ms": 281.9,
+      "over50": 0
+    }
+  },
+  "accept_time_reduction_D_vs_E_percent": 62.31913386623496,
+  "frame_p95_reduction_D_vs_E_percent": 14.516129032258062,
+  "verdicts": {
+    "supported": [
+      "Full GameSim replay has materially higher Web client CPU cost than movement-only replay",
+      "Visual-only/local-render scenarios exhibit frame spikes without WebSocket/DB/auth; rendering/warmup is a separate contributor",
+      "Pure Wiredecode+NetStateapply replay is comparatively light after warmup",
+      "Synthetic remote authority tickp95~3.5ms stays below16.7ms at testedload"
+    ],
+    "not_proven": [
+      "All live lag on RTX3070Ti is caused solely by prediction",
+      "Production server at concurrent-room load never stalls",
+      "Production input scheduling/authentication/profile-refresh/CAS/DB costs are represented fully",
+      "An FPS guarantee or same improvement on actual mobile devices"
+    ]
+  },
+  "next_changes": [
+    "Replace full-world prediction with local-player movement/combat subset, preserve server authority",
+    "Reuse prediction state rather than reconstruct all entities each snapshot",
+    "Add percast/perframe stage timings to real-account LagReport and compare on Boss device",
+    "Investigate first-use rendering/texture/shader warmup separately"
+  ],
+  "production_game_changed": false
+}

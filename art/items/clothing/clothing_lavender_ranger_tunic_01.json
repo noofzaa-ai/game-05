@@ -1,0 +1,16 @@
+{
+  "id": "clothing_lavender_ranger_tunic_01",
+  "name": "ชุดลาดตระเวนม่วงเทา · เสื้อหนังแต่งผ้า",
+  "asset_version": 1,
+  "triangle_count": 444,
+  "set_triangle_budget": 1500,
+  "slot": "shirt",
+  "fit_profile": "chibi-sculpt-v1",
+  "skinned": true,
+  "set_id": "cloth_lavender_ranger_01",
+  "thumbnail": "clothing_lavender_ranger_tunic_01.png",
+  "cloth_simulation": false,
+  "hide_head": false,
+  "hide_hair": false,
+  "binding": "GameRig57: normalized torso; independent hip/thigh panels; articulated glove fingers; blended boot ankles"
+}

@@ -1,0 +1,11 @@
+{
+  "id": "face_neutral_01",
+  "name": "ปกติ",
+  "asset_version": 1,
+  "socket": "attach_head",
+  "attachment_mode": "rigid",
+  "fit_profile": "chibi-sculpt-v1",
+  "thumbnail": "face_neutral_01.png",
+  "default": true,
+  "legacy_ids": []
+}
