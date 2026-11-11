@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-11 | tech-artist via PO | feature/class-weapons-card-screen | บังคับแนวนอน: `project.godot` handheld orientation=4 (sensor landscape) · `tools/web/play_template.html` หน้า Rotate your device (CSS, จอสัมผัสแนวตั้ง) + lock landscape ตอนเต็มจอ · `ink_ui.gd` เลิกใช้ layout แนวตั้ง · ยังไม่ได้ build/deploy เว็บ · เทสต์ 2098/83 ชุดเดิม
+
 - 2026-11-11 | gameplay-programmer via PO | feature/class-weapons-card-screen | อุปกรณ์ต่อการ์ด ขั้น 1-3 (`Profile.card_gear`, migration ไปดาบโล่, คำสั่ง equip/unequip/skill_build/repair_all รับ `card`, `weapon_families` ในคลาส, แฟชั่นนับชิ้น `card_fashion`) · `Profile.loadout` ยังเป็น stand-in ของการ์ดดาบโล่จนถึงขั้น 4 · เทสต์ 2098/83 ชุดเดิม
 
 - 2026-11-11 | combat-designer via PO | feature/class-weapons-card-screen | จูนโหมดเวฟ: ทัพเริ่มต้นชนะ ~72% (40 seed) บอสยากสุด · แก้ HP มอนคูณ co-op ซ้ำ 2 รอบ · บอสได้ poise_mult · `wave_power_by_squad` · ดาบใหญ่ได้บัฟป้องกัน/ฟื้นเลือด · class_sim นับการล้ม · เทสต์ 2070/83

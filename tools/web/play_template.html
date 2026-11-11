@@ -123,10 +123,31 @@ progress { width: 100%; height: 6px; accent-color: var(--seal); }
 
 <style>
 @media (any-pointer: coarse) { #help { display: none !important; } }
-#landscape-required { display:none; position:fixed; inset:0; z-index:10000; background:#0b0d14; color:#f0e8d6; align-items:center; justify-content:center; text-align:center; padding:24px; font:20px sans-serif; touch-action:none; }
+/* Landscape only (Boss 2026-11-11). Pure CSS so it shows before the engine loads; touch devices only,
+   desktop windows are never covered. Nothing is paused: the game keeps running underneath. */
+#landscape-required { display:none; position:fixed; inset:0; z-index:10000; box-sizing:border-box;
+  flex-direction:column; align-items:center; justify-content:center; gap:28px; text-align:center;
+  padding:calc(24px + env(safe-area-inset-top,0px)) 24px calc(24px + env(safe-area-inset-bottom,0px));
+  background:radial-gradient(ellipse at 50% 40%,#2a2016 0%,#16110c 70%); color:#ecdcb4;
+  font-family:Georgia,var(--display); touch-action:none; }
+#landscape-required::before { content:""; position:absolute; inset:12px; border:1px solid #b8914f;
+  box-shadow:inset 0 0 0 4px #120d08,inset 0 0 0 5px #6e5530; border-radius:14px; pointer-events:none; }
+#landscape-required svg { width:112px; height:112px; color:#e3c27e; }
+#landscape-required .phone { transform-origin:60px 60px; animation:zorx-rotate 2.4s ease-in-out infinite; }
+#landscape-required h2 { margin:0; font-size:26px; font-weight:700; letter-spacing:.06em; color:#f3e6c4; }
+#landscape-required p { margin:0; max-width:300px; font:15px/1.5 var(--body); color:#bfae88; }
+@keyframes zorx-rotate { 0%,20% { transform:rotate(0deg); } 50%,80% { transform:rotate(-90deg); } 100% { transform:rotate(0deg); } }
+@media (prefers-reduced-motion: reduce) { #landscape-required .phone { animation:none; transform:rotate(-90deg); } }
 @media (any-pointer:coarse) and (orientation:portrait) { #landscape-required { display:flex; } }
 </style>
-<div id="landscape-required" role="status">หมุนมือถือเป็นแนวนอนเพื่อเล่น<br>Rotate your phone to landscape</div>
+<div id="landscape-required" role="alert" aria-live="assertive">
+  <svg viewBox="0 0 120 120" aria-hidden="true" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M24 34 A44 44 0 0 1 86 20" stroke-width="3" opacity=".7"/><path d="M80 12 L87 20 L77 25" stroke-width="3" opacity=".7"/>
+    <g class="phone"><rect x="42" y="26" width="36" height="68" rx="6" stroke-width="4"/><path d="M54 84 h12" stroke-width="3"/></g>
+  </svg>
+  <h2>Rotate your device</h2>
+  <p>ZORX is played in landscape. Turn your phone sideways to continue.</p>
+</div>
 
 <style>
 #pc-controls { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:28px; background:#02091399; backdrop-filter:blur(5px); }
@@ -279,6 +300,13 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
     });
   }
 
+  function lockLandscape() {
+    try {
+      if (screen.orientation && screen.orientation.lock) return screen.orientation.lock('landscape').catch(function () {});
+    } catch (_) {}
+    return Promise.resolve();
+  }
+
   let started = false;
   let loading = false;
   let authenticated = false;
@@ -322,12 +350,12 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
     }
     loading = true;
     if (started) { loading = false; gate.hidden = true; help.hidden = touchControls; canvas.focus(); return; }
-    // Best-effort physical lock; the CSS + Godot portrait gates remain authoritative on iOS.
+    // Best-effort physical lock (Android Chrome: only in fullscreen / installed PWA). iOS Safari has no
+    // lock, so the CSS #landscape-required overlay is what enforces landscape there.
     if (navigator.maxTouchPoints > 0) {
-      const lock = () => screen.orientation && screen.orientation.lock ? screen.orientation.lock('landscape').catch(() => {}) : Promise.resolve();
       if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().then(lock).catch(() => {});
-      } else { lock(); }
+        document.documentElement.requestFullscreen().then(lockLandscape).catch(() => {});
+      } else { lockLandscape(); }
     }
     start.disabled = true;
     status.className = '';
@@ -372,6 +400,8 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
       canvas.focus();
     }, function (err) { loading = false; started = false; start.hidden = false; fail(err); });
   }
+  // Also lock whenever the game itself enters fullscreen (Godot's own fullscreen toggle).
+  document.addEventListener('fullscreenchange', function () { if (document.fullscreenElement) lockLandscape(); });
   start.addEventListener('click', launch);
   if (!missing.length) launch();
 

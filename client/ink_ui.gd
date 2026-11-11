@@ -200,7 +200,7 @@ static var LINE_PHONE := 1.75
 ## Layout modes for a screen size.
 const WIDE := "wide"  ## desktop / tablet landscape
 const COMPACT := "compact"  ## phone landscape
-const PORTRAIT := "portrait"  ## phone portrait
+const PORTRAIT := "portrait"  ## retired: phone portrait (landscape only since 2026-11-11, never picked)
 
 ## The design sizes each mode is laid out for (in the menu's own units); the menu is scaled so this
 ## fits the screen. Phones get fewer units (so everything is drawn bigger).
@@ -225,9 +225,10 @@ static var _defaults := {}  ## the built-in token values, saved on the first app
 static func layout_for(window_pixels: Vector2, logical: Vector2, density: float = 1.0) -> Dictionary:
 	var real := window_pixels / maxf(density, 0.01)
 	var mode := WIDE
-	if real.x < real.y * 0.9:
-		mode = PORTRAIT
-	elif real.y < PHONE_HEIGHT:
+	# Landscape only (Boss 2026-11-11): a portrait phone is covered by the web page's "Rotate your
+	# device" overlay and native builds are locked to landscape, so PORTRAIT is never picked any more
+	# (a tall desktop window just gets the scaled-down wide layout). PORTRAIT stays defined for old callers.
+	if real.y < PHONE_HEIGHT and real.x >= real.y:
 		mode = COMPACT
 	var scale := 1.0
 	match mode:
