@@ -7,3 +7,4 @@
 - [Python edits keep line endings](python-edits-keep-line-endings.md) — Windows python write_text makes CRLF; use bytes/newline=''
 - [Boss token budget](boss-token-budget.md) — keep agent work narrow; no heavy Blender loops
 - [Verify art in game view](verify-art-in-game-view.md) — check stances in real camp/game view front/side/back; never oversell
+- [Auto-battler pivot](auto-battler-pivot.md) — squad of 3 from 4 class cards, auto wave fights; full log in docs/handoff/auto_battler_handoff.md
