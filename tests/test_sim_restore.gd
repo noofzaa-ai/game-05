@@ -18,6 +18,8 @@ func run(ctx) -> void:
 		sim.fighters[1].hit_ids.assign([100])
 		sim._ai[100]._detour_left = 25
 		sim._ai[100]._detour_direction = Vector2.LEFT
+		sim.wave_heal_fraction = 0.4
+		sim.class_styles[1] = sim.fighters[1].style
 		var saved: Dictionary = sim.snapshot()
 		var digest := Codec.digest(saved)
 		var copy := Sim.new(World.new(), f["combat"], F.rng(999))
@@ -35,6 +37,7 @@ func run(ctx) -> void:
 		ctx.check("M1-3 300+restore+300 equals uninterrupted600 %s" % boss, Codec.digest(copy.snapshot()) == Codec.digest(sim.snapshot()))
 		ctx.check("M1-3 saved snapshot remains immutable after live ticks %s" % boss, Codec.digest(saved) == digest)
 		ctx.check("M1-3 AI world references rebound %s" % boss, copy._ai[100].world == copy.world)
+		ctx.check("wave heal and class styles survive restore %s" % boss, copy.wave_heal_fraction == 0.4 and copy.class_styles.get(1, "") == sim.fighters[1].style)
 	var empty := Sim.new(World.new())
 	ctx.check("M1-3 version rejection leaves target unchanged", not empty.restore({"v": 9}) and empty.tick_count == 0)
 	var a := F.make()

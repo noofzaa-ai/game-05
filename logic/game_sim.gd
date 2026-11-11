@@ -478,7 +478,8 @@ func _checkpoint() -> Array:
 		"rng_seed": rng.seed, "rng_state": rng.state, "tick": tick_count,
 		"ranged": _ranged, "events": events, "waves": _waves, "waves_released": _waves_released,
 		"skill_system": skill_system.save() if skill_system != null else {},
-		"coop": _coop, "had_enemies": _had_enemies, "clear_reported": _clear_reported})
+		"coop": _coop, "had_enemies": _had_enemies, "clear_reported": _clear_reported,
+		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles})
 
 
 ## Restore into a sim constructed with the same combat/rules. Supply camp data if runs exist.
@@ -532,6 +533,8 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 	_coop = d.get("coop", {"enabled": false, "players": [], "wiped": false, "paid": {}})
 	_had_enemies = d["had_enemies"]
 	_clear_reported = d["clear_reported"]
+	wave_heal_fraction = float(d.get("wave_heal_fraction", 0.0))
+	class_styles = d.get("class_styles", {}).duplicate()
 	if not d.get("skill_system", {}).is_empty():
 		skill_system = preload("res://logic/skills/system.gd").new()
 		skill_system.setup(self)
