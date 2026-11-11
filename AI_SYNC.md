@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-11 | PO | feature/class-weapons-card-screen | ลองเล่นเต็ม 12 เวฟในหน้าต่างจริง (`tools/shots/full_run_review.gd`) ชนะสบาย ทัพไม่ล้ม · อัปเดต PROGRESS
+
 - 2026-11-11 | PO | feature/class-weapons-card-screen | เซฟ/โหลด sim เก็บ `wave_heal_fraction` และ `class_styles` แล้ว (+เทสต์ใน test_sim_restore) · ลองแก้ auto_pilot จองช่องสกิลทิ้งตอนคอมโบแล้วทัพ 2 ตัวแพ้บอส 3/6 seed จึงถอยคืน รอจูนพร้อมสกิลต่อคลาส · เทสต์ 2061 ผ่าน/83 พังชุดเดิม
 
 - 2026-11-11 | lead-programmer | (ยังไม่ push) | Boss สั่งตัดระบบเก่า: ลบฮับ/แคมป์/ร้านค้า/ฟาร์ม/warp/NPC/หน้าสกิล/ศูนย์กล้องอัลติ/ปุ่มมือถือเก่า (client + scenes/hub, workshops + tests/tools ที่เกี่ยวข้อง); `go_hub` ถูกตัดแล้ว ทุกทางกลับไป `GameState.go_card_deck()`; `camp_screen.gd` เหลือแค่หน้าต่าง Backpack ของการ์ด (ใช้ gear_panel); stage_view ไม่มีจุดพัก/กองไฟแล้ว
