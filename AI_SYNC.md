@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-12 | ui-programmer via PO | feature/class-weapons-card-screen | หน้าฮับใหม่ในเกม (ฉากซากปรักหักพัง, กรอบหนัง 4 คลาส, เมนูซ้าย 6 อัน, แถบทัพ, FIGHT, อังกฤษ, Taviraj/Sarabun, ปุ่ม >=96px บนมือถือ) `card_deck_screen.gd`/`card_tokens.gd`/`card_portrait.gd` + `art/ui/class_cards/` · เมนูอื่นยัง Coming soon · ระวัง: `godot --import` crash แล้วแก้ .import ราว 3,200 ไฟล์ในเครื่อง ไม่ได้ commit · เทสต์ 2134/83
+
 - 2026-11-12 | gameplay-programmer via PO | feature/class-weapons-card-screen | ช่อง `offhand` (โล่) เฉพาะ sword_shield: `rules.json` slot classes, `ItemRules.slot_open_for`, equip คืน `slot_closed`, โล่เริ่มต้น `starter-offhand-v1-sword_shield` (+migration), refine ได้, catalog `round_shield` (procedural) ผ่าน `tools/items/publish_offhand_catalog.py` · ยังไม่มีโมเดล/ไอคอนโล่ และตัวละครยังโชว์โล่ของคลาส · เทสต์ 2134/83 ชุดเดิม
 
 - 2026-11-11 | gameplay-programmer via PO | feature/class-weapons-card-screen | อุปกรณ์ต่อการ์ด ขั้น 4-5: ทัพสร้างจากการ์ด 3 ใบในทัพ (`logic/squad_member.gd`) ใช้ของ/สกิลของการ์ดเอง กระเป๋ากลาง ดรอป 1 ชิ้น/kill · checkpoint_v 2, party_v 2 (v1 ยังโหลดได้) · ตัด guest สุ่มใน `game_state.gd` · ห้องออนไลน์ยังไม่เปลี่ยน · เทสต์ 2116/83 ชุดเดิม

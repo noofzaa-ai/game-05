@@ -9,8 +9,9 @@ extends RefCounted
 const InkUi := preload("res://client/ink_ui.gd")
 
 const ART_DIR := "res://art/ui/class_cards/"  ## the one path the real art is read from
-const FONT_DISPLAY_PATH := "res://art/fonts/Mitr-SemiBold.woff2"  ## spec §2; absent until art-director adds it
-const FONT_MEDIUM_PATH := "res://art/fonts/Mitr-Medium.woff2"
+## Hub look (Boss 2026-11-11): Taviraj for titles / plates, Sarabun for body text (both in art/fonts/).
+const FONT_DISPLAY_PATH := "res://art/fonts/Taviraj-SemiBold.woff2"
+const FONT_MEDIUM_PATH := "res://art/fonts/Sarabun-SemiBold.woff2"
 
 # ------------------------------------------------------------------ palette (§5.2)
 const INK := Color("1B1530")
@@ -213,6 +214,171 @@ const INTRO_RISE := 24.0
 const SQUAD_BAR_LABEL_W := 90.0
 const STAR_SPIN_SECONDS := 0.4
 
+# ------------------------------------------------------------------ hub (docs/ui/hub_layout_spec.md, Boss 2026-11-11)
+## Leather / parchment palette of the approved v10 art.
+const HUB_INK := Color("3A2414")  ## dark brown text on parchment
+const HUB_CREAM := Color("F0E2C4")  ## light text over the night scene
+const HUB_MUTED := Color("D9C8A6")  ## secondary light text
+const HUB_SLOT_TEXT := Color("8C7458")  ## empty slot names on dark leather
+const HUB_TAB_IDLE := Color("6A5038")  ## inactive tab label
+const HUB_UNDERLINE := Color("7A2E1C")  ## active tab underline
+const HUB_OUTLINE := Color("120C08")  ## dark outline of light text
+const HUB_BADGE := Color("C8372D")  ## notification disc
+const HUB_BADGE_RING := Color("2A140C")
+const HUB_BADGE_TEXT := Color("FFFFFF")
+const HUB_GOLD_EDGE := Color("B98A4E")
+const HUB_PILL := Color(0.149, 0.086, 0.047, 0.9)  ## gold counter back
+const HUB_GLOW := Color(1.0, 0.75, 0.42, 0.75)  ## hover glow / squad card glow
+const HUB_SCENE_DIM := Color(0.031, 0.039, 0.078, 0.24)  ## over the background (the mock darkens it a little)
+const HUB_FIGHT_GLOW := Color(1.0, 0.59, 0.27, 0.8)
+const HUB_HOVER := Color(1.12, 1.06, 0.96)  ## menu plate brightened on hover / focus
+const HUB_PRESSED := Color(0.92, 0.92, 0.92)  ## pressed: 8% darker
+const HUB_LOCKED := Color(0.6, 0.58, 0.56)  ## locked: darkened (plus the grey shader)
+const HUB_DIM := Color(0.024, 0.016, 0.008, 0.62)  ## behind a panel over the hub
+const HUB_CHAR_DIM := Color(0.024, 0.016, 0.008, 0.47)  ## over the background of the character screen
+const HUB_PAPER := Color("F3E6C8")  ## details box parchment
+const HUB_PAPER_EDGE := Color("B98A4E")
+const HUB_LEATHER := Color("5A3420")
+const HUB_LEATHER_EDGE := Color("2A140C")
+const HUB_BAR_BACK := Color("4A2C1A")  ## durability bar
+const HUB_BAR_FILL := Color("D4A866")
+const HUB_BAR_LOW := Color("C8372D")
+const HUB_STAT_STRIP := Color(0.07, 0.05, 0.04, 0.78)
+const HUB_TIER: Array[Color] = [Color("E8E2D4"), Color("5A8FD8"), Color("A06AD8"), Color("E0A83A")]  ## pips 1..4
+const HUB_SUBTEXT := Color("3E6CB8")  ## slot · tier line
+const HUB_REFINE := Color("FFE7A8")  ## "+N" on slots
+const HUB_GOOD := Color("2E7D32")
+const HUB_BAD := Color("B3261E")
+const HUB_WINDOW_BOTTOM := Color(0.094, 0.07, 0.055)  ## card window gradient bottom (top = class accent)
+const HUB_WINDOW_LOCKED := Color(0.16, 0.16, 0.16)
+const HUB_CLEAR := Color(0.0, 0.0, 0.0, 0.0)
+const HUB_WHITE := Color(1.0, 1.0, 1.0, 1.0)
+
+## Art (ART_DIR + name + ".png"); imported from art_source/ui/class_cards/v10 (Boss accepted 2026-11-11).
+const HUB_BG := "hub_bg_ruins"
+const HUB_CARD_FRAME_PREFIX := "card_frame_"  ## + class id
+const HUB_MENU_PLATE := "hub_menu_plate"
+const HUB_ICON_PREFIX := "hub_icon_"  ## + service icon id
+const HUB_TRAY := "hub_squad_tray"
+const HUB_FIGHT := "hub_fight_button"
+const HUB_PANEL := "hub_panel_tabs"
+const HUB_SLOT := "equip_slot_normal"
+const HUB_SLOT_SELECTED := "equip_slot_selected"
+const HUB_SYS_PREFIX := "hub_sys_"  ## settings | back | gold | account
+
+## Side menu, most used first (spec §2). icon = HUB_ICON_PREFIX + icon.
+const HUB_SERVICES: Array[Dictionary] = [
+	{"id": "blacksmith", "icon": "blacksmith"}, {"id": "shop", "icon": "shop"}, {"id": "tailor", "icon": "tailor"},
+	{"id": "storage", "icon": "storage"}, {"id": "quests", "icon": "quest"}, {"id": "relics", "icon": "relics"},
+]
+const HUB_STAGE_FILE := "res://data/journeys/goblin_waves.json"  ## the stage name over FIGHT (its "name")
+
+# Fonts (at the 1080 reference)
+const FONT_HUB_TITLE := 52
+const FONT_HUB_MENU := 34
+const FONT_HUB_MENU_SUB := 18
+const FONT_HUB_CARD_NAME := 24
+const FONT_HUB_SQUAD := 18
+const FONT_HUB_LOCKED := 36
+const FONT_HUB_HINT := 22
+const FONT_HUB_FIGHT := 64
+const FONT_HUB_STAGE := 22
+const FONT_HUB_GOLD := 28
+const FONT_HUB_BADGE := 20
+const FONT_HUB_TRAY_NUM := 24
+const FONT_HUB_TRAY_ADD := 18
+const FONT_HUB_PANEL_TITLE := 44
+const FONT_HUB_BODY := 26
+const FONT_CHAR_TITLE := 52
+const FONT_CHAR_SWITCH := 20
+const FONT_CHAR_TAB := 30
+const FONT_CHAR_ITEM := 34
+const FONT_CHAR_LINE := 22
+const FONT_CHAR_SLOT := 16
+const FONT_CHAR_STAT := 18
+const FONT_CHAR_BUTTON := 26
+const OUTLINE_HUB := 3
+
+# Layout at the 1920x1080 reference
+const HUB_SAFE := Vector2(40.0, 24.0)
+const HUB_PHONE_SAFE_X := 132.0  ## extra side inset on phones (notch / rounded corners)
+const HUB_TITLE_Y := 64.0  ## title line centre
+const HUB_SYS_SIZE := 80.0
+const HUB_SYS_PHONE := 96.0  ## phones: bigger system buttons (spec §1)
+const HUB_SYS_Y := 26.0
+const HUB_SYS_GAP := 16.0
+const HUB_GOLD_SIZE := Vector2(184.0, 54.0)
+const HUB_GOLD_GAP := 70.0  ## between the gold counter and the system buttons
+const HUB_MENU_X := 28.0  ## from the side edge (or the phone safe inset)
+const HUB_MENU_Y := 132.0
+const HUB_MENU_ENTRY := Vector2(300.0, 100.0)  ## the plate (art aspect 1458x423 -> 300x87, centred in 100)
+const HUB_MENU_STEP := 104.0
+const HUB_MENU_HOVER_SHIFT := 6.0
+const HUB_MENU_PRESS_SHIFT := 2.0
+const HUB_MENU_ICON_SCALE := 1.05  ## medallion height / plate height
+const HUB_MENU_ICON_X := 0.135  ## medallion centre, fraction of the plate width
+const HUB_MENU_LABEL := Vector2(0.27, 0.93)  ## parchment label from/to, fractions of the plate width
+const HUB_MENU_PRESS_ICON := 0.96
+const HUB_BADGE_R := 17.0
+const HUB_BADGE_AT := Vector2(0.235, 0.12)  ## badge centre on the plate
+const HUB_CARD_AREA_X := 400.0  ## the card row starts right of the menu (from the side edge)
+const HUB_CARD := Vector2(300.0, 450.0)
+const HUB_CARD_GAP := 34.0
+const HUB_CARD_MIN_W := 240.0
+const HUB_PHONE_CARD_GROW := 1.12  ## phones: cards a little bigger when the row has room (names stay readable)
+const HUB_CARD_TOP := 150.0
+const HUB_CARD_LIFT := 12.0  ## squad cards sit a little higher
+const HUB_CARD_FOCUS_LIFT := 8.0
+const HUB_GLOW_PAD := 16.0
+const HUB_HINT_Y := 640.0
+const HUB_TRAY_X := 470.0  ## from the side edge (or the phone safe inset)
+const HUB_TRAY_W := 760.0
+const HUB_TRAY_BOTTOM := 34.0
+const HUB_FIGHT_W := 470.0
+const HUB_FIGHT_MIN_W := 300.0
+const HUB_FIGHT_RIGHT := 40.0
+const HUB_FIGHT_TEXT := Vector2(0.56, 0.5)  ## label centre, fraction of the button art
+const HUB_FIGHT_TEXT_W := 0.6
+## Card frame window (the hole in the frame PNG): WIN = (60, 150, 964, 1470) on 1024x1536, as fractions.
+const HUB_CARD_WINDOW := Rect2(0.0586, 0.0977, 0.8828, 0.8594)
+const HUB_CARD_WINDOW_RADIUS := 0.068  ## of the card width
+const HUB_CARD_NAME := Rect2(0.06, 0.035, 0.55, 0.066)  ## top plate text box
+const HUB_CARD_SQUAD := Rect2(0.42, 0.885, 0.36, 0.066)  ## bottom plate text box
+const HUB_CARD_LOCK_Y := 0.47
+const HUB_CARD_PLATE_TAP := 0.16  ## squad tap area: the bottom fraction of the card
+## Squad tray windows, fractions of the tray art (measured on hub_squad_tray_v1).
+const HUB_TRAY_SLOTS: Array[Rect2] = [Rect2(0.098, 0.215, 0.17, 0.69), Rect2(0.413, 0.215, 0.17, 0.69), Rect2(0.728, 0.215, 0.17, 0.69)]
+const HUB_TRAY_NUM_Y := 0.075
+const HUB_PANEL_SIZE := Vector2(1000.0, 520.0)  ## the "coming soon" panel
+const HUB_PANEL_MARGIN := 48.0
+const HUB_BUTTON := Vector2(240.0, 80.0)
+const HUB_RADIUS := 28.0
+const HUB_LINE := 4.0
+const HUB_TAP_MIN_PHONE := 96.0  ## every tap target on a phone (Boss 2026-11-11)
+
+# Character screen (spec §4)
+const CHAR_PANEL_Y := 140.0
+const CHAR_PANEL_ART := Vector2(1486.0, 971.0)
+## Tab plates on the panel art: x from, x to, label y (art pixels).
+const CHAR_TABS: Array[Vector3] = [Vector3(152.0, 502.0, 62.0), Vector3(584.0, 922.0, 62.0), Vector3(1006.0, 1343.0, 62.0)]
+const CHAR_TAB_H := 100.0  ## art pixels: the tab plates' height (tap area)
+const CHAR_UNDERLINE := Vector2(0.62, 102.0)  ## underline: fraction of the tab width, y in art px
+## Content area inside the panel art (art px): left, top, right, bottom.
+const CHAR_INNER := Rect2(80.0, 160.0, 1326.0, 740.0)
+const CHAR_SLOT := 104.0
+const CHAR_SLOT_GAP := 12.0
+const CHAR_DETAIL_H := 0.47  ## of the right column height
+const CHAR_STORE_COLUMNS := 10
+const CHAR_STORE_COLUMNS_PHONE := 7
+const CHAR_ACTION_H := 72.0
+const CHAR_ICON := 130.0
+const CHAR_STAT_STRIP_H := 64.0
+const CHAR_BAR_H := 22.0
+const CHAR_PIP := 5.0
+const CHAR_SWITCH_H := 40.0
+const CHAR_GAP := 16.0
+const CHAR_PAD := 20.0
+
 # ------------------------------------------------------------------ 3D portrait (card_portrait.gd)
 const PORTRAIT_MAX_PIXELS := Vector2(440.0, 620.0)
 const PORTRAIT_MIN_PIXELS := Vector2(64.0, 96.0)
@@ -226,6 +392,12 @@ const PORTRAIT_FRAME_BOTTOM := 1.045  ## about 0.9x of the first framing (1.16):
 ## "card_deck" framing (deck cards only): smaller figure so a shield / weapon stays above the name plate.
 const PORTRAIT_DECK_TOP := 0.012
 const PORTRAIT_DECK_BOTTOM := 0.90
+## "hub" framing (leather card window, full body): model top / feet as fractions of the portrait height.
+const PORTRAIT_HUB_TOP := 0.10
+const PORTRAIT_HUB_BOTTOM := 0.90
+## "stage" framing (character screen window): room under the feet for the stat strip.
+const PORTRAIT_STAGE_TOP := 0.07
+const PORTRAIT_STAGE_BOTTOM := 0.84
 const PORTRAIT_KEY_ENERGY := 0.25
 const PORTRAIT_RIM_ENERGY := 1.6  ## rim light from behind: lifts the character off the backdrop
 const PORTRAIT_AMBIENT := Color(0.82, 0.8, 0.78)
@@ -240,7 +412,7 @@ const PORTRAIT_PULSE_SECONDS := 0.25
 
 # ------------------------------------------------------------------ strings (§11): Thai first, English second
 ## The game has no localisation system yet; this table is the one place the screen's words live.
-static var language := "th"
+static var language := "en"  ## Boss 2026-11-11: hub and card text in English
 const STRINGS := {
 	"deck_title": ["การ์ดของฉัน", "My Cards"],
 	"deck_hint": ["แตะการ์ดเพื่อแต่ง · แตะ + เพื่อลงทัพ", "Tap a card to customise · Tap + to add to squad"],
@@ -280,6 +452,56 @@ const STRINGS := {
 	"hair_prefix": ["ผม ", "Hair "],
 	"remove_from_squad": ["เอาออกจากทัพ", "Remove from squad"],
 	"add_to_squad": ["ลงทัพ", "Add to squad"],
+	# hub (docs/ui/hub_layout_spec.md)
+	"hub_title": ["การ์ดของฉัน", "MY CARDS"],
+	"hub_hint": ["แตะการ์ดเพื่อเปิดตัวละคร · แตะป้ายล่างเพื่อลงทัพ", "Tap a card to open its character  ·  Tap its bottom plate to add or remove it from the squad"],
+	"squad_n": ["ทัพ %d", "SQUAD %d"],
+	"squad_add": ["+ ลงทัพ", "+ SQUAD"],
+	"locked": ["ล็อก", "LOCKED"],
+	"locked_toast": ["ทำเควสต์ให้เสร็จเพื่อปลดล็อก %s", "Finish the quests to unlock %s"],
+	"tray_add": ["เพิ่มการ์ด", "Add a card"],
+	"fight_need": ["เลือกอย่างน้อย 1 ใบ", "Pick at least 1 card"],
+	"svc_blacksmith": ["ช่างตีเหล็ก", "Blacksmith"],
+	"svc_shop": ["ร้านค้า", "Shop"],
+	"svc_tailor": ["ช่างตัดเสื้อ", "Tailor"],
+	"svc_storage": ["คลัง", "Storage"],
+	"svc_quests": ["เควสต์", "Quests"],
+	"svc_relics": ["วัตถุโบราณ", "Relics"],
+	"svc_locked_line": ["ทำเควสต์ 3 เพื่อปลดล็อก", "Quest 3 to unlock"],
+	"soon_body": ["ส่วนนี้ยังไม่เปิด", "This service is not open yet."],
+	"close": ["ปิด", "Close"],
+	"account": ["บัญชี", "Account"],
+	# card character screen
+	"tab_equipment": ["อุปกรณ์", "Equipment"],
+	"card_of": ["การ์ด %d จาก %d", "Card %d of %d"],
+	"prev_card": ["< %s", "< %s"],
+	"next_card": ["%s >", "%s >"],
+	"slot_earring": ["ต่างหู", "Earring"], "slot_necklace": ["สร้อยคอ", "Necklace"], "slot_ring": ["แหวน", "Ring"],
+	"slot_hat": ["หมวก", "Hat"], "slot_shirt": ["เสื้อ", "Shirt"], "slot_pants": ["กางเกง", "Pants"], "slot_shoes": ["รองเท้า", "Shoes"],
+	"slot_armband": ["ปลอกแขน", "Armband"], "slot_bracelet": ["กำไล", "Bracelet"], "slot_weapon": ["อาวุธ", "Weapon"], "slot_back": ["หลัง", "Back"],
+	"storage_title": ["คลัง (ใช้ร่วมทุกการ์ด)", "Storage  (shared by all cards)"],
+	"filter_all": ["ทั้งหมด", "All"], "filter_weapon": ["อาวุธ", "Weapons"], "filter_armor": ["ชุดเกราะ", "Armor"], "filter_trinket": ["เครื่องประดับ", "Trinkets"],
+	"equip": ["สวม", "Equip"],
+	"unequip": ["ถอด", "Unequip"],
+	"refine": ["ตีบวก", "Refine"],
+	"repair": ["ซ่อม", "Repair"],
+	"durability": ["ความทนทาน", "Durability"],
+	"pick_piece": ["แตะชิ้นอุปกรณ์เพื่อดูรายละเอียด", "Tap a piece to see its details"],
+	"empty_slot_line": ["ยังไม่ได้สวม: แตะของในคลังที่ใส่ช่องนี้ได้", "Nothing worn. Tap a piece in Storage that fits this slot."],
+	"char_hint": ["แตะ = รายละเอียด · แตะสองครั้ง = สวม / ถอด · Esc / B = กลับ", "Tap a piece = details  ·  Double-tap = wear / take off  ·  Esc / B = back"],
+	"outfit_body": ["ผม ตา ชุด และสีผิวของการ์ดนี้แต่งได้ที่ตัวแต่งหน้าตา", "Hair, eyes, outfit and skin of this card are set in the look editor."],
+	"open_editor": ["เปิดตัวแต่งหน้าตา", "Open the look editor"],
+	"skills_soon": ["สกิลของคลาส: เร็วๆ นี้", "Class skills: coming soon"],
+	"worn_ok": ["สวมแล้ว", "Equipped"],
+	"took_off_ok": ["ถอดไปไว้ในคลังแล้ว", "Moved to Storage"],
+	"err_wrong_weapon_family": ["คลาสนี้ใช้อาวุธนี้ไม่ได้", "This class can't use that weapon"],
+	"err_weapon_required": ["ต้องถืออาวุธไว้เสมอ", "A weapon must stay equipped"],
+	"err_reskill_required": ["ต้องรีเซ็ตสกิลก่อนเปลี่ยนอาวุธ", "Reset the skills before changing weapon family"],
+	"err_bag_full": ["คลังเต็ม", "Storage is full"],
+	"err_invalid_slot": ["ใส่ช่องนี้ไม่ได้", "That doesn't fit there"],
+	"err_not_available_here": ["ทำตอนนี้ไม่ได้", "Not available here"],
+	"err_unknown": ["ทำไม่สำเร็จ", "That didn't work"],
+	"waiting": ["รอเซิร์ฟเวอร์…", "Waiting for the server..."],
 }
 
 
@@ -390,11 +612,11 @@ static func body_font() -> Font:
 
 
 ## Styles a Label / Button text. `role` is one of the FONT_ sizes (at 1080p), `s` the layout scale.
-static func style_text(control: Control, size: int, color: Color, s: float, outline: int = 0, face: String = "display") -> void:
+static func style_text(control: Control, size: int, color: Color, s: float, outline: int = 0, face: String = "display", outline_color: Color = INK) -> void:
 	var px := maxi(int(round(size * s)), FONT_MIN)
 	control.add_theme_font_size_override("font_size", px)
 	control.add_theme_color_override("font_color", color)
-	control.add_theme_color_override("font_outline_color", INK)
+	control.add_theme_color_override("font_outline_color", outline_color)
 	control.add_theme_constant_override("outline_size", int(round(outline * s)) if outline > 0 else 0)
 	var font: Font = display_font() if face == "display" else (medium_font() if face == "medium" else body_font())
 	if font != null:
@@ -407,13 +629,145 @@ static func style_text(control: Control, size: int, color: Color, s: float, outl
 
 
 ## A new Label (never takes clicks).
-static func label(text: String, size: int, color: Color, s: float, outline: int = 0, face: String = "display") -> Label:
+static func label(text: String, size: int, color: Color, s: float, outline: int = 0, face: String = "display", outline_color: Color = INK) -> Label:
 	var l := Label.new()
 	l.text = text
 	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	l.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	style_text(l, size, color, s, outline, face)
+	style_text(l, size, color, s, outline, face, outline_color)
 	return l
+
+
+# ------------------------------------------------------------------ hub helpers
+## Hub text: dark ink on parchment (outline 0) or cream with a dark outline over the scene.
+static func hub_text(control: Control, size: int, color: Color, s: float, outline: int = 0, face: String = "display") -> void:
+	style_text(control, size, color, s, outline, face, HUB_OUTLINE)
+
+
+static func hub_label(text: String, size: int, color: Color, s: float, outline: int = 0, face: String = "display") -> Label:
+	var l := label(text, size, color, s, outline, face, HUB_OUTLINE)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS  # the label may be set narrower than its text (hub_fit shrinks it first)
+	return l
+
+
+## Styles `control` at the largest size <= `size` whose `text` fits `width` screen px (never under FONT_MIN).
+static func hub_fit(control: Control, text: String, size: int, width: float, color: Color, s: float, outline: int = 0, face: String = "display") -> void:
+	var font: Font = display_font() if face == "display" else (medium_font() if face == "medium" else body_font())
+	var px := maxi(int(round(size * s)), FONT_MIN)
+	while px > FONT_MIN and font != null and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+		px -= 1
+	style_text(control, 1, color, 1.0, 0, face, HUB_OUTLINE)
+	control.add_theme_font_size_override("font_size", px)
+	control.add_theme_constant_override("outline_size", int(round(outline * s)) if outline > 0 else 0)
+
+
+## Side inset in screen px: the reference edge, plus the notch inset on phones, and at least the device's safe area.
+static func hub_safe_x(screen: Vector2, s: float, device_px: float = 0.0) -> float:
+	var x := HUB_SAFE.x * s
+	if is_phone(screen):
+		x += HUB_PHONE_SAFE_X * s
+	return maxf(x, device_px)
+
+
+## A tap size (unscaled px): at least HUB_TAP_MIN_PHONE on a phone.
+static func tap(size: float, phone: bool) -> float:
+	return maxf(size, HUB_TAP_MIN_PHONE) if phone else size
+
+
+static func hub_paper(s: float) -> StyleBox:
+	return flat(HUB_PAPER, HUB_PAPER_EDGE, HUB_LINE * 0.5, HUB_RADIUS * 0.5, s)
+
+
+static func hub_leather(s: float) -> StyleBox:
+	return flat(HUB_LEATHER, HUB_LEATHER_EDGE, HUB_LINE, HUB_RADIUS, s, true)
+
+
+static func hub_shade(color: Color) -> StyleBox:
+	var box := StyleBoxFlat.new()
+	box.bg_color = color
+	return box
+
+
+static func hub_pill(s: float) -> StyleBox:
+	return flat(HUB_PILL, HUB_GOLD_EDGE, 2.0, HUB_GOLD_SIZE.y * 0.5, s)
+
+
+static func hub_strip(s: float) -> StyleBox:
+	return flat(HUB_STAT_STRIP, HUB_STAT_STRIP, 0.0, 12.0, s)
+
+
+static func hub_bar(fill: Color, s: float) -> StyleBox:
+	return flat(fill, HUB_LEATHER_EDGE, 1.0, CHAR_BAR_H * 0.5, s)
+
+
+static func hub_badge(s: float) -> StyleBox:
+	return flat(HUB_BADGE, HUB_BADGE_RING, 3.0, HUB_BADGE_R + 3.0, s)
+
+
+static func hub_line(color: Color) -> StyleBox:
+	var box := StyleBoxFlat.new()
+	box.bg_color = color
+	return box
+
+
+## A vertical window gradient: the class accent on top, dark leather at the bottom.
+static func window_gradient(class_id: String, locked: bool = false) -> GradientTexture2D:
+	var gradient := Gradient.new()
+	var top: Color = HUB_WINDOW_LOCKED if locked else palette(class_id)["shadow"]
+	gradient.colors = PackedColorArray([top, HUB_WINDOW_BOTTOM])
+	gradient.offsets = PackedFloat32Array([0.0, 1.0])
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill_from = Vector2(0.0, 0.0)
+	texture.fill_to = Vector2(0.0, 1.0)
+	texture.width = 4
+	texture.height = 128
+	return texture
+
+
+## Parchment plate buttons (action buttons, the dialog); ghost = text only (the card switcher, filters).
+static func hub_button(button: Button, s: float, ghost: bool = false) -> void:
+	var states := {"normal": HUB_PAPER, "hover": FRAME_LIGHT, "pressed": PAPER_SHADOW, "disabled": DISABLED}
+	for state in states:
+		var box: StyleBox = StyleBoxEmpty.new() if ghost else flat(states[state], HUB_LEATHER_EDGE, HUB_LINE * 0.75, 14.0, s, state == "normal" or state == "hover")
+		button.add_theme_stylebox_override(state, box)
+	button.add_theme_stylebox_override("hover_pressed", button.get_theme_stylebox("pressed"))
+	button.add_theme_stylebox_override("focus", hub_focus(s, 16.0))
+
+
+## Buttons that draw their own art (texture rects inside): no box, but keep the focus ring.
+static func bare_button(button: BaseButton, s: float, radius: float = 16.0) -> void:
+	for state in ["normal", "hover", "pressed", "disabled", "hover_pressed"]:
+		button.add_theme_stylebox_override(state, StyleBoxEmpty.new())
+	button.add_theme_stylebox_override("focus", hub_focus(s, radius))
+
+
+## Focus ring of the hub (spec §6): 3 px cream outline.
+static func hub_focus(s: float, radius: float) -> StyleBoxFlat:
+	var focus := ring(HUB_CREAM, 3.0, radius, s)
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		focus.set_expand_margin(side, 4.0 * s)
+	return focus
+
+
+static var _grey: ShaderMaterial
+
+
+## The grey look of locked things (menu entry, card): a desaturating canvas shader.
+static func grey_material() -> ShaderMaterial:
+	if _grey == null:
+		var shader := Shader.new()
+		shader.code = "shader_type canvas_item;\nvoid fragment() {\n\tvec4 c = texture(TEXTURE, UV) * COLOR;\n\tfloat g = dot(c.rgb, vec3(0.299, 0.587, 0.114));\n\tCOLOR = vec4(mix(c.rgb, vec3(g), 0.85), c.a);\n}\n"
+		_grey = ShaderMaterial.new()
+		_grey.shader = shader
+	return _grey
+
+
+static func slot_name(slot_id: String) -> String:
+	var key := "slot_" + slot_id
+	return t(key) if STRINGS.has(key) else slot_id.capitalize()
+
 
 
 # ------------------------------------------------------------------ style boxes (the only StyleBoxFlat of the screen)
@@ -538,3 +892,37 @@ static func simple_picker(picker: ColorPicker) -> void:
 	picker.sliders_visible = false
 	picker.hex_visible = false
 	picker.presets_visible = false
+
+
+## A soft glow around a rect (the box itself is clear; only its blurred shadow shows): squad cards, FIGHT, hover.
+static func hub_glow(color: Color, spread: float, radius: float, s: float) -> StyleBoxFlat:
+	var box := StyleBoxFlat.new()
+	box.bg_color = HUB_CLEAR
+	box.shadow_color = color
+	box.shadow_size = int(round(spread * s))
+	box.set_corner_radius_all(int(round(radius * s)))
+	return box
+
+
+## The display name of the stage FIGHT starts (data file), "" when missing.
+static func stage_name() -> String:
+	if not FileAccess.file_exists(HUB_STAGE_FILE):
+		return ""
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(HUB_STAGE_FILE))
+	return str(parsed.get("name", "")) if parsed is Dictionary else ""
+
+
+## A full-size art picture (scaled to its rect, never takes clicks); empty when the file is missing.
+static func art_rect(art_name: String) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture = tex(art_name)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_SCALE
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+
+## Height / width of an art file (fallback when missing).
+static func art_aspect(art_name: String, fallback: float) -> float:
+	var image := tex(art_name)
+	return float(image.get_height()) / float(image.get_width()) if image != null else fallback

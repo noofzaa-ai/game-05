@@ -1,8 +1,10 @@
 extends Control
-## The Class Card screen (docs/ui/class_card_ui_handoff.md): the home screen the player sees before a fight.
-## It replaces the campfire hub (the hub code stays, hidden). States: A deck, B editor of one card, C summon.
+## The class-card hub (docs/ui/hub_layout_spec.md, Boss 2026-11-11): the home screen the player sees before a fight.
+## Night ruins background, the 4 leather class cards with their live full-body characters, the service menu on the
+## left, the squad tray (3 picks, fight order) and FIGHT. States: A hub, B look editor of one card, C summon, plus
+## one "service" panel over the hub. Phones (CardTokens.is_phone) get the notch inset and 96 px tap targets.
 ## The screen draws the player's card deck (Profile.card_deck, rules in logic/card_deck.gd) and reports what the
-## player wants through signals (§13). It never changes the profile itself: the small controller at the bottom
+## player wants through signals. It never changes the profile itself: the small controller at the bottom
 ## (auto_wire) turns the signals into the server commands `card_look` / `card_squad` on the session, then
 ## draws the deck the profile now holds (or calls refuse()).
 ## Every colour, size, string and art path comes from client/card_tokens.gd.
@@ -23,16 +25,21 @@ signal look_changed(class_id: String, part: String, choice: String)  ## part: ha
 signal squad_changed(squad: Array)  ## the full new order, 1..3 class ids
 signal reset_card(class_id: String)
 signal fight_pressed()
-signal bag_pressed()
+signal service_pressed(service: String)  ## a side-menu entry (blacksmith, shop, tailor, storage, quests, relics) or "account"
 signal settings_pressed()
 signal back_pressed()
 signal summon_finished()
 
 ## true: the screen sends the commands itself (the game). Tests and shot scripts can set false.
 var auto_wire := true
-## Reduced motion (§9): no bob, shine, tilt or wiggle; transitions become short fades. There is no game
+## Reduced motion (§9): no lift easing, pops or shakes; transitions become short fades. There is no game
 ## setting for it yet; whoever adds one sets this.
 var reduced_motion := false
+## Display-only state the rules will own (no logic exists yet: quests / unlocks / notifications). The game
+## leaves them empty; whoever adds the rule fills them: locked side-menu services, locked class cards, badges.
+var locked_services: Array = []
+var locked_classes: Array = []
+var service_badges := {}  ## service id -> "2" / "!"
 
 var _deck := {}
 var _cosmetics
@@ -51,21 +58,30 @@ var _toast_tween: Tween
 var _camp: CanvasLayer
 
 var _bg: TextureRect
-var _clouds: Array[Panel] = []
+var _bg_shade: Panel
 var _deck_layer: Control
 var _top_title: Label
-var _bag_button: Button
+var _gold_pill: Panel
+var _gold_icon: TextureRect
+var _gold_label: Label
 var _settings_button: Button
-var _back_button: Button
+var _account_button: Button
+var _menu: Array = []  ## MenuEntry
 var _row_scroll: ScrollContainer
 var _row: Control
 var _hint: Label
-var _bar: Panel
-var _bar_label: Label
-var _ready_label: Label
-var _slots: Array = []
+var _bar: Control  ## the squad tray
+var _bar_art: TextureRect
+var _slots: Array = []  ## TraySlot
+var _slot_numbers: Array = []
 var _fight: Button
-var _cards := {}  ## class id -> CardView (deck)
+var _fight_art: TextureRect
+var _fight_label: Label
+var _fight_glow: Panel
+var _stage_label: Label
+var _cards := {}  ## class id -> HubCard
+var _service_layer: Control
+var _service_open := ""
 
 var _editor_layer: Control
 var _editor_back: Button
@@ -419,26 +435,329 @@ class CardView extends Control:
 			accept_event()
 
 
-## One slot of the squad bar: empty (+) or a mini card with a remove button. Drag a filled slot onto another to reorder.
-class SquadSlot extends Panel:
+# ================================================================== hub widgets (docs/ui/hub_layout_spec.md)
+## One leather class card of the hub: the class-accent window with the live full-body portrait, the Boss frame
+## art over it, the class name on the top plate and the squad plate at the foot (a button: add / remove).
+class HubCard extends Control:
+	signal pressed()
+	signal squad_toggled()
+
+	var class_id := ""
+	var locked := false
+	var portrait: Control
+	var window_slot: Control
+	var squad_button: Button
+	var base_position := Vector2.ZERO
+	var pop := 1.0  ## select / intro pop (scale)
+	var lift := 0.0
+	var hovered := false
+	var in_squad := false
+	var number := 0
+	var s := 1.0
+	var phone := false
+	var _glow: Panel
+	var _mask: Panel
+	var _back: TextureRect
+	var _frame: TextureRect
+	var _name: Label
+	var _squad_label: Label
+	var _lock: Label
+	var _focus: Panel
+
+	func build(id: String) -> void:
+		class_id = id
+		focus_mode = Control.FOCUS_ALL
+		mouse_filter = Control.MOUSE_FILTER_STOP
+		_glow = Panel.new()
+		_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_glow)
+		_mask = Panel.new()  # rounded window shape: clips the backdrop and the character
+		_mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mask.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+		add_child(_mask)
+		_back = TextureRect.new()
+		_back.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_back.stretch_mode = TextureRect.STRETCH_SCALE
+		_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_back.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_mask.add_child(_back)
+		window_slot = Control.new()
+		window_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		window_slot.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_mask.add_child(window_slot)
+		portrait = CardPortrait.new()
+		portrait.framing = "hub"
+		portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+		window_slot.add_child(portrait)
+		_frame = CardTokens.art_rect(CardTokens.HUB_CARD_FRAME_PREFIX + id)
+		add_child(_frame)
+		_name = CardTokens.hub_label("", CardTokens.FONT_HUB_CARD_NAME, CardTokens.HUB_INK, 1.0)
+		add_child(_name)
+		_lock = CardTokens.hub_label(CardTokens.t("locked"), CardTokens.FONT_HUB_LOCKED, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
+		_lock.visible = false
+		add_child(_lock)
+		_squad_label = CardTokens.hub_label("", CardTokens.FONT_HUB_SQUAD, CardTokens.HUB_INK, 1.0, 0, "medium")
+		add_child(_squad_label)
+		squad_button = Button.new()
+		squad_button.focus_mode = Control.FOCUS_ALL
+		squad_button.pressed.connect(func() -> void: squad_toggled.emit())
+		add_child(squad_button)
+		_focus = Panel.new()
+		_focus.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_focus.visible = false
+		add_child(_focus)
+		mouse_entered.connect(_hover.bind(true))
+		mouse_exited.connect(_hover.bind(false))
+		focus_entered.connect(func() -> void: _focus.visible = true)
+		focus_exited.connect(func() -> void: _focus.visible = false)
+
+	func _hover(on: bool) -> void:
+		hovered = on
+		portrait.set_hover(on)
+		portrait.set_render_mode(CardPortrait.Mode.LIVE if on else CardPortrait.Mode.THROTTLED)
+
+	func apply(look: Dictionary, p_in_squad: bool, p_number: int, p_locked: bool) -> void:
+		in_squad = p_in_squad
+		number = p_number
+		locked = p_locked
+		if portrait.class_id != class_id:
+			portrait.set_class(class_id)
+		portrait.set_look(look)
+		_back.texture = CardTokens.window_gradient(class_id, locked)
+		portrait.material = CardTokens.grey_material() if locked else null
+		portrait.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
+		_lock.visible = locked
+		_name.text = CardTokens.class_name_of(class_id)
+		_squad_label.text = "" if locked else (CardTokens.t("squad_n") % number if in_squad else CardTokens.t("squad_add"))
+		squad_button.tooltip_text = CardTokens.t("remove_from_squad" if in_squad else "add_to_squad")
+		squad_button.visible = not locked
+		layout(size.x, s, phone)
+
+	func layout(w: float, p_s: float, p_phone: bool) -> void:
+		s = p_s
+		phone = p_phone
+		var h := w * CardTokens.HUB_CARD.y / CardTokens.HUB_CARD.x
+		size = Vector2(w, h)
+		custom_minimum_size = size
+		pivot_offset = size * 0.5
+		_frame.position = Vector2.ZERO
+		_frame.size = size
+		var win := CardTokens.HUB_CARD_WINDOW
+		_mask.position = Vector2(win.position.x * w, win.position.y * h)
+		_mask.size = Vector2(win.size.x * w, win.size.y * h)
+		CardTokens.panel(_mask, CardTokens.flat(CardTokens.HUB_WINDOW_BOTTOM, CardTokens.HUB_WINDOW_BOTTOM, 0.0, CardTokens.HUB_CARD_WINDOW_RADIUS * w, 1.0))
+		var pad := CardTokens.HUB_GLOW_PAD * s
+		_glow.position = Vector2(pad, pad) * 0.5
+		_glow.size = size - Vector2(pad, pad)
+		CardTokens.panel(_glow, CardTokens.hub_glow(CardTokens.HUB_GLOW, CardTokens.HUB_GLOW_PAD * 1.4, CardTokens.HUB_RADIUS, s))
+		_glow.visible = in_squad and not locked
+		var unit := w / CardTokens.HUB_CARD.x
+		var nr := CardTokens.HUB_CARD_NAME
+		_name.position = Vector2(nr.position.x * w, nr.position.y * h)
+		_name.size = Vector2(nr.size.x * w, nr.size.y * h)
+		CardTokens.hub_fit(_name, _name.text, CardTokens.FONT_HUB_CARD_NAME, _name.size.x, CardTokens.HUB_SLOT_TEXT if locked else CardTokens.HUB_INK, unit)
+		var sr := CardTokens.HUB_CARD_SQUAD
+		_squad_label.position = Vector2(sr.position.x * w, sr.position.y * h)
+		_squad_label.size = Vector2(sr.size.x * w, sr.size.y * h)
+		CardTokens.hub_fit(_squad_label, _squad_label.text, CardTokens.FONT_HUB_SQUAD, _squad_label.size.x, CardTokens.HUB_INK, unit, 0, "medium")
+		_lock.position = Vector2(0.0, CardTokens.HUB_CARD_LOCK_Y * h - 30.0 * unit)
+		_lock.size = Vector2(w, 60.0 * unit)
+		CardTokens.hub_text(_lock, CardTokens.FONT_HUB_LOCKED, CardTokens.HUB_CREAM, unit, CardTokens.OUTLINE_HUB)
+		# squad plate: the whole foot of the card is the tap area (>= 96 reference px on phones)
+		var tap_h := maxf(CardTokens.HUB_CARD_PLATE_TAP * h, CardTokens.tap(0.0, phone) * s)
+		squad_button.position = Vector2(0.0, h - tap_h)
+		squad_button.size = Vector2(w, tap_h)
+		CardTokens.bare_button(squad_button, s, 12.0)
+		_focus.position = Vector2(-4.0, -4.0) * s
+		_focus.size = size + Vector2(8.0, 8.0) * s
+		CardTokens.panel(_focus, CardTokens.hub_focus(s, CardTokens.HUB_RADIUS))
+
+	func set_selected(_on: bool) -> void:
+		pass
+
+	func animate(delta: float, motion: bool) -> void:
+		var target := 0.0
+		if in_squad and not locked:
+			target += CardTokens.HUB_CARD_LIFT
+		if hovered or has_focus():
+			target += CardTokens.HUB_CARD_FOCUS_LIFT
+		lift = lerpf(lift, target, minf(1.0, delta * 12.0)) if motion else target
+		position = base_position - Vector2(0.0, lift * s)
+		scale = Vector2(pop, pop)
+
+	func _gui_input(event: InputEvent) -> void:
+		var button := event as InputEventMouseButton
+		if button != null and button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
+			pressed.emit()
+			accept_event()
+			return
+		var motion := event as InputEventMouseMotion
+		if motion != null:
+			portrait.set_hover(true, Vector2(clampf(motion.position.x / maxf(size.x, 1.0), 0.0, 1.0), 0.5))
+		if event.is_action_pressed("ui_accept"):
+			pressed.emit()
+			accept_event()
+
+	func _get_drag_data(_at: Vector2) -> Variant:
+		if locked:
+			return null
+		var preview := CardTokens.hub_label(CardTokens.class_name_of(class_id), CardTokens.FONT_HUB_CARD_NAME, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
+		set_drag_preview(preview)
+		return {"deck_card": class_id}
+
+
+## One side-menu entry (spec §2): leather plate + service medallion + parchment label. A Button, so it takes
+## focus, keyboard / gamepad accept and touch. States: normal, hover / focus (glow, 6 px right), pressed
+## (2 px back, darker, medallion 0.96), locked (grey + a reason line; a tap shows it as a toast), badge.
+class MenuEntry extends Button:
+	var service := ""
+	var locked := false
+	var locked_line := ""
+	var badge := ""  ## "" none, "!" new, or a number
+	var s := 1.0
+	var _glow: Panel
+	var _plate: TextureRect
+	var _icon: TextureRect
+	var _label: Label
+	var _sub: Label
+	var _badge: Panel
+	var _badge_label: Label
+	var _base_x := 0.0
+	var _shift := 0.0
+
+	func build(id: String, icon: String) -> void:
+		service = id
+		focus_mode = Control.FOCUS_ALL
+		_glow = Panel.new()
+		_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_glow.visible = false
+		add_child(_glow)
+		_plate = CardTokens.art_rect(CardTokens.HUB_MENU_PLATE)
+		add_child(_plate)
+		_icon = CardTokens.art_rect(CardTokens.HUB_ICON_PREFIX + icon)
+		add_child(_icon)
+		_label = CardTokens.hub_label(CardTokens.t("svc_" + id), CardTokens.FONT_HUB_MENU, CardTokens.HUB_INK, 1.0)
+		add_child(_label)
+		_sub = CardTokens.hub_label("", CardTokens.FONT_HUB_MENU_SUB, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium")
+		_sub.visible = false
+		add_child(_sub)
+		_badge = Panel.new()
+		_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(_badge)
+		_badge_label = CardTokens.hub_label("", CardTokens.FONT_HUB_BADGE, CardTokens.HUB_BADGE_TEXT, 1.0, 0, "medium")
+		_badge.add_child(_badge_label)
+		mouse_entered.connect(_refresh_state)
+		mouse_exited.connect(_refresh_state)
+		focus_entered.connect(_refresh_state)
+		focus_exited.connect(_refresh_state)
+		button_down.connect(_refresh_state)
+		button_up.connect(_refresh_state)
+
+	func layout(at: Vector2, p_s: float, phone: bool) -> void:
+		s = p_s
+		var w := CardTokens.HUB_MENU_ENTRY.x * s
+		var h := maxf(CardTokens.HUB_MENU_ENTRY.y, CardTokens.tap(0.0, phone)) * s
+		_base_x = at.x
+		position = at
+		size = Vector2(w, h)
+		CardTokens.bare_button(self, s, CardTokens.HUB_RADIUS)
+		var plate_h := w * CardTokens.art_aspect(CardTokens.HUB_MENU_PLATE, 0.29)
+		_plate.size = Vector2(w, plate_h)
+		_plate.position = Vector2(0.0, (h - plate_h) * 0.5)
+		var icon_h := plate_h * CardTokens.HUB_MENU_ICON_SCALE
+		_icon.size = Vector2(icon_h, icon_h)
+		_icon.pivot_offset = _icon.size * 0.5
+		_icon.position = Vector2(w * CardTokens.HUB_MENU_ICON_X - icon_h * 0.5, (h - icon_h) * 0.5)
+		_glow.position = _plate.position + Vector2(8.0, 8.0) * s
+		_glow.size = _plate.size - Vector2(16.0, 16.0) * s
+		CardTokens.panel(_glow, CardTokens.hub_glow(CardTokens.HUB_GLOW, 12.0, plate_h * 0.3 / maxf(s, 0.01), s))
+		var lx := w * CardTokens.HUB_MENU_LABEL.x
+		var lw := w * (CardTokens.HUB_MENU_LABEL.y - CardTokens.HUB_MENU_LABEL.x)
+		_label.size = Vector2(lw, plate_h * (0.5 if locked else 0.8))
+		_label.position = Vector2(lx, _plate.position.y + plate_h * (0.12 if locked else 0.1))
+		CardTokens.hub_fit(_label, _label.text, CardTokens.FONT_HUB_MENU, lw * 0.92, CardTokens.HUB_CREAM if locked else CardTokens.HUB_INK, s, CardTokens.OUTLINE_HUB if locked else 0)
+		_sub.text = locked_line
+		_sub.visible = locked
+		_sub.size = Vector2(lw, plate_h * 0.3)
+		_sub.position = Vector2(lx, _plate.position.y + plate_h * 0.6)
+		CardTokens.hub_fit(_sub, _sub.text, CardTokens.FONT_HUB_MENU_SUB, lw * 0.95, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium")
+		var r := CardTokens.HUB_BADGE_R * s
+		_badge.size = Vector2(r, r) * 2.0
+		_badge.position = Vector2(w * CardTokens.HUB_BADGE_AT.x, _plate.position.y + plate_h * CardTokens.HUB_BADGE_AT.y) - Vector2(r, r)
+		CardTokens.panel(_badge, CardTokens.hub_badge(s))
+		_badge_label.size = _badge.size
+		_badge_label.text = badge
+		CardTokens.hub_text(_badge_label, CardTokens.FONT_HUB_BADGE, CardTokens.HUB_BADGE_TEXT, s, 0, "medium")
+		_badge.visible = badge != "" and not locked
+		_plate.material = CardTokens.grey_material() if locked else null
+		_icon.material = _plate.material
+		tooltip_text = locked_line if locked else CardTokens.t("svc_" + service)
+		_refresh_state()
+
+	func _refresh_state() -> void:
+		if not is_inside_tree():
+			return
+		var hot := (is_hovered() or has_focus()) and not locked
+		var down := button_pressed or (is_hovered() and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT))
+		_glow.visible = hot
+		_shift = CardTokens.HUB_MENU_HOVER_SHIFT if hot else 0.0
+		if down and not locked:
+			_shift -= CardTokens.HUB_MENU_PRESS_SHIFT
+		position.x = _base_x + _shift * s
+		var tint: Color = CardTokens.HUB_LOCKED if locked else (CardTokens.HUB_PRESSED if down else (CardTokens.HUB_HOVER if hot else CardTokens.HUB_WHITE))
+		_plate.modulate = tint
+		_icon.modulate = tint
+		_icon.scale = Vector2.ONE * (CardTokens.HUB_MENU_PRESS_ICON if down and not locked else 1.0)
+
+
+## One window of the squad tray (number medallion = fight order): the picked card's head, or an empty "+".
+## Tap a filled slot = take that card out; drag between slots = reorder; drop a deck card = put it here.
+class TraySlot extends Button:
 	var index := 0
 	var class_id := ""
-	var drop_callback: Callable
+	var drop_callback: Callable  ## (from_slot: int, to_slot: int)
+	var card_drop_callback: Callable  ## (class_id: String, to_slot: int)
+	var portrait: Control
+	var _plus: Label
+
+	func build() -> void:
+		focus_mode = Control.FOCUS_ALL
+		portrait = CardPortrait.new()
+		portrait.framing = "bust"
+		portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+		portrait.visible = false
+		add_child(portrait)
+		_plus = CardTokens.hub_label("+", CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, 1.0)
+		_plus.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(_plus)
+
+	func show_card(id: String, look: Dictionary, s: float) -> void:
+		class_id = id
+		CardTokens.bare_button(self, s, 10.0)
+		portrait.visible = not id.is_empty()
+		_plus.visible = id.is_empty()
+		CardTokens.hub_text(_plus, CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, s)
+		tooltip_text = CardTokens.t("tray_add") if id.is_empty() else CardTokens.t("remove_from_squad")
+		if not id.is_empty():
+			portrait.set_render_mode(CardPortrait.Mode.ONCE)
+			portrait.set_class(id)
+			portrait.set_look(look)
 
 	func _get_drag_data(_at: Vector2) -> Variant:
 		if class_id.is_empty():
 			return null
-		var preview := Label.new()
-		preview.text = CardTokens.class_name_of(class_id)
+		var preview := CardTokens.hub_label(CardTokens.class_name_of(class_id), CardTokens.FONT_HUB_CARD_NAME, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
 		set_drag_preview(preview)
 		return {"squad_slot": index}
 
 	func _can_drop_data(_at: Vector2, data: Variant) -> bool:
-		return data is Dictionary and data.has("squad_slot") and int(data["squad_slot"]) != index
+		return data is Dictionary and ((data.has("squad_slot") and int(data["squad_slot"]) != index) or data.has("deck_card"))
 
 	func _drop_data(_at: Vector2, data: Variant) -> void:
-		drop_callback.call(int(data["squad_slot"]), index)
-
+		if data.has("squad_slot"):
+			drop_callback.call(int(data["squad_slot"]), index)
+		else:
+			card_drop_callback.call(str(data["deck_card"]), index)
 
 ## The comic burst of the summon: a star shaped polygon, no letters (§10).
 class BurstView extends Control:
@@ -463,6 +782,7 @@ class BurstView extends Control:
 		draw_colored_polygon(core, CardTokens.ACTION_LIGHT)
 
 
+
 # ================================================================== build
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -471,6 +791,7 @@ func _ready() -> void:
 	_build_deck_layer()
 	_build_editor_layer()
 	_build_overlays()
+	_build_service_layer()
 	resized.connect(_layout)
 	_layout()
 	if auto_wire:
@@ -479,63 +800,472 @@ func _ready() -> void:
 
 func _build_background() -> void:
 	_bg = TextureRect.new()
-	_bg.texture = CardTokens.tex("bg_sky") if CardTokens.tex("bg_sky") != null else CardTokens.sky_gradient()
+	_bg.texture = CardTokens.tex(CardTokens.HUB_BG) if CardTokens.tex(CardTokens.HUB_BG) != null else CardTokens.sky_gradient()
 	_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	_bg.stretch_mode = TextureRect.STRETCH_SCALE
+	_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_bg)
-	for i in CardTokens.CLOUD_Y.size():
-		var cloud := Panel.new()
-		cloud.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		cloud.modulate.a = CardTokens.CLOUD_FADE
-		add_child(cloud)
-		_clouds.append(cloud)
+	_bg_shade = Panel.new()
+	_bg_shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_bg_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CardTokens.panel(_bg_shade, CardTokens.hub_shade(CardTokens.HUB_SCENE_DIM))
+	add_child(_bg_shade)
 
 
+## The hub (state A): top bar, side menu, the card row, the squad tray and FIGHT.
 func _build_deck_layer() -> void:
 	_deck_layer = Control.new()
 	_deck_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_deck_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_deck_layer)
-	_top_title = CardTokens.label(CardTokens.t("deck_title"), CardTokens.FONT_SCREEN_TITLE, CardTokens.TEXT_LIGHT, 1.0, CardTokens.OUTLINE_TEXT)
+	_top_title = CardTokens.label(CardTokens.t("hub_title"), CardTokens.FONT_HUB_TITLE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
 	_deck_layer.add_child(_top_title)
-	_bag_button = _pill(CardTokens.t("bag"), func() -> void: bag_pressed.emit())
-	_settings_button = _pill(CardTokens.t("settings"), func() -> void: settings_pressed.emit())
-	_back_button = _pill(CardTokens.t("back"), func() -> void: back_pressed.emit())
-	for b in [_bag_button, _settings_button, _back_button]:
-		_deck_layer.add_child(b)
+	_gold_pill = Panel.new()
+	_gold_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_deck_layer.add_child(_gold_pill)
+	_gold_icon = CardTokens.art_rect(CardTokens.HUB_SYS_PREFIX + "gold")
+	_deck_layer.add_child(_gold_icon)
+	_gold_label = CardTokens.hub_label("0", CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, 1.0, 0, "medium")
+	_gold_pill.add_child(_gold_label)
+	_settings_button = _sys_button("settings", func() -> void: settings_pressed.emit())
+	_account_button = _sys_button("account", func() -> void: service_pressed.emit("account"))
+	for service in CardTokens.HUB_SERVICES:
+		var entry := MenuEntry.new()
+		entry.build(str(service["id"]), str(service["icon"]))
+		entry.pressed.connect(_on_menu.bind(entry))
+		_deck_layer.add_child(entry)
+		_menu.append(entry)
 	_row_scroll = ScrollContainer.new()
 	_row_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	_row_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_row_scroll.follow_focus = true
+	_row_scroll.mouse_filter = Control.MOUSE_FILTER_PASS
 	_deck_layer.add_child(_row_scroll)
 	_row = Control.new()
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_row_scroll.add_child(_row)
-	_hint = CardTokens.label(CardTokens.t("deck_hint"), CardTokens.FONT_HINT, CardTokens.TEXT_DARK, 1.0, 0, "body")
-	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint = CardTokens.hub_label(CardTokens.t("hub_hint"), CardTokens.FONT_HUB_HINT, CardTokens.HUB_MUTED, 1.0, CardTokens.OUTLINE_HUB, "medium")
 	_deck_layer.add_child(_hint)
-	_bar = Panel.new()
+	_bar = Control.new()  # the squad tray
 	_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 	_deck_layer.add_child(_bar)
-	_bar_label = CardTokens.label(CardTokens.t("squad"), CardTokens.FONT_TAB, CardTokens.TEXT_DARK, 1.0)
-	_bar.add_child(_bar_label)
-	_ready_label = CardTokens.label(CardTokens.t("squad_ready"), CardTokens.FONT_OPTION, CardTokens.TEXT_DARK, 1.0, 0, "medium")
-	_ready_label.visible = false
-	_bar.add_child(_ready_label)
+	_bar_art = CardTokens.art_rect(CardTokens.HUB_TRAY)
+	_bar.add_child(_bar_art)
 	for i in CardDeck.SQUAD_MAX:
-		var slot := SquadSlot.new()
+		var slot := TraySlot.new()
 		slot.index = i
+		slot.build()
 		slot.drop_callback = _on_slot_drop
-		slot.mouse_filter = Control.MOUSE_FILTER_STOP
+		slot.card_drop_callback = _on_card_drop
+		slot.pressed.connect(_on_tray_pressed.bind(slot))
 		_bar.add_child(slot)
 		_slots.append(slot)
+		var number := CardTokens.hub_label(str(i + 1), CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
+		_bar.add_child(number)
+		_slot_numbers.append(number)
+	_fight_glow = Panel.new()
+	_fight_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_deck_layer.add_child(_fight_glow)
 	_fight = Button.new()
-	_fight.text = CardTokens.t("fight")
+	_fight.focus_mode = Control.FOCUS_ALL
+	_fight.tooltip_text = CardTokens.t("fight")
 	_fight.pressed.connect(func() -> void: fight_pressed.emit())
+	_fight.button_down.connect(func() -> void: _fight_art.modulate = CardTokens.HUB_PRESSED)
+	_fight.button_up.connect(func() -> void: _fight_art.modulate = CardTokens.HUB_WHITE)
 	_deck_layer.add_child(_fight)
+	_fight_art = CardTokens.art_rect(CardTokens.HUB_FIGHT)
+	_fight.add_child(_fight_art)
+	_fight_label = CardTokens.hub_label(CardTokens.t("fight"), CardTokens.FONT_HUB_FIGHT, CardTokens.HUB_INK, 1.0)
+	_fight.add_child(_fight_label)
+	_stage_label = CardTokens.hub_label(CardTokens.stage_name(), CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium")
+	_deck_layer.add_child(_stage_label)
 
+
+## A round system button (settings / account / back) drawn from the hub art.
+func _sys_button(art: String, callback: Callable) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_ALL
+	b.tooltip_text = CardTokens.t(art)
+	var picture := CardTokens.art_rect(CardTokens.HUB_SYS_PREFIX + art)
+	picture.set_anchors_preset(Control.PRESET_FULL_RECT)
+	b.add_child(picture)
+	b.pressed.connect(callback)
+	b.button_down.connect(func() -> void: picture.modulate = CardTokens.HUB_PRESSED)
+	b.button_up.connect(func() -> void: picture.modulate = CardTokens.HUB_WHITE)
+	_deck_layer.add_child(b)
+	return b
+
+
+## The panel a side-menu service opens over the hub (spec §2). For now a "Coming soon" panel.
+func _build_service_layer() -> void:
+	_service_layer = Control.new()
+	_service_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_service_layer.mouse_filter = Control.MOUSE_FILTER_STOP
+	_service_layer.visible = false
+	add_child(_service_layer)
+	move_child(_service_layer, _toast.get_index())  # under the toast
+
+
+# ================================================================== layout
+func _layout() -> void:
+	_s = CardTokens.scale_for(size)
+	_phone = CardTokens.is_phone(size)
+	var s := _s
+	var device := _device_safe_x()
+	var side := CardTokens.hub_safe_x(size, s, device)
+	var phone_extra := side - CardTokens.HUB_SAFE.x * s  # the extra phone / notch inset, 0 on a desktop
+	# top bar: title left, gold + settings + account right
+	var title_h := CardTokens.FONT_HUB_TITLE * 1.6 * s
+	_top_title.position = Vector2(side, CardTokens.HUB_TITLE_Y * s - title_h * 0.5)
+	_top_title.size = Vector2(size.x * 0.4, title_h)
+	CardTokens.style_text(_top_title, CardTokens.FONT_HUB_TITLE, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
+	var sys := CardTokens.tap(CardTokens.HUB_SYS_SIZE, _phone) * s
+	var x := size.x - side
+	for b in [_account_button, _settings_button]:
+		x -= sys
+		b.position = Vector2(x, CardTokens.HUB_SYS_Y * s)
+		b.size = Vector2(sys, sys)
+		CardTokens.bare_button(b, s, CardTokens.HUB_SYS_SIZE * 0.5)
+		x -= CardTokens.HUB_SYS_GAP * s
+	var pill := CardTokens.HUB_GOLD_SIZE * s
+	x -= CardTokens.HUB_GOLD_GAP * s - CardTokens.HUB_SYS_GAP * s + pill.x
+	_gold_pill.position = Vector2(x, CardTokens.HUB_SYS_Y * s + (sys - pill.y) * 0.5)
+	_gold_pill.size = pill
+	CardTokens.panel(_gold_pill, CardTokens.hub_pill(s))
+	var coin := pill.y * 1.15
+	_gold_icon.size = Vector2(coin, coin)
+	_gold_icon.position = _gold_pill.position - Vector2(pill.y * 0.15, pill.y * 0.075)
+	_gold_label.position = Vector2(coin * 0.8, 0.0)
+	_gold_label.size = Vector2(pill.x - coin * 0.9, pill.y)
+	CardTokens.hub_text(_gold_label, CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, s, 0, "medium")
+	# side menu (left)
+	var menu_x := CardTokens.HUB_MENU_X * s + phone_extra
+	for i in _menu.size():
+		var entry: MenuEntry = _menu[i]
+		entry.locked = locked_services.has(entry.service)
+		entry.locked_line = CardTokens.t("svc_locked_line") if entry.locked else ""
+		entry.badge = str(service_badges.get(entry.service, ""))
+		entry.layout(Vector2(menu_x, (CardTokens.HUB_MENU_Y + float(i) * CardTokens.HUB_MENU_STEP) * s), s, _phone)
+	# card row: right of the menu; cards shrink to HUB_CARD_MIN_W, then the row scrolls (never two rows)
+	var row_left := CardTokens.HUB_CARD_AREA_X * s + phone_extra
+	var row_right := size.x - side
+	var avail := maxf(row_right - row_left, 1.0)
+	var count := maxi(_class_ids.size(), 1)
+	var gap := CardTokens.HUB_CARD_GAP * s
+	var card_w := CardTokens.HUB_CARD.x * s
+	if _phone:
+		card_w = minf(card_w * CardTokens.HUB_PHONE_CARD_GROW, (avail - gap * (count - 1)) / count)
+		card_w = maxf(card_w, CardTokens.HUB_CARD.x * s)
+	var need := card_w * count + gap * (count - 1)
+	if need > avail:
+		card_w = maxf((avail - gap * (count - 1)) / count, CardTokens.HUB_CARD_MIN_W * s)
+		need = card_w * count + gap * (count - 1)
+	var card_h := card_w * CardTokens.HUB_CARD.y / CardTokens.HUB_CARD.x
+	var pad := (CardTokens.HUB_CARD_LIFT + CardTokens.HUB_CARD_FOCUS_LIFT + CardTokens.HUB_GLOW_PAD) * s
+	_row_scroll.position = Vector2(row_left, CardTokens.HUB_CARD_TOP * s - pad)
+	_row_scroll.size = Vector2(avail, card_h + pad * 2.0)
+	_row.custom_minimum_size = Vector2(maxf(need, avail), card_h + pad * 2.0)
+	var start_x := (maxf(need, avail) - need) * 0.5
+	var index := 0
+	for id in _class_ids:
+		var card: HubCard = _cards.get(id)
+		if card == null:
+			continue
+		card.layout(card_w, s, _phone)
+		card.base_position = Vector2(start_x + float(index) * (card_w + gap), pad)
+		card.position = card.base_position
+		index += 1
+	_hint.position = Vector2(row_left, maxf(CardTokens.HUB_HINT_Y * s, _row_scroll.position.y + _row_scroll.size.y - pad * 0.5))
+	_hint.size = Vector2(avail, CardTokens.FONT_HUB_HINT * 1.6 * s)
+	CardTokens.hub_fit(_hint, _hint.text, CardTokens.FONT_HUB_HINT, avail, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
+	# FIGHT (bottom right) and the squad tray (bottom, right of the menu column); the tray never runs under FIGHT
+	var fight_w := CardTokens.HUB_FIGHT_W * s
+	var tray_x := CardTokens.HUB_TRAY_X * s + phone_extra
+	var tray_w := CardTokens.HUB_TRAY_W * s
+	var fight_x := size.x - side - fight_w
+	if tray_x + tray_w + gap > fight_x:  # narrow screens: shrink FIGHT first, then the tray
+		fight_w = maxf(CardTokens.HUB_FIGHT_MIN_W * s, size.x - side - (tray_x + tray_w + gap))
+		fight_x = size.x - side - fight_w
+		tray_w = minf(tray_w, fight_x - gap - tray_x)
+	var fight_h := fight_w * CardTokens.art_aspect(CardTokens.HUB_FIGHT, 0.45)
+	_fight.size = Vector2(fight_w, fight_h)
+	_fight.position = Vector2(fight_x, size.y - CardTokens.HUB_TRAY_BOTTOM * s - fight_h)
+	CardTokens.bare_button(_fight, s, CardTokens.HUB_RADIUS)
+	_fight_art.size = _fight.size
+	_fight_glow.position = _fight.position + _fight.size * Vector2(0.06, 0.25)
+	_fight_glow.size = _fight.size * Vector2(0.88, 0.5)
+	CardTokens.panel(_fight_glow, CardTokens.hub_glow(CardTokens.HUB_FIGHT_GLOW, CardTokens.HUB_GLOW_PAD * 1.5, CardTokens.HUB_RADIUS, s))
+	var text_w := fight_w * CardTokens.HUB_FIGHT_TEXT_W
+	_fight_label.size = Vector2(text_w, fight_h * 0.5)
+	_fight_label.position = Vector2(fight_w * CardTokens.HUB_FIGHT_TEXT.x - text_w * 0.5, fight_h * CardTokens.HUB_FIGHT_TEXT.y - fight_h * 0.25)
+	CardTokens.hub_fit(_fight_label, _fight_label.text, CardTokens.FONT_HUB_FIGHT, text_w, CardTokens.HUB_INK if not _fight.disabled else CardTokens.HUB_SLOT_TEXT, s)
+	_stage_label.size = Vector2(fight_w, CardTokens.FONT_HUB_STAGE * 1.6 * s)
+	_stage_label.position = Vector2(fight_x, _fight.position.y - _stage_label.size.y)
+	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.FONT_HUB_STAGE, fight_w, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium")
+	var tray_h := tray_w * CardTokens.art_aspect(CardTokens.HUB_TRAY, 0.27)
+	_bar.position = Vector2(tray_x, size.y - CardTokens.HUB_TRAY_BOTTOM * s - tray_h)
+	_bar.size = Vector2(tray_w, tray_h)
+	_bar_art.size = _bar.size
+	for i in _slots.size():
+		var r: Rect2 = CardTokens.HUB_TRAY_SLOTS[i]
+		var slot: TraySlot = _slots[i]
+		slot.position = Vector2(r.position.x * tray_w, r.position.y * tray_h)
+		slot.size = Vector2(r.size.x * tray_w, r.size.y * tray_h)
+		var number: Label = _slot_numbers[i]
+		number.size = Vector2(r.size.x * tray_w, CardTokens.FONT_HUB_TRAY_NUM * 1.4 * s)
+		number.position = Vector2(r.position.x * tray_w, CardTokens.HUB_TRAY_NUM_Y * tray_h - number.size.y * 0.5)
+		CardTokens.hub_text(number, CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
+	_refresh_squad_bar()
+	_layout_editor()
+	_layout_toast()
+	_layout_service()
+
+
+## The device's own safe area (notch / rounded corners) as a side inset, in this control's pixels.
+func _device_safe_x() -> float:
+	if OS.has_feature("headless") or not is_inside_tree():
+		return 0.0
+	var screen := DisplayServer.screen_get_size()
+	var safe := DisplayServer.get_display_safe_area()
+	if safe.size.x <= 0 or screen.x <= 0:
+		return 0.0
+	var inset := float(maxi(safe.position.x, screen.x - safe.end.x))
+	return inset * size.x / float(screen.x) if DisplayServer.window_get_mode() == DisplayServer.WINDOW_MODE_FULLSCREEN else 0.0
+
+
+# ================================================================== data
+## Draws everything from `deck` (Profile.card_deck). Called again after each change.
+func show_deck(deck: Dictionary, cosmetics) -> void:
+	_deck = deck.duplicate(true)
+	_cosmetics = cosmetics
+	var ids: Array = []
+	for id in CardDeck.classes():
+		if _deck.get("cards", {}).has(id):
+			ids.append(id)
+	if ids != _class_ids:
+		_class_ids = ids
+		_rebuild_cards()
+		_layout()
+	_refresh_all()
+
+
+## The gold counter of the top bar (the profile's stash gold).
+func set_gold(amount: int) -> void:
+	_gold_label.text = str(amount)
+
+
+func _rebuild_cards() -> void:
+	for card in _cards.values():
+		card.queue_free()
+	_cards.clear()
+	for id in _class_ids:
+		var card := HubCard.new()
+		_row.add_child(card)
+		card.build(id)
+		card.layout(CardTokens.HUB_CARD.x * _s, _s, _phone)
+		card.pressed.connect(_on_card_pressed.bind(id))
+		card.squad_toggled.connect(_toggle_squad.bind(id))
+		_cards[id] = card
+
+
+func _squad() -> Array:
+	return (_deck.get("squad", []) as Array).duplicate()
+
+
+func _refresh_all() -> void:
+	var squad := _squad()
+	for id in _class_ids:
+		var card: HubCard = _cards.get(id)
+		if card == null:
+			continue
+		var at := squad.find(id)
+		card.apply(CardDeck.look_of(_deck, id), at >= 0, at + 1, locked_classes.has(id))
+		if at >= 0 and squad.size() <= 1:
+			card.squad_button.tooltip_text = CardTokens.t("squad_need_one")
+	_refresh_squad_bar()
+	_fight.disabled = squad.is_empty()
+	_fight_glow.visible = not squad.is_empty()
+	_fight_art.material = CardTokens.grey_material() if squad.is_empty() else null
+	_stage_label.text = CardTokens.t("fight_need") if squad.is_empty() else CardTokens.stage_name()
+	if _mode == "editor":
+		_refresh_editor()
+
+
+func _refresh_squad_bar() -> void:
+	if _slots.is_empty() or _deck.is_empty():
+		return
+	var squad := _squad()
+	for i in _slots.size():
+		var slot: TraySlot = _slots[i]
+		var id := str(squad[i]) if i < squad.size() else ""
+		slot.show_card(id, CardDeck.look_of(_deck, id) if not id.is_empty() else {}, _s)
+
+
+# ================================================================== squad
+func _toggle_squad(class_id: String) -> void:
+	if locked_classes.has(class_id):
+		toast(CardTokens.t("locked_toast") % CardTokens.class_name_of(class_id))
+		return
+	var squad := _squad()
+	var at := squad.find(class_id)
+	if at >= 0:
+		if squad.size() <= 1:
+			_blocked("squad_need_one")
+			return
+		squad.remove_at(at)
+	else:
+		if squad.size() >= CardDeck.SQUAD_MAX:
+			_blocked("squad_full")
+			return
+		squad.append(class_id)
+	_set_squad(squad)
+
+
+## Tap a tray slot: a filled one takes that card out; an empty one explains how to add.
+func _on_tray_pressed(slot: TraySlot) -> void:
+	if slot.class_id.is_empty():
+		toast(CardTokens.t("hub_hint"))
+	else:
+		_toggle_squad(slot.class_id)
+
+
+func _on_slot_drop(from: int, to: int) -> void:
+	var squad := _squad()
+	if from < 0 or from >= squad.size():
+		return
+	var moved = squad.pop_at(from)
+	squad.insert(mini(to, squad.size()), moved)
+	_set_squad(squad)
+
+
+## A deck card dropped on tray slot `to`: it goes there (moving if already in, replacing when the tray is full).
+func _on_card_drop(class_id: String, to: int) -> void:
+	if locked_classes.has(class_id):
+		toast(CardTokens.t("locked_toast") % CardTokens.class_name_of(class_id))
+		return
+	var squad := _squad()
+	var at := squad.find(class_id)
+	if at >= 0:
+		squad.remove_at(at)
+	elif squad.size() >= CardDeck.SQUAD_MAX:
+		squad.remove_at(mini(to, squad.size() - 1))
+	squad.insert(mini(to, squad.size()), class_id)
+	_set_squad(squad)
+
+
+func _set_squad(squad: Array) -> void:
+	_previous = {"kind": "squad", "value": _squad()}
+	_deck["squad"] = squad
+	_refresh_all()
+	squad_changed.emit(squad)
+
+
+## A change the rules do not allow: shake the squad tray and say why (§9).
+func _blocked(message_key: String) -> void:
+	toast(CardTokens.t(message_key))
+	if reduced_motion:
+		return
+	var home := _bar.position
+	var tween := create_tween()
+	for i in 3:
+		tween.tween_property(_bar, "position:x", home.x + CardTokens.SHAKE_PIXELS * _s, CardTokens.SHAKE_SECONDS / 6.0)
+		tween.tween_property(_bar, "position:x", home.x - CardTokens.SHAKE_PIXELS * _s, CardTokens.SHAKE_SECONDS / 6.0)
+	tween.tween_property(_bar, "position:x", home.x, 0.02)
+
+
+# ================================================================== side menu and its panels
+func _on_menu(entry: MenuEntry) -> void:
+	if entry.locked:
+		toast(entry.locked_line)
+		return
+	service_pressed.emit(entry.service)
+
+
+## Opens what a service shows. Tailor = the look editor of the first squad card; Storage = the backpack
+## window the old Bag button opened; the rest are "Coming soon" for now.
+func open_service(service: String) -> void:
+	match service:
+		"tailor":
+			var squad := _squad()
+			var id := str(squad[0]) if not squad.is_empty() else (str(_class_ids[0]) if not _class_ids.is_empty() else "")
+			if not id.is_empty():
+				_open_editor(id)
+		"storage":
+			if auto_wire:
+				_open_bag()
+			else:
+				_show_soon(service)
+		_:
+			_show_soon(service)
+
+
+func _show_soon(service: String) -> void:
+	_service_open = service
+	_service_layer.visible = true
+	_layout_service()
+
+
+func _close_service() -> void:
+	_service_open = ""
+	_service_layer.visible = false
+
+
+func _layout_service() -> void:
+	if _service_layer == null:
+		return
+	for child in _service_layer.get_children():
+		_service_layer.remove_child(child)
+		child.queue_free()
+	if _service_open.is_empty():
+		return
+	var s := _s
+	var shade := Panel.new()
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	CardTokens.panel(shade, CardTokens.hub_shade(CardTokens.HUB_DIM))
+	shade.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			_close_service())
+	_service_layer.add_child(shade)
+	var box := Panel.new()
+	box.size = CardTokens.HUB_PANEL_SIZE * s
+	box.position = (size - box.size) * 0.5
+	CardTokens.panel(box, CardTokens.hub_leather(s))
+	_service_layer.add_child(box)
+	var paper := Panel.new()
+	var m := CardTokens.HUB_PANEL_MARGIN * s * 0.5
+	paper.position = Vector2(m, m)
+	paper.size = box.size - Vector2(m, m) * 2.0
+	CardTokens.panel(paper, CardTokens.hub_paper(s))
+	box.add_child(paper)
+	var service := _service_open
+	var icon_name := service
+	for entry in CardTokens.HUB_SERVICES:
+		if str(entry["id"]) == service:
+			icon_name = str(entry["icon"])
+	var icon := CardTokens.art_rect(CardTokens.HUB_ICON_PREFIX + icon_name)
+	var icon_size := CardTokens.HUB_MENU_ENTRY.y * 1.6 * s
+	icon.size = Vector2(icon_size, icon_size)
+	icon.position = Vector2((paper.size.x - icon_size) * 0.5, CardTokens.HUB_PANEL_MARGIN * s * 0.5)
+	paper.add_child(icon)
+	var title_key := "svc_" + service if CardTokens.STRINGS.has("svc_" + service) else service
+	var title := CardTokens.hub_label(CardTokens.t(title_key), CardTokens.FONT_HUB_PANEL_TITLE, CardTokens.HUB_INK, s)
+	title.position = Vector2(0.0, icon.position.y + icon_size + 8.0 * s)
+	title.size = Vector2(paper.size.x, CardTokens.FONT_HUB_PANEL_TITLE * 1.5 * s)
+	paper.add_child(title)
+	var body := CardTokens.hub_label(CardTokens.t("coming_soon") + "\n" + CardTokens.t("soon_body"), CardTokens.FONT_HUB_BODY, CardTokens.HUB_INK, s, 0, "medium")
+	body.position = Vector2(0.0, title.position.y + title.size.y)
+	body.size = Vector2(paper.size.x, CardTokens.FONT_HUB_BODY * 3.2 * s)
+	paper.add_child(body)
+	var close := Button.new()
+	close.text = CardTokens.t("close")
+	close.size = Vector2(CardTokens.HUB_BUTTON.x, CardTokens.tap(CardTokens.HUB_BUTTON.y, _phone)) * s
+	close.position = Vector2((paper.size.x - close.size.x) * 0.5, paper.size.y - close.size.y - CardTokens.HUB_PANEL_MARGIN * s * 0.5)
+	CardTokens.hub_button(close, s)
+	CardTokens.hub_text(close, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, s)
+	close.pressed.connect(_close_service)
+	paper.add_child(close)
+	close.grab_focus.call_deferred()
 
 func _build_editor_layer() -> void:
 	_editor_layer = Control.new()
@@ -613,91 +1343,6 @@ func _pill(text: String, callback: Callable) -> Button:
 	return b
 
 
-# ================================================================== layout
-func _layout() -> void:
-	_s = CardTokens.scale_for(size)
-	_phone = CardTokens.is_phone(size)
-	var s := _s
-	var safe := CardTokens.SAFE * s
-	for i in _clouds.size():
-		var w: float = CardTokens.CLOUD_WIDTH[i] * s
-		CardTokens.panel(_clouds[i], CardTokens.skin("bg_cloud_%d" % (i % 3 + 1), [0, 0, 0, 0], CardTokens.flat(CardTokens.CLOUD, CardTokens.CLOUD_SHADOW, 4.0, CardTokens.CLOUD_HEIGHT * 0.5, s)))
-		_clouds[i].size = Vector2(w, CardTokens.CLOUD_HEIGHT * s)
-		_clouds[i].position = Vector2(fmod(float(i) * size.x * 0.37, size.x + w) - w, size.y * CardTokens.CLOUD_Y[i])
-	# top bar
-	var pill_h := CardTokens.PILL_H * s
-	_top_title.position = Vector2(safe.x, safe.y)
-	_top_title.size = Vector2(size.x * 0.4, CardTokens.TOP_BAR_H * s)
-	CardTokens.style_text(_top_title, CardTokens.FONT_SCREEN_TITLE, CardTokens.TEXT_LIGHT, s, CardTokens.OUTLINE_TEXT)
-	var x := size.x - safe.x
-	for b in [_back_button, _settings_button, _bag_button]:
-		CardTokens.button_skin(b, "secondary", s)
-		CardTokens.style_text(b, CardTokens.FONT_TAB, CardTokens.TEXT_DARK, s, 0, "medium")
-		var w := maxf(b.get_minimum_size().x + 24.0 * s, 120.0 * s)
-		b.size = Vector2(w, pill_h)
-		x -= w
-		b.position = Vector2(x, safe.y + (CardTokens.TOP_BAR_H * s - pill_h) * 0.5)
-		x -= CardTokens.ICON_GAP * s
-	# card row (§7.1; scrolls when more cards than fit, §15)
-	var count := maxi(_class_ids.size(), 1)
-	var card_w: float = (CardTokens.PHONE_CARD.x if _phone else CardTokens.CARD_SIZE.x) * s
-	var gap: float = (CardTokens.PHONE_CARD_GAP if _phone else CardTokens.CARD_GAP) * s
-	var avail := size.x - safe.x * 2.0
-	var need := card_w * count + gap * (count - 1)
-	if need > avail:
-		card_w = maxf((avail - gap * (count - 1)) / count, CardTokens.CARD_MIN_WIDTH * s)
-		need = card_w * count + gap * (count - 1)
-	var card_h := card_w * CardTokens.CARD_SIZE.y / CardTokens.CARD_SIZE.x
-	var pad := 40.0 * s
-	_row_scroll.position = Vector2(safe.x, CardTokens.CARD_TOP * s - pad)
-	_row_scroll.size = Vector2(avail, card_h + pad * 2.0 + 24.0 * s)
-	_row.custom_minimum_size = Vector2(maxf(need, avail), card_h + pad * 2.0)
-	var start_x := (maxf(need, avail) - need) * 0.5
-	var index := 0
-	for id in _class_ids:
-		var card: CardView = _cards.get(id)
-		if card == null:
-			continue
-		card.layout(card_w, s)
-		card.base_position = Vector2(start_x + float(index) * (card_w + gap), pad + CardTokens.CARD_FAN_DROP[index % 4] * s)
-		card.base_rotation = CardTokens.CARD_FAN_ROTATION[index % 4]
-		card.phase = float(index) * CardTokens.BOB_OFFSET
-		card.position = card.base_position
-		index += 1
-	_hint.visible = not _phone
-	_hint.position = Vector2(safe.x, _row_scroll.position.y + _row_scroll.size.y + 8.0 * s)
-	_hint.size = Vector2(avail, 32.0 * s)
-	CardTokens.style_text(_hint, CardTokens.FONT_HINT, CardTokens.TEXT_DARK, s, 0, "body")
-	# squad bar and the fight button, along the bottom
-	var bar_w: float = (CardTokens.PHONE_SQUAD_W if _phone else CardTokens.SQUAD_BAR.x) * s
-	var bar_h: float = CardTokens.SQUAD_BAR.y * s
-	var bar_y := size.y - safe.y - bar_h - 48.0 * s
-	_bar.position = Vector2(safe.x, bar_y)
-	_bar.size = Vector2(bar_w, bar_h)
-	CardTokens.panel(_bar, CardTokens.panel_paper(s))
-	_bar_label.position = Vector2(24.0 * s, 16.0 * s)
-	_bar_label.size = Vector2(CardTokens.SQUAD_BAR_LABEL_W * s, 40.0 * s)
-	CardTokens.style_text(_bar_label, CardTokens.FONT_TAB, CardTokens.TEXT_DARK, s)
-	_ready_label.position = Vector2(24.0 * s, 64.0 * s)
-	_ready_label.size = Vector2(CardTokens.SQUAD_BAR_LABEL_W * s * 1.4, 36.0 * s)
-	CardTokens.style_text(_ready_label, CardTokens.FONT_OPTION, CardTokens.TEXT_DARK, s, 0, "medium")
-	var slot_w := CardTokens.SQUAD_SLOT.x * s
-	var slot_h := CardTokens.SQUAD_SLOT.y * s
-	var slot_x := (CardTokens.SQUAD_BAR_LABEL_W + 48.0) * s
-	for i in _slots.size():
-		var slot: SquadSlot = _slots[i]
-		slot.position = Vector2(slot_x + float(i) * (slot_w + CardTokens.SQUAD_SLOT_GAP * s), (bar_h - slot_h) * 0.5)
-		slot.size = Vector2(slot_w, slot_h)
-	var fight_size: Vector2 = (CardTokens.PHONE_FIGHT if _phone else CardTokens.FIGHT_SIZE) * s
-	_fight.size = fight_size
-	_fight.position = Vector2(size.x - safe.x - fight_size.x, bar_y + (bar_h - fight_size.y) * 0.5)
-	CardTokens.button_skin(_fight, "primary", s)
-	CardTokens.style_text(_fight, CardTokens.FONT_FIGHT, CardTokens.TEXT_LIGHT, s, CardTokens.OUTLINE_TEXT)
-	_refresh_squad_bar()
-	_layout_editor()
-	_layout_toast()
-
-
 func _layout_toast() -> void:
 	var s := _s
 	CardTokens.panel(_toast, CardTokens.panel_paper(s, 20.0))
@@ -754,153 +1399,6 @@ func _layout_editor() -> void:
 		_refresh_editor()
 
 
-# ================================================================== data
-## Draws everything from `deck` (Profile.card_deck). Called again after each change.
-func show_deck(deck: Dictionary, cosmetics) -> void:
-	_deck = deck.duplicate(true)
-	_cosmetics = cosmetics
-	var ids: Array = []
-	for id in CardDeck.classes():
-		if _deck.get("cards", {}).has(id):
-			ids.append(id)
-	if ids != _class_ids:
-		_class_ids = ids
-		_rebuild_cards()
-		_layout()
-	_refresh_all()
-
-
-func _rebuild_cards() -> void:
-	for card in _cards.values():
-		card.queue_free()
-	_cards.clear()
-	for id in _class_ids:
-		var card := CardView.new()
-		_row.add_child(card)
-		card.build(id, false, true)
-		card.layout(CardTokens.CARD_SIZE.x * _s, _s)
-		card.apply_class(id, CardDeck.look_of(_deck, id))
-		card.pressed.connect(_on_card_pressed.bind(id))
-		card.squad_toggled.connect(_toggle_squad.bind(id))
-		_cards[id] = card
-
-
-func _squad() -> Array:
-	return (_deck.get("squad", []) as Array).duplicate()
-
-
-func _refresh_all() -> void:
-	var squad := _squad()
-	for id in _class_ids:
-		var card: CardView = _cards.get(id)
-		if card == null:
-			continue
-		card.set_look(CardDeck.look_of(_deck, id))
-		var at := squad.find(id)
-		card.set_number(at + 1 if at >= 0 else 0)
-		var full := squad.size() >= CardDeck.SQUAD_MAX and at < 0
-		var last := squad.size() <= 1 and at >= 0
-		card.set_squad_state(at >= 0, full or last)
-		card.squad_button.tooltip_text = CardTokens.t("squad_need_one") if last else card.squad_button.tooltip_text
-	_refresh_squad_bar()
-	_fight.disabled = squad.is_empty()
-	if _mode == "editor":
-		_refresh_editor()
-
-
-func _refresh_squad_bar() -> void:
-	if _slots.is_empty() or _deck.is_empty():
-		return
-	var s := _s
-	var squad := _squad()
-	for i in _slots.size():
-		var slot: SquadSlot = _slots[i]
-		for child in slot.get_children():
-			child.queue_free()
-		slot.class_id = str(squad[i]) if i < squad.size() else ""
-		if slot.class_id.is_empty():
-			CardTokens.panel(slot, CardTokens.skin("squad_slot_empty", [40, 40, 40, 40], CardTokens.flat(CardTokens.PAPER_SHADOW, CardTokens.DISABLED_SHADOW, CardTokens.OUTLINE_ICON, 24.0, s)))
-			var plus := CardTokens.label("+", CardTokens.FONT_FIGHT, CardTokens.DISABLED_SHADOW, s)
-			plus.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			plus.size = slot.size
-			slot.add_child(plus)
-			continue
-		var pal := CardTokens.palette(slot.class_id)
-		CardTokens.panel(slot, CardTokens.skin("squad_slot_filled", [40, 40, 40, 40], CardTokens.flat(pal["light"], pal["shadow"], CardTokens.OUTLINE_BUTTON, 24.0, s)))
-		var mini := CardView.new()
-		slot.add_child(mini)
-		mini.build(slot.class_id, true, false)
-		mini.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		mini.focus_mode = Control.FOCUS_NONE
-		var mini_w := slot.size.x * 0.8
-		mini.layout(mini_w, s)
-		mini.position = Vector2((slot.size.x - mini_w) * 0.5, 8.0 * s)
-		mini.apply_class(slot.class_id, CardDeck.look_of(_deck, slot.class_id))
-		mini.portrait.set_framing("bust")
-		mini.set_idle_mode(CardPortrait.Mode.ONCE)
-		mini.set_number(i + 1)
-		var remove := Button.new()
-		remove.text = "x"
-		remove.tooltip_text = CardTokens.t("squad_need_one") if squad.size() <= 1 else CardTokens.t("remove_from_squad")
-		var cls: String = slot.class_id
-		remove.pressed.connect(_toggle_squad.bind(cls))
-		CardTokens.button_skin(remove, "sticker", s, CardTokens.DISABLED if squad.size() <= 1 else CardTokens.ACTION)
-		CardTokens.style_text(remove, CardTokens.FONT_OPTION, CardTokens.TEXT_LIGHT, s, CardTokens.OUTLINE_TEXT_SMALL)
-		var rs := CardTokens.SLOT_REMOVE * s
-		remove.size = Vector2(rs, rs)
-		remove.position = Vector2(slot.size.x - rs - 2.0 * s, 2.0 * s)
-		slot.add_child(remove)
-	_ready_label.visible = squad.size() >= CardDeck.SQUAD_MAX
-
-
-# ================================================================== squad
-func _toggle_squad(class_id: String) -> void:
-	var squad := _squad()
-	var at := squad.find(class_id)
-	if at >= 0:
-		if squad.size() <= 1:
-			_blocked("squad_need_one")
-			return
-		squad.remove_at(at)
-	else:
-		if squad.size() >= CardDeck.SQUAD_MAX:
-			_blocked("squad_full")
-			return
-		squad.append(class_id)
-	_set_squad(squad)
-
-
-func _on_slot_drop(from: int, to: int) -> void:
-	var squad := _squad()
-	if from < 0 or from >= squad.size():
-		return
-	var moved = squad.pop_at(from)
-	squad.insert(mini(to, squad.size()), moved)
-	_set_squad(squad)
-
-
-func _set_squad(squad: Array) -> void:
-	_previous = {"kind": "squad", "value": _squad()}
-	_deck["squad"] = squad
-	_refresh_all()
-	squad_changed.emit(squad)
-
-
-## A change the rules do not allow: shake the squad bar, flash it red and say why (§9).
-func _blocked(message_key: String) -> void:
-	toast(CardTokens.t(message_key))
-	if reduced_motion:
-		return
-	var home := _bar.position
-	var tween := create_tween()
-	for i in 3:
-		tween.tween_property(_bar, "position:x", home.x + CardTokens.SHAKE_PIXELS * _s, CardTokens.SHAKE_SECONDS / 6.0)
-		tween.tween_property(_bar, "position:x", home.x - CardTokens.SHAKE_PIXELS * _s, CardTokens.SHAKE_SECONDS / 6.0)
-	tween.tween_property(_bar, "position:x", home.x, 0.02)
-	CardTokens.panel(_bar, CardTokens.flat(CardTokens.PAPER, CardTokens.ERROR, CardTokens.OUTLINE_PRIMARY, 28.0, _s, true))
-	tween.finished.connect(func() -> void: CardTokens.panel(_bar, CardTokens.panel_paper(_s)))
-
-
 func toast(text: String) -> void:
 	_toast_label.text = text
 	_toast.visible = true
@@ -929,7 +1427,7 @@ func refuse(message_key: String) -> void:
 # ================================================================== state A to B: the editor
 func _on_card_pressed(class_id: String) -> void:
 	card_selected.emit(class_id)
-	var card: CardView = _cards.get(class_id)
+	var card: HubCard = _cards.get(class_id)
 	if card != null and not reduced_motion:
 		var tween := create_tween()
 		tween.tween_property(card, "pop", CardTokens.SELECT_SCALE, CardTokens.SELECT_SECONDS * 0.5)
@@ -1360,7 +1858,7 @@ func play_summon(squad: Array) -> void:
 		back.add_child(emblem)
 		holder.add_child(front)
 		holder.add_child(back)
-		var from_card: CardView = _cards.get(id)
+		var from_card: Control = _cards.get(id)
 		holder.position = (from_card.get_global_rect().position - _summon_layer.get_global_rect().position) if from_card != null else centre
 		_summon_layer.add_child(holder)
 		var target := centre - card_size * 0.5 + Vector2(float(index) * CardTokens.SUMMON_STACK_OFFSET * _s, -float(index) * CardTokens.SUMMON_STACK_OFFSET * _s)
@@ -1445,20 +1943,17 @@ func _process(delta: float) -> void:
 	_time += delta
 	if _mode == "deck":
 		for card in _cards.values():
-			card.animate(_time, delta, not reduced_motion)
+			card.animate(delta, not reduced_motion)
 	elif _mode == "editor" and _editor_card != null:
 		_editor_card.animate(_time, delta, not reduced_motion)
-	if not reduced_motion:
-		for cloud in _clouds:
-			cloud.position.x += CardTokens.CLOUD_SPEED * _s * delta
-			if cloud.position.x > size.x:
-				cloud.position.x = -cloud.size.x
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("ui_cancel"):
 		return
-	if _picker_layer.visible:
+	if _service_layer.visible:
+		_close_service()
+	elif _picker_layer.visible:
 		_close_picker(true)
 	elif _confirm_layer.visible:
 		_confirm_layer.visible = false
@@ -1475,11 +1970,12 @@ func _wire_game() -> void:
 	squad_changed.connect(_send_squad)
 	reset_card.connect(_send_reset)
 	fight_pressed.connect(_start_fight)
-	bag_pressed.connect(_open_bag)
+	service_pressed.connect(open_service)
 	settings_pressed.connect(func() -> void: add_child(GraphicsPanel.new()))
 	back_pressed.connect(func() -> void: get_tree().change_scene_to_file(TITLE_SCENE))
 	if GameState.ensure_profile():
 		show_deck(GameState.profile.card_deck, ItemAssets.cosmetics())
+		set_gold(GameState.profile.stash.gold)
 		_intro()
 
 
@@ -1516,6 +2012,7 @@ func _send(request: Dictionary) -> Dictionary:
 func _sync_from_profile() -> void:
 	if GameState.profile != null:
 		show_deck(GameState.profile.card_deck, ItemAssets.cosmetics())
+		set_gold(GameState.profile.stash.gold)
 
 
 func _send_look(class_id: String, part: String, choice: String) -> void:

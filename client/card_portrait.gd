@@ -19,7 +19,7 @@ enum Mode { LIVE, THROTTLED, ONCE }
 var viewport: SubViewport
 var model  ## the studio05 character model (null if its file is missing)
 var class_id := ""
-var framing := "full"  ## "full" body, "bust" (head and shoulders, for mini cards) or "card" (fills the whole card, see tokens)
+var framing := "full"  ## "full" body, "bust" (head and shoulders, for mini cards), "card" / "card_deck" (old card), "hub" (leather card window) or "stage" (character screen window)
 var _mode := Mode.THROTTLED
 var _pivot: Node3D
 var _camera: Camera3D
@@ -218,9 +218,11 @@ func _fit_camera() -> void:
 	var top := bounds.position.y + bounds.size.y
 	var height := bounds.size.y
 	var center_y := bounds.get_center().y
-	if framing == "card" or framing == "card_deck":
-		var f_top := CardTokens.PORTRAIT_FRAME_TOP if framing == "card" else CardTokens.PORTRAIT_DECK_TOP
-		var f_bottom := CardTokens.PORTRAIT_FRAME_BOTTOM if framing == "card" else CardTokens.PORTRAIT_DECK_BOTTOM
+	if framing in ["card", "card_deck", "hub", "stage"]:
+		var tops := {"card": CardTokens.PORTRAIT_FRAME_TOP, "card_deck": CardTokens.PORTRAIT_DECK_TOP, "hub": CardTokens.PORTRAIT_HUB_TOP, "stage": CardTokens.PORTRAIT_STAGE_TOP}
+		var bottoms := {"card": CardTokens.PORTRAIT_FRAME_BOTTOM, "card_deck": CardTokens.PORTRAIT_DECK_BOTTOM, "hub": CardTokens.PORTRAIT_HUB_BOTTOM, "stage": CardTokens.PORTRAIT_STAGE_BOTTOM}
+		var f_top: float = tops[framing]
+		var f_bottom: float = bottoms[framing]
 		var view_height := height / maxf(f_bottom - f_top, 0.1)
 		var view_top := top + f_top * view_height
 		_aim(view_height, view_top - view_height * 0.5)
