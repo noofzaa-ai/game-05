@@ -54,6 +54,7 @@ var energy_wait := 0  ## ticks to wait after spending before the energy starts r
 var skill_hit_filter: Callable  ## Authority-local callback, excluded from checkpoints/wire.
 var skill_base_hit: Callable
 var skill_view: Dictionary = {}  ## Read-only presentation state for slots, casts and statuses.
+var skill_state: Dictionary = {}  ## Class skills v2 runtime (logic/class_skills/engine.gd): cooldowns, the cast, stance/veil/link; saved in checkpoints.
 var exhausted := false  ## ran out of energy: cannot run until it refills a little
 var running := false  ## true while actually running this tick (for the client's animation and dust)
 var run_ticks := 0  ## how long the fighter has been running; a run attack needs a short run-up

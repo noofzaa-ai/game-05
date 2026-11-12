@@ -5,6 +5,7 @@ extends RefCounted
 ## EXTENDING: new states live in fighter.gd and get a branch in update_fighter(); status effects
 ## and new skill kinds are applied inside apply_hit() / start_skill().
 
+const ClassSkills := preload("res://logic/class_skills/engine.gd")
 const CombatData := preload("res://logic/combat_data.gd")
 const Effects := preload("res://logic/effects.gd")
 const Fighter := preload("res://logic/fighter.gd")
@@ -361,6 +362,8 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	if target.skill_hit_filter.is_valid():
 		damage = target.skill_hit_filter.call(damage, attacker_id, not ranged)
 		if damage <= 0.0: return "blocked"
+	if not target.skill_state.is_empty():  # class skills v2: Warding Veil, Iron Guard (+ counter), Intercept link (class-skills.md 4.2)
+		damage = ClassSkills.incoming(target_id, attacker_id, damage, not ranged, fighters, bodies, data, events, int(target.skill_state.get("now", 0)))
 	var absorbed := target.absorb(damage)  # race shield first (GDD races 4.3); the event keeps the full damage
 	target.hp = maxf(0.0, target.hp - (damage - absorbed))
 	if attacker.skill_base_hit.is_valid(): attacker.skill_base_hit.call(target_id, damage)
@@ -397,6 +400,8 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	# A race ultimate's wind-up is not staggered by hits (unbreakable poise, GDD races 3.10.3); stun/death still end it.
 	if not killed and target.state == Fighter.State.ATTACK and target.move_id == str(target.race_state.get("ult", {}).get("move", "-")):
 		armored = true
+	elif not killed and ClassSkills.armored(target, int(target.skill_state.get("now", 0))):
+		armored = true  # mid class skill / Iron Guard / Battle Trance: hits do not stagger (class-skills.md 3.2-3.3)
 	elif target.max_poise > 0.0 and not killed:
 		target.poise_wait = int(data.rules["poise_regen_delay_ticks"])
 		target.poise -= float(move["power"]) * float(data.rules["poise_damage_per_power"])

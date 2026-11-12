@@ -311,6 +311,9 @@ static func race_events(id: int, fighter, event: Dictionary, fighters: Dictionar
 		"skill_cast":
 			if int(event.get("player", -1)) == id:
 				out.append("skill_cast")
+		"skill_heavy":  # a class skill that counts as a heavy hit (Reaping Arc), once per cast (class-skills.md 5.2)
+			if int(event.get("player", -1)) == id:
+				out.append("heavy_hit")
 		"dodge_started":
 			if int(event.get("player", -1)) == id:
 				out.append("dodge")

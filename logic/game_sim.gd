@@ -26,6 +26,7 @@ const Run := preload("res://logic/run.gd")
 const SquadMember := preload("res://logic/squad_member.gd")
 const Wear := preload("res://logic/wear.gd")
 const RacePassives := preload("res://logic/race_passives.gd")
+const ClassSkills := preload("res://logic/class_skills/engine.gd")
 
 var world: SimWorld
 var combat: CombatData  ## null = movement only, no fighting
@@ -236,6 +237,8 @@ func tick(prediction_player: int = -1) -> void:
 						var direction := input.aim.normalized() if input.aim != Vector2.ZERO else Vector2(fighter.direction).normalized()
 						skill_system.cast(id, input.skill_slot, body.position + Vector3(direction.x,0,direction.y) * input.aim_distance)
 					if fighter.skill_view.get("casting",false) or fighter.skill_view.get("moving",false): input = SimInput.new()
+			if ClassSkills.busy(fighter):
+				input = SimInput.new()  # inside a class-skill clip window: no move, attack or other skill (class-skills.md 3.1 rule 6)
 			if fighter.hitstop > 0:
 				fighter.hitstop -= 1
 				continue  # frozen for a moment after a hit
@@ -262,6 +265,7 @@ func tick(prediction_player: int = -1) -> void:
 		projectiles = _ranged["projectiles"]
 		areas = _ranged["areas"]
 		Combat.resolve_hits(fighters, bodies, combat, rng, events,melee_target_boxes)
+		ClassSkills.step(self)  # class skills v2: travel, releases, counters, orbs (logic/class_skills/engine.gd)
 		if skill_system != null:
 			for event in events.duplicate():
 				if event.type == "dodge_started": skill_system.on_dodge(int(event.player))
