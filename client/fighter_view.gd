@@ -15,6 +15,7 @@ const Fighter := preload("res://logic/fighter.gd")
 const Movement := preload("res://logic/movement.gd")
 const SimBody := preload("res://logic/sim_body.gd")
 const SkillVfx := preload("res://client/vfx/skill_vfx.gd")
+const ClassSkillMotion := preload("res://client/skills/class_skill_motion.gd")
 
 ## Which stand-in pose each kind of move uses until real animations exist (client-side look only).
 ## A move id is "<weapon>_<kind>", so every weapon shares these.
@@ -85,6 +86,10 @@ var _clock := 0.0
 var _skill_vfx: Node3D  ## a model team skill pack's effect while its move plays (see SkillVfx)
 var _center_skeleton: Skeleton3D  ## found once for body_center()
 var _center_bone := -1
+var _class_skill_shown := false  ## a class skill v2 clip window drives the model now
+var _class_skill_id := ""
+var _class_skill_start := -1
+var _class_skill_clock := 0.0
 var _skill_pose := false  ## the pack's own character clip is driving the model right now
 var _weapon_hidden := false  ## the weapon is out of the hand (a thrown spear)
 var _prepared_style := ""  ## the weapon type whose pack has been loaded and warmed up
@@ -742,6 +747,7 @@ func skill_weapon_point() -> Vector3:
 static var _lab_motions: Dictionary = {}
 
 func _show_skill_pack(body: SimBody, fighter: Fighter) -> void:
+	if _show_class_skill(fighter): return
 	if _show_lab_cast(body,fighter): return
 	var pack := SkillVfx.pack_for(fighter.move_id) if fighter.state == Fighter.State.ATTACK else {}
 	if _skill_vfx != null and (pack.is_empty() or _skill_vfx.get_meta("move") != fighter.move_id):
@@ -865,6 +871,35 @@ func _show_effects(fighter: Fighter, data: CombatData) -> void:
 	elif stunned:
 		target_tilt = sin(_clock * 22.0) * 0.08
 	_body.rotation.z = lerpf(_body.rotation.z, target_tilt, 0.3)
+
+## Class skills v2 (design/gdd/class-skills.md 3.1 rule 7): the Studio clip window of the skill being cast, timed from
+## the sim's cast start (skill_view.class_cast). The sim moves the body only in the travel frames; the model keeps the
+## hips in place. No VFX yet: each skill's `vfx` key (class_skill/<id>) resolves to nothing until the VFX tool fills it.
+func _show_class_skill(fighter: Fighter) -> bool:
+	var cast: Dictionary = fighter.skill_view.get("class_cast", {})
+	if cast.is_empty() or not _model.has_method("show_class_skill_frame"):
+		if _class_skill_shown:
+			_class_skill_shown = false
+			_model.clear_class_skill_frame()
+		return false
+	if str(cast.get("skill", "")) != _class_skill_id or int(cast.get("start", 0)) != _class_skill_start:
+		_class_skill_id = str(cast.get("skill", ""))
+		_class_skill_start = int(cast.get("start", 0))
+		_class_skill_clock = float(cast.get("now", _class_skill_start))
+	# the sim tick plus the time since it was published (render frames run between ticks)
+	var now := float(cast.get("now", 0))
+	if now > _class_skill_clock:
+		_class_skill_clock = now
+	else:
+		_class_skill_clock = minf(_class_skill_clock + get_process_delta_time() * 60.0, now + 1.0)
+	var pose: Dictionary = ClassSkillMotion.frame(cast, _class_skill_clock)
+	if pose.is_empty() or not _model.show_class_skill_frame(pose):
+		return false
+	_class_skill_shown = true
+	if _skill_pose:
+		_skill_pose = false
+	return true
+
 
 func _show_lab_cast(body: SimBody, fighter: Fighter) -> bool:
 	var pose: Dictionary=fighter.skill_view.get("pose",{})

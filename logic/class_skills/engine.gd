@@ -637,6 +637,8 @@ static func _run_counters(sim, id: int, fighter) -> void:
 			var counter_stats: Dictionary = stats.duplicate()
 			counter_stats["skill_id"] = "iron_guard"
 			_hit(sim, id, attacker, float(stance.get("counter", 0.5)), counter_stats, {})
+			if not stance.is_empty():
+				stance["counter_ticks"] = stance.get("counter_ticks", []) + [sim.tick_count]  # the client plays the counter clip from here
 			sim.events.append({"type": "class_skill_counter", "player": id, "target": attacker})
 			if float(stance.get("fortify", 0.0)) > 0.0:
 				Effects.apply(id, fighter, id, fighter, {"id": "fortify", "chance": 100.0, "duration": SkillData.ticks(float(stance["fortify"]))}, sim.combat, sim.rng, sim.events)
@@ -850,7 +852,8 @@ static func publish_view(sim, id: int, fighter) -> void:
 	if cast.is_empty():
 		view.erase("class_cast")
 	else:
-		view["class_cast"] = {"skill": str(cast["skill"]), "start": int(cast["start"]), "end": int(cast["end"]), "now": sim.tick_count, "target": int(cast["target"]), "aim": cast["aim"]}
+		view["class_cast"] = {"skill": str(cast["skill"]), "start": int(cast["start"]), "end": int(cast["end"]), "now": sim.tick_count, "target": int(cast["target"]), "aim": cast["aim"],
+			"time_mul": float(cast.get("cast_time", 1.0)), "stance_end": int(s.get("stance", {}).get("until", -1)), "counters": s.get("stance", {}).get("counter_ticks", []).duplicate()}
 		var travel: Dictionary = cast.get("travel", {})
 		view["moving"] = not travel.is_empty() and sim.tick_count >= int(travel["from_tick"]) and sim.tick_count <= int(travel["to_tick"])
 	var buffs := {}

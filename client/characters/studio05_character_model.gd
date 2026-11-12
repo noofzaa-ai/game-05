@@ -838,6 +838,24 @@ func clip_length(clip: String) -> float:
 	return _library.length(clip) if _library != null and _library.has_clip(clip) else 0.0
 
 
+## Class skills v2 (client/skills/class_skill_motion.gd frame()): one frame of this class's own clips, with an optional
+## cross-fade from the previous segment's last pose. Wins over the pose until clear_class_skill_frame().
+func show_class_skill_frame(pose: Dictionary) -> bool:
+	if _library == null or not _library.has_clip(str(pose.get("clip", ""))):
+		return false
+	var active := {"set": _library, "clip": str(pose["clip"]), "time": float(pose["time"])}
+	if pose.has("from") and _library.has_clip(str(pose["from"])):
+		active["from"] = str(pose["from"])
+		active["from_time"] = float(pose["from_time"])
+		active["weight"] = float(pose["weight"])
+	_skill_clip = active
+	return true
+
+
+func clear_class_skill_frame() -> void:
+	_skill_clip = {}
+
+
 ## The idle clip on show ("" = the class idle).
 func idle_clip() -> String:
 	return _idle_clip

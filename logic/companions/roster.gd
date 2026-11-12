@@ -19,9 +19,7 @@ static func make_profile(id: String, rules, camp, round_seed: int = -1):
 	profile.vault.items.clear()
 	profile.vault.gold = 0
 	profile.vault.materials.clear()
-	profile.skill_build = preload("res://logic/skill_build.gd").initial("blade")
-	for slot in mini(4, entry.skills.size()):
-		profile.skill_build.skills[slot] = {"skill": entry.skills[slot], "shape": "", "effect": ""}
+	profile.skill_build = preload("res://logic/skill_build.gd").initial("blade")  # the style's default build (no hand-picked old skill ids, class-skills.md 3.6)
 	if round_seed >= 0: _randomize(profile, rules, rng)
 	return profile
 
@@ -50,11 +48,5 @@ static func _randomize(profile, rules, rng: RandomNumberGenerator) -> void:
 	for part in ["eye_color","skin"]:
 		var choices: Array = options.choices.get(part,[])
 		if not choices.is_empty(): profile.appearance[part] = _pick(choices,rng).id
-	profile.skill_build = preload("res://logic/skill_build.gd").initial(family)
-	var skills: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/skill_system/catalog.json"))
-	# Fisher-Yates uses only the round's server RNG; never global shuffle().
-	for index in range(skills.size()-1,0,-1):
-		var other := rng.randi_range(0,index)
-		var old = skills[index];skills[index]=skills[other];skills[other]=old
-	for slot in 4: profile.skill_build.skills[slot]={"skill":skills[slot],"shape":"","effect":""}
+	profile.skill_build = preload("res://logic/skill_build.gd").initial(family)  # the family's default build (no random old skill ids)
 	assert(preload("res://logic/skill_build.gd").ready_for_run(profile))

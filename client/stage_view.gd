@@ -11,6 +11,7 @@ const CameraRig := preload("res://client/camera_rig.gd")
 const CameraTrigger := preload("res://client/camera_trigger.gd")
 const Effects := preload("res://client/effects.gd")
 var _skill_presenter: Node3D
+const ClassSkillData := preload("res://logic/class_skills/skill_data.gd")
 const ExitPortal := preload("res://client/exit_portal.gd")
 const TreasureChest := preload("res://client/treasure_chest.gd")
 const EnemyBars := preload("res://client/enemy_bars.gd")
@@ -707,6 +708,9 @@ func _handle_events() -> void:
 				if _skill_presenter != null: _skill_presenter.event(event)
 				_play_skill_burst(event)
 			"skill_cast":
+				if bool(event.get("class_skill", false)):
+					_announce_cast(int(event.player), str(event.skill))  # class skills v2: name callout only, no VFX yet
+					continue
 				# Buff-only effect gems have no hit to ride on: mark them on the caster as the cast lands.
 				if str(event.get("effect","")) in ["thorns", "regen"]:
 					_play_at_fighter("skill_gem/" + str(event.effect), int(event.player))
@@ -846,6 +850,8 @@ func _play_skill_hit(event: Dictionary, impact: Dictionary) -> Dictionary:
 	if event.type == "skill_dot":
 		_effects.play("skill_dot", ctx)
 		return impact
+	if is_class_skill(skill_id) or skill_id == "intercept_link":
+		return impact  # class skills v2: no VFX until the VFX tool fills class_skill/<id> (class-skills.md 6); the number still shows
 	var tier := int(event.get("impact", 1))
 	var crit := bool(event.get("crit", false))
 	var periodic := bool(event.get("periodic", false))
@@ -915,11 +921,18 @@ func _is_our_team(id: int) -> bool:
 static var _skill_names: Dictionary = {}
 ## A skill's player-facing name (data/skill_system/skills/<id>.tres display_name), cached.
 static func skill_display_name(skill: String) -> String:
+	if not _skill_names.has(skill) and is_class_skill(skill):
+		_skill_names[skill] = str(ClassSkillData.load_default().skill(skill).get("name", skill.capitalize()))
 	if not _skill_names.has(skill):
 		var path := "res://data/skill_system/skills/%s.tres" % skill
 		var data = load(path) if ResourceLoader.exists(path) else null
 		_skill_names[skill] = str(data.display_name) if data != null and not str(data.display_name).is_empty() else skill.capitalize()
 	return _skill_names[skill]
+
+
+## True for a class skill v2 id (data/class_skills/class_skills.json).
+static func is_class_skill(skill: String) -> bool:
+	return not ClassSkillData.load_default().skill(skill).is_empty()
 
 
 ## A special skill or ultimate of the local player: its name appears in a brush-stroke banner.
