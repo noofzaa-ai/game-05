@@ -1,0 +1,15 @@
+{
+  "_note": "Starter flavour only (Boss 2026-11-13): a new player's 4 cards each draw a distinct hair colour from this list (at most one near_white). The real option is the free hair-colour picker (Studio #hair-color); any #rrggbb is valid on a card.",
+  "colors": [
+    {"id": "black", "color": "#1d1b24"},
+    {"id": "dark_brown", "color": "#3f2b22"},
+    {"id": "chestnut", "color": "#7a4a2c"},
+    {"id": "auburn", "color": "#9c3f26"},
+    {"id": "blond", "color": "#e3c275"},
+    {"id": "silver", "color": "#d8dbe4", "near_white": true},
+    {"id": "navy", "color": "#2c3d70"},
+    {"id": "teal", "color": "#2f8888"},
+    {"id": "rose", "color": "#e08aa6"},
+    {"id": "violet", "color": "#7a5bb5"}
+  ]
+}

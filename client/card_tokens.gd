@@ -446,6 +446,7 @@ const SVC_GOLD_W := 0.14  ## header money line width, share of the panel (Tailor
 const TAILOR_SPLIT := 0.36  ## the character window's share of the Tailor width
 const TAILOR_TILE := Vector2(170.0, 200.0)  ## a fashion piece tile (icon + name)
 const TAILOR_CHIP := Vector2(250.0, 64.0)  ## a look choice (hair / colour / makeup)
+const TAILOR_HAIR_PICKER := 300.0  ## the Hair colour wheel (Tailor) side, before scale
 const TAILOR_SWATCH := 36.0  ## colour disc on eye / skin chips  ## details box share of the content height (Blacksmith)
 ## Slot "slot:index" -> [column, row] on the 5 x 6 paper-doll (client/gear_panel.gd SLOT_PLACES) plus the off-hand
 ## between Weapon and Back (Boss 2026-11-11: Sword & Shield only).
@@ -689,6 +690,10 @@ const STRINGS := {
 	"tailor_eyes": ["สีตา", "Eyes"],
 	"tailor_part_iris_style": ["แบบม่านตา", "Iris style"],
 	"tailor_part_eye_color": ["สีตา", "Eye colour"],
+	"tailor_part_hair": ["ทรงผม", "Hair style"],
+	"tailor_part_hair_color": ["สีผม", "Hair colour"],
+	"tailor_hair_color_apply": ["ใช้สีนี้", "Apply colour"],
+	"tailor_hair_color_default": ["ค่าเริ่มต้น", "Default"],
 	"iris_style_0": ["Classic", "Classic"], "iris_style_1": ["Starry Violet", "Starry Violet"], "iris_style_3": ["03 · Solar Flame", "Solar Flame"],
 	"iris_style_6": ["06 · Lavender Orbit", "Lavender Orbit"], "iris_style_7": ["07 · Sunburst", "Sunburst"], "iris_style_9": ["09 · Pastel Halo", "Pastel Halo"],
 	"iris_style_10": ["10 · Astral Sigil", "Astral Sigil"],

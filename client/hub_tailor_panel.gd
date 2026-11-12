@@ -1,6 +1,8 @@
 extends "res://client/hub_service_panel.gd"
 ## Tailor (docs/ui/hub_layout_spec.md §2 / §4 Outfit tab), full screen: a card picker, the card's big live
 ## character, and the look and fashion choices of that card.
+## - Hair colour is the Studio's free #hair-color input: a colour wheel previews live on the character, Apply
+##   sends `card_look {part: "hair_color", choice: "#rrggbb"}`, Default sends "" (the hair's Studio default).
 ## - Hair, Eyes, Skin, Makeup and the base Outfit are the card's own looks: `card_look {class, part, choice}` with
 ##   the options of logic/card_deck.gd (hairs of the class file, data/cosmetics eye / skin lists, makeup, outfit).
 ## - Fashion and Back are Mall pieces (logic/mall.gd, counted: one copy dresses one card): `mall_buy {part, choice}`
@@ -16,7 +18,7 @@ const HubLook := preload("res://client/hub_look.gd")
 
 ## Category tab -> the profile part it changes ("look" = card_look parts, "mall" = Mall fashion parts).
 const CATEGORIES: Array[Dictionary] = [
-	{"id": "hair", "kind": "look", "part": "hair"},
+	{"id": "hair", "kind": "look", "part": "hair", "parts": ["hair", "hair_color"]},  ## style, then the Studio free colour
 	{"id": "eyes", "kind": "look", "part": "eye_color", "parts": ["iris_style", "eye_color"]},  ## iris style (Studio) then colour
 	{"id": "skin", "kind": "look", "part": "skin"},
 	{"id": "makeup", "kind": "look", "part": "makeup"},
@@ -40,6 +42,7 @@ var _strip: Panel
 var _strip_name: Label
 var _strip_line: Label
 var _strip_buttons: HBoxContainer
+var _hair_picker: ColorPicker
 
 
 func _init() -> void:
@@ -210,6 +213,9 @@ func refresh() -> void:
 func _fill_looks(p, part: String) -> void:
 	var cosmetics = ItemAssets.cosmetics()
 	var current := str(p.card_deck.get("cards", {}).get(card, {}).get(part, CardDeck.LATER_PARTS.get(part, "")))
+	if part == "hair_color":
+		_fill_hair_color(p, current)
+		return
 	for id in CardDeck.options(card, part, cosmetics):
 		var choice := str(id)
 		var swatch := ""
@@ -222,6 +228,8 @@ func _fill_looks(p, part: String) -> void:
 
 
 static func _look_name(part: String, choice: String) -> String:
+	if part == "hair_color":
+		return CardTokens.t("tailor_hair_color_default") if choice.is_empty() else choice.to_upper()
 	match part:
 		"hair": return CardTokens.hair_name(choice)
 		"outfit": return CardTokens.choice_name("outfit", choice)
@@ -230,6 +238,41 @@ static func _look_name(part: String, choice: String) -> String:
 	if choice.begins_with("#"):
 		return CardTokens.t("custom")
 	return CardTokens.choice_name(part, choice)
+
+
+## The Studio #hair-color input: a colour wheel (live preview on the character), Apply and Default.
+func _fill_hair_color(p, current: String) -> void:
+	_hair_picker = ColorPicker.new()
+	CardTokens.simple_picker(_hair_picker)
+	var side := CardTokens.TAILOR_HAIR_PICKER * s
+	_hair_picker.custom_minimum_size = Vector2(side, side)
+	_hair_picker.color = Color(current) if CardDeck.is_hex_color(current) else _studio_default_hair(p)
+	_hair_picker.color_changed.connect(_preview_hair)
+	_flow.add_child(_hair_picker)
+	var column := VBoxContainer.new()
+	CardTokens.gap(column, 12.0, s)
+	_flow.add_child(column)
+	for b in [
+		_option(CardTokens.t("tailor_hair_color_apply"), null, "", false, func() -> void: _set_look("hair_color", "#" + _hair_picker.color.to_html(false))),
+		_option(CardTokens.t("tailor_hair_color_default"), null, "", current.is_empty(), _set_look.bind("hair_color", "")),
+	]:
+		_flow.remove_child(b)
+		column.add_child(b)
+
+
+## index.html: #6f657f for hairs A/B, white for C-G (their colour is in the file).
+func _studio_default_hair(p) -> Color:
+	var hair := str(p.card_deck.get("cards", {}).get(card, {}).get("hair", "a"))
+	return Color("ffffff") if hair in ["c", "e", "f", "g"] else Color("6f657f")
+
+
+func _preview_hair(color: Color) -> void:
+	var p = _profile()
+	if p == null:
+		return
+	var look := CardDeck.look_of(p.card_deck, card)
+	look["hair_color"] = "#" + color.to_html(false)
+	_portrait.set_look(look)
 
 
 # ------------------------------------------------------------------ Mall fashion (mall_buy, card_fashion)

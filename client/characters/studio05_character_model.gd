@@ -545,7 +545,9 @@ func _prepare_meshes() -> void:
 	CharacterLight.prepare(_model_root)
 
 
-## Hair colour (index.html updateColors): the chosen colour, else #6F657F for hairs A/B and white for
+## Hair colour (index.html updateColors: material.color.set(#hair-color) on Hair_* meshes, multiplied in the
+## shader by the hair's vertex colours / Hair G texture, as three.js does): the chosen colour (a card's
+## hair_color via ItemAssets.card_appearance), else #6F657F for hairs A/B and white for
 ## C-G (their colour lives in the file: vertex colours, or Hair G's texture).
 func _hair_linear() -> Color:
 	var chosen := _hair_color if _custom_hair else (LIGHT_HAIR if _hair_letter in ["c", "e", "f", "g"] else DEFAULT_HAIR)

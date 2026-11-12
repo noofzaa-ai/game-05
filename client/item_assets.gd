@@ -71,8 +71,8 @@ static func cosmetics() -> RefCounted:
 ## {"skin": Color, "hair": Color, "hair_natural": bool (styles keep their own colors), "face" and
 ## "hair_style": path ("" = the body's own), "face_replaces_head" / "face_hides_hair": bool (whole
 ## replacement heads, from the model team's register)}.
-## The model's appearance for one class card's look (card_deck.look_of): the card's own hair, outfit, eyes,
-## skin, makeup and iris style on top of `base` (the account's appearance).
+## The model's appearance for one class card's look (card_deck.look_of): the card's own hair, hair colour, outfit,
+## eyes, skin, makeup and iris style on top of `base` (the account's appearance).
 static func card_appearance(look: Dictionary, base: Dictionary) -> Dictionary:
 	var result := base.duplicate(true)
 	var picks: Dictionary = result.get("choices", {}).duplicate()
@@ -87,6 +87,15 @@ static func card_appearance(look: Dictionary, base: Dictionary) -> Dictionary:
 		picks["skin"] = str(parts["skin"]["id"])
 	picks["makeup"] = str(look.get("makeup", "none"))
 	result["iris_style"] = int(str(look.get("iris_style", "0")))
+	# Studio #hair-color: a card colour replaces the hair material colour (index.html updateColors); "" keeps
+	# the hair's Studio default (#6f657f for A/B, white for C-G whose colour is in the file).
+	var hair_hex := str(look.get("hair_color", ""))
+	if hair_hex.length() == 7 and hair_hex.begins_with("#") and Color.html_is_valid(hair_hex):
+		result["hair"] = Color(hair_hex)
+		result["hair_natural"] = false
+	else:
+		result.erase("hair")
+		result["hair_natural"] = true
 	result["choices"] = picks
 	return result
 

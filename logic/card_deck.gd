@@ -8,16 +8,19 @@ extends RefCounted
 ##
 ## deck = {"v": 1, "cards": {class_id: card}, "squad": [class_id, ...]}
 ## card = {"hair": "a", "outfit": "none"|"silver", "eye_color": id or "#rrggbb", "skin": id or "#rrggbb",
-##         "makeup": "none"|"sharp_wing", "iris_style": id of data/cosmetics/iris_styles.json, "skills": []}
+##         "makeup": "none"|"sharp_wing", "iris_style": id of data/cosmetics/iris_styles.json,
+##         "hair_color": "" (the hair's Studio default) or any "#rrggbb" (Studio #hair-color free input), "skills": []}
 
 const CLASS_FOLDER := "res://data/classes/"
 const CLASS_ORDER: Array[String] = ["sword_shield", "greatsword", "longbow", "magic"]
 const SQUAD_MAX := 3
 const OUTFITS: Array[String] = ["none", "silver"]  ## none = the class armor (Studio "ชุดประจำคลาส"); silver = Silver Silk + class weapons
 const MAKEUPS: Array[String] = ["none", "sharp_wing"]
-const PARTS: Array[String] = ["hair", "outfit", "eye_color", "skin", "makeup", "iris_style"]
+const PARTS: Array[String] = ["hair", "outfit", "eye_color", "skin", "makeup", "iris_style", "hair_color"]
 ## Parts added after cards shipped: a saved card without them uses this value (the card stays valid).
-const LATER_PARTS := {"iris_style": "0"}
+const LATER_PARTS := {"iris_style": "0", "hair_color": ""}
+## Starter flavour palette (Boss 2026-11-13): new cards draw distinct hair colours from it. Not an option list.
+const STARTER_HAIR_COLORS := "res://data/cosmetics/starter_hair_colors.json"
 ## The card each class starts with. Every class starts in its class armor (outfit "none", PO default 2026-11-12,
 ## docs/po_defaults.md); saved cards keep their own choice.
 const STARTERS := {
@@ -93,6 +96,7 @@ static func starter_card(class_id: String, cosmetics) -> Dictionary:
 		"skin": str(cosmetics.defaults.get("skin", "")) if cosmetics != null else "",
 		"makeup": "none",
 		"iris_style": str(cosmetics.defaults.get("iris_style", "0")) if cosmetics != null else "0",
+		"hair_color": "",
 		"skills": [],
 	}
 
@@ -112,8 +116,9 @@ static func initial(cosmetics = null) -> Dictionary:
 ## Boss 2026-11-13: a NEW player's cards do not all look alike. Each card gets its own iris style (no two
 ## cards share one), the eye colour that style brings (Studio irisSelect; the Classic style takes a colour of
 ## data/cosmetics/eye_colors.json instead, so no two cards share an eye colour either) and a makeup set, all
-## from the existing Studio-sourced option lists. Hair style and class armor stay the class starter's.
-## Hair colour is not varied: the card has no hair-colour part (the Studio only has a free colour input).
+## from the existing Studio-sourced option lists, plus a hair colour (the Studio's free #hair-color input) drawn
+## from the curated starter palette (data/cosmetics/starter_hair_colors.json): no two cards share one and at
+## most one is near-white. Hair style and class armor stay the class starter's.
 ## `rng` is a profile-creation RNG (deterministic per seed). Saved decks never pass through here.
 static func vary_starter_looks(deck: Dictionary, cosmetics, rng: RandomNumberGenerator) -> void:
 	if cosmetics == null:
@@ -140,6 +145,44 @@ static func vary_starter_looks(deck: Dictionary, cosmetics, rng: RandomNumberGen
 		used_colors[str(cosmetics.entry("eye_color", str(card["eye_color"])).get("color", card["eye_color"])).to_lower()] = true
 		card["makeup"] = MAKEUPS[rng.randi_range(0, MAKEUPS.size() - 1)]
 		index += 1
+	_vary_hair_colors(deck, rng)
+
+
+## The starter hair palette: [{"id", "color": "#rrggbb", "near_white"?: bool}], only valid colours.
+static func starter_hair_palette() -> Array:
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(STARTER_HAIR_COLORS)) if FileAccess.file_exists(STARTER_HAIR_COLORS) else null
+	var out := []
+	if parsed is Dictionary and parsed.get("colors") is Array:
+		for entry in parsed["colors"]:
+			if entry is Dictionary and is_hex_color(str(entry.get("color", ""))):
+				out.append(entry)
+	return out
+
+
+## Each card (class order) takes the next colour of the shuffled palette, skipping repeats and a second
+## near-white. A palette too small to go round leaves the remaining cards on the Studio default ("").
+static func _vary_hair_colors(deck: Dictionary, rng: RandomNumberGenerator) -> void:
+	var palette := starter_hair_palette()
+	_shuffle(palette, rng)
+	var used := {}
+	var white_used := false
+	for class_id in classes():
+		if not deck.get("cards", {}).has(class_id):
+			continue
+		for entry in palette:
+			var hex := str(entry["color"]).to_lower()
+			var white := bool(entry.get("near_white", false))
+			if used.has(hex) or (white and white_used):
+				continue
+			deck["cards"][class_id]["hair_color"] = hex
+			used[hex] = true
+			white_used = white_used or white
+			break
+
+
+## True for "#rrggbb" (exactly 7 characters, hex digits).
+static func is_hex_color(text: String) -> bool:
+	return text.length() == 7 and text.begins_with("#") and Color.html_is_valid(text)
 
 
 static func _shuffle(list: Array, rng: RandomNumberGenerator) -> void:
@@ -194,6 +237,8 @@ static func validate_card(class_id: String, card: Variant, cosmetics = null) -> 
 
 
 static func _part_allowed(class_id: String, part: String, choice: String, cosmetics) -> bool:
+	if part == "hair_color":  # Studio #hair-color is a free colour input: any #rrggbb, or "" for the default
+		return choice.is_empty() or is_hex_color(choice)
 	if part in ["eye_color", "skin", "iris_style"] and cosmetics == null:
 		return true  # without the cosmetic lists a colour cannot be checked here (the server always has them)
 	if options(class_id, part, cosmetics).has(choice):
@@ -232,7 +277,7 @@ static func set_squad(deck: Dictionary, squad: Array) -> bool:
 
 
 ## What the card looks like, as plain data the client dresses a model with:
-## {"class", "hair", "silver", "eye_color", "skin", "makeup", "iris_style"}.
+## {"class", "hair", "silver", "eye_color", "skin", "makeup", "iris_style", "hair_color"}.
 static func look_of(deck: Dictionary, class_id: String) -> Dictionary:
 	var card: Dictionary = deck.get("cards", {}).get(class_id, {})
 	return {
@@ -243,6 +288,7 @@ static func look_of(deck: Dictionary, class_id: String) -> Dictionary:
 		"skin": str(card.get("skin", "")),
 		"makeup": str(card.get("makeup", "none")),
 		"iris_style": str(card.get("iris_style", LATER_PARTS["iris_style"])),
+		"hair_color": str(card.get("hair_color", LATER_PARTS["hair_color"])),
 	}
 
 

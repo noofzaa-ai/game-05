@@ -43,6 +43,21 @@ func run(ctx) -> void:
 	var kept := Deck.repaired(older, cosmetics)
 	ctx.check("an older saved card keeps its own outfit and gets the Classic iris", kept["cards"]["greatsword"]["outfit"] == "silver" and not kept["cards"]["greatsword"].has("iris_style") and Deck.look_of(kept, "greatsword")["iris_style"] == "0")
 
+	# Hair colour (Studio #hair-color free input): "" = the hair's Studio default, else a #rrggbb.
+	var tinted := Deck.initial(cosmetics)
+	ctx.check("hair colour: a starter card has the Studio default", tinted["cards"]["magic"]["hair_color"] == "" and Deck.look_of(tinted, "magic")["hair_color"] == "")
+	ctx.check("hair colour: any #rrggbb is accepted and stored lower case", Deck.set_look(tinted, "magic", "hair_color", "#3A5FCD", cosmetics) and tinted["cards"]["magic"]["hair_color"] == "#3a5fcd" and Deck.look_of(tinted, "magic")["hair_color"] == "#3a5fcd")
+	ctx.check("hair colour: bad values are refused", not Deck.set_look(tinted, "magic", "hair_color", "#zzzzzz", cosmetics) and not Deck.set_look(tinted, "magic", "hair_color", "3a5fcd", cosmetics) and not Deck.set_look(tinted, "magic", "hair_color", "#3a5", cosmetics) and not Deck.set_look(tinted, "magic", "hair_color", "#3a5fcd00", cosmetics) and not Deck.set_look(tinted, "magic", "hair_color", "blue", cosmetics) and tinted["cards"]["magic"]["hair_color"] == "#3a5fcd")
+	ctx.check("hair colour: \"\" resets to the Studio default", Deck.set_look(tinted, "magic", "hair_color", "", cosmetics) and tinted["cards"]["magic"]["hair_color"] == "")
+	ctx.check("hair colour: works without the cosmetic lists too", Deck.set_look(tinted, "magic", "hair_color", "#112233", null) and Deck.validate(tinted, cosmetics) == "")
+	var broken_tint := Deck.initial(cosmetics)
+	broken_tint["cards"]["longbow"]["hair_color"] = "#nothex"
+	ctx.check("hair colour: a saved bad value makes the card invalid", Deck.validate(broken_tint, cosmetics) == "bad_card")
+	var pre_tint := Deck.initial(cosmetics)
+	for c in classes:
+		pre_tint["cards"][c].erase("hair_color")
+	ctx.check("hair colour: an old save without it stays valid and keeps its cards", Deck.validate(pre_tint, cosmetics) == "" and Deck.repaired(pre_tint, cosmetics)["cards"]["greatsword"] == pre_tint["cards"]["greatsword"] and Deck.look_of(pre_tint, "greatsword")["hair_color"] == "")
+
 	# Squad rules.
 	ctx.check("a squad of one to three is allowed", Deck.set_squad(deck, ["longbow"]) and Deck.set_squad(deck, ["magic", "longbow", "sword_shield"]))
 	ctx.check("a class twice, an unknown class, an empty or a fourth card are refused", not Deck.set_squad(deck, ["magic", "magic"]) and not Deck.set_squad(deck, ["ghost"]) and not Deck.set_squad(deck, []) and not Deck.set_squad(deck, classes + ["magic"]))
@@ -66,6 +81,9 @@ func run(ctx) -> void:
 	var state := {"profile": profile, "rules": rules, "camp": camp, "location": "camp", "cosmetics": cosmetics}
 	var ok: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair", "choice": "e"}, rng)
 	ctx.check("the card_look command changes the card", ok.get("ok", false) and profile.card_deck["cards"]["greatsword"]["hair"] == "e")
+	var tint_ok: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair_color", "choice": "#C04080"}, rng)
+	var tint_bad: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair_color", "choice": "#C0408"}, rng)
+	ctx.check("the card_look command sets a hair colour and refuses a bad one", tint_ok.get("ok", false) and not tint_bad.get("ok", true) and profile.card_deck["cards"]["greatsword"]["hair_color"] == "#c04080")
 	var bad: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair", "choice": "d"}, rng)
 	ctx.check("a hair the class cannot wear is rejected by the server", not bad.get("ok", true) and bad.get("error") == "invalid_card")
 	var squad_ok: Dictionary = Commands.apply(state, {"type": "card_squad", "squad": ["longbow", "magic"]}, rng)
@@ -111,6 +129,29 @@ func _starter_looks(ctx, rules, camp, cosmetics, classes: Array) -> void:
 	for s in [12, 13, 14, 15]:
 		differs = differs or looks_of.call(s) != a
 	ctx.check("starter looks: other seeds give other looks", differs)
+	var hair_tints := {}
+	for c in classes:
+		hair_tints[str(a[c]["hair_color"])] = true
+	var palette: Array = Deck.starter_hair_palette()
+	var palette_hex := palette.map(func(e): return str(e["color"]).to_lower())
+	ctx.check("starter looks: the hair palette is about ten curated colours", palette.size() >= 8 and palette.size() <= 12)
+	ctx.check("starter looks: every card has its own palette hair colour (%s)" % [hair_tints.keys()], hair_tints.size() == classes.size() and hair_tints.keys().all(func(h): return palette_hex.has(h)))
+	var whites_ok := true
+	var hair_seeds_differ := false
+	for s in range(30, 50):
+		var l: Dictionary = looks_of.call(s)
+		var whites := 0
+		var seen := {}
+		for c in classes:
+			var hex := str(l[c]["hair_color"])
+			seen[hex] = true
+			for e in palette:
+				if str(e["color"]).to_lower() == hex and bool(e.get("near_white", false)):
+					whites += 1
+		whites_ok = whites_ok and whites <= 1 and seen.size() == classes.size()
+		hair_seeds_differ = hair_seeds_differ or classes.any(func(c): return l[c]["hair_color"] != a[c]["hair_color"])
+	ctx.check("starter looks: 20 seeds give 4 distinct hair colours, at most one near-white", whites_ok)
+	ctx.check("starter looks: hair colours change with the seed", hair_seeds_differ)
 	var makeups := {}
 	for s in range(20, 30):
 		var l: Dictionary = looks_of.call(s)
