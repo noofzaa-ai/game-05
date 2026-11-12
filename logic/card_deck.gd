@@ -10,7 +10,9 @@ extends RefCounted
 ## card = {"hair": "a", "outfit": "none"|"silver", "eye_color": id or "#rrggbb", "skin": id or "#rrggbb",
 ##         "makeup": "none"|"sharp_wing", "iris_style": id of data/cosmetics/iris_styles.json,
 ##         "hair_color": "" (the hair's Studio default) or any "#rrggbb" (Studio #hair-color free input), "skills": [],
-##         "race": a race id of data/races/ (design/gdd/races-and-classes.md 3.7; changed only by the card_race command)}
+##         "race": a race id of data/races/ (design/gdd/races-and-classes.md 3.7; changed only by the card_race command),
+##         "progress": {"level", "xp"} (design/gdd/skill-tree.md 3.2, logic/card_progress.gd; optional: missing = level 1,
+##         changed only by the run-end XP grant)}
 
 const CLASS_FOLDER := "res://data/classes/"
 const CLASS_ORDER: Array[String] = ["sword_shield", "greatsword", "longbow", "magic"]
@@ -26,6 +28,7 @@ const LATER_PARTS := {"iris_style": "0", "hair_color": ""}
 ## starter race (data/races/rules.json starter_races), like LATER_PARTS.
 const RACE_PART := "race"
 const RaceData := preload("res://logic/race_data.gd")
+const CardProgress := preload("res://logic/card_progress.gd")
 const STARTER_HAIR_COLORS := "res://data/cosmetics/starter_hair_colors.json"
 ## The card each class starts with. Every class starts in its class armor (outfit "none", PO default 2026-11-12,
 ## docs/po_defaults.md); saved cards keep their own choice.
@@ -266,6 +269,8 @@ static func validate_card(class_id: String, card: Variant, cosmetics = null) -> 
 		return "bad_card"  # skills are not part of cards yet
 	if card.has(RACE_PART) and (not card[RACE_PART] is String or not RaceData.load_default().has_race(card[RACE_PART])):
 		return "bad_card"
+	if card.has(CardProgress.PROGRESS) and not CardProgress.problem(card[CardProgress.PROGRESS]).is_empty():
+		return "bad_card"
 	return ""
 
 
@@ -347,6 +352,8 @@ static func repaired(deck: Variant, cosmetics = null) -> Dictionary:
 			var saved_card: Dictionary = (saved_cards[class_id] as Dictionary).duplicate(true)
 			if saved_card.has(RACE_PART) and not RaceData.load_default().has_race(str(saved_card[RACE_PART])):
 				saved_card[RACE_PART] = RaceData.load_default().default_race()  # a removed race file (GDD 5): keep the card, default race
+			if saved_card.has(CardProgress.PROGRESS):  # JSON floats or an out-of-range block: keep the card, clean its level
+				saved_card[CardProgress.PROGRESS] = CardProgress.clean(saved_card[CardProgress.PROGRESS])
 			if validate_card(class_id, saved_card, cosmetics).is_empty():
 				fresh["cards"][class_id] = saved_card
 	if deck.get("squad") is Array:

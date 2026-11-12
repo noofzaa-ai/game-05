@@ -41,6 +41,16 @@ static func start_party(journey_data, trips: Dictionary, rules, loot, weapons: A
 func player_ids() -> Array:
 	return runs_by_player.keys()  # inserted in sorted order
 
+## Card XP (GDD skill-tree 3.7): every member's card (a squad's cards, or each separate player's lead card).
+func xp_cards() -> Array:
+	var cards: Array = []
+	for id in player_ids():
+		var trip = runs_by_player[id]
+		var pair := [trip.profile, _card_of(trip)]
+		if not cards.any(func(c): return c[0] == pair[0] and c[1] == pair[1]):
+			cards.append(pair)
+	return cards
+
 ## Loot by squad size: the party's fighters (a member down still counts; the squad chose its size).
 func fighter_count() -> int:
 	return runs_by_player.size()
@@ -159,17 +169,20 @@ func died() -> void:
 		if not trip.died: trip.death()
 	state = LOST
 	clear_gauges()
+	pay_card_xp()
 
 func retreat() -> Dictionary:
 	if not is_at_camp(): return {}
 	state = RETREATED
 	clear_gauges()
+	pay_card_xp()
 	return finish_rewards()
 
 func abandon() -> Dictionary:
 	if is_over() or state == IN_STAGE or is_at_camp(): return {}
 	state = ABANDONED
 	clear_gauges()
+	pay_card_xp()
 	var losses := {}
 	for id in player_ids(): losses[id] = runs_by_player[id].discard_loot()
 	return losses[primary_id]

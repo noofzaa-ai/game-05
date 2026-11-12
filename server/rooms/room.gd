@@ -357,6 +357,7 @@ func tick() -> void:
 		event_sequence += 1
 		events.append({"sequence": event_sequence, "tick": clock_tick, "event": event.duplicate(true)})
 	if events.size() > 256: events = events.slice(-256)
+	journey.note_waves(sim)  # card XP counts the waves cleared (design/gdd/skill-tree.md 3.7)
 	if journey is Party:
 		journey.capture_party(sim)
 		if sim._coop.wiped:

@@ -13,6 +13,7 @@ const ItemSystem := preload("res://logic/item_system.gd")
 const JourneyData := preload("res://logic/journey_data.gd")
 const Loot := preload("res://logic/loot.gd")
 const Run := preload("res://logic/run.gd")
+const CardProgress := preload("res://logic/card_progress.gd")
 
 ## What the journey is waiting for.
 const CHOOSING := "choosing"  ## the player picks the next stage
@@ -43,6 +44,11 @@ var gauge := 0.0:
 var path: Array[String] = []  ## types of the nodes taken, in order (for the summary)
 var last_reward: Dictionary = {}  ## what the last treasure / challenge gave (from Run.loot_into_bag)
 var treasure_pending := false  ## at a treasure node whose chest is not opened yet (open_treasure())
+## Card XP (design/gdd/skill-tree.md 3.7, logic/card_progress.gd): waves cleared in the wave-mode fight so far
+## (note_waves), whether the run's XP was paid (once only) and what each card got {card_id: CardProgress.grant()}.
+var waves_cleared := 0
+var card_xp_paid := false
+var card_xp: Dictionary = {}
 
 
 ## Starts a journey and lays out every stage's choices from `seed`.
@@ -219,6 +225,7 @@ func died() -> void:
 		run.death()
 	state = LOST
 	clear_gauges()
+	pay_card_xp()
 
 
 ## Goes home with the bag. Only from a camp: leaving anywhere else is abandon(). Returns Run.return_to_camp().
@@ -227,6 +234,7 @@ func retreat() -> Dictionary:
 		return {}
 	state = RETREATED
 	clear_gauges()
+	pay_card_xp()
 	return run.return_to_camp()
 
 
@@ -237,6 +245,7 @@ func abandon() -> Dictionary:
 		return {}
 	state = ABANDONED
 	clear_gauges()
+	pay_card_xp()
 	return run.discard_loot()
 
 
@@ -403,6 +412,46 @@ func _advance() -> void:
 	state = WON if completed >= total_stages() else CHOOSING
 	if is_over():
 		clear_gauges()
+		pay_card_xp()
+
+
+## Wave mode: records how many waves of the one fight are cleared (a wave is cleared when the next one arrives).
+## The session/room calls it every tick with its sim; it only ever goes up and stops once the run is over.
+func note_waves(sim) -> void:
+	if data.wave_mode and sim != null and not is_over():
+		waves_cleared = maxi(waves_cleared, int(sim._waves_released))
+
+
+## Normal waves cleared this run, for the XP formula (the boss wave is the boss bonus, not a wave).
+func xp_waves_cleared() -> int:
+	var normal := maxi(data.stage_count - 1, 0)
+	if state == WON:
+		return normal
+	return mini(waves_cleared if data.wave_mode else completed, normal)
+
+
+## The cards that started this run: the squad member's card, or the lead card of a plain (pre-card) run.
+func xp_cards() -> Array:
+	return [[run.profile, _card_of(run)]]
+
+
+static func _card_of(trip) -> String:
+	var card := str(trip.get("card_id")) if "card_id" in trip else ""
+	return card if not card.is_empty() else str(trip.profile.lead_card())
+
+
+## Run end (GDD skill-tree 3.7): every card that started the run gets the same XP, downed or not. Paid ONCE
+## (card_xp_paid is saved with the journey), so a repeated end never pays twice. Lost, retreated and abandoned
+## runs pay for the waves already cleared.
+func pay_card_xp() -> void:
+	if card_xp_paid or not is_over():
+		return
+	card_xp_paid = true
+	var amount := CardProgress.run_xp(xp_waves_cleared(), state == WON, state == WON)
+	for entry in xp_cards():
+		var granted: Dictionary = CardProgress.grant(entry[0].card_deck, str(entry[1]), amount)
+		if not granted.is_empty():
+			card_xp[str(entry[1])] = granted
 
 
 ## Run end (GDD races 3.10.2): the carried ultimate gauge goes back to 0.
@@ -490,7 +539,8 @@ func to_dict() -> Dictionary:
 	return {"v": 1, "run": run.to_dict(), "seed": str(seed_value), "nodes": nodes.duplicate(true),
 		"first_camp": first_camp, "completed": completed, "current": current.duplicate(true),
 		"state": state, "hp_fraction": StateCodec.float_text(hp_fraction), "gauge": StateCodec.float_text(gauge),
-		"path": path.duplicate(), "last_reward": reward, "treasure_pending": treasure_pending}
+		"path": path.duplicate(), "last_reward": reward, "treasure_pending": treasure_pending,
+		"waves_cleared": waves_cleared, "card_xp_paid": card_xp_paid, "card_xp": card_xp.duplicate(true)}
 
 
 static func from_dict(d: Dictionary, journey_data: JourneyData, rules, camp_data, loot, weapons: Array):
@@ -521,6 +571,16 @@ static func from_dict(d: Dictionary, journey_data: JourneyData, rules, camp_data
 	j.gauge = StateCodec.float_value(d["gauge"])
 	j.path.assign(d["path"])
 	j.treasure_pending = bool(d["treasure_pending"])
+	j.waves_cleared = int(d.get("waves_cleared", 0))  # older checkpoints: none cleared, not paid yet
+	j.card_xp_paid = bool(d.get("card_xp_paid", false))
+	j.card_xp = {}
+	var paid_xp = d.get("card_xp", {})
+	if paid_xp is Dictionary:
+		for card in paid_xp:
+			var entry: Dictionary = {}
+			for key in paid_xp[card]:
+				entry[key] = paid_xp[card][key] if paid_xp[card][key] is String else int(paid_xp[card][key])
+			j.card_xp[str(card)] = entry
 	j.last_reward = d["last_reward"].duplicate(true)
 	if j.last_reward.has("gold"):
 		j.last_reward["gold"] = int(j.last_reward["gold"])

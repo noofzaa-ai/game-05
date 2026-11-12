@@ -184,6 +184,7 @@ func tick() -> void:
 	_sim.tick()
 	if journey == null:
 		return
+	journey.note_waves(_sim)  # card XP counts the waves cleared (design/gdd/skill-tree.md 3.7)
 	if is_coop():
 		journey.capture_party(_sim)
 		if _sim._coop["wiped"]:

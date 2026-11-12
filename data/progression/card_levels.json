@@ -1,0 +1,8 @@
+{
+ "_comment": "Card levels and XP (design/gdd/skill-tree.md 3.2, 3.7, 4.1-4.3). Every number is a placeholder until tools/balance/class_sim.gd measures it. xp_req(L) = round(xp_base * L^xp_exp) to go from L to L+1. points(L) = (L - 1) + count of milestone_levels <= L. Run XP = sum(wave_base + wave_step * w for each cleared wave w, w <= max_waves) + boss + win, paid once at run end to every card that started the run.",
+ "max_level": 25,
+ "xp_base": 100,
+ "xp_exp": 1.2,
+ "milestone_levels": [10, 20],
+ "xp_rewards": {"wave_base": 20, "wave_step": 5, "max_waves": 11, "boss": 100, "win": 50}
+}
