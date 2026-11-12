@@ -525,6 +525,7 @@ class HubCard extends Control:
 		portrait.framing = "hub"
 		portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
 		window_slot.add_child(portrait)
+		portrait.set_render_mode(CardPortrait.Mode.LIVE)  # hub characters animate every frame from the start, not only after a hover (Boss 2026-11-13)
 		_scene_front = CardSceneLayers.new()
 		_mask.add_child(_scene_front)
 		var painted := _scene_back.setup(id, CardSceneLayers.Part.BACK) and _scene_front.setup(id, CardSceneLayers.Part.FRONT)
