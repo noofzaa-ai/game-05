@@ -161,6 +161,8 @@ func cast(id: int, slot: int, aim: Vector3) -> String:
 	stats.skill_id = row.skill  # rides along in every hit context: picks the impact tier and the event's move
 	stats.crit_chance = minf(1.0,float(stats.get("crit_chance",0))+fighter.stat("CRIRATE") / 100.0)
 	stats.crit_multiplier = fighter.stat("CRIDMG", 150.0) / 100.0
+	var race_refusal: String = preload("res://logic/race_passives.gd").modify_skill_stats(fighter, stats)  # race skill_mod (GDD races 4.4)
+	if not race_refusal.is_empty(): return race_refusal
 	var caster: ZorxSkillRuntime = casters[id]
 	var skill: ZorxSkillData = load(Build.ROOT + "skills/" + row.skill + ".tres")
 	var problem := caster.request_cast(skill, stats, sim.bodies[id].position, aim)
@@ -168,6 +170,7 @@ func cast(id: int, slot: int, aim: Vector3) -> String:
 	var facing := Vector2(aim.x-sim.bodies[id].position.x,aim.z-sim.bodies[id].position.z)
 	if facing.length_squared() > .00001: fighter.direction = preload("res://logic/combat.gd").direction_from(facing)
 	fighter.energy -= cost
+	if preload("res://logic/race_passives.gd").pay_skill_hp(sim, id, fighter) > 0.0: caster.actor.hp = fighter.hp  # Blood Rite
 	fighter.energy_wait = int(sim.combat.rules.energy_regen_delay_ticks)
 	caster.cast_pose = {"skill":row.skill, "family":fighter.style, "started":caster.clock, "windup":maxf(0,caster.cast_until-caster.clock), "aim":aim}
 	preload("res://logic/relic_effects.gd").skill_cast(fighter)

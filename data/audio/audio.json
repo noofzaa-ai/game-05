@@ -1373,6 +1373,16 @@
 				]
 			}
 		],
+		"race_hp_cost": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"dot_tick"
+				]
+			}
+		],
 		"race_heal": [
 			{
 				"when": {

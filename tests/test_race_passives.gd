@@ -73,6 +73,7 @@ func run(ctx) -> void:
 	_inert_cells(ctx)
 	_shield(ctx)
 	_low_hp_scaling(ctx)
+	_skill_mod(ctx)
 	_synergy(ctx)
 	_checkpoint_and_determinism(ctx)
 
@@ -297,6 +298,77 @@ func _low_hp_scaling(ctx) -> void:
 	var tbase: float = tank.stat("ATK")
 	tank.hp = tank.max_hp() * 0.3
 	ctx.check("Viking Trio: ATK +20% below 50% (sword & shield has no scaling cell)", is_equal_approx(tank.stat("ATK"), tbase * 1.2))
+
+
+## Casts skill slot 0 of squad member `id` through the real skill-build path; returns the release job's stats
+## and the cooldown it set ({} if the cast was refused, with "refused").
+static func cast_slot0(sim, id: int) -> Dictionary:
+	var fighter = sim.fighters[id]
+	var class_id := str(fighter.race_state["class"])
+	sim.set_class_style(id, str(Deck.class_data(class_id).get("weapon", "")))  # as the client and class_sim do
+	fighter.energy = fighter.max_energy()
+	var system = sim.skill_system
+	var caster = system.casters[id]
+	var skill: String = system.builds[id].skills[0].skill
+	var problem: String = system.cast(id, 0, sim.bodies[id].position + Vector3(2, 0, 0))
+	if not problem.is_empty():
+		return {"refused": problem}
+	var job: Dictionary = caster.jobs.filter(func(j): return j["kind"] == "release")[-1]
+	return {"stats": job["data"]["stats"], "cooldown": float(caster.cooldowns[skill]) - float(caster.cast_until)}
+
+
+## skill_mod (GDD 4.4, phase 4 step 3): the hook where a skill-build cast resolves (logic/skills/system.gd cast()).
+func _skill_mod(ctx) -> void:
+	# Formula 4.4 on plain stats: Human magic + Human Trio -> cooldown x0.85 x0.90 = 0.765, damage x1.30 x1.20.
+	var mage := Fighter.new()
+	mage.stats = {"HP": 750.0}
+	mage.hp = 750.0
+	mage.race_state = {"effects": [{"src": "passive", "effect": {"type": "skill_mod", "damage_mul": 1.3, "cooldown_mul": 0.85}},
+		{"src": "synergy", "effect": {"type": "skill_mod", "damage_mul": 1.2, "cooldown_mul": 0.9}}], "pseudo": {}}
+	var stats := {"damage": 100.0, "cooldown": 10.0, "radius": 2.0, "crit_chance": 0.1}
+	RacePassives.modify_skill_stats(mage, stats)
+	ctx.check("formula 4.4: Human magic + Trio cooldown 10 -> 7.65 (%.3f)" % stats["cooldown"], is_equal_approx(stats["cooldown"], 7.65))
+	ctx.check("formula 4.4: Human magic + Trio damage 100 -> 156 (%.2f)" % stats["damage"], is_equal_approx(stats["damage"], 156.0))
+	mage.race_state["pseudo"] = {"SKILL_DMG": {"add": 0.0, "mul": 0.3}}  # recital (+30% SKILL_DMG): 1.30 x 1.20 x 1.30 = 2.028
+	stats = {"damage": 100.0, "cooldown": 10.0}
+	RacePassives.modify_skill_stats(mage, stats)
+	ctx.check("formula 4.4: with SKILL_DMG +30%% -> 2.028x (%.3f)" % (stats["damage"] / 100.0), is_equal_approx(stats["damage"], 202.8))
+	mage.race_state["effects"].append({"src": "passive", "effect": {"type": "skill_mod", "cooldown_mul": 0.5}})
+	stats = {"damage": 100.0, "cooldown": 10.0}
+	RacePassives.modify_skill_stats(mage, stats)
+	ctx.check("formula 4.4: cooldown floored at x0.60 (%.2f)" % stats["cooldown"], is_equal_approx(stats["cooldown"], 6.0))
+	var gs := Fighter.new()
+	gs.stats = {"HP": 1000.0}
+	gs.race_state = {"effects": [{"src": "passive", "effect": {"type": "skill_mod", "radius_mul": 1.25, "damage_mul": 1.1}},
+		{"src": "passive", "effect": {"type": "skill_mod", "crit_add": 20.0}}], "pseudo": {}}
+	stats = {"damage": 100.0, "radius": 2.0, "crit_chance": 0.1}
+	RacePassives.modify_skill_stats(gs, stats)
+	ctx.check("Wide Arcs: radius x1.25, damage x1.1; Trained Eye: crit +20", is_equal_approx(stats["radius"], 2.5) and is_equal_approx(stats["damage"], 110.0) and is_equal_approx(stats["crit_chance"], 0.3))
+	# Real casts. Human magic (Archmage) vs Elf magic (no skill_mod), same squad shape otherwise (Alliance both).
+	var human := squad(["human", "viking", "elf"], ["magic", "greatsword", "longbow"])
+	var elf := squad(["elf", "viking", "human"], ["magic", "greatsword", "longbow"])
+	if human.sim.skill_system == null or elf.sim.skill_system == null:
+		ctx.check("skill_mod: the skill build is on for squad runs", false)
+		return
+	var h := cast_slot0(human.sim, 1)
+	var e := cast_slot0(elf.sim, 1)
+	ctx.check("Archmage: a real cast is accepted (%s / %s)" % [h.get("refused", ""), e.get("refused", "")], h.has("stats") and e.has("stats"))
+	if h.has("stats") and e.has("stats"):
+		ctx.check("Archmage: real cast damage x1.30 (%.2f vs %.2f)" % [float(h["stats"]["damage"]), float(e["stats"]["damage"])], is_equal_approx(float(h["stats"]["damage"]), float(e["stats"]["damage"]) * 1.3))
+		ctx.check("Archmage: real cast cooldown x0.85 (%.2f vs %.2f)" % [h["cooldown"], e["cooldown"]], is_equal_approx(float(h["cooldown"]), float(e["cooldown"]) * 0.85))
+	# Viking magic (Blood Rite): +40% damage, costs 5% of current HP, refused below 10% HP; the cost is not a hurt.
+	var viking := squad(["viking", "human", "elf"], ["magic", "greatsword", "longbow"])
+	var vm = viking.sim.fighters[1]
+	vm.hp = vm.max_hp() * 0.8
+	var before: float = vm.hp
+	viking.sim.events.clear()
+	var v := cast_slot0(viking.sim, 1)
+	ctx.check("Blood Rite: real cast damage x1.40", v.has("stats") and e.has("stats") and is_equal_approx(float(v["stats"]["damage"]), float(e["stats"]["damage"]) * 1.4))
+	ctx.check("Blood Rite: pays 5%% of current HP (%.2f -> %.2f)" % [before, vm.hp], is_equal_approx(vm.hp, before * 0.95))
+	ctx.check("Blood Rite: the price is not damage (no hit/hurt event)", not viking.sim.events.any(func(ev): return ev["type"] in ["hit", "skill_hit"] and int(ev.get("target", -1)) == 1))
+	var low := squad(["viking", "human", "elf"], ["magic", "greatsword", "longbow"])
+	low.sim.fighters[1].hp = low.sim.fighters[1].max_hp() * 0.09
+	ctx.check("Blood Rite: cannot cast below 10% HP", cast_slot0(low.sim, 1).get("refused", "") == "race_min_hp")
 
 
 func _synergy(ctx) -> void:

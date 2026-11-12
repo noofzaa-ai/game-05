@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.3: `skill_mod` ใน `skills/system.gd` cast() (Human greatsword/longbow crit/magic, Viking Blood Rite, Human default/Pair/Trio), cooldown ต่ำสุด 0.6x · event ใหม่ race_hp_cost · เทสต์ 2383/81
+
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.2: `low_hp_scaling` (Viking Berserker, Viking Pair/Trio/default ATK ตอนเลือดน้อย) คิดสดใน `Fighter.stat()` · เทสต์ 2370/81
 
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.1: โล่ของนักสู้ (cap 30% max HP, ดูดดาเมจก่อน HP ทุกทาง, หายตอนจบเวฟ, event race_shield/race_shield_end) · ยังไม่ส่งผ่าน net_wire ออนไลน์ · เทสต์ 2360/81

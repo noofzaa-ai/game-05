@@ -7,7 +7,8 @@ extends RefCounted
 ## actions `apply_status`, `heal` and `shield` (Fighter.shield, 4.3), on the events wave_start, hit, heavy_hit, skill_cast, skill_hit, kill, hurt,
 ## guard_block, self_low_hp (fields: chance, every_n, cooldown_ticks, once_per_wave, hp_below).
 ## `low_hp_scaling` (4.1) is read live by Fighter.stat through scaling_mul (race_state.scaling).
-## INERT until their phase-4 feature exists (loaded and validated, no effect): skill_mod, charges,
+## `skill_mod` (4.4) changes a skill-build cast in logic/skills/system.gd cast() through modify_skill_stats.
+## INERT until their phase-4 feature exists (loaded and validated, no effect): charges,
 ## aggro, and the actions burst, pulse_aggro, zone, skill_refresh. The event ultimate_cast never fires yet.
 ## Deterministic: a `chance` roll uses the sim RNG; nothing else is random. Order = fighter id, then effect order.
 
@@ -82,6 +83,70 @@ static func low_hp_bonus(effect: Dictionary, h: float) -> float:
 	if from_hp <= full_at:
 		return max_mul if h <= full_at else 0.0
 	return max_mul * clampf((from_hp - h) / (from_hp - full_at), 0.0, 1.0)
+
+
+## The fighter's skill_mods combined (4.4): damage/cooldown/radius multiply, crit_add and hp_cost add, min_hp = largest.
+static func skill_mods(fighter) -> Dictionary:
+	var out := {"damage_mul": 1.0, "cooldown_mul": 1.0, "radius_mul": 1.0, "crit_add": 0.0, "hp_cost": 0.0, "min_hp": 0.0}
+	for entry in fighter.race_state.get("effects", []):
+		var effect: Dictionary = entry["effect"]
+		if effect["type"] != "skill_mod":
+			continue
+		for key in ["damage_mul", "cooldown_mul", "radius_mul"]:
+			out[key] *= float(effect.get(key, 1.0))
+		out["crit_add"] += float(effect.get("crit_add", 0.0))
+		out["hp_cost"] += float(effect.get("hp_cost", 0.0))
+		out["min_hp"] = maxf(float(out["min_hp"]), float(effect.get("min_hp", 0.0)))
+	return out
+
+
+## SKILL_DMG pseudo-stat (4.4, 3.7): race stat_mod SKILL_DMG plus any status that grants it (recital, later).
+static func skill_dmg(fighter) -> float:
+	var total := 0.0
+	var race: Dictionary = fighter.race_state.get("pseudo", {}).get("SKILL_DMG", {})
+	total += float(race.get("add", 0.0)) + float(race.get("mul", 0.0))
+	var status: Dictionary = fighter.stat_mods.get("SKILL_DMG", {})
+	total += float(status.get("add", 0.0)) + float(status.get("mul", 0.0))
+	return total
+
+
+## The skill_mod hook (4.4), called once where a skill-build cast resolves (logic/skills/system.gd cast()), on the
+## cast's stats before the caster takes them. Returns "" or a refusal ("race_min_hp": Blood Rite below 10% HP).
+##   damage = base x product(damage_mul) x (1 + SKILL_DMG)   (also the skill's burn/bleed damage)
+##   cooldown = base x product(cooldown_mul), floored at base x cooldown_mul_floor (rules.json, 0.60)
+##   radius x product(radius_mul); crit chance + crit_add/100.
+## Nothing to do for a fighter without race state or mods (plain profile runs, enemies).
+static func modify_skill_stats(fighter, stats: Dictionary) -> String:
+	if fighter.race_state.is_empty():
+		return ""
+	var mods := skill_mods(fighter)
+	if float(mods["min_hp"]) > 0.0 and fighter.hp < fighter.max_hp() * float(mods["min_hp"]):
+		return "race_min_hp"
+	var damage_mul: float = float(mods["damage_mul"]) * (1.0 + skill_dmg(fighter))
+	for key in ["damage", "burn_damage_mul", "bleed_damage_mul"]:
+		if stats.has(key):
+			stats[key] = float(stats[key]) * damage_mul
+	if stats.has("cooldown"):
+		var floor_mul := float(RaceData.load_default().rules.get("cooldown_mul_floor", 0.0))
+		stats["cooldown"] = float(stats["cooldown"]) * maxf(float(mods["cooldown_mul"]), floor_mul)
+	if stats.has("radius"):
+		stats["radius"] = float(stats["radius"]) * float(mods["radius_mul"])
+	if float(mods["crit_add"]) != 0.0:
+		stats["crit_chance"] = minf(1.0, float(stats.get("crit_chance", 0.0)) + float(mods["crit_add"]) / 100.0)
+	return ""
+
+
+## Blood Rite's price (3.4, 5): hp_cost x CURRENT HP, paid after a cast is accepted. Not damage: no hurt event,
+## no runes, no lifesteal. Returns the HP paid.
+static func pay_skill_hp(sim, id: int, fighter) -> float:
+	if fighter.race_state.is_empty():
+		return 0.0
+	var cost: float = float(skill_mods(fighter)["hp_cost"]) * fighter.hp
+	if cost <= 0.0:
+		return 0.0
+	fighter.hp = maxf(1.0, fighter.hp - cost)
+	sim.events.append({"type": "race_hp_cost", "player": id, "amount": cost})
+	return cost
 
 
 ## Healing received multiplier from race pseudo-stat HEALING (Elf default/pair/trio), for Fighter.heal_factor.
