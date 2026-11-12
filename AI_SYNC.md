@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | PO | develop | build เว็บสำเร็จบนเครื่อง dev (Windows): `build/web` build 1a135457db4a, Godot 4.7.2 web templates ติดตั้งแล้ว · บน Windows ต้องรัน `python -X utf8 pipeline/build_web.py` (python3 เป็น Store stub, log เป็น cp1252) · ขั้นเทสต์ใน pipeline ต้องการ 0 fail แต่ baseline มี 81 ข้อเก่า -> ใช้ --skip-tests หลังรันชุดเทสต์แยก · Docker Desktop ยังไม่ได้ติดตั้ง (ต้องสิทธิ์ admin)
+
 - 2026-11-13 | PO | develop | Boss: เครื่อง Windows นี้ = dev (build/run Docker ที่นี่), k3s = prod ยังไม่ขึ้น · สร้าง `develop` จาก feature/class-weapons-card-screen
 
 - 2026-11-13 | character-artist via PO | feature/class-weapons-card-screen | แก้สีชุดเกราะคลาสซีด: texture ถูกแปลง sRGB ซ้ำ 2 รอบบน gl_compatibility (`source_color` ไม่ decode) -> decode เองใน `studio05_toon/ink.gdshader` (Hair G ด้วย) ตรงกับ Studio แล้ว · เทสต์ 2224/82
