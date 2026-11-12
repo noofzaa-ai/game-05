@@ -639,8 +639,7 @@ func has_class_weapon() -> bool:
 
 func set_appearance(appearance: Dictionary) -> void:
 	var choices: Dictionary = appearance.get("choices", {})
-	var outfit := str(choices.get("fashion", "none"))
-	var silver := outfit != "none" and str(choices.get("fashion_display", "on")) == "on"
+	var silver := false  # the old account-wide fashion is gone (Boss 2026-11-13); the card's outfit sets it below
 	var hair := hair_for(str(choices.get("hair_style", "")))
 	if appearance.has("studio_hair"):  # the card's own look (CardDeck.look_of) wins
 		hair = hair_for(str(appearance["studio_hair"]))

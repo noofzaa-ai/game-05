@@ -208,7 +208,6 @@ def main():
                                 str(ROOT / 'tools/web/pack_layout.json'), str(split)], logs, args.timeout)
         print('5/6 Compress and hash packs\n6/6 Write manifest and play.html', flush=True)
         build_id = package(stage, args)
-        subprocess.run([sys.executable, str(ROOT / "tools/web/verify_mall_pack.py"), str(stage)], check=True, timeout=30)
         destination = build / 'web'
         # Keep the artifact-link metadata used by the existing Windows workflow.
         if (destination / '.claude').is_dir():

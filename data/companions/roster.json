@@ -5,10 +5,7 @@
       "name": "อรุณ",
       "seed": 43017,
       "personality": "นักดาบใจเย็น ชอบช่วยเพื่อน",
-      "appearance": {
-        "fashion": "red",
-        "fashion_display": "on"
-      },
+      "appearance": {},
       "camp_route": [
         [
           -3,

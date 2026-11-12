@@ -98,9 +98,11 @@ func _init() -> void:
 				if true:
 					var key := "%s in %s" % [m["class"], scenario["name"]]
 					if not per_class.has(key):
-						per_class[key] = {"dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "n": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0}
-					for field in ["dealt", "taken", "deaths", "ults", "attack", "walk", "alive", "kills", "gauge_full", "skill_dealt", "casts", "casting"]:
+						per_class[key] = {"dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "n": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": ""}
+					for field in ["dealt", "taken", "deaths", "ults", "attack", "walk", "alive", "kills", "gauge_full", "skill_dealt", "casts", "casting",
+							"ult_dealt", "ult_support", "support", "ult_lost", "ult_gap_ticks", "ult_gaps", "ult_first", "ult_firsts"]:
 						per_class[key][field] += m[field]
+					per_class[key]["race"] = m["race"]
 					per_class[key]["n"] += 1
 		print("%-19s | %3d%% | %5.1f / %2d    | %7s | %9.0f | %9.0f | %6.2f | %4.1f | %d" % [scenario["name"], 100 * wins / seeds, float(waves_total) / seeds, waves_min,
 			("%.0f" % (clear_ticks / 60.0 / wins)) if wins > 0 else "-", dealt / seeds, taken / seeds, float(deaths) / seeds, float(ults) / seeds, timeouts])
@@ -113,6 +115,26 @@ func _init() -> void:
 		var n := float(c["n"])
 		var alive := maxf(1.0, float(c["alive"]))
 		print("%-34s | %10.0f | %9.0f | %5.1f | %9.0f | %5.1f | %6.2f | %4.1f | %12.1f | %9.0f%% | %7.0f%% | %7.0f%%" % [key, c["dealt"] / n, c["skill_dealt"] / n, c["casts"] / n, c["taken"] / n, c["kills"] / n, c["deaths"] / n, c["ults"] / n, c["gauge_full"] / 60.0 / n, 100.0 * c["attack"] / alive, 100.0 * c["walk"] / alive, 100.0 * c["casting"] / alive])
+	# Race ultimates (GDD races section 8): per card, then the squad share of damage and of heal+shield.
+	print("")
+	print("ultimates (per run avg)            | race      | fired | first s | mean gap s | lost | ult dmg | ult dmg % | ult heal+shield | heal+shield % of own")
+	var squad_dmg := 0.0
+	var squad_ult_dmg := 0.0
+	var squad_support := 0.0
+	var squad_ult_support := 0.0
+	for key in per_class:
+		var c: Dictionary = per_class[key]
+		var n := float(c["n"])
+		var own_dmg: float = c["dealt"] + c["skill_dealt"]
+		squad_dmg += own_dmg
+		squad_ult_dmg += c["ult_dealt"]
+		squad_support += c["support"]
+		squad_ult_support += c["ult_support"]
+		print("%-34s | %-9s | %5.2f | %7s | %10s | %4.2f | %7.0f | %8.1f%% | %15.0f | %18.1f%%" % [key, c["race"], c["ults"] / n,
+			("%.1f" % (c["ult_first"] / 60.0 / c["ult_firsts"])) if c["ult_firsts"] > 0 else "-",
+			("%.1f" % (c["ult_gap_ticks"] / 60.0 / c["ult_gaps"])) if c["ult_gaps"] > 0 else "-",
+			c["ult_lost"] / n, c["ult_dealt"] / n, 100.0 * c["ult_dealt"] / maxf(1.0, own_dmg), c["ult_support"] / n, 100.0 * c["ult_support"] / maxf(1.0, c["support"])])
+	print("ultimate share of all damage: %.1f%%   of all heal+shield: %.1f%%" % [100.0 * squad_ult_dmg / maxf(1.0, squad_dmg), 100.0 * squad_ult_support / maxf(1.0, squad_support)])
 	quit(0)
 
 
@@ -175,7 +197,8 @@ func play(classes: Array, seed: int) -> Dictionary:
 		var id: int = ids[i]
 		sim.set_class_style(id, str(Deck.class_data(str(classes[i])).get("weapon", "")))
 		memories[id] = Pilot.new_memory(id * 7919 + 1 + seed)
-		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0}
+		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": ""}
+		members[id]["race"] = str(sim.fighters[id].race_state.get("race", ""))
 	var waves := 1
 	var loot_seen := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0}  ## "loot" events: what reached a run bag
 	var wave_taken := []
@@ -211,10 +234,21 @@ func play(classes: Array, seed: int) -> Dictionary:
 					if members.has(t) and not members.has(a):
 						members[t]["taken"] += float(event["damage"])
 						wave_taken[waves] += float(event["damage"])
-				"race_burst_hit":  # race rune bursts (Runic Edge): dealt damage, counted with the weapon hits
+				"race_burst_hit":  # race rune bursts (Runic Edge) and ultimates: dealt damage, counted with the weapon hits
 					var a := int(event.get("attacker", -1))
 					if members.has(a) and not members.has(int(event.get("target", -1))):
 						members[a]["dealt"] += float(event["damage"])
+						if bool(event.get("ultimate", false)):
+							members[a]["ult_dealt"] += float(event["damage"])
+				"race_heal", "race_shield":  # heal + shield given to the squad (ultimate part measured apart)
+					var a := int(event.get("player", -1))
+					if members.has(a):
+						members[a]["support"] += float(event["amount"])
+						if bool(event.get("ultimate", false)):
+							members[a]["ult_support"] += float(event["amount"])
+				"race_ult_lost":
+					if members.has(int(event.get("player", -1))):
+						members[int(event["player"])]["ult_lost"] += 1
 				"skill_cast":
 					if members.has(int(event.get("player", -1))):
 						members[int(event["player"])]["casts"] += 1
@@ -236,6 +270,13 @@ func play(classes: Array, seed: int) -> Dictionary:
 					var p := int(event.get("player", -1))
 					if members.has(p) and str(event.get("move", "")).ends_with("ultimate"):
 						members[p]["ults"] += 1
+						if members[p].has("last_ult"):
+							members[p]["ult_gap_ticks"] += tick - int(members[p]["last_ult"])
+							members[p]["ult_gaps"] += 1
+						else:
+							members[p]["ult_first"] += tick
+							members[p]["ult_firsts"] += 1
+						members[p]["last_ult"] = tick
 				"wave_arrived":
 					waves = int(event["wave"])
 				"loot":

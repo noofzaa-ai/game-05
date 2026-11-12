@@ -117,10 +117,6 @@ var doll  ## PaperDoll
 var slot_cells: Dictionary = {}  ## "slot:index" -> ItemCell
 var bag_cells: Array = []  ## ItemCells in the grid, in order
 
-var _fashion_slot: Button
-var _fashion_caption: Label
-var _fashion_toggle: CheckBox
-var _fashion_pending := false
 var _board: Control
 var _bag_box: VBoxContainer
 var _bag_title: HBoxContainer
@@ -202,23 +198,6 @@ func _build() -> void:
 				cell.set_meta("extra_place", placed)  # a slot the board has no place for: bottom rows
 				placed += 1
 
-	_fashion_slot = Button.new()
-	_fashion_slot.name = "FashionSlot"
-	_fashion_slot.tooltip_text = "ชุดแฟชั่นที่เลือก · แตะเพื่อเปลี่ยน"
-	_fashion_slot.pressed.connect(func(): select({"kind":"fashion"}))
-	_board.add_child(_fashion_slot)
-	_fashion_toggle=CheckBox.new()
-	_fashion_toggle.name="ShowFashion"
-	_fashion_toggle.text=""
-	_fashion_toggle.alignment=HORIZONTAL_ALIGNMENT_CENTER
-	_fashion_caption=InkUi.label("แฟชั่น",InkUi.PAPER,InkUi.FONT_TINY)
-	_fashion_caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
-	_fashion_caption.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	_fashion_toggle.add_child(_fashion_caption)
-	_fashion_toggle.add_theme_font_size_override("font_size",12)
-	_fashion_toggle.tooltip_text="แสดงแฟชั่นทั้งชุด / ซ่อนเพื่อแสดงชุดต่อสู้ · ปีกไม่เปลี่ยน"
-	_fashion_toggle.toggled.connect(func(on: bool): _choose_fashion("fashion_display","on" if on else "off"))
-	_board.add_child(_fashion_toggle)
 	_bag_box = VBoxContainer.new()
 	_bag_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_bag_box.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -390,13 +369,6 @@ func _layout_board(cell_size: float, gap: float) -> void:
 			place = [n % BOARD_COLUMNS, BOARD_ROWS + n / BOARD_COLUMNS]
 		cell.position = Vector2(place[0] * step, place[1] * step)
 		cell.size = Vector2(cell_size, cell_size)
-	_fashion_toggle.position=Vector2(4*step,4*step)
-	_fashion_toggle.size=Vector2(cell_size,cell_size)
-	_fashion_caption.position=Vector2(0,cell_size-18)
-	_fashion_caption.size=Vector2(cell_size,18)
-	_fashion_slot.position=Vector2(4*step,5*step)
-	_fashion_slot.size=Vector2(cell_size,cell_size)
-	_fashion_slot.add_theme_constant_override("icon_max_width",int(cell_size-8))
 	for cell in bag_cells:
 		cell.custom_minimum_size = Vector2(cell_size, cell_size)
 
@@ -491,7 +463,6 @@ func refresh() -> void:
 		_show_item(cell, item)
 		if item == null:
 			cell.icon_shape = ItemIcon.shape_for(cell.slot_id)
-	_refresh_fashion()
 	doll.dress(profile.loadout, profile.loadout.weapon_style(combat.styles.keys()), rules.catalog, profile.appearance)
 	var bag = store()
 	_capacity.text = TEXT["capacity"] % [bag.slots_used(), bag.capacity]
@@ -833,8 +804,6 @@ func _build_detail() -> void:
 				_detail_empty_slot(selection["slot"], selection["index"])
 		"material":
 			_detail_material(selection["id"])
-		"fashion":
-			_detail_fashion()
 		_:
 			_detail_character()
 
@@ -1069,56 +1038,7 @@ func _button(text: String, callback: Callable) -> Button:
 
 
 func _online_command_done(_id: int, result: Dictionary) -> void:
-	_fashion_pending=false
 	refresh()
 	message.emit(preload("res://client/online/online_text.gd").command_message(result))
 	_pending_discard = null
 
-
-func _refresh_fashion() -> void:
-	var picked: Dictionary=ItemAssets.cosmetics().resolve(profile.appearance)
-	var choice: Dictionary=picked.get("fashion",{})
-	var selected := str(choice.get("id","none")) != "none"
-	var shown := selected and str(picked.get("fashion_display",{}).get("id","on"))=="on"
-	var file := preload("res://client/look_panel.gd").icon_file("fashion",choice) if selected else ""
-	_fashion_slot.icon=load(file) if not file.is_empty() else null
-	_fashion_slot.expand_icon=true
-	_fashion_slot.text="" if _fashion_slot.icon != null else "แฟชั่น"
-	_fashion_slot.modulate=Color.WHITE if shown else Color(.65,.65,.65)
-	_fashion_slot.tooltip_text="แฟชั่น: "+str(choice.get("name","ยังไม่ได้เลือก"))+(" · แสดง" if shown else " · ซ่อน")
-	if _fashion_toggle != null:
-		_fashion_toggle.set_pressed_no_signal(shown)
-		_fashion_toggle.disabled=not selected or _fashion_pending
-
-func _choose_fashion(part: String, choice: String) -> void:
-	if _fashion_pending: return
-	var result: Dictionary=session.command({"type":"appearance","part":part,"choice":choice})
-	_fashion_pending=bool(result.get("pending",false))
-	if _fashion_pending:
-		_refresh_fashion()
-		return
-	if result.get("ok",false):
-		refresh()
-		changed.emit()
-	else:
-		_refresh_fashion()
-		message.emit(preload("res://client/online/online_text.gd").command_message(result))
-
-func _detail_fashion() -> void:
-	_detail.add_child(_line("ชุดแฟชั่น",InkUi.GOLD,InkUi.FONT_HEADING))
-	_detail.add_child(_wrapped("เลือกแฟชั่นทั้งชุด หรือปิดเครื่องหมายแฟชั่นเพื่อแสดงชุดต่อสู้ทั้งชุด ปีกแสดงแยกต่างหาก",InkUi.MUTED))
-	var grid := GridContainer.new()
-	grid.columns=2
-	_detail.add_child(grid)
-	for choice in ItemAssets.cosmetics().choices.get("fashion",[]):
-		if choice.id=="none": continue
-		var button := Button.new()
-		button.custom_minimum_size=Vector2(72,72)
-		button.tooltip_text=str(choice.name)
-		var file := preload("res://client/look_panel.gd").icon_file("fashion",choice)
-		if not file.is_empty(): InkUi.picture_button(button,load(file),64)
-		else: button.text=str(choice.name)
-		button.disabled=run != null or _fashion_pending
-		button.pressed.connect(_choose_fashion.bind("fashion",str(choice.id)))
-		grid.add_child(button)
-	if run != null: _detail.add_child(_wrapped("เปลี่ยนชุดได้เมื่อกลับแคมป์",InkUi.MUTED))

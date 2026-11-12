@@ -1,35 +1,29 @@
 extends "res://client/hub_service_panel.gd"
 ## Tailor (docs/ui/hub_layout_spec.md §2 / §4 Outfit tab), full screen: a card picker, the card's big live
-## character, and the look and fashion choices of that card.
+## character, and the look choices of that card.
 ## - Hair colour is the Studio's free #hair-color input: a colour wheel previews live on the character, Apply
 ##   sends `card_look {part: "hair_color", choice: "#rrggbb"}`, Default sends "" (the hair's Studio default).
 ## - Hair, Eyes, Skin, Makeup and the base Outfit are the card's own looks: `card_look {class, part, choice}` with
 ##   the options of logic/card_deck.gd (hairs of the class file, data/cosmetics eye / skin lists, makeup, outfit).
-## - Fashion and Back are Mall pieces (logic/mall.gd, counted: one copy dresses one card): `mall_buy {part, choice}`
-##   buys a copy with diamonds, `card_fashion {class, part, choice}` dresses / undresses this card. Refusals
-##   (no_free_copy, cosmetic_not_owned, not_enough_diamonds, already_owned) show their reason in the status line.
-## Hats are deferred (CLAUDE.md 2026-10-23) and not offered. The character redraws from the profile after each answer.
+## - The old Fashion and Back item categories were removed with the old fashion pieces (Boss 2026-11-13: they fit
+##   the old character model only). Hats stay deferred. The character redraws from the profile after each answer.
 
 const CardDeck := preload("res://logic/card_deck.gd")
 const CardPortrait := preload("res://client/card_portrait.gd")
-const Mall := preload("res://logic/mall.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
 const HubLook := preload("res://client/hub_look.gd")
 
-## Category tab -> the profile part it changes ("look" = card_look parts, "mall" = Mall fashion parts).
+## Category tab -> the profile part it changes (all are card_look parts).
 const CATEGORIES: Array[Dictionary] = [
 	{"id": "hair", "kind": "look", "part": "hair", "parts": ["hair", "hair_color"]},  ## style, then the Studio free colour
 	{"id": "eyes", "kind": "look", "part": "eye_color", "parts": ["iris_style", "eye_color"]},  ## iris style (Studio) then colour
 	{"id": "skin", "kind": "look", "part": "skin"},
 	{"id": "makeup", "kind": "look", "part": "makeup"},
 	{"id": "base_outfit", "kind": "look", "part": "outfit"},
-	{"id": "fashion", "kind": "mall", "part": "fashion"},
-	{"id": "back", "kind": "mall", "part": "fashion_back"},
 ]
 
 var card := ""
 var category := "hair"
-var picked := ""  ## the Mall piece shown in the fashion strip
 var _card_row: HBoxContainer
 var _cards := {}
 var _window: Panel
@@ -99,19 +93,16 @@ func build() -> void:
 func open_for(class_id: String) -> void:
 	if not class_id.is_empty():
 		card = class_id
-	picked = ""
 	open()
 
 
 func select_card(id: String) -> void:
 	card = id
-	picked = ""
 	refresh()
 
 
 func select_category(id: String) -> void:
 	category = id
-	picked = ""
 	_scroll.scroll_vertical = 0
 	refresh()
 
@@ -194,19 +185,16 @@ func refresh() -> void:
 		child.queue_free()
 	var entry := _category()
 	var part := str(entry["part"])
-	if str(entry["kind"]) == "look":
-		var parts: Array = entry.get("parts", [part])
-		for each in parts:
-			if parts.size() > 1:
-				_section(CardTokens.t("tailor_part_" + str(each)))
-			_fill_looks(p, str(each))
+	var parts: Array = entry.get("parts", [part])
+	for each in parts:
 		if parts.size() > 1:
-			var now := []
-			for each in parts:
-				now.append(_look_name(str(each), str(p.card_deck.get("cards", {}).get(card, {}).get(str(each), CardDeck.LATER_PARTS.get(str(each), "")))))
-			_strip_line.text = CardTokens.t("tailor_look_line") % " + ".join(now)
-	else:
-		_fill_mall(p, part)
+			_section(CardTokens.t("tailor_part_" + str(each)))
+		_fill_looks(p, str(each))
+	if parts.size() > 1:
+		var now := []
+		for each in parts:
+			now.append(_look_name(str(each), str(p.card_deck.get("cards", {}).get(card, {}).get(str(each), CardDeck.LATER_PARTS.get(str(each), "")))))
+		_strip_line.text = CardTokens.t("tailor_look_line") % " + ".join(now)
 
 
 # ------------------------------------------------------------------ card looks (card_look)
@@ -275,80 +263,8 @@ func _preview_hair(color: Color) -> void:
 	_portrait.set_look(look)
 
 
-# ------------------------------------------------------------------ Mall fashion (mall_buy, card_fashion)
-func _fill_mall(p, part: String) -> void:
-	var cosmetics = ItemAssets.cosmetics()
-	var wearing := str(Mall.card_look(p, card).get(part, "none"))
-	for entry in cosmetics.choices.get(part, []):
-		var id := str(entry["id"])
-		if id == "none":
-			continue
-		var owned := Mall.owned_count(p, part, id)
-		var mark := ""
-		if owned > 0:
-			mark = CardTokens.t("tailor_owned_mark") % owned
-		_option(fashion_name(id, part) + ("\n" + mark if not mark.is_empty() else ""), _fashion_icon(part, id), "", id == wearing, select_piece.bind(id), id == picked)
-	if picked.is_empty():
-		picked = wearing if wearing != "none" else ""
-	_fill_strip(p, part, wearing)
-
-
-func select_piece(id: String) -> void:
-	picked = id
-	refresh()
-
-
-func _fill_strip(p, part: String, wearing: String) -> void:
-	_clear_strip_buttons()
-	if picked.is_empty():
-		_strip_name.text = CardTokens.t("tailor_" + category)
-		_strip_line.text = CardTokens.t("tailor_pick_piece")
-		if wearing == "none":
-			return
-	var id := picked if not picked.is_empty() else wearing
-	var owned := Mall.owned_count(p, part, id)
-	var free := Mall.free_copies(p, part, id)
-	var on: Array = Mall.cards_wearing(p, part, id)
-	var names: Array = on.map(func(c) -> String: return CardTokens.class_name_of(str(c)))
-	var price := int(Mall.config().get("prices", {}).get(part, 0))
-	_strip_name.text = fashion_name(id, part)
-	var line := CardTokens.t("tailor_copies") % [owned, free]
-	if not names.is_empty():
-		line += "   ·   " + CardTokens.t("tailor_worn_by") % ", ".join(names)
-	_strip_line.text = line
-	var buy := _strip_button(CardTokens.t("tailor_buy") % price, _buy.bind(part, id))
-	buy.disabled = owned >= Mall.max_copies(part)
-	if buy.disabled:
-		buy.tooltip_text = CardTokens.error_text("already_owned")
-	if id == wearing:
-		_strip_button(CardTokens.t("tailor_take_off"), _wear.bind(part, "none"))
-	else:
-		var wear := _strip_button(CardTokens.t("tailor_wear"), _wear.bind(part, id))
-		wear.disabled = owned < 1
-		if owned < 1:
-			wear.tooltip_text = CardTokens.error_text("cosmetic_not_owned")
-	HubItemDetails.fit_buttons(_strip_buttons, s)
-
-
-## The fashion piece's display name: the English `name` of its data/cosmetics choice (Thai is kept in `name_th`,
-## tools/items/cosmetic_names.py). Fashion and Back share some ids (bat_club ...), so the part picks the list.
-static func fashion_name(id: String, part := "fashion") -> String:
-	var choice: Dictionary = ItemAssets.cosmetics().entry(part, id)
-	if not choice.is_empty() and not str(choice.get("name", "")).is_empty():
-		return str(choice["name"])
-	return id.replace("_", " ").capitalize()
-
-
-static func _fashion_icon(part: String, id: String) -> Texture2D:
-	var kind := "outfit" if part == "fashion" else "back"
-	for file in ["res://art/fashion/icons/%s_%s.png" % [part, id], "res://art/fashion/studio_icons/%s-%s.svg" % [kind, id]]:
-		if ResourceLoader.exists(file):
-			return load(file) as Texture2D
-	return null
-
-
 # ------------------------------------------------------------------ widgets
-## One choice: a parchment tile with an icon (fashion), a colour disc (eyes / skin) or just its name.
+## One choice: a parchment tile with an icon, a colour disc (eyes / skin) or just its name.
 ## The worn / chosen one gets a dark ring and a check mark (shape, not colour alone).
 func _option(text: String, picture: Texture2D, swatch: String, chosen: bool, callback: Callable, highlighted: bool = false) -> Button:
 	var b := Button.new()
@@ -449,15 +365,3 @@ func _set_look(part: String, choice: String) -> void:
 		if not reduced_motion:
 			_portrait.pulse()
 
-
-func _buy(part: String, id: String) -> void:
-	var result := await run({"type": "mall_buy", "part": part, "choice": id})
-	if result.get("ok", false):
-		say(CardTokens.t("tailor_bought") % [fashion_name(id, part), int(result.get("owned", 1))])
-
-
-func _wear(part: String, id: String) -> void:
-	var old := str(Mall.card_look(_profile(), card).get(part, "none"))
-	var result := await run({"type": "card_fashion", "class": card, "part": part, "choice": id})
-	if result.get("ok", false):
-		say(CardTokens.t("tailor_took_off") % fashion_name(old, part) if id == "none" else CardTokens.t("tailor_wearing") % [CardTokens.class_name_of(card), fashion_name(id, part)])

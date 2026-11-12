@@ -12,7 +12,9 @@ extends RefCounted
 ##         "hair_color": "" (the hair's Studio default) or any "#rrggbb" (Studio #hair-color free input), "skills": [],
 ##         "race": a race id of data/races/ (design/gdd/races-and-classes.md 3.7; changed only by the card_race command),
 ##         "progress": {"level", "xp"} (design/gdd/skill-tree.md 3.2, logic/card_progress.gd; optional: missing = level 1,
-##         changed only by the run-end XP grant)}
+##         changed only by the run-end XP grant),
+##         "skill_tree": {"class": [node ids], "race": [...], "combo": [...]} (design/gdd/skill-tree.md 3.3, logic/skill_tree.gd;
+##         optional: missing = nothing learned; changed only by the tree_* commands and card_race)}
 
 const CLASS_FOLDER := "res://data/classes/"
 const CLASS_ORDER: Array[String] = ["sword_shield", "greatsword", "longbow", "magic"]
@@ -271,7 +273,18 @@ static func validate_card(class_id: String, card: Variant, cosmetics = null) -> 
 		return "bad_card"
 	if card.has(CardProgress.PROGRESS) and not CardProgress.problem(card[CardProgress.PROGRESS]).is_empty():
 		return "bad_card"
+	if card.has("skill_tree") and not _tree_shape_ok(card["skill_tree"]):
+		return "bad_card"  # the node rules themselves are checked by logic/skill_tree.gd (repair on load, commands)
 	return ""
+
+
+static func _tree_shape_ok(tree) -> bool:
+	if not tree is Dictionary or tree.size() != 3 or not tree.has_all(["class", "race", "combo"]):
+		return false
+	for branch in tree:
+		if not tree[branch] is Array or not (tree[branch] as Array).all(func(id): return id is String):
+			return false
+	return true
 
 
 static func _part_allowed(class_id: String, part: String, choice: String, cosmetics) -> bool:
@@ -354,6 +367,10 @@ static func repaired(deck: Variant, cosmetics = null) -> Dictionary:
 				saved_card[RACE_PART] = RaceData.load_default().default_race()  # a removed race file (GDD 5): keep the card, default race
 			if saved_card.has(CardProgress.PROGRESS):  # JSON floats or an out-of-range block: keep the card, clean its level
 				saved_card[CardProgress.PROGRESS] = CardProgress.clean(saved_card[CardProgress.PROGRESS])
+			if saved_card.has("skill_tree"):  # GDD 5: unknown ids dropped, invalid deepest tiers refunded (load(): no preload cycle)
+				var level: int = int(CardProgress.clean(saved_card.get(CardProgress.PROGRESS))["level"])
+				var race := str(saved_card.get(RACE_PART, starter_race(class_id)))
+				saved_card["skill_tree"] = load("res://logic/skill_tree.gd").repaired(saved_card["skill_tree"], class_id, race, CardProgress.points(int(level)))
 			if validate_card(class_id, saved_card, cosmetics).is_empty():
 				fresh["cards"][class_id] = saved_card
 	if deck.get("squad") is Array:

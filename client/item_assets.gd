@@ -8,7 +8,7 @@ const MANIFEST_PATH := "res://art/items/item_manifest.json"
 ## Inventory icons made from the model team's previews (tools/items/build_icons.py).
 const ICON_FOLDER := "res://art/items/icons/"
 ## Shown on an empty shirt / pants slot (Boss 2026-10-06: the basic clothes are not items).
-const EMPTY_LOOKS := {} # Native body/fashion supplies the base; old garments use an incompatible rig.
+const EMPTY_LOOKS := {} # The Studio body supplies the base; old garments use an incompatible rig.
 ## The equipment slots that show a model on the body.
 const BODY_SLOTS: Array[String] = ["hat", "shirt", "armband", "pants", "shoes"]
 
@@ -32,7 +32,7 @@ static func entry(asset_id: String) -> Dictionary:
 
 ## The resource path of a ready asset (or of an archived one too, with `archived_ok`), or "".
 static func path(asset_id: String, archived_ok: bool = false) -> String:
-	if (asset_id.begins_with("res://art/fashion/") or asset_id.begins_with("res://art/armor/")):
+	if asset_id.begins_with("res://art/armor/"):
 		return asset_id if ResourceLoader.exists(asset_id) else ""
 	var asset := entry(asset_id)
 	var file := str(asset.get("asset_path", ""))
@@ -112,31 +112,9 @@ static func appearance(chosen: Dictionary) -> Dictionary:
 	if parts.has("hair_color"):
 		result["hair"] = Color(parts["hair_color"]["color"])
 		result["hair_natural"] = parts["hair_color"].get("natural", false)
-	if parts.has("face"):
-		var face_id := str(parts["face"].get("asset_id", ""))
-		result["face"] = path(face_id, parts["face"].get("archived", false))
-		result["face_replaces_head"] = entry(face_id).get("replaces_head", false)
-		result["face_hides_hair"] = entry(face_id).get("hide_hair", false)
-	if parts.has("hair_style"):
-		result["hair_style"] = path(str(parts["hair_style"].get("asset_id", "")), parts["hair_style"].get("archived", false))
-	result["eye_style"] = str(parts.get("face", {}).get("id", "original"))
-	result["eye_texture"] = str(parts.get("face", {}).get("asset_id", ""))
 	if parts.has("eye_color"):
 		result["eye_color"] = Color(parts["eye_color"]["color"])
 		result["eye_color_id"] = str(parts["eye_color"]["id"])
-	var manifest_path := "res://art/fashion/manifest.json"
-	if FileAccess.file_exists(manifest_path):
-		var manifest = JSON.parse_string(FileAccess.get_file_as_string(manifest_path))
-		if manifest is Dictionary:
-			result["fashion"] = manifest.get("outfits", {}).get(str(parts.get("fashion", {}).get("id", "red")), {})
-			var hair_id := str(parts.get("hair_style", {}).get("id", "mens_short"))
-			result["head_accessory"] = str(manifest.get("head", {}).get(hair_id, ""))
-			result["mask"] = str(manifest.get("mask", {}).get(hair_id, ""))
-	for part in ["fashion_hat", "fashion_back"]:
-		result[part] = str(parts.get(part, {}).get("asset_id", ""))
-	result["wear"] = {}
-	for slot in ["shirt", "pants", "shoes", "head", "hair", "mask"]:
-		result["wear"][slot] = str(parts.get("wear_"+slot, {}).get("id", "on")) == "on"
 	result["blink_mode"] = "auto"
 	return result
 

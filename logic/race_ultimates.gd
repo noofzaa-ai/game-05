@@ -49,7 +49,8 @@ static func ready(sim, id: int) -> bool:
 	if fighter == null or fighter.race_state.get("ultimate", {}).is_empty() or not _passives().ultimates_enabled():
 		return false
 	var ult: Dictionary = fighter.race_state["ultimate"]
-	if fighter.gauge < float(sim.combat.rules["ultimate_gauge_max"]) or fighter.state != Fighter.State.IDLE or not fighter.is_alive():
+	var need: float = _passives().TreeEffects.fire_threshold(fighter, float(sim.combat.rules["ultimate_gauge_max"]))  # tree Berserkergang
+	if fighter.gauge < need or fighter.state != Fighter.State.IDLE or not fighter.is_alive():
 		return false
 	if fighter.incapacitated or fighter.rooted or not sim.bodies[id].grounded:
 		return false
@@ -65,7 +66,7 @@ static func start(sim, id: int) -> bool:
 	var fighter = sim.fighters[id]
 	var ult: Dictionary = fighter.race_state["ultimate"]
 	register_move(sim.combat, fighter)
-	fighter.gauge = 0.0
+	fighter.gauge = _passives().TreeEffects.gauge_after_cast(fighter)  # 0, or the tree's after_cast (Mastery Overflow)
 	fighter.race_state["full_at"] = -1
 	var move := move_id(fighter)
 	fighter.move_id = move

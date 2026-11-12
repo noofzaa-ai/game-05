@@ -24,10 +24,12 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"upgrade_camp": {}, "upgrade_facility": {"facility": TYPE_STRING},
 		"appearance": {"part": TYPE_STRING, "choice": TYPE_STRING},
 		"mall_buy": {"part": TYPE_STRING, "choice": TYPE_STRING},
-		"card_fashion": {"class": TYPE_STRING, "part": TYPE_STRING, "choice": TYPE_STRING},
 		"set_name": {"name": TYPE_STRING},
 		"card_look": {"class": TYPE_STRING, "part": TYPE_STRING, "choice": TYPE_STRING}, "card_squad": {"squad": TYPE_ARRAY},
 		"card_race": {"class": TYPE_STRING, "race": TYPE_STRING},  # design/gdd/races-and-classes.md 3.7: free switch (Boss 2026-11-13)
+		# Card skill tree (design/gdd/skill-tree.md 3.3, logic/skill_tree.gd): learn one node, confirm a whole draft, reset a branch.
+		"tree_learn": {"card": TYPE_STRING, "node": TYPE_STRING}, "tree_save": {"card": TYPE_STRING, "draft": TYPE_DICTIONARY},
+		"tree_reset_class": {"card": TYPE_STRING}, "tree_reset_race": {"card": TYPE_STRING},
 		"farm_seed": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_plant": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_harvest": {"plot":TYPE_INT},
 		"shop_buy": {"sku": TYPE_STRING},
 		"skill_build": {"action": TYPE_STRING, "build": TYPE_DICTIONARY, "card": TYPE_STRING},
@@ -165,12 +167,11 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 					return _error("invalid_count")
 				inventory.remove_material(command["material"], count)
 		"mall_buy":
+			# Nothing is sold now (Boss 2026-11-13 removed the old fashion): every part is "invalid_cosmetic".
 			if location != "camp": return _error("not_available_here")
-			return preload("res://logic/mall.gd").buy(p,state.get("cosmetics"),command.part,command.choice)
-		"card_fashion":
-			if location != "camp": return _error("not_available_here")
-			var worn_result: Dictionary = preload("res://logic/mall.gd").wear_on_card(p, state.get("cosmetics"), command["class"], command.part, command.choice)
-			if not worn_result.get("ok", false): return _error(str(worn_result.get("reason", "invalid_cosmetic")))
+			var bought: Dictionary = preload("res://logic/mall.gd").buy(p,state.get("cosmetics"),command.part,command.choice)
+			if not bought.get("ok", false): return _error(str(bought.get("reason", "invalid_cosmetic")))
+			result = bought
 		"card_look", "card_squad":
 			if location != "camp": return _error("not_available_here")
 			var deck_rules := preload("res://logic/card_deck.gd")
@@ -182,10 +183,17 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"card_race":
 			if location != "camp": return _error("not_available_here")
 			if not command.has_all(["class", "race"]): return _error("invalid_command")
+			var old_race := preload("res://logic/card_deck.gd").race_of(p.card_deck, command["class"]) if p.card_deck.get("cards", {}).has(command["class"]) else ""
 			if not preload("res://logic/card_deck.gd").set_race(p.card_deck, command["class"], command["race"]):
 				return _error("invalid_race")
+			if old_race != command["race"]:  # skill-tree.md 3.11: race + combo branches refunded for free, class kept
+				result = {"tree_refunded": preload("res://logic/skill_tree.gd").on_race_change(p.card_deck, command["class"])}
+		"tree_learn", "tree_save", "tree_reset_class", "tree_reset_race":
+			if location != "camp": return _error("in_run")  # the tree never changes during a run (skill-tree.md 3.2)
+			result = preload("res://logic/skill_tree.gd").apply_command(p, command)
+			if not result.get("ok", false): return _error(str(result.get("reason", "bad_tree")))
 		"set_name", "appearance", "randomize_appearance":
-			if location != "camp" and not (kind == "appearance" and command.get("part") == "fashion_display"):
+			if location != "camp":
 				return _error("not_available_here")
 			if kind == "set_name":
 				var problem := Profile.name_problem(command["name"])
@@ -196,12 +204,10 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				if state.get("cosmetics") == null:
 					return _error("invalid_appearance")
 				var randomized: Dictionary = state["cosmetics"].random(_rng)
-				for part in ["fashion","fashion_hat","fashion_back"]: randomized[part]=p.appearance.get(part,"none")
 				randomized["blink_mode"]="auto"
 				p.appearance = randomized
 			else:
 				var cosmetics = state.get("cosmetics")
-				if command.part in ["fashion","fashion_hat","fashion_back"] and not preload("res://logic/mall.gd").owns(p,command.part,command.choice):return _error("cosmetic_not_owned")
 				if command.part=="blink_mode" and command.choice!="auto":return _error("invalid_appearance")
 				if cosmetics == null or not cosmetics.choose(p.appearance, command["part"], command["choice"]):
 					return _error("invalid_appearance")

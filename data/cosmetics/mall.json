@@ -1,8 +1,13 @@
 {
   "initial_diamonds": 9999,
-  "prices": {
-    "fashion": 150,
-    "fashion_hat": 50,
-    "fashion_back": 100
+  "prices": {},
+  "legacy_refund": {
+    "_comment": "Boss 2026-11-13: the old fashion pieces were removed (they fit the old character model only). Every saved copy of a removed part is refunded at its old Mall price, in diamonds (the only currency the Mall took). logic/mall.gd refund_legacy().",
+    "currency": "diamonds",
+    "prices": {
+      "fashion": 150,
+      "fashion_hat": 50,
+      "fashion_back": 100
+    }
   }
 }

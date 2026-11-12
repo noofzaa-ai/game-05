@@ -476,11 +476,8 @@ func command(id: int, request_id: int, request: Dictionary, expected_epoch: int 
 					settled = true
 				result = {"ok": true}
 		"appearance":
-			# Only cosmetic visibility may change mid-stage. No client-owned equipment/state accepted.
-			if request.size()==3 and request.get("part")=="fashion_display" and request.get("choice") in ["on","off"]:
-				var trip = trip_for(id)
-				result = preload("res://logic/commands.gd").apply({"now":int(Time.get_unix_time_from_system()),"profile":trip.profile,"rules":_rules,"camp":_camp,"location":"stage","run":trip,"cosmetics":_config.get("cosmetics",preload("res://logic/cosmetic_options.gd").load_default())},request,sim.rng)
-			elif lobby:
+			# Looks change in the lobby only (the mid-stage fashion toggle went with the old fashion, Boss 2026-11-13).
+			if lobby:
 				var trip = trip_for(id)
 				result = preload("res://logic/commands.gd").apply({"now":int(Time.get_unix_time_from_system()),"profile":trip.profile,"rules":_rules,"camp":_camp,"location":"camp","run":null,"cosmetics":_config.get("cosmetics",preload("res://logic/cosmetic_options.gd").load_default())},request,sim.rng)
 		_:

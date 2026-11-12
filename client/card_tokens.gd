@@ -444,7 +444,7 @@ const SVC_DETAIL_H := 0.5
 const SHOP_DETAIL_H := 0.62  ## Shop: details box share of the content height (materials under it)
 const SVC_GOLD_W := 0.14  ## header money line width, share of the panel (Tailor: wider, it adds diamonds)
 const TAILOR_SPLIT := 0.36  ## the character window's share of the Tailor width
-const TAILOR_TILE := Vector2(170.0, 200.0)  ## a fashion piece tile (icon + name)
+const TAILOR_TILE := Vector2(170.0, 200.0)  ## a picture tile (icon + name)
 const TAILOR_CHIP := Vector2(250.0, 64.0)  ## a look choice (hair / colour / makeup)
 const TAILOR_HAIR_PICKER := 300.0  ## the Hair colour wheel (Tailor) side, before scale
 const TAILOR_SWATCH := 36.0  ## colour disc on eye / skin chips  ## details box share of the content height (Blacksmith)
@@ -640,7 +640,6 @@ const STRINGS := {
 	"repaired_ok": ["ซ่อมแล้ว", "Repaired"],
 	"char_hint_touch": ["แตะ = รายละเอียด · แตะสองครั้ง = สวม / ถอด · Q / E = เปลี่ยนการ์ด · Esc / B = กลับ", "Tap a piece = details  ·  Double-tap = wear / take off  ·  Q / E = switch card  ·  Esc / B = back"],
 	"err_slot_closed": ["การ์ดนี้ใช้ช่องนี้ไม่ได้", "This card can't use that slot"],
-	"err_no_free_copy": ["ทุกชิ้นถูกการ์ดอื่นใส่อยู่", "Every copy is worn by another card"],
 	"err_cannot_afford": ["เงินหรือวัสดุไม่พอ", "Not enough gold or materials"],
 	"err_nothing_to_repair": ["ไม่ต้องซ่อม", "Nothing to repair"],
 	"err_no_workbench": ["ยังไม่มีโต๊ะช่าง", "The workbench is not built"],
@@ -703,20 +702,8 @@ const STRINGS := {
 	"tailor_skin": ["สีผิว", "Skin"],
 	"tailor_makeup": ["แต่งตา", "Makeup"],
 	"tailor_base_outfit": ["ชุดพื้นฐาน", "Base outfit"],
-	"tailor_fashion": ["ชุดแฟชั่น", "Fashion"],
-	"tailor_back": ["ของบนหลัง", "Back item"],
 	"tailor_look_line": ["ตอนนี้: %s · แตะเพื่อเปลี่ยน (ฟรี)", "Now: %s  ·  tap a choice to change it (free)"],
-	"tailor_pick_piece": ["แตะชิ้นแฟชั่นเพื่อซื้อหรือใส่", "Tap a piece to buy or wear it"],
-	"tailor_owned_mark": ["มี %d", "Owned %d"],
-	"tailor_copies": ["มี %d ชิ้น · ว่าง %d", "Owned %d  ·  free %d"],
-	"tailor_worn_by": ["ใส่อยู่: %s", "Worn by: %s"],
-	"tailor_buy": ["ซื้อ (%d เพชร)", "Buy (%d diamonds)"],
-	"tailor_wear": ["ใส่ให้การ์ดนี้", "Wear on this card"],
-	"tailor_take_off": ["ถอดออก", "Take off"],
 	"tailor_changed": ["เปลี่ยนเป็น %s แล้ว", "Changed to %s"],
-	"tailor_bought": ["ซื้อ %s แล้ว (มี %d)", "Bought %s (you own %d)"],
-	"tailor_wearing": ["%s ใส่ %s แล้ว", "%s now wears %s"],
-	"tailor_took_off": ["ถอด %s แล้ว", "Took off %s"],
 	"eye_color_turquoise": ["ฟ้า", "Turquoise"], "eye_color_green": ["เขียว", "Green"], "eye_color_violet": ["ม่วง", "Violet"], "eye_color_brown": ["น้ำตาล", "Brown"],
 	"skin_fair": ["ขาว", "Fair"], "skin_natural": ["ธรรมชาติ", "Natural"], "skin_tan": ["แทน", "Tan"], "skin_deep": ["เข้ม", "Deep"],
 	"err_cosmetic_not_owned": ["ยังไม่มีชิ้นนี้ ซื้อก่อน", "You don't own this piece yet"],

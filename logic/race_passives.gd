@@ -34,6 +34,7 @@ const RaceData := preload("res://logic/race_data.gd")
 const Effects := preload("res://logic/effects.gd")
 const Fighter := preload("res://logic/fighter.gd")
 const RaceUltimates := preload("res://logic/race_ultimates.gd")
+const TreeEffects := preload("res://logic/skill_tree_effects.gd")  ## card skill tree nodes (design/gdd/skill-tree.md 3.5)
 const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield", "burst", "pulse_aggro", "zone", "skill_refresh"]
 const PULSE_RADIUS := 5.0  ## pulse_aggro defaults (GDD 3.6: the Bulwark values)
 const PULSE_TICKS := 180
@@ -74,6 +75,7 @@ static func attach(fighter, run) -> void:
 	fighter.race_state = {"race": race, "class": class_id, "passive": str(passive.get("name", "")), "synergy": str(synergy.get("kind", "none")),
 		"effects": effects, "fx": {}, "pseudo": pseudo, "scaling": scaling, "wave": 0, "heal_window": [-1, 0.0],
 		"ultimate": races.ultimate_for(race, class_id).duplicate(true), "full_at": -1}
+	TreeEffects.attach(fighter, run)  # learned tree nodes join the effects / cells / signature (skill-tree.md 3.5)
 
 
 ## stat_mod on real stats, applied to freshly computed base stats (GameSim._refresh_run_stats): (base + add) x (1 + mul).
@@ -271,6 +273,7 @@ static func gain_gauge(sim, id: int, fighter, events: Array, in_combat: bool) ->
 		"support": charge * float(rule.get("support", 0.0)) * float(mul.get("support", 1.0)) * support / atk,
 		"kill": float(rule.get("kill", 0.0)) * float(kills),
 	}
+	TreeEffects.gauge_parts(fighter, parts, kills)  # tree gauge_mod (skill-tree.md 4.7)
 	var total := 0.0
 	var by: Dictionary = fighter.race_state.get("gauge_by", {})
 	for key in parts:
@@ -308,6 +311,9 @@ static func race_events(id: int, fighter, event: Dictionary, fighters: Dictionar
 		"skill_cast":
 			if int(event.get("player", -1)) == id:
 				out.append("skill_cast")
+		"dodge_started":
+			if int(event.get("player", -1)) == id:
+				out.append("dodge")
 		"killed":
 			var target := int(event.get("target", -1))
 			if int(event.get("by", -1)) == id and fighters.has(target) and fighters[target].team != fighter.team:
@@ -326,8 +332,12 @@ static func fire(sim, id: int, event_name: String, context: Dictionary) -> void:
 			continue
 		if effect["type"] != "trigger" or str(effect["on"]) != event_name:
 			continue
+		if not TreeEffects.filter_ok(sim, id, effect, context):  # tree trigger filters (skill-tree.md 3.5)
+			continue
 		var fx: Dictionary = fighter.race_state["fx"].get(str(index), {"last": -1, "n": 0, "wave": 0, "low": false})
 		fighter.race_state["fx"][str(index)] = fx
+		if TreeEffects.once_per_tick(sim, effect, fx):
+			continue
 		if int(effect.get("cooldown_ticks", 0)) > 0 and int(fx["last"]) >= 0 and sim.tick_count - int(fx["last"]) < int(effect["cooldown_ticks"]):
 			continue
 		if bool(effect.get("once_per_wave", false)) and int(fx["wave"]) == int(fighter.race_state["wave"]):
@@ -399,8 +409,10 @@ static func _gain_charges(sim, id: int, index: int, event_name: String, context:
 	if have < top:
 		sim.events.append({"type": "race_runes", "player": id, "runes": have, "max": top})
 		return
-	fx["charges"] = 0
-	sim.events.append({"type": "race_runes", "player": id, "runes": 0, "max": top})
+	fx["charges"] = mini(int(effect.get("reset_to", 0)), top - 1)  # Rune Battery (tree cell_mod charges_reset_to)
+	sim.events.append({"type": "race_runes", "player": id, "runes": int(fx["charges"]), "max": top})
+	if TreeEffects.discharge_gauge(fighter) > 0.0:  # Stored Power (tree gauge_mod discharge_add)
+		fighter.gauge = minf(float(sim.combat.rules["ultimate_gauge_max"]), fighter.gauge + TreeEffects.discharge_gauge(fighter))
 	var done := 0
 	for action in effect["actions"]:
 		if run_action(sim, id, action, context):
@@ -411,6 +423,8 @@ static func _gain_charges(sim, id: int, index: int, event_name: String, context:
 
 ## Runs one action; returns true when it did something. Inert (not yet built) actions return false.
 static func run_action(sim, id: int, action: Dictionary, context: Dictionary) -> bool:
+	if TreeEffects.ACTIONS.has(str(action["action"])):
+		return TreeEffects.run_action(sim, id, action, context)  # node actions: pull, cleanse, skill_status
 	if not RUNNING_ACTIONS.has(str(action["action"])):
 		return false
 	if not context.has("points"):  # a passive's context is the sim event itself: never write into it
@@ -540,6 +554,8 @@ static func _targets(sim, id: int, kind: String, context: Dictionary, action: Di
 		"target":
 			var target := int(context.get("target", -1))
 			return [target] if sim.fighters.has(target) and sim.fighters[target].is_alive() and target != id else []
+		"allies_in_radius":
+			return TreeEffects.targets(sim, id, kind, action)
 	return RaceUltimates.targets_v2(sim, id, kind, context, action)
 
 

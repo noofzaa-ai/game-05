@@ -1,14 +1,12 @@
 {
-  "_comment": "Content packs for the split web build (pipeline/build_web.py, tools/web/build_web.ps1). Order = mount order. Paths not listed, and every script/scene/data file anywhere, stay in the core pack (fetched by play.html with the engine). Audio stays in core: the Audio autoload preloads its cues before any pack can load. GPU textures are split further into one pack per format (name.s3tc / name.etc2). stage (Boss 2026-11-13, two-stage loading): 'boot' packs load before the card screen opens (class characters, fashion, items and icons for the character screen); 'battle' packs (maps, monsters, skill VFX, battle props, monster clips) download in the background while the player is on the card screen, and FIGHT waits for them (client/pack_fetcher.gd). A pack without a stage is 'boot'.",
+  "_comment": "Content packs for the split web build (pipeline/build_web.py, tools/web/build_web.ps1). Order = mount order. Paths not listed, and every script/scene/data file anywhere, stay in the core pack (fetched by play.html with the engine). Audio stays in core: the Audio autoload preloads its cues before any pack can load. GPU textures are split further into one pack per format (name.s3tc / name.etc2). stage (Boss 2026-11-13, two-stage loading): 'boot' packs load before the card screen opens (class characters, looks, items and icons for the character screen); 'battle' packs (maps, monsters, skill VFX, battle props, monster clips) download in the background while the player is on the card screen, and FIGHT waits for them (client/pack_fetcher.gd). A pack without a stage is 'boot'.",
   "packs": [
     {
       "name": "characters",
       "stage": "boot",
       "include": [
         "res://art/characters/",
-        "res://art/rig/",
-        "res://art/cosmetics/",
-        "res://art/fashion/"
+        "res://art/rig/"
       ]
     },
     {

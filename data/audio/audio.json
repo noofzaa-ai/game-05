@@ -1462,6 +1462,23 @@
 				]
 			}
 		],
+		"tree_pull": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_cleanse": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"buff_up"
+				]
+			}
+		],
 		"race_skill_refresh": [
 			{
 				"when": {

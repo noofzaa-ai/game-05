@@ -42,22 +42,17 @@ func run(ctx) -> void:
 		ctx.check("every %s is a model of the model team (missing: %s)" % [part, missing], missing.is_empty())
 		var no_picture: Array = options.choices[part].filter(func(choice): return LookPanel.icon_file(part, choice).is_empty())
 		ctx.check("every %s has a picture for its button (missing: %s)" % [part, no_picture], no_picture.is_empty())
-	ctx.check("the body's own hair is offered", options.entry("hair_style", "original").get("asset_id", "?") == "")
-	ctx.check("every face choice is a real face (Boss 2026-10-08: no plain clay face, no faceless heads)", options.choices["face"].all(func(face): return not face["asset_id"].is_empty() and not ItemAssets.entry(face["asset_id"]).get("replaces_head", false)))
-	ctx.check("there are 31 hair styles from the model team (+ the body's own)", options.choices["hair_style"].size() == 32)
-	ctx.check("hair can keep each style's own colors", options.entry("hair_color", "natural").get("natural", false))
 
 	# The rules.
 	var broken = CosmeticOptions.parse({"skin": "{\"default\": \"x\", \"colors\": [{\"id\": \"a\", \"color\": \"#zz\"}, {\"id\": \"b\", \"color\": \"#ffffff\"}, {\"id\": \"b\", \"color\": \"#000000\"}]}", "face": "not json"})
-	ctx.check("mistakes are reported, not crashed on (bad color, twice-used id, bad default, broken and two missing files: %d)" % broken.errors.size(), broken.errors.size() == 6 and broken.choices["skin"].size() == 1 and broken.defaults["skin"] == "b")
+	ctx.check("mistakes are reported, not crashed on (bad color, twice-used id, bad default, broken and two missing files: %d)" % broken.errors.size(), broken.errors.size() == 4 + CosmeticOptions.PARTS.size() - 2 and broken.choices["skin"].size() == 1 and broken.defaults["skin"] == "b")
 	var chosen := {}
-	ctx.check("nothing picked = the defaults", options.resolve(chosen)["skin"]["id"] == options.defaults["skin"] and options.resolve(chosen)["face"]["id"] == options.defaults["face"])
+	ctx.check("nothing picked = the defaults", options.resolve(chosen)["skin"]["id"] == options.defaults["skin"])
 	ctx.check("an unknown choice is refused and changes nothing", not options.choose(chosen, "skin", "green_goblin") and chosen.is_empty())
 	ctx.check("a known choice is kept", options.choose(chosen, "skin", "deep") and options.resolve(chosen)["skin"]["id"] == "deep")
-	chosen["face"] = "no_longer_offered"
-	ctx.check("a choice the data dropped falls back to the default", options.resolve(chosen)["face"]["id"] == options.defaults["face"])
-	var looks := ItemAssets.appearance({"skin": "deep", "hair_color": "blonde", "face": "devious"})
-	ctx.check("the choices become colors and a face model for the character", looks["skin"].is_equal_approx(Color("#4a2e20")) and looks["hair"].is_equal_approx(Color("#d9b56a")) and looks["face"].ends_with("face_devious_01.glb"))
+	chosen["skin"] = "no_longer_offered"
+	ctx.check("a choice the data dropped falls back to the default", options.resolve(chosen)["skin"]["id"] == options.defaults["skin"])
+	ctx.check("the old face / hair-style / fashion lists are gone (Boss 2026-11-13)", not CosmeticOptions.PARTS.has("face") and not CosmeticOptions.PARTS.has("hair_style") and not CosmeticOptions.PARTS.has("fashion"))
 
 	# The model.
 	var model := CharacterModel.new()
@@ -66,44 +61,9 @@ func run(ctx) -> void:
 	var other := CharacterModel.new()
 	ctx.root.add_child(other)
 	other.load_model("res://art/characters/chibi-studio/chibi_base_animated.glb")
-	var mouth := _body_part(model, "Mouth")
-	model.set_appearance(looks)
-	ctx.check("a face item is worn on the head and the body's own face features are hidden", model.face_path() == looks["face"] and model._face_node != null and mouth != null and not mouth.visible)
-	ctx.check("the skin takes its color", _color_of(_body_part(model, "Face")).is_equal_approx(looks["skin"]) and _color_of(_body_part(model, "Hands articulated")).is_equal_approx(looks["skin"]))
-	ctx.check("the hair and brows take the hair color", model._hair_meshes.size() > 0 and model._hair_meshes.all(func(mesh): return _color_of(mesh).is_equal_approx(looks["hair"])) and _color_of(_body_part(model, "Brow_L")).is_equal_approx(looks["hair"]))
-	ctx.check("another character keeps its own colors (materials are not shared)", not _color_of(_body_part(other, "Face")).is_equal_approx(looks["skin"]))
-	model.dress({"appearance": {"face": ""}})
-	ctx.check("the plain face takes the face item off and shows the body's own again", model.face_path() == "" and model._face_node == null and mouth.visible)
-
-	# Whole replacement heads.
-	# (none is offered now, but the model still supports them for when the model team makes heads with faces)
-	var head_skin := Color("#4a2e20")
-	model.set_appearance({"face": ItemAssets.path("head_smooth_brain_01", true), "face_replaces_head": true, "face_hides_hair": true, "skin": head_skin})
-	ctx.check("a replacement head hides the body's own head, face and hair", model.face_path().ends_with("head_smooth_brain_01.glb") and not _body_part(model, "Face").visible and not _body_part(model, "Nose").visible and not mouth.visible and not model.is_hair_shown())
-	ctx.check("and takes the skin color", model._face_meshes.size() > 0 and _color_of(model._face_meshes[0]).is_equal_approx(head_skin))
-	model.set_appearance(ItemAssets.appearance({"face": "smile"}))
-	ctx.check("a normal face brings the head and hair back", _body_part(model, "Face").visible and model.is_hair_shown() and not mouth.visible)
-
-	# Hair styles.
-	var styled := ItemAssets.appearance({"hair_style": "cat_ears", "hair_color": "natural"})
-	model.ink_outline = true
-	model.set_appearance(styled)
-	var strands: Array = model._hair_item_meshes
-	ctx.check("a hair style is worn on the head and the body's own hair is hidden", model.hair_style_path().ends_with("hair_row4_cat_ears_01.glb") and strands.size() > 0 and model._hair_meshes.all(func(mesh): return not mesh.visible) and model.is_hair_shown())
-	ctx.check("its pieces get the ink outline like the body", strands.all(func(mesh): return mesh in model._meshes and model.outline_of(mesh) != null))
-	var designed: Array = strands.map(func(mesh): return _color_of(mesh))
-	ctx.check("natural = the style's own designed colors", strands.all(func(mesh): return _color_of(mesh).is_equal_approx(mesh.get_active_material(0).get_meta("style_color"))))
-	model.set_appearance(ItemAssets.appearance({"hair_style": "cat_ears", "hair_color": "jade_green"}))
-	var green := Color("#2f7d62")
-	ctx.check("a hair color dyes the style, keeping darker and lighter parts", strands.all(func(mesh): var c := _color_of(mesh); return c.g > c.r and c.g <= green.g + 0.001) and strands.any(func(mesh): return _color_of(mesh).is_equal_approx(green)))
-	model.set_appearance(ItemAssets.appearance({"hair_style": "cat_ears", "hair_color": "natural"}))
-	ctx.check("and natural brings the designed colors back", strands.map(func(mesh): return _color_of(mesh)) == designed)
-	model.dress({"hide_hair": true})
-	ctx.check("a hat that hides hair hides the hair style", not model.is_hair_shown() and not model._hair_node.visible)
-	model.dress({"hide_hair": false})
-	ctx.check("and it comes back without the hat", model.is_hair_shown())
-	model.set_appearance({"hair_style": ""})
-	ctx.check("the body's own hair comes back when no style is worn", model._hair_node == null and model._hair_meshes.all(func(mesh): return mesh.visible) and strands.all(func(mesh): return not mesh in model._meshes))
+	model.set_appearance({"skin": Color("#4a2e20")})
+	ctx.check("the skin takes its color", _color_of(_body_part(model, "Hands articulated")).is_equal_approx(Color("#4a2e20")))
+	ctx.check("another character keeps its own colors (materials are not shared)", not _color_of(_body_part(other, "Hands articulated")).is_equal_approx(Color("#4a2e20")))
 
 	# Clothes over skin.
 	var body := _body_part(model, "Body continuous")

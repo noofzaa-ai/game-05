@@ -60,9 +60,8 @@ func run(ctx) -> void:
 	ctx.check("layout stages are all boot or battle", PackLayout.layout_errors(layout).is_empty())
 	ctx.check("a bad layout stage is reported", not PackLayout.layout_errors({"packs": [{"name": "x", "stage": "later"}]}).is_empty())
 	ctx.check("class characters load at boot (card screen)", PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/characters/studio05/split/hair_a.glb.import")) == PackLayout.BOOT)
-	ctx.check("fashion and item icons load at boot (character screen, Tailor)",
-		PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/fashion/icons/a.png.import")) == PackLayout.BOOT
-		and PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/items/icons/a.png.import")) == PackLayout.BOOT
+	ctx.check("item icons load at boot (character screen, Tailor)",
+		PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/items/icons/a.png.import")) == PackLayout.BOOT
 		and PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/armor/ash_cloth/shirt.glb.import")) == PackLayout.BOOT)
 	for p in ["res://art/maps/goblin_forest/a.glb.import", "res://art/props/goblin_base/meshes/hut.res", "res://art/monsters/goblin/goblin.glb.import",
 			"res://art/skill_system/mcp_vfx/fireball/effect.glb.import", "res://art/skills/blade/x/vfx.glb.import", "res://art/animations/goblin.glb.import"]:

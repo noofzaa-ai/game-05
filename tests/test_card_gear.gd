@@ -1,10 +1,9 @@
 extends RefCounted
 ## Per-card gear (docs/tech/per_card_gear_plan.md, Boss answers 2026-11-11): each class card wears its own
-## slots and skill build, the stash is shared, an item is worn by at most one card, class weapon families,
-## counted fashion copies.
+## slots and skill build, the stash is shared, an item is worn by at most one card, class weapon families.
+## The old fashion (Mall outfits / hats / back items) is gone (Boss 2026-11-13): old saves are refunded on load.
 const Profile := preload("res://logic/profile.gd")
 const Commands := preload("res://logic/commands.gd")
-const Mall := preload("res://logic/mall.gd")
 const ItemSystem := preload("res://logic/item_system.gd")
 const Cosmetics := preload("res://logic/cosmetic_options.gd")
 
@@ -26,7 +25,6 @@ func run(ctx) -> void:
 	# Migration of a pre-card save: old worn gear + build -> Sword & Shield; the others get starters.
 	var old: Dictionary = p.to_dict()
 	old.erase("card_gear")
-	old.erase("card_fashion")
 	old["loadout"]["equipped"]["weapon:0"]["id"] = "old-weapon"
 	old["skill_build"]["allocated"] = ["start_katana"]
 	var migrated = Profile.from_dict(JSON.parse_string(JSON.stringify(old)), rules, camp)
@@ -66,18 +64,44 @@ func run(ctx) -> void:
 	ctx.check("card gear: equip of a wrong family returns wrong_weapon_family", Commands.apply(state, {"type": "equip", "item": "test-bow", "source": "stash", "card": "magic"}, rng).get("error") == "wrong_weapon_family")
 	ctx.check("card gear: repair_all accepts a card", Commands.apply(state, {"type": "repair_all", "card": "greatsword"}, rng).get("error", "") in ["", "no_workbench", "cannot_afford"])
 
-	# Counted fashion: one copy dresses one card at a time.
-	p.mall_owned = []
-	p.diamonds = 9999
-	ctx.check("fashion: buying adds one copy", Commands.apply(state, {"type": "mall_buy", "part": "fashion", "choice": "purple"}, rng).get("ok", false) and Mall.owned_count(p, "fashion", "purple") == 1)
-	ctx.check("fashion: a card wears the owned copy", Commands.apply(state, {"type": "card_fashion", "class": "magic", "part": "fashion", "choice": "purple"}, rng).get("ok", false))
-	ctx.check("fashion: a second card cannot wear the only copy", Commands.apply(state, {"type": "card_fashion", "class": "longbow", "part": "fashion", "choice": "purple"}, rng).get("error") == "no_free_copy")
-	Commands.apply(state, {"type": "mall_buy", "part": "fashion", "choice": "purple"}, rng)
-	ctx.check("fashion: a second copy dresses a second card", Commands.apply(state, {"type": "card_fashion", "class": "longbow", "part": "fashion", "choice": "purple"}, rng).get("ok", false) and Mall.cards_wearing(p, "fashion", "purple").size() == 2)
-	ctx.check("fashion: unowned pieces are refused", Commands.apply(state, {"type": "card_fashion", "class": "magic", "part": "fashion", "choice": "red"}, rng).get("error") == "cosmetic_not_owned")
-	var dressed = Profile.from_dict(JSON.parse_string(JSON.stringify(p.to_dict())), rules, camp)
-	ctx.check("fashion: what each card wears survives save/load", dressed != null and Mall.card_look(dressed, "magic")["fashion"] == "purple" and dressed.mall_owned.size() == 2)
+	# Old fashion removed (Boss 2026-11-13): commands are refused, old saves load, get refunded and keep their looks.
+	var diamonds_before: int = p.diamonds
+	ctx.check("fashion removed: card_fashion is an unknown command", Commands.apply(state, {"type": "card_fashion", "class": "magic", "part": "fashion", "choice": "purple"}, rng).get("error") == "unknown_command")
+	for part in ["fashion", "fashion_back", "fashion_hat"]:
+		var bought: Dictionary = Commands.apply(state, {"type": "mall_buy", "part": part, "choice": "purple" if part == "fashion" else "bat_club"}, rng)
+		ctx.check("fashion removed: mall_buy %s is refused" % part, not bought.get("ok", true) and bought.get("error") == "invalid_cosmetic")
+	ctx.check("fashion removed: appearance fashion is refused", Commands.apply(state, {"type": "appearance", "part": "fashion", "choice": "red"}, rng).get("error") == "invalid_appearance")
+	ctx.check("fashion removed: a refused purchase costs nothing", p.diamonds == diamonds_before and p.mall_owned.is_empty())
+	ctx.check("fashion removed: no fashion parts are offered", not Cosmetics.PARTS.has("fashion") and not Cosmetics.PARTS.has("fashion_back") and not Cosmetics.PARTS.has("fashion_hat"))
 
+	var looks_before: Dictionary = p.card_deck.duplicate(true)
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(p.to_dict()))
+	saved["diamonds"] = 1000
+	saved["mall_owned"] = ["fashion:purple", "fashion:purple", "fashion_back:angel_wings", "fashion_hat:cat", "gizmo:x"]
+	saved["card_fashion"] = {"magic": {"fashion": "purple", "fashion_back": "angel_wings"}, "longbow": {"fashion": "purple"}}
+	saved["appearance"]["fashion"] = "purple"
+	saved["appearance"]["fashion_display"] = "on"
+	saved["appearance"]["fashion_back"] = "angel_wings"
+	saved["appearance"]["fashion_hat"] = "cat"
+	saved["appearance"]["wear_shirt"] = "off"
+	saved["appearance"]["eye_color"] = "violet"
+	var loaded = Profile.from_dict(saved, rules, camp)
+	ctx.check("old save with fashion: loads", loaded != null)
+	if loaded != null:
+		# 2 x outfit 150 + back 100 + hat 50 = 450; the unknown "gizmo" entry pays nothing.
+		ctx.check("old save with fashion: every owned copy refunded at its old price (%d)" % loaded.diamonds, loaded.diamonds == 1000 + 450)
+		ctx.check("old save with fashion: no fashion copies are kept", loaded.mall_owned.is_empty())
+		ctx.check("old save with fashion: fashion fields dropped", not loaded.to_dict().has("card_fashion") and not loaded.appearance.has("fashion") and not loaded.appearance.has("fashion_display") and not loaded.appearance.has("fashion_back") and not loaded.appearance.has("fashion_hat") and not loaded.appearance.has("wear_shirt"))
+		ctx.check("old save with fashion: card looks kept (hair, outfit, eyes, skin, makeup)", loaded.card_deck == looks_before)
+		ctx.check("old save with fashion: the account's own looks kept", str(loaded.appearance.get("eye_color", "")) == "violet")
+		var plain = Profile.from_dict(JSON.parse_string(JSON.stringify(p.to_dict())), rules, camp)
+		ctx.check("old save with fashion: gear kept", plain != null and loaded.to_dict()["card_gear"] == plain.to_dict()["card_gear"])
+		var reloaded = Profile.from_dict(JSON.parse_string(JSON.stringify(loaded.to_dict())), rules, camp)
+		ctx.check("old save with fashion: the refund is paid once (a second load adds nothing)", reloaded != null and reloaded.diamonds == loaded.diamonds)
+	var no_wallet: Dictionary = saved.duplicate(true)
+	no_wallet.erase("mall_owned")
+	var granted = Profile.from_dict(no_wallet, rules, camp)
+	ctx.check("a save from before the Mall (worn fashion granted, not bought) gets no refund", granted != null and granted.diamonds == 1000 and granted.mall_owned.is_empty() and not granted.appearance.has("fashion"))
 
 func _with(d: Dictionary, key: String, value) -> Dictionary:
 	var copy := d.duplicate(true)

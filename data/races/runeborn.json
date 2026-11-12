@@ -29,5 +29,22 @@
    "effects": [{"type": "trigger", "on": "wave_start", "actions": [{"action": "shield", "target": "self", "fraction_of": "source_max_hp", "fraction": 0.12, "duration_ticks": 600}]},
                {"type": "stat_mod", "stat": "RUNE_GAIN", "add": 1}]}
  },
- "unlock": null
+ "unlock": null,
+ "_skill_tree": "Race branch (8 nodes T1..T4, class-agnostic: cell_mod works on whichever class cell the card has) and combo capstones per class (design/gdd/skill-tree.md 3.9, 3.10), validated by logic/skill_tree_data.gd. Numbers are placeholders.",
+ "skill_tree": {"nodes": [
+  {"id": "rb_1", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Quick Glyphs", "text": "Passive `charges_max_add` −1 (S&S 5→4, GS 4→3, bow 6→5, magic 3→2).", "icon": "res://art/ui/skill_tree/icons/rb_1.png", "effects": [{"type": "cell_mod", "cell": "passive", "charges_max_add": -1.0}]},
+  {"id": "rb_2", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Stored Power", "text": "Each rune discharge gives +8 gauge.", "icon": "res://art/ui/skill_tree/icons/rb_2.png", "effects": [{"type": "gauge_mod", "discharge_add": 8.0}]},
+  {"id": "rb_3", "tier": 2, "type": "major", "cost": 2, "excl": "", "name": "Empowered Discharge", "text": "Passive `scale` 1.3 (shields, bursts and focus from runes are 30% stronger).", "icon": "res://art/ui/skill_tree/icons/rb_3.png", "effects": [{"type": "cell_mod", "cell": "passive", "scale": 1.3}]},
+  {"id": "rb_4", "tier": 2, "type": "major", "cost": 2, "excl": "", "name": "Runic Ultimate", "text": "Ultimate `scale` 1.25 and `duration_mul` 1.25 on its zones.", "icon": "res://art/ui/skill_tree/icons/rb_4.png", "effects": [{"type": "cell_mod", "cell": "ultimate", "scale": 1.25, "duration_mul": 1.25}]},
+  {"id": "rb_5", "tier": 3, "type": "major", "cost": 2, "excl": "", "name": "Rune Battery", "text": "After a discharge, runes reset to 1 instead of 0 (`charges_reset_to` 1).", "icon": "res://art/ui/skill_tree/icons/rb_5.png", "effects": [{"type": "cell_mod", "cell": "passive", "charges_reset_to": 1.0}]},
+  {"id": "rb_6", "tier": 3, "type": "major", "cost": 2, "excl": "", "name": "Warding Sigil", "text": "This card's shields last +4 s. When one breaks, it `shock`s enemies within 2 m.", "icon": "res://art/ui/skill_tree/icons/rb_6.png", "effects": [{"type": "mechanic", "id": "warding_sigil", "ticks_add": 240, "status": "shock", "radius": 2.0}]},
+  {"id": "rb_7", "tier": 4, "type": "capstone", "cost": 3, "excl": "rb_capstone", "name": "Overcharge", "text": "Runes may go 2 past max. A discharge spends all of them and scales its payload by runes/max (1.33× for bow up to 1.67× for magic).", "icon": "res://art/ui/skill_tree/icons/rb_7.png", "effects": [{"type": "mechanic", "id": "overcharge", "over_max": 2}]},
+  {"id": "rb_8", "tier": 4, "type": "capstone", "cost": 3, "excl": "rb_capstone", "name": "Resonance", "text": "Each discharge also gives +1 rune to every other Runeborn ally. It feeds the Pair/Trio.", "icon": "res://art/ui/skill_tree/icons/rb_8.png", "effects": [{"type": "mechanic", "id": "resonance", "runes": 1}]}
+ ],
+ "combo": {
+  "sword_shield": {"id": "combo_rb_ss", "tier": 0, "type": "capstone", "cost": 3, "excl": "", "name": "Runic Bulwark", "text": "Each Bulwark pulse gives +1 rune per taunted enemy (max +3).", "icon": "res://art/ui/skill_tree/icons/combo_rb_ss.png", "effects": [{"type": "mechanic", "id": "runic_bulwark", "max_runes": 3}]},
+  "greatsword": {"id": "combo_rb_gs", "tier": 0, "type": "capstone", "cost": 3, "excl": "", "name": "Shatterglyph", "text": "The Runic Edge burst counts as a heavy for Cleave and leaves a 2 s `shock` zone (r3 m).", "icon": "res://art/ui/skill_tree/icons/combo_rb_gs.png", "effects": [{"type": "mechanic", "id": "shatterglyph", "radius": 3.0, "ticks": 120, "status": "shock"}]},
+  "longbow": {"id": "combo_rb_lb", "tier": 0, "type": "capstone", "cost": 3, "excl": "", "name": "Glyph Arrows", "text": "Each Glyph Shot discharge applies Hunter's Mark to all enemies within 6 m of the target.", "icon": "res://art/ui/skill_tree/icons/combo_rb_lb.png", "effects": [{"type": "mechanic", "id": "glyph_arrows", "radius": 6.0}]},
+  "magic": {"id": "combo_rb_mg", "tier": 0, "type": "capstone", "cost": 3, "excl": "", "name": "Grand Runeweaver", "text": "Skill hits on 3+ enemies also give a rune. Runeweaver's shields also give `focus` 3 s.", "icon": "res://art/ui/skill_tree/icons/combo_rb_mg.png", "effects": [{"type": "mechanic", "id": "grand_runeweaver", "min_targets": 3, "status": "focus", "ticks": 180}]}
+ }}
 }

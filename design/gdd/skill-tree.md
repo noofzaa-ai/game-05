@@ -97,12 +97,17 @@ Reused as they are (races-and-classes.md 3.6): `stat_mod`, `low_hp_scaling`, `sk
 | `gauge_mod` | `start` (gauge at run start), `charge_mul`, `kill_add`, `support_mul`, `skill_mul`, `low_hp_mul` + `below`, `fire_at` + `fire_below_hp`, `after_cast` (gauge left after a cast) | Changes this card's ultimate gauge (races-and-classes.md 4.7). |
 | `signature_mod` | `every_mul`, `radius_add`, `duration_add`, `per_target_add`, `max_add`, `mark_duration_add`, `extra_actions` [actions] | Changes the class signature (Bulwark / Cleave / Hunter's Mark / Spellweave). |
 | `pilot_mod` | fixed keys: `kite_drop_skill`, `cast_center` (`densest`), `kite_distance`, `hold_min_targets_add` | The few nodes that change auto-pilot behaviour say so in data (section 6.4). |
+| `mechanic` | `id` (one of `data/skill_tree/rules.json` `vocabulary.mechanics`) + its own params | A one-off node rule the generic words cannot express (Deadeye, Twin Ultimate, World Tree, the combo capstones...). Each id is listed with a one-line description in the rules file; an unknown id is a load error; the engine implements it by id (PO default 2026-11-13, accepted). |
+
+`gauge_mod` also takes `discharge_add` (gauge per rune discharge, Stored Power).
 
 **New events / targets / actions the node list needs** (beyond races-and-classes.md v2):
 - Events: `signature_pulse` (Bulwark pulse / Cleave heavy / Mark applied), `dodge`, `kite`, `block` (an alias of the existing `guard_block`), `overheal`, `rune_discharge`, `lethal_hit`.
 - Trigger filters: `skill` (the trigger fires only for one skill id), `min_targets` (a hit that touched N+ enemies), `target_has` (a status id on the target), `self_below_hp`.
 - Actions: `pull` {radius, distance}, `cleanse` {target, statuses}, `skill_status` {status, stacks} (applies a *skill-system* status from the race engine), `death_save` {duration_ticks, atk_mul, survive_if_kill}, `reflect` {fraction, while}.
 - Stats: `CONTROL_IMMUNE` (flag), `DMG_TAKEN_AURA` {radius, mul}, `heavy_arc` (degrees, a move field).
+- Targets: `allies_in_radius` {radius} (allies within radius of the card, Rallying Wall).
+- Action fields: `heal` takes `per_target` (amount × enemies the hit touched) and `cap_max_hp` (cap per trigger, Unstoppable, Red Harvest); `skill_refresh` takes `others` (refresh every skill but the one that fired, Overload).
 
 ### 3.6 Skill slots (no gem slotting)
 
@@ -330,7 +335,7 @@ At 26 points: class cap + combo = 16 + 6 + 3 = 25 ✓ (1 spare). Race cap + comb
 - **Death save + revive on the same card** (Valhalla's Call, then World Tree from an Elf ally): the death save runs first. If it ends with the card down, the revive may then run. Each is once per wave.
 - **Twin Ultimate on a revive ultimate (Rebirth Bloom)**: the echo can't revive anyone already revived this wave (shared flag), so it only heals and regens.
 - **Overcharge with Rune Battery**: reset to 1 after a scaled discharge. Payload scale is capped at (max+2)/max.
-- **Online**: tree edits are server commands (`skill_tree` {action: save|reset_class|reset_race, card, draft}), validated like `card_look`. Rooms receive each card's validated tree in the deck they already send. The sim never trusts client node lists. Determinism: chance-based nodes use the fighter's sim RNG; replays and prediction stay exact.
+- **Online**: tree edits are server commands, validated like `card_look`. Built as four commands (PO default 2026-11-13, docs/po_defaults.md): `tree_learn` {card, node}, `tree_save` {card, draft} (the whole draft, saved or rejected as a whole), `tree_reset_class` {card}, `tree_reset_race` {card}; `card_race` returns the refunded race/combo points. Rooms receive each card's validated tree in the deck they already send. The sim never trusts client node lists. Determinism: chance-based nodes use the fighter's sim RNG; replays and prediction stay exact.
 - **XP double pay**: XP is granted inside the once-only haul commit (`haul.committed`), so a double "end run" never doubles XP.
 
 ## 6. Dependencies (both ways)

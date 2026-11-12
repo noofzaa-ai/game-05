@@ -53,7 +53,7 @@ class ProfileWorkerPackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             builder.prepare(root)
-            for path in ('server/profile/runner.gd', 'logic/commands.gd', 'data/items/catalog.json', 'data/items/rules.json', 'data/camp/camp.json', 'data/cosmetics/faces.json'):
+            for path in ('server/profile/runner.gd', 'logic/commands.gd', 'data/items/catalog.json', 'data/items/rules.json', 'data/camp/camp.json', 'data/cosmetics/skin_tones.json'):
                 self.assertTrue((root / path).is_file(), path)
             for path in ('build', 'art', 'client', 'server/k3s', 'data/online.local.json'):
                 self.assertFalse((root / path).exists(), path)

@@ -52,22 +52,10 @@ func run():
 	await _shot(prefix + "_tailor_hair_after.png")
 	tailor.select_category("eyes")
 	await _shot(prefix + "_tailor_eyes.png")
-	# Fashion: buy one copy, wear it on Great Sword, then refuse the same piece on a second card
-	tailor.select_category("fashion")
-	tailor.select_piece("red")
-	await _shot(prefix + "_tailor_fashion_before.png")
-	await tailor._buy("fashion", "red")
-	print("BUY status=", tailor._status.text, " owned=", gs.profile.mall_owned.count("fashion:red"))
-	await tailor._wear("fashion", "red")
-	print("WEAR status=", tailor._status.text)
-	await _shot(prefix + "_tailor_fashion_after.png")
-	tailor.select_card("longbow")
-	tailor.select_piece("red")
-	await tailor._wear("fashion", "red")
-	print("REFUSE status=", tailor._status.text)
-	await _shot(prefix + "_tailor_no_free_copy.png")
-	tailor.select_category("back")
-	await _shot(prefix + "_tailor_back.png")
+	# The categories left after the old fashion was removed (Boss 2026-11-13): Hair, Eyes, Skin, Makeup, Base outfit
+	for id in ["skin", "makeup", "base_outfit"]:
+		tailor.select_category(id)
+		await _shot(prefix + "_tailor_" + id + ".png")
 	tailor.close()
 	# the character screen's Outfit tab opens the Tailor for that card
 	screen.open_character("sword_shield")

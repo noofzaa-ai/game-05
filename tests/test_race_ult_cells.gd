@@ -16,6 +16,8 @@ const MAGIC_SQUAD := ["sword_shield", "greatsword", "magic"]
 func run(ctx) -> void:
 	_strict_validation(ctx)
 	_human(ctx)
+	_viking(ctx)
+	_elf(ctx)
 
 
 ## A squad of these races with each card's own ultimate from the data, gauges full, bodies grounded.
@@ -226,3 +228,213 @@ static func _skill_damage_mul(fighter) -> float:
 	var stats := {"damage": 1.0}
 	RacePassives.modify_skill_stats(fighter, stats)
 	return float(stats["damage"])
+
+
+## Viking (red): HP and kills in 4 ways (Fury-scaled taunt burst, kill-extended whirl, execute chain, HP-cost nuke).
+func _viking(ctx) -> void:
+	var data = RaceData.load_default()
+	ctx.check("Viking: 4 class ultimates + a default, fury_factor 1.5", ["sword_shield", "greatsword", "longbow", "magic"].all(func(c): return not str(data.ultimate_for("viking", c).get("name", "")).is_empty())
+		and data.ultimate_for("viking", "no_such_class")["name"] == "Battle Fury" and float(data.rules["fury_factor"]) == 1.5)
+	# V/S&S Unbowed Roar: taunt r7 4 s, unbowed 6 s, burst r3 100% fury. 4.6: at 60% HP -> 160%.
+	var f := squad(["viking", "viking", "viking"])
+	var sim = f.sim
+	var foes := Act.enemies(sim)
+	Act.place(sim, sim.bodies[1].position, {foes[0]: Vector3(2, 0, 0), foes[1]: Vector3(6, 0, 0)})
+	var tank = sim.fighters[1]
+	tank.hp = tank.max_hp() * 0.6
+	var atk: float = tank.stat("ATK")
+	var out := cast(f, 1)
+	var hits := damage_by(out, 1)
+	ctx.check("Unbowed Roar: taunts within 7 m for 4 s", out.any(func(e): return e["type"] == "race_taunt" and int(e["ticks"]) == 240 and e["enemies"].size() == 2))
+	ctx.check("Unbowed Roar: unbowed 6 s on self", int(tank.effects.get("unbowed", {}).get("left", 0)) == 360)
+	# Unbowed (+30% ATK) lands first (action order), then the burst: 100% x 1.3 ATK x (1 + 1.5 x 0.4) = 160% of the buffed ATK.
+	ctx.check("formula 4.6: Unbowed burst at 60%% HP = 160%% of the Unbowed ATK, only within 3 m (%s vs %.0f)" % [hits.map(func(e): return e["damage"]), roundf(atk * 1.3 * 1.6)],
+		hits.size() == 1 and int(hits[0]["target"]) == foes[0] and is_equal_approx(float(hits[0]["damage"]), roundf(atk * 1.3 * 1.6)))
+	var u := squad(["viking", "viking", "viking"])
+	var uf := Act.enemies(u.sim)
+	Act.place(u.sim, u.sim.bodies[1].position, {uf[0]: Vector3(5, 0, 0), uf[1]: Vector3(6, 0, 0)})
+	ctx.check("Unbowed Roar use: 2 enemies in 7 m, all healthy -> holds", not _matches(u.sim, 1))
+	Act.place(u.sim, u.sim.bodies[1].position, {uf[0]: Vector3(5, 0, 0), uf[1]: Vector3(6, 0, 0), uf[2]: Vector3(-6, 0, 0)})
+	ctx.check("Unbowed Roar use: 3 enemies in 7 m -> fires", _matches(u.sim, 1))
+	Act.place(u.sim, u.sim.bodies[1].position, {uf[0]: u.sim.bodies[3].position - u.sim.bodies[1].position + Vector3(1, 0, 0)})
+	u.sim.fighters[3].hp = u.sim.fighters[3].max_hp() * 0.5
+	ctx.check("Unbowed Roar use: a hurt ally (<60%) with an enemy on it -> fires", _matches(u.sim, 1))
+
+	# V/GS Ragnarok Whirl: follow zone r3 3 s, 55% fury every 0.5 s = 6 pulses at full HP.
+	var w := squad(["viking", "viking", "viking"])
+	var wsim = w.sim
+	var wf := Act.enemies(wsim)
+	Act.place(wsim, wsim.bodies[2].position, {wf[0]: Vector3(1, 0, 0)})
+	var gs = wsim.fighters[2]
+	gs.hp = gs.max_hp()
+	var gatk: float = gs.stat("ATK")
+	var all := cast(w, 2)
+	all.append_array(run_ticks(wsim, 200))
+	hits = damage_by(all, 2)
+	ctx.check("Ragnarok Whirl: 6 pulses of 55%% ATK at full HP (%d x %s)" % [hits.size(), hits[0]["damage"] if not hits.is_empty() else 0],
+		hits.size() == 6 and hits.all(func(e): return is_equal_approx(float(e["damage"]), roundf(gatk * 0.55))))
+	var ws := squad(["viking", "viking", "viking"])
+	var wsf := Act.enemies(ws.sim)
+	Act.place(ws.sim, ws.sim.bodies[2].position, {wsf[0]: Vector3(1, 0, 0), wsf[1]: Vector3(-1, 0, 0)})
+	ctx.check("Ragnarok Whirl use: 2 enemies in 3 m -> holds", not _matches(ws.sim, 2))
+	Act.place(ws.sim, ws.sim.bodies[2].position, {wsf[0]: Vector3(1, 0, 0), wsf[1]: Vector3(-1, 0, 0), wsf[2]: Vector3(0, 0, 2)})
+	ctx.check("Ragnarok Whirl use: 3 enemies in 3 m -> fires", _matches(ws.sim, 2))
+
+	# V/Bow Executioner's Volley: 220% at the lowest-HP% enemy in 12 m, x2 below 30%, chain_on_kill 3.
+	var x := squad(["viking", "viking", "viking"])
+	var xsim = x.sim
+	var xf := Act.enemies(xsim)
+	Act.place(xsim, xsim.bodies[3].position, {xf[0]: Vector3(6, 0, 0), xf[1]: Vector3(7, 0, 1)})
+	xsim.fighters[xf[0]].hp = xsim.fighters[xf[0]].max_hp() * 0.6
+	xsim.fighters[xf[1]].hp = xsim.fighters[xf[1]].max_hp() * 0.8
+	var batk: float = xsim.fighters[3].stat("ATK")
+	hits = damage_by(cast(x, 3), 3)
+	ctx.check("Executioner: 220%% at the lowest HP%% target in 12 m (%s)" % [hits.map(func(e): return e["damage"])],
+		hits.size() == 1 and int(hits[0]["target"]) == xf[0] and is_equal_approx(float(hits[0]["damage"]), roundf(batk * 2.2)))
+	var xu := squad(["viking", "viking", "viking"])
+	var xuf := Act.enemies(xu.sim)
+	Act.place(xu.sim, xu.sim.bodies[3].position, {xuf[0]: Vector3(6, 0, 0)})
+	xu.sim.fighters[xuf[0]].hp = xu.sim.fighters[xuf[0]].max_hp() * 0.4
+	ctx.check("Executioner use: one enemy at 40% -> holds", not _matches(xu.sim, 3))
+	xu.sim.fighters[xuf[0]].hp = xu.sim.fighters[xuf[0]].max_hp() * 0.25
+	ctx.check("Executioner use: an enemy below 30% in 12 m -> fires", _matches(xu.sim, 3))
+
+	# V/Magic Blood Moon: 15% current HP first; zone r4 4 s at densest within 9 m; 45% fury x2.0 per 0.5 s; rage on allies inside.
+	# 4.6: caster at 80% pays 12% -> 68%, m = 0.32 -> each pulse 45% x 1.64 = 73.8%; 8 pulses.
+	var b := squad(["viking", "viking", "viking"], MAGIC_SQUAD)
+	var bsim = b.sim
+	var bf := Act.enemies(bsim)
+	Act.place(bsim, bsim.bodies[3].position, {bf[0]: Vector3(6, 0, 0), bf[1]: Vector3(6.5, 0, 1), bf[2]: Vector3(6, 0, -1)})
+	bsim.bodies[2].position = bsim.bodies[3].position + Vector3(6, 0, 0.5)  # an ally standing in the moon
+	var mage = bsim.fighters[3]
+	mage.hp = mage.max_hp() * 0.8
+	var matk: float = mage.stat("ATK")
+	all = cast(b, 3)
+	ctx.check("Blood Moon: pays 15%% of current HP first (%.3f of max)" % (mage.hp / mage.max_hp()), absf(mage.hp / mage.max_hp() - 0.68) < 0.001)
+	all.append_array(run_ticks(bsim, 260))
+	hits = damage_by(all, 3).filter(func(e): return int(e["target"]) == bf[0])
+	ctx.check("formula 4.6: Blood Moon 8 pulses of 45%% x 1.64 = 74%% each (%d x %s vs %.0f)" % [hits.size(), hits[0]["damage"] if not hits.is_empty() else 0, roundf(matk * 0.45 * 1.64)],
+		hits.size() == 8 and hits.all(func(e): return is_equal_approx(float(e["damage"]), roundf(matk * 0.45 * 1.64))))
+	ctx.check("Blood Moon: rage on the ally inside (first pulse only), not on the one outside", bsim.fighters[2].effects.has("rage") and not bsim.fighters[1].effects.has("rage"))
+	var bu := squad(["viking", "viking", "viking"], MAGIC_SQUAD)
+	var buf := Act.enemies(bu.sim)
+	Act.place(bu.sim, bu.sim.bodies[3].position, {buf[0]: Vector3(6, 0, 0), buf[1]: Vector3(6.5, 0, 1)})
+	ctx.check("Blood Moon use: 2 enemies in r4 -> holds", not _matches(bu.sim, 3))
+	Act.place(bu.sim, bu.sim.bodies[3].position, {buf[0]: Vector3(6, 0, 0), buf[1]: Vector3(6.5, 0, 1), buf[2]: Vector3(8, 0, -2)})
+	ctx.check("Blood Moon use: 3 enemies in r4 of a point within 9 m -> fires", _matches(bu.sim, 3))
+	bu.sim.fighters[3].hp = bu.sim.fighters[3].max_hp() * 0.2
+	ctx.check("Blood Moon: below 25% HP it never fires, even past max_hold_ticks (5)", not RaceUltimates.ready(bu.sim, 3))
+
+
+## Elf (green): healing in 4 shapes (zone, damage-to-heal, single target + guard, revive).
+func _elf(ctx) -> void:
+	var data = RaceData.load_default()
+	ctx.check("Elf: 4 class ultimates + a default; Rebirth Bloom charge_mul 0.85", ["sword_shield", "greatsword", "longbow", "magic"].all(func(c): return not str(data.ultimate_for("elf", c).get("name", "")).is_empty())
+		and data.ultimate_for("elf", "no_such_class")["name"] == "Lifebloom Surge" and float(data.ultimate_for("elf", "magic")["charge_mul"]) == 0.85)
+	# E/S&S Heartwood Bastion: taunt r5 3 s; grove r5 6 s: allies inside heal 2.5% max HP/s (12 pulses x 1.25%), enemies slowed.
+	var f := squad(["elf", "elf", "elf"])
+	var sim = f.sim
+	var foes := Act.enemies(sim)
+	Act.place(sim, sim.bodies[1].position, {foes[0]: Vector3(2, 0, 0)})
+	sim.bodies[2].position = sim.bodies[1].position + Vector3(0, 0, 2)
+	sim.bodies[3].position = sim.bodies[1].position + Vector3(0, 0, 12)
+	for id in [1, 2, 3]:
+		sim.fighters[id].hp = sim.fighters[id].max_hp() * 0.3
+		sim.fighters[id].effects.clear()
+		sim.fighters[id].race_state["pseudo"] = {}  # (no Elf Trio HEALING bonus: the plain numbers)
+	var out := cast(f, 1)
+	out.append_array(run_ticks(sim, 400))
+	var healed_in: float = (sim.fighters[2].hp / sim.fighters[2].max_hp()) - 0.3
+	ctx.check("Heartwood: an ally in the grove heals 2.5%%/s for 6 s = 15%% (%.3f)" % healed_in, absf(healed_in - 0.15) < 0.002)
+	ctx.check("Heartwood: an ally outside heals nothing", is_equal_approx(sim.fighters[3].hp / sim.fighters[3].max_hp(), 0.3))
+	ctx.check("Heartwood: taunt 3 s and slow on enemies inside", out.any(func(e): return e["type"] == "race_taunt" and int(e["ticks"]) == 180)
+		and out.any(func(e): return e["type"] == "effect_applied" and e["effect"] == "slow" and int(e["target"]) == foes[0]))
+	var h := squad(["elf", "elf", "elf"])
+	h.sim.bodies[2].position = h.sim.bodies[1].position + Vector3(0, 0, 2)
+	h.sim.bodies[3].position = h.sim.bodies[1].position + Vector3(0, 0, 3)
+	Act.place(h.sim, h.sim.bodies[1].position, {})
+	ctx.check("Heartwood use: allies near but healthy -> holds", not _matches(h.sim, 1))
+	h.sim.fighters[2].hp = h.sim.fighters[2].max_hp() * 0.6
+	ctx.check("Heartwood use: 2+ allies within 5 m and one below 65% -> fires", _matches(h.sim, 1))
+
+	# E/GS Thornbloom Cleave: 180% in 3.5 m + slow, then 40% of the damage heals all allies, split, cap 12% each (4.2).
+	var t := squad(["elf", "elf", "elf"])
+	var tsim = t.sim
+	var tf := Act.enemies(tsim)
+	Act.place(tsim, tsim.bodies[2].position, {tf[0]: Vector3(1, 0, 0), tf[1]: Vector3(-1, 0, 0), tf[2]: Vector3(0, 0, 1)})
+	for id in [1, 2, 3]:
+		tsim.fighters[id].hp = tsim.fighters[id].max_hp() * 0.2
+		tsim.fighters[id].effects.clear()
+		tsim.fighters[id].race_state["pseudo"] = {}
+	var gatk: float = tsim.fighters[2].stat("ATK")
+	out = cast(t, 2)
+	var hits := damage_by(out, 2)
+	var dealt := 0.0
+	for e in hits:
+		dealt += float(e["damage"])
+	ctx.check("Thornbloom: 180%% on each of 3 enemies (%s vs %.0f)" % [hits.map(func(e): return e["damage"]), roundf(gatk * 1.8)], hits.size() == 3 and hits.all(func(e): return is_equal_approx(float(e["damage"]), roundf(gatk * 1.8))))
+	var ok := true
+	for id in [1, 2, 3]:
+		var fighter = tsim.fighters[id]
+		var want: float = minf(0.40 * dealt / 3.0, 0.12 * fighter.max_hp())
+		ok = ok and absf(fighter.hp - (0.2 * fighter.max_hp() + want)) < 0.01
+	ctx.check("formula 4.2 split: 40%% of %.0f damage over 3 allies, capped at 12%% max HP each" % dealt, ok)
+	ctx.check("Thornbloom: the heals are ultimate heals (exempt from the 6%/s passive cap)", out.filter(func(e): return e["type"] == "race_heal").all(func(e): return bool(e["ultimate"])))
+	var tu := squad(["elf", "elf", "elf"])
+	var tuf := Act.enemies(tu.sim)
+	Act.place(tu.sim, tu.sim.bodies[2].position, {tuf[0]: Vector3(1, 0, 0), tuf[1]: Vector3(-1, 0, 0), tuf[2]: Vector3(0, 0, 1)})
+	ctx.check("Thornbloom use: 3 enemies, nobody hurt -> holds", not _matches(tu.sim, 2))
+	tu.sim.fighters[1].hp = tu.sim.fighters[1].max_hp() * 0.7
+	ctx.check("Thornbloom use: 3 enemies and an ally below 75% -> fires", _matches(tu.sim, 2))
+	Act.place(tu.sim, tu.sim.bodies[2].position, {tuf[0]: Vector3(1, 0, 0), tuf[1]: Vector3(-1, 0, 0), tuf[2]: Vector3(0, 0, 1), tuf[3]: Vector3(0, 0, -1)})
+	tu.sim.fighters[1].hp = tu.sim.fighters[1].max_hp()
+	ctx.check("Thornbloom use: 4 enemies -> fires even with nobody hurt", _matches(tu.sim, 2))
+
+	# E/Bow Guardian Seedshot: heal the most-hurt ally 15% + regen 6 s; then 4 arrows 100% 0.25 s apart at the enemy nearest that ally, slow.
+	var g := squad(["elf", "elf", "elf"])
+	var gsim = g.sim
+	var gf := Act.enemies(gsim)
+	gsim.fighters[1].hp = gsim.fighters[1].max_hp() * 0.3
+	gsim.fighters[2].hp = gsim.fighters[2].max_hp() * 0.6
+	for id in [1, 2]:
+		gsim.fighters[id].race_state["pseudo"] = {}
+		gsim.fighters[id].effects.clear()
+	Act.place(gsim, gsim.bodies[1].position, {gf[0]: Vector3(1.5, 0, 0), gf[1]: Vector3(3.0, 0, 0)})
+	var batk: float = gsim.fighters[3].stat("ATK")
+	out = cast(g, 3)
+	out.append_array(run_ticks(gsim, 60))
+	hits = damage_by(out, 3)
+	ctx.check("Seedshot: the most-hurt ally heals 15%% + regen 6 s (%.3f)" % (gsim.fighters[1].hp / gsim.fighters[1].max_hp()),
+		gsim.fighters[1].hp / gsim.fighters[1].max_hp() >= 0.449 and int(gsim.fighters[1].effects.get("regen", {}).get("left", 0)) >= 300)  # (the Elf Trio wave-start regen may stack its own time on top)
+	ctx.check("Seedshot: 4 arrows of 100%% at the enemy nearest that ally, 15 ticks apart (%s)" % [hits.map(func(e): return [e["target"], e["damage"]])],
+		hits.size() == 4 and hits.all(func(e): return int(e["target"]) == gf[0] and is_equal_approx(float(e["damage"]), roundf(batk))))
+	var gu := squad(["elf", "elf", "elf"])
+	var guf := Act.enemies(gu.sim)
+	Act.place(gu.sim, gu.sim.bodies[1].position, {guf[0]: Vector3(1, 0, 0), guf[1]: Vector3(-1, 0, 0)})
+	gu.sim.fighters[1].hp = gu.sim.fighters[1].max_hp() * 0.7
+	ctx.check("Seedshot use: an ally at 70% -> holds", not _matches(gu.sim, 3))
+	gu.sim.fighters[1].hp = gu.sim.fighters[1].max_hp() * 0.6
+	ctx.check("Seedshot use: an ally below 65% with 2 enemies on them -> fires", _matches(gu.sim, 3))
+	Act.place(gu.sim, gu.sim.bodies[1].position, {})
+	ctx.check("Seedshot use: the same ally with nobody on them -> holds", not _matches(gu.sim, 3))
+
+	# E/Magic Rebirth Bloom: revive downed at 35% (once per ally per wave), heal all 20%, regen 6 s on all.
+	var r := squad(["elf", "elf", "elf"], MAGIC_SQUAD)
+	var rsim = r.sim
+	rsim.enable_coop([1, 2, 3])
+	preload("res://logic/coop.gd").down(rsim, 1, {"type": "killed", "target": 1})
+	ctx.check("Rebirth Bloom use: an ally downed -> fires at once", _matches(rsim, 3))
+	rsim.fighters[2].hp = rsim.fighters[2].max_hp() * 0.5
+	for id in [1, 2]:
+		rsim.fighters[id].race_state["pseudo"] = {}
+	out = cast(r, 3)
+	ctx.check("Rebirth Bloom: the downed ally stands up (35%% + the 20%% squad heal = %.2f)" % (rsim.fighters[1].hp / rsim.fighters[1].max_hp()),
+		rsim.fighters[1].is_alive() and absf(rsim.fighters[1].hp / rsim.fighters[1].max_hp() - 0.55) < 0.001)
+	ctx.check("Rebirth Bloom: living allies heal 20% and everyone gets regen 6 s", absf(rsim.fighters[2].hp / rsim.fighters[2].max_hp() - 0.7) < 0.001
+		and [1, 2, 3].all(func(id): return rsim.fighters[id].effects.has("regen")))
+	var ru := squad(["elf", "elf", "elf"], MAGIC_SQUAD)
+	ru.sim.fighters[1].hp = ru.sim.fighters[1].max_hp() * 0.6
+	ctx.check("Rebirth Bloom use: squad average 87% -> holds", not _matches(ru.sim, 3))
+	for id in [1, 2, 3]:
+		ru.sim.fighters[id].hp = ru.sim.fighters[id].max_hp() * 0.5
+	ctx.check("Rebirth Bloom use: squad average below 55% -> fires", _matches(ru.sim, 3))

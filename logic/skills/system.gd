@@ -161,6 +161,7 @@ func cast(id: int, slot: int, aim: Vector3) -> String:
 	stats.skill_id = row.skill  # rides along in every hit context: picks the impact tier and the event's move
 	stats.crit_chance = minf(1.0,float(stats.get("crit_chance",0))+fighter.stat("CRIRATE") / 100.0)
 	stats.crit_multiplier = fighter.stat("CRIDMG", 150.0) / 100.0
+	preload("res://logic/skill_tree_effects.gd").upgrade_skill(fighter, stats)  # tree skill_upgrade, before the race mods (skill-tree.md 3.6)
 	var race_refusal: String = preload("res://logic/race_passives.gd").modify_skill_stats(fighter, stats)  # race skill_mod (GDD races 4.4)
 	if not race_refusal.is_empty(): return race_refusal
 	var caster: ZorxSkillRuntime = casters[id]

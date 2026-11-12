@@ -47,12 +47,9 @@ static func _randomize(profile, rules, rng: RandomNumberGenerator) -> void:
 		assert(equipped)
 	var options = preload("res://logic/cosmetic_options.gd").load_default()
 	profile.appearance = options.starter()
-	for part in ["hair_style","hair_color","eye_color","skin","face","fashion"]:
+	for part in ["eye_color","skin"]:
 		var choices: Array = options.choices.get(part,[])
 		if not choices.is_empty(): profile.appearance[part] = _pick(choices,rng).id
-	profile.appearance["fashion_display"] = "on"
-	profile.appearance["fashion_hat"] = "none"
-	profile.appearance["fashion_back"] = "none"
 	profile.skill_build = preload("res://logic/skill_build.gd").initial(family)
 	var skills: Array = JSON.parse_string(FileAccess.get_file_as_string("res://data/skill_system/catalog.json"))
 	# Fisher-Yates uses only the round's server RNG; never global shuffle().

@@ -186,8 +186,13 @@ func _fight_fills_and_skills_cast(ctx) -> void:
 			sim.set_input(id, SimInput.decode(Pilot.decide(sim, f.combat, id, memories[id], tick).encode()))
 		sim.tick()
 		casts += sim.events.filter(func(e): return e["type"] == "skill_cast").size()
-	var gauges: Array = [1, 2, 3].map(func(id): return snappedf(sim.fighters[id].gauge, 0.1))
-	ctx.check("20 s squad fight: every card's gauge filled (%s)" % [gauges], gauges.all(func(g): return g >= 20.0))
+	# Gauge gained in total (race_state.gauge_by): a card whose ultimate already fired has spent its gauge back to 0.
+	var gained: Array = [1, 2, 3].map(func(id):
+		var total := 0.0
+		for part in sim.fighters[id].race_state.get("gauge_by", {}).values():
+			total += float(part)
+		return snappedf(total, 0.1))
+	ctx.check("20 s squad fight: every card's gauge filled (gained %s)" % [gained], gained.all(func(g): return g >= 20.0))
 	ctx.check("20 s squad fight: class skills still cast (%d)" % casts, casts > 0)
 
 

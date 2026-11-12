@@ -13,6 +13,9 @@ const ItemSystem := preload("res://logic/item_system.gd")
 const Loadout := preload("res://logic/loadout.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
 
+## Appearance parts of the removed old-model fashion and face / hair-style lists (Boss 2026-11-13); dropped from saves on load.
+const LEGACY_FASHION_PARTS: Array[String] = ["face", "hair_style", "hair_color", "fashion", "fashion_display", "fashion_hat", "fashion_back", "wear_shirt", "wear_pants", "wear_shoes", "wear_head", "wear_hair", "wear_mask"]
+
 const NAME_MIN := 2
 const NAME_MAX := 16
 
@@ -36,12 +39,9 @@ var loadout: Loadout:
 		_lead_gear()["loadout"] = value
 var camp_level := 1
 var diamonds := int(preload("res://logic/mall.gd").config().initial_diamonds)
-## Owned fashion copies, one "part:id" entry per piece bought (Boss 2026-11-11: counted; two entries = two
-## cards can wear it at once). logic/mall.gd owns the rules.
+## Mall pieces owned, one "part:id" entry per purchase (logic/mall.gd). Only parts the Mall still sells are
+## kept: the old fashion copies are refunded on load (Boss 2026-11-13, Mall.refund_legacy).
 var mall_owned: Array = []
-## The fashion each class card wears: class id -> {part: id} for part in Mall.CARD_PARTS; missing = "none".
-## A piece is worn by at most as many cards as the copies owned (logic/mall.gd wear_on_card).
-var card_fashion: Dictionary = {}
 var farm: Dictionary = {}
 var facility_levels: Dictionary = {}  ## facility id -> built level (0 = not built)
 ## The character's own looks: part -> chosen id (logic/cosmetic_options.gd); a missing part = its default.
@@ -52,6 +52,8 @@ var starter_armor_kit_version := 0
 var starter_weapon_kit_version := 0
 var starter_shield_kit_version := 0  ## 1 = the offhand starter shield was granted (ensure_starter_shields)
 var beta_kit_version := 0
+## 2 = the old per-run skill tree was turned into card levels (logic/skill_tree.gd migrate_old_builds, skill-tree.md 5).
+var tree_migration_version := 0
 var bonus_stash_slots := 0
 ## Transition stand-in: the lead card's skill build (IDs only; validated by skill_build.gd on the authority).
 var skill_build: Dictionary:
@@ -91,6 +93,7 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	profile.ensure_starter_cards(item_rules)
 	profile.ensure_starter_shields(item_rules)
 	profile.armor_migration_version = 2
+	profile.tree_migration_version = 2  # a new player has no old tree to convert
 	# Boss 2026-11-13: each new card gets its own eyes and makeup. A child RNG seeded from the creation RNG's
 	# state keeps it deterministic per seed without consuming draws the rest of the game relies on.
 	var looks_rng := RandomNumberGenerator.new()
@@ -326,11 +329,11 @@ func to_dict() -> Dictionary:
 		saved_gear[card] = {"loadout": card_gear[card]["loadout"].to_dict(), "skill_build": card_gear[card]["skill_build"].duplicate(true)}
 	# "loadout"/"skill_build" below are the lead card's copies, kept for readers that still need them
 	# (server runner/rooms, plaza, admin); plan step 7 removes them. from_dict reads only "card_gear".
-	return {"card_gear": saved_gear, "card_fashion": card_fashion.duplicate(true),
+	return {"card_gear": saved_gear,
 		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
-		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "beta_kit_version": beta_kit_version, "bonus_stash_slots": bonus_stash_slots,
+		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
 		"skill_build": skill_build.duplicate(true), "relics": relics.duplicate(true), "card_deck": card_deck.duplicate(true)}
 
 
@@ -354,17 +357,20 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	# Adopt the new baseline only for missing/unbuilt core facilities. Preserve earned levels.
 	for id in camp.progression_facilities:
 		p.facility_levels[id] = maxi(1, int(p.facility_levels.get(id, 0)))
+	if not d["appearance"] is Dictionary: return null
 	p.appearance = d["appearance"].duplicate()
 	p.appearance["blink_mode"] = "auto"
 	p.diamonds = int(d.get("diamonds",p.diamonds))
 	if p.diamonds < 0: return null
 	if not d.get("mall_owned",[]) is Array: return null
-	p.mall_owned.assign(d.get("mall_owned",[]))
-	# Existing equipped cosmetics remain owned; the introductory balance is granted once.
-	if not d.has("mall_owned"):
-		for part in ["fashion","fashion_hat","fashion_back"]:
-			var id := str(p.appearance.get(part,"none"))
-			if id != "none": p.mall_owned.append(part+":"+id)
+	# Old fashion removed (Boss 2026-11-13). Refund rule (logic/mall.gd refund_legacy): every saved copy of a
+	# removed part pays back its old Mall price in diamonds, once (the save then holds no such entry). A save
+	# from before mall_owned existed (its worn fashion was granted, not bought) gets nothing back.
+	var refund: Dictionary = preload("res://logic/mall.gd").refund_legacy(d.get("mall_owned",[]))
+	p.mall_owned.assign(refund["kept"])
+	p.diamonds += int(refund["diamonds"])
+	for part in LEGACY_FASHION_PARTS:
+		p.appearance.erase(part)
 	p.relics = preload("res://logic/relics.gd").decode(d.get("relics",preload("res://logic/relics.gd").initial()))
 	if p.relics.is_empty(): return null
 	p.name = str(d["name"])
@@ -396,22 +402,10 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	p.ensure_starter_cards(item_rules)  # the other cards (or a class added later) get a starter set once
 	p.starter_shield_kit_version = maxi(0, int(d.get("starter_shield_kit_version", 0)))
 	p.ensure_starter_shields(item_rules)  # old saves: the Sword & Shield card gets its starter shield once
-	var fashion = d.get("card_fashion", {})
-	if not d.has("card_fashion"):
-		# Migration: the account-wide worn fashion (owned copies only) dresses the Sword & Shield card.
-		fashion = {}
-		for part in preload("res://logic/mall.gd").CARD_PARTS:
-			var id := str(p.appearance.get(part, "none"))
-			if id != "none" and preload("res://logic/mall.gd").owns(p, part, id):
-				fashion[LEAD_CARD] = fashion.get(LEAD_CARD, {})
-				fashion[LEAD_CARD][part] = id
-	if not fashion is Dictionary: return null
-	for card in fashion:
-		if not fashion[card] is Dictionary: return null
-		var worn_fashion := {}
-		for part in fashion[card]:
-			worn_fashion[str(part)] = str(fashion[card][part])
-		p.card_fashion[str(card)] = worn_fashion
+	p.tree_migration_version = maxi(0, int(d.get("tree_migration_version", 0)))
+	if p.tree_migration_version < 2:  # once: old per-run tree points become card levels (skill-tree.md 5)
+		preload("res://logic/skill_tree.gd").migrate_old_builds(p.card_gear, p.card_deck)
+		p.tree_migration_version = 2
 	return p
 
 
