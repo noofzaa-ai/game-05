@@ -342,6 +342,9 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
   }
   async function launch() {
     if (loading) return;
+    // Dev machine (Boss 2026-11-13: this Windows PC is dev): on localhost skip the online account and
+    // play offline; the production site (zorx.daiyooo.com) still requires the account.
+    if (!authenticated && ['localhost', '127.0.0.1'].includes(location.hostname)) authenticated = true;
     if (!authenticated) {
       loading = true;
       try { if (!await authenticate()) return; }
