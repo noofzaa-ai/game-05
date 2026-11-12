@@ -254,7 +254,7 @@ class CardView extends Control:
 			portrait.set_render_mode(CardPortrait.Mode.LIVE if on else _idle_mode)
 		hover_changed.emit(on)
 
-	var _idle_mode := CardPortrait.Mode.THROTTLED
+	var _idle_mode := CardPortrait.Mode.LIVE  ## Boss 2026-11-13: every hub card animates at full frame rate (was 5 fps when not hovered)
 
 	## The holo foil, tilt parallax and sparkles run only on the card the pointer or focus is on (and the
 	## editor card, which is always active). Other cards pay nothing: no overlay node exists for them.
@@ -557,7 +557,7 @@ class HubCard extends Control:
 		if not on:
 			_has_pointer = false
 		portrait.set_hover(on)
-		portrait.set_render_mode(CardPortrait.Mode.LIVE if on else CardPortrait.Mode.THROTTLED)
+		portrait.set_render_mode(CardPortrait.Mode.LIVE)  # hub cards always live (Boss 2026-11-13)
 
 	func apply(look: Dictionary, p_in_squad: bool, p_number: int, p_locked: bool) -> void:
 		in_squad = p_in_squad

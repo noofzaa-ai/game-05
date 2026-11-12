@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | PO | develop | การ์ดในฮับขยับทุกเฟรม (เดิมการ์ดที่ไม่ได้ชี้ redraw 5 ครั้ง/วิ) `card_deck_screen.gd` · วัดบนเดสก์ท็อป 1920x1080 ไม่มีเมาส์ชี้: เฉลี่ย ~1,560 fps, ต่ำสุด 354 fps (`tools/perf/hub_fps.gd`) · ยังไม่ได้วัดบนมือถือ/เว็บ
+
 - 2026-11-13 | gameplay-programmer via PO | develop | ท่าไม้ตาย Human 4 ท่าใช้ได้จริงในการสู้ (Commander's Call, Masterstroke, Called Shot, Grand Recital) + ตรวจข้อมูลท่าไม้ตายเข้มงวดตอนโหลด · GDD 3.6 เพิ่มฟิลด์พิเศษ 5 ตัว · เทสต์ 2622/80
 
 - 2026-11-13 | gameplay-programmer x2 via PO | develop | เลเวลการ์ด: `logic/card_progress.gd`, `data/progression/card_levels.json`, XP จ่ายตอนจบรอบ (`journey.card_xp`) · เครื่องยนต์ท่าไม้ตายเผ่า: `logic/race_ultimates.gd` (cast/ยกเลิกเมื่อมึน/ตาย, zone, skill_refresh, burst v2, revive), pilot ยิงตามเงื่อนไข, status valor/unbowed/recital · ยังไม่มีท่าไม้ตายในข้อมูลเผ่า (C2-C5) · เทสต์ 2581/80
