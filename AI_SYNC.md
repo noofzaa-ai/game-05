@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | gameplay-programmer via PO | develop | คลาสต่างกันชัดขึ้น: `pilot` ต่อคลาสใน data/classes (ดาบโล่ peel, ดาบใหญ่ densest+heavy ทุก 3, ธนู lowest_hp/บอส+kite, เวท hold skill/frost_armor), Cleave (+15%/ศัตรูเพิ่ม max 45%), Hunter's Mark (sunder ตีแรกเป้าใหม่ + ทัพรุมเป้ามาร์ค) · class_sim ยังส่ง reaction 0.85 ทับค่าคลาส · เทสต์ 2454/81
+
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.5: taunt ใน `enemy_ai.gd` (`GameSim.taunt_enemy`), `pulse_aggro`, Bulwark ของดาบโล่ (signature ใน sword_shield.json), Unbroken pulse · passive เผ่าครบ 16 ช่อง · class_sim นับ race_burst_hit · ทัพชนะ 100% ยังไม่จูน · เทสต์ 2424/81
 
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.4: `charges` (อักษร Runeborn สะสมข้ามเวฟ, เก็บใน checkpoint) + `burst` (ระเบิดวง ATK x atk_mul หัก DEF) ทั้ง 4 ช่อง Runeborn + Trio rune gain · event race_runes/race_burst/race_burst_hit · class_sim ยังไม่นับดาเมจ burst · เทสต์ 2404/81

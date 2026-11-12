@@ -46,5 +46,7 @@
  ],
  "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body.",
  "_signature": "GDD races-and-classes 3.2 class signature, read by logic/race_passives.gd (any race). Bulwark: every 8 s, enemies within 5 m attack this card for 3 s (it pulses once an enemy is in range).",
- "signature": [{"type": "aggro", "name": "Bulwark", "radius": 5.0, "every_ticks": 480.0, "duration_ticks": 180.0}]
+ "signature": [{"type": "aggro", "name": "Bulwark", "radius": 5.0, "every_ticks": 480.0, "duration_ticks": 180.0}],
+ "_pilot": "GDD races-and-classes 3.2 pilot profile, read by logic/auto_pilot.gd for squad cards (a class without it keeps the old constants). target: nearest|peel|densest|lowest_hp|marked_first. engage_range 0 = from the weapon; shoot_range 0 = the default 6 m. prefer_marked: attack a target carrying mark_status inside the engage range first (Hunter's Mark focus fire). line is not used yet.",
+ "pilot": {"line": "front", "target": "peel", "engage_range": 0, "shoot_range": 0, "kite_distance": 0, "heavy_every": 4, "reaction": 0.95, "skill_min_targets": 1, "support_skill": "", "support_below": 0.0, "prefer_marked": true, "mark_status": "sunder"}
 }

@@ -149,7 +149,7 @@ func _moonlit_and_bloom(ctx) -> void:
 	hurt.hp = hurt.max_hp() * 0.5
 	var counts := []
 	for i in 5:
-		counts.append(procs(react(sim, {"type": "hit", "attacker": 3, "target": foe, "damage": 10, "move": "light_1"}), 3).size())
+		counts.append(procs(react(sim, {"type": "hit", "attacker": 3, "target": foe, "damage": 10, "move": "light_1"}), 3).filter(func(e): return e["source"] == "passive").size())  # (not the class signature Hunter's Mark)
 	ctx.check("Moonlit Arrow: only the 5th hit heals (%s)" % [counts], counts == [0, 0, 0, 0, 1])
 	ctx.check("Moonlit Arrow: the most-hurt ally gets 6% max HP", is_equal_approx(hurt.hp, hurt.max_hp() * 0.56))
 	# Formula 4.2 (Bloomcaster): 300 damage, ally max 1000 -> min(0.25 x 300, 0.08 x 1000) = 75; and the cap: 2000 -> 80.
@@ -421,7 +421,7 @@ func _charges_and_burst(ctx) -> void:
 	var bfoe := enemy_of(bsim)
 	counts = []
 	for i in 6:
-		counts.append(procs(react(bsim, {"type": "hit", "attacker": 3, "target": bfoe, "damage": 10, "move": "light_1"}), 3).size())
+		counts.append(procs(react(bsim, {"type": "hit", "attacker": 3, "target": bfoe, "damage": 10, "move": "light_1"}), 3).filter(func(e): return e["source"] == "passive").size())  # (not Hunter's Mark)
 	var bow = bsim.fighters[3]
 	ctx.check("Glyph Shot: discharges on the 6th hit (%s)" % [counts], counts == [0, 0, 0, 0, 0, 1])
 	ctx.check("Glyph Shot: focus 480 ticks + shield 8% max HP", int(bow.effects.get("focus", {}).get("left", 0)) == 480 and is_equal_approx(bow.shield, bow.max_hp() * 0.08))

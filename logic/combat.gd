@@ -9,6 +9,7 @@ const CombatData := preload("res://logic/combat_data.gd")
 const Effects := preload("res://logic/effects.gd")
 const Fighter := preload("res://logic/fighter.gd")
 const Movement := preload("res://logic/movement.gd")
+const RacePassives := preload("res://logic/race_passives.gd")
 const SimBody := preload("res://logic/sim_body.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 
@@ -112,8 +113,15 @@ static func resolve_hits(fighters: Dictionary, bodies: Dictionary, data: CombatD
 			if target_box.intersects(box) and hits_footprint(bodies[attacker_id], attacker, data,target_box):
 				landed.append(Vector2i(attacker_id, target_id))
 				moves_used[Vector2i(attacker_id, target_id)] = attacker.move_id
+	# Cleave (greatsword class signature, GDD races 3.2): a heavy swing deals more per extra enemy it hits.
+	var swing_size := {}  ## attacker id -> enemies this swing has hit, counting this tick's landings
 	for pair in landed:
-		apply_hit(pair.x, pair.y, moves_used[pair], fighters, bodies, data, rng, events)
+		swing_size[pair.x] = int(swing_size.get(pair.x, fighters[pair.x].hit_ids.size())) + 1
+	for pair in landed:
+		var cleave := 1.0
+		if str(moves_used[pair]).contains("heavy") and not fighters[pair.x].race_state.is_empty():
+			cleave = RacePassives.cleave_mul(fighters[pair.x], int(swing_size[pair.x]))
+		apply_hit(pair.x, pair.y, moves_used[pair], fighters, bodies, data, rng, events, {}, cleave)
 
 
 ## Predict only our melee contact pause, using the same geometry as resolve_hits.
@@ -304,7 +312,8 @@ static func special_cooldown_left(fighter: Fighter, data: CombatData) -> int:
 ## (its flight, or away from the area's center), "pos": where it lands, "projectile" or "area": its id,
 ## "unblockable": true for an area that cannot be guarded}. The attacker is then not frozen by the
 ## hit-stop and its move's own once-per-target list is left alone. Returns "blocked" or "hit".
-static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighters: Dictionary, bodies: Dictionary, data: CombatData, rng: RandomNumberGenerator, events: Array[Dictionary], source: Dictionary = {}) -> String:
+## `damage_mul` scales the rolled damage (Cleave, before guard and DEF floors are applied again by rounding).
+static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighters: Dictionary, bodies: Dictionary, data: CombatData, rng: RandomNumberGenerator, events: Array[Dictionary], source: Dictionary = {}, damage_mul: float = 1.0) -> String:
 	var attacker: Fighter = fighters[attacker_id]
 	var target: Fighter = fighters[target_id]
 	var attacker_body: SimBody = bodies[attacker_id]
@@ -341,6 +350,8 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 
 	var roll := compute_damage(attacker, target, move, data, rng)
 	var damage: float = roll["damage"]
+	if damage_mul != 1.0:
+		damage = roundf(damage * damage_mul)
 	var crit: bool = roll["crit"]
 	if blocked:
 		damage = maxf(float(data.rules["min_damage"]), roundf(damage * (1.0 - float(data.rules["guard_damage_reduction"]))))

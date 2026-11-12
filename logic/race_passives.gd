@@ -10,6 +10,9 @@ extends RefCounted
 ## `skill_mod` (4.4) changes a skill-build cast in logic/skills/system.gd cast() through modify_skill_stats.
 ## `charges` (runes): count events in fx[index].charges, run the actions at `max`, reset; RUNE_GAIN adds to int gains.
 ## `burst` hits enemies within `radius` of `center` (self | target) for atk_mul x ATK (vs DEF), + optional status.
+## Class signatures (data/classes/<id>.json "signature", any race): `cleave` (greatsword, read by logic/combat.gd
+## resolve_hits through cleave_mul) and a `trigger` with `new_target` (longbow Hunter's Mark: sunder on the first
+## hit on a target new to this card).
 ## `aggro` (a class signature, data/classes/<id>.json "signature": Bulwark) pulses every `every_ticks` once an enemy
 ## is within `radius`; `pulse_aggro` taunts enemies within radius (5) for duration_ticks (180) via GameSim.taunt_enemy.
 ## INERT until their phase (loaded and validated, no effect): the actions zone, skill_refresh. The event ultimate_cast never fires yet.
@@ -241,6 +244,11 @@ static func fire(sim, id: int, event_name: String, context: Dictionary) -> void:
 			continue
 		if bool(effect.get("once_per_wave", false)) and int(fx["wave"]) == int(fighter.race_state["wave"]):
 			continue
+		if bool(effect.get("new_target", false)):  # Hunter's Mark (3.2): only the first hit on a target new to this card
+			var hit_target := int(context.get("target", -1))
+			if hit_target == int(fx.get("target", -1)):
+				continue
+			fx["target"] = hit_target
 		if int(effect.get("every_n", 0)) > 1:
 			fx["n"] = int(fx["n"]) + 1
 			if int(fx["n"]) < int(effect["every_n"]):
@@ -256,7 +264,26 @@ static func fire(sim, id: int, event_name: String, context: Dictionary) -> void:
 			continue  # only inert actions (a later phase): nothing happened, no proc
 		fx["last"] = sim.tick_count
 		fx["wave"] = int(fighter.race_state["wave"])
-		sim.events.append({"type": "race_proc", "player": id, "source": effects[index]["src"], "name": fighter.race_state["passive"] if effects[index]["src"] == "passive" else fighter.race_state["synergy"], "on": event_name})
+		sim.events.append({"type": "race_proc", "player": id, "source": effects[index]["src"], "name": _source_name(fighter, effects[index]), "on": event_name})
+
+
+## The name a race_proc shows: the passive name, the synergy kind, or the class signature's own `name`.
+static func _source_name(fighter, entry: Dictionary) -> String:
+	match str(entry["src"]):
+		"passive": return str(fighter.race_state["passive"])
+		"signature": return str(entry["effect"].get("name", ""))
+	return str(fighter.race_state["synergy"])
+
+
+## Cleave (class signature, GDD 3.2): damage multiplier for one heavy swing that hit `hit_count` enemies:
+## 1 + min(max_bonus, per_extra x (hit_count - 1)). 1.0 without the signature or for a single target.
+static func cleave_mul(fighter, hit_count: int) -> float:
+	var bonus := 0.0
+	for entry in fighter.race_state.get("effects", []):
+		var effect: Dictionary = entry["effect"]
+		if effect["type"] == "cleave":
+			bonus += minf(float(effect["max_bonus"]), float(effect["per_extra"]) * float(maxi(0, hit_count - 1)))
+	return 1.0 + bonus
 
 
 ## charges (3.4 Runeborn, 3.6 #5): +gain per listed event (+RUNE_GAIN for int gains; "max" fills at once).

@@ -11,10 +11,18 @@ extends RefCounted
 ## keeps between ticks (decisions made once per enemy attack, skill timers); `reaction` (0..1) is the
 ## chance this fighter reacts to a given enemy attack at all (so a squad does not look robotic).
 ## Determinism: all randomness comes from `memory.rng`, which the caller seeds (the sim's replays stay exact).
+##
+## Class pilot profiles (design/gdd/races-and-classes.md 3.2): a squad card whose class file (data/classes/<id>.json)
+## has a `pilot` block uses it instead of the constants below: `target` (nearest | peel | densest | lowest_hp |
+## marked_first, + `boss_first`), `prefer_marked` (Hunter's Mark focus fire), `shoot_range`, `kite_distance`,
+## `heavy_every`, `reaction`, the skill hold rule `skill_min_targets` and the `support_skill` / `support_below` rule.
+## A fighter with no class profile (no race_state, or a class without `pilot`) behaves exactly as before.
 
 const Fighter := preload("res://logic/fighter.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 const SkillBuild := preload("res://logic/skill_build.gd")
+const CardDeck := preload("res://logic/card_deck.gd")
+const RaceData := preload("res://logic/race_data.gd")
 
 const REACH := 1.5  ## stop walking and start swinging inside this distance (metres, body to body)
 const BLADE_REACH := 1.45  ## the weapon reach number REACH was tuned for (data/combat/weapons.json blade)
@@ -27,6 +35,9 @@ const ULTIMATE_RANGE := 3.4  ## the ultimate strikes a box this far ahead: a sho
 const SKILL_RETRY_TICKS := 150  ## after trying a slot, wait this long before trying it again
 const GUARD_REACH := 3.0
 const CHARGER_REACH := 8.0
+const DEFAULT_REACTION := 0.85  ## used when the caller passes no reaction and the class has no pilot.reaction
+const DENSE_RADIUS := 2.5  ## pilot target "densest": other enemies counted within this radius (pilot.dense_radius)
+const HOLD_RADIUS := 2.0  ## skill hold rule: smallest area radius counted around the target
 
 
 static func new_memory(seed: int = 1) -> Dictionary:
@@ -35,11 +46,15 @@ static func new_memory(seed: int = 1) -> Dictionary:
 	return {"rng": rng, "decided": {}, "swings": 0, "slot_ready_at": {}, "next_slot": 0}
 
 
-static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction: float = 0.85) -> SimInput:
+## `reaction` < 0 = the class pilot's reaction (data), else DEFAULT_REACTION; a value >= 0 overrides it (tests, bots).
+static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction: float = -1.0) -> SimInput:
 	var input := SimInput.new()
 	var me: Fighter = sim.fighters.get(id)
 	if me == null or not me.is_alive() or me.incapacitated:
 		return input
+	var profile := pilot_profile(me)
+	if reaction < 0.0:
+		reaction = float(profile.get("reaction", DEFAULT_REACTION))
 	var at: Vector3 = sim.bodies[id].position
 	var rng: RandomNumberGenerator = memory["rng"]
 	var decided: Dictionary = memory["decided"]
@@ -96,11 +111,19 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	if nearest == -1:
 		return input
 
-	var toward: Vector2 = _flat(sim.bodies[nearest].position - at)
-	var engage := _engage_range(combat, me)
-	if nearest_distance > engage:
+	var engage := _engage_range(combat, me, profile)
+	var kite := float(profile.get("kite_distance", 0.0))
+	if kite > 0.0 and nearest_distance < kite and me.state == Fighter.State.IDLE and me.dodge_cooldown == 0 and me.energy >= float(combat.rules["dodge_energy"]):
+		var away: Vector2 = _flat(at - sim.bodies[nearest].position)
+		input.dodge = true  # kite: slide back from an enemy that got too close (pilot.kite_distance)
+		input.move = away.normalized() if away.length() > 0.05 else Vector2.LEFT
+		return input
+	var target := pick_target(sim, id, profile, engage, nearest)
+	var target_distance: float = _flat(sim.bodies[target].position - at).length()
+	var toward: Vector2 = _flat(sim.bodies[target].position - at)
+	if target_distance > engage:
 		input.move = toward.normalized()
-		input.run = nearest_distance > RUN_DISTANCE and me.energy > 25.0
+		input.run = target_distance > RUN_DISTANCE and me.energy > 25.0
 		return input
 
 	input.aim = toward
@@ -112,33 +135,118 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 		input.ultimate = true
 		return input
 	# Only book a slot when the cast can go out now, or the retry timer burns it mid-combo.
-	var slot := _ready_skill_slot(sim, me, id, memory, tick) if nearest_distance < SKILL_RANGE and me.state == Fighter.State.IDLE else -1
+	var slot := _ready_skill_slot(sim, me, id, memory, tick, profile, target) if target_distance < SKILL_RANGE and me.state == Fighter.State.IDLE else -1
 	if slot >= 0:
 		input.skill_slot = slot
-		input.aim_distance = clampf(nearest_distance, 1.0, 8.0)
+		input.aim_distance = clampf(target_distance, 1.0, 8.0)
 		return input
 	if tick % SWING_EVERY == 0:
 		memory["swings"] = int(memory["swings"]) + 1
-		if int(memory["swings"]) % HEAVY_EVERY == 0:
+		if int(memory["swings"]) % maxi(1, int(profile.get("heavy_every", HEAVY_EVERY))) == 0:
 			input.heavy = true
 		else:
 			input.light = true
 	return input
 
 
+## The class pilot profile (data/classes/<class>.json "pilot") of a squad card, or {} (old behaviour).
+static func pilot_profile(me: Fighter) -> Dictionary:
+	var class_id := str(me.race_state.get("class", ""))
+	if class_id.is_empty():
+		return {}
+	var pilot = CardDeck.class_data(class_id).get("pilot", {})
+	return pilot if pilot is Dictionary else {}
+
+
+## True when enemy `fighter` is a boss type (data/races/rules.json boss_types).
+static func is_boss(fighter: Fighter) -> bool:
+	return RaceData.load_default().rules.get("boss_types", []).has(fighter.enemy_type)
+
+
+## The enemy this fighter goes for (GDD 3.2). No profile = `nearest` (today's rule). `prefer_marked` /
+## `marked_first`: a living enemy carrying `mark_status` within the engage range wins first (Hunter's Mark focus
+## fire); `boss_first`: the boss while it lives. Ties: nearer, then lower id (deterministic, no RNG).
+static func pick_target(sim, id: int, profile: Dictionary, engage: float, nearest: int) -> int:
+	if profile.is_empty():
+		return nearest
+	var me: Fighter = sim.fighters[id]
+	var at: Vector3 = sim.bodies[id].position
+	var enemies: Array = []
+	for other_id in sim.fighters:
+		if sim.fighters[other_id].team != me.team and sim.fighters[other_id].is_alive():
+			enemies.append(other_id)
+	enemies.sort()
+	var kind := str(profile.get("target", "nearest"))
+	var mark := str(profile.get("mark_status", "sunder"))
+	if bool(profile.get("prefer_marked", false)) or kind == "marked_first":
+		var marked := _best(enemies, func(e):
+			var d: float = _flat(sim.bodies[e].position - at).length()
+			return -d if sim.fighters[e].effects.has(mark) and d <= engage else -INF)
+		if marked >= 0:
+			return marked
+	if bool(profile.get("boss_first", false)):
+		for e in enemies:
+			if is_boss(sim.fighters[e]):
+				return e
+	match kind:
+		"peel":  # the enemy nearest the most-hurt other ally (nobody else hurt = nearest)
+			var hurt := -1
+			var worst := 1.0
+			var allies: Array = sim.fighters.keys()
+			allies.sort()
+			for other_id in allies:
+				var f: Fighter = sim.fighters[other_id]
+				if other_id != id and f.team == me.team and f.is_alive() and f.hp / maxf(1.0, f.max_hp()) < worst:
+					worst = f.hp / maxf(1.0, f.max_hp())
+					hurt = other_id
+			if hurt < 0:
+				return nearest
+			var guard: Vector3 = sim.bodies[hurt].position
+			return _best(enemies, func(e): return -_flat(sim.bodies[e].position - guard).length())
+		"densest":  # the enemy with the most other enemies around it, then the nearer
+			var radius := float(profile.get("dense_radius", DENSE_RADIUS))
+			return _best(enemies, func(e):
+				var count := 0
+				for o in enemies:
+					if o != e and _flat(sim.bodies[o].position - sim.bodies[e].position).length() <= radius:
+						count += 1
+				return float(count) * 1000.0 - _flat(sim.bodies[e].position - at).length())
+		"lowest_hp":  # the finisher: least HP left, then the nearer
+			return _best(enemies, func(e): return -sim.fighters[e].hp * 1000.0 - _flat(sim.bodies[e].position - at).length())
+	return nearest
+
+
+## The id in `ids` (sorted) with the highest score; -1 when every score is -INF.
+static func _best(ids: Array, score: Callable) -> int:
+	var best := -1
+	var best_score := -INF
+	for e in ids:
+		var value: float = score.call(e)
+		if value > best_score:
+			best_score = value
+			best = e
+	return best
+
+
 ## How close this fighter walks before it starts attacking: shooters stand off, long weapons start earlier.
-static func _engage_range(combat, me: Fighter) -> float:
+## A class pilot's `engage_range` (> 0) wins; a shooter uses its `shoot_range` (> 0) instead of SHOOT_RANGE.
+static func _engage_range(combat, me: Fighter, profile: Dictionary = {}) -> float:
+	if float(profile.get("engage_range", 0.0)) > 0.0:
+		return float(profile["engage_range"])
 	var style: Dictionary = combat.styles.get(me.style, {})
 	var light: Dictionary = combat.moves.get(str(style.get("ground_light", "")), {})
 	if not light.get("spawns", []).is_empty():
-		return SHOOT_RANGE
+		return float(profile["shoot_range"]) if float(profile.get("shoot_range", 0.0)) > 0.0 else SHOOT_RANGE
 	var reach := float(combat.weapons.get(me.style, {}).get("params", {}).get("reach", BLADE_REACH))
 	return REACH * maxf(1.0, reach / BLADE_REACH)
 
 
 ## The next skill-build slot worth trying (round robin), or -1. The sim reports no cooldown to read, so
 ## each slot is retried only every SKILL_RETRY_TICKS; a failed cast (stamina, cooldown) costs nothing.
-static func _ready_skill_slot(sim, me: Fighter, id: int, memory: Dictionary, tick: int) -> int:
+## Class hold rules (GDD 3.2, magic): a damage skill waits until `skill_min_targets` enemies stand within its radius
+## of the target (or the target is the boss); `support_skill` waits until a squad member is below `support_below`.
+## A held slot is not booked (its retry timer stays), so it goes out the tick the rule is met.
+static func _ready_skill_slot(sim, me: Fighter, id: int, memory: Dictionary, tick: int, profile: Dictionary = {}, target: int = -1) -> int:
 	var system = sim.skill_system
 	if system == null or not system.casters.has(id):
 		return -1
@@ -152,10 +260,38 @@ static func _ready_skill_slot(sim, me: Fighter, id: int, memory: Dictionary, tic
 		var cost := float(SkillBuild.config().stamina.get(system.builds[id].skills[slot].skill, 0))
 		if me.energy < cost:
 			continue
+		if not profile.is_empty() and held(sim, me, system.builds[id], slot, profile, target):
+			continue
 		ready_at[slot] = tick + SKILL_RETRY_TICKS
 		memory["next_slot"] = (slot + 1) % 4
 		return slot
 	return -1
+
+
+## True when the class rules hold this skill slot back now (see _ready_skill_slot).
+static func held(sim, me: Fighter, build: Dictionary, slot: int, profile: Dictionary, target: int) -> bool:
+	var skill := str(build.skills[slot].skill)
+	if not str(profile.get("support_skill", "")).is_empty() and skill == str(profile["support_skill"]):
+		var below := float(profile.get("support_below", 0.0))
+		for other_id in sim.fighters:
+			var f: Fighter = sim.fighters[other_id]
+			if f.team == me.team and f.is_alive() and f.hp < f.max_hp() * below:
+				return false
+		return true
+	var need := int(profile.get("skill_min_targets", 1))
+	if need <= 1 or target < 0 or not sim.fighters.has(target) or is_boss(sim.fighters[target]):
+		return false
+	var stats := SkillBuild.calculate(build, slot)
+	if float(stats.get("damage", 0.0)) <= 0.0:
+		return false
+	var radius := maxf(float(stats.get("radius", HOLD_RADIUS)), HOLD_RADIUS)
+	var center: Vector3 = sim.bodies[target].position
+	var count := 0
+	for other_id in sim.fighters:
+		var f: Fighter = sim.fighters[other_id]
+		if f.team != me.team and f.is_alive() and _flat(sim.bodies[other_id].position - center).length() <= radius:
+			count += 1
+	return count < need
 
 
 static func _flat(v: Vector3) -> Vector2:

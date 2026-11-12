@@ -216,6 +216,10 @@ func _check_effects(where: String, effects) -> void:
 				if not effect.get("max") is float or float(effect["max"]) < 1.0:
 					errors.append("%s: charges needs max >= 1" % where)
 				_check_actions(where, effect.get("actions"))
+			"cleave":
+				for key in ["per_extra", "max_bonus"]:
+					if not effect.get(key) is float:
+						errors.append("%s: cleave needs %s" % [where, key])
 			"aggro":
 				for key in ["radius", "every_ticks", "duration_ticks"]:
 					if not effect.get(key) is float:

@@ -44,5 +44,9 @@
   "f",
   "g"
  ],
- "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body."
+ "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body.",
+ "_pilot": "GDD races-and-classes 3.2 pilot profile, read by logic/auto_pilot.gd for squad cards (a class without it keeps the old constants). target: nearest|peel|densest|lowest_hp|marked_first. engage_range 0 = from the weapon; shoot_range 0 = the default 6 m. prefer_marked: attack a target carrying mark_status inside the engage range first (Hunter's Mark focus fire). line is not used yet.",
+ "pilot": {"line": "back", "target": "lowest_hp", "boss_first": true, "engage_range": 0, "shoot_range": 7.0, "kite_distance": 3.0, "heavy_every": 4, "reaction": 0.85, "skill_min_targets": 1, "support_skill": "", "support_below": 0.0, "prefer_marked": false, "mark_status": "sunder"},
+ "_signature": "GDD races-and-classes 3.2 class signature (any race). Hunter's Mark: the first hit on a new target applies sunder (DEF -40%); the other cards' pilots prefer that marked target (pilot.prefer_marked).",
+ "signature": [{"type": "trigger", "name": "Hunter's Mark", "on": "hit", "new_target": true, "actions": [{"action": "apply_status", "status": "sunder", "target": "target"}]}]
 }
