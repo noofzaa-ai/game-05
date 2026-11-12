@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3]
-[ext_resource type="Script" path="res://client/skills/mcp_skill_visual.gd" id="1"]
-[node name="eruption" type="Node3D"]
-script = ExtResource("1")
-asset_path = "res://art/skill_system/mcp_vfx/eruption/effect.tscn"
-asset_scale = 0.32
-tint = Color(1.0,0.5411764705882353,0.14901960784313725,1)

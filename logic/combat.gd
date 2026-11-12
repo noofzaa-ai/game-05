@@ -523,7 +523,7 @@ static func _update_idle(id: int, fighter: Fighter, body: SimBody, input: SimInp
 	# "fists" has no skill-system weapon family (weapon_starts has no "fists" entry): a player
 	# with no weapon equipped, or whose weapon broke mid-run, reaches this style. They keep
 	# light/heavy/guard/dodge/jump here same as any weapon; special/ultimate are already
-	# stripped for every skill_build player upstream in game_sim.gd, so they simply have none
+	# stripped for every player upstream in game_sim.gd (class skills replace them), so they simply have none
 	# equipped to cast. Previously this returned early and left them unable to act at all.
 
 	if input.dodge:

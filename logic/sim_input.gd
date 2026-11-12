@@ -18,7 +18,7 @@ var skill_slot := -1  ## 0..3, -1 = no cast; server resolves all skill/Gem data.
 var aim_distance := 8.0  ## metres along bounded aim direction, never a client hit position.
 
 static func wire_size() -> int:
-	return 7 if preload("res://logic/skill_build.gd").enabled() else 5
+	return 7  ## with the skill slot and aim distance (class skills)
 
 
 ## An independent copy (the simulation adjusts inputs, for example to add aim assist, without

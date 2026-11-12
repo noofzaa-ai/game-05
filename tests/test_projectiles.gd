@@ -162,7 +162,7 @@ func _test_area(ctx) -> void:
 	# _press(..., "special") below triggers the player's special via classic input, which
 	# game_sim.gd strips once skill_build is enabled, routing casts into the skill system
 	# instead (see tests/test_combat.gd's _test_special_and_ultimate).
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # players cast class skills; the classic special/ultimate buttons are off (game_sim.gd)
 		ctx.check("the mage's hex area via classic special input is retired while skill_build is enabled (covered by the skill system instead)", true)
 		return
 	var sim := _range_sim(5.0, AABB(), "goblin_mage")

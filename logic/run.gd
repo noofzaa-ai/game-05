@@ -38,10 +38,6 @@ func loadout() -> Loadout:
 	return profile.loadout
 
 
-## The skill build this fighter uses (a squad member: its card's build, logic/squad_member.gd).
-func skill_build() -> Dictionary:
-	return profile.skill_build
-
 
 ## The character's stats for this run: worn gear (as worn down) plus the camp skills.
 func stats(item_rules: ItemRules) -> Dictionary:

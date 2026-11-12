@@ -19,16 +19,17 @@ func run(ctx) -> void:
 	ctx.check("card gear: a new player has gear for every class card", classes.all(func(c): return p.card_gear.has(c) and p.loadout_of(c).item_at("weapon", 0) != null))
 	ctx.check("card gear: Sword & Shield wears the original starter set", p.loadout_of("sword_shield").item_at("weapon", 0).id == "starter-weapon")
 	ctx.check("card gear: other cards get starter-card ids", p.loadout_of("magic").item_at("weapon", 0).id == "starter-card-v1-magic-weapon")
-	ctx.check("card gear: each card's build follows its class", p.build_of("longbow").get("start") == "bow" and p.build_of("sword_shield").get("start") == "katana")
+	ctx.check("card gear: no card carries the old skill build (class-skills.md)", classes.all(func(c): return not p.card_gear[c].has("skill_build")) and not p.to_dict().has("skill_build"))
 	ctx.check("card gear: the loadout stand-in is the Sword & Shield card", p.loadout == p.loadout_of("sword_shield"))
 
 	# Migration of a pre-card save: old worn gear + build -> Sword & Shield; the others get starters.
 	var old: Dictionary = p.to_dict()
 	old.erase("card_gear")
 	old["loadout"]["equipped"]["weapon:0"]["id"] = "old-weapon"
-	old["skill_build"]["allocated"] = ["start_katana"]
+	old["skill_build"] = {"v": 1, "start": "katana", "allocated": ["start_katana"], "skills": []}  # an old save's account build
 	var migrated = Profile.from_dict(JSON.parse_string(JSON.stringify(old)), rules, camp)
 	ctx.check("card gear: migration puts the old gear on Sword & Shield", migrated != null and migrated.loadout_of("sword_shield").item_at("weapon", 0).id == "old-weapon")
+	ctx.check("card gear: the old skill build is dropped on load", migrated != null and not migrated.card_gear["sword_shield"].has("skill_build") and not migrated.to_dict().has("skill_build"))
 	ctx.check("card gear: migration gives the other cards a starter set", migrated != null and migrated.loadout_of("greatsword").item_at("weapon", 0).id == "starter-card-v1-greatsword-weapon")
 	var again = Profile.from_dict(JSON.parse_string(JSON.stringify(old)), rules, camp)
 	ctx.check("card gear: migration is deterministic (same save -> same starter rolls)", again.to_dict() == migrated.to_dict())

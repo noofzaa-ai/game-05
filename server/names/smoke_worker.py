@@ -23,7 +23,7 @@ def prepare(destination):
     folder.mkdir(parents=True)
     shutil.copytree(ROOT / 'server/profile', destination / 'server/profile')
     shutil.copytree(ROOT / 'server/shared', destination / 'server/shared')
-    for sub in ('items', 'camp', 'cosmetics', 'skill_system'):
+    for sub in ('items', 'camp', 'cosmetics'):
         shutil.copytree(ROOT / 'data' / sub, destination / 'data' / sub, ignore=shutil.ignore_patterns('*.import', '*.uid'))
     for name in ('name_rules.gd', 'worker.gd'):
         shutil.copy2(ROOT / 'server/names' / name, folder / name)

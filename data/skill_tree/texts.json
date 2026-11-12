@@ -7,7 +7,7 @@
   "ss_t1_flame": "Breaker Slam reaches 4 m and slows the enemies it hits for 2 s.",
   "ss_t2_storm_a": "Shield Rush strikes again at 50% power. Cooldown +30%.",
   "ss_t2_storm_b": "Shield Rush knocks the enemy 3 m back and stuns it for 1.2 s. Damage -10%.",
-  "ss_t2_riposte_a": "Iron Guard counters hit for 75% of your attack instead of 50%.",
+  "ss_t2_riposte_a": "Iron Guard counters hit 50% harder.",
   "ss_t2_riposte_b": "Iron Guard counters make the attacker bleed. Counter damage -10%.",
   "ss_t2_blood_a": "While Intercept links you, 30% of the damage you take for your ally hits the attacker back.",
   "ss_t2_blood_b": "The Intercept link lasts 9 s. Cooldown +20%.",

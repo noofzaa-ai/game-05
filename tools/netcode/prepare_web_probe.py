@@ -40,7 +40,7 @@ name="Web"
 platform="Web"
 runnable=true
 export_filter="all_resources"
-include_filter="data/*.json, art/animations/*.json, art/items/item_manifest.json, art/skills/*.json"
+include_filter="data/*.json, art/animations/*.json, art/items/item_manifest.json"
 exclude_filter="art/items/_archive/*, */preview/*"
 [preset.0.options]
 variant/extensions_support=false

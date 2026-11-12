@@ -42,8 +42,7 @@ var projectiles: Array = []
 var areas: Array = []
 var _ranged := {"projectiles": [], "areas": [], "next_id": 1}
 var melee_target_boxes:Dictionary={} # Authority-owned historical enemy AABBs per attacker.
-var prediction_motion
-var skill_system  ## Pure fixed-tick Skill Lab adapter; activation is server content config.
+var skill_system = null  ## Old skill-build runtime: deleted (class-skills.md, Boss 2026-11-13). Always null; kept for old checkpoints.
 
 var item_rules: ItemRules  ## with loot_data: monsters drop loot and gear wears (see attach_run)
 var loot_data: LootData
@@ -122,13 +121,11 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 	_refresh_run_stats(id)
 	fighters[id].hp = fighters[id].max_hp()
 	fighters[id].energy = fighters[id].max_energy()
-	if run is SquadMember and ClassSkills.attach(self, id, run.card_id):
-		pass  # a squad card casts its class's 4 skills (design/gdd/class-skills.md), not a skill-build
-	elif preload("res://logic/skill_build.gd").enabled():
-		if skill_system == null:
-			skill_system = preload("res://logic/skills/system.gd").new()
-			skill_system.setup(self)
-		skill_system.attach(id, run.skill_build())
+	if run is SquadMember:
+		ClassSkills.attach(self, id, run.card_id)  # a squad card casts its class's 4 skills (design/gdd/class-skills.md)
+	elif class_styles.has(id):
+		ClassSkills.attach(self, id, ClassSkillData.class_for_style(class_styles[id]))  # a class was set first (set_class_style)
+	# (a plain weapon-led run, an online companion, has no class: no class skills; PO default 2026-11-13)
 
 
 ## Auto-battler: the squad member's class decides the fighting style (data/classes/<class>.json "weapon" is a
@@ -141,14 +138,13 @@ func set_class_style(id: int, style: String) -> void:
 		return
 	class_styles[id] = style
 	_apply_class_style(id)
-	# The class's own skill set (data/skill_system/integration.json class_skills) replaces the profile's;
-	# a squad member (logic/squad_member.gd) keeps its own card's build instead.
-	if fighters.has(id) and not ClassSkills.has_skills(fighters[id]):
-		ClassSkills.attach(self, id, ClassSkillData.class_for_style(style))  # the class's 4 skills (class-skills.md 3.6)
-	if skill_system != null and fighters.has(id) and not ClassSkills.has_skills(fighters[id]):
-		var build: Dictionary = runs[id].skill_build() if runs.has(id) and runs[id] is SquadMember else preload("res://logic/skill_build.gd").initial(style)
-		if not str(build.get("start", "")).is_empty() and skill_system.builds.get(id, {}) != build:
-			skill_system.attach(id, build)
+	# The class decides the skills: a fighter that is not a squad card gets this class style's 4 (class-skills.md 3.6);
+	# a squad card keeps its own class's. Same class again = keep the running cooldowns.
+	if fighters.has(id) and not (runs.has(id) and runs[id] is SquadMember):
+		var class_id := ClassSkillData.class_for_style(style)
+		if str(fighters[id].skill_state.get("class", "")) != class_id:
+			fighters[id].skill_state = {}
+			ClassSkills.attach(self, id, class_id)
 
 
 func _apply_class_style(id: int) -> void:
@@ -164,10 +160,6 @@ func gear_changed(id: int) -> void:
 	fighters[id].style = runs[id].loadout().weapon_style(combat.styles.keys())
 	_apply_class_style(id)
 	_refresh_run_stats(id)
-	if skill_system != null and not ClassSkills.has_skills(fighters[id]):
-		var build: Dictionary = runs[id].skill_build()
-		if skill_system.builds.get(id,{}) != build:
-			skill_system.attach(id,build)
 
 
 ## The player rests at a rest point (once per point per trip): heals part of their max HP and
@@ -204,8 +196,6 @@ func set_input(id: int, input: SimInput) -> void:
 func tick(prediction_player: int = -1) -> void:
 	# Client prediction advances only its actor; damage, AI and rewards remain authoritative.
 	events.clear()
-	if prediction_player>=0 and prediction_motion!=null:prediction_motion.before_tick()
-	if prediction_player < 0 and skill_system != null: skill_system.before_tick()
 	var ids := bodies.keys() if prediction_player < 0 else [prediction_player]
 	ids.sort()
 	# Monsters take turns attacking: only a few may be mid-attack at once, the rest wait their turn.
@@ -234,17 +224,12 @@ func tick(prediction_player: int = -1) -> void:
 					input.ultimate = false
 					if prediction_player < 0 and RacePassives.RaceUltimates.start(self, id):
 						input = SimInput.new()
-				if preload("res://logic/skill_build.gd").enabled():
-					input = input.duplicate_input()
-					input.special = false
-					input.ultimate = false
-					if prediction_player>=0 and prediction_motion!=null and input.skill_slot>=0:prediction_motion.cast(input.skill_slot,input)
-					if prediction_player < 0 and ClassSkills.has_skills(fighter) and input.skill_slot >= 0:
-						_cast_class_skill(id, fighter, body, input)
-					elif skill_system != null and skill_system.casters.has(id) and input.skill_slot >= 0:
-						var direction := input.aim.normalized() if input.aim != Vector2.ZERO else Vector2(fighter.direction).normalized()
-						skill_system.cast(id, input.skill_slot, body.position + Vector3(direction.x,0,direction.y) * input.aim_distance)
-					if fighter.skill_view.get("casting",false) or fighter.skill_view.get("moving",false): input = SimInput.new()
+				# Players cast class skills by slot (class-skills.md); the old weapon special/ultimate buttons are off.
+				input = input.duplicate_input()
+				input.special = false
+				input.ultimate = false
+				if prediction_player < 0 and ClassSkills.has_skills(fighter) and input.skill_slot >= 0:
+					_cast_class_skill(id, fighter, body, input)
 			if ClassSkills.busy(fighter):
 				input = SimInput.new()  # inside a class-skill clip window: no move, attack or other skill (class-skills.md 3.1 rule 6)
 			if fighter.hitstop > 0:
@@ -263,7 +248,6 @@ func tick(prediction_player: int = -1) -> void:
 						fighter.move_id = ""
 						fighter.buffered = ""
 		Movement.step(id, body, input, world, events)
-	if prediction_player>=0 and prediction_motion!=null:prediction_motion.advance()
 	if prediction_player>=0 and combat!=null and fighters.has(prediction_player):
 		Combat.predict_attacker_hitstop(prediction_player,fighters,bodies,combat,melee_target_boxes)
 	if combat != null and prediction_player < 0:
@@ -273,11 +257,7 @@ func tick(prediction_player: int = -1) -> void:
 		projectiles = _ranged["projectiles"]
 		areas = _ranged["areas"]
 		Combat.resolve_hits(fighters, bodies, combat, rng, events,melee_target_boxes)
-		if skill_system != null:
-			for event in events.duplicate():
-				if event.type == "dodge_started": skill_system.on_dodge(int(event.player))
-			skill_system.advance()
-		ClassSkills.step(self)  # class skills v2: travel, releases, counters, orbs (logic/class_skills/engine.gd); after the old views
+		ClassSkills.step(self)  # class skills: travel, releases, counters, orbs (logic/class_skills/engine.gd)
 		_release_waves()
 		RacePassives.step(self)  # after hits, skills and waves of this tick: race triggers react to them
 		_check_stage_clear()
@@ -466,9 +446,6 @@ func _refresh_run_stats(id: int) -> void:
 	var fighter: Fighter = fighters[id]
 	fighter.stats = combat.full_stats(runs[id].stats(item_rules))
 	RacePassives.apply_stats(fighter)  # race/synergy stat_mod (HP, ATK ...) on top of gear
-	if skill_system != null and skill_system.casters.has(id):
-		skill_system._base_stats[id] = fighter.stats.duplicate(true)
-		fighter.stats.HP *= float(skill_system.casters[id].actor.passive_stats.get("hp_max_mul",1))
 	fighter.hp = minf(fighter.hp, fighter.max_hp())
 	bodies[id].move_speed_multiplier = Stats.move_multiplier(fighter.stats)
 
@@ -560,7 +537,6 @@ func _checkpoint() -> Array:
 		"fighters": fighter_data, "ai": ai_data, "inputs": input_data, "runs": run_data,
 		"rng_seed": rng.seed, "rng_state": rng.state, "tick": tick_count,
 		"ranged": _ranged, "events": events, "waves": _waves, "waves_released": _waves_released,
-		"skill_system": skill_system.save() if skill_system != null else {},
 		"coop": _coop, "had_enemies": _had_enemies, "clear_reported": _clear_reported,
 		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor})
 
@@ -643,10 +619,7 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 	wave_heal_fraction = float(d.get("wave_heal_fraction", 0.0))
 	loot_factor = float(d.get("loot_factor", 1.0))
 	class_styles = d.get("class_styles", {}).duplicate()
-	if not d.get("skill_system", {}).is_empty():
-		skill_system = preload("res://logic/skills/system.gd").new()
-		skill_system.setup(self)
-		skill_system.restore(d.skill_system)
+	# (an old checkpoint's "skill_system" block belongs to the deleted skill-build runtime: ignored)
 	for id in fighters:  # race ultimate moves are built at attach; a restored sim may have fresh combat data
 		RacePassives.RaceUltimates.register_move(combat, fighters[id])
 	return true

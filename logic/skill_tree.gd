@@ -299,11 +299,14 @@ static func apply_command(profile, command: Dictionary, data = null) -> Dictiona
 ## the effort is not counted twice). No gold comes back: the old system never charged gold for gems (only reskill_gold
 ## for a reset, which bought nothing that still exists). The caller runs this once (Profile.tree_migration_version).
 ## Returns {card: {"old_nodes": n, "level": new level}} for the cards that had an old build.
-static func migrate_old_builds(card_gear: Dictionary, deck: Dictionary) -> Dictionary:
+const OLD_MAX_POINTS := 12  ## the deleted skill-build system's max_points (was data/skill_system/integration.json)
+
+
+static func migrate_old_builds(old_builds: Dictionary, deck: Dictionary) -> Dictionary:
 	var report := {}
-	var max_points := int(preload("res://logic/skill_build.gd").config().get("max_points", 12))
-	for card in card_gear:
-		var build = card_gear[card].get("skill_build")
+	var max_points := OLD_MAX_POINTS
+	for card in old_builds:
+		var build = old_builds[card]
 		var entry = deck.get("cards", {}).get(card)
 		if not build is Dictionary or not entry is Dictionary:
 			continue

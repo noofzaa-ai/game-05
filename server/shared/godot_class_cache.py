@@ -7,7 +7,7 @@ import re
 def prepare(root):
     root = Path(root)
     rows = []
-    for folder in (root / 'logic', root / 'data/skill_system/scripts', root / 'addons'):
+    for folder in (root / 'logic', root / 'addons'):
         if not folder.exists():
             continue
         for path in sorted(folder.rglob('*.gd')):

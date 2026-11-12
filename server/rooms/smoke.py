@@ -20,7 +20,7 @@ def prepare(root):
     shutil.copytree(ROOT / 'logic', root / 'logic')
     for sub in ('rooms', 'shared'):
         shutil.copytree(ROOT / 'server' / sub, root / 'server' / sub, ignore=shutil.ignore_patterns('__pycache__', '*.py', '*.md'))
-    for sub in ('items', 'camp', 'combat', 'loot', 'journeys', 'maps', 'cosmetics', 'skill_system', 'companions'):
+    for sub in ('items', 'camp', 'combat', 'loot', 'journeys', 'maps', 'cosmetics', 'class_skills', 'classes', 'companions'):
         shutil.copytree(ROOT / 'data' / sub, root / 'data' / sub, ignore=shutil.ignore_patterns('*.import', '*.uid'))
     shutil.copytree(ROOT / 'runtime/netfox', root / 'runtime/netfox')
     shutil.copytree(ROOT / 'runtime/diagnostics', root / 'runtime/diagnostics')

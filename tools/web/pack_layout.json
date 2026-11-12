@@ -30,8 +30,6 @@
       "name": "vfx",
       "stage": "battle",
       "include": [
-        "res://art/skills/",
-        "res://art/skill_system/",
         "res://art/animations/"
       ]
     },

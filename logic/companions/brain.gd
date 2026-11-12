@@ -84,11 +84,11 @@ func think(sim, id: int):
 		return frame
 	if fighter.state not in [Fighter.State.IDLE, Fighter.State.GUARD]: return frame
 	if skill_wait == 0:
-		var slots: Array = fighter.skill_view.get("slots", [])
+		var slots: Array = fighter.skill_view.get("slots", [])  # class skills (logic/class_skills/engine.gd publish_view)
 		for slot in mini(4, slots.size()):
 			var row: Dictionary = slots[slot]
 			if not str(row.get("skill", "")).is_empty() and float(row.get("left", 0)) <= 0 and fighter.energy >= float(row.get("cost", 0)):
-				frame.skill_slot = slot
+				frame.skill_slot = slot  # the authority re-reads the skill's use rule (GameSim._cast_class_skill)
 				skill_wait = 45
 				return frame
 	if attack_wait == 0:

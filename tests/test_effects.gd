@@ -470,7 +470,7 @@ func _test_from_moves(ctx) -> void:
 	# enabled (see tests/test_combat.gd's _test_special_and_ultimate); game_sim.gd strips
 	# input.special/input.ultimate for every non-AI fighter and routes them into the skill
 	# system instead. These effect-on-cast checks all rely on the classic trigger.
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # players cast class skills; the classic special/ultimate buttons are off (game_sim.gd)
 		ctx.check("special/ultimate cast effects via classic input are retired while skill_build is enabled (covered by the skill system instead)", true)
 	else:
 		# A special skill with a cast buff: fists' special makes the player rage.
@@ -537,7 +537,7 @@ func _test_monster_skills(ctx) -> void:
 	# cast._ai.erase(10) below makes the charger a non-AI, explicit-input "still target" (like
 	# _duel()'s enemy): once skill_build is enabled, game_sim.gd strips its classic special
 	# input too (it only exempts AI-driven fighters), so triggering it this way no longer works.
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # players cast class skills; the classic special/ultimate buttons are off (game_sim.gd)
 		ctx.check("a non-AI fighter's cast effect via classic input is retired while skill_build is enabled (covered by the skill system instead)", true)
 	else:
 		var cast := GameSim.new(_world(), _data, _rng(3))

@@ -10,7 +10,6 @@ const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const CameraRig := preload("res://client/camera_rig.gd")
 const CameraTrigger := preload("res://client/camera_trigger.gd")
 const Effects := preload("res://client/effects.gd")
-var _skill_presenter: Node3D
 const ClassSkillData := preload("res://logic/class_skills/skill_data.gd")
 const ExitPortal := preload("res://client/exit_portal.gd")
 const TreasureChest := preload("res://client/treasure_chest.gd")
@@ -172,9 +171,6 @@ func _ready() -> void:
 func _confirm_scene_presented() -> void:
 	var remote = GameState.remote_session
 	var scene_epoch: int = _built_scene_epoch
-	if _skill_presenter!=null and GameState.profile!=null and _session!=null and _session.bodies.has(_local_player_id):
-		await _skill_presenter.warm_build(GameState.profile.skill_build,_session.bodies[_local_player_id].position)
-		if not is_inside_tree():return
 	for frame in range(2):
 		if DisplayServer.get_name() == "headless": await get_tree().process_frame
 		else: await RenderingServer.frame_post_draw
@@ -237,7 +233,7 @@ func _physics_frame(_delta: float) -> void:
 	_ranged.handle_events(_session.events, _color_of)
 	_ranged.show_state(_session)
 	Audio.handle_events(_session.events, _session, _local_player_id)
-	work_started=_work_mark("skill_vfx_projectiles_audio",work_started)
+	work_started=_work_mark("projectiles_audio",work_started)
 	_update_popup_keep_out()
 	if _squad_panel != null:
 		for squad_id in _views:
@@ -257,7 +253,6 @@ func _physics_frame(_delta: float) -> void:
 	work_started=_work_mark("fighter_visuals",work_started)
 	if _rig != null and _rig.arena:
 		_rig.action_points = _action_points()
-	if _skill_presenter != null: _skill_presenter.update_from(_session.fighters,_session.bodies,_views)
 	_update_hitbox_views()
 	for trigger in _zone_triggers:
 		trigger.update(_views[_local_player_id].position)
@@ -607,10 +602,6 @@ func _build_effects_and_hud() -> void:
 	_effects = Effects.new()
 	_effects.library = _vfx
 	add_child(_effects)
-	if preload("res://logic/skill_build.gd").enabled():
-		_skill_presenter = preload("res://client/skills/presenter.gd").new()
-		_skill_presenter.effects = _effects
-		add_child(_skill_presenter)
 	_ranged = ProjectileView.new()  # arrows, bolts and ground circles (logic/projectiles.gd)
 	_ranged.effects = _effects
 	add_child(_ranged)
@@ -678,7 +669,7 @@ func _build_error_hud(errors: Array[String]) -> void:
 
 
 static func help_text(in_journey: bool = false) -> String:
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # skill slots replace the old special/ultimate keys
 		return "Move WASD   Light LMB   Heavy RMB   Guard F   Dodge C   Run Shift   Jump Space   Skills 1 2 3 4\nBow: grounded shots only · no run/jump attacks   Camera 6–9   F2 FPS   F1 hide help"
 	var keys: Array = []
 	for action in ["light", "heavy", "guard", "dodge", "run", "jump", "special", "ultimate"]:
@@ -705,7 +696,6 @@ func _handle_events() -> void:
 			_popup(event.pos, preload("res://client/party_hud.gd").TEXT.get(event.kind, ""), Color(0.9, 0.75, 0.3), 0.012)
 		match event["type"]:
 			"skill_visual":
-				if _skill_presenter != null: _skill_presenter.event(event)
 				_play_skill_burst(event)
 			"skill_cast":
 				if bool(event.get("class_skill", false)):
@@ -919,14 +909,12 @@ func _is_our_team(id: int) -> bool:
 
 
 static var _skill_names: Dictionary = {}
-## A skill's player-facing name (data/skill_system/skills/<id>.tres display_name), cached.
+## A skill's player-facing name (data/class_skills/class_skills.json name), cached.
 static func skill_display_name(skill: String) -> String:
 	if not _skill_names.has(skill) and is_class_skill(skill):
 		_skill_names[skill] = str(ClassSkillData.load_default().skill(skill).get("name", skill.capitalize()))
 	if not _skill_names.has(skill):
-		var path := "res://data/skill_system/skills/%s.tres" % skill
-		var data = load(path) if ResourceLoader.exists(path) else null
-		_skill_names[skill] = str(data.display_name) if data != null and not str(data.display_name).is_empty() else skill.capitalize()
+		_skill_names[skill] = skill.capitalize()
 	return _skill_names[skill]
 
 

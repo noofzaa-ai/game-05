@@ -150,17 +150,7 @@ func _drawn_layers(lib) -> int:
 
 ## Every class skill reads on screen (QA 2026-11-12: several skills showed nothing), HUD helpers.
 func _check_skill_looks(ctx, lib) -> void:
-	var integration: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/skill_system/integration.json"))
-	var silent: Array[String] = []
-	for family in integration["class_skills"]:
-		if not integration["class_skills"][family] is Array:
-			continue  # (the "_comment")
-		for skill in integration["class_skills"][family]:
-			if not (lib.has("skill_cast/" + skill) or lib.has("skill_burst/" + skill) or lib.has("skill_struck/" + skill)):
-				silent.append(str(skill))
-	ctx.check("every class skill has its own cast, burst or struck look %s" % [silent], silent.is_empty())
-	for skill in ["chain_lightning", "lightning_strike", "ground_slam", "shatter_smash", "riposte", "fireball", "flame_dash"]:
-		ctx.check("%s lands with a data look" % skill, lib.has("skill_burst/" + skill) or lib.has("skill_struck/" + skill) or lib.has("skill_trail/" + skill))
+	# (the old skill-build skills' per-skill looks went with that system; class skills have no VFX yet, class-skills.md 6)
 	var dark: Array[String] = []
 	for key in ["skill_hit/1", "skill_hit/2", "skill_hit/3", "hit", "death"]:
 		for layer in lib.layers(key):

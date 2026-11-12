@@ -189,7 +189,6 @@ def main():
         print(f'Logs: {logs}', flush=True)
         print('1/6 Import assets', flush=True)
         invoke(binary, 'import', ['--editor', '--import'], logs, args.timeout)
-        invoke(binary, 'skill-flipbooks', ['--script', 'res://tools/art/optimize_skill_scenes.gd'], logs, args.timeout)
         write_build_metadata()
         print('2/6 Tests' + (' (skipped)' if args.skip_tests else ''), flush=True)
         if not args.skip_tests:

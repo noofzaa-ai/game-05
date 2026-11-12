@@ -7,12 +7,11 @@ func _initialize() -> void:
 		var a = roster.make_profile("arun",manager.rules,manager.camp,seed_value)
 		var b = roster.make_profile("arun",manager.rules,manager.camp,seed_value)
 		assert(a.to_dict()==b.to_dict(),"reconnect must recreate same seeded identity")
-		assert(preload("res://logic/skill_build.gd").ready_for_run(a))
 		assert(a.stash.gold==0 and a.stash.items.is_empty() and a.vault.items.is_empty())
 		assert(a.loadout.items().size()==6,str(a.loadout.to_dict()))
 		for item in a.loadout.items():
 			assert(not manager.rules.catalog.entry(item.item_id).is_empty() and item.tier<=2 and item.durability==item.max_durability)
-		names[a.name]=true;builds[JSON.stringify(a.skill_build)]=true
+		names[a.name]=true
 		weapons[a.loadout.item_at("weapon",0).weapon_type]=true
 		looks[JSON.stringify(a.appearance)]=true
 	assert(names.size()>24 and builds.size()>24 and weapons.size()==5 and looks.size()>24)

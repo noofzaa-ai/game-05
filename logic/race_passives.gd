@@ -7,7 +7,7 @@ extends RefCounted
 ## actions `apply_status`, `heal` and `shield` (Fighter.shield, 4.3), on the events wave_start, hit, heavy_hit, skill_cast, skill_hit, kill, hurt,
 ## guard_block, self_low_hp (fields: chance, every_n, cooldown_ticks, once_per_wave, hp_below).
 ## `low_hp_scaling` (4.1) is read live by Fighter.stat through scaling_mul (race_state.scaling).
-## `skill_mod` (4.4) changes a skill-build cast in logic/skills/system.gd cast() through modify_skill_stats.
+## `skill_mod` (4.4) changes a class-skill cast in logic/class_skills/engine.gd cast_stats() through modify_skill_stats.
 ## `charges` (runes): count events in fx[index].charges, run the actions at `max`, reset; RUNE_GAIN adds to int gains.
 ## `burst` hits enemies within `radius` of `center` (self | target) for atk_mul x ATK (vs DEF), + optional status.
 ## Class signatures (data/classes/<id>.json "signature", any race): `cleave` (greatsword, read by logic/combat.gd
@@ -136,7 +136,7 @@ static func skill_dmg(fighter) -> float:
 	return total
 
 
-## The skill_mod hook (4.4), called once where a skill-build cast resolves (logic/skills/system.gd cast()), on the
+## The skill_mod hook (4.4), called once where a class-skill cast resolves (logic/class_skills/engine.gd cast_stats()), on the
 ## cast's stats before the caster takes them. Returns "" or a refusal ("race_min_hp": Blood Rite below 10% HP).
 ##   damage = base x product(damage_mul) x (1 + SKILL_DMG)   (also the skill's burn/bleed damage)
 ##   cooldown = base x product(cooldown_mul), floored at base x cooldown_mul_floor (rules.json, 0.60)

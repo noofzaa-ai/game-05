@@ -654,7 +654,7 @@ func _test_guard(ctx) -> void:
 	# fighter 2 here is not AI-controlled (an explicit-input "still target", like _duel()'s
 	# enemy), so once skill_build is enabled game_sim.gd strips its classic ultimate input too
 	# (see _test_special_and_ultimate); triggering the classic ultimate this way no longer works.
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # players cast class skills; the classic special/ultimate buttons are off (game_sim.gd)
 		ctx.check("an ultimate ignoring guard via classic input is retired while skill_build is enabled (covered by the skill system instead)", true)
 	else:
 		var ult := _guard_duel()
@@ -790,7 +790,7 @@ func _test_ultimate_strikes_forward(ctx) -> void:
 	# The move-data check above still applies; triggering the ultimate via classic player input
 	# below does not once skill_build is enabled (see _test_special_and_ultimate). Without this
 	# guard, "far" below waits forever for a move_id that can never start.
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # players cast class skills; the classic special/ultimate buttons are off (game_sim.gd)
 		ctx.check("triggering the ultimate via classic input is retired while skill_build is enabled (covered by the skill system instead)", true)
 		return
 
@@ -822,7 +822,7 @@ func _test_special_and_ultimate(ctx) -> void:
 	# player regardless of weapon style and routes them into the skill-casting system instead
 	# (see logic/game_sim.gd:tick()). The classic special/ultimate move path tested below is no
 	# longer reachable by player input; covering the skill-system path is a separate test.
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # players cast class skills; the classic special/ultimate buttons are off (game_sim.gd)
 		ctx.check("player special/ultimate via classic input is retired while skill_build is enabled (covered by the skill system instead)", true)
 		return
 	var sim := _duel(1.0, {"CRIRATE": 0}, {"HP": 100000})
@@ -1190,7 +1190,7 @@ func _test_stamina_costs(ctx) -> void:
 	# Positive-case special/ultimate triggering via classic player input is retired once
 	# skill_build is enabled (see _test_special_and_ultimate); the negative case above
 	# ("without stamina there is no special") still holds trivially either way.
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # players cast class skills; the classic special/ultimate buttons are off (game_sim.gd)
 		ctx.check("special/ultimate stamina costs via classic input are retired while skill_build is enabled (covered by the skill system instead)", true)
 	else:
 		var special := _duel(4.0)

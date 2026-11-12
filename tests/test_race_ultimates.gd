@@ -141,7 +141,7 @@ func _no_wipe(ctx) -> void:
 	var f := RaceTest.squad(["human", "human", "human"])
 	var sim = f.sim
 	var Skills = preload("res://logic/class_skills/engine.gd")
-	ctx.check("squad cards cast class skills v2, not the old skill-build system", Skills.has_skills(sim.fighters[1]) and (sim.skill_system == null or not sim.skill_system.casters.has(1)))
+	ctx.check("squad cards cast class skills v2, not the old skill-build system", Skills.has_skills(sim.fighters[1]) and sim.skill_system == null)
 	sim.fighters[1].gauge = 50.0
 	Skills.step(sim)
 	ctx.check("the class-skill step keeps a race card's gauge", sim.fighters[1].gauge == 50.0)

@@ -215,7 +215,7 @@ func current_clip() -> Dictionary:
 
 
 ## Plays one clip from a file outside the character's own animation sets at an exact time: the
-## imported skill packs (art/skills/<weapon>/<skill>/motion.glb, see client/vfx/skill_vfx.gd), whose
+## imported skill packs (deleted with the old skill system; class skills use show_class_skill_frame), whose
 ## clip runs at the same rate as the move's frames, so the caller passes the time itself. It wins
 ## over every other clip and pose until clear_skill_clip(); the weapon sits in the artist's grip,
 ## because these clips were authored on this rig.

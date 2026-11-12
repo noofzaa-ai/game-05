@@ -340,10 +340,6 @@ func _refresh_account() -> void:
 	else: online_error = "ยังโหลดข้อมูลล่าสุดไม่ได้ กรุณาเชื่อมต่อใหม่"
 
 func _start_solo(farm_map: String = "") -> void:
-	if account_session != null and not preload("res://logic/skill_build.gd").ready_for_run(account_session.profile):
-		_solo_connecting=false;_solo_started_at=0;solo_phase=""
-		online_error=preload("res://client/online/online_text.gd").message("skill_build_required")
-		return
 	_solo_generation+=1
 	var request_generation:=_solo_generation
 	_solo_started_at=Time.get_ticks_msec()

@@ -388,9 +388,8 @@ static func _run_jobs(sim, id: int, fighter) -> void:
 
 ## skill_refresh (3.6, formula 4.4): each of the target's 4 class-skill cooldowns: remaining' = max(0, remaining x
 ## (1 - fraction) - seconds). cap_seconds caps the flat seconds one cast may give each target (Masterstroke 4 s).
-## No skill system (skill-build off) = nothing to refresh (5). Returns true when a cooldown got shorter.
+## A card with no class skills = nothing to refresh (5). Returns true when a cooldown got shorter.
 static func skill_refresh(sim, id: int, action: Dictionary, ctx: Dictionary) -> bool:
-	var system = sim.skill_system
 	var did := false
 	var given: Dictionary = ctx.get("refreshed", {})
 	for target_id in _passives().targets(sim, id, str(action.get("target", "self")), ctx, action):
@@ -406,28 +405,6 @@ static func skill_refresh(sim, id: int, action: Dictionary, ctx: Dictionary) -> 
 				sim.fighters[target_id].race_state["refreshed_at"] = sim.tick_count
 				sim.events.append({"type": "race_skill_refresh", "player": id, "target": target_id, "seconds": cut_v2, "ultimate": bool(ctx.get("ultimate", false))})
 			continue
-		if system == null or not system.casters.has(target_id):
-			continue
-		var caster = system.casters[target_id]
-		var seconds := float(action.get("seconds", 0.0))
-		if action.has("cap_seconds"):
-			seconds = clampf(float(action["cap_seconds"]) - float(given.get(target_id, 0.0)), 0.0, seconds)
-		given[target_id] = float(given.get(target_id, 0.0)) + seconds
-		var fraction := float(action.get("fraction", 0.0))
-		var cut := 0.0
-		for row in system.builds[target_id].skills:
-			var skill := str(row.skill)
-			var remaining := maxf(0.0, float(caster.cooldowns.get(skill, 0.0)) - caster.clock)
-			var after := maxf(0.0, remaining * (1.0 - fraction) - seconds)
-			if after < remaining:
-				cut += remaining - after
-				caster.cooldowns[skill] = caster.clock + after
-				if caster.active_id == skill:
-					caster.ready_at = caster.cooldowns[skill]
-		if cut > 0.0:
-			did = true
-			sim.fighters[target_id].race_state["refreshed_at"] = sim.tick_count  # the pilot retries its skills at once
-			sim.events.append({"type": "race_skill_refresh", "player": id, "target": target_id, "seconds": cut, "ultimate": bool(ctx.get("ultimate", false))})
 	ctx["refreshed"] = given
 	return did
 

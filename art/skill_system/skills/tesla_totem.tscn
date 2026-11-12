@@ -1,8 +1,0 @@
-[gd_scene load_steps=2 format=3]
-[ext_resource type="Script" path="res://client/skills/mcp_skill_visual.gd" id="1"]
-[node name="tesla_totem" type="Node3D"]
-script = ExtResource("1")
-asset_path = "res://art/skill_system/mcp_vfx/tesla_totem/effect.tscn"
-asset_scale = 1.15
-tint = Color(0.6470588235294118,0.5725490196078431,1.0,1)
-projectile_path = "res://art/skill_system/mcp_vfx/tesla_totem_projectile/effect.glb"

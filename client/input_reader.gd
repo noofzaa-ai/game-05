@@ -38,7 +38,7 @@ static func read(viewport: Viewport = null) -> SimInput:
 	input.dodge = Input.is_action_just_pressed("dodge")
 	input.special = Input.is_action_just_pressed("special")
 	input.ultimate = Input.is_action_just_pressed("ultimate")
-	if preload("res://logic/skill_build.gd").enabled():
+	if true:  # skill slots 1-4 (class skills)
 		for index in range(4):
 			if Input.is_action_just_pressed(["special","ultimate","skill_3","skill_4"][index]): input.skill_slot = index
 		input.special = false

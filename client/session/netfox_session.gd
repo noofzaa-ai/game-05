@@ -115,7 +115,7 @@ func _accept_metadata(state:Dictionary)->void:
   var decoded=Profile.from_dict(profiles[_player_id],rules,camp)
   if decoded==null:return
   if profile==null:profile=decoded
-  else:copy_fields(decoded,profile,["stash","vault","loadout","camp_level","facility_levels","farm","appearance","name","created","beta_kit_version","diamonds", "mall_owned", "bonus_stash_slots","skill_build"])
+  else:copy_fields(decoded,profile,["stash","vault","loadout","camp_level","facility_levels","farm","appearance","name","created","beta_kit_version","diamonds", "mall_owned", "bonus_stash_slots"])
   var trip=Run.from_dict(state.meta.run,rules,camp,profile)
   if trip==null:return
   run=trip

@@ -409,7 +409,7 @@ static func _parse_moves(root: Dictionary, data: CombatData) -> void:
 				data.errors.append("moves.%s.%s points to unknown move '%s'" % [id, chain, target])
 
 
-## Reads data/combat/ultimates.json: which imported skill pack (art/skills/) every weapon type's
+## Reads data/combat/ultimates.json: which imported skill pack (art deleted 2026-11-13; numbers kept) every weapon type's
 ## ultimate uses, and the facts of each pack (hit times, range in body lengths, dash window, when
 ## locomotion is released). The file is generated from the packs by tools/skills/sync_ultimates.py.
 ## A missing or broken file is not fatal: the weapons keep the plain template ultimate.

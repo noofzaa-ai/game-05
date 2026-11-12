@@ -17,7 +17,8 @@ func run(ctx) -> void:
 func _old_save(f: Dictionary, card: String, nodes: int) -> Dictionary:
 	var saved: Dictionary = JSON.parse_string(JSON.stringify(f.profile.to_dict()))
 	saved.erase("tree_migration_version")
-	var build: Dictionary = saved["card_gear"][card]["skill_build"]
+	var build := {"v": 1, "start": "katana", "allocated": [], "skills": [{"skill": "old_a", "shape": "", "effect": ""}]}
+	saved["card_gear"][card]["skill_build"] = build  # (the save of a player from before the class skills)
 	var start := "start_" + str(build["start"])
 	build["allocated"] = [start]
 	for i in nodes:
@@ -41,8 +42,7 @@ func _migrates_once(ctx) -> void:
 	var state := SkillTree.state(loaded.card_deck, card)
 	ctx.check("7 old nodes (+ start) -> level 8, 7 points, 0 XP %s" % [state], state["level"] == 8 and state["earned"] == 7 and state["free"] == 7 and Progress.progress_of(loaded.card_deck, card)["xp"] == 0)
 	ctx.check("the v2 tree starts empty", state["class"].is_empty() and state["race"].is_empty() and state["combo"].is_empty())
-	var build: Dictionary = loaded.card_gear[card]["skill_build"]
-	ctx.check("the old passives and gems are dropped (start node kept)", build["allocated"] == ["start_" + str(build["start"])] and build["skills"].all(func(r): return r["shape"] == "" and r["effect"] == ""))
+	ctx.check("the old skill build itself is dropped on load (class-skills.md)", not loaded.card_gear[card].has("skill_build") and not loaded.to_dict().has("skill_build"))
 	ctx.check("no gold changes hands (the old gems never cost gold)", loaded.stash.gold == gold_before)
 	ctx.check("the profile is marked migrated", loaded.tree_migration_version == 2)
 	ctx.check("the other cards had no old points: still level 1", Progress.level_of(loaded.card_deck, "greatsword") == 1)
@@ -62,7 +62,7 @@ func _edge_cases(ctx) -> void:
 	ctx.check("an old build with only the start node stays level 1", Progress.level_of(none.card_deck, "sword_shield") == 1)
 	var saved := _old_save(f, "sword_shield", 40)
 	var capped = Profile.from_dict(saved, f.rules, f.camp)
-	var max_points := int(preload("res://logic/skill_build.gd").config().get("max_points", 12))
+	var max_points := SkillTree.OLD_MAX_POINTS
 	ctx.check("old points are capped at the old max (%d) -> level %d" % [max_points, 1 + max_points], Progress.level_of(capped.card_deck, "sword_shield") == 1 + max_points)
 	var levelled := _old_save(f, "sword_shield", 3)
 	levelled["card_deck"]["cards"]["sword_shield"]["progress"] = {"level": 10, "xp": 50}

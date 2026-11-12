@@ -14,7 +14,6 @@ const InkStyle := preload("res://client/ink_style.gd")
 const Fighter := preload("res://logic/fighter.gd")
 const Movement := preload("res://logic/movement.gd")
 const SimBody := preload("res://logic/sim_body.gd")
-const SkillVfx := preload("res://client/vfx/skill_vfx.gd")
 const ClassSkillMotion := preload("res://client/skills/class_skill_motion.gd")
 
 ## Which stand-in pose each kind of move uses until real animations exist (client-side look only).
@@ -83,16 +82,13 @@ var _warning: Label3D
 var _status_tags: Dictionary = {}  ## effect id -> Label3D shown above the head
 var _flash := 0.0
 var _clock := 0.0
-var _skill_vfx: Node3D  ## a model team skill pack's effect while its move plays (see SkillVfx)
 var _center_skeleton: Skeleton3D  ## found once for body_center()
 var _center_bone := -1
 var _class_skill_shown := false  ## a class skill v2 clip window drives the model now
 var _class_skill_id := ""
 var _class_skill_start := -1
 var _class_skill_clock := 0.0
-var _skill_pose := false  ## the pack's own character clip is driving the model right now
 var _weapon_hidden := false  ## the weapon is out of the hand (a thrown spear)
-var _prepared_style := ""  ## the weapon type whose pack has been loaded and warmed up
 var _own_materials: Array = []  ## textured monster: [{"material": copy, "albedo": its own color}]
 var _anim: RefCounted  ## the monster's AnimationSet (null = static model)
 var _skeleton: Skeleton3D
@@ -666,11 +662,6 @@ func _update_bar_color(ratio: float) -> void:
 
 ## Chooses the stand-in pose for the fighter's state and tints the model on hits.
 func _show_model_state(body: SimBody, fighter: Fighter, data: CombatData) -> void:
-	if fighter.team == "player" and fighter.style != _prepared_style:
-		# The weapon was equipped (or changed): load its ultimate's pack and draw it once, so the
-		# first cast does not stutter while the shaders compile (it matters most on the web).
-		_prepared_style = fighter.style
-		SkillVfx.prepare(fighter.style, get_parent())
 	var kind := "idle"
 	var phase := ""
 	var amount := 0.0
@@ -744,46 +735,9 @@ func skill_weapon_point() -> Vector3:
 	return position + Vector3(0, 0.15, 0)
 
 
-static var _lab_motions: Dictionary = {}
-
-func _show_skill_pack(body: SimBody, fighter: Fighter) -> void:
-	if _show_class_skill(fighter): return
-	if _show_lab_cast(body,fighter): return
-	var pack := SkillVfx.pack_for(fighter.move_id) if fighter.state == Fighter.State.ATTACK else {}
-	if _skill_vfx != null and (pack.is_empty() or _skill_vfx.get_meta("move") != fighter.move_id):
-		_skill_vfx.play_out()  # it frees itself when its effect is over
-		_skill_vfx = null
-	if pack.is_empty():
-		if _skill_pose:
-			_skill_pose = false
-			_model.clear_skill_clip()
-			_show_thrown_weapon(true)
-		return
-	var show_vfx := preload("res://client/graphics_options.gd").enabled("ultimate_vfx")
-	if not show_vfx and _skill_vfx != null:
-		_skill_vfx.queue_free()
-		_skill_vfx = null
-	if show_vfx and _skill_vfx == null and get_parent() != null:
-		_skill_vfx = SkillVfx.new()
-		_skill_vfx.set_meta("move", fighter.move_id)
-		get_parent().add_child(_skill_vfx)
-		_skill_vfx.setup(pack, body.position, Vector2(fighter.direction), float(pack.get("body_m", 1.7)) / maxf(float(pack.get("height", 1.506733)), .001), _model)
-	var time := fighter.move_frame / 60.0
-	var motion := SkillVfx.motion_for(pack)
-	if not motion.is_empty():
-		_skill_pose = true
-		_model.show_skill_clip(motion["set"], motion["clip"], time)
-	if _skill_vfx != null:
-		var anchor: Dictionary = pack.get("impact_anchor", {})
-		if not anchor.is_empty() and time >= float(anchor["time_s"]) and not _skill_vfx.has_meta("impact_frozen"):
-			var point := skill_weapon_point()
-			point.y = body.position.y
-			_skill_vfx.global_position = point
-			_skill_vfx.set_meta("impact_frozen", true)
-		_skill_vfx.show_at(time)
-	# The spear packs throw the weapon and catch it again: it is out of the hand in between.
-	var throw: Dictionary = pack.get("throw", {})
-	_show_thrown_weapon(throw.is_empty() or time < float(throw["release_time_s"]) or time >= float(throw["catch_time_s"]))
+## The class skill clip window (old skill packs and Skill Lab casts were deleted with the old skill system).
+func _show_skill_pack(_body: SimBody, fighter: Fighter) -> void:
+	_show_class_skill(fighter)
 
 
 ## The middle of the shown body in world space: the hips bone of the model (it rises with a leaping
@@ -806,12 +760,6 @@ func _show_thrown_weapon(in_hand: bool) -> void:
 		return
 	_weapon_hidden = not in_hand
 	_model.set_weapon_visible(in_hand)
-
-
-func _exit_tree() -> void:
-	if _skill_vfx != null:
-		_skill_vfx.queue_free()
-		_skill_vfx = null
 
 
 ## The colored tint of the strongest effect on the fighter (a debuff first), or a clear color if none.
@@ -896,22 +844,5 @@ func _show_class_skill(fighter: Fighter) -> bool:
 	if pose.is_empty() or not _model.show_class_skill_frame(pose):
 		return false
 	_class_skill_shown = true
-	if _skill_pose:
-		_skill_pose = false
 	return true
 
-
-func _show_lab_cast(body: SimBody, fighter: Fighter) -> bool:
-	var pose: Dictionary=fighter.skill_view.get("pose",{})
-	if pose.is_empty():return false
-	if _lab_motions.is_empty():_lab_motions=JSON.parse_string(FileAccess.get_file_as_string("res://art/skill_system/motions/motion_manifest.json"))
-	var meta: Dictionary=_lab_motions.get("skills",{}).get(pose.get("skill",""),{}).get(pose.get("family",""),{})
-	if meta.is_empty():return false
-	var elapsed:=maxf(0,float(fighter.skill_view.get("clock",0))-float(pose.started))
-	var windup:=maxf(.001,float(pose.windup));var release:=float(meta.release)
-	var time:=elapsed*release/windup if elapsed<windup else release+elapsed-windup
-	if time>float(meta.duration) or fighter.state!=Fighter.State.IDLE or (elapsed>=windup and body.velocity.length()>.1):return false
-	var library=preload("res://client/animation_set.gd").load_file("res://art/skill_system/motions/skill_lab_casts.glb")
-	if library==null:return false
-	_skill_pose=true;_model.show_skill_clip(library,meta.clip,time)
-	return true

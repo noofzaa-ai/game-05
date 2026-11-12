@@ -62,11 +62,11 @@ func run()->void:
  assert(actor.relic_state.charge==initial_charge)
  assert(sim.events.filter(func(e):return e.type=="killed").size()==1)
  assert(enemy.effects.is_empty())
- # Actual successful/failed skill request path.
+ # Actual successful/failed skill request path (class skills, logic/class_skills/engine.gd).
  sim=pair("goblin_lantern");actor=sim.fighters[1]
- sim.skill_system=load("res://logic/skills/system.gd").new();sim.skill_system.setup(sim);sim.skill_system.attach(1,load("res://logic/skill_build.gd").initial("blade"))
- actor.energy=0;assert(not sim.skill_system.cast(1,0,Vector3(2,0,0)).is_empty());assert(actor.relic_state.lantern_ready==0)
- actor.energy=1000;assert(sim.skill_system.cast(1,0,Vector3(2,0,0)).is_empty());assert(actor.relic_state.lantern_ready==240)
+ var Skills=load("res://logic/class_skills/engine.gd");Skills.attach(sim,1,"sword_shield")
+ actor.energy=0;assert(not Skills.cast(sim,1,"breaker_slam",{"target":2}).is_empty());assert(actor.relic_state.lantern_ready==0)
+ actor.energy=1000;assert(Skills.cast(sim,1,"breaker_slam",{"target":2}).is_empty());assert(actor.relic_state.lantern_ready==240)
  # Full JSON simulation checkpoint must retain charge/timers and restore deterministically.
  var saved:Dictionary=sim.snapshot();var restored=pair("goblin_lantern")
  assert(restored.restore(JSON.parse_string(JSON.stringify(saved))))

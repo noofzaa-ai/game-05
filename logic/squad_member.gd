@@ -46,9 +46,6 @@ func loadout() -> Loadout:
 	return profile.loadout_of(card_id)
 
 
-func skill_build() -> Dictionary:
-	return profile.build_of(card_id)
-
 
 func loot_into_bag(drop: Dictionary) -> Dictionary:
 	return shared.loot_into_bag(drop)

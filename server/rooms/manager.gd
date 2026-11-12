@@ -25,11 +25,10 @@ func ready() -> bool:
 
 func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, capacity: int = 4, farm_map: String = "") -> Dictionary:
 	if not ready(): return failure("not_configured")
-	if not lobby and preload("res://logic/skill_build.gd").enabled():
+	if not lobby:
 		for entry in profiles:
 			if not entry is Dictionary or not entry.get("profile") is Dictionary: return failure("invalid_payload")
-			var profile = preload("res://logic/profile.gd").from_dict(entry.profile,rules,camp)
-			if profile == null or not preload("res://logic/skill_build.gd").ready_for_run(profile): return failure("skill_build_required")
+			if preload("res://logic/profile.gd").from_dict(entry.profile,rules,camp) == null: return failure("invalid_payload")
 	if RegEx.create_from_string("^[a-z0-9-]{8,64}$").search(id) == null: return failure("invalid_payload")
 	if rooms.has(id): return failure("room_exists")
 	if rooms.size() >= MAX_ROOMS: return failure("worker_full")

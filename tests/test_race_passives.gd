@@ -303,7 +303,7 @@ static func cast_slot0(sim, id: int) -> Dictionary:
 	return {"stats": fighter.skill_state["cast"]["stats"], "cooldown": float(fighter.skill_state["cast"]["stats"]["cooldown"])}
 
 
-## skill_mod (GDD 4.4, phase 4 step 3): the hook where a skill-build cast resolves (logic/skills/system.gd cast()).
+## skill_mod (GDD 4.4, phase 4 step 3): the hook where a class-skill cast resolves (logic/class_skills/engine.gd cast_stats()).
 func _skill_mod(ctx) -> void:
 	# Formula 4.4 on plain stats: Human magic + Human Trio -> cooldown x0.85 x0.90 = 0.765, damage x1.30 x1.20.
 	var mage := Fighter.new()

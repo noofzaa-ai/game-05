@@ -4,7 +4,7 @@ extends RefCounted
 ## "skill_tree") against data/skill_tree/rules.json, with strict validation in race_data.gd style: a wrong tier count,
 ## type, cost, gate, OR pair, unknown effect type, event, action, target, stat, skill, status or mechanic id is a LOAD
 ## ERROR (`errors`), never a silent no-op. A class with no combo in a race is only a warning (the race has none to offer).
-## Independent of the old skill system's chart/tree/gems (data/skill_system/tree, gems): Boss 2026-11-13, those go.
+## Independent of the old skill system's chart/tree/gems (deleted 2026-11-13).
 ## Pure data. The rules that learn/validate a card's tree are in logic/skill_tree.gd.
 
 const RULES_FILE := "res://data/skill_tree/rules.json"

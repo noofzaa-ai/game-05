@@ -64,7 +64,7 @@ func run(ctx) -> void:
 		PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/items/icons/a.png.import")) == PackLayout.BOOT
 		and PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/armor/ash_cloth/shirt.glb.import")) == PackLayout.BOOT)
 	for p in ["res://art/maps/goblin_forest/a.glb.import", "res://art/props/goblin_base/meshes/hut.res", "res://art/monsters/goblin/goblin.glb.import",
-			"res://art/skill_system/mcp_vfx/fireball/effect.glb.import", "res://art/skills/blade/x/vfx.glb.import", "res://art/animations/goblin.glb.import"]:
+			"res://art/animations/goblin.glb.import"]:
 		ctx.check("battle art loads in the background: " + p, PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, p)) == PackLayout.BATTLE)
 	ctx.check("card screen UI art stays in core (with the page)", PackLayout.pack_for_path(layout, "res://art/ui/class_cards/hub_fight_button.png.import") == "core")
 	ctx.check("a format variant has its base pack's stage", PackLayout.stage_of(layout, "monsters.etc2") == PackLayout.BATTLE and PackLayout.stage_of(layout, "characters.s3tc") == PackLayout.BOOT)

@@ -20,7 +20,6 @@ extends RefCounted
 
 const Fighter := preload("res://logic/fighter.gd")
 const SimInput := preload("res://logic/sim_input.gd")
-const SkillBuild := preload("res://logic/skill_build.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const RaceUltimates := preload("res://logic/race_ultimates.gd")
@@ -149,19 +148,9 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	input.aim = toward
 	if me.state != Fighter.State.IDLE and me.state != Fighter.State.ATTACK:
 		return input
-	# The old weapon ultimate (no race ultimate): while the skill-build system is on, GameSim drops the button (and
-	# retires the gauge): pressing it would only waste the tick, and a full gauge would freeze the fighter, so swing.
-	if me.race_state.get("ultimate", {}).is_empty() and not SkillBuild.enabled() and me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
-		input.ultimate = true
-		return input
+	# (the old weapon ultimate button is off for players: GameSim drops it, so a full gauge never freezes the pilot)
 	if not class_pick.is_empty():
 		return _skill_input(sim, id, me, class_pick)
-	# Only book a slot when the cast can go out now, or the retry timer burns it mid-combo.
-	var slot := -1 if ClassSkills.has_skills(me) else _ready_skill_slot(sim, me, id, memory, tick, profile, target) if target_distance < SKILL_RANGE and me.state == Fighter.State.IDLE else -1
-	if slot >= 0:
-		input.skill_slot = slot
-		input.aim_distance = clampf(target_distance, 1.0, 8.0)
-		return input
 	if tick % SWING_EVERY == 0:
 		memory["swings"] = int(memory["swings"]) + 1
 		var every := ClassSkills.heavy_every(sim, me)  # Battle Trance: every 2nd swing is a heavy (class-skills.md 3.3 G4)
@@ -286,33 +275,6 @@ static func _engage_range(combat, me: Fighter, profile: Dictionary = {}) -> floa
 	return REACH * maxf(1.0, reach / BLADE_REACH)
 
 
-## The next skill-build slot worth trying (round robin), or -1. The sim reports no cooldown to read, so
-## each slot is retried only every SKILL_RETRY_TICKS; a failed cast (stamina, cooldown) costs nothing.
-## Class hold rules (GDD 3.2, magic): a damage skill waits until `skill_min_targets` enemies stand within its radius
-## of the target (or the target is the boss); `support_skill` waits until a squad member is below `support_below`.
-## A held slot is not booked (its retry timer stays), so it goes out the tick the rule is met.
-static func _ready_skill_slot(sim, me: Fighter, id: int, memory: Dictionary, tick: int, profile: Dictionary = {}, target: int = -1) -> int:
-	var system = sim.skill_system
-	if system == null or not system.casters.has(id):
-		return -1
-	if SkillBuild.start_for(me.style) != str(system.builds[id].get("start", "")):
-		return -1  # this class's style has no skill tree (the cast would fail with weapon_tree_mismatch)
-	var ready_at: Dictionary = memory["slot_ready_at"]
-	for step in 4:
-		var slot: int = (int(memory["next_slot"]) + step) % 4
-		if int(ready_at.get(slot, 0)) > tick:
-			continue
-		var cost := float(SkillBuild.config().stamina.get(system.builds[id].skills[slot].skill, 0))
-		if me.energy < cost:
-			continue
-		if not profile.is_empty() and held(sim, me, system.builds[id], slot, profile, target):
-			continue
-		ready_at[slot] = tick + SKILL_RETRY_TICKS
-		memory["next_slot"] = (slot + 1) % 4
-		return slot
-	return -1
-
-
 ## Race ultimate fire rule (GDD 3.10.4): the cell's `use.any_of` matches now, or the gauge has been full for
 ## `use.max_hold_ticks` and an enemy is within the class engage range. No randomness. Each condition may also carry
 ## `and` [conditions] (all must match) and, as in the GDD data, `and_ally_hurt_below`.
@@ -371,7 +333,6 @@ static func use_matches(sim, id: int, rule: Dictionary) -> bool:
 				return _flat(sim.bodies[e].position - at).length() <= float(rule.get("range", 12.0)) and f.hp < f.max_hp() * float(rule.get("below", 0.3)) and (not bool(rule.get("boss_only", false)) or is_boss(f)))
 			ok = low.size() >= int(rule.get("min", 1))
 		"skills_on_cooldown":
-			var system = sim.skill_system
 			var count := 0
 			for a in ([id] if int(rule.get("allies", 1)) <= 1 else _allies(sim, id)):
 				if ClassSkills.has_skills(sim.fighters[a]):
@@ -380,14 +341,6 @@ static func use_matches(sim, id: int, rule: Dictionary) -> bool:
 						if ClassSkills.cooldown_left(sim, sim.fighters[a], str(skill)) > 0.0:
 							waiting += 1
 					if waiting >= int(rule.get("min", 1)):
-						count += 1
-				elif system != null and system.casters.has(a):
-					var caster = system.casters[a]
-					var down := 0
-					for row in system.builds[a].skills:
-						if float(caster.cooldowns.get(str(row.skill), 0.0)) - caster.clock > 0.0:
-							down += 1
-					if down >= int(rule.get("min", 1)):
 						count += 1
 			ok = count >= int(rule.get("allies", 1))
 		"boss_telegraph":
@@ -417,32 +370,6 @@ static func _enemy_ids(sim, id: int) -> Array:
 
 static func _enemies_within(sim, id: int, point: Vector3, radius: float) -> int:
 	return _enemy_ids(sim, id).filter(func(e): return _flat(sim.bodies[e].position - point).length() <= radius).size()
-
-
-## True when the class rules hold this skill slot back now (see _ready_skill_slot).
-static func held(sim, me: Fighter, build: Dictionary, slot: int, profile: Dictionary, target: int) -> bool:
-	var skill := str(build.skills[slot].skill)
-	if not str(profile.get("support_skill", "")).is_empty() and skill == str(profile["support_skill"]):
-		var below := float(profile.get("support_below", 0.0))
-		for other_id in sim.fighters:
-			var f: Fighter = sim.fighters[other_id]
-			if f.team == me.team and f.is_alive() and f.hp < f.max_hp() * below:
-				return false
-		return true
-	var need := int(profile.get("skill_min_targets", 1))
-	if need <= 1 or target < 0 or not sim.fighters.has(target) or is_boss(sim.fighters[target]):
-		return false
-	var stats := SkillBuild.calculate(build, slot)
-	if float(stats.get("damage", 0.0)) <= 0.0:
-		return false
-	var radius := maxf(float(stats.get("radius", HOLD_RADIUS)), HOLD_RADIUS)
-	var center: Vector3 = sim.bodies[target].position
-	var count := 0
-	for other_id in sim.fighters:
-		var f: Fighter = sim.fighters[other_id]
-		if f.team != me.team and f.is_alive() and _flat(sim.bodies[other_id].position - center).length() <= radius:
-			count += 1
-	return count < need
 
 
 static func _flat(v: Vector3) -> Vector2:

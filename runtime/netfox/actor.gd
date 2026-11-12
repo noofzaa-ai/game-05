@@ -115,8 +115,7 @@ func retire()->void:
  paused=true;sync.suspended=true;get_node("Input").suspended=true
 
 func _exit_tree()->void:
- if authority_room==null and simulation!=null and simulation.skill_system!=null:
-  simulation.skill_system.dispose()
+ pass
 
 func _motion_fields()->Dictionary:
  var body=simulation.bodies[actor_id];var fighter=simulation.fighters[actor_id]

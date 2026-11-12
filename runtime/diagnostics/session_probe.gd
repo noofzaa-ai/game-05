@@ -76,7 +76,6 @@ func report()->Dictionary:
  var runtime=Engine.get_main_loop().get_root()
  var client=recorder.export_data()
  client["context"]=_context.duplicate(true)
- if session.profile!=null:client["context"]["skill_build"]=session.profile.skill_build.duplicate(true)
  client["graphics"]=preload("res://client/graphics_options.gd").snapshot()
  client["render"]={"viewport":[runtime.size.x,runtime.size.y],"draw_calls":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),"primitives":Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)}
  var ref={"room":str(session.admission.get("room","")),"player":session.player_id(),"epoch":session.scene_epoch(),"key":"room/player/epoch/input_tick"}

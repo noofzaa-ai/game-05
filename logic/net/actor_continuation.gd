@@ -17,10 +17,7 @@ static func capture(sim,id:int,validate:bool=true)->PackedByteArray:
  var context:Dictionary={}
  for target in sim.bodies:
   if target!=id and sim.fighters.has(target):context[target]={"body":Codec.fields(sim.bodies[target]),"fighter":Codec.fields(sim.fighters[target],EXCLUDED)}
- var skills:Dictionary={}
- if sim.skill_system!=null and sim.skill_system.casters.has(id):
-  var full:Dictionary=sim.skill_system.save()
-  skills={"builds":{id:full.builds[id]},"base_stats":{id:full.base_stats[id]},"targets":full.targets,"casters":{id:full.casters[id]}}
+ var skills:Dictionary={}  # (the old skill-build runtime's block: always empty now; class skills ride in skill_state)
  var values={"v":VERSION,"actor":id,"body":Codec.fields(sim.bodies[id]),"fighter":Codec.fields(sim.fighters[id],EXCLUDED),"context":context,"skills":skills}
  if validate and not _value_safe(values):
   print("ACTOR SNAPSHOT REJECT ",_unsafe_path(values))
@@ -46,9 +43,7 @@ static func restore(sim,id:int,bytes:PackedByteArray)->bool:
   var row=value.context[target]
   if not row is Dictionary or row.size()!=2 or not row.get("body") is Dictionary or not row.get("fighter") is Dictionary:return false
   if not _same_shape(Codec.fields(sim.bodies[id]),row.body) or not _same_shape(Codec.fields(sim.fighters[id],EXCLUDED),row.fighter):return false
- if not value.skills.is_empty():
-  if not value.skills.has_all(["builds","base_stats","targets","casters"]):return false
-  if value.skills.builds.keys()!=[id] or value.skills.casters.keys()!=[id]:return false
+ if not value.skills.is_empty():return false
  # Context is combat-only: no stash, profile, bag, credentials or persistence state.
  for target in value.context:
   if not sim.bodies.has(target):sim.add_player(target,Vector3.ZERO)
@@ -58,13 +53,6 @@ static func restore(sim,id:int,bytes:PackedByteArray)->bool:
   if target!=id and not value.context.has(target):sim.remove_player(target)
  Codec.apply_fields(sim.bodies[id],value.body)
  Codec.apply_fields(sim.fighters[id],value.fighter)
- if not value.skills.is_empty():
-  if sim.skill_system==null:
-   sim.skill_system=preload("res://logic/skills/system.gd").new();sim.skill_system.setup(sim)
-  sim.skill_system.restore(value.skills,true)
-  for caster in sim.skill_system.casters.values():caster.visuals_enabled=false
- else:sim.skill_system=null
- sim.prediction_motion=null
  return true
 static func _same_shape(expected:Dictionary,received:Dictionary)->bool:
  if expected.size()!=received.size():return false

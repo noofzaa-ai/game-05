@@ -1,8 +1,0 @@
-[gd_scene load_steps=2 format=3]
-[ext_resource type="Script" path="res://client/skills/mcp_skill_visual.gd" id="1"]
-[node name="piercing_shot" type="Node3D"]
-script = ExtResource("1")
-asset_path = "res://art/skill_system/mcp_vfx/piercing_shot/effect.tscn"
-asset_scale = 0.45
-tint = Color(0.9490196078431372,0.8117647058823529,0.45098039215686275,1)
-projectile_path = "res://art/skill_system/mcp_vfx/piercing_shot_projectile/effect.glb"

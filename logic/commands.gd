@@ -32,7 +32,6 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"tree_reset_class": {"card": TYPE_STRING}, "tree_reset_race": {"card": TYPE_STRING},
 		"farm_seed": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_plant": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_harvest": {"plot":TYPE_INT},
 		"shop_buy": {"sku": TYPE_STRING},
-		"skill_build": {"action": TYPE_STRING, "build": TYPE_DICTIONARY, "card": TYPE_STRING},
 		"relic_equip": {"relic":TYPE_STRING,"slot":TYPE_INT},
 		"shop_sell": {"item": TYPE_STRING, "expected_price": TYPE_INT},
 		"shop_sell_batch": {"entries": TYPE_ARRAY, "expected_price": TYPE_INT},
@@ -110,10 +109,6 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 	var bag_before: Dictionary = trip.bag.to_dict() if trip != null else {}
 	var result := {}
 	match kind:
-		"skill_build":
-			if location != "camp": return _error("not_available_here")
-			result = preload("res://logic/skill_build.gd").apply(p, command, card)
-			if not result.get("ok", false): return _error(str(result.get("reason", "invalid_skill_build")))
 		"equip", "unequip", "discard", "discard_material":
 			var source: String = command.get("source", command.get("destination", ""))
 			if not source in ["stash", "bag"]:
@@ -135,17 +130,13 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				var wear_problem := Profile.slot_problem(p.lead_card() if card.is_empty() else card, item, state["rules"])
 				if not wear_problem.is_empty():
 					return _error(wear_problem)  # slot_closed (offhand: Sword & Shield only) or wrong_weapon_family
-				if item.slot == "weapon" and not preload("res://logic/skill_build.gd").can_equip(p, item.weapon_type, card):
-					return _error("reskill_required")
 				if source == "bag" and not card.is_empty() and card != p.lead_card():
 					return _error("not_available_here")  # run bags dress the fighting character only (plan step 4)
 				if not (p.equip_from_stash(at, index, card) if source == "stash" else trip.equip_from_bag(at, index)):
 					return _error("invalid_slot")
-				if item.slot == "weapon":
-					preload("res://logic/skill_build.gd").follow_unspent_weapon(p, item.weapon_type, card)
 			elif kind == "unequip":
-				if command.slot == "weapon" and preload("res://logic/skill_build.gd").enabled():
-					return _error("weapon_required")
+				if command.slot == "weapon":
+					return _error("weapon_required")  # a card always holds a weapon
 				if source == "bag" and not card.is_empty() and card != p.lead_card():
 					return _error("not_available_here")
 				if p.loadout_of(card).item_at(command["slot"], index) == null:

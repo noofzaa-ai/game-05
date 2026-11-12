@@ -12,7 +12,7 @@ func _run() -> void:
   print("ROOM CREATE FAILED ",result)
   var profile=preload("res://logic/profile.gd").from_dict(raw,manager.rules,manager.camp)
   var weapon=profile.loadout.item_at("weapon",0) if profile!=null else null
-  print("BUILD CHECK ",{"profile_valid":profile!=null,"weapon_present":weapon!=null,"weapon_destroyed":weapon.destroyed if weapon!=null else null,"weapon_family":weapon.weapon_type if weapon!=null else "", "build_error":preload("res://logic/skill_build.gd").validate(profile.skill_build) if profile!=null else "invalid_profile", "build_start":profile.skill_build.get("start","") if profile!=null else ""})
+  print("BUILD CHECK ",{"profile_valid":profile!=null,"weapon_present":weapon!=null,"weapon_destroyed":weapon.destroyed if weapon!=null else null,"weapon_family":weapon.weapon_type if weapon!=null else ""})
   quit(2);return
  var room=manager.rooms["12345678abcd"].room
  for id in room.sim.bodies:

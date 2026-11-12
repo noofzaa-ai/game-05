@@ -1,5 +1,5 @@
 {
- "_comment": "Class-skill clip windows v2 (animator 2026-11-13), mirrors design/gdd/class-skills.md 3.2-3.5. segs: [clip, start, end, speed, [release clip-times]]. travel: [from, to] clip-time span of segment `travel_seg` where the sim moves the body (root-motion rule). blend: seconds between segments (default 0.12).",
+ "_comment": "Class-skill clip windows v2 (animator 2026-11-13), mirrors design/gdd/class-skills.md 3.2-3.5. segs: [clip, start, end, speed, [release clip-times]]. travel: [from, to] clip-time span of segment `travel_seg` where the sim moves the body (root-motion rule). blend: seconds between segments (default 0.12). Bow windows (L1-L4) at the tuned 1.2x speeds (tuning pass 1, data/class_skills/class_skills.json is the source).",
  "S1": {
   "cls": "sword_shield",
   "name": "Shield Rush",
@@ -249,14 +249,14 @@
     "lb_draw_arrow",
     0.0,
     1.017,
-    1.0,
+    1.2,
     []
    ],
    [
     "lb_aim_recoil",
     0.0,
     0.7,
-    1.0,
+    1.2,
     [
      0.18
     ]
@@ -271,14 +271,14 @@
     "lb_draw_arrow",
     0.0,
     1.017,
-    1.5,
+    1.8,
     []
    ],
    [
     "lb_aim_recoil",
     0.0,
     0.7,
-    0.8,
+    0.96,
     [
      0.18
     ]
@@ -294,14 +294,14 @@
     "lb_draw_arrow",
     0.0,
     1.017,
-    2.0,
+    2.4,
     []
    ],
    [
     "lb_aim_recoil",
     0.0,
     0.18,
-    1.0,
+    1.2,
     [
      0.18
     ]
@@ -310,14 +310,14 @@
     "lb_aim_recoil",
     0.18,
     0.233,
-    0.332,
+    0.398,
     []
    ],
    [
     "lb_aim_recoil",
     0.15,
     0.18,
-    0.332,
+    0.398,
     [
      0.18
     ]
@@ -326,14 +326,14 @@
     "lb_aim_recoil",
     0.18,
     0.233,
-    0.332,
+    0.398,
     []
    ],
    [
     "lb_aim_recoil",
     0.15,
     0.18,
-    0.332,
+    0.398,
     [
      0.18
     ]
@@ -342,14 +342,14 @@
     "lb_aim_recoil",
     0.18,
     0.233,
-    0.332,
+    0.398,
     []
    ],
    [
     "lb_aim_recoil",
     0.15,
     0.18,
-    0.332,
+    0.398,
     [
      0.18
     ]
@@ -358,7 +358,7 @@
     "lb_aim_recoil",
     0.18,
     0.7,
-    1.0,
+    1.2,
     []
    ]
   ],
@@ -377,21 +377,21 @@
     "lb_dodge_backward",
     0.0,
     0.95,
-    1.5,
+    1.8,
     []
    ],
    [
     "lb_draw_arrow",
     0.0,
     1.017,
-    2.0,
+    2.4,
     []
    ],
    [
     "lb_aim_recoil",
     0.0,
     0.7,
-    1.0,
+    1.2,
     [
      0.18
     ]

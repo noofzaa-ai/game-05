@@ -25,7 +25,7 @@ const STARTER_LOOKS := {"weapon": "blade_01", "shirt": "scout_vest", "shoes": "s
 var vault: Inventory = Inventory.new(0)  ## Storage NPC bank; old profiles start empty
 var stash: Inventory
 ## Per-card gear (Boss 2026-11-11, docs/tech/per_card_gear_plan.md): class id -> {"loadout": Loadout,
-## "skill_build": Dictionary}. Each class card wears its own equipment slots and owns its own skill build;
+## }. Each class card wears its own equipment slots (an old save's per-card "skill_build" is dropped on load);
 ## stash, vault, gold and materials stay shared by the whole account. An item is in the stash/vault OR worn
 ## by exactly one card (logic/commands.gd rejects any id seen twice).
 var card_gear: Dictionary = {}
@@ -55,13 +55,6 @@ var beta_kit_version := 0
 ## 2 = the old per-run skill tree was turned into card levels (logic/skill_tree.gd migrate_old_builds, skill-tree.md 5).
 var tree_migration_version := 0
 var bonus_stash_slots := 0
-## Transition stand-in: the lead card's skill build (IDs only; validated by skill_build.gd on the authority).
-var skill_build: Dictionary:
-	get:
-		var gear = card_gear.get(lead_card())
-		return gear["skill_build"] if gear != null else {}
-	set(value):
-		_lead_gear()["skill_build"] = value
 ## One class card per class, each customised on its own, plus the squad of the next fight (logic/card_deck.gd).
 var card_deck: Dictionary = preload("res://logic/card_deck.gd").initial(preload("res://logic/cosmetic_options.gd").load_default())
 var name := ""  ## the character's name, set when the player creates the character
@@ -77,7 +70,7 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 		stacks[id] = camp.materials[id]["stack"]
 	profile.stash = Inventory.new(camp.stash_slots, stacks)
 	profile.vault = Inventory.new(camp.bank_slots, stacks)
-	profile.card_gear["sword_shield"] = {"loadout": Loadout.new(item_rules), "skill_build": {}}
+	profile.card_gear["sword_shield"] = {"loadout": Loadout.new(item_rules)}
 	profile.facility_levels = camp.start_levels.duplicate()
 	profile.stash.gold = int(camp.starter.get("gold", 0))
 	for id in camp.starter.get("materials", {}):
@@ -87,7 +80,6 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	first.equip(ItemSystem.create_item(item_rules, "starter-weapon", "weapon", 1, rng, "blade", STARTER_LOOKS["weapon"]))
 	first.equip(ItemSystem.create_item(item_rules, "starter-shirt", "shirt", 2, rng, "", STARTER_LOOKS["shirt"]))
 	first.equip(ItemSystem.create_item(item_rules, "starter-shoes", "shoes", 0, rng, "", STARTER_LOOKS["shoes"]))
-	profile.card_gear["sword_shield"]["skill_build"] = preload("res://logic/skill_build.gd").initial("blade")
 	profile.ensure_starter_weapons(item_rules, rng)
 	profile.ensure_starter_armor(item_rules, rng)
 	profile.ensure_starter_cards(item_rules)
@@ -102,9 +94,9 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	return profile
 
 
-## The card the transition stand-ins (`loadout`, `skill_build`) and card-less commands use: the Sword & Shield
+## The card the transition stand-in (`loadout`) and card-less commands use: the Sword & Shield
 ## card, which holds the account's pre-card gear and build. Fixed (not squad[0]) so the online rooms and
-## the sim, which still read `loadout`/`skill_build` until plan step 4, see the same character whatever
+## the sim, which still read `loadout` until plan step 4, see the same character whatever
 ## order the squad is in.
 const LEAD_CARD := "sword_shield"
 
@@ -116,7 +108,7 @@ func lead_card() -> String:
 func _lead_gear() -> Dictionary:
 	var card := lead_card()
 	if not card_gear.has(card):
-		card_gear[card] = {"loadout": null, "skill_build": {}}
+		card_gear[card] = {"loadout": null}
 	return card_gear[card]
 
 
@@ -129,12 +121,6 @@ func has_card(card: String) -> bool:
 func loadout_of(card: String = "") -> Loadout:
 	var gear = card_gear.get(lead_card() if card.is_empty() else card)
 	return gear["loadout"] if gear != null else null
-
-
-## The card's skill build ({} for an unknown card). "" = the lead card.
-func build_of(card: String = "") -> Dictionary:
-	var gear = card_gear.get(lead_card() if card.is_empty() else card)
-	return gear["skill_build"] if gear != null else {}
 
 
 ## Every card's worn entries, destroyed ones included (one Array per card): for id-uniqueness scans.
@@ -227,7 +213,7 @@ func ensure_starter_cards(item_rules: ItemRules) -> void:
 			if item != null:
 				worn.equip(item)
 		var style := str(CardDeck.class_data(card).get("weapon", family))
-		card_gear[card] = {"loadout": worn, "skill_build": preload("res://logic/skill_build.gd").initial(style)}
+		card_gear[card] = {"loadout": worn}
 
 
 ## One starter per missing weapon family, once per account. Earned gear is never removed.
@@ -326,15 +312,15 @@ func to_dict() -> Dictionary:
 	saved_appearance["blink_mode"] = "auto"
 	var saved_gear := {}
 	for card in card_gear:
-		saved_gear[card] = {"loadout": card_gear[card]["loadout"].to_dict(), "skill_build": card_gear[card]["skill_build"].duplicate(true)}
-	# "loadout"/"skill_build" below are the lead card's copies, kept for readers that still need them
+		saved_gear[card] = {"loadout": card_gear[card]["loadout"].to_dict()}
+	# "loadout" below is the lead card's copy, kept for readers that still need it
 	# (server runner/rooms, plaza, admin); plan step 7 removes them. from_dict reads only "card_gear".
 	return {"card_gear": saved_gear,
 		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
 		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
-		"skill_build": skill_build.duplicate(true), "relics": relics.duplicate(true), "card_deck": card_deck.duplicate(true)}
+		"relics": relics.duplicate(true), "card_deck": card_deck.duplicate(true)}
 
 
 static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
@@ -381,6 +367,7 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	p.beta_kit_version = maxi(0, int(d.get("beta_kit_version", 0)))
 	p.bonus_stash_slots = clampi(int(d.get("bonus_stash_slots", 0)), 0, 1000)
 	p.card_deck = preload("res://logic/card_deck.gd").repaired(d.get("card_deck"), preload("res://logic/cosmetic_options.gd").load_default())  # old saves get the starter cards
+	var old_builds := {}  ## card -> the save's old skill_build (dropped after the level migration below)
 	if d.has("card_gear"):
 		if not d.card_gear is Dictionary: return null
 		for card in d.card_gear:
@@ -388,33 +375,24 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 			if not entry is Dictionary or not entry.get("loadout") is Dictionary: return null
 			var worn = Loadout.from_dict(entry["loadout"], item_rules)
 			if worn == null: return null
-			var build = _decode_build(entry.get("skill_build"), worn)
-			if build == null: return null
-			p.card_gear[str(card)] = {"loadout": worn, "skill_build": build}  # a class no longer in data keeps its gear
+			if entry.has("skill_build") and not entry["skill_build"] is Dictionary and entry["skill_build"] != null: return null
+			p.card_gear[str(card)] = {"loadout": worn}  # a class no longer in data keeps its gear
+			old_builds[str(card)] = entry.get("skill_build")  # the deleted per-card build: only the one-time level migration reads it
 	else:
 		# Migration (Boss 2026-11-11): the account's old worn gear and skill build go to the Sword & Shield card.
 		if not d.get("loadout") is Dictionary: return null
 		var worn = Loadout.from_dict(d["loadout"], item_rules)
 		if worn == null: return null
-		var build = _decode_build(d.get("skill_build"), worn)
-		if build == null: return null
-		p.card_gear["sword_shield"] = {"loadout": worn, "skill_build": build}
+		if d.has("skill_build") and not d["skill_build"] is Dictionary and d["skill_build"] != null: return null
+		p.card_gear["sword_shield"] = {"loadout": worn}
+		old_builds["sword_shield"] = d.get("skill_build")
 	p.ensure_starter_cards(item_rules)  # the other cards (or a class added later) get a starter set once
 	p.starter_shield_kit_version = maxi(0, int(d.get("starter_shield_kit_version", 0)))
 	p.ensure_starter_shields(item_rules)  # old saves: the Sword & Shield card gets its starter shield once
 	p.tree_migration_version = maxi(0, int(d.get("tree_migration_version", 0)))
 	if p.tree_migration_version < 2:  # once: old per-run tree points become card levels (skill-tree.md 5)
-		preload("res://logic/skill_tree.gd").migrate_old_builds(p.card_gear, p.card_deck)
+		preload("res://logic/skill_tree.gd").migrate_old_builds(old_builds, p.card_deck)
 		p.tree_migration_version = 2
 	return p
 
 
-## A saved skill build (plain JSON), or the weapon's initial build when the save has none; null = corrupt.
-static func _decode_build(saved: Variant, worn: Loadout) -> Variant:
-	if saved == null:
-		var weapon = worn.item_at("weapon", 0)
-		return preload("res://logic/skill_build.gd").initial(weapon.weapon_type if weapon != null else "")
-	if not saved is Dictionary: return null
-	var build: Dictionary = saved.duplicate(true)
-	if build.has("v"): build["v"] = int(build["v"])  # plain JSON loses int vs float
-	return build

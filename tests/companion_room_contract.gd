@@ -8,7 +8,7 @@ func _run() -> void:
 	var rng := RandomNumberGenerator.new(); rng.seed = 100
 	var human = preload("res://logic/profile.gd").new_player(manager.rules, manager.camp, rng)
 	var companion = Roster.make_profile("arun", manager.rules, manager.camp)
-	assert(companion != null and preload("res://logic/skill_build.gd").ready_for_run(companion))
+	assert(companion != null)
 	assert(companion.name == "อรุณ" and companion.stash.items.is_empty() and companion.stash.gold == 0)
 	var profiles: Array = [{"id":1,"profile":human.to_dict()},{"id":4,"profile":companion.to_dict()}]
 	assert(manager.create("companion-room-contract", 100, profiles, true, 4).ok)

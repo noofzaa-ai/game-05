@@ -412,13 +412,8 @@ func command(id: int, request_id: int, request: Dictionary, expected_epoch: int 
 			elif id != leader: result.error = "leader_only"
 			elif not party.can_depart(id): result.error = "party_not_ready"
 			elif request.size() == 1:
-				var valid_builds := true
-				for player_id in connected:
-					if not preload("res://logic/skill_build.gd").ready_for_run(trip_for(player_id).profile): valid_builds = false
-				if not valid_builds: result.error = "skill_build_required"
-				else:
-					party.departing = true
-					result = {"ok": true, "action": "depart"}
+				party.departing = true  # (the old skill-build check is gone with that system)
+				result = {"ok": true, "action": "depart"}
 		"party_leave":
 			if lobby and not party.departing and request.size() == 1: result = {"ok": true, "action": "leave"}
 		"party_ping":
