@@ -140,17 +140,11 @@ func _old_gains_skip_race_cards(ctx) -> void:
 func _no_wipe(ctx) -> void:
 	var f := RaceTest.squad(["human", "human", "human"])
 	var sim = f.sim
-	ctx.check("skill-build system is on (the case that wiped the gauge)", preload("res://logic/skill_build.gd").enabled() and sim.skill_system != null and sim.skill_system.casters.has(1))
+	var Skills = preload("res://logic/class_skills/engine.gd")
+	ctx.check("squad cards cast class skills v2, not the old skill-build system", Skills.has_skills(sim.fighters[1]) and (sim.skill_system == null or not sim.skill_system.casters.has(1)))
 	sim.fighters[1].gauge = 50.0
-	sim.skill_system.publish_views()
-	ctx.check("publish_views keeps a race card's gauge", sim.fighters[1].gauge == 50.0)
-	sim.fighters[1].gauge = 40.0
-	var motion = preload("res://logic/skills/motion_prediction.gd").new()
-	motion.setup(sim, 1, sim.skill_system.builds[1], sim.fighters[1].skill_view)
-	motion.before_tick()
-	motion.advance()
-	ctx.check("motion prediction keeps it too (prediction and authority agree)", sim.fighters[1].gauge == 40.0)
-	motion.system.dispose()
+	Skills.step(sim)
+	ctx.check("the class-skill step keeps a race card's gauge", sim.fighters[1].gauge == 50.0)
 
 
 ## ultimates_enabled false: today's behaviour (gauge retired, old rules).
@@ -160,14 +154,13 @@ func _switch_off(ctx) -> void:
 	var f := RaceTest.squad(["human", "human", "human"])
 	var sim = f.sim
 	sim.fighters[1].gauge = 50.0
-	sim.skill_system.publish_views()
-	var wiped: bool = sim.fighters[1].gauge == 0.0
 	sim.fighters[2].gauge = 0.0
 	sim.events.clear()
 	RacePassives.step(sim)
 	var no_gain: bool = sim.fighters[2].gauge == 0.0
+	var owned: bool = RacePassives.owns_gauge(sim.fighters[1])
 	rules["ultimates_enabled"] = true
-	ctx.check("ultimates_enabled false: the gauge stays retired (wiped on publish)", wiped and not RacePassives.owns_gauge(Fighter.new()))
+	ctx.check("ultimates_enabled false: the race engine does not own the gauge", not owned)
 	ctx.check("ultimates_enabled false: the race engine does not fill it", no_gain)
 
 

@@ -369,9 +369,12 @@ static func run_action(sim, id: int, action: Dictionary, context: Dictionary) ->
 			return did
 		"skill_status":
 			var system = sim.skill_system
+			var target_id := int(context.get("target", -1))
+			if sim.fighters.has(target_id) and sim.fighters[target_id].is_alive() and sim.combat.effects.has(str(action["status"])):
+				# class skills v2: the combat status of the same name (bleed ...); skill-system statuses are gone (class-skills.md 3.1.4)
+				return Effects.apply(id, sim.fighters[id], target_id, sim.fighters[target_id], {"id": str(action["status"]), "chance": 100.0, "duration": 0}, sim.combat, sim.rng, sim.events)
 			if system == null:
 				return false
-			var target_id := int(context.get("target", -1))
 			if not system.targets.has(target_id) or not sim.fighters.has(target_id) or not sim.fighters[target_id].is_alive():
 				return false
 			for _i in maxi(1, int(action.get("stacks", 1))):
@@ -411,7 +414,7 @@ static func nodes(fighter) -> Array:
 	return tree_of(fighter).get("nodes", [])
 
 
-## Pilot changes (GDD 6.4) the auto-pilot may read: kite_drop_skill, cast_center, kite_distance, hold_min_targets_add.
+## Pilot changes (GDD 6.4) the auto-pilot may read: cast_center, kite_distance, hold_min_targets_add.
 static func pilot_mods(fighter) -> Dictionary:
 	return tree_of(fighter).get("pilot", {})
 

@@ -67,6 +67,20 @@ static func cast_now(sim, id: int) -> Array:
 	return sim.events.duplicate() if ok else []
 
 
+## Class skills v2 (logic/class_skills/engine.gd): the card's skill ids, set/read cooldowns in seconds.
+static func skills_of(sim, id: int) -> Array:
+	return sim.fighters[id].skill_state.get("skills", [])
+
+
+static func set_cd(sim, id: int, skills: Array, seconds: float) -> void:
+	for skill in skills:
+		sim.fighters[id].skill_state["cd"][str(skill)] = sim.tick_count + int(round(seconds * 60.0))
+
+
+static func cd_left(sim, id: int, skill: String) -> float:
+	return preload("res://logic/class_skills/engine.gd").cooldown_left(sim, sim.fighters[id], skill)
+
+
 static func zero_def(sim) -> void:
 	for e in enemies(sim):
 		sim.fighters[e].stats["DEF"] = 0.0
@@ -291,24 +305,23 @@ func _skill_refresh(ctx) -> void:
 	# Formula 4.4: remaining' = max(0, remaining x (1 - fraction) - seconds).
 	var f := RaceTest.squad(["human", "human", "human"])
 	var sim = f.sim
-	var system = sim.skill_system
-	var caster = system.casters[1]
-	var skills: Array = system.builds[1].skills.map(func(r): return str(r.skill))
+	var skills: Array = skills_of(sim, 1)
 	for i in 4:
-		caster.cooldowns[skills[i]] = caster.clock + 10.0 * float(i + 1)  # 10, 20, 30, 40 s left
+		set_cd(sim, 1, [skills[i]], 10.0 * float(i + 1))  # 10, 20, 30, 40 s left
 	arm(sim, 1, {"name": "Call", "cast_ticks": 1, "actions": [{"action": "skill_refresh", "target": "allies_all", "fraction": 0.5}]})
 	cast_now(sim, 1)
-	var left: Array = skills.map(func(s): return snappedf(float(caster.cooldowns[s]) - caster.clock, 0.01))
+	var left: Array = skills.map(func(s): return snappedf(cd_left(sim, 1, s), 0.01))
 	ctx.check("skill_refresh fraction 0.5: 10/20/30/40 s -> 5/10/15/20 s (%s)" % [left], left == [5.0, 10.0, 15.0, 20.0])
 	arm(sim, 1, {"name": "Flat", "cast_ticks": 1, "actions": [{"action": "skill_refresh", "target": "self", "seconds": 1.0, "cap_seconds": 2.5}]})
 	var ctx2 := {"ultimate": true, "points": {}, "picked": {}}
 	for i in 4:
 		RaceUltimates.skill_refresh(sim, 1, {"action": "skill_refresh", "target": "self", "seconds": 1.0, "cap_seconds": 2.5}, ctx2)
-	left = skills.map(func(s): return snappedf(float(caster.cooldowns[s]) - caster.clock, 0.01))
+	left = skills.map(func(s): return snappedf(cd_left(sim, 1, s), 0.01))
 	ctx.check("skill_refresh seconds 1 per hit, cap 2.5 s per cast (%s)" % [left], left == [2.5, 7.5, 12.5, 17.5])
-	ctx.check("skill_refresh never goes below 0", RaceUltimates.skill_refresh(sim, 1, {"action": "skill_refresh", "target": "self", "fraction": 1.0}, {"ultimate": true}) and skills.all(func(s): return float(caster.cooldowns[s]) - caster.clock <= 0.0))
+	ctx.check("skill_refresh never goes below 0", RaceUltimates.skill_refresh(sim, 1, {"action": "skill_refresh", "target": "self", "fraction": 1.0}, {"ultimate": true}) and skills.all(func(s): return cd_left(sim, 1, s) <= 0.0))
+	sim.fighters[1].skill_state = {}
 	sim.skill_system = null
-	ctx.check("skill_refresh with the skill system off: nothing to refresh (5)", not RaceUltimates.skill_refresh(sim, 1, {"action": "skill_refresh", "target": "self", "fraction": 1.0}, {}))
+	ctx.check("skill_refresh with no skills: nothing to refresh (5)", not RaceUltimates.skill_refresh(sim, 1, {"action": "skill_refresh", "target": "self", "fraction": 1.0}, {}))
 
 
 func _revive(ctx) -> void:

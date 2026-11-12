@@ -27,6 +27,8 @@ const SquadMember := preload("res://logic/squad_member.gd")
 const Wear := preload("res://logic/wear.gd")
 const RacePassives := preload("res://logic/race_passives.gd")
 const ClassSkills := preload("res://logic/class_skills/engine.gd")
+const ClassSkillUse := preload("res://logic/class_skills/use_rules.gd")
+const ClassSkillData := preload("res://logic/class_skills/skill_data.gd")
 
 var world: SimWorld
 var combat: CombatData  ## null = movement only, no fighting
@@ -120,11 +122,13 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 	_refresh_run_stats(id)
 	fighters[id].hp = fighters[id].max_hp()
 	fighters[id].energy = fighters[id].max_energy()
-	if preload("res://logic/skill_build.gd").enabled():
+	if run is SquadMember and ClassSkills.attach(self, id, run.card_id):
+		pass  # a squad card casts its class's 4 skills (design/gdd/class-skills.md), not a skill-build
+	elif preload("res://logic/skill_build.gd").enabled():
 		if skill_system == null:
 			skill_system = preload("res://logic/skills/system.gd").new()
 			skill_system.setup(self)
-		skill_system.attach(id, run.skill_build())  # a squad member: its own card's build
+		skill_system.attach(id, run.skill_build())
 
 
 ## Auto-battler: the squad member's class decides the fighting style (data/classes/<class>.json "weapon" is a
@@ -139,7 +143,9 @@ func set_class_style(id: int, style: String) -> void:
 	_apply_class_style(id)
 	# The class's own skill set (data/skill_system/integration.json class_skills) replaces the profile's;
 	# a squad member (logic/squad_member.gd) keeps its own card's build instead.
-	if skill_system != null and fighters.has(id):
+	if fighters.has(id) and not ClassSkills.has_skills(fighters[id]):
+		ClassSkills.attach(self, id, ClassSkillData.class_for_style(style))  # the class's 4 skills (class-skills.md 3.6)
+	if skill_system != null and fighters.has(id) and not ClassSkills.has_skills(fighters[id]):
 		var build: Dictionary = runs[id].skill_build() if runs.has(id) and runs[id] is SquadMember else preload("res://logic/skill_build.gd").initial(style)
 		if not str(build.get("start", "")).is_empty() and skill_system.builds.get(id, {}) != build:
 			skill_system.attach(id, build)
@@ -158,7 +164,7 @@ func gear_changed(id: int) -> void:
 	fighters[id].style = runs[id].loadout().weapon_style(combat.styles.keys())
 	_apply_class_style(id)
 	_refresh_run_stats(id)
-	if skill_system != null:
+	if skill_system != null and not ClassSkills.has_skills(fighters[id]):
 		var build: Dictionary = runs[id].skill_build()
 		if skill_system.builds.get(id,{}) != build:
 			skill_system.attach(id,build)
@@ -233,7 +239,9 @@ func tick(prediction_player: int = -1) -> void:
 					input.special = false
 					input.ultimate = false
 					if prediction_player>=0 and prediction_motion!=null and input.skill_slot>=0:prediction_motion.cast(input.skill_slot,input)
-					if skill_system != null and skill_system.casters.has(id) and input.skill_slot >= 0:
+					if prediction_player < 0 and ClassSkills.has_skills(fighter) and input.skill_slot >= 0:
+						_cast_class_skill(id, fighter, body, input)
+					elif skill_system != null and skill_system.casters.has(id) and input.skill_slot >= 0:
 						var direction := input.aim.normalized() if input.aim != Vector2.ZERO else Vector2(fighter.direction).normalized()
 						skill_system.cast(id, input.skill_slot, body.position + Vector3(direction.x,0,direction.y) * input.aim_distance)
 					if fighter.skill_view.get("casting",false) or fighter.skill_view.get("moving",false): input = SimInput.new()
@@ -265,17 +273,40 @@ func tick(prediction_player: int = -1) -> void:
 		projectiles = _ranged["projectiles"]
 		areas = _ranged["areas"]
 		Combat.resolve_hits(fighters, bodies, combat, rng, events,melee_target_boxes)
-		ClassSkills.step(self)  # class skills v2: travel, releases, counters, orbs (logic/class_skills/engine.gd)
 		if skill_system != null:
 			for event in events.duplicate():
 				if event.type == "dodge_started": skill_system.on_dodge(int(event.player))
 			skill_system.advance()
+		ClassSkills.step(self)  # class skills v2: travel, releases, counters, orbs (logic/class_skills/engine.gd); after the old views
 		_release_waves()
 		RacePassives.step(self)  # after hits, skills and waves of this tick: race triggers react to them
 		_check_stage_clear()
 		_process_economy()
 		Coop.step(self)
 	tick_count += 1
+
+
+## A squad card pressed skill slot 0..3 (the auto-pilot, logic/class_skills/use_rules.gd): the authority re-reads the
+## skill's use rule for its target/point (deterministic), else aims at the enemy nearest the aimed point.
+func _cast_class_skill(id: int, fighter: Fighter, body: SimBody, input: SimInput) -> void:
+	var skills: Array = fighter.skill_state.get("skills", [])
+	if input.skill_slot >= skills.size():
+		return
+	var skill := str(skills[input.skill_slot])
+	var direction := input.aim.normalized() if input.aim != Vector2.ZERO else Vector2(fighter.direction).normalized()
+	var point := body.position + Vector3(direction.x, 0, direction.y) * input.aim_distance
+	var aimed := -1
+	var best := INF
+	for other_id in fighters:
+		if fighters[other_id].team != fighter.team and fighters[other_id].is_alive():
+			var d := Vector2(bodies[other_id].position.x - point.x, bodies[other_id].position.z - point.z).length()
+			if d < best:
+				best = d
+				aimed = other_id
+	var choice: Dictionary = ClassSkillUse.choose(self, id, skill, aimed)
+	if choice.is_empty():
+		choice = {"target": aimed, "point": point}
+	ClassSkills.cast(self, id, skill, choice)
 
 
 ## Everything a client needs to draw the current state (and what will be sent over the network).

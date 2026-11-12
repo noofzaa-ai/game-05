@@ -391,12 +391,22 @@ static func _run_jobs(sim, id: int, fighter) -> void:
 ## No skill system (skill-build off) = nothing to refresh (5). Returns true when a cooldown got shorter.
 static func skill_refresh(sim, id: int, action: Dictionary, ctx: Dictionary) -> bool:
 	var system = sim.skill_system
-	if system == null:
-		return false
 	var did := false
 	var given: Dictionary = ctx.get("refreshed", {})
 	for target_id in _passives().targets(sim, id, str(action.get("target", "self")), ctx, action):
-		if not system.casters.has(target_id):
+		var class_card: bool = sim.fighters.has(target_id) and not sim.fighters[target_id].skill_state.get("skills", []).is_empty()
+		if class_card:  # class skills v2 (design/gdd/class-skills.md): the card's 4 skills live in Fighter.skill_state
+			var secs := float(action.get("seconds", 0.0))
+			if action.has("cap_seconds"):
+				secs = clampf(float(action["cap_seconds"]) - float(given.get(target_id, 0.0)), 0.0, secs)
+			given[target_id] = float(given.get(target_id, 0.0)) + secs
+			var cut_v2: float = preload("res://logic/class_skills/engine.gd").refresh_cooldowns(sim, target_id, float(action.get("fraction", 0.0)), secs)
+			if cut_v2 > 0.0:
+				did = true
+				sim.fighters[target_id].race_state["refreshed_at"] = sim.tick_count
+				sim.events.append({"type": "race_skill_refresh", "player": id, "target": target_id, "seconds": cut_v2, "ultimate": bool(ctx.get("ultimate", false))})
+			continue
+		if system == null or not system.casters.has(target_id):
 			continue
 		var caster = system.casters[target_id]
 		var seconds := float(action.get("seconds", 0.0))

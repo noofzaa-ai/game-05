@@ -25,6 +25,8 @@ const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const RaceUltimates := preload("res://logic/race_ultimates.gd")
 const Combat := preload("res://logic/combat.gd")
+const ClassSkills := preload("res://logic/class_skills/engine.gd")
+const ClassSkillUse := preload("res://logic/class_skills/use_rules.gd")
 const TARGETED_RADIUS := 3.0  ## use rule targeted_by_min: enemies this close to an ally count as on it
 const DEFAULT_HOLD_TICKS := 480  ## use.max_hold_ticks fallback
 
@@ -116,6 +118,13 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 		return input
 
 	var engage := _engage_range(combat, me, profile)
+	var class_pick: Dictionary = {}
+	if ClassSkills.has_skills(me) and me.state == Fighter.State.IDLE and not ClassSkills.busy(me):
+		# class skills v2 (design/gdd/class-skills.md 3.7): the use rules pick the skill and its target; defensive ones
+		# (Vault Shot replaces the kite dodge, Repulse Nova, Intercept ...) come before walking or the ultimate.
+		class_pick = ClassSkillUse.pick(sim, id, pick_target(sim, id, profile, engage, nearest))
+	if not class_pick.is_empty() and float(SkillData_priority(str(class_pick["skill"]))) < 1.0:
+		return _skill_input(sim, id, me, class_pick)
 	var kite := float(profile.get("kite_distance", 0.0))
 	if kite > 0.0 and nearest_distance < kite and me.state == Fighter.State.IDLE and me.dodge_cooldown == 0 and me.energy >= float(combat.rules["dodge_energy"]):
 		var away: Vector2 = _flat(at - sim.bodies[nearest].position)
@@ -145,19 +154,44 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	if me.race_state.get("ultimate", {}).is_empty() and not SkillBuild.enabled() and me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
 		input.ultimate = true
 		return input
+	if not class_pick.is_empty():
+		return _skill_input(sim, id, me, class_pick)
 	# Only book a slot when the cast can go out now, or the retry timer burns it mid-combo.
-	var slot := _ready_skill_slot(sim, me, id, memory, tick, profile, target) if target_distance < SKILL_RANGE and me.state == Fighter.State.IDLE else -1
+	var slot := -1 if ClassSkills.has_skills(me) else _ready_skill_slot(sim, me, id, memory, tick, profile, target) if target_distance < SKILL_RANGE and me.state == Fighter.State.IDLE else -1
 	if slot >= 0:
 		input.skill_slot = slot
 		input.aim_distance = clampf(target_distance, 1.0, 8.0)
 		return input
 	if tick % SWING_EVERY == 0:
 		memory["swings"] = int(memory["swings"]) + 1
-		if int(memory["swings"]) % maxi(1, int(profile.get("heavy_every", HEAVY_EVERY))) == 0:
+		var every := ClassSkills.heavy_every(sim, me)  # Battle Trance: every 2nd swing is a heavy (class-skills.md 3.3 G4)
+		if int(memory["swings"]) % maxi(1, every if every > 0 else int(profile.get("heavy_every", HEAVY_EVERY))) == 0:
 			input.heavy = true
 		else:
 			input.light = true
 	return input
+
+
+## The input that casts a class skill picked by ClassSkillUse.pick: its slot, aimed at the chosen target or point (the
+## authority re-reads the use rule, GameSim._cast_class_skill).
+static func _skill_input(sim, id: int, me: Fighter, pick: Dictionary) -> SimInput:
+	var input := SimInput.new()
+	input.skill_slot = me.skill_state["skills"].find(str(pick["skill"]))
+	var at: Vector3 = sim.bodies[id].position
+	var choice: Dictionary = pick["choice"]
+	var aim_at: Vector3 = at
+	if choice.get("point") is Vector3:
+		aim_at = choice["point"]
+	elif sim.bodies.has(int(choice.get("target", -1))):
+		aim_at = sim.bodies[int(choice["target"])].position
+	var off := _flat(aim_at - at)
+	input.aim = off if off.length() > 0.01 else Vector2(me.direction)
+	input.aim_distance = clampf(off.length(), 0.5, 12.0)
+	return input
+
+
+static func SkillData_priority(skill: String) -> float:
+	return float(preload("res://logic/class_skills/skill_data.gd").load_default().skill(skill).get("priority", 2))
 
 
 ## The class pilot profile (data/classes/<class>.json "pilot") of a squad card, or {} (old behaviour).
@@ -340,7 +374,14 @@ static func use_matches(sim, id: int, rule: Dictionary) -> bool:
 			var system = sim.skill_system
 			var count := 0
 			for a in ([id] if int(rule.get("allies", 1)) <= 1 else _allies(sim, id)):
-				if system != null and system.casters.has(a):
+				if ClassSkills.has_skills(sim.fighters[a]):
+					var waiting := 0
+					for skill in sim.fighters[a].skill_state["skills"]:
+						if ClassSkills.cooldown_left(sim, sim.fighters[a], str(skill)) > 0.0:
+							waiting += 1
+					if waiting >= int(rule.get("min", 1)):
+						count += 1
+				elif system != null and system.casters.has(a):
 					var caster = system.casters[a]
 					var down := 0
 					for row in system.builds[a].skills:

@@ -1,6 +1,7 @@
 {
  "_comment": "Class skills v2 (design/gdd/class-skills.md): 4 per class, 16 total. Read by logic/class_skills/skill_data.gd (validation) and run by logic/class_skills/engine.gd. Numbers are first-pass (combat-designer tunes them, GDD section 7). Times are seconds, distances metres, damage = fraction of the caster's ATK. 'kind' picks the engine behaviour; 'stats' are the numbers a skill-tree skill_upgrade or a race skill_mod may change (damage, cooldown, radius ...). 'use' is the auto-pilot rule (GDD 3.7): the first any_of entry that matches gives the target; 'and' entries must all match too. 'priority': lower goes first when several skills are ready (GDD 3.7). 'motion' is the Studio clip window (GDD 3.1 rule 7, mirror of tools/shots/skill_windows_v2.json): segs = [clip, start, end, speed, [release clip times]]; travel = [segment index, clip from, clip to]: the only frames in which the sim moves the body (root-motion rule 3.1.9, D10). 'vfx' is the key the separate VFX tool will fill; the client resolves it to nothing for now.",
  "version": 1,
+ "_priority": "Pilot order when several skills are ready (GDD 3.7): defensive/utility 0-0.5 (S3, S2, L4, L2, M2, M4 in that order), burst 1, main damage 2, self-buff 3 (boss_priority: first when the boss is within boss_radius). Below 1 the pilot casts it before walking, kiting or the ultimate.",
  "_impact": "How hard a skill blow lands: tier 0 none, 1 light, 2 medium, 3 heavy. Hit-stop in 60 Hz ticks (same as weapon moves); never stacks (max of pending).",
  "impact": {"target_hitstop": [0, 4, 6, 10], "caster_hitstop": [0, 0, 2, 4], "crit_hitstop_bonus": 2, "max_hitstop": 12},
  "blend": 0.12,
@@ -18,7 +19,7 @@
    "motion": {"segs": [["attack_4", 0.30, 0.62, 0.8, [0.62]], ["attack_4", 0.62, 1.98, 1.5, []]], "travel": [0, 0.30, 0.62], "invulnerable": "travel"}
   },
   "iron_guard": {
-   "name": "Iron Guard", "class": "sword_shield", "kind": "stance", "stamina": 10, "impact_tier": 2, "priority": 0, "vfx": "class_skill/iron_guard",
+   "name": "Iron Guard", "class": "sword_shield", "kind": "stance", "stamina": 10, "impact_tier": 2, "priority": 0.5, "vfx": "class_skill/iron_guard",
    "stats": {"cooldown": 12.0, "duration": 3.0, "taken_mul": 0.5, "counter": 0.5, "max_counters": 2, "counter_icd": 0.3},
    "use": {"any_of": [{"if": "self_attacked_by", "count": 2, "radius": 3.0}, {"if": "boss_telegraph", "radius": 4.0}, {"if": "self_hurt", "below": 0.5, "enemies_within": 3.0, "min": 1}],
     "and": [{"if": "enemies_near", "radius": 3.0, "min": 1}]},
@@ -69,7 +70,7 @@
    "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.0, []], ["lb_aim_recoil", 0.0, 0.70, 1.0, [0.18]]]}
   },
   "pinning_shot": {
-   "name": "Pinning Shot", "class": "longbow", "kind": "shot", "stamina": 10, "impact_tier": 2, "priority": 0, "vfx": "class_skill/pinning_shot",
+   "name": "Pinning Shot", "class": "longbow", "kind": "shot", "stamina": 10, "impact_tier": 2, "priority": 0.5, "vfx": "class_skill/pinning_shot",
    "stats": {"cooldown": 8.0, "damage": 1.2, "range": 12.0, "shock": 1.5},
    "use": {"any_of": [{"if": "enemy_near_backline", "distance": 3.0, "range": 12.0}, {"if": "closing_enemy", "range": 8.0}]},
    "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.5, []], ["lb_aim_recoil", 0.0, 0.70, 0.8, [0.18]]]}
@@ -109,7 +110,7 @@
    "motion": {"segs": [["mg_spell_2h_cast_spell_01", 0.167, 1.967, 1.0, [1.25]]]}
   },
   "warding_veil": {
-   "name": "Warding Veil", "class": "magic", "kind": "ally_buff", "stamina": 14, "impact_tier": 0, "priority": 0, "vfx": "class_skill/warding_veil",
+   "name": "Warding Veil", "class": "magic", "kind": "ally_buff", "stamina": 14, "impact_tier": 0, "priority": 0.5, "vfx": "class_skill/warding_veil",
    "stats": {"cooldown": 14.0, "range": 9.0, "taken_mul": 0.7, "duration": 5.0, "haste": 3.0},
    "use": {"any_of": [{"if": "ally_below_hp_attacked", "below": 0.6, "range": 9.0, "self": true, "most_attacked": true}]},
    "motion": {"segs": [["mg_spell_2h_magic_attack_05", 0.267, 3.067, 1.6, [2.03]]]}

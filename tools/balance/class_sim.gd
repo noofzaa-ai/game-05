@@ -188,14 +188,18 @@ func play(classes: Array, seed: int) -> Dictionary:
 		sim.add_player(1, map.spawn)
 		sim.attach_run(1, journey.run, journey.item_rules, journey.loot_data)
 	journey.populate(sim, map, 1, 100)
-	if no_skills and sim.skill_system != null:
+	if no_skills:
 		for id in ids:
-			sim.skill_system.attach(id, {})  # an invalid build detaches the caster and its hooks
+			sim.fighters[id].skill_state = {}  # class skills v2 off for this card (logic/class_skills/engine.gd)
+			if sim.skill_system != null:
+				sim.skill_system.attach(id, {})  # an invalid build detaches an old skill-build caster too
 	var members := {}
 	var memories := {}
 	for i in ids.size():
 		var id: int = ids[i]
 		sim.set_class_style(id, str(Deck.class_data(str(classes[i])).get("weapon", "")))
+		if no_skills:
+			sim.fighters[id].skill_state = {}  # (set_class_style gives a skill-less fighter its class skills)
 		memories[id] = Pilot.new_memory(id * 7919 + 1 + seed)
 		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": ""}
 		members[id]["race"] = str(sim.fighters[id].race_state.get("race", ""))

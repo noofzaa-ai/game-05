@@ -115,13 +115,11 @@ func _human(ctx) -> void:
 	var sim = f.sim
 	var foes := Act.enemies(sim)
 	Act.place(sim, sim.bodies[1].position, {foes[0]: Vector3(2, 0, 0), foes[1]: Vector3(-2, 0, 0)})
-	var system = sim.skill_system
 	for id in [1, 2, 3]:
-		for row in system.builds[id].skills:
-			system.casters[id].cooldowns[str(row.skill)] = system.casters[id].clock + 10.0
+		Act.set_cd(sim, id, Act.skills_of(sim, id), 10.0)
 	var out := cast(f, 1)
 	ctx.check("Commander's Call: taunts enemies within 5 m for 3 s", out.any(func(e): return e["type"] == "race_taunt" and int(e["ticks"]) == 180 and e["enemies"].size() == 2))
-	var halved: bool = [1, 2, 3].all(func(id): return system.builds[id].skills.all(func(r): return absf(float(system.casters[id].cooldowns[str(r.skill)]) - system.casters[id].clock - 5.0) < 0.001))
+	var halved: bool = [1, 2, 3].all(func(id): return Act.skills_of(sim, id).all(func(s): return absf(Act.cd_left(sim, id, s) - 5.0) < 0.02))
 	ctx.check("Commander's Call: every ally's skill cooldowns halved (10 s -> 5 s)", halved)
 	ctx.check("Commander's Call: valor 6 s on every ally", [1, 2, 3].all(func(id): return int(sim.fighters[id].effects.get("valor", {}).get("left", 0)) == 360))
 	# use: 2+ allies with 2+ skills on cooldown AND 2+ enemies within 5 m; or the boss within 5 m.
@@ -131,8 +129,7 @@ func _human(ctx) -> void:
 	Act.place(gsim, gsim.bodies[1].position, {gf[0]: Vector3(2, 0, 0), gf[1]: Vector3(-2, 0, 0)})
 	ctx.check("Commander's Call use: holds while skills are ready", not _matches(gsim, 1))
 	for id in [1, 2]:
-		for row in gsim.skill_system.builds[id].skills.slice(0, 2):
-			gsim.skill_system.casters[id].cooldowns[str(row.skill)] = gsim.skill_system.casters[id].clock + 8.0
+		Act.set_cd(gsim, id, Act.skills_of(gsim, id).slice(0, 2), 8.0)
 	ctx.check("Commander's Call use: 2 allies x 2 skills on cooldown + 2 enemies in 5 m -> fires", _matches(gsim, 1))
 	Act.place(gsim, gsim.bodies[1].position, {gf[0]: Vector3(2, 0, 0)})
 	ctx.check("Commander's Call use: only 1 enemy near -> holds", not _matches(gsim, 1))
@@ -146,9 +143,9 @@ func _human(ctx) -> void:
 	Act.place(msim, msim.bodies[2].position, {mf[0]: Vector3(1, 0, 0), mf[1]: Vector3(-1, 0, 0), mf[2]: Vector3(0, 0, 1)})
 	for e in mf:
 		msim.fighters[e].control_immune_left = 0
-	var caster = msim.skill_system.casters[2]
-	for row in msim.skill_system.builds[2].skills:
-		caster.cooldowns[str(row.skill)] = caster.clock + 20.0
+	Act.set_cd(msim, 2, Act.skills_of(msim, 2), 20.0)
+	var first_cd := str(Act.skills_of(msim, 2)[0])
+	var cd_set_at: int = msim.tick_count
 	var atk: float = msim.fighters[2].stat("ATK")
 	var all_events := cast(m, 2)
 	all_events.append_array(run_ticks(msim, 60))
@@ -157,7 +154,7 @@ func _human(ctx) -> void:
 		hits.size() == 9 and hits.all(func(e): return is_equal_approx(float(e["damage"]), roundf(atk * 1.1))))
 	var stuns: Array = all_events.filter(func(e): return e["type"] == "effect_applied" and e["effect"] == "stun")
 	ctx.check("Masterstroke: the 3rd hit stuns (%d stuns, at the last hit)" % stuns.size(), stuns.size() == 3 and all_events.find(stuns[0]) > all_events.find(hits[5]))
-	var cut: float = 20.0 - (float(caster.cooldowns[str(msim.skill_system.builds[2].skills[0].skill)]) - caster.clock)
+	var cut: float = 20.0 - (Act.cd_left(msim, 2, first_cd) + float(msim.tick_count - cd_set_at) / 60.0)
 	ctx.check("Masterstroke: 9 enemy hits refresh 1 s each, capped at 4 s per cast (%.2f)" % cut, absf(cut - 4.0) < 0.05)
 	var mu := squad(["human", "human", "human"])
 	var mf2 := Act.enemies(mu.sim)
@@ -181,12 +178,10 @@ func _human(ctx) -> void:
 	ctx.check("Called Shot: sunder 7 s", int(csim.fighters[cf[0]].effects.get("sunder", {}).get("left", 0)) == 420)
 	csim.fighters[cf[1]].enemy_type = "goblin_chief"
 	csim.fighters[cf[1]].hp = 10.0
-	var bcaster = csim.skill_system.casters[3]
-	for row in csim.skill_system.builds[3].skills:
-		bcaster.cooldowns[str(row.skill)] = bcaster.clock + 12.0
+	Act.set_cd(csim, 3, Act.skills_of(csim, 3), 12.0)
 	hits = damage_by(cast(c, 3), 3)
 	ctx.check("Called Shot: the boss first, even when weaker", hits.size() == 1 and int(hits[0]["target"]) == cf[1])
-	ctx.check("Called Shot: a kill readies every skill", csim.skill_system.builds[3].skills.all(func(r): return float(bcaster.cooldowns[str(r.skill)]) - bcaster.clock <= 0.0))
+	ctx.check("Called Shot: a kill readies every skill", Act.skills_of(csim, 3).all(func(s): return Act.cd_left(csim, 3, s) <= 0.0))
 	var cu := squad(["human", "human", "human"])
 	var cuf := Act.enemies(cu.sim)
 	Act.place(cu.sim, cu.sim.bodies[3].position, {cuf[0]: Vector3(6, 0, 0)})
@@ -202,18 +197,15 @@ func _human(ctx) -> void:
 	var rsim = r.sim
 	var rf := Act.enemies(rsim)
 	Act.place(rsim, rsim.bodies[3].position, {rf[0]: Vector3(4, 0, 0), rf[1]: Vector3(5, 0, 0)})
-	var mcaster = rsim.skill_system.casters[3]
 	ctx.check("Grand Recital use: skills ready -> holds", not _matches(rsim, 3))
-	for row in rsim.skill_system.builds[3].skills.slice(0, 3):
-		mcaster.cooldowns[str(row.skill)] = mcaster.clock + 9.0
+	Act.set_cd(rsim, 3, Act.skills_of(rsim, 3).slice(0, 3), 9.0)
 	ctx.check("Grand Recital use: 3 of 4 skills on cooldown + 2 enemies in 7 m -> fires", _matches(rsim, 3))
 	cast(r, 3)
-	ctx.check("Grand Recital: every skill ready", rsim.skill_system.builds[3].skills.all(func(row): return float(mcaster.cooldowns.get(str(row.skill), 0.0)) - mcaster.clock <= 0.0))
+	ctx.check("Grand Recital: every skill ready", Act.skills_of(rsim, 3).all(func(s): return Act.cd_left(rsim, 3, s) <= 0.0))
 	ctx.check("Grand Recital: recital 6 s (skill damage x1.3 through SKILL_DMG)", int(rsim.fighters[3].effects.get("recital", {}).get("left", 0)) == 360
 		and is_equal_approx(RacePassives.skill_dmg(rsim.fighters[3]), 0.3))
 	Act.place(rsim, rsim.bodies[3].position, {rf[0]: Vector3(4, 0, 0)})
-	for row in rsim.skill_system.builds[3].skills.slice(0, 3):
-		mcaster.cooldowns[str(row.skill)] = mcaster.clock + 9.0
+	Act.set_cd(rsim, 3, Act.skills_of(rsim, 3).slice(0, 3), 9.0)
 	ctx.check("Grand Recital use: 1 enemy near and no boss -> holds", not _matches(rsim, 3))
 	ctx.check("formula 4.4: Human mage in Human Trio with recital = 1.30 x 1.20 x 1.30 = 2.03x skill damage",
 		absf(_skill_damage_mul(rsim.fighters[3]) - 2.028) < 0.001)

@@ -325,8 +325,6 @@ func _check_effects(at: String, effects) -> bool:
 					_check_actions(at, effect["extra_actions"])
 			"pilot_mod":
 				_check_fields(at, effect, vocab["pilot_mod_fields"])
-				if effect.has("kite_drop_skill") and not _skill_exists(str(effect["kite_drop_skill"])):
-					errors.append("%s: pilot_mod kite_drop_skill unknown" % at)
 				if effect.has("cast_center") and str(effect["cast_center"]) != "densest":
 					errors.append("%s: pilot_mod cast_center must be densest" % at)
 			"mechanic":

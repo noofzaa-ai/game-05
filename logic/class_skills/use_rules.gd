@@ -30,18 +30,12 @@ static func pick(sim, id: int, target: int) -> Dictionary:
 			priority = float(info["boss_priority"])  # Battle Trance goes first when the boss is in range (3.7)
 		order.append([priority, slot, skill])
 	order.sort()
-	var held: Dictionary = fighter.skill_state.get("held", {})
-	fighter.skill_state["held"] = held
 	for row in order:
 		var skill: String = row[2]
 		if Skills.cooldown_left(sim, fighter, skill) > 0.0 or fighter.energy < float(data.skill(skill).get("stamina", 0.0)):
-			held.erase(skill)
 			continue
-		if not held.has(skill):
-			held[skill] = sim.tick_count  # ready since (the held_for rules)
 		var choice := choose(sim, id, skill, target)
 		if not choice.is_empty():
-			held.erase(skill)
 			return {"skill": skill, "choice": choice}
 	return {}
 
@@ -87,8 +81,8 @@ static func matches(sim, id: int, skill: String, rule: Dictionary, target: int) 
 					var d := _d(sim, id, e)
 					if d >= float(rule.get("min", 0.0)) and d <= float(rule.get("max", 7.0)):
 						out = {"target": e}
-			"self_attacked_by":
-				if _enemies(sim, id).filter(func(e): return _flat(sim.bodies[e].position - at).length() <= float(rule.get("radius", 3.0))).size() >= int(rule.get("count", 1)):
+			"self_attacked_by":  # S2: enemies within radius that are mid-attack and facing this card
+				if _enemies(sim, id).filter(func(e): return attacking(sim, e, id, float(rule.get("radius", 3.0)))).size() >= int(rule.get("count", 1)):
 					out = {"target": target}
 			"self_hp_at_least":
 				if me.hp >= me.max_hp() * float(rule.get("at_least", 0.0)):
@@ -108,7 +102,7 @@ static func matches(sim, id: int, skill: String, rule: Dictionary, target: int) 
 					elif inside.size() >= int(rule.get("min", 1)):
 						out = {"target": aim}
 			"held_for":
-				var since := int(me.skill_state.get("held", {}).get(skill, sim.tick_count))
+				var since := int(me.skill_state.get("cd", {}).get(skill, sim.tick_count))  # ready since its cooldown ended (no pilot-side state)
 				if sim.tick_count - since >= SkillData.ticks(float(rule.get("seconds", 3.0))):
 					out = {"target": target}
 			"dense_point":
@@ -227,6 +221,17 @@ static func hurt_ally(sim, id: int, rule: Dictionary) -> int:
 			best_key = key
 			best = a
 	return best
+
+
+## True when enemy `e` stands within `radius` of fighter `victim`, is in an attack and faces it (within 60 degrees).
+static func attacking(sim, e: int, victim: int, radius: float) -> bool:
+	var f = sim.fighters[e]
+	if f.state != preload("res://logic/fighter.gd").State.ATTACK:
+		return false
+	var off := _flat(sim.bodies[victim].position - sim.bodies[e].position)
+	if off.length() > radius:
+		return false
+	return off.length() < 0.05 or Vector2(f.direction).normalized().dot(off.normalized()) >= 0.5
 
 
 static func _boss_within(sim, id: int, radius: float) -> bool:

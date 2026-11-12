@@ -294,14 +294,13 @@ static func cast_slot0(sim, id: int) -> Dictionary:
 	var class_id := str(fighter.race_state["class"])
 	sim.set_class_style(id, str(Deck.class_data(class_id).get("weapon", "")))  # as the client and class_sim do
 	fighter.energy = fighter.max_energy()
-	var system = sim.skill_system
-	var caster = system.casters[id]
-	var skill: String = system.builds[id].skills[0].skill
-	var problem: String = system.cast(id, 0, sim.bodies[id].position + Vector3(2, 0, 0))
+	var Skills = preload("res://logic/class_skills/engine.gd")
+	var skill: String = fighter.skill_state["skills"][0]
+	fighter.skill_state["cd"][skill] = 0
+	var problem: String = Skills.cast(sim, id, skill, {"target": enemy_of(sim)})
 	if not problem.is_empty():
 		return {"refused": problem}
-	var job: Dictionary = caster.jobs.filter(func(j): return j["kind"] == "release")[-1]
-	return {"stats": job["data"]["stats"], "cooldown": float(caster.cooldowns[skill]) - float(caster.cast_until)}
+	return {"stats": fighter.skill_state["cast"]["stats"], "cooldown": float(fighter.skill_state["cast"]["stats"]["cooldown"])}
 
 
 ## skill_mod (GDD 4.4, phase 4 step 3): the hook where a skill-build cast resolves (logic/skills/system.gd cast()).
@@ -334,8 +333,8 @@ func _skill_mod(ctx) -> void:
 	# Real casts. Human magic (Archmage) vs Elf magic (no skill_mod), same squad shape otherwise (Alliance both).
 	var human := squad(["human", "viking", "elf"], ["magic", "greatsword", "longbow"])
 	var elf := squad(["elf", "viking", "human"], ["magic", "greatsword", "longbow"])
-	if human.sim.skill_system == null or elf.sim.skill_system == null:
-		ctx.check("skill_mod: the skill build is on for squad runs", false)
+	if not preload("res://logic/class_skills/engine.gd").has_skills(human.sim.fighters[1]):
+		ctx.check("skill_mod: squad cards have their class skills", false)
 		return
 	var h := cast_slot0(human.sim, 1)
 	var e := cast_slot0(elf.sim, 1)

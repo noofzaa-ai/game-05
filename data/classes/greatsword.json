@@ -2,7 +2,9 @@
  "_comment": "One file per class. All classes share the studio05 base body; a class is an animation set plus how our moves map onto its clips. 'animations' is the GLB the clips are read from (same 102-joint rig as the body files), 'clip_marks' its timing marks. weapon_visible/weapon_scale/off_hand: what the hands hold for the look (the combat 'weapon' id keeps owning the stats). Advance (travel) distances live in the weapon's overrides in data/combat/weapons.json.",
  "id": "greatsword",
  "weapon": "greatsword",
- "weapon_families": ["blade"],
+ "weapon_families": [
+  "blade"
+ ],
  "_weapon_families": "Weapon items (catalog weapon_type) this class card may wear in its weapon slot, logic/profile.gd card_can_wear (Boss 2026-11-11) (placeholder: the catalog has only blade weapons; list the class weapon family here once its items exist).",
  "animations": "res://art/characters/studio05/split/body_greatsword.glb",
  "clip_marks": "res://art/characters/studio05/classes/greatsword_clips.json",
@@ -31,7 +33,13 @@
   "launched": "gs_impact_2",
   "air": "gs_jump"
  },
- "idle_variants": ["gs_idle", "gs_idle_2", "gs_idle_3", "gs_idle_4", "gs_idle_5"],
+ "idle_variants": [
+  "gs_idle",
+  "gs_idle_2",
+  "gs_idle_3",
+  "gs_idle_4",
+  "gs_idle_5"
+ ],
  "_idle_variants": "Idle clips the card portraits (hub cards, character screen) cycle through: mostly states.idle, now and then another one (client/card_portrait.gd). Display only; battle fighters keep states.idle.",
  "off_hand": "none",
  "weapon_visible": true,
@@ -46,25 +54,55 @@
  ],
  "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body.",
  "_pilot": "GDD races-and-classes 3.2 pilot profile, read by logic/auto_pilot.gd for squad cards (a class without it keeps the old constants). target: nearest|peel|densest|lowest_hp|marked_first. engage_range 0 = from the weapon; shoot_range 0 = the default 6 m. prefer_marked: attack a target carrying mark_status inside the engage range first (Hunter's Mark focus fire). line is not used yet.",
- "pilot": {"line": "front", "target": "densest", "dense_radius": 2.5, "engage_range": 0, "shoot_range": 0, "kite_distance": 0, "heavy_every": 3, "reaction": 0.85, "skill_min_targets": 1, "support_skill": "", "support_below": 0.0, "prefer_marked": true, "mark_status": "sunder"},
+ "pilot": {
+  "line": "front",
+  "target": "densest",
+  "dense_radius": 2.5,
+  "engage_range": 0,
+  "shoot_range": 0,
+  "kite_distance": 0,
+  "heavy_every": 3,
+  "reaction": 0.85,
+  "skill_min_targets": 1,
+  "support_skill": "",
+  "support_below": 0.0,
+  "prefer_marked": true,
+  "mark_status": "sunder"
+ },
  "_signature": "GDD races-and-classes 3.2 class signature (any race). Cleave: a heavy hit deals +15% damage per extra enemy the same heavy swing hits (max +45%), applied in logic/combat.gd resolve_hits.",
- "signature": [{"type": "cleave", "name": "Cleave", "per_extra": 0.15, "max_bonus": 0.45}],
+ "signature": [
+  {
+   "type": "cleave",
+   "name": "Cleave",
+   "per_extra": 0.15,
+   "max_bonus": 0.45
+  }
+ ],
  "_gauge": "GDD races-and-classes 3.10.2: this class's multipliers on the shared race gauge rule (data/races/rules.json gauge, formula 4.7), read by logic/race_passives.gd.",
- "gauge": {"dealt": 1.0, "taken": 1.0, "support": 1.0},
+ "gauge": {
+  "dealt": 1.0,
+  "taken": 1.0,
+  "support": 1.0
+ },
  "_skill_tree": "Class branch of the card skill tree (design/gdd/skill-tree.md 3.1, 3.8): 16 nodes T1..T4, validated by logic/skill_tree_data.gd against data/skill_tree/rules.json. excl = OR pair id. Numbers are placeholders.",
- "skill_tree": {"skills": ["ground_slam", "shatter_smash", "eruption", "war_cry"], "nodes": [
-  {"id": "gs_t1_slam", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Faultline", "text": "Ground Slam first `pull`s enemies within 5 m 1.5 m toward the card, then hits. It gathers the pack for Cleave.", "icon": "res://art/ui/skill_tree/icons/gs_t1_slam.png", "effects": [{"type": "trigger", "on": "skill_cast", "actions": [{"action": "pull", "radius": 5.0, "distance": 1.5}], "skill": "ground_slam"}]},
-  {"id": "gs_t1_shatter", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Cold Iron", "text": "Shatter Smash applies 2 `chill` stacks. Two casts set up its own `frozen_mul`.", "icon": "res://art/ui/skill_tree/icons/gs_t1_shatter.png", "effects": [{"type": "skill_upgrade", "skill": "shatter_smash", "mods": [{"stat": "status_stacks", "op": 2, "value": 2}], "status": "chill"}]},
-  {"id": "gs_t1_eruption", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Banked Embers", "text": "Heavy hits apply 1 `burn` stack (`skill_status`), so Eruption always has fuel to consume.", "icon": "res://art/ui/skill_tree/icons/gs_t1_eruption.png", "effects": [{"type": "trigger", "on": "heavy_hit", "actions": [{"action": "skill_status", "status": "burn", "stacks": 1, "target": "target"}]}]},
-  {"id": "gs_t1_cry", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Battle Hymn", "text": "War Cry radius 4 → 7 m and duration 5 → 7 s. Its buff reaches every ally inside.", "icon": "res://art/ui/skill_tree/icons/gs_t1_cry.png", "effects": [{"type": "skill_upgrade", "skill": "war_cry", "mods": [{"stat": "radius", "op": 2, "value": 7}, {"stat": "duration", "op": 2, "value": 7}]}, {"type": "mechanic", "id": "war_cry_allies"}]},
-  {"id": "gs_t2_slam_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_slam", "name": "Wide Quake", "text": "wide gem (radius ×1.5, dmg ×0.8).", "icon": "res://art/ui/skill_tree/icons/gs_t2_slam_a.png", "effects": [{"type": "skill_upgrade", "skill": "ground_slam", "mods": [{"stat": "radius", "op": 1, "value": 1.5}, {"stat": "damage", "op": 1, "value": 0.8}]}]},
-  {"id": "gs_t2_slam_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_slam", "name": "Aftershock", "text": "echo gem.", "icon": "res://art/ui/skill_tree/icons/gs_t2_slam_b.png", "effects": [{"type": "skill_upgrade", "skill": "ground_slam", "mods": [{"stat": "repeat", "op": 0, "value": 1}, {"stat": "repeat_damage_mul", "op": 2, "value": 0.5}, {"stat": "cooldown", "op": 1, "value": 1.3}], "behavior": "echo"}]},
-  {"id": "gs_t2_shatter_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_shatter", "name": "Dense Impact", "text": "dense gem (radius ×0.7, dmg ×1.4).", "icon": "res://art/ui/skill_tree/icons/gs_t2_shatter_a.png", "effects": [{"type": "skill_upgrade", "skill": "shatter_smash", "mods": [{"stat": "radius", "op": 1, "value": 0.7}, {"stat": "damage", "op": 1, "value": 1.4}]}]},
-  {"id": "gs_t2_shatter_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_shatter", "name": "Shock Shatter", "text": "shock gem (`shock`, dmg ×0.9).", "icon": "res://art/ui/skill_tree/icons/gs_t2_shatter_b.png", "effects": [{"type": "skill_upgrade", "skill": "shatter_smash", "mods": [{"stat": "damage", "op": 1, "value": 0.9}], "status": "shock"}]},
-  {"id": "gs_t2_eruption_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_eruption", "name": "Wide Eruption", "text": "wide gem.", "icon": "res://art/ui/skill_tree/icons/gs_t2_eruption_a.png", "effects": [{"type": "skill_upgrade", "skill": "eruption", "mods": [{"stat": "radius", "op": 1, "value": 1.5}, {"stat": "damage", "op": 1, "value": 0.8}]}]},
-  {"id": "gs_t2_eruption_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_eruption", "name": "Charged Eruption", "text": "charge gem (dmg ×1.5, cast time ×1.6).", "icon": "res://art/ui/skill_tree/icons/gs_t2_eruption_b.png", "effects": [{"type": "skill_upgrade", "skill": "eruption", "mods": [{"stat": "damage", "op": 1, "value": 1.5}, {"stat": "cast_time", "op": 1, "value": 1.6}]}]},
-  {"id": "gs_t2_cry_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_cry", "name": "Long Hymn", "text": "longer gem (duration ×1.5, cooldown ×1.2).", "icon": "res://art/ui/skill_tree/icons/gs_t2_cry_a.png", "effects": [{"type": "skill_upgrade", "skill": "war_cry", "mods": [{"stat": "duration", "op": 1, "value": 1.5}, {"stat": "cooldown", "op": 1, "value": 1.2}]}]},
-  {"id": "gs_t2_cry_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_cry", "name": "Thorn Hymn", "text": "thorns gem on every buffed ally.", "icon": "res://art/ui/skill_tree/icons/gs_t2_cry_b.png", "effects": [{"type": "skill_upgrade", "skill": "war_cry", "mods": [{"stat": "thorns", "op": 2, "value": 0.3}, {"stat": "duration", "op": 1, "value": 0.8}]}]},
+ "skill_tree": {"skills": [
+   "reaping_arc",
+   "crater_leap",
+   "hook_sweep",
+   "battle_trance"
+  ], "nodes": [
+  {"id": "gs_t1_slam", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Faultline", "text": "Crater Leap first `pull`s enemies within 4 m 1.5 m toward the landing point.", "icon": "res://art/ui/skill_tree/icons/gs_t1_slam.png", "effects": [{"type": "skill_upgrade", "skill": "crater_leap", "mods": [{"stat": "pre_pull", "op": 2, "value": 1.5}, {"stat": "pre_pull_radius", "op": 2, "value": 4.0}]}]},
+  {"id": "gs_t1_shatter", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Long Reach", "text": "Reaping Arc radius 3 -> 3.75 m.", "icon": "res://art/ui/skill_tree/icons/gs_t1_shatter.png", "effects": [{"type": "skill_upgrade", "skill": "reaping_arc", "mods": [{"stat": "radius", "op": 2, "value": 3.75}]}]},
+  {"id": "gs_t1_eruption", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Iron Hook", "text": "Hook Sweep pull 2 -> 3 m and range 5 -> 6 m.", "icon": "res://art/ui/skill_tree/icons/gs_t1_eruption.png", "effects": [{"type": "skill_upgrade", "skill": "hook_sweep", "mods": [{"stat": "pull", "op": 2, "value": 3.0}, {"stat": "pull_range", "op": 2, "value": 6.0}]}]},
+  {"id": "gs_t1_cry", "tier": 1, "type": "minor", "cost": 1, "excl": "", "name": "Deep Trance", "text": "Battle Trance 6 -> 8 s.", "icon": "res://art/ui/skill_tree/icons/gs_t1_cry.png", "effects": [{"type": "skill_upgrade", "skill": "battle_trance", "mods": [{"stat": "duration", "op": 2, "value": 8.0}]}]},
+  {"id": "gs_t2_slam_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_slam", "name": "Wide Quake", "text": "landing radius x1.5, dmg x0.8.", "icon": "res://art/ui/skill_tree/icons/gs_t2_slam_a.png", "effects": [{"type": "skill_upgrade", "skill": "crater_leap", "mods": [{"stat": "radius", "op": 1, "value": 1.5}, {"stat": "damage", "op": 1, "value": 0.8}]}]},
+  {"id": "gs_t2_slam_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_slam", "name": "Aftershock", "text": "a second shockwave 0.5 s later at 50%.", "icon": "res://art/ui/skill_tree/icons/gs_t2_slam_b.png", "effects": [{"type": "skill_upgrade", "skill": "crater_leap", "mods": [{"stat": "aftershock", "op": 2, "value": 0.5}]}]},
+  {"id": "gs_t2_shatter_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_shatter", "name": "Full Circle", "text": "arc 240 -> 360 degrees, dmg x0.85.", "icon": "res://art/ui/skill_tree/icons/gs_t2_shatter_a.png", "effects": [{"type": "skill_upgrade", "skill": "reaping_arc", "mods": [{"stat": "arc_deg", "op": 2, "value": 360.0}, {"stat": "damage", "op": 1, "value": 0.85}]}]},
+  {"id": "gs_t2_shatter_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_shatter", "name": "Rending Arc", "text": "applies `sunder` 3 s to all hit, dmg x0.9.", "icon": "res://art/ui/skill_tree/icons/gs_t2_shatter_b.png", "effects": [{"type": "skill_upgrade", "skill": "reaping_arc", "mods": [{"stat": "sunder", "op": 2, "value": 3.0}, {"stat": "damage", "op": 1, "value": 0.9}]}]},
+  {"id": "gs_t2_eruption_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_eruption", "name": "Wide Hook", "text": "radius x1.5, dmg x0.8.", "icon": "res://art/ui/skill_tree/icons/gs_t2_eruption_a.png", "effects": [{"type": "skill_upgrade", "skill": "hook_sweep", "mods": [{"stat": "radius", "op": 1, "value": 1.5}, {"stat": "damage", "op": 1, "value": 0.8}]}]},
+  {"id": "gs_t2_eruption_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_eruption", "name": "Heavy Hook", "text": "the cut counts as a heavy hit (Cleave) and dmg x1.3, cast x1.4.", "icon": "res://art/ui/skill_tree/icons/gs_t2_eruption_b.png", "effects": [{"type": "skill_upgrade", "skill": "hook_sweep", "mods": [{"stat": "heavy", "op": 2, "value": 1.0}, {"stat": "damage", "op": 1, "value": 1.3}, {"stat": "cast_time", "op": 1, "value": 1.4}]}]},
+  {"id": "gs_t2_cry_a", "tier": 2, "type": "major", "cost": 2, "excl": "gs_cry", "name": "Long Trance", "text": "duration x1.5, cooldown x1.2.", "icon": "res://art/ui/skill_tree/icons/gs_t2_cry_a.png", "effects": [{"type": "skill_upgrade", "skill": "battle_trance", "mods": [{"stat": "duration", "op": 1, "value": 1.5}, {"stat": "cooldown", "op": 1, "value": 1.2}]}]},
+  {"id": "gs_t2_cry_b", "tier": 2, "type": "major", "cost": 2, "excl": "gs_cry", "name": "Thorned Trance", "text": "while active, reflect 20% of melee damage taken.", "icon": "res://art/ui/skill_tree/icons/gs_t2_cry_b.png", "effects": [{"type": "skill_upgrade", "skill": "battle_trance", "mods": [{"stat": "thorns", "op": 2, "value": 0.2}]}]},
   {"id": "gs_t3_a", "tier": 3, "type": "major", "cost": 2, "excl": "", "name": "Executioner's Arc", "text": "Cleave +15% → +20% per extra enemy, max +45% → +60%.", "icon": "res://art/ui/skill_tree/icons/gs_t3_a.png", "effects": [{"type": "signature_mod", "per_target_add": 0.05, "max_add": 0.15}]},
   {"id": "gs_t3_b", "tier": 3, "type": "major", "cost": 2, "excl": "", "name": "Momentum", "text": "A heavy that hits 3+ enemies gives `haste` 2 s and makes the next heavy come one swing earlier (once).", "icon": "res://art/ui/skill_tree/icons/gs_t3_b.png", "effects": [{"type": "trigger", "on": "heavy_hit", "actions": [{"action": "apply_status", "status": "haste", "target": "self", "duration": 120}], "min_targets": 3}, {"type": "mechanic", "id": "momentum", "min_targets": 3}]},
   {"id": "gs_t4_a", "tier": 4, "type": "capstone", "cost": 3, "excl": "gs_capstone", "name": "Titan's Swing", "text": "Every heavy is a full 360° sweep (`heavy_arc` 360, radius 2.5 m). The bruiser fights in the middle of the pack.", "icon": "res://art/ui/skill_tree/icons/gs_t4_a.png", "effects": [{"type": "mechanic", "id": "titan_swing", "heavy_arc": 360.0, "radius": 2.5}]},

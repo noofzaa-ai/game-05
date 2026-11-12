@@ -194,7 +194,17 @@ func _iron_guard(ctx) -> void:
 	var sim := world(["sword_shield"])
 	put(sim, 10, Vector3(1, 0, 0))
 	put(sim, 11, Vector3(-1, 0, 0))
-	ctx.check("S2 pilot: 2 enemies within 3 m -> Iron Guard", not UseRules.choose(sim, 1, "iron_guard", 10).is_empty())
+	ctx.check("S2 pilot: 2 enemies near but not attacking -> no Iron Guard", UseRules.choose(sim, 1, "iron_guard", 10).is_empty())
+	for e in [10, 11]:
+		sim.fighters[e].state = Fighter.State.ATTACK
+	sim.fighters[10].direction = Vector2i(-1, 0)
+	sim.fighters[11].direction = Vector2i(1, 0)
+	ctx.check("S2 pilot: 2 enemies within 3 m attacking this card -> Iron Guard", not UseRules.choose(sim, 1, "iron_guard", 10).is_empty())
+	sim.fighters[11].direction = Vector2i(-1, 0)
+	ctx.check("S2 pilot: one of them swings the other way -> no Iron Guard", UseRules.choose(sim, 1, "iron_guard", 10).is_empty())
+	sim.fighters[11].direction = Vector2i(1, 0)
+	for e in [10, 11]:
+		sim.fighters[e].state = Fighter.State.IDLE  # (a test-made attack state has no move)
 	var lone := world(["sword_shield"])
 	put(lone, 10, Vector3(5, 0, 0))
 	lone.fighters[1].hp = 100.0
@@ -298,7 +308,7 @@ func _reaping_arc(ctx) -> void:
 	var neg := world(["greatsword"])
 	put(neg, 10, Vector3(2, 0, 0))
 	ctx.check("G1 pilot: one grunt -> hold", UseRules.choose(neg, 1, "reaping_arc", 10).is_empty())
-	neg.fighters[1].skill_state["held"] = {"reaping_arc": neg.tick_count - 181}
+	neg.fighters[1].skill_state["cd"]["reaping_arc"] = neg.tick_count - 181
 	ctx.check("G1 pilot: held 3 s -> cast on whatever is in front", not UseRules.choose(neg, 1, "reaping_arc", 10).is_empty())
 
 
@@ -457,7 +467,7 @@ func _arcane_orb(ctx) -> void:
 	var neg := world(["magic"])
 	put(neg, 10, Vector3(6, 0, 0))
 	ctx.check("M1 pilot: one target -> hold", UseRules.choose(neg, 1, "arcane_orb", 10).is_empty())
-	neg.fighters[1].skill_state["held"] = {"arcane_orb": neg.tick_count - 241}
+	neg.fighters[1].skill_state["cd"]["arcane_orb"] = neg.tick_count - 241
 	ctx.check("M1 pilot: held 4 s -> cast anyway", not UseRules.choose(neg, 1, "arcane_orb", 10).is_empty())
 
 

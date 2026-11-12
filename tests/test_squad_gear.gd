@@ -80,7 +80,7 @@ func _member_gear_and_build(ctx) -> void:
 	ctx.check("squad: fighter stats differ when card loadouts differ", sim.runs[2].stats(f.rules) != sim.runs[1].stats(f.rules) and sim.runs[2].stats(f.rules).get("EFFECT_RES", 0.0) > sim.runs[1].stats(f.rules).get("EFFECT_RES", 0.0))
 	# Forcing a style must not swap in that style's default build: the card's own build stays.
 	sim.set_class_style(3, "blade")
-	ctx.check("squad: a member keeps its card's skill build (not the style default)", sim.skill_system != null and sim.skill_system.builds.get(3, {}) == f.profile.build_of("longbow"))
+	ctx.check("squad: a member keeps its card's class skills (not the forced style's)", sim.fighters[3].skill_state.get("skills", []) == preload("res://logic/class_skills/skill_data.gd").load_default().class_skills("longbow"))
 
 
 func _one_drop_per_kill(ctx) -> void:

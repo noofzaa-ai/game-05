@@ -122,15 +122,24 @@ static func cast(sim, id: int, skill: String, choice: Dictionary = {}) -> String
 	var kind := str(data["kind"])
 	var at: Vector3 = sim.bodies[id].position
 	var target := int(choice.get("target", -1))
-	var cast := {"skill": skill, "kind": kind, "start": sim.tick_count, "stats": stats, "target": target, "done": 0, "aim": at + Vector3.RIGHT}
-	var timing: Dictionary = data["timing"]
+	var cast := {"skill": skill, "kind": kind, "cast_time": float(stats.get("cast_time", 1.0)), "start": sim.tick_count, "stats": stats, "target": target, "done": 0, "aim": at + Vector3.RIGHT}
+	var timing: Dictionary = scaled_timing(data["timing"], float(stats.get("cast_time", 1.0)))
+	if str(stats.get("origin", "")) == "target" and kind == "circle":  # Remote Nova (tree behavior remote): at the densest point
+		var best: Dictionary = load("res://logic/race_ultimates.gd").densest_point(sim, id, float(stats.get("remote_range", 7.0)), float(stats.get("radius", 3.0)))
+		if best["pos"] == null:
+			return "no_target"
+		choice = {"target": -1, "point": best["pos"]}
+		target = -1
+		kind = "remote_circle"
+		cast["kind"] = kind
+		cast["target"] = -1
 	match kind:
 		"stance", "self_buff":
 			pass
 		"ally_leap", "ally_buff":
 			if not _ally_ok(sim, id, target):
 				return "no_target"
-		"leap_slam", "delayed_circle":
+		"leap_slam", "delayed_circle", "remote_circle":
 			if not choice.get("point") is Vector3:
 				return "no_target"
 			cast["point"] = choice["point"]
@@ -169,6 +178,19 @@ static func cast(sim, id: int, skill: String, choice: Dictionary = {}) -> String
 
 
 ## Release ticks: the clip's release times; Rapid Fire adds arrows past the 4 clip releases at the same spacing.
+## The skill's clip timing with every time x `mul` (a tree cast_time mod); the client plays the clip at speed / mul.
+static func scaled_timing(timing: Dictionary, mul: float) -> Dictionary:
+	if is_equal_approx(mul, 1.0):
+		return timing
+	var out: Dictionary = timing.duplicate(true)
+	for key in ["releases", "travel", "pull"]:
+		out[key] = (timing[key] as Array).map(func(t): return float(t) * mul)
+	for key in ["end", "exit", "counter_release", "counter_length"]:
+		if timing.has(key):
+			out[key] = float(timing[key]) * mul
+	return out
+
+
 static func _release_ticks(sim, kind: String, stats: Dictionary, timing: Dictionary) -> Array:
 	var out: Array = (timing["releases"] as Array).map(func(t): return sim.tick_count + SkillData.ticks(float(t)))
 	if kind == "stance":
@@ -240,8 +262,8 @@ static func step(sim) -> void:
 		_expire(sim, id, fighter)
 		if fighter.skill_state.has("skills"):
 			_run_cast(sim, id, fighter)
-			_run_counters(sim, id, fighter)
 			_run_jobs(sim, id, fighter)
+		_run_counters(sim, id, fighter)
 		publish_view(sim, id, fighter)
 
 
@@ -348,6 +370,8 @@ static func _release(sim, id: int, fighter, cast: Dictionary, index: int) -> voi
 				sim.events.append({"type": "class_skill_link", "player": id, "target": target, "until": ally.skill_state["link"]["until"]})
 		"circle":
 			_circle(sim, id, at, float(stats["radius"]), stats)
+		"remote_circle":
+			_circle(sim, id, Vector3(cast["point"]), float(stats["radius"]), stats)
 		"pull_circle":
 			_circle(sim, id, at, float(stats["radius"]), stats)
 		"arc":
@@ -368,16 +392,36 @@ static func _release(sim, id: int, fighter, cast: Dictionary, index: int) -> voi
 				for key in ["shock", "stun", "slow", "weaken"]:
 					if float(stats.get(key, 0.0)) > 0.0:
 						extra[key] = stats[key]
+				var dir := _flat_dir(sim.bodies[target].position - at)
+				var struck: Array = [target]
 				_hit(sim, id, target, float(stats["damage"]), stats, extra)
+				if int(stats.get("pierce", 0)) > 0:  # Marked Line / Through Pin: the arrow goes on through enemies on its line
+					for e in line_hits(sim, id, at, dir, float(stats.get("range", 12.0)), struck).slice(0, int(stats["pierce"])):
+						struck.append(e)
+						_hit(sim, id, e, float(stats["damage"]), stats, extra)
+				for k in int(stats.get("projectile_count", 0)):  # Split Volley: extra arrows in a +-spread cone
+					var side := 1.0 if k % 2 == 0 else -1.0
+					var angle := deg_to_rad(float(stats.get("spread_deg", 15.0))) * side * float(k / 2 + 1)
+					var hit_list := line_hits(sim, id, at, dir.rotated(Vector3.UP, angle), float(stats.get("range", 12.0)), [])
+					if not hit_list.is_empty():
+						_hit(sim, id, int(hit_list[0]), float(stats["damage"]), stats, extra)
 		"volley":
 			var range_m := float(stats.get("range", 12.0))
 			if not _enemy_ok(sim, id, target) or _flat(sim.bodies[target].position - at).length() > range_m + 0.5:
-				target = shot_target(sim, id, range_m)  # 5.1: the next pilot target within 12 m, else the arrow is lost
+				target = shot_target(sim, id, range_m, float(stats.get("marked_first", 0.0)) > 0.0)  # 5.1: the next pilot target within 12 m, else lost
 				cast["target"] = target
+			if target >= 0 and float(stats.get("alternate", 0.0)) > 0.0 and index % 2 == 1:  # Spread Fire: every other arrow on the next nearest
+				var other := _nearest_to(sim, id, sim.bodies[target].position, range_m, [target])
+				if other >= 0:
+					target = other
 			if target >= 0:
 				var last: bool = index == cast["releases"].size() - 1
 				_hit(sim, id, target, float(stats["damage"]), stats, {"stun": stats.get("last_stun", 0.0)} if last else {})
 		"vault_shot":
+			if float(stats.get("smoke_radius", 0.0)) > 0.0 and not cast.get("travel", {}).is_empty():  # Smoke Vault: one-shot slow at the take-off spot
+				var spot: Vector3 = cast["travel"]["from"]
+				for e in _enemy_ids(sim, id).filter(func(e): return _flat(sim.bodies[e].position - spot).length() <= float(stats["smoke_radius"])):
+					Effects.apply(id, fighter, e, sim.fighters[e], {"id": "slow", "chance": 100.0, "duration": SkillData.ticks(float(stats.get("smoke_slow", 2.0)))}, sim.combat, sim.rng, sim.events)
 			if _enemy_ok(sim, id, target) and _flat(sim.bodies[target].position - at).length() <= float(stats.get("range", 12.0)):
 				_hit(sim, id, target, float(stats["damage"]), stats, {"slow": stats.get("slow", 0.0)})
 		"orb":
@@ -480,6 +524,9 @@ static func _hit(sim, id: int, target_id: int, frac: float, stats: Dictionary, e
 	if target.hp <= 0.0:
 		_kill(sim, target_id, id)
 		return true
+	if extra.has("stun") and stats.has("boss_stun") and is_boss(target):
+		extra = extra.duplicate()
+		extra["stun"] = minf(float(extra["stun"]), float(stats["boss_stun"]))  # Gravity Crush: the longer stagger is for non-bosses
 	for key in extra:
 		if float(extra[key]) > 0.0:
 			Effects.apply(id, source, target_id, target, {"id": str(key), "chance": 100.0, "duration": SkillData.ticks(float(extra[key]))}, sim.combat, sim.rng, sim.events)
@@ -558,6 +605,14 @@ static func _taken_mods(id: int, fighter, attacker_id: int, damage: float, melee
 		damage *= float(veil["mul"])
 		if melee and float(veil.get("slow", 0.0)) > 0.0 and fighters.has(attacker_id):
 			s["veil_slow"] = s.get("veil_slow", []) + [attacker_id]
+	var reflect := 0.0
+	if not veil.is_empty() and int(veil["until"]) > tick:
+		reflect += float(veil.get("reflect", 0.0))  # Spiked Veil
+	var trance: Dictionary = s.get("trance", {})
+	if not trance.is_empty() and int(trance["until"]) > tick:
+		reflect += float(trance.get("reflect", 0.0))  # Thorned Trance
+	if melee and reflect > 0.0 and fighters.has(attacker_id) and fighters[attacker_id].team != fighter.team:
+		s["reflect_queue"] = s.get("reflect_queue", []) + [[id, attacker_id, damage * reflect]]
 	var stance: Dictionary = s.get("stance", {})
 	if not stance.is_empty() and int(stance["until"]) > tick:
 		damage *= float(stance["taken_mul"])
@@ -736,9 +791,13 @@ static func _nearest_enemy(sim, id: int, within: float) -> int:
 
 
 ## The longbow's next shot target (L3 retarget, 5.1): the boss in range, else the lowest HP in range, ties nearer then id.
-static func shot_target(sim, id: int, range_m: float) -> int:
+static func shot_target(sim, id: int, range_m: float, marked_first: bool = false) -> int:
 	var at: Vector3 = sim.bodies[id].position
 	var inside: Array = _enemy_ids(sim, id).filter(func(e): return _flat(sim.bodies[e].position - at).length() <= range_m)
+	if marked_first:  # Hunter's Rhythm: arrows retarget to Hunter's Mark (sunder) first
+		var marked: Array = inside.filter(func(e): return sim.fighters[e].effects.has("sunder"))
+		if not marked.is_empty():
+			inside = marked
 	for e in inside:
 		if is_boss(sim.fighters[e]):
 			return e
@@ -748,6 +807,32 @@ static func shot_target(sim, id: int, range_m: float) -> int:
 		var score: float = sim.fighters[e].hp * 1000.0 + _flat(sim.bodies[e].position - at).length()
 		if score < best_score:
 			best_score = score
+			best = e
+	return best
+
+
+## Enemies (not in `skip`) within 0.6 m of the line from `at` along `dir` up to `length`, nearest first.
+static func line_hits(sim, id: int, at: Vector3, dir: Vector3, length: float, skip: Array) -> Array:
+	var d2 := Vector2(dir.x, dir.z)
+	var found: Array = []
+	for e in _enemy_ids(sim, id):
+		if skip.has(e):
+			continue
+		var off := _flat(sim.bodies[e].position - at)
+		var along := off.dot(d2)
+		if along > 0.0 and along <= length and absf(off.cross(d2)) <= 0.6:
+			found.append([along, e])
+	found.sort()
+	return found.map(func(row): return row[1])
+
+
+static func _nearest_to(sim, id: int, point: Vector3, range_m: float, skip: Array) -> int:
+	var best := -1
+	var best_d := INF
+	for e in _enemy_ids(sim, id):
+		var d := _flat(sim.bodies[e].position - point).length()
+		if not skip.has(e) and _flat(sim.bodies[e].position - sim.bodies[id].position).length() <= range_m and d < best_d:
+			best_d = d
 			best = e
 	return best
 

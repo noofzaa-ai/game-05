@@ -112,7 +112,11 @@ func _longbow_target_and_kite(ctx) -> void:
 	bow.dodge_cooldown = 0
 	bow.energy = bow.max_energy()
 	var input: SimInput = Pilot.decide(sim, f.combat, 3, Pilot.new_memory(1), 0, 0.0)
-	ctx.check("kite: an enemy within 3 m -> the bow dodges away from it", input.dodge and input.move.x < -0.5)
+	ctx.check("kite: an enemy within 3 m -> Vault Shot away from it (class-skills.md L4: the kite skill)", input.skill_slot == bow.skill_state["skills"].find("vault_shot"))
+	bow.skill_state["cd"]["vault_shot"] = sim.tick_count + 600
+	bow.skill_state["cd"]["pinning_shot"] = sim.tick_count + 600
+	input = Pilot.decide(sim, f.combat, 3, Pilot.new_memory(1), 0, 0.0)
+	ctx.check("kite: Vault Shot on cooldown -> the bow dodges away instead", input.dodge and input.move.x < -0.5)
 	bow.dodge_cooldown = 10
 	input = Pilot.decide(sim, f.combat, 3, Pilot.new_memory(1), 0, 0.0)
 	ctx.check("kite: dodge on cooldown -> no kite", not input.dodge)
@@ -153,32 +157,27 @@ func _heavy_every(ctx) -> void:
 	ctx.check("heavy_every: greatsword heavy on press 3, S&S on press 4 (%s)" % [counts], int(counts[2]) == 3 and int(counts[1]) == 4)
 
 
-## Magic: damage skills wait for 2+ enemies in the area (or the boss); frost_armor waits for an ally below 60%.
+## Magic (class-skills.md 3.5, 3.7): Arcane Orb waits for 2+ enemies around the target (or the boss); Warding Veil
+## waits for an ally below 60% (pilot support_skill: warding_veil). Rules from data/class_skills/class_skills.json.
 func _magic_hold(ctx) -> void:
 	var f := RaceTest.squad(["human", "viking", "runeborn"], ["sword_shield", "greatsword", "magic"])
 	var sim = f.sim
-	sim.set_class_style(3, "magic")
-	var build: Dictionary = sim.skill_system.builds[3]
-	var profile := Pilot.pilot_profile(sim.fighters[3])
-	var slots := {}
-	for i in 4:
-		slots[str(build.skills[i].skill)] = i
+	var Use = preload("res://logic/class_skills/use_rules.gd")
+	ctx.check("magic pilot support_skill is warding_veil", str(Pilot.pilot_profile(sim.fighters[3]).get("support_skill", "")) == "warding_veil")
 	var foes := enemies(sim)
 	var at: Vector3 = sim.bodies[3].position
 	place(sim, at, {foes[0]: Vector3(5.0, 0, 0)})
-	var ring := int(slots["fire_ring"])
-	ctx.check("magic hold: 1 enemy in the area -> fire_ring held", Pilot.held(sim, sim.fighters[3], build, ring, profile, foes[0]))
+	ctx.check("magic hold: 1 enemy in the area -> Arcane Orb held", Use.choose(sim, 3, "arcane_orb", foes[0]).is_empty())
 	place(sim, at, {foes[0]: Vector3(5.0, 0, 0), foes[1]: Vector3(5.5, 0, 0.5)})
-	ctx.check("magic hold: 2 enemies in the area -> fire_ring goes", not Pilot.held(sim, sim.fighters[3], build, ring, profile, foes[0]))
+	ctx.check("magic hold: 2 enemies in the area -> Arcane Orb goes", not Use.choose(sim, 3, "arcane_orb", foes[0]).is_empty())
 	place(sim, at, {foes[0]: Vector3(5.0, 0, 0)})
 	sim.fighters[foes[0]].enemy_type = "goblin_chief"
-	ctx.check("magic hold: the boss alone -> goes", not Pilot.held(sim, sim.fighters[3], build, ring, profile, foes[0]))
+	ctx.check("magic hold: the boss alone -> goes", not Use.choose(sim, 3, "arcane_orb", foes[0]).is_empty())
 	sim.fighters[foes[0]].enemy_type = "goblin"
-	var armor := int(slots["frost_armor"])
-	ctx.check("magic support: frost_armor held while every ally is above 60%", Pilot.held(sim, sim.fighters[3], build, armor, profile, foes[0]))
+	place(sim, at, {foes[0]: sim.bodies[1].position - at + Vector3(1.0, 0, 0)})
+	ctx.check("magic support: Warding Veil held while every ally is above 60%", Use.choose(sim, 3, "warding_veil", foes[0]).is_empty())
 	sim.fighters[1].hp = sim.fighters[1].max_hp() * 0.5
-	ctx.check("magic support: an ally below 60% -> frost_armor goes", not Pilot.held(sim, sim.fighters[3], build, armor, profile, foes[0]))
-	ctx.check("no pilot hold for a class without skill_min_targets (S&S)", not Pilot.held(sim, sim.fighters[1], sim.skill_system.builds[1], 0, Pilot.pilot_profile(sim.fighters[1]), foes[0]))
+	ctx.check("magic support: an attacked ally below 60% -> Warding Veil goes", int(Use.choose(sim, 3, "warding_veil", foes[0]).get("target", -1)) == 1)
 
 
 ## Hunter's Mark (longbow signature, any race): sunder on the first hit on a target new to this card only.

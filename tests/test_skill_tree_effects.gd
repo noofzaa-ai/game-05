@@ -198,13 +198,13 @@ func _skill_upgrades(ctx) -> void:
 					same = same and stats["statuses"].has(effect["status"])
 				if not same:
 					ctx.check("%s upgrades its skill by its mods" % n["id"], false)
-	var triple := _find(data.class_nodes("magic"), func(e): return e["type"] == "skill_upgrade" and e["mods"].any(func(m): return m["stat"] == "projectile_count"))
+	var triple := _find(data.class_nodes("magic"), func(e): return e["type"] == "skill_upgrade" and e["mods"].any(func(m): return m["stat"] == "count"))
 	var effect: Dictionary = triple["effects"][0]
 	var fighter := Fighter.new()
 	fighter.race_state = {"tree": {"skills": {effect["skill"]: [effect]}}}
-	var stats := {"skill_id": effect["skill"], "damage": 16.0, "projectile_count": 1.0, "statuses": []}
+	var stats := {"skill_id": effect["skill"], "damage": 1.0, "count": 1.0, "statuses": []}
 	TreeEffects.upgrade_skill(fighter, stats)
-	ctx.check("4.5 Triple Fireball: 3 x 16 x 0.7 = 33.6 on a pack", absf(stats["projectile_count"] * stats["damage"] - 33.6) < 0.001)
+	ctx.check("Triple Orb (class-skills.md 3.6): 3 orbs x 0.7 damage", absf(stats["count"] - 3.0) < 0.001 and absf(stats["damage"] - 0.7) < 0.001)
 	var other := {"skill_id": "not_this_skill", "damage": 16.0}
 	TreeEffects.upgrade_skill(fighter, other)
 	ctx.check("an upgrade touches only its own skill", other["damage"] == 16.0)
@@ -213,27 +213,34 @@ func _skill_upgrades(ctx) -> void:
 func _triggers_and_actions(ctx) -> void:
 	var data = TreeData.load_default()
 	# A trigger with a `skill` filter fires only for that skill (the id comes from the node data).
-	var line := _find(data.class_nodes(LB), func(e): return e["type"] == "trigger" and e.has("skill"))
-	var skill := str(line["effects"].filter(func(e): return e.has("skill"))[0]["skill"])
-	var f := _squad(["human", "viking", "elf"], func(f): _with_tree(f, LB, [line["id"]]))
+	# (class-skills.md 3.6 turned the skill-filtered class nodes into skill_upgrades: the filter is checked on a synthetic trigger)
+	var skill := str(data.class_skills(LB)[0])
+	var f := _squad(["human", "viking", "elf"], func(_f): pass)
 	var id := _id_of(f, LB)
+	f.sim.fighters[id].race_state["effects"].append({"src": "tree", "effect": {"type": "trigger", "on": "skill_hit", "skill": skill, "actions": [{"action": "apply_status", "status": "sunder", "target": "target"}]}})
 	var enemy := RP.enemy_of(f.sim)
 	var other_skill := "x_" + skill
 	var miss := RP.react(f.sim, {"type": "skill_hit", "attacker": id, "target": enemy, "damage": 5.0, "move": "skill:" + other_skill})
 	var hit := RP.react(f.sim, {"type": "skill_hit", "attacker": id, "target": enemy, "damage": 5.0, "move": "skill:" + skill})
 	ctx.check("a skill-filtered trigger ignores other skills", RP.procs(miss, id).filter(func(e): return e["source"] == "tree").is_empty())
 	ctx.check("and fires on its own skill", not RP.procs(hit, id).filter(func(e): return e["source"] == "tree").is_empty())
-	# Faultline: pull enemies 1.5 m toward the card.
-	var fault := _find(data.class_nodes(GS), func(e): return e["type"] == "trigger" and e["actions"].any(func(a): return a["action"] == "pull"))
-	f = _squad(["human", "viking", "elf"], func(f): _with_tree(f, GS, [fault["id"]]))
+	# The node action pull (still used by race nodes): enemies 1.5 m toward the card.
+	f = _squad(["human", "viking", "elf"], func(_f): pass)
 	id = _id_of(f, GS)
 	enemy = RP.enemy_of(f.sim)
 	var me: Vector3 = f.sim.bodies[id].position
 	f.sim.bodies[enemy].position = me + Vector3(4.0, 0.0, 0.0)
-	var cast_skill := str(fault["effects"][0]["skill"])
-	var events := RP.react(f.sim, {"type": "skill_cast", "player": id, "skill": cast_skill})
+	f.sim.events.clear()
+	TreeEffects.run_action(f.sim, id, {"action": "pull", "radius": 5.0, "distance": 1.5}, {})
 	var after := Vector2(f.sim.bodies[enemy].position.x - me.x, f.sim.bodies[enemy].position.z - me.z).length()
-	ctx.check("Faultline pulls an enemy 4 m -> 2.5 m (%.2f)" % after, absf(after - 2.5) < 0.01 and events.any(func(e): return e["type"] == "tree_pull"))
+	ctx.check("pull moves an enemy 4 m -> 2.5 m (%.2f)" % after, absf(after - 2.5) < 0.01 and f.sim.events.any(func(e): return e["type"] == "tree_pull"))
+	# Faultline (class-skills.md 3.6): Crater Leap first pulls enemies within 4 m of the landing spot 1.5 m inward.
+	var fault := _find(data.class_nodes(GS), func(e): return e["type"] == "skill_upgrade" and e["skill"] == "crater_leap" and e["mods"].any(func(m): return m["stat"] == "pre_pull"))
+	var fstats := {"skill_id": "crater_leap", "statuses": []}
+	var learner := Fighter.new()
+	learner.race_state = {"tree": {"skills": {"crater_leap": fault["effects"]}}}
+	TreeEffects.upgrade_skill(learner, fstats)
+	ctx.check("Faultline: Crater Leap gets a 1.5 m pre-pull within 4 m", is_equal_approx(float(fstats.get("pre_pull", 0.0)), 1.5) and is_equal_approx(float(fstats.get("pre_pull_radius", 0.0)), 4.0))
 	# Rallying Wall: the signature_pulse event is not emitted yet, so allies_in_radius is checked directly.
 	ctx.check("allies_in_radius finds the card itself", TreeEffects.targets(f.sim, id, "allies_in_radius", {"radius": 4.0}).has(id))
 

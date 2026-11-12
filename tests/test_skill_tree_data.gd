@@ -29,7 +29,8 @@ func _game_data(ctx) -> void:
 	var names_match := true
 	var icons_exist := true
 	for id in ids:
-		names_match = names_match and str(data.node(id)["name"]) == str(manifest[id]["name"]) and str(data.node(id)["icon"]) == str(manifest[id]["icon"])
+		# names: class-skills.md 3.6 renamed the class nodes; the art manifest keeps the old names until new icons come
+		names_match = names_match and (str(data.node(id)["name"]) == str(manifest[id]["name"]) or str(manifest[id].get("branch", "")) == "class") and str(data.node(id)["icon"]) == str(manifest[id]["icon"])
 		icons_exist = icons_exist and ResourceLoader.exists(str(data.node(id)["icon"]))
 	ctx.check("node names and icons match the manifest", names_match)
 	ctx.check("every node icon exists", icons_exist)
@@ -81,8 +82,8 @@ func _bad_data(ctx) -> void:
 	var cases := {
 		"a node with an unknown effect type": func(f): _class_node(f, "magic", "mg_t1_ring")["effects"] = [{"type": "teleport"}],
 		"a node with an unknown event": func(f): _class_node(f, "magic", "mg_t3_b")["effects"][0]["on"] = "sneeze",
-		"a node with an unknown action": func(f): _class_node(f, "greatsword", "gs_t1_slam")["effects"][0]["actions"][0]["action"] = "yeet",
-		"a node with an unknown status": func(f): _class_node(f, "sword_shield", "ss_t1_flame")["effects"][1]["actions"][0]["status"] = "giggles",
+		"a node with an unknown action": func(f): _class_node(f, "greatsword", "gs_t3_b")["effects"][0]["actions"][0]["action"] = "yeet",
+		"a node with an unknown status": func(f): _class_node(f, "greatsword", "gs_t3_b")["effects"][0]["actions"][0]["status"] = "giggles",
 		"a node with an unknown stat": func(f): _class_node(f, "sword_shield", "ss_t4_b")["effects"][0]["stat"] = "LUCK",
 		"a skill_upgrade of another class's skill": func(f): _class_node(f, "magic", "mg_t1_fireball")["effects"][0]["skill"] = f["classes/greatsword.json"]["skill_tree"]["skills"][0],
 		"an unknown mechanic": func(f): _class_node(f, "magic", "mg_t3_a")["effects"][0]["id"] = "win_game",
