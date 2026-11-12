@@ -31,6 +31,8 @@
   "launched": "gs_impact_2",
   "air": "gs_jump"
  },
+ "idle_variants": ["gs_idle", "gs_idle_2", "gs_idle_3", "gs_idle_4", "gs_idle_5"],
+ "_idle_variants": "Idle clips the card portraits (hub cards, character screen) cycle through: mostly states.idle, now and then another one (client/card_portrait.gd). Display only; battle fighters keep states.idle.",
  "off_hand": "none",
  "weapon_visible": true,
  "weapon_scale": 1.6,

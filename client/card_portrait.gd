@@ -2,7 +2,7 @@ extends Control
 ## The live 3D window of a class card (docs/ui/class_card_ui_handoff.md §3, §13): the class's own character
 ## (studio05 model, the card's hair / outfit / eyes / skin / makeup) playing the class idle in a small SubViewport.
 ## API: set_class(id), set_look(look), set_hover(on, pointer), pulse(), set_render_mode(mode), set_framing(kind),
-## set_view_material(mat).
+## set_view_material(mat), set_idle_variants(on).
 ## Performance (the web build has no threads): every portrait has its own tiny world and renders only while
 ## it is visible. Render modes: "live" every frame (the selected / focused card), "throttled" a few times a
 ## second (the other deck cards), "once" one redraw per change (mini cards).
@@ -20,7 +20,7 @@ enum Mode { LIVE, THROTTLED, ONCE }
 var viewport: SubViewport
 var model  ## the studio05 character model (null if its file is missing)
 var class_id := ""
-var framing := "full"  ## "full" body, "bust" (head and shoulders, for mini cards), "card" / "card_deck" (old card), "hub" (leather card window) or "stage" (character screen window)
+var framing := "full"  ## "full" body, "bust" (head and shoulders: squad tray), "card" / "card_deck" (old card), "hub" (leather card window) or "stage" (character screen window)
 var _mode := Mode.THROTTLED
 var _pivot: Node3D
 var _camera: Camera3D
@@ -32,6 +32,14 @@ var _turn := 0.0
 var _turn_target := 0.0
 var _redraw_once := true
 var _shadow: TextureRect
+## Idle variants (set_idle_variants): the class idle most of the time, now and then another idle clip of the
+## class (data/classes/<id>.json "idle_variants"), cross-faded. Timings: CardTokens.PORTRAIT_IDLE_*.
+var _variants_on := false
+var _variant_left := 0.0  ## seconds until the next switch
+var _variant_index := -1  ## index into the class's other variants on show, -1 = the class idle
+var _variant_rng := RandomNumberGenerator.new()
+var _variant_last := -1  ## the variant shown last time (not picked again next)
+var _variant_class := ""  ## the class the cycle was started for
 
 
 func _ready() -> void:
@@ -166,6 +174,24 @@ func set_view_material(mat: Material) -> void:
 		_texture.material = mat
 
 
+## Cycles the class's idle variants (hub cards, character screen). Off = the class idle only (reduced motion,
+## mini cards, battle). Each card has its own deterministic rhythm (seeded by its class).
+func set_idle_variants(on: bool) -> void:
+	_variants_on = on
+	_restart_variants()
+
+
+## The idle clips this class cycles besides its main idle (data/classes/<id>.json "idle_variants").
+func idle_variant_clips() -> Array:
+	var spec := CardDeck.class_data(class_id)
+	var main := str(spec.get("states", {}).get("idle", ""))
+	var out := []
+	for clip in spec.get("idle_variants", []):
+		if str(clip) != main and not out.has(str(clip)):
+			out.append(str(clip))
+	return out
+
+
 func is_rendering() -> bool:
 	return viewport != null and viewport.render_target_update_mode != SubViewport.UPDATE_DISABLED
 
@@ -187,6 +213,8 @@ func _dress() -> void:
 		looks["refine"] = {"offhand": int(gear.get("refine", {}).get("offhand", 0)), "weapon": int(gear.get("refine", {}).get("weapon", 0))}
 	model.equipment_rest = true
 	model.dress(looks)
+	if _variant_class != class_id:
+		_restart_variants()
 	model.set_pose("idle", 0.0, 0.0, true, Vector2(0.0, 1.0), false, "", "", _weapon)
 	model.apply_pose(0.0)
 	_redraw_once = true
@@ -203,6 +231,43 @@ func _card_looks() -> Dictionary:
 	if loadout == null:
 		return {}
 	return ItemAssets.looks(loadout, state.item_rules.catalog, _weapon)
+
+
+## Back to the class idle and a fresh wait (class change, toggled).
+func _restart_variants() -> void:
+	_variant_class = class_id
+	_variant_rng.seed = hash("idle_variants:" + class_id)
+	_variant_index = -1
+	_variant_last = -1
+	_variant_left = _variant_rng.randf_range(CardTokens.PORTRAIT_IDLE_GAP_MIN, CardTokens.PORTRAIT_IDLE_GAP_MAX)
+	if model != null:
+		model.play_idle_clip("", 0.0 if not _variants_on else CardTokens.PORTRAIT_IDLE_BLEND)
+
+
+func _step_variants(delta: float) -> void:
+	if not _variants_on or model == null:
+		return
+	_variant_left -= delta
+	if _variant_left > 0.0:
+		return
+	var clips := idle_variant_clips()
+	if _variant_index >= 0 or clips.is_empty():  # a variant ends (or there is none): back to the class idle
+		_variant_index = -1
+		model.play_idle_clip("", CardTokens.PORTRAIT_IDLE_BLEND)
+		_variant_left = _variant_rng.randf_range(CardTokens.PORTRAIT_IDLE_GAP_MIN, CardTokens.PORTRAIT_IDLE_GAP_MAX)
+		return
+	var pick := _variant_rng.randi_range(0, clips.size() - 1)
+	if clips.size() > 1 and pick == _variant_last:  # never the same variant twice in a row
+		pick = (pick + 1 + _variant_rng.randi_range(0, clips.size() - 2)) % clips.size()
+	_variant_index = pick
+	_variant_last = pick
+	var clip: String = clips[_variant_index]
+	if not model.play_idle_clip(clip, CardTokens.PORTRAIT_IDLE_BLEND):
+		_variant_index = -1
+		_variant_left = CardTokens.PORTRAIT_IDLE_GAP_MIN
+		return
+	var length: float = model.clip_length(clip)
+	_variant_left = clampf(length, CardTokens.PORTRAIT_IDLE_SHOW_MIN, CardTokens.PORTRAIT_IDLE_SHOW_MAX)
 
 
 func _update_rendering() -> void:
@@ -242,18 +307,15 @@ func _fit_camera() -> void:
 	var top := bounds.position.y + bounds.size.y
 	var height := bounds.size.y
 	var center_y := bounds.get_center().y
-	if framing in ["card", "card_deck", "hub", "stage"]:
-		var tops := {"card": CardTokens.PORTRAIT_FRAME_TOP, "card_deck": CardTokens.PORTRAIT_DECK_TOP, "hub": CardTokens.PORTRAIT_HUB_TOP, "stage": CardTokens.PORTRAIT_STAGE_TOP}
-		var bottoms := {"card": CardTokens.PORTRAIT_FRAME_BOTTOM, "card_deck": CardTokens.PORTRAIT_DECK_BOTTOM, "hub": CardTokens.PORTRAIT_HUB_BOTTOM, "stage": CardTokens.PORTRAIT_STAGE_BOTTOM}
+	if framing in ["card", "card_deck", "hub", "stage", "bust"]:
+		var tops := {"card": CardTokens.PORTRAIT_FRAME_TOP, "card_deck": CardTokens.PORTRAIT_DECK_TOP, "hub": CardTokens.PORTRAIT_HUB_TOP, "stage": CardTokens.PORTRAIT_STAGE_TOP, "bust": CardTokens.PORTRAIT_BUST_TOP}
+		var bottoms := {"card": CardTokens.PORTRAIT_FRAME_BOTTOM, "card_deck": CardTokens.PORTRAIT_DECK_BOTTOM, "hub": CardTokens.PORTRAIT_HUB_BOTTOM, "stage": CardTokens.PORTRAIT_STAGE_BOTTOM, "bust": CardTokens.PORTRAIT_BUST_BOTTOM}
 		var f_top: float = tops[framing]
 		var f_bottom: float = bottoms[framing]
 		var view_height := height / maxf(f_bottom - f_top, 0.1)
 		var view_top := top + f_top * view_height
 		_aim(view_height, view_top - view_height * 0.5)
 		return
-	if framing == "bust":
-		height = bounds.size.y * 0.42
-		center_y = top - height * 0.5
 	var framed_height := maxf(height * CardTokens.PORTRAIT_FRAME_PAD, bounds.size.x * CardTokens.PORTRAIT_FRAME_PAD / maxf(aspect, 0.1))
 	_aim(framed_height, center_y)
 
@@ -264,11 +326,15 @@ func _aim(view_height: float, center_y: float) -> void:
 	var target := Vector3(0.0, center_y, 0.0)
 	_camera.position = target + Vector3(0.0, 0.0, distance)
 	_camera.look_at(target)
+	if _mode == Mode.ONCE:  # (the camera is fitted deferred, after the change's redraw: draw again with it)
+		_redraw_once = true
+		_update_rendering()
 
 
 func _process(delta: float) -> void:
 	if model == null:
 		return
+	_step_variants(delta)
 	_turn = lerpf(_turn, _turn_target, minf(1.0, delta * 8.0))
 	_pivot.rotation.y = _turn
 	match _mode:

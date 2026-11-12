@@ -31,6 +31,8 @@
   "launched": "mg_lite_react_large_from_front",
   "air": "mg_loco_jump"
  },
+ "idle_variants": ["mg_lite_idle", "mg_lite_idle_02", "mg_loco_idle"],
+ "_idle_variants": "Idle clips the card portraits (hub cards, character screen) cycle through: mostly states.idle, now and then another one (client/card_portrait.gd). Display only; battle fighters keep states.idle.",
  "off_hand": "none",
  "weapon_visible": false,
  "weapon_scale": 1.0,

@@ -111,6 +111,13 @@ var shield_turn_degrees := Vector3(0.0, 0.0, 90.0)
 var _offhand_node: Node3D  ## an equipped shield that has its own model file (left hand socket)
 var _offhand_path := ""
 var _weapon_shown := true
+## Idle variant (card portraits): the clip shown in place of the class idle while the pose is a plain idle,
+## "" = the class idle. The previous one fades out over the blend (play_idle_clip).
+var _idle_clip := ""
+var _idle_start := 0.0  ## _clock when _idle_clip started
+var _idle_from := ""  ## clip faded out ("" = nothing to fade)
+var _idle_from_start := 0.0
+var _idle_blend := 0.0  ## seconds of the crossfade
 
 
 ## The body file a variant starts from (index.html loadInPlaceRun): the class's own GLB with hair A-F;
@@ -778,6 +785,37 @@ func show_skill_clip(_set: RefCounted, clip: String, time: float) -> void:
 	_skill_clip = {"set": _library, "clip": wanted, "time": minf(time, _library.length(wanted))}
 
 
+## Plays `clip` (a clip of this class's animation file, e.g. an idle variant from data/classes/<id>.json
+## "idle_variants") whenever the pose is a plain idle, cross-fading from what was shown over `blend_seconds`.
+## "" or the class idle goes back to the class idle. Display only: other poses (run, attacks, hurt) are unchanged.
+## Returns false when the clip is not in the file.
+func play_idle_clip(clip: String, blend_seconds: float = 0.5) -> bool:
+	if _library == null:
+		return false
+	var main := str(class_data(class_id).get("states", {}).get("idle", "idle"))
+	var wanted := "" if clip == main else clip
+	if not wanted.is_empty() and not _library.has_clip(wanted):
+		return false
+	if wanted == _idle_clip:
+		return true
+	_idle_from = _idle_clip if not _idle_clip.is_empty() else main
+	_idle_from_start = _idle_start if not _idle_clip.is_empty() else 0.0
+	_idle_clip = wanted
+	_idle_start = _clock
+	_idle_blend = maxf(blend_seconds, 0.0)
+	return true
+
+
+## Seconds of a clip of this class's file (0 when it is not there).
+func clip_length(clip: String) -> float:
+	return _library.length(clip) if _library != null and _library.has_clip(clip) else 0.0
+
+
+## The idle clip on show ("" = the class idle).
+func idle_clip() -> String:
+	return _idle_clip
+
+
 func _clip_time(clip: String, phase: String, amount: float) -> float:
 	var meta: Dictionary = _library._clips[clip]["meta"]
 	var begin := float(meta.get("begin", 0.0))
@@ -824,11 +862,28 @@ func _active_clip() -> Dictionary:
 	elif not bool(_pose["grounded"]):
 		clip = str(states.get("air", clip))
 		time = clampf(amount, 0.0, 1.0) * _library.length(clip)
+	else:
+		return _idle_active(clip)
 	return {"set": _library, "clip": clip, "time": time}
+
+
+## The plain idle: the class idle (on the model clock, as before) or the chosen variant (from its start,
+## play_idle_clip), with the fade from the previous one.
+func _idle_active(main: String) -> Dictionary:
+	var clip := _idle_clip if not _idle_clip.is_empty() and _library.has_clip(_idle_clip) else main
+	var active := {"set": _library, "clip": clip, "time": _clock if clip == main else _clock - _idle_start}
+	var since := _clock - _idle_start
+	if not _idle_from.is_empty() and _idle_from != clip and _library.has_clip(_idle_from) and since < _idle_blend:
+		active["from"] = _idle_from
+		active["from_time"] = _clock if _idle_from == main else _clock - _idle_from_start
+		active["weight"] = since / maxf(_idle_blend, 0.001)
+	return active
 
 
 func _apply_clip(active: Dictionary) -> void:
 	var sample: Dictionary = active["set"].sample(active["clip"], active["time"])
+	if active.has("from"):  # idle variant crossfade (play_idle_clip)
+		sample = _blend_samples(active["set"].sample(active["from"], active["from_time"]), sample, float(active["weight"]))
 	_apply_cape(str(active["clip"]), float(active["time"]))
 	for bone_name in _bone_index:
 		var values: Dictionary = sample.get(bone_name, {})
@@ -840,3 +895,22 @@ func _apply_clip(active: Dictionary) -> void:
 				target.x = _rest_position[HIPS].x
 				target.z = _rest_position[HIPS].z
 			_skeleton.set_bone_pose_position(index, _skeleton.get_bone_pose_position(index).lerp(target, _follow))
+
+
+## `a` toward `b` by `weight` (0 = a, 1 = b), bone by bone; a bone missing from one side uses its rest pose.
+func _blend_samples(a: Dictionary, b: Dictionary, weight: float) -> Dictionary:
+	var w := smoothstep(0.0, 1.0, clampf(weight, 0.0, 1.0))
+	var out := {}
+	for bone_name in _bone_index:
+		if not a.has(bone_name) and not b.has(bone_name):
+			continue
+		var from: Dictionary = a.get(bone_name, {})
+		var to: Dictionary = b.get(bone_name, {})
+		var values := {}
+		var rest: Quaternion = _rest.get(bone_name, Quaternion.IDENTITY)
+		values["rotation"] = (from.get("rotation", rest) as Quaternion).slerp(to.get("rotation", rest), w)
+		if from.has("position") or to.has("position"):
+			var rest_position: Vector3 = _rest_position.get(bone_name, Vector3.ZERO)
+			values["position"] = (from.get("position", rest_position) as Vector3).lerp(to.get("position", rest_position), w)
+		out[bone_name] = values
+	return out

@@ -478,6 +478,15 @@ const PORTRAIT_HUB_BOTTOM := 0.90
 ## "stage" framing (character screen window): room under the feet for the stat strip.
 const PORTRAIT_STAGE_TOP := 0.07
 const PORTRAIT_STAGE_BOTTOM := 0.84
+## "bust" (squad tray heads): head and shoulders of the chibi body (the head alone is the top half, the shoulders
+## are at about 0.42 of the height). Same rule as the card framings: the top of the hair at BUST_TOP and the feet
+## at BUST_BOTTOM of the view (>1 = below it), so the view shows the top 1/(BOTTOM-TOP) of the body (~0.69: down
+## to the upper chest).
+const PORTRAIT_BUST_TOP := 0.03
+const PORTRAIT_BUST_BOTTOM := 1.48
+## The tray slot's parchment window inside its frame art (fractions of the slot: left, top, right, bottom):
+## the bust is drawn only inside it.
+const HUB_TRAY_WINDOW_INSET := Vector4(0.085, 0.13, 0.085, 0.075)
 const PORTRAIT_KEY_ENERGY := 0.25
 const PORTRAIT_RIM_ENERGY := 1.6  ## rim light from behind: lifts the character off the backdrop
 const PORTRAIT_AMBIENT := Color(0.82, 0.8, 0.78)
@@ -489,6 +498,14 @@ const PORTRAIT_THROTTLE_SECONDS := 0.2  ## unselected cards redraw this often (w
 const PORTRAIT_HOVER_TURN := 0.35  ## radians the character turns toward the pointer
 const PORTRAIT_PULSE_SCALE := 1.08
 const PORTRAIT_PULSE_SECONDS := 0.25
+## Idle variants on the live portraits (hub cards, character screen; Boss 2026-11-12): the class idle plays for
+## a random GAP_MIN..GAP_MAX seconds, then one variant (data/classes/<id>.json "idle_variants") for its clip length
+## clamped to SHOW_MIN..SHOW_MAX, cross-fading BLEND seconds each way. Off under reduced motion.
+const PORTRAIT_IDLE_GAP_MIN := 6.0
+const PORTRAIT_IDLE_GAP_MAX := 10.0
+const PORTRAIT_IDLE_SHOW_MIN := 3.0
+const PORTRAIT_IDLE_SHOW_MAX := 7.0
+const PORTRAIT_IDLE_BLEND := 0.6
 
 # ------------------------------------------------------------------ strings (§11): Thai first, English second
 ## The game has no localisation system yet; this table is the one place the screen's words live.

@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | ui-programmer via PO | feature/class-weapons-card-screen | การ์ดสลับท่า idle (`idle_variants` ใน data/classes, `play_idle_clip()` ในโมเดล, เฉพาะการ์ด/หน้าตัวละคร) · แถบทัพเป็นภาพครึ่งตัวพอดีช่อง · เทสต์ 2196/82
+
 - 2026-11-13 | ui-programmer x2 via PO | feature/class-weapons-card-screen | การ์ดฮับเอียง 3D + ความลึก + แสงวาว (`client/card_tilt*.gdshader`), ชื่อการ์ดไม่ถูกตัด · HUD ฉากสู้เป็นแผ่นหนัง (squad_panel/hud แถบบอส/ขวาบน) · ป้าย Offline/Online อังกฤษบนฮับ · ชื่อยาวในร้าน/คลัง/Tailor ย่อพอดี · เทสต์ 2196/82
 
 - 2026-11-12 | ui-programmer via PO | feature/class-weapons-card-screen | หน้าสรุปหลังสู้แบบหนัง/กระดาษ (VICTORY/DEFEAT, เวฟที่ผ่าน, ของที่ได้: `GameState.run_loot` เก็บจาก event loot ใน stage_view) · ไอคอนโล่เรนเดอร์จากโมเดล Studio (`tools/shots/shield_icon.gd`, catalog icon_path) · `client/hub_look.gd` helper · ยังไม่ได้: HUD ฉากสู้, ป้ายออนไลน์, ชื่อยาวถูกตัด · เทสต์ 2195/82

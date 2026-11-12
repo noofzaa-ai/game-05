@@ -31,6 +31,8 @@
   "launched": "lb_react_small_from_headshot",
   "air": "lb_fall_a"
  },
+ "idle_variants": ["lb_idle_01", "lb_idle_02_looking", "lb_idle_03_examine"],
+ "_idle_variants": "Idle clips the card portraits (hub cards, character screen) cycle through: mostly states.idle, now and then another one (client/card_portrait.gd). Display only; battle fighters keep states.idle.",
  "off_hand": "none",
  "weapon_visible": false,
  "weapon_scale": 1.0,

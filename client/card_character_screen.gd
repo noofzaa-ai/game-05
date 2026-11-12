@@ -302,6 +302,7 @@ func _show_card(class_id: String) -> void:
 	_sel_item = ""
 	_portrait.set_class(class_id)
 	_portrait.set_look(CardDeck.look_of(_deck, class_id))
+	_portrait.set_idle_variants(not reduced_motion)  # idle variants (Boss 2026-11-12), off for reduced motion
 	_portrait.set_render_mode(CardPortrait.Mode.LIVE)
 	_layout()
 

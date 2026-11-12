@@ -838,7 +838,12 @@ class TraySlot extends Button:
 		focus_mode = Control.FOCUS_ALL
 		portrait = CardPortrait.new()
 		portrait.framing = "bust"
-		portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
+		# Inside the slot's parchment window only (not over its frame border).
+		var inset := CardTokens.HUB_TRAY_WINDOW_INSET
+		portrait.anchor_left = inset.x
+		portrait.anchor_top = inset.y
+		portrait.anchor_right = 1.0 - inset.z
+		portrait.anchor_bottom = 1.0 - inset.w
 		portrait.visible = false
 		add_child(portrait)
 		_plus = CardTokens.hub_label("+", CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, 1.0)
@@ -1224,6 +1229,7 @@ func _rebuild_cards() -> void:
 		var card := HubCard.new()
 		_row.add_child(card)
 		card.build(id)
+		card.portrait.set_idle_variants(not reduced_motion)  # idle variants (Boss 2026-11-12), off for reduced motion
 		card.layout(CardTokens.HUB_CARD.x * _s, _s, _phone)
 		card.pressed.connect(_on_card_pressed.bind(id))
 		card.squad_toggled.connect(_toggle_squad.bind(id))
