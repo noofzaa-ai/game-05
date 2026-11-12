@@ -26,4 +26,6 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-13 | Great Sword / Longbow with hair F animation speed | use the class clip speed (old files played 2.5x slower, likely a 24 fps export mistake) | attack timing marks fit the class speed | `tools/characters/split_studio05_hair.py`, docs/tech/studio_v20261111_inventory.md section 7
 - 2026-11-13 | Class armor / Hair G texture size on desktop | 1024 everywhere (Godot import settings are not per-platform) | no visible difference measured (<0.2/255 mean), simpler build | `art/characters/studio05/v1111/**/*.import` size_limit
 - 2026-11-13 | Boss answer "start with 3 races" read as: the 3-card starter squad has 3 different races (Alliance on day one); all 4 races exist from the start | matches the recommended default the Boss said yes to | design/gdd/races-and-classes.md
+- 2026-11-13 | Who fires race ultimates | fully automatic by the auto-pilot | the game is an auto-battler; the Boss ruled players do not press skills | design/gdd/races-and-classes.md 3.10
+- 2026-11-13 | Elf Magic ultimate revives downed allies | yes, 35% HP, once per ally per wave | gives Elf its "squad that will not stay down" identity | design/gdd/races-and-classes.md
 
