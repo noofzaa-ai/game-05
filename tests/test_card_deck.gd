@@ -58,6 +58,7 @@ func run(ctx) -> void:
 	# The profile keeps it, saves it, and the server command changes it.
 	var rules = ItemRulesLoader.load_default()
 	var camp = CampDataLoader.load_default(rules.tiers.size())
+	_starter_looks(ctx, rules, camp, cosmetics, classes)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 3
 	var profile = Profile.new_player(rules, camp, rng)
@@ -79,3 +80,50 @@ func run(ctx) -> void:
 	old_save.erase("card_deck")
 	var migrated = Profile.from_dict(old_save, rules, camp)
 	ctx.check("an old save without cards gets the starter deck", migrated != null and Deck.validate(migrated.card_deck, cosmetics) == "")
+
+
+## Boss 2026-11-13: a new player's cards each get their own eyes and makeup (Studio options), per seed.
+func _starter_looks(ctx, rules, camp, cosmetics, classes: Array) -> void:
+	var looks_of := func(seed_value: int) -> Dictionary:
+		var rng := RandomNumberGenerator.new()
+		rng.seed = seed_value
+		var p = Profile.new_player(rules, camp, rng)
+		var out := {}
+		for c in classes:
+			out[c] = p.card_deck["cards"][c].duplicate(true)
+		return out
+	var a: Dictionary = looks_of.call(11)
+	var irises := {}
+	var eyes := {}
+	var sound := true
+	for c in classes:
+		irises[a[c]["iris_style"]] = true
+		var tint := str(cosmetics.entry("eye_color", str(a[c]["eye_color"])).get("color", a[c]["eye_color"])).to_lower()
+		eyes[tint] = true
+		var starter := Deck.starter_card(c, cosmetics)
+		sound = sound and a[c]["hair"] == starter["hair"] and a[c]["outfit"] == starter["outfit"] and a[c]["skin"] == starter["skin"]
+		sound = sound and Deck.validate_card(c, a[c], cosmetics) == ""
+	ctx.check("starter looks: every card has its own iris style (%s)" % [irises.keys()], irises.size() == classes.size())
+	ctx.check("starter looks: every card has its own eye colour (%s)" % [eyes.keys()], eyes.size() == classes.size())
+	ctx.check("starter looks: class hair, armor and skin are kept and every card is valid", sound)
+	ctx.check("starter looks: same seed, same looks", looks_of.call(11) == a)
+	var differs := false
+	for s in [12, 13, 14, 15]:
+		differs = differs or looks_of.call(s) != a
+	ctx.check("starter looks: other seeds give other looks", differs)
+	var makeups := {}
+	for s in range(20, 30):
+		var l: Dictionary = looks_of.call(s)
+		for c in classes:
+			makeups[l[c]["makeup"]] = true
+	ctx.check("starter looks: both card makeup sets are used (%s)" % [makeups.keys()], makeups.size() == Deck.MAKEUPS.size())
+	var old = Profile.from_dict(JSON.parse_string(JSON.stringify(_old_save(rules, camp, cosmetics))), rules, camp)
+	ctx.check("starter looks: a saved deck is not changed on load", old != null and old.card_deck == Deck.initial(cosmetics))
+
+
+func _old_save(rules, camp, cosmetics) -> Dictionary:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 11
+	var d: Dictionary = Profile.new_player(rules, camp, rng).to_dict()
+	d["card_deck"] = Deck.initial(cosmetics)
+	return d

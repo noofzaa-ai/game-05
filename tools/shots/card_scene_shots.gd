@@ -1,8 +1,8 @@
 extends SceneTree
 ## Hub shot with the painted card scenes (client/card_scene_layers.gd), plus the character screen window.
 ## Run windowed: godot --path . --script res://tools/shots/card_scene_shots.gd   (ZORX_SIZE=WxH, default 1920x1080)
-## Output: build/card_scene/hub_<W>x<H>.png and char_<W>x<H>.png
-const OUT := "res://build/card_scene"
+## Output: build/card_scene/hub_<W>x<H>.png and char_<W>x<H>.png (ZORX_OUT=res://build/<folder> to change the folder)
+var OUT := "res://build/card_scene"
 
 
 func _initialize() -> void:
@@ -22,6 +22,8 @@ func run() -> void:
 	var size := Vector2i(1920, 1080)
 	if wanted.contains("x"):
 		size = Vector2i(int(wanted.split("x")[0]), int(wanted.split("x")[1]))
+	var out_env := OS.get_environment("ZORX_OUT")
+	OUT = out_env if not out_env.is_empty() else OUT
 	DirAccess.make_dir_recursive_absolute(OUT)
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
 	DisplayServer.window_set_size(size)

@@ -1,19 +1,21 @@
 extends RefCounted
-## A bag: a limited number of slots holding equipment (one piece per slot) and stacks of materials
-## (up to the material's stack size per slot), plus gold, which takes no slot. The run bag a
-## player carries into a stage and the camp stash are both Inventories.
+## A bag: a limited number of slots holding equipment (one piece per slot), plus gold and materials,
+## which take no slot (Boss 2026-11-13: materials are an unlimited counter per material id; only items
+## use slots). The run bag a player carries into a stage and the camp stash are both Inventories.
+## Old saves need no migration: `materials` was always saved as {id: count}; it simply stops filling slots.
 ## EXTENDING: new kinds of things to carry (potions, keys) are new arrays here and a rule in slots_used().
 
 const Item := preload("res://logic/item.gd")
 
 const DEFAULT_STACK := 99
+const MATERIAL_MAX := 1_000_000_000  ## a safety ceiling for one material's counter (effectively unlimited)
 
 var capacity := 0  ## number of slots
 var items: Array[Item] = []
 var materials: Dictionary = {}  ## material id -> count
 var gold := 0
 
-var _stack_sizes: Dictionary  ## material id -> how many fit in one slot
+var _stack_sizes: Dictionary  ## material id -> camp.json "stack": how many one transfer / one grid cell shows (no slot use)
 
 
 func _init(slot_capacity: int, material_stack_sizes: Dictionary = {}) -> void:
@@ -25,11 +27,9 @@ func stack_size(material_id: String) -> int:
 	return maxi(1, int(_stack_sizes.get(material_id, DEFAULT_STACK)))
 
 
+## Only items use slots; materials are a counter (Boss 2026-11-13).
 func slots_used() -> int:
-	var used := items.size()
-	for id in materials:
-		used += ceili(float(materials[id]) / float(stack_size(id)))
-	return used
+	return items.size()
 
 
 func free_slots() -> int:
@@ -57,15 +57,12 @@ func take_item(index: int) -> Item:
 	return item
 
 
-## How many more of a material fit: the room left in its current stack plus whole free slots.
+## How many more of a material fit: materials take no slot, so only the counter's ceiling limits it.
 func room_for(material_id: String) -> int:
-	var size := stack_size(material_id)
-	var have := int(materials.get(material_id, 0))
-	var in_current := ceili(float(have) / float(size)) * size - have
-	return in_current + maxi(0, free_slots()) * size
+	return maxi(0, MATERIAL_MAX - material_count(material_id))
 
 
-## Adds up to `count` of a material; returns how many were really added (less if the bag is full).
+## Adds up to `count` of a material; returns how many were really added (all of it, below MATERIAL_MAX).
 func add_material(material_id: String, count: int) -> int:
 	var added := mini(maxi(count, 0), room_for(material_id))
 	if added > 0:

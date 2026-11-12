@@ -109,6 +109,47 @@ static func initial(cosmetics = null) -> Dictionary:
 	return {"v": 1, "cards": cards, "squad": squad}
 
 
+## Boss 2026-11-13: a NEW player's cards do not all look alike. Each card gets its own iris style (no two
+## cards share one), the eye colour that style brings (Studio irisSelect; the Classic style takes a colour of
+## data/cosmetics/eye_colors.json instead, so no two cards share an eye colour either) and a makeup set, all
+## from the existing Studio-sourced option lists. Hair style and class armor stay the class starter's.
+## Hair colour is not varied: the card has no hair-colour part (the Studio only has a free colour input).
+## `rng` is a profile-creation RNG (deterministic per seed). Saved decks never pass through here.
+static func vary_starter_looks(deck: Dictionary, cosmetics, rng: RandomNumberGenerator) -> void:
+	if cosmetics == null:
+		return
+	var styles: Array = options("", "iris_style", cosmetics)
+	var colors: Array = options("", "eye_color", cosmetics)
+	_shuffle(styles, rng)
+	_shuffle(colors, rng)
+	var used_colors := {}
+	var index := 0
+	for class_id in classes():
+		if not deck.get("cards", {}).has(class_id):
+			continue
+		if not styles.is_empty():
+			set_look(deck, class_id, "iris_style", str(styles[index % styles.size()]), cosmetics)
+		var card: Dictionary = deck["cards"][class_id]
+		if str(card.get("iris_style", "0")) == "0" or used_colors.has(str(card["eye_color"])):
+			for id in colors:  # the Classic iris (or a repeat) takes the first unused eye colour of the list
+				var tint := str(cosmetics.entry("eye_color", str(id)).get("color", "")).to_lower()
+				if not used_colors.has(str(id)) and not used_colors.has(tint):
+					card["eye_color"] = str(id)
+					break
+		used_colors[str(card["eye_color"])] = true
+		used_colors[str(cosmetics.entry("eye_color", str(card["eye_color"])).get("color", card["eye_color"])).to_lower()] = true
+		card["makeup"] = MAKEUPS[rng.randi_range(0, MAKEUPS.size() - 1)]
+		index += 1
+
+
+static func _shuffle(list: Array, rng: RandomNumberGenerator) -> void:
+	for i in range(list.size() - 1, 0, -1):  # Fisher-Yates with the given RNG (Array.shuffle uses the global one)
+		var j := rng.randi_range(0, i)
+		var swap = list[i]
+		list[i] = list[j]
+		list[j] = swap
+
+
 ## "" when the deck is sound, else what is wrong. Unknown classes, hairs the class cannot wear, a
 ## repeated or oversized squad, or skills before the skill system exists are all rejected.
 static func validate(deck: Variant, cosmetics = null) -> String:

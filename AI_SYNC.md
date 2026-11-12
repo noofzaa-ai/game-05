@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | gameplay-programmer via PO | feature/class-weapons-card-screen | วัตถุดิบเป็นตัวนับไม่กินช่องกระเป๋า (`logic/inventory.gd`) · การ์ดผู้เล่นใหม่สุ่มแบบม่านตา/สีตา/ขอบตาไม่ซ้ำกัน (`CardDeck.vary_starter_looks`) · เทสต์ 2212/82
+
 - 2026-11-13 | ui-programmer via PO | feature/class-weapons-card-screen | ฉากในการ์ด 3 ชั้น (far/mid/near + เงาใต้เท้า) `client/card_scene_layers.gd`, art `art/ui/class_cards/scene/` (VRAM compress, 768px) เลื่อนตามการเอียง; หน้าตัวละครใช้ฉากนิ่ง · เทสต์ 2197/82
 
 - 2026-11-13 | ui-programmer via PO | feature/class-weapons-card-screen | การ์ดสลับท่า idle (`idle_variants` ใน data/classes, `play_idle_clip()` ในโมเดล, เฉพาะการ์ด/หน้าตัวละคร) · แถบทัพเป็นภาพครึ่งตัวพอดีช่อง · เทสต์ 2196/82

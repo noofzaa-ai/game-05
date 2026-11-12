@@ -91,6 +91,11 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	profile.ensure_starter_cards(item_rules)
 	profile.ensure_starter_shields(item_rules)
 	profile.armor_migration_version = 2
+	# Boss 2026-11-13: each new card gets its own eyes and makeup. A child RNG seeded from the creation RNG's
+	# state keeps it deterministic per seed without consuming draws the rest of the game relies on.
+	var looks_rng := RandomNumberGenerator.new()
+	looks_rng.seed = hash([rng.state, "starter_card_looks"])
+	CardDeck.vary_starter_looks(profile.card_deck, preload("res://logic/cosmetic_options.gd").load_default(), looks_rng)
 	return profile
 
 
