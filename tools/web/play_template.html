@@ -366,9 +366,10 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
     bar.hidden = false;
     bar.removeAttribute('value');
     loadManifest().then(function (manifest) {
-      // one bar for both steps: engine + core (before the engine runs), then the content packs (in the game)
+      // one bar for both steps: engine + core (before the engine runs), then the boot content packs (in the
+      // game). The battle packs download later in the background on the card screen, so they are not counted.
       const first = (manifest.engine_bytes || 1) + (manifest.core_bytes || 1);
-      const packs = manifest.packs || [];
+      const packs = (manifest.packs || []).filter(function (p) { return (p.stage || 'boot') === 'boot'; });
       const formats = new Set(packs.map(function (p) { return p.format || ''; }).filter(Boolean)).size || 1;
       let all = first + packs.reduce(function (n, p) { return n + (p.bytes || 0) / (p.format ? formats : 1); }, 0);
       downloadTotal = all;

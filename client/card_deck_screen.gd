@@ -27,6 +27,7 @@ const ItemAssets := preload("res://client/item_assets.gd")
 const CampScreen := preload("res://client/camp_screen.gd")
 const GraphicsPanel := preload("res://client/graphics_panel.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
+const PackFetcher := preload("res://client/pack_fetcher.gd")  ## web: the battle packs FIGHT waits for
 const TITLE_SCENE := "res://scenes/title.tscn"
 
 signal card_selected(class_id: String)
@@ -86,6 +87,8 @@ var _slot_numbers: Array = []
 var _fight: Button
 var _fight_art: TextureRect
 var _fight_label: Label
+var _fight_progress: Label  ## web build: "Loading 42%" while the battle packs download (client/pack_fetcher.gd)
+var _fight_waiting := false  ## FIGHT was pressed before the battle packs were in
 var _fight_glow: Panel
 var _stage_label: Label
 var _cards := {}  ## class id -> HubCard
@@ -1014,6 +1017,11 @@ func _build_deck_layer() -> void:
 	_fight.add_child(_fight_art)
 	_fight_label = CardTokens.hub_label(CardTokens.t("fight"), CardTokens.FONT_HUB_FIGHT, CardTokens.HUB_INK, 1.0)
 	_fight.add_child(_fight_label)
+	_fight_progress = CardTokens.hub_label("", CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium")
+	_fight_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_fight_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_fight_progress.visible = false
+	_fight.add_child(_fight_progress)
 	_stage_label = CardTokens.hub_label(CardTokens.stage_name(), CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium")
 	_deck_layer.add_child(_stage_label)
 
@@ -1182,6 +1190,9 @@ func _layout() -> void:
 	_fight_label.size = Vector2(text_w, fight_h * 0.5)
 	_fight_label.position = Vector2(fight_w * CardTokens.HUB_FIGHT_TEXT.x - text_w * 0.5, fight_h * CardTokens.HUB_FIGHT_TEXT.y - fight_h * 0.25)
 	CardTokens.hub_fit(_fight_label, _fight_label.text, CardTokens.FONT_HUB_FIGHT, text_w, CardTokens.HUB_INK if not _fight.disabled else CardTokens.HUB_SLOT_TEXT, s)
+	_fight_progress.size = Vector2(fight_w, CardTokens.FONT_HUB_STAGE * 1.6 * s)
+	_fight_progress.position = Vector2(0.0, fight_h - _fight_progress.size.y * 1.05)
+	_fit_fight_progress()
 	_stage_label.size = Vector2(fight_w, CardTokens.FONT_HUB_STAGE * 1.6 * s)
 	_stage_label.position = Vector2(fight_x, _fight.position.y - _stage_label.size.y)
 	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.FONT_HUB_STAGE, fight_w, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium")
@@ -2159,6 +2170,7 @@ func portrait_slot(class_id: String, kind: String) -> Control:
 # ================================================================== motion and input
 func _process(delta: float) -> void:
 	_time += delta
+	_update_fight_progress()
 	if _mode == "deck":
 		for card in _cards.values():
 			card.animate(delta, not reduced_motion)
@@ -2264,8 +2276,39 @@ func _send_reset(class_id: String) -> void:
 	_sync_from_profile()
 
 
+## Web build: the battle packs (maps, monsters, skill VFX) download in the background while the player is here.
+## FIGHT waits for them with a small readout on the button; when they are in (or on desktop) it starts at once.
+func _update_fight_progress() -> void:
+	if _fight_progress == null:
+		return
+	var ready := PackFetcher.battle_ready(get_tree())
+	var text := "" if ready else CardTokens.t("fight_loading") % int(PackFetcher.battle_fraction(get_tree()) * 100.0)
+	var node := get_tree().root.get_node_or_null(PackFetcher.BATTLE_NODE)
+	if node != null and node.state == node.State.FAILED:
+		text = CardTokens.t("fight_load_failed")
+	if text != _fight_progress.text:
+		_fight_progress.text = text
+		_fight_progress.visible = text != ""
+		_fit_fight_progress()
+	if _fight_waiting and ready:
+		_fight_waiting = false
+		_start_fight()
+
+
+func _fit_fight_progress() -> void:
+	if _fight_progress != null and _fight_progress.visible:
+		CardTokens.hub_fit(_fight_progress, _fight_progress.text, CardTokens.FONT_HUB_STAGE, _fight_progress.size.x, CardTokens.HUB_CREAM, _s, CardTokens.OUTLINE_HUB, "medium")
+
+
 func _start_fight() -> void:
 	if _busy or _mode == "summon":
+		return
+	if not PackFetcher.battle_ready(get_tree()):
+		var node := get_tree().root.get_node_or_null(PackFetcher.BATTLE_NODE)
+		if node != null and node.state == node.State.FAILED:
+			node.retry()
+		_fight_waiting = true
+		toast(CardTokens.t("fight_wait"))
 		return
 	_busy = true
 	play_summon(_squad())

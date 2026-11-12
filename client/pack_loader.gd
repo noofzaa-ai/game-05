@@ -1,26 +1,26 @@
 extends Control
 ## Boot scene (project main scene: scenes/boot.tscn). On the split web build it downloads the
-## content packs listed in the manifest, loads them with ProjectSettings.load_resource_pack and only
-## then opens the title screen, so nothing touches art before its pack is in. Desktop, editor and the headless
-## tests have no manifest: they go straight to the title screen and load from the project folder.
+## content packs the card screen needs ("boot" stage), mounts them, then opens the game. The "battle"
+## packs (maps, monsters, skill VFX) start downloading right after, in the background, in the persistent
+## /root/BattlePacks node (client/pack_fetcher.gd); FIGHT on the card screen waits for them.
+## Desktop, editor and the headless tests have no manifest: they go straight on and load from the project folder.
 ##
 ## Load order: the engine and the core pack (code, scenes, data, audio) are fetched by play.html
-## before the engine starts; then every content pack here, all downloads in parallel, mounted in
-## manifest order. Texture packs come in one variant per GPU format (".s3tc" desktop, ".etc2"
-## mobile); only the variant this device will read is downloaded.
+## before the engine starts; then the boot packs here, all downloads in parallel, mounted in manifest
+## order; then the battle packs in the background (Boss 2026-11-13, two-stage loading). Texture packs
+## come in one variant per GPU format (".s3tc" desktop, ".etc2" mobile); only the variant this device
+## will read is downloaded.
 ## The page gives us the manifest as window.zorxBoot = {base: "<absolute pack URL>", manifest: {...}}
 ## (see tools/web/play_template.html and docs/tech/web_hosting.md).
 
 const PackLayout := preload("res://client/pack_layout.gd")
+const PackFetcher := preload("res://client/pack_fetcher.gd")
 const NEXT_SCENE := "res://scenes/title.tscn"  ## the title screen (its Start opens the campfire hub)
-const RETRIES := 3
 
 var _label: Label
 var _bar: ProgressBar
-var _packs: Array = []  # [{name, file, bytes, ...}] to load
-var _requests: Dictionary = {}  # name -> HTTPRequest
-var _data: Dictionary = {}  # name -> PackedByteArray
-var _tries: Dictionary = {}
+var _boot: Node  ## PackFetcher for the boot packs
+var _battle_packs: Array = []
 var _base := ""
 var _failed := false
 
@@ -33,19 +33,26 @@ func _ready() -> void:
 	_build_ui()
 	var errors := []
 	_base = str(boot.get("base", ""))
-	_packs = choose_packs(PackLayout.content_packs(boot.get("manifest"), errors), _supported_formats())
-	print("pack loader: GPU formats %s, loading %s" % [_supported_formats(), _packs.map(func(p): return str(p.name))])
+	var chosen := choose_packs(PackLayout.content_packs(boot.get("manifest"), errors), _supported_formats())
 	if not errors.is_empty():
 		_fail("bad pack manifest: %s" % [errors])
 		return
-	var selected_bytes := 0
-	for p in _packs: selected_bytes += int(p.get("bytes", 0))
-	JavaScriptBridge.eval("if (window.zorxBootPlan) window.zorxBootPlan(%d);" % selected_bytes)
-	if _packs.is_empty():
-		_finish()
-		return
-	for p in _packs:
-		_start(p)
+	var boot_packs := PackLayout.packs_for_stage(chosen, PackLayout.BOOT)
+	_battle_packs = PackLayout.packs_for_stage(chosen, PackLayout.BATTLE)
+	print("pack loader: GPU formats %s, boot %s, battle %s" % [_supported_formats(), _names(boot_packs), _names(_battle_packs)])
+	var boot_bytes := 0
+	for p in boot_packs: boot_bytes += int(p.get("bytes", 0))
+	JavaScriptBridge.eval("if (window.zorxBootPlan) window.zorxBootPlan(%d);" % boot_bytes)
+	_boot = PackFetcher.new()
+	_boot.name = "BootPacks"
+	add_child(_boot)
+	_boot.finished.connect(_on_boot_packs)
+	_boot.failed.connect(_fail)
+	_boot.start(boot_packs, _base)
+
+
+static func _names(list: Array) -> Array:
+	return list.map(func(p): return str(p.name))
 
 
 ## The content packs this device needs: plain packs plus, for packs with a "format", only the first
@@ -82,77 +89,29 @@ func _page_boot():
 	return parsed if parsed is Dictionary else null
 
 
-func _start(p: Dictionary) -> void:
-	var req := HTTPRequest.new()
-	req.accept_gzip = true
-	req.timeout = 120.0
-	add_child(req)
-	_requests[p.name] = req
-	_tries[p.name] = int(_tries.get(p.name, 0)) + 1
-	req.request_completed.connect(_on_done.bind(p, req))
-	var err := req.request(PackLayout.pack_url(_base, str(p.file)))
-	if err != OK:
-		_on_done(HTTPRequest.RESULT_CANT_CONNECT, 0, PackedStringArray(), PackedByteArray(), p, req)
-
-
-func _on_done(result: int, code: int, _headers, body: PackedByteArray, p: Dictionary, req: HTTPRequest) -> void:
-	_requests.erase(p.name)
-	req.queue_free()
-	if _failed:
-		return
-	if result != HTTPRequest.RESULT_SUCCESS or code != 200:
-		if int(_tries.get(p.name, 0)) < RETRIES:
-			push_warning("pack %s: result %d HTTP %d, retrying" % [p.file, result, code])
-			_start(p)
-		else:
-			_fail("could not download %s (result %d, HTTP %d)" % [p.file, result, code])
-		return
-	var bytes := PackLayout.unwrap(body)
-	if bytes.is_empty():
-		_fail("pack %s is empty or not a valid gzip" % p.file)
-		return
-	_data[p.name] = bytes
-	if _data.size() == _packs.size():
-		_mount_all()
-
-
-func _mount_all() -> void:
+func _on_boot_packs() -> void:
 	_label.text = "Preparing…"
-	for p in _packs:  # mounted in manifest order, whatever order the downloads finished in
-		var path := _write_pack(str(p.file), _data[p.name])
-		if path == "" or not ProjectSettings.load_resource_pack(path):
-			_fail("could not open pack %s" % p.file)
-			return
-		_data.erase(p.name)
+	start_battle_packs(get_tree(), _battle_packs, _base)
 	_finish()
 
 
-## Packs go to the in-memory /tmp (not user://, which the web build mirrors into IndexedDB).
-func _write_pack(file: String, bytes: PackedByteArray) -> String:
-	for dir in ["/tmp/zorx_packs", "user://packs"]:
-		DirAccess.make_dir_recursive_absolute(dir)
-		var path: String = dir.path_join(file.get_file())
-		var f := FileAccess.open(path, FileAccess.WRITE)
-		if f == null:
-			continue
-		f.store_buffer(bytes)
-		f.close()
-		return path
-	return ""
+## Starts the background download of the battle packs in the persistent /root/BattlePacks node (once).
+static func start_battle_packs(tree: SceneTree, packs: Array, base: String) -> Node:
+	var node := tree.root.get_node_or_null(PackFetcher.BATTLE_NODE)
+	if node != null:
+		return node
+	node = PackFetcher.new()
+	node.name = PackFetcher.BATTLE_NODE
+	tree.root.add_child(node)
+	node.start(packs, base)
+	return node
 
 
 func _process(_delta: float) -> void:
-	if _bar == null or _failed or _packs.is_empty():
+	if _bar == null or _failed or _boot == null:
 		return
-	var done := 0.0
-	var total := 0.0
-	for p in _packs:
-		var size := float(p.get("bytes", 1))
-		total += size
-		if _data.has(p.name):
-			done += size
-		elif _requests.has(p.name):
-			done += minf(size, float(_requests[p.name].get_downloaded_bytes()))
+	var done := float(_boot.done_bytes())
+	var total := float(_boot.total_bytes())
 	_bar.value = 100.0 * done / maxf(total, 1.0)
 	_label.text = "Loading game data %d%%" % int(_bar.value)
 	JavaScriptBridge.eval("window.zorxBootProgress && window.zorxBootProgress(%f, %f)" % [done, total], true)

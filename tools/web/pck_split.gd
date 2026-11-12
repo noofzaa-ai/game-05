@@ -153,8 +153,8 @@ func _split(pck_path: String, layout_path: String, out_dir: String) -> int:
 	if not _read_dir(pck_path):
 		return 1
 	var layout := PackLayout.read_layout(layout_path)
-	if layout.is_empty():
-		printerr("bad layout file " + layout_path)
+	if layout.is_empty() or not PackLayout.layout_errors(layout).is_empty():
+		printerr("bad layout file %s %s" % [layout_path, PackLayout.layout_errors(layout)])
 		return 1
 	var owner := _assign(layout)
 	var names := []  # layout order, each pack followed by its format variants
@@ -194,8 +194,9 @@ func _split(pck_path: String, layout_path: String, out_dir: String) -> int:
 			if owner[_entries[i].path] == pack:
 				DirAccess.remove_absolute(tmp.path_join("%d.bin" % i))
 		var parts: PackedStringArray = str(pack).split(".")
-		report.append({"name": pack, "format": parts[1] if parts.size() > 1 else "", "files": count, "content_bytes": raw})
-		print("pack %-20s %5d files %8.2f MB" % [pack, count, raw / 1048576.0])
+		var stage := PackLayout.stage_of(layout, pack)
+		report.append({"name": pack, "stage": stage, "format": parts[1] if parts.size() > 1 else "", "files": count, "content_bytes": raw})
+		print("pack %-20s %-6s %5d files %8.2f MB" % [pack, stage, count, raw / 1048576.0])
 	DirAccess.remove_absolute(tmp)
 	var out := FileAccess.open(out_dir.path_join("split.json"), FileAccess.WRITE)
 	out.store_string(JSON.stringify(report, "  "))

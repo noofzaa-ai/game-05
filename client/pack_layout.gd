@@ -7,6 +7,11 @@ extends RefCounted
 ## Anything not matched, and every script/scene/data file whatever its folder, goes in "core".
 
 const CORE := "core"
+## Two-stage loading (Boss 2026-11-13): "boot" packs load before the card screen, "battle" packs in the
+## background while the player is on it (FIGHT waits for them). A layout pack without "stage" is "boot".
+const BOOT := "boot"
+const BATTLE := "battle"
+const STAGES := [BOOT, BATTLE]
 ## Kept in core whatever folder they sit in: code, scenes and project data (one place for class_name & co).
 const CORE_EXTENSIONS := ["gd", "gdc", "gde", "gdshader", "gdshaderinc", "shader", "tscn", "scn", "uid", "json", "cfg", "binary"]
 const CORE_PREFIXES := ["res://data/", "res://.godot/global_script_class_cache", "res://.godot/uid_cache", "res://project.binary"]
@@ -50,6 +55,31 @@ static func pack_for_path(layout: Dictionary, path: String) -> String:
 	return best
 
 
+## The loading stage of the layout pack called `name` ("core" and unknown names are BOOT; a format
+## variant "<pack>.<format>" has its base pack's stage).
+static func stage_of(layout: Dictionary, name: String) -> String:
+	var base := name.get_slice(".", 0)
+	for p in layout.get("packs", []):
+		if str(p.get("name", "")) == base:
+			var stage := str(p.get("stage", BOOT))
+			return stage if STAGES.has(stage) else BOOT
+	return BOOT
+
+
+## Layout check: every stage value is "boot" or "battle". Returns the problems ([] = fine).
+static func layout_errors(layout: Dictionary) -> Array:
+	var errors := []
+	for p in layout.get("packs", []):
+		if p.has("stage") and not STAGES.has(str(p["stage"])):
+			errors.append("pack %s: stage must be boot or battle, not %s" % [p.get("name", "?"), p["stage"]])
+	return errors
+
+
+## The manifest packs of one loading stage, in manifest order. Old manifests have no "stage": all boot.
+static func packs_for_stage(packs: Array, stage: String) -> Array:
+	return packs.filter(func(p): return str(p.get("stage", BOOT)) == stage)
+
+
 ## "path.s3tc=..." style lines of an exported .import file: {format: res://.godot/... path}.
 static func format_paths(import_text: String) -> Dictionary:
 	var out := {}
@@ -70,7 +100,7 @@ static func linked_paths(text: String) -> Array:
 
 
 ## Manifest written by build_web.ps1 (packs.json) and handed to the game by play.html:
-## {"build": "<id>", "engine": "...", "core": "...", "packs": [{"name", "file", "bytes", "raw_bytes"}]}
+## {"build": "<id>", "engine": "...", "core": "...", "packs": [{"name", "stage", "format", "file", "bytes", "raw_bytes"}]}
 ## Returns the content packs to load, in order, or [] with errors filled when it is malformed.
 static func content_packs(manifest, errors: Array) -> Array:
 	if not (manifest is Dictionary):
@@ -89,6 +119,8 @@ static func content_packs(manifest, errors: Array) -> Array:
 			continue
 		if not is_versioned(str(p.file)):
 			errors.append("pack file name has no content hash: " + str(p.file))
+		if p.has("stage") and not STAGES.has(str(p["stage"])):
+			errors.append("pack %s has an unknown stage: %s" % [p.name, p["stage"]])
 		out.append(p)
 	return out if errors.is_empty() else []
 

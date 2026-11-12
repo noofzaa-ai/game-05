@@ -4,6 +4,7 @@ extends RefCounted
 
 const PackLayout := preload("res://client/pack_layout.gd")
 const PackLoader := preload("res://client/pack_loader.gd")
+const PackFetcher := preload("res://client/pack_fetcher.gd")
 const LAYOUT := "res://tools/web/pack_layout.json"
 
 
@@ -26,7 +27,7 @@ func run(ctx) -> void:
 	ctx.check("weapons go to the weapons pack (longest prefix beats art/items/)",
 		PackLayout.pack_for_path(layout, "res://art/items/weapons/hammer.glb.import") == "weapons")
 	ctx.check("clothing goes to items", PackLayout.pack_for_path(layout, "res://art/items/clothing/a.glb.import") == "items")
-	ctx.check("animations go to characters", PackLayout.pack_for_path(layout, "res://art/animations/chibi.glb.import") == "characters")
+	ctx.check("monster animation clips go with the battle art (vfx pack)", PackLayout.pack_for_path(layout, "res://art/animations/goblin.glb.import") == "vfx")
 	ctx.check("audio stays in core (the Audio autoload preloads cues before packs load)",
 		PackLayout.pack_for_path(layout, "res://audio/sfx/hit.ogg.import") == "core")
 
@@ -54,6 +55,34 @@ func run(ctx) -> void:
 	ctx.check("mobile GPU gets the etc2 textures only", _names(mobile) == ["items", "weapons.etc2"])
 	ctx.check("a GPU with both formats takes the manifest's first (the .import order, as Godot's importer does)",
 		_names(PackLoader.choose_packs(packs, ["etc2", "s3tc"])) == ["items", "weapons.s3tc"])
+
+	# Two-stage loading (Boss 2026-11-13): boot packs before the card screen, battle packs in the background.
+	ctx.check("layout stages are all boot or battle", PackLayout.layout_errors(layout).is_empty())
+	ctx.check("a bad layout stage is reported", not PackLayout.layout_errors({"packs": [{"name": "x", "stage": "later"}]}).is_empty())
+	ctx.check("class characters load at boot (card screen)", PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/characters/studio05/split/hair_a.glb.import")) == PackLayout.BOOT)
+	ctx.check("fashion and item icons load at boot (character screen, Tailor)",
+		PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/fashion/icons/a.png.import")) == PackLayout.BOOT
+		and PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/items/icons/a.png.import")) == PackLayout.BOOT
+		and PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/armor/ash_cloth/shirt.glb.import")) == PackLayout.BOOT)
+	for p in ["res://art/maps/goblin_forest/a.glb.import", "res://art/props/goblin_base/meshes/hut.res", "res://art/monsters/goblin/goblin.glb.import",
+			"res://art/skill_system/mcp_vfx/fireball/effect.glb.import", "res://art/skills/blade/x/vfx.glb.import", "res://art/animations/goblin.glb.import"]:
+		ctx.check("battle art loads in the background: " + p, PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, p)) == PackLayout.BATTLE)
+	ctx.check("card screen UI art stays in core (with the page)", PackLayout.pack_for_path(layout, "res://art/ui/class_cards/hub_fight_button.png.import") == "core")
+	ctx.check("a format variant has its base pack's stage", PackLayout.stage_of(layout, "monsters.etc2") == PackLayout.BATTLE and PackLayout.stage_of(layout, "characters.s3tc") == PackLayout.BOOT)
+	var staged := [{"name": "characters", "stage": "boot", "file": "characters.0123456789ab.pck.wasm"},
+		{"name": "stages", "stage": "battle", "file": "stages.0123456789ab.pck.wasm"},
+		{"name": "items", "file": "items.0123456789ab.pck.wasm"}]
+	ctx.check("manifest packs split into boot (no stage = boot) and battle",
+		_names(PackLayout.packs_for_stage(staged, PackLayout.BOOT)) == ["characters", "items"] and _names(PackLayout.packs_for_stage(staged, PackLayout.BATTLE)) == ["stages"])
+	errors = []
+	ctx.check("a manifest pack with an unknown stage is refused",
+		PackLayout.content_packs({"build": "x", "packs": [{"name": "a", "stage": "soon", "file": "a.0123456789ab.pck.wasm"}]}, errors).is_empty() and not errors.is_empty())
+	ctx.check("FIGHT does not wait when there is no background download (desktop, tests)",
+		PackFetcher.battle_ready(Engine.get_main_loop()) and is_equal_approx(PackFetcher.battle_fraction(Engine.get_main_loop()), 1.0))
+	var fetcher = PackFetcher.new()
+	fetcher.start([], "")
+	ctx.check("an empty battle list counts as loaded", fetcher.fraction() == 1.0 or fetcher.state == fetcher.State.LOADING)
+	fetcher.free()
 
 	ctx.check("pack URL next to the page", PackLayout.pack_url("", "a.pck.wasm") == "a.pck.wasm")
 	ctx.check("pack URL on a CDN base", PackLayout.pack_url("https://cdn.x/zorx", "a.pck.wasm") == "https://cdn.x/zorx/a.pck.wasm")

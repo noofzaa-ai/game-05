@@ -46,18 +46,24 @@ a longer prefix to `pack_layout.json` (for example `res://art/items/weapons/hamm
    `manifest.core` from the pack base and un-gzips them.
 3. The engine starts the main scene `scenes/boot.tscn` (`client/pack_loader.gd`). It reads `window.zorxBoot`,
    chooses the content packs (plain packs plus one texture format: the first format, in the manifest's order,
-   that `OS.has_feature` reports; this is the same rule Godot's importer uses to pick `path.<format>`),
-   downloads them in parallel with `HTTPRequest` (3 tries each), un-gzips them, writes them to the in-memory
-   `/tmp/zorx_packs/` and mounts them with `ProjectSettings.load_resource_pack` in manifest order.
-4. Only then does it open `scenes/hub.tscn`. The page keeps its loading card up (one progress bar for both steps)
-   until the game calls `window.zorxBootDone()`; `window.zorxBootFail(msg)` shows an error.
+   that `OS.has_feature` reports; this is the same rule Godot's importer uses to pick `path.<format>`), and
+   splits them by `stage`. The **boot** packs (`client/pack_fetcher.gd`) download in parallel with `HTTPRequest`
+   (3 tries each), are un-gzipped, written to the in-memory `/tmp/zorx_packs/` and mounted with
+   `ProjectSettings.load_resource_pack` in manifest order.
+4. Then it opens the class card screen. The page keeps its loading card up (one progress bar for engine + core +
+   boot packs only) until the game calls `window.zorxBootDone()`; `window.zorxBootFail(msg)` shows an error.
+5. The **battle** packs (maps, battle props, monsters, skill VFX, monster clips) start downloading in the
+   background in the persistent `/root/BattlePacks` node as soon as the card screen opens. FIGHT checks
+   `PackFetcher.battle_ready()`: if they are in it starts at once; if not, FIGHT shows "Loading battle NN%" and
+   starts by itself when they arrive. A failed battle download shows "Load failed, tap to retry" on FIGHT.
 
 No manifest (desktop, editor, headless tests, `--script` runs): the boot scene opens the hub at once and
 everything loads from the project folder.
 
-All packs load before the hub today (about 12 MB per device after gzip). Later packs that are only needed in
-stages could load in the background after the hub opens, but then every way into a stage must wait for them
-first (`GameState` scene changes); not done yet.
+Two-stage loading (Boss 2026-11-13): each pack in `tools/web/pack_layout.json` has `"stage": "boot"` or
+`"battle"` (missing = boot), copied into `packs.json`. Only FIGHT on the card screen enters a stage today; any new
+way into a stage (online rooms, previews) must also wait for `PackFetcher.battle_ready()`.
+Scenes (`.tscn`) always stay in core, so a map's `.tscn` is in core but its meshes/textures are in the battle pack.
 
 ## Pack base URL (CDN)
 

@@ -110,7 +110,10 @@ def package(stage, args):
         if name == 'core':
             continue
         part = publish(split / (name + '.pck'), name, 'pck.wasm', stage)
-        packs.append(dict(name=name, format=entry.get('format', ''), file=part['file'],
+        load_stage = entry.get('stage', 'boot')
+        if load_stage not in ('boot', 'battle'):
+            raise RuntimeError(f'Invalid stage for pack {name!r}: {load_stage!r}')
+        packs.append(dict(name=name, stage=load_stage, format=entry.get('format', ''), file=part['file'],
                           bytes=part['bytes'], raw_bytes=part['raw_bytes']))
     seed = '|'.join([engine['hash'], core['hash']] + [p['file'] for p in packs])
     build_id = hashlib.sha256(seed.encode()).hexdigest()[:12]
@@ -130,8 +133,12 @@ def package(stage, args):
     config.setdefault('fileSizes', {})['index.pck'] = core['raw_bytes']
     formats = [p['format'] for p in packs if p['format']]
     pick = formats[0] if formats else ''
+    # First download (what the loading page shows): engine + core + the boot packs, one texture format.
+    # The battle packs load in the background on the card screen (client/pack_fetcher.gd).
+    device = [p for p in packs if not p['format'] or p['format'] == pick]
     download = engine['bytes'] + core['bytes'] + (stage / 'index.js').stat().st_size
-    download += sum(p['bytes'] for p in packs if not p['format'] or p['format'] == pick)
+    battle = sum(p['bytes'] for p in device if p['stage'] == 'battle')
+    download += sum(p['bytes'] for p in device if p['stage'] == 'boot')
     background = ROOT / 'assets/ui/camp_menu/farm-v1.png'
     background_name = 'loading.' + hashlib.sha256(background.read_bytes()).hexdigest()[:12] + '.png'
     shutil.copyfile(background, stage / background_name)
@@ -149,6 +156,8 @@ def package(stage, args):
     for filename in ('index.html', 'index.pck', 'index.wasm'):
         (stage / filename).unlink()
     shutil.rmtree(split)
+    print(f'\nPer device ({pick or "no"} textures): boot download {download / MIB:.2f} MiB, '
+          f'battle download {battle / MIB:.2f} MiB, total {(download + battle) / MIB:.2f} MiB')
     print(f'\nSize table (build {build_id}):')
     oversized = []
     for file in sorted(stage.iterdir(), key=lambda p: p.stat().st_size, reverse=True):

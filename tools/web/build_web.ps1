@@ -100,7 +100,8 @@ $packs = @()
 foreach ($p in (Get-Content "$split\split.json" -Raw | ConvertFrom-Json)) {
     if ($p.name -eq "core") { continue }
     $f = Publish-File "$split\$($p.name).pck" $p.name "pck.wasm"
-    $packs += [ordered]@{ name = $p.name; format = $p.format; file = $f.file; bytes = $f.bytes; raw_bytes = $f.raw_bytes }
+    $stage = if ($p.stage) { $p.stage } else { "boot" }
+    $packs += [ordered]@{ name = $p.name; stage = $stage; format = $p.format; file = $f.file; bytes = $f.bytes; raw_bytes = $f.raw_bytes }
 }
 $buildId = (($engine.hash, $core.hash) + ($packs | ForEach-Object { $_.file }) -join "|")
 $buildId = [BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::UTF8.GetBytes($buildId))).Replace("-", "").Substring(0, 12).ToLower()
@@ -119,7 +120,8 @@ if (-not $match.Success) { throw "GODOT_CONFIG not found in the exported index.h
 # per-device download: engine + core + plain packs + one texture format (formats are alternatives)
 $formats = @($packs | Where-Object { $_.format } | ForEach-Object { $_.format } | Select-Object -Unique)
 $download = $engine.bytes + $core.bytes + (Get-Item "$out\index.js").Length
-foreach ($p in $packs) { if (-not $p.format) { $download += $p.bytes } elseif ($p.format -eq $formats[0]) { $download += $p.bytes } }
+# (only the boot packs: the battle packs load in the background on the card screen, client/pack_fetcher.gd)
+foreach ($p in $packs) { if ($p.stage -eq "battle") { continue }; if (-not $p.format) { $download += $p.bytes } elseif ($p.format -eq $formats[0]) { $download += $p.bytes } }
 $download /= 1MB
 $loadingSource = "$root\assets\ui\camp_menu\farm-v1.png"
 $loadingHash = (Get-FileHash $loadingSource -Algorithm SHA256).Hash.ToLower().Substring(0,12)
