@@ -164,8 +164,30 @@ func _finish() -> void:
 	_open_game()
 
 
+## Boss 2026-11-13: no title screen in between; go straight to the class card screen. With an account
+## session from the web page (production) it signs in first; otherwise (dev machine, desktop) it plays offline.
+## The title screen stays only as a fallback when the online sign-in fails.
 func _open_game() -> void:
-	get_tree().change_scene_to_file(NEXT_SCENE)
+	var game_state = get_node_or_null("/root/GameState")
+	if game_state == null or DisplayServer.get_name() == "headless":
+		get_tree().change_scene_to_file(NEXT_SCENE)
+		return
+	var online = get_node_or_null("/root/Online")
+	var has_account := OS.has_feature("web") and bool(JavaScriptBridge.eval("window.zorxGoogleSession != null", true))
+	if has_account and online != null:
+		JavaScriptBridge.eval("window.zorxAutoEnter = false", true)
+		online.begin()
+		while online.status == online.Status.CONNECTING:
+			await online.changed
+		if await game_state.connect_account_profile():
+			get_tree().change_scene_to_file(game_state.CARD_DECK_SCENE)
+			return
+		get_tree().change_scene_to_file(NEXT_SCENE)  # sign-in failed: the title screen shows why and can retry
+		return
+	if online != null:
+		online.use_offline()
+	game_state.ensure_profile()
+	get_tree().change_scene_to_file(game_state.CARD_DECK_SCENE)
 
 
 func _fail(message: String) -> void:

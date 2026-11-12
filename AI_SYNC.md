@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | PO | develop | Boss: ตัดหน้า title ออก boot -> หน้าการ์ดเลย (`client/pack_loader.gd` `_open_game`): มี session บัญชีจากหน้าเว็บ = ล็อกอินออนไลน์ก่อน (ล้มเหลวถึงกลับหน้า title), ไม่มี = เล่นออฟไลน์ · เว็บ build 8442ee5d7712 · เทสต์ 2225/81
+
 - 2026-11-13 | PO | develop | `play_template.html`: บน localhost/127.0.0.1 ข้ามการล็อกอินบัญชีออนไลน์ (เล่นออฟไลน์บนเครื่อง dev) เว็บจริงยังต้องล็อกอิน · ขนาดดาวน์โหลดครั้งแรก 222 MB
 
 - 2026-11-13 | PO | develop | build เว็บสำเร็จบนเครื่อง dev (Windows): `build/web` build 1a135457db4a, Godot 4.7.2 web templates ติดตั้งแล้ว · บน Windows ต้องรัน `python -X utf8 pipeline/build_web.py` (python3 เป็น Store stub, log เป็น cp1252) · ขั้นเทสต์ใน pipeline ต้องการ 0 fail แต่ baseline มี 81 ข้อเก่า -> ใช้ --skip-tests หลังรันชุดเทสต์แยก · Docker Desktop ยังไม่ได้ติดตั้ง (ต้องสิทธิ์ admin)
