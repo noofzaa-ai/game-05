@@ -394,7 +394,10 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	# Poise is armor against flinching: each hit wears it down and the target keeps doing what it
 	# was doing (a brute keeps swinging) until it is gone, then it staggers and the armor comes back.
 	var armored := false
-	if target.max_poise > 0.0 and not killed:
+	# A race ultimate's wind-up is not staggered by hits (unbreakable poise, GDD races 3.10.3); stun/death still end it.
+	if not killed and target.state == Fighter.State.ATTACK and target.move_id == str(target.race_state.get("ult", {}).get("move", "-")):
+		armored = true
+	elif target.max_poise > 0.0 and not killed:
 		target.poise_wait = int(data.rules["poise_regen_delay_ticks"])
 		target.poise -= float(move["power"]) * float(data.rules["poise_damage_per_power"])
 		if target.poise > 0.0:
@@ -525,7 +528,7 @@ static func _update_idle(id: int, fighter: Fighter, body: SimBody, input: SimInp
 		if body.grounded and fighter.dodge_cooldown <= 0:
 			events.append({"type": "out_of_stamina", "player": id, "action": "dodge"})
 	# The ultimate runs on its gauge and costs no stamina.
-	if input.ultimate and body.grounded and style.has("ultimate"):
+	if input.ultimate and body.grounded and style.has("ultimate") and not RacePassives.owns_gauge(fighter):  # race cards: GameSim routes it (races 3.10.6)
 		var move: Dictionary = data.moves[style["ultimate"]]
 		if fighter.gauge >= float(move["gauge_cost"]):
 			fighter.gauge -= float(move["gauge_cost"])

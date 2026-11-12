@@ -23,6 +23,10 @@ const SimInput := preload("res://logic/sim_input.gd")
 const SkillBuild := preload("res://logic/skill_build.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
+const RaceUltimates := preload("res://logic/race_ultimates.gd")
+const Combat := preload("res://logic/combat.gd")
+const TARGETED_RADIUS := 3.0  ## use rule targeted_by_min: enemies this close to an ally count as on it
+const DEFAULT_HOLD_TICKS := 480  ## use.max_hold_ticks fallback
 
 const REACH := 1.5  ## stop walking and start swinging inside this distance (metres, body to body)
 const BLADE_REACH := 1.45  ## the weapon reach number REACH was tuned for (data/combat/weapons.json blade)
@@ -118,6 +122,13 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 		input.dodge = true  # kite: slide back from an enemy that got too close (pilot.kite_distance)
 		input.move = away.normalized() if away.length() > 0.05 else Vector2.LEFT
 		return input
+	if RaceUltimates.ready(sim, id) and wants_ultimate(sim, id, engage):  # race ultimate first (GDD 3.10.4)
+		input.ultimate = true
+		input.aim = _flat(sim.bodies[nearest].position - at)
+		return input
+	if int(me.race_state.get("refreshed_at", -1)) > int(memory.get("refresh_seen", -1)):
+		memory["refresh_seen"] = int(me.race_state["refreshed_at"])
+		memory["slot_ready_at"].clear()  # an ultimate cut the skill cooldowns: try the skills again at once
 	var target := pick_target(sim, id, profile, engage, nearest)
 	var target_distance: float = _flat(sim.bodies[target].position - at).length()
 	var toward: Vector2 = _flat(sim.bodies[target].position - at)
@@ -129,9 +140,9 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	input.aim = toward
 	if me.state != Fighter.State.IDLE and me.state != Fighter.State.ATTACK:
 		return input
-	# While the skill-build system is on, GameSim drops the ultimate button (and retires the gauge): pressing it
-	# would only waste the tick, and a full gauge would freeze the fighter in place, so swing instead.
-	if not SkillBuild.enabled() and me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
+	# The old weapon ultimate (no race ultimate): while the skill-build system is on, GameSim drops the button (and
+	# retires the gauge): pressing it would only waste the tick, and a full gauge would freeze the fighter, so swing.
+	if me.race_state.get("ultimate", {}).is_empty() and not SkillBuild.enabled() and me.gauge >= float(combat.rules["ultimate_gauge_max"]) and me.state == Fighter.State.IDLE and nearest_distance <= ULTIMATE_RANGE:
 		input.ultimate = true
 		return input
 	# Only book a slot when the cast can go out now, or the retry timer burns it mid-combo.
@@ -266,6 +277,105 @@ static func _ready_skill_slot(sim, me: Fighter, id: int, memory: Dictionary, tic
 		memory["next_slot"] = (slot + 1) % 4
 		return slot
 	return -1
+
+
+## Race ultimate fire rule (GDD 3.10.4): the cell's `use.any_of` matches now, or the gauge has been full for
+## `use.max_hold_ticks` and an enemy is within the class engage range. No randomness. Each condition may also carry
+## `and` [conditions] (all must match) and, as in the GDD data, `and_ally_hurt_below`.
+static func wants_ultimate(sim, id: int, engage: float) -> bool:
+	var me: Fighter = sim.fighters[id]
+	var use: Dictionary = me.race_state.get("ultimate", {}).get("use", {})
+	for rule in use.get("any_of", []):
+		if use_matches(sim, id, rule):
+			return true
+	var full_at := int(me.race_state.get("full_at", -1))
+	if full_at >= 0 and sim.tick_count - full_at >= int(use.get("max_hold_ticks", DEFAULT_HOLD_TICKS)):
+		return _enemies_within(sim, id, sim.bodies[id].position, engage) > 0
+	return false
+
+
+## One `use` condition (the fixed list of GDD 3.7).
+static func use_matches(sim, id: int, rule: Dictionary) -> bool:
+	var me: Fighter = sim.fighters[id]
+	var at: Vector3 = sim.bodies[id].position
+	var ok := false
+	match str(rule.get("if", "")):
+		"enemies_near":
+			ok = _enemies_within(sim, id, at, float(rule.get("radius", 3.0))) >= int(rule.get("min", 1))
+		"enemies_at_point":
+			ok = int(RaceUltimates.densest_point(sim, id, float(rule.get("cast_range", 9.0)), float(rule.get("radius", 3.0)))["count"]) >= int(rule.get("min", 1))
+		"ally_hurt":
+			var near: Array = _allies(sim, id).filter(func(a): return not rule.has("allies_within") or _flat(sim.bodies[a].position - at).length() <= float(rule["allies_within"]))
+			var hurt: Array = near.filter(func(a):
+				var f: Fighter = sim.fighters[a]
+				return f.hp < f.max_hp() * float(rule.get("below", 0.5)) and (not rule.has("targeted_by_min") or _enemies_within(sim, id, sim.bodies[a].position, TARGETED_RADIUS) >= int(rule["targeted_by_min"])))
+			if rule.has("allies_within"):
+				ok = not hurt.is_empty() and near.size() >= int(rule.get("min_allies", 1))
+			else:
+				ok = hurt.size() >= int(rule.get("min_allies", 1))
+		"squad_hp_below":
+			var allies := _allies(sim, id)
+			var total := 0.0
+			for a in allies:
+				total += sim.fighters[a].hp / maxf(1.0, sim.fighters[a].max_hp())
+			ok = not allies.is_empty() and total / float(allies.size()) < float(rule.get("below", 0.5))
+			if ok and rule.has("enemies_within"):
+				ok = _enemies_within(sim, id, at, float(rule["enemies_within"])) >= int(rule.get("min", 1))
+		"ally_downed":
+			ok = sim.fighters.keys().any(func(o): return sim.fighters[o].team == me.team and sim.fighters[o].state == Fighter.State.DOWNED and not sim.fighters[o].eliminated)
+		"self_hurt":
+			ok = me.hp < me.max_hp() * float(rule.get("below", 0.5))
+			if ok and rule.has("enemies_within"):
+				ok = _enemies_within(sim, id, at, float(rule["enemies_within"])) >= int(rule.get("min", 1))
+		"boss_near", "elite_near":
+			var key := "boss_types" if str(rule["if"]) == "boss_near" else "elite_types"
+			var kinds: Array = RaceData.load_default().rules.get(key, [])
+			ok = _enemy_ids(sim, id).any(func(e): return kinds.has(sim.fighters[e].enemy_type) and _flat(sim.bodies[e].position - at).length() <= float(rule.get("radius", 5.0)))
+		"execute_ready":
+			var low: Array = _enemy_ids(sim, id).filter(func(e):
+				var f: Fighter = sim.fighters[e]
+				return _flat(sim.bodies[e].position - at).length() <= float(rule.get("range", 12.0)) and f.hp < f.max_hp() * float(rule.get("below", 0.3)) and (not bool(rule.get("boss_only", false)) or is_boss(f)))
+			ok = low.size() >= int(rule.get("min", 1))
+		"skills_on_cooldown":
+			var system = sim.skill_system
+			var count := 0
+			for a in ([id] if int(rule.get("allies", 1)) <= 1 else _allies(sim, id)):
+				if system != null and system.casters.has(a):
+					var caster = system.casters[a]
+					var down := 0
+					for row in system.builds[a].skills:
+						if float(caster.cooldowns.get(str(row.skill), 0.0)) - caster.clock > 0.0:
+							down += 1
+					if down >= int(rule.get("min", 1)):
+						count += 1
+			ok = count >= int(rule.get("allies", 1))
+		"boss_telegraph":
+			ok = _enemy_ids(sim, id).any(func(e): return is_boss(sim.fighters[e]) and Combat.is_telegraphing(sim.fighters[e], sim.combat) and _flat(sim.bodies[e].position - at).length() <= float(rule.get("radius", 4.0)))
+	if ok and rule.has("and_ally_hurt_below"):
+		ok = _allies(sim, id).any(func(a): return sim.fighters[a].hp < sim.fighters[a].max_hp() * float(rule["and_ally_hurt_below"]))
+	if ok:
+		for extra in rule.get("and", []):
+			if not use_matches(sim, id, extra):
+				return false
+	return ok
+
+
+static func _allies(sim, id: int) -> Array:
+	var team: String = sim.fighters[id].team
+	var out: Array = sim.fighters.keys().filter(func(o): return sim.fighters[o].team == team and sim.fighters[o].is_alive())
+	out.sort()
+	return out
+
+
+static func _enemy_ids(sim, id: int) -> Array:
+	var team: String = sim.fighters[id].team
+	var out: Array = sim.fighters.keys().filter(func(o): return sim.fighters[o].team != team and sim.fighters[o].is_alive())
+	out.sort()
+	return out
+
+
+static func _enemies_within(sim, id: int, point: Vector3, radius: float) -> int:
+	return _enemy_ids(sim, id).filter(func(e): return _flat(sim.bodies[e].position - point).length() <= radius).size()
 
 
 ## True when the class rules hold this skill slot back now (see _ready_skill_slot).

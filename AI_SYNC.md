@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | gameplay-programmer x2 via PO | develop | เลเวลการ์ด: `logic/card_progress.gd`, `data/progression/card_levels.json`, XP จ่ายตอนจบรอบ (`journey.card_xp`) · เครื่องยนต์ท่าไม้ตายเผ่า: `logic/race_ultimates.gd` (cast/ยกเลิกเมื่อมึน/ตาย, zone, skill_refresh, burst v2, revive), pilot ยิงตามเงื่อนไข, status valor/unbowed/recital · ยังไม่มีท่าไม้ตายในข้อมูลเผ่า (C2-C5) · เทสต์ 2581/80
+
 - 2026-11-13 | ux-ui-designer via PO | develop | อาร์ต skill tree เข้าเกมแล้ว `art/ui/skill_tree/` (ไอคอน 112, กรอบ 11, ตรา 4, แผนที่, `manifest.json` node id -> ไอคอน) · ยังไม่มีโค้ดแท็บ Skills ใช้ · Codex รวม 145 ครั้ง
 
 - 2026-11-13 | gameplay-programmer via PO | develop | เกจท่าไม้ตายเผ่ากลับมา (`ultimates_enabled`, กติกาเกจใน rules.json, อัตราต่อคลาสใน data/classes, เติมใน race_passives) ระบบสกิล/motion prediction ไม่ล้างเกจของการ์ดเผ่าแล้ว · เกจเต็มแต่ยังไม่มีท่าไม้ตายให้ใช้ (chunk C) · class_sim ใช้ reaction ของคลาส · ห้องออนไลน์ยังไม่ได้ทดสอบ · เทสต์ 2486/81

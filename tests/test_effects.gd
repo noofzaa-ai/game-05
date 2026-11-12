@@ -86,6 +86,7 @@ func _used_by_a_move(effect_id: String) -> bool:
 func _test_data(ctx) -> void:
 	for id in _data.effects:
 		if id in ["focus", "exhaust", "shock", "sleep"]: continue  # only the removed weapons handed these out
+		if id in ["valor", "unbowed", "recital"]: continue  # handed out by race ultimates (data/races, GDD races 3.7), not moves
 		ctx.check("effect '%s' is handed out by at least one weapon or monster move" % id, _used_by_a_move(id))
 	var kinds := {"buff": 0, "debuff": 0}
 	for definition in _data.effects.values():

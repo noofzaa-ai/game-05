@@ -3,6 +3,8 @@
 
 	"_comment": "Buffs and debuffs (status effects). Durations are simulation ticks (60 per second). A move gives them out through its 'effects' list (see combat.json / weapons.json): {id, target: enemy|self, chance 0-100, on: hit|cast, duration (optional override)}. 'stats' change a fighter's stats while the effect lasts: add = a flat amount, mul = a fraction (0.3 = +30%, -0.4 = -40%), both multiplied by the number of stacks; HEALING is a pseudo-stat that scales every kind of healing (HPREGEN and heal_percent). dot_power = damage per second as a fraction of the SOURCE's ATK, ignoring DEF (per stack). heal_percent = percent of max HP healed per second. control: stun = cannot act at all, sleep = cannot act and wakes when hurt, shock = cannot move, jump, run or dodge (can still attack and guard). A debuff's chance is moved by the source's EFFECT_ACC minus the target's EFFECT_RES. After a control effect ends the target is immune to new ones for control_immunity_ticks, so nobody can be chain-locked. Numbers are placeholders to tune by feel.",
 
+	"_race_ultimates": "valor, unbowed, recital: statuses of the race ultimates (design/gdd/races-and-classes.md 3.7, 3.10.1). SKILL_DMG is a pseudo-stat read by the race skill_mod hook (logic/race_passives.gd skill_dmg).",
+
 	"rules": {
 		"control_immunity_ticks": 120,
 		"dot_interval_ticks": 30
@@ -10,6 +12,18 @@
 
 	"effects": {
 		"relic_goblin_poison": {"name":"พิษตะเกียงก็อบลิน", "kind":"debuff", "color":[0.55,0.9,0.2], "duration":180, "max_stacks":1, "dot_power":0.1},
+		"valor": {
+			"name": "Valor", "kind": "buff", "color": [1.0, 0.76, 0.23], "duration": 360, "max_stacks": 1,
+			"stats": {"ATK": {"mul": 0.2}, "DEF": {"mul": 0.2}}
+		},
+		"unbowed": {
+			"name": "Unbowed", "kind": "buff", "color": [0.88, 0.19, 0.16], "duration": 360, "max_stacks": 1,
+			"stats": {"ATK": {"mul": 0.3}, "DEF": {"mul": 0.4}}
+		},
+		"recital": {
+			"name": "Recital", "kind": "buff", "color": [1.0, 0.76, 0.23], "duration": 360, "max_stacks": 1,
+			"stats": {"SKILL_DMG": {"mul": 0.3}, "STAREGEN": {"add": 40}}
+		},
 		"rage": {
 			"name": "Rage", "kind": "buff", "color": [1.0, 0.25, 0.2], "duration": 480, "max_stacks": 1,
 			"stats": {"ATK": {"mul": 0.3}, "DEF": {"mul": -0.15}}

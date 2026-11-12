@@ -21,14 +21,20 @@ extends RefCounted
 ## the ultimate's charge_mul; capped at ultimate_gauge_max; no gain while an ultimate move runs or from an event tagged
 ## "ultimate". The old gains (combat gauge_per_hit_*, ULTREGEN) and the skill system's gauge wipe skip such fighters
 ## (owns_gauge). The gauge is a Fighter field, so it is in checkpoints and carries across waves; journeys clear it at run end.
-## INERT until their phase (loaded and validated, no effect): the actions zone, skill_refresh. The event ultimate_cast never fires yet.
+## Ultimates (3.10): logic/race_ultimates.gd runs the cast; its actions go through run_action like any trigger's.
+## run_action knows all 7 actions (apply_status, heal incl. revive on ally_downed and split, shield, burst with the v2
+## fields, pulse_aggro, zone, skill_refresh) and every target/center of the vocabulary. An ultimate's context has
+## "ultimate": true: its heals skip the per-second passive cap (4.2), its shields use ult_shield_cap_max_hp (4.3), and
+## every event it causes is tagged "ultimate" (no gauge, measured apart). The race event ultimate_cast fires after the
+## actions resolve (Runeborn runes then discharge, 3.4).
 ## Deterministic: a `chance` roll uses the sim RNG; nothing else is random. Order = fighter id, then effect order.
 
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const Effects := preload("res://logic/effects.gd")
 const Fighter := preload("res://logic/fighter.gd")
-const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield", "burst", "pulse_aggro"]
+const RaceUltimates := preload("res://logic/race_ultimates.gd")
+const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield", "burst", "pulse_aggro", "zone", "skill_refresh"]
 const PULSE_RADIUS := 5.0  ## pulse_aggro defaults (GDD 3.6: the Bulwark values)
 const PULSE_TICKS := 180
 const SHIELD_TICKS := 600  ## default shield life when an action has no duration_ticks (GDD 4.3)
@@ -66,7 +72,8 @@ static func attach(fighter, run) -> void:
 			mod["mul"] += float(effect.get("mul", 0.0))
 			pseudo[str(effect["stat"])] = mod
 	fighter.race_state = {"race": race, "class": class_id, "passive": str(passive.get("name", "")), "synergy": str(synergy.get("kind", "none")),
-		"effects": effects, "fx": {}, "pseudo": pseudo, "scaling": scaling, "wave": 0, "heal_window": [-1, 0.0]}
+		"effects": effects, "fx": {}, "pseudo": pseudo, "scaling": scaling, "wave": 0, "heal_window": [-1, 0.0],
+		"ultimate": races.ultimate_for(race, class_id).duplicate(true), "full_at": -1}
 
 
 ## stat_mod on real stats, applied to freshly computed base stats (GameSim._refresh_run_stats): (base + add) x (1 + mul).
@@ -185,6 +192,8 @@ static func step(sim) -> void:
 		return
 	ids.sort()
 	var wave: int = sim._waves_released + 1
+	for id in ids:  # ultimates first: a wind-up resolves or is lost, zones and repeat hits run (3.10.3)
+		RaceUltimates.step(sim, id, sim.fighters[id])
 	var seen: Array = sim.events.duplicate()
 	for id in ids:
 		var fighter = sim.fighters[id]
@@ -270,7 +279,10 @@ static func gain_gauge(sim, id: int, fighter, events: Array, in_combat: bool) ->
 			by[key] = float(by.get(key, 0.0)) + float(parts[key])
 	fighter.race_state["gauge_by"] = by
 	var before: float = fighter.gauge
-	fighter.gauge = minf(float(sim.combat.rules["ultimate_gauge_max"]), fighter.gauge + total)  # overflow is lost (3.10.2)
+	var top := float(sim.combat.rules["ultimate_gauge_max"])
+	fighter.gauge = minf(top, fighter.gauge + total)  # overflow is lost (3.10.2)
+	if fighter.gauge >= top and int(fighter.race_state.get("full_at", -1)) < 0:
+		fighter.race_state["full_at"] = sim.tick_count  # the pilot's max_hold_ticks clock (3.10.4)
 	return fighter.gauge - before
 
 
@@ -401,86 +413,49 @@ static func _gain_charges(sim, id: int, index: int, event_name: String, context:
 static func run_action(sim, id: int, action: Dictionary, context: Dictionary) -> bool:
 	if not RUNNING_ACTIONS.has(str(action["action"])):
 		return false
+	if not context.has("points"):  # a passive's context is the sim event itself: never write into it
+		context = context.duplicate()
+		context["points"] = {}
+		context["picked"] = {}
 	var source = sim.fighters[id]
-	if str(action["action"]) == "burst":
-		return _burst(sim, id, action, context)
-	if str(action["action"]) == "pulse_aggro":
-		return pulse_aggro(sim, id, float(action.get("radius", PULSE_RADIUS)), int(action.get("duration_ticks", PULSE_TICKS)))
+	var ult := bool(context.get("ultimate", false))
+	match str(action["action"]):
+		"burst":
+			return RaceUltimates.burst(sim, id, action, context)
+		"pulse_aggro":
+			return pulse_aggro(sim, id, float(action.get("radius", PULSE_RADIUS)), int(action.get("duration_ticks", PULSE_TICKS)), ult)
+		"zone":
+			return RaceUltimates.start_zone(sim, id, action, context)
+		"skill_refresh":
+			return RaceUltimates.skill_refresh(sim, id, action, context)
 	var did := false
-	for target_id in targets(sim, id, str(action.get("target", "self")), context):
+	var chosen := targets(sim, id, str(action.get("target", "self")), context, action)
+	for target_id in chosen:
 		var target = sim.fighters[target_id]
 		match str(action["action"]):
 			"apply_status":
 				var entry := {"id": str(action["status"]), "chance": 100.0, "duration": int(action.get("duration", 0))}
 				did = Effects.apply(id, source, target_id, target, entry, sim.combat, sim.rng, sim.events) or did
 			"heal":
-				var amount := heal_amount(action, source, target, float(context.get("damage", 0.0)))
-				amount = _within_heal_cap(sim, target, amount)
+				if target.state == Fighter.State.DOWNED:  # ally_downed: a revive at fraction x max HP (3.10.5)
+					did = RaceUltimates.revive(sim, id, target_id, float(action["fraction"])) or did
+					continue
+				var amount := heal_amount(action, source, target, float(context.get("damage", 0.0)) / (float(chosen.size()) if bool(action.get("split", false)) else 1.0))
+				if not ult:
+					amount = _within_heal_cap(sim, target, amount)  # ultimate heals are exempt from the per-second cap (4.2)
 				var healed := minf(amount, target.max_hp() - target.hp)
 				if healed > 0.0:
 					target.hp += healed
-					sim.events.append({"type": "race_heal", "player": id, "target": target_id, "amount": healed})
+					sim.events.append({"type": "race_heal", "player": id, "target": target_id, "amount": healed, "ultimate": ult})
 					did = true
 			"shield":
-				var cap := float(RaceData.load_default().rules.get("shield_cap_max_hp", 0.30))
-				var added: float = target.add_shield(shield_amount(action, source, float(context.get("damage", 0.0))), int(action.get("duration_ticks", SHIELD_TICKS)), sim.tick_count, cap)
+				var cap := float(RaceData.load_default().rules.get("ult_shield_cap_max_hp" if ult else "shield_cap_max_hp", 0.30))
+				var base := float(context.get("damage", 0.0)) / (float(chosen.size()) if bool(action.get("split", false)) else 1.0)
+				var added: float = target.add_shield(shield_amount(action, source, base), int(action.get("duration_ticks", SHIELD_TICKS)), sim.tick_count, cap)
 				if added > 0.0:
-					sim.events.append({"type": "race_shield", "player": id, "target": target_id, "amount": added, "shield": target.shield, "until": target.shield_until})
+					sim.events.append({"type": "race_shield", "player": id, "target": target_id, "amount": added, "shield": target.shield, "until": target.shield_until, "ultimate": ult})
 					did = true
 	return did
-
-
-## burst (3.6): every living enemy within `radius` m of `center` takes atk_mul x ATK, reduced by its DEF like a
-## weapon hit (no crit roll unless force_crit; min_damage floor), then `status`. Shields absorb first. A kill is a
-## normal "killed" event by the caster (loot, waves). Emits race_burst (the client's ring) and race_burst_hit per enemy.
-## Returns true when the burst went off (even if nobody stood in it: the runes are spent). v2 fields (hits,
-## interval_ticks, chain_on_kill, fury, delayed, bonus_target_below_hp) belong to the ultimates phase.
-static func _burst(sim, id: int, action: Dictionary, context: Dictionary) -> bool:
-	var source = sim.fighters[id]
-	var center = _center(sim, id, str(action.get("center", "self")), context)
-	if center == null:
-		return false
-	var radius := float(action["radius"])
-	var rules: Dictionary = sim.combat.rules
-	sim.events.append({"type": "race_burst", "player": id, "pos": center, "radius": radius})
-	var ids: Array = sim.fighters.keys()
-	ids.sort()
-	for target_id in ids:
-		var target = sim.fighters[target_id]
-		if target.team == source.team or not target.is_alive():
-			continue
-		var pos: Vector3 = sim.bodies[target_id].position
-		if Vector2(pos.x - center.x, pos.z - center.z).length() > radius:
-			continue
-		var defense: float = target.stat("DEF")
-		var damage: float = source.stat("ATK") * float(action["atk_mul"]) * (1.0 - defense / (defense + float(rules["defense_constant"])))
-		if bool(action.get("force_crit", false)):
-			damage *= source.stat("CRIDMG", 100.0) / 100.0
-		damage = maxf(float(rules["min_damage"]), roundf(damage))
-		var absorbed: float = target.absorb(damage)
-		target.hp = maxf(0.0, target.hp - (damage - absorbed))
-		sim.events.append({"type": "race_burst_hit", "attacker": id, "target": target_id, "damage": damage, "absorbed": absorbed, "pos": pos})
-		if target.hp <= 0.0:
-			target.state = Fighter.State.DEAD
-			target.state_ticks = 0
-			target.move_id = ""
-			target.launched = false
-			Effects.clear(target, sim.combat)
-			sim.events.append({"type": "killed", "target": target_id, "by": id})
-		elif action.has("status"):
-			Effects.apply(id, source, target_id, target, {"id": str(action["status"]), "chance": 100.0, "duration": int(action.get("duration", 0))}, sim.combat, sim.rng, sim.events)
-	return true
-
-
-## Where a burst sits. self | target (the event's target, else self). Other centers come with the ultimates.
-static func _center(sim, id: int, kind: String, context: Dictionary):
-	match kind:
-		"self":
-			return sim.bodies[id].position
-		"target":
-			var target := int(context.get("target", -1))
-			return sim.bodies[target].position if sim.bodies.has(target) else sim.bodies[id].position
-	return null
 
 
 ## Formula 4.3: amount = fraction x source max HP (or x the damage dealt). The target's cap is applied by Fighter.add_shield.
@@ -527,8 +502,20 @@ static func _within_heal_cap(sim, target, amount: float) -> float:
 	return given
 
 
-## Target ids for an action, in id order. Unknown or not-yet-built targets give nobody.
-static func targets(sim, id: int, kind: String, context: Dictionary) -> Array:
+## Target ids for an action, in id order. The v2 targets (ally_downed, *_in_zone, enemies_in_radius,
+## enemy_lowest_hp_pct, enemy_highest_hp) are in RaceUltimates.targets_v2. Within one ultimate cast (context.picked)
+## ally_most_hurt is picked once, so a heal, its regen and a burst centered on that ally agree on who.
+static func targets(sim, id: int, kind: String, context: Dictionary, action: Dictionary = {}) -> Array:
+	var picked = context.get("picked")
+	if picked is Dictionary and kind == "ally_most_hurt" and picked.has(kind):
+		return picked[kind]
+	var out := _targets(sim, id, kind, context, action)
+	if picked is Dictionary and kind == "ally_most_hurt":
+		picked[kind] = out
+	return out
+
+
+static func _targets(sim, id: int, kind: String, context: Dictionary, action: Dictionary) -> Array:
 	var me = sim.fighters[id]
 	var allies: Array = []
 	for other in sim.fighters:
@@ -553,12 +540,12 @@ static func targets(sim, id: int, kind: String, context: Dictionary) -> Array:
 		"target":
 			var target := int(context.get("target", -1))
 			return [target] if sim.fighters.has(target) and sim.fighters[target].is_alive() and target != id else []
-	return []
+	return RaceUltimates.targets_v2(sim, id, kind, context, action)
 
 
 ## Taunt (3.6): every living enemy within `radius` m of fighter `id` attacks it for `ticks` (the longer remaining
 ## taunt wins on overlap). Returns true when at least one enemy was taunted. Emits race_taunt for the client.
-static func pulse_aggro(sim, id: int, radius: float, ticks: int) -> bool:
+static func pulse_aggro(sim, id: int, radius: float, ticks: int, ultimate: bool = false) -> bool:
 	var me: Vector3 = sim.bodies[id].position
 	var taunted: Array = []
 	var ids: Array = sim.fighters.keys()
@@ -572,7 +559,7 @@ static func pulse_aggro(sim, id: int, radius: float, ticks: int) -> bool:
 			taunted.append(other)
 	if taunted.is_empty():
 		return false
-	sim.events.append({"type": "race_taunt", "player": id, "enemies": taunted, "radius": radius, "ticks": ticks, "pos": me})
+	sim.events.append({"type": "race_taunt", "player": id, "enemies": taunted, "radius": radius, "ticks": ticks, "pos": me, "ultimate": ultimate})
 	return true
 
 

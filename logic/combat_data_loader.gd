@@ -40,7 +40,7 @@ const FLOAT_FIELDS: Array[String] = ["power", "knockback", "launch", "energy_cos
 const VECTOR_FIELDS: Array[String] = ["hit_offset", "hit_size"]
 const EFFECT_KINDS: Array[String] = ["buff", "debuff"]
 const EFFECT_CONTROLS: Array[String] = ["", "stun", "shock", "sleep"]
-const EFFECT_STATS: Array[String] = ["HEALING"]  ## pseudo-stats an effect may change besides STAT_NAMES
+const EFFECT_STATS: Array[String] = ["HEALING", "SKILL_DMG"]  ## pseudo-stats an effect may change besides STAT_NAMES
 const OVERRIDE_FIELDS: Array[String] = [
 	"effects", "spawns", "melee", "on_light", "on_heavy",
 	"startup", "active", "recovery", "hitstun", "hitstop", "cooldown", "invuln_from", "invuln_to", "power", "knockback",

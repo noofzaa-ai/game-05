@@ -113,6 +113,7 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 	runs[id] = run
 	preload("res://logic/relic_effects.gd").attach(fighters[id],run.profile)
 	RacePassives.attach(fighters[id], run)  # a squad card: its race x class passive + the squad synergy (GDD races 3.4-3.5)
+	RacePassives.RaceUltimates.register_move(combat, fighters[id])  # its synthetic <race>_<class>_ultimate move (3.10.3)
 	fighters[id].style = run.loadout().weapon_style(combat.styles.keys())  # the weapon decides the fighting style
 	_apply_class_style(id)
 	_refresh_run_stats(id)
@@ -218,6 +219,14 @@ func tick(prediction_player: int = -1) -> void:
 					attack_slots -= 1
 			else:
 				input = _with_aim_assist(fighter, body, input,id)
+				# Race ultimates (GDD races 3.10.6): a squad card's ultimate press starts its race ultimate, never the
+				# weapon style's. Prediction leaves it to the authority.
+				var race_ult: bool = input.ultimate and RacePassives.owns_gauge(fighter) and not fighter.race_state.get("ultimate", {}).is_empty()
+				if race_ult:
+					input = input.duplicate_input()
+					input.ultimate = false
+					if prediction_player < 0 and RacePassives.RaceUltimates.start(self, id):
+						input = SimInput.new()
 				if preload("res://logic/skill_build.gd").enabled():
 					input = input.duplicate_input()
 					input.special = false
@@ -603,6 +612,8 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 		skill_system = preload("res://logic/skills/system.gd").new()
 		skill_system.setup(self)
 		skill_system.restore(d.skill_system)
+	for id in fighters:  # race ultimate moves are built at attach; a restored sim may have fresh combat data
+		RacePassives.RaceUltimates.register_move(combat, fighters[id])
 	return true
 
 

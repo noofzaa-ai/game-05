@@ -1414,6 +1414,64 @@
 				]
 			}
 		],
+		"ultimate_cast": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"race_ult_resolved": [
+			{
+				"play": [
+					"ultimate_boom"
+				]
+			}
+		],
+		"race_ult_lost": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"resist"
+				]
+			}
+		],
+		"race_zone": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"race_zone_pulse": [
+			{
+				"play": [
+					"dot_tick"
+				]
+			}
+		],
+		"race_zone_end": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"race_skill_refresh": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"buff_up"
+				]
+			}
+		],
 		"race_heal": [
 			{
 				"when": {

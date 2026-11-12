@@ -32,4 +32,6 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-13 | Max-level card tree coverage | 26 of 35 points (~74%), both capstones never fit together | forces a build choice | design/gdd/skill-tree.md
 - 2026-11-13 | Old saves with the old skill tree | each old tree point becomes a card level on that card; gem choices dropped, gem gold refunded | players keep their progress | design/gdd/skill-tree.md
 - 2026-11-13 | Difficulty retune after races | wait: retune `wave_power_by_squad` once after phase 4 features and race ultimates land (squad wins 100% with races in the meantime) | avoids tuning twice | design/gdd/races-and-classes.md 4.5
+- 2026-11-13 | 5 extra ultimate data fields not in the GDD (last_status, pick nearest/spread, burst.target, zone first_only, use `and`) | keep them and add to GDD 3.6 | 5 of 16 ultimates cannot be written without them | design/gdd/races-and-classes.md 3.6
+- 2026-11-13 | Card XP table vs formula | code follows the formula 100 x L^1.2 (GDD table lv15/24 off by 2) | formula is the source | design/gdd/skill-tree.md 4.2
 
