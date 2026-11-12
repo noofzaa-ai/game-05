@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | game-designer via PO | develop | GDD skill tree ใหม่ `design/gdd/skill-tree.md` (25 ช่อง/การ์ด: คลาส 16 + เผ่า 8 + combo 1, แต้มถาวรจากเลเวลการ์ด, ไอคอน 112 ชิ้น) ยังไม่ทำโค้ด ตัวเลขยังไม่วัด
+
 - 2026-11-13 | game-designer via PO | develop | GDD เผ่า v2: ท่าไม้ตายเผ่า 16 ท่า + กติกาเกจ + action ใหม่ `zone`, `skill_refresh` + สวิตช์ `ultimates_enabled` (ยังไม่ได้ทำโค้ด ตัวเลขยังไม่วัด)
 
 - 2026-11-13 | tech-artist via PO | develop | ลดขนาดเว็บ: ตัดของเก่าออกจาก export (`export_presets.cfg` exclude_filter), texture ชุดเกราะ/Hair G 1024 (metal-rough 512), โหลด 2 ช่วง boot/battle (`pack_layout.json` stage, `client/pack_fetcher.gd`, FIGHT รอ battle pack) · โหลดแรก 222 MB -> 65 MB, เบื้องหลัง 21 MB · ทางเข้าสู้ใหม่ต้องเช็ก `PackFetcher.battle_ready()` · เทสต์ 2255/81

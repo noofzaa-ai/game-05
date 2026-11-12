@@ -28,4 +28,7 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-13 | Boss answer "start with 3 races" read as: the 3-card starter squad has 3 different races (Alliance on day one); all 4 races exist from the start | matches the recommended default the Boss said yes to | design/gdd/races-and-classes.md
 - 2026-11-13 | Who fires race ultimates | fully automatic by the auto-pilot | the game is an auto-battler; the Boss ruled players do not press skills | design/gdd/races-and-classes.md 3.10
 - 2026-11-13 | Elf Magic ultimate revives downed allies | yes, 35% HP, once per ally per wave | gives Elf its "squad that will not stay down" identity | design/gdd/races-and-classes.md
+- 2026-11-13 | Class branch reset price | 50 gold per refunded point (~950 per full branch); race branch reset stays free | keeps class choices meaningful | design/gdd/skill-tree.md
+- 2026-11-13 | Max-level card tree coverage | 26 of 35 points (~74%), both capstones never fit together | forces a build choice | design/gdd/skill-tree.md
+- 2026-11-13 | Old saves with the old skill tree | each old tree point becomes a card level on that card; gem choices dropped, gem gold refunded | players keep their progress | design/gdd/skill-tree.md
 
