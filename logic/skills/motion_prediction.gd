@@ -60,7 +60,7 @@ func cast(slot:int,input)->void:
  if system.cast(id,slot,aim).is_empty():supported_casts+=1
 func advance()->void:
  var fighter=sim.fighters[id]
- fighter.gauge=0 # Authority publish_views disables the retired ultimate gauge.
+ if not preload("res://logic/race_passives.gd").owns_gauge(fighter):fighter.gauge=0 # Same rule as authority publish_views (retired unless race ultimates own it).
  runtime.actor.position=sim.bodies[id].position
  runtime.advance(1.0/60.0)
  sim.bodies[id].position=runtime.actor.position

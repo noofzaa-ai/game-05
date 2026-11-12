@@ -35,7 +35,11 @@ var completed := 0  ## stages finished so far
 var current: Dictionary = {}  ## the node being played / visited
 var state := CHOOSING
 var hp_fraction := 1.0  ## the player's health carried from stage to stage (0..1 of max HP)
-var gauge := 0.0  ## the player's ultimate gauge carried from stage to stage (Boss 2026-10-15: it does not reset)
+## The player's ultimate gauge carried from stage to stage (Boss 2026-10-15: it does not reset). Cleared at run end
+## (GDD races 3.10.2): once the journey is over it stays 0, whatever a late capture writes.
+var gauge := 0.0:
+	set(value):
+		gauge = 0.0 if is_over() else value
 var path: Array[String] = []  ## types of the nodes taken, in order (for the summary)
 var last_reward: Dictionary = {}  ## what the last treasure / challenge gave (from Run.loot_into_bag)
 var treasure_pending := false  ## at a treasure node whose chest is not opened yet (open_treasure())
@@ -214,6 +218,7 @@ func died() -> void:
 	if not run.died:
 		run.death()
 	state = LOST
+	clear_gauges()
 
 
 ## Goes home with the bag. Only from a camp: leaving anywhere else is abandon(). Returns Run.return_to_camp().
@@ -221,6 +226,7 @@ func retreat() -> Dictionary:
 	if not is_at_camp():
 		return {}
 	state = RETREATED
+	clear_gauges()
 	return run.return_to_camp()
 
 
@@ -230,6 +236,7 @@ func abandon() -> Dictionary:
 	if is_over() or state == IN_STAGE or is_at_camp():
 		return {}
 	state = ABANDONED
+	clear_gauges()
 	return run.discard_loot()
 
 
@@ -394,6 +401,13 @@ func _advance() -> void:
 	completed += 1
 	current = {}
 	state = WON if completed >= total_stages() else CHOOSING
+	if is_over():
+		clear_gauges()
+
+
+## Run end (GDD races 3.10.2): the carried ultimate gauge goes back to 0.
+func clear_gauges() -> void:
+	gauge = 0.0
 
 
 func _apply_power(fighter, power: float) -> void:

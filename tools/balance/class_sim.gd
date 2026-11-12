@@ -26,7 +26,7 @@ const Profile := preload("res://logic/profile.gd")
 const Run := preload("res://logic/run.gd")
 
 const MAX_TICKS := 60 * 600  ## 10 minutes of fight at 60 ticks/s
-const REACTION := 0.85  ## the pilot's default reaction chance (client/session/local_session.gd uses the default)
+const REACTION := -1.0  ## < 0: each card uses its class pilot's reaction (data/classes/<id>.json pilot), as the game does
 
 var rules
 var camp
@@ -58,7 +58,7 @@ func _init() -> void:
 	scenarios.append({"name": "starter duo", "classes": Array(Deck.STARTER_SQUAD).slice(0, 2), "kind": "duo"})  # loot by squad size (Boss 2026-11-12)
 	for class_id in ["sword_shield", "greatsword", "longbow"]:
 		scenarios.append({"name": "3x " + class_id, "classes": [class_id, class_id, class_id], "kind": "mono"})
-	print("CLASS SIM  seeds=%d  reaction=%.2f  max=%ds" % [seeds, REACTION, MAX_TICKS / 60])
+	print("CLASS SIM  seeds=%d  reaction=class pilot  max=%ds" % [seeds, MAX_TICKS / 60])
 	print("scenario            | win  | waves avg/min | clear s | dmg dealt | dmg taken | deaths | ults | timeouts")
 	var per_class := {}
 	for scenario in scenarios:

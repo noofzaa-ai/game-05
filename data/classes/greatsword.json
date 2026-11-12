@@ -48,5 +48,7 @@
  "_pilot": "GDD races-and-classes 3.2 pilot profile, read by logic/auto_pilot.gd for squad cards (a class without it keeps the old constants). target: nearest|peel|densest|lowest_hp|marked_first. engage_range 0 = from the weapon; shoot_range 0 = the default 6 m. prefer_marked: attack a target carrying mark_status inside the engage range first (Hunter's Mark focus fire). line is not used yet.",
  "pilot": {"line": "front", "target": "densest", "dense_radius": 2.5, "engage_range": 0, "shoot_range": 0, "kite_distance": 0, "heavy_every": 3, "reaction": 0.85, "skill_min_targets": 1, "support_skill": "", "support_below": 0.0, "prefer_marked": true, "mark_status": "sunder"},
  "_signature": "GDD races-and-classes 3.2 class signature (any race). Cleave: a heavy hit deals +15% damage per extra enemy the same heavy swing hits (max +45%), applied in logic/combat.gd resolve_hits.",
- "signature": [{"type": "cleave", "name": "Cleave", "per_extra": 0.15, "max_bonus": 0.45}]
+ "signature": [{"type": "cleave", "name": "Cleave", "per_extra": 0.15, "max_bonus": 0.45}],
+ "_gauge": "GDD races-and-classes 3.10.2: this class's multipliers on the shared race gauge rule (data/races/rules.json gauge, formula 4.7), read by logic/race_passives.gd.",
+ "gauge": {"dealt": 1.0, "taken": 1.0, "support": 1.0}
 }

@@ -215,7 +215,7 @@ func publish_views() -> void:
 				"heal_allowed":float(caster.actor.passive_stats.get("heal_allowed",1)), "dodge_cd_mul":float(caster.actor.passive_stats.get("dodge_cd_mul",1)), "move_mul":caster.actor.multiplier("move_speed_mul"), "attack_mul":float(basic.get("damage",1))*caster.actor.multiplier("buff_damage_mul"), "range_mul":float(basic.get("range_mul",1)), "projectile_speed_mul":float(basic.get("projectile_speed",1)), "crit_bonus":float(basic.get("crit_chance",0)), "passives":basic.get("events",[])})
 			view["visuals"] = _visuals(caster)
 			view["motion"] = preload("res://logic/skills/motion_prediction.gd").capsule(caster,builds[id])
-			sim.fighters[id].gauge = 0
+			if not preload("res://logic/race_passives.gd").owns_gauge(sim.fighters[id]): sim.fighters[id].gauge = 0  # retired gauge, unless race ultimates own it (GDD races 3.10.6)
 		if sim.fighters[id].style=="bow":view["shot_aim"]=sim.fighters[id].shot_direction
 		sim.fighters[id].skill_view = view
 

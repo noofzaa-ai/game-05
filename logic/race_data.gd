@@ -103,6 +103,17 @@ func passive_for(race: String, class_id: String) -> Dictionary:
 	return races[race].get("default_class", {}).get("passive", {})
 
 
+## The ultimate block (GDD 3.7) for this race x class: the class cell, else the race's default_class. {} if none.
+func ultimate_for(race: String, class_id: String) -> Dictionary:
+	if not races.has(race):
+		return {}
+	var cell: Dictionary = races[race].get("classes", {}).get(class_id, {})
+	if cell.get("ultimate") is Dictionary:
+		return cell["ultimate"]
+	var fallback = races[race].get("default_class", {}).get("ultimate", {})
+	return fallback if fallback is Dictionary else {}
+
+
 ## Squad synergy from the races of the squad at run start (3.5, first match wins): 3 of one race = Trio,
 ## 2 of one race = Pair, 3 different = Alliance, otherwise none (a solo card, a mixed duo).
 ## Returns {"kind": "trio"|"pair"|"alliance"|"none", "race", "name", "text", "effects"} (plain data, read-only for UI).
@@ -138,6 +149,10 @@ func _check_rules() -> void:
 	for key in ["effect_types", "events", "actions", "targets", "centers", "pseudo_stats"]:
 		if not vocab.get(key) is Array:
 			errors.append("rules.json: vocabulary.%s missing" % key)
+	if rules.has("gauge"):
+		for key in ["time", "dealt", "taken", "support", "kill"]:
+			if not rules["gauge"] is Dictionary or not rules["gauge"].get(key) is float:
+				errors.append("rules.json: gauge.%s missing" % key)
 	if not rules.get("starter_races") is Dictionary:
 		errors.append("rules.json: starter_races missing")
 	if rules.has("alliance"):

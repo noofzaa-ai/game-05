@@ -15,6 +15,12 @@ extends RefCounted
 ## hit on a target new to this card).
 ## `aggro` (a class signature, data/classes/<id>.json "signature": Bulwark) pulses every `every_ticks` once an enemy
 ## is within `radius`; `pulse_aggro` taunts enemies within radius (5) for duration_ticks (180) via GameSim.taunt_enemy.
+## Ultimate gauge (GDD 3.10.2, 3.10.6, formula 4.7): with rules.ultimates_enabled the race engine owns a squad card's
+## Fighter.gauge. gain_gauge() fills it once per tick from time in combat, damage dealt (/ own ATK), damage taken after
+## shields (/ own max HP), heal + shield given to other allies (/ own ATK) and kills, scaled by the class `gauge` block and
+## the ultimate's charge_mul; capped at ultimate_gauge_max; no gain while an ultimate move runs or from an event tagged
+## "ultimate". The old gains (combat gauge_per_hit_*, ULTREGEN) and the skill system's gauge wipe skip such fighters
+## (owns_gauge). The gauge is a Fighter field, so it is in checkpoints and carries across waves; journeys clear it at run end.
 ## INERT until their phase (loaded and validated, no effect): the actions zone, skill_refresh. The event ultimate_cast never fires yet.
 ## Deterministic: a `chance` roll uses the sim RNG; nothing else is random. Order = fighter id, then effect order.
 
@@ -196,6 +202,76 @@ static func step(sim) -> void:
 				fire(sim, id, raced, event)
 		_check_low_hp(sim, id, fighter)
 		_check_aggro(sim, id, fighter)
+	if ultimates_enabled():  # after the triggers: their heals/shields/bursts this tick count too
+		var in_combat: bool = sim.living_enemy_count() > 0
+		for id in ids:
+			gain_gauge(sim, id, sim.fighters[id], sim.events, in_combat)
+
+
+## rules.ultimates_enabled (data/races/rules.json): race ultimates and their gauge are on.
+static func ultimates_enabled() -> bool:
+	return bool(RaceData.load_default().rules.get("ultimates_enabled", false))
+
+
+## True when the race engine owns this fighter's gauge (a squad card with ultimates on): the old gauge gains and the
+## skill system's "retired gauge" wipe leave it alone.
+static func owns_gauge(fighter) -> bool:
+	return not fighter.race_state.is_empty() and ultimates_enabled()
+
+
+## Formula 4.7 for one tick of fighter `id` from this tick's `events`:
+##   gain = charge_mul x (T/60 + Gd x md x dealt/ATK + Gt x mt x 100 x taken/maxHP + Gs x ms x support/ATK) + Gk x kills
+## T only while `in_combat` (living enemies). Running totals per source go to race_state.gauge_by (measurement).
+static func gain_gauge(sim, id: int, fighter, events: Array, in_combat: bool) -> float:
+	if not fighter.is_alive() or (fighter.state == Fighter.State.ATTACK and fighter.move_id.ends_with("ultimate")):
+		return 0.0
+	var data = RaceData.load_default()
+	var rule: Dictionary = data.rules.get("gauge", {})
+	var mul: Dictionary = CardDeck.class_data(str(fighter.race_state["class"])).get("gauge", {})
+	var charge := float(data.ultimate_for(str(fighter.race_state["race"]), str(fighter.race_state["class"])).get("charge_mul", 1.0))
+	var atk: float = maxf(1.0, fighter.stat("ATK"))
+	var dealt := 0.0
+	var taken := 0.0
+	var support := 0.0
+	var kills := 0
+	for event in events:
+		if bool(event.get("ultimate", false)) or str(event.get("move", "")).ends_with("ultimate"):
+			continue  # an ultimate never feeds the gauge (no chaining, 3.10.2)
+		var kind := str(event.get("type", ""))
+		match kind:
+			"hit", "blocked", "skill_hit", "skill_dot", "race_burst_hit", "dot":
+				var attacker := int(event.get("attacker", -1))
+				var target := int(event.get("target", -1))
+				if kind != "dot" and attacker == id and target != id and sim.fighters.has(target) and sim.fighters[target].team != fighter.team:
+					dealt += float(event.get("damage", 0.0))
+				if target == id and attacker != id and (kind == "dot" or not sim.fighters.has(attacker) or sim.fighters[attacker].team != fighter.team):
+					# skill hits report the damage after shields; the others report the full blow and what the shield took
+					var absorbed := 0.0 if kind.begins_with("skill") else float(event.get("absorbed", 0.0))
+					taken += maxf(0.0, float(event.get("damage", 0.0)) - absorbed)
+			"race_heal", "race_shield":
+				if int(event.get("player", -1)) == id and int(event.get("target", -1)) != id:
+					support += float(event.get("amount", 0.0))
+			"killed":
+				var dead := int(event.get("target", -1))
+				if int(event.get("by", -1)) == id and sim.fighters.has(dead) and sim.fighters[dead].team != fighter.team:
+					kills += 1
+	var parts := {
+		"time": charge * (float(rule.get("time", 0.0)) / 60.0 if in_combat else 0.0),
+		"dealt": charge * float(rule.get("dealt", 0.0)) * float(mul.get("dealt", 1.0)) * dealt / atk,
+		"taken": charge * float(rule.get("taken", 0.0)) * float(mul.get("taken", 1.0)) * 100.0 * taken / maxf(1.0, fighter.max_hp()),
+		"support": charge * float(rule.get("support", 0.0)) * float(mul.get("support", 1.0)) * support / atk,
+		"kill": float(rule.get("kill", 0.0)) * float(kills),
+	}
+	var total := 0.0
+	var by: Dictionary = fighter.race_state.get("gauge_by", {})
+	for key in parts:
+		total += float(parts[key])
+		if float(parts[key]) > 0.0:
+			by[key] = float(by.get(key, 0.0)) + float(parts[key])
+	fighter.race_state["gauge_by"] = by
+	var before: float = fighter.gauge
+	fighter.gauge = minf(float(sim.combat.rules["ultimate_gauge_max"]), fighter.gauge + total)  # overflow is lost (3.10.2)
+	return fighter.gauge - before
 
 
 ## The race events one sim event means for fighter `id` (the doc's event list, 3.6).

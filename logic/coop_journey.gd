@@ -96,6 +96,8 @@ func populate(sim: GameSim, map, _player_id: int, first_enemy_id: int) -> Array[
 	return bosses
 
 func capture_party(sim) -> void:
+	if is_over():
+		return  # run end: the gauges were cleared (GDD races 3.10.2)
 	for id in player_ids():
 		if not sim.fighters.has(id): continue
 		var fighter = sim.fighters[id]
@@ -156,18 +158,27 @@ func died() -> void:
 	for trip in runs_by_player.values():
 		if not trip.died: trip.death()
 	state = LOST
+	clear_gauges()
 
 func retreat() -> Dictionary:
 	if not is_at_camp(): return {}
 	state = RETREATED
+	clear_gauges()
 	return finish_rewards()
 
 func abandon() -> Dictionary:
 	if is_over() or state == IN_STAGE or is_at_camp(): return {}
 	state = ABANDONED
+	clear_gauges()
 	var losses := {}
 	for id in player_ids(): losses[id] = runs_by_player[id].discard_loot()
 	return losses[primary_id]
+
+## Run end (GDD races 3.10.2): every member's carried gauge goes back to 0.
+func clear_gauges() -> void:
+	for id in gauge_by_player:
+		gauge_by_player[id] = 0.0
+	gauge = 0.0
 
 func to_dict() -> Dictionary:
 	var saved := super.to_dict()

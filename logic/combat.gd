@@ -380,9 +380,12 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 
 	# The ultimate gauge is hard to fill: it only grows by landing hits (taking hits adds
 	# gauge_per_hit_taken, which is 0 in the shipped data).
+	# A squad card with race ultimates on fills its gauge in the race engine instead (GDD races 3.10.6, formula 4.7).
 	var gauge_max := float(data.rules["ultimate_gauge_max"])
-	attacker.gauge = minf(gauge_max, attacker.gauge + float(data.rules["gauge_per_hit_dealt"]))
-	target.gauge = minf(gauge_max, target.gauge + float(data.rules["gauge_per_hit_taken"]))
+	if not RacePassives.owns_gauge(attacker):
+		attacker.gauge = minf(gauge_max, attacker.gauge + float(data.rules["gauge_per_hit_dealt"]))
+	if not RacePassives.owns_gauge(target):
+		target.gauge = minf(gauge_max, target.gauge + float(data.rules["gauge_per_hit_taken"]))
 
 	attacker.combo_dealt += 1
 	attacker.combo_damage += int(damage)
@@ -493,7 +496,8 @@ static func _tick_timers(fighter: Fighter, data: CombatData) -> void:
 	# Health (HPREGEN) and the ultimate gauge (ULTREGEN) also refill by themselves.
 	if fighter.is_alive():
 		fighter.hp = minf(fighter.max_hp(), fighter.hp + fighter.stat("HPREGEN") / 60.0 * fighter.heal_factor())
-		fighter.gauge = minf(float(data.rules["ultimate_gauge_max"]), fighter.gauge + fighter.stat("ULTREGEN") / 60.0)
+		if not RacePassives.owns_gauge(fighter):  # the race gauge ignores ULTREGEN (GDD races 3.10.2)
+			fighter.gauge = minf(float(data.rules["ultimate_gauge_max"]), fighter.gauge + fighter.stat("ULTREGEN") / 60.0)
 
 
 static func _spend_energy(fighter: Fighter, amount: float, data: CombatData) -> void:
