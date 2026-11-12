@@ -10,7 +10,11 @@ render_mode unshaded, cull_disabled, fog_disabled;
 group_uniforms surface;
 uniform vec3 base_color_linear = vec3(0.72, 0.56, 0.48); // material colour (three.js material.color)
 uniform bool use_albedo_tex = false; // class gear / Hair G: baseColorTexture
-uniform sampler2D albedo_tex : source_color, filter_linear_mipmap, repeat_enable;
+// No source_color hint: the Compatibility renderer returns the raw sRGB texels for a source_color
+// sampler (no decode) while the shader still encodes its linear result below, which double-encoded the
+// gear texture (washed-out pink-grey armor). Decoded by hand here so it is the same on every renderer
+// (three.js decodes baseColorTexture as sRGB before the multiply).
+uniform sampler2D albedo_tex : filter_linear_mipmap, repeat_enable;
 uniform bool use_normal_tex = false; // class gear / Hair G: normalTexture (perturbs the cel normal)
 uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform bool use_vertex_color = false; // COLOR_0 multiplies the colour (Hair C-F)
@@ -261,6 +265,10 @@ vec2 eyeSocketRim(float t) {
 	return b + 0.5 * f * ((c - a) + f * ((2.0 * a - 5.0 * b + 4.0 * c - d) + f * (3.0 * (b - c) + d - a)));
 }
 
+vec3 srgb_to_linear(vec3 c) {
+	return mix(c / 12.92, pow((max(c, vec3(0.0)) + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c));
+}
+
 vec3 linear_to_srgb(vec3 v) {
 	vec3 low = 12.92 * v;
 	vec3 high = 1.055 * pow(max(v, vec3(0.0)), vec3(1.0 / 2.4)) - 0.055;
@@ -280,7 +288,7 @@ void fragment() {
 	}
 	vec3 diffuse = base_color_linear;
 	if (use_albedo_tex) {
-		diffuse *= texture(albedo_tex, UV).rgb;
+		diffuse *= srgb_to_linear(texture(albedo_tex, UV).rgb);
 	}
 	if (use_vertex_color) {
 		diffuse *= vertex_color.rgb;

@@ -9,7 +9,11 @@ uniform bool is_hair = true;
 uniform bool has_rest = false;
 uniform vec3 base_color_linear = vec3(0.43, 0.39, 0.52); // hair material colour
 uniform bool use_albedo_tex = false; // Hair G: its texture is part of the hull colour (diffuseColor)
-uniform sampler2D albedo_tex : source_color, filter_linear_mipmap, repeat_enable;
+// No source_color hint: the Compatibility renderer returns the raw sRGB texels for a source_color
+// sampler (no decode) while the shader still encodes its linear result below, which double-encoded the
+// gear texture (washed-out pink-grey armor). Decoded by hand here so it is the same on every renderer
+// (three.js decodes baseColorTexture as sRGB before the multiply).
+uniform sampler2D albedo_tex : filter_linear_mipmap, repeat_enable;
 uniform bool use_vertex_color = false; // Hair C-F: COLOR_0 is part of the hull colour
 
 varying vec3 rest_pos;
@@ -19,6 +23,10 @@ void vertex() {
 	rest_pos = has_rest ? vec3(UV.x, UV.y, UV2.x) : VERTEX;
 	vertex_color = COLOR;
 	VERTEX += normalize(NORMAL) * grow;
+}
+
+vec3 srgb_to_linear(vec3 c) {
+	return mix(c / 12.92, pow((max(c, vec3(0.0)) + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c));
 }
 
 vec3 linear_to_srgb(vec3 v) {
@@ -37,7 +45,7 @@ void fragment() {
 	}
 	vec3 diffuse = base_color_linear;
 	if (use_albedo_tex) {
-		diffuse *= texture(albedo_tex, UV).rgb;
+		diffuse *= srgb_to_linear(texture(albedo_tex, UV).rgb);
 	}
 	if (use_vertex_color) {
 		diffuse *= vertex_color.rgb;
