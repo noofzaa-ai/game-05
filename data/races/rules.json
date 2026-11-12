@@ -19,7 +19,7 @@
   "events": ["wave_start", "hit", "heavy_hit", "skill_cast", "skill_hit", "kill", "hurt", "guard_block", "self_low_hp", "ultimate_cast"],
   "actions": ["apply_status", "heal", "shield", "burst", "pulse_aggro", "zone", "skill_refresh"],
   "targets": ["self", "target", "allies_all", "ally_most_hurt", "enemies_in_radius", "ally_downed", "allies_in_zone", "enemies_in_zone", "enemy_lowest_hp_pct", "enemy_highest_hp"],
-  "centers": ["self", "target", "densest", "boss_or_highest_hp", "ally_most_hurt"],
+  "centers": ["self", "target", "densest", "boss_or_highest_hp", "ally_most_hurt", "zone"],
   "pseudo_stats": ["HEALING", "RUNE_GAIN", "SKILL_DMG"]
  }
 }

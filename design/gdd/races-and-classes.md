@@ -139,6 +139,13 @@ No third action was added. Revive is a `heal` on the new target `ally_downed`. F
 **Targets**, fixed list: `self, target, allies_all, ally_most_hurt, enemies_in_radius`, plus v2: `ally_downed` (all downed allies), `allies_in_zone`, `enemies_in_zone`, `enemy_lowest_hp_pct`, `enemy_highest_hp`.
 **Centers** (where a burst/zone sits), fixed list: `self, target, densest` (the point within `cast_range` that has the most enemies within `radius`), `boss_or_highest_hp`, `ally_most_hurt`.
 
+**Implementation fields (added in phase 6, PO default 2026-11-13).** Five ultimates needed words the lists above do not have. They are optional fields, checked at load like the rest:
+- `burst.last_status`: with `hits`, the status only the last hit applies (Masterstroke: the 3rd hit stuns).
+- `burst.pick`: `"nearest"` = only the enemy nearest the burst point is hit (Executioner, Called Shot, Seedshot arrows); `"spread"` = each hit goes to a different enemy within `cast_range`, then the boss, then the nearest (Glyph Barrage).
+- `burst.target` (+ `cast_range`): aim the burst at a target kind (`enemy_lowest_hp_pct`, `enemy_highest_hp`) instead of a center; `chain_on_kill` re-aims at the next match. `on_hit` / `on_kill` [actions] run per enemy hit / killed (Masterstroke refresh per hit, Called Shot refresh on kill).
+- `first_only: true` on a zone `pulse` action: it runs on the first pulse only (Blood Moon's `rage`, Arcane Singularity's `shock`). The center `zone` = the zone's own spot.
+- `and: [conditions]` on a `use` condition: all must match too (Commander's Call: skills on cooldown **and** 2+ enemies near; Grand Recital).
+
 Example: Elf + magic passive:
 ```json
 {"type": "trigger", "on": "skill_hit",

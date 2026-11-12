@@ -7,16 +7,21 @@
  "classes": {
   "sword_shield": {"passive": {"name": "Rallying Drill", "text": "Every skill cast gives Fortify to all allies for 3 s (10 s cooldown).",
    "effects": [{"type": "trigger", "on": "skill_cast", "cooldown_ticks": 600,
-    "actions": [{"action": "apply_status", "status": "fortify", "target": "allies_all", "duration": 180}]}]}},
+    "actions": [{"action": "apply_status", "status": "fortify", "target": "allies_all", "duration": 180}]}]},
+   "ultimate": {"name": "Commander's Call", "text": "Hold the line, then strike as one: taunt 5 m 3 s, halves every ally's skill cooldowns, Valor 6 s on all.", "clip": "ultimate", "cast_ticks": 48, "recover_ticks": 24, "charge_mul": 1.0, "vfx": "race_ult/human_sword_shield", "actions": [{"action": "pulse_aggro", "radius": 5.0, "duration_ticks": 180}, {"action": "skill_refresh", "target": "allies_all", "fraction": 0.5}, {"action": "apply_status", "status": "valor", "target": "allies_all", "duration": 360}], "use": {"any_of": [{"if": "skills_on_cooldown", "min": 2, "allies": 2, "and": [{"if": "enemies_near", "radius": 5.0, "min": 2}]}, {"if": "boss_near", "radius": 5.0}], "max_hold_ticks": 480}}},
   "greatsword": {"passive": {"name": "Wide Arcs", "text": "Skill radius +25%, skill damage +10%.",
-   "effects": [{"type": "skill_mod", "radius_mul": 1.25, "damage_mul": 1.10}]}},
+   "effects": [{"type": "skill_mod", "radius_mul": 1.25, "damage_mul": 1.10}]},
+   "ultimate": {"name": "Masterstroke", "text": "Three perfect arcs (110% x3 in 3.5 m, the third stuns); each enemy hit takes 1 s off the skill cooldowns (max 4 s).", "clip": "ultimate", "cast_ticks": 30, "recover_ticks": 30, "charge_mul": 1.0, "vfx": "race_ult/human_greatsword", "actions": [{"action": "burst", "center": "self", "radius": 3.5, "atk_mul": 1.1, "hits": 3, "interval_ticks": 24, "last_status": "stun", "on_hit": [{"action": "skill_refresh", "target": "self", "seconds": 1.0, "cap_seconds": 4.0}]}], "use": {"any_of": [{"if": "enemies_near", "radius": 3.5, "min": 3}, {"if": "boss_near", "radius": 3.0}], "max_hold_ticks": 480}}},
   "longbow": {"passive": {"name": "Trained Eye", "text": "Skill hits apply Sunder; skill crit rate +20.",
    "effects": [{"type": "trigger", "on": "skill_hit", "actions": [{"action": "apply_status", "status": "sunder", "target": "target"}]},
-               {"type": "skill_mod", "crit_add": 20}]}},
+               {"type": "skill_mod", "crit_add": 20}]},
+   "ultimate": {"name": "Called Shot", "text": "One breath, one arrow: 450% guaranteed crit + Sunder 7 s on the boss or the toughest enemy in 12 m; a kill readies every skill.", "clip": "ultimate", "cast_ticks": 72, "recover_ticks": 20, "charge_mul": 1.0, "vfx": "race_ult/human_longbow", "actions": [{"action": "burst", "target": "enemy_highest_hp", "cast_range": 12.0, "pick": "nearest", "radius": 0.6, "atk_mul": 4.5, "force_crit": true, "status": "sunder", "duration": 420, "on_kill": [{"action": "skill_refresh", "target": "self", "fraction": 1.0}]}], "use": {"any_of": [{"if": "boss_near", "radius": 12.0}, {"if": "elite_near", "radius": 12.0}], "max_hold_ticks": 360}}},
   "magic": {"passive": {"name": "Archmage", "text": "Skill damage +30%, skill cooldowns x0.85.",
-   "effects": [{"type": "skill_mod", "damage_mul": 1.30, "cooldown_mul": 0.85}]}}
+   "effects": [{"type": "skill_mod", "damage_mul": 1.30, "cooldown_mul": 0.85}]},
+   "ultimate": {"name": "Grand Recital", "text": "Every spell, ready at once: all 4 skills ready, Recital 6 s (skill damage +30%, stamina regen +40).", "clip": "ultimate", "cast_ticks": 42, "recover_ticks": 24, "charge_mul": 1.0, "vfx": "race_ult/human_magic", "actions": [{"action": "skill_refresh", "target": "self", "fraction": 1.0}, {"action": "apply_status", "status": "recital", "target": "self", "duration": 360}], "use": {"any_of": [{"if": "skills_on_cooldown", "min": 3, "and": [{"if": "enemies_near", "radius": 7.0, "min": 2}]}, {"if": "skills_on_cooldown", "min": 3, "and": [{"if": "boss_near", "radius": 7.0}]}], "max_hold_ticks": 480}}}
  },
- "default_class": {"passive": {"name": "Mastery", "text": "Skill damage +10%.", "effects": [{"type": "skill_mod", "damage_mul": 1.10}]}},
+ "default_class": {"passive": {"name": "Mastery", "text": "Skill damage +10%.", "effects": [{"type": "skill_mod", "damage_mul": 1.10}]},
+   "ultimate": {"name": "Rally", "text": "Halves the skill cooldowns of every ally.", "clip": "ultimate", "cast_ticks": 40, "recover_ticks": 20, "charge_mul": 1.0, "vfx": "race_ult/human_default", "actions": [{"action": "skill_refresh", "target": "allies_all", "fraction": 0.5}], "use": {"any_of": [{"if": "skills_on_cooldown", "min": 2, "allies": 2}], "max_hold_ticks": 360}}},
  "synergy": {
   "2": {"text": "All skill damage +10%.", "effects": [{"type": "skill_mod", "damage_mul": 1.10}]},
   "3": {"text": "Skill damage +20%, skill cooldowns x0.90.", "effects": [{"type": "skill_mod", "damage_mul": 1.20, "cooldown_mul": 0.90}]}

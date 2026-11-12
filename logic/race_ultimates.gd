@@ -131,6 +131,8 @@ static func resolve(sim, id: int) -> void:
 static func burst(sim, id: int, action: Dictionary, ctx: Dictionary) -> bool:
 	var hits := maxi(1, int(action.get("hits", 1)))
 	var index := int(ctx.get("hit_index", 1))
+	if not ctx.has("refreshed"):
+		ctx["refreshed"] = {}  # one skill_refresh cap per cast, shared by the later hits of this burst (Masterstroke 4 s)
 	if hits > 1 and index == 1:
 		var every := maxi(1, int(action.get("interval_ticks", 15)))
 		var jobs: Array = sim.fighters[id].race_state.get("jobs", [])

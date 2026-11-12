@@ -15,6 +15,16 @@ const STAT_NAMES := preload("res://logic/combat_data_loader.gd").STAT_NAMES
 const SKILL_MOD_FIELDS: Array[String] = ["type", "damage_mul", "cooldown_mul", "radius_mul", "crit_add", "hp_cost", "min_hp"]
 const HEAL_SOURCES: Array[String] = ["max_hp", "damage", "source_max_hp"]
 const SHIELD_SOURCES: Array[String] = ["source_max_hp", "damage"]
+## Ultimate block fields (GDD 3.7) and the pilot's `use` conditions with the fields each may carry (3.7 fixed list;
+## `and` [conditions] and `and_ally_hurt_below` may be added to any). An unknown one is a load error.
+const ULTIMATE_FIELDS: Array[String] = ["name", "text", "clip", "cast_ticks", "recover_ticks", "charge_mul", "self_hp_cost", "min_hp", "vfx", "actions", "use"]
+const USE_CONDITIONS := {
+	"enemies_near": ["radius", "min"], "enemies_at_point": ["cast_range", "radius", "min"],
+	"ally_hurt": ["below", "min_allies", "allies_within", "targeted_by_min"], "squad_hp_below": ["below", "enemies_within", "min"],
+	"ally_downed": [], "self_hurt": ["below", "enemies_within", "min"], "boss_near": ["radius"], "elite_near": ["radius"],
+	"execute_ready": ["range", "below", "min", "boss_only"], "skills_on_cooldown": ["min", "allies"], "boss_telegraph": ["radius"],
+}
+const CLIP_KEYS: Array[String] = ["ultimate", "special", "charge"]  ## an ultimate's clip is a key of the class file's moves map
 
 var races: Dictionary = {}  ## id -> race file (Dictionary)
 var rules: Dictionary = {}
@@ -191,8 +201,46 @@ func _check_cell(where: String, cell) -> void:
 		errors.append("%s: passive missing" % where)
 		return
 	_check_effects(where + ".passive", cell["passive"].get("effects"))
-	if cell.get("ultimate") is Dictionary:  # ultimates run in a later phase; their actions must still be valid words
-		_check_actions(where + ".ultimate", cell["ultimate"].get("actions", []))
+	if cell.has("ultimate"):
+		_check_ultimate(where + ".ultimate", cell["ultimate"])
+
+
+## An ultimate block (GDD 3.7, 3.10): known fields, wind-up/recovery ticks, a clip key, a vfx key, valid actions and a
+## `use` block of known conditions (+ max_hold_ticks).
+func _check_ultimate(where: String, ult) -> void:
+	if not ult is Dictionary:
+		errors.append("%s: must be an object" % where)
+		return
+	for key in ult:
+		if not ULTIMATE_FIELDS.has(str(key)) and not str(key).begins_with("_"):
+			errors.append("%s: unknown field '%s'" % [where, key])
+	if str(ult.get("name", "")).is_empty():
+		errors.append("%s: name missing" % where)
+	if not ult.get("cast_ticks") is float or float(ult["cast_ticks"]) < 1.0 or float(ult.get("recover_ticks", 0.0)) < 0.0:
+		errors.append("%s: cast_ticks >= 1 and recover_ticks >= 0 required" % where)
+	if not CLIP_KEYS.has(str(ult.get("clip", ""))):
+		errors.append("%s: unknown clip key '%s' (one of %s)" % [where, ult.get("clip", ""), CLIP_KEYS])
+	if float(ult.get("charge_mul", 1.0)) <= 0.0:
+		errors.append("%s: charge_mul must be above 0" % where)
+	_check_actions(where + ".actions", ult.get("actions"))
+	var use = ult.get("use")
+	if not use is Dictionary or not use.get("any_of") is Array or (use["any_of"] as Array).is_empty():
+		errors.append("%s: use.any_of must be a non-empty list" % where)
+		return
+	for rule in use["any_of"]:
+		_check_use(where + ".use", rule)
+
+
+func _check_use(where: String, rule) -> void:
+	if not rule is Dictionary or not USE_CONDITIONS.has(str(rule.get("if", ""))):
+		errors.append("%s: unknown condition '%s'" % [where, rule.get("if", "") if rule is Dictionary else rule])
+		return
+	var allowed: Array = USE_CONDITIONS[str(rule["if"])] + ["if", "and", "and_ally_hurt_below"]
+	for key in rule:
+		if not allowed.has(str(key)):
+			errors.append("%s: condition %s has unknown field '%s'" % [where, rule["if"], key])
+	for extra in rule.get("and", []):
+		_check_use(where, extra)
 
 
 func _check_effects(where: String, effects) -> void:
@@ -273,9 +321,18 @@ func _check_actions(where: String, actions) -> void:
 			"burst":
 				if not action.get("atk_mul") is float or not action.get("radius") is float:
 					errors.append("%s: burst needs atk_mul and radius" % where)
+				if action.has("pick") and not ["nearest", "spread"].has(str(action["pick"])):
+					errors.append("%s: unknown pick '%s'" % [where, action["pick"]])
+				if action.has("last_status"):
+					_check_status(where, action["last_status"])
+				for list_key in ["on_hit", "on_kill"]:
+					if action.has(list_key):
+						_check_actions(where + "." + list_key, action[list_key])
 				if action.get("delayed") is Dictionary and action["delayed"].has("status"):
 					_check_status(where, action["delayed"]["status"])
 			"zone":
+				if not action.get("radius") is float or not action.get("duration_ticks") is float:
+					errors.append("%s: zone needs radius and duration_ticks" % where)
 				_check_actions(where + ".zone.pulse", action.get("pulse"))
 				if action.has("on_end"):
 					_check_actions(where + ".zone.on_end", action["on_end"])

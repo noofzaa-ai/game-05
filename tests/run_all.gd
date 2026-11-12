@@ -25,6 +25,7 @@ const TEST_FILES := [
 	"res://tests/test_class_identity.gd",
 	"res://tests/test_race_ultimates.gd",
 	"res://tests/test_race_ult_actions.gd",
+	"res://tests/test_race_ult_cells.gd",
 	"res://tests/test_material_counter.gd",
 	"res://tests/test_card_gear.gd",
 	"res://tests/test_squad_gear.gd",
