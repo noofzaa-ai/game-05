@@ -121,20 +121,19 @@ func _refresh() -> void:
 			if not j.is_at_camp():
 				_add_button("Leave the journey (the bag is lost)", _abandon)
 		_:
-			var ending := {Journey.WON: "ชนะ! บอสล้มแล้ว", Journey.LOST: "พ่ายแพ้ — ทัพล้มก่อนจบเวฟ", Journey.RETREATED: "ถอนทัพกลับแล้ว", Journey.ABANDONED: "ออกจากด่านกลางทาง"}
-			_box.add_child(_label(str(ending.get(j.state, "")), InkUi.GOLD if j.state == Journey.WON else InkUi.BAD))
+			_box.add_child(_label(HubLook.t(str(SUMMARY_TITLES.get(j.state, "summary_lost"))), InkUi.GOLD if j.state == Journey.WON else InkUi.BAD))
 			if GameState.remote_session != null and not GameState.remote_session.saved:
-				_box.add_child(_label("กำลังบันทึกผลรอบบนเซิร์ฟเวอร์…", InkUi.MUTED))
-			var back := _add_button("กลับหน้าการ์ด", GameState.end_journey)
+				_box.add_child(_label(HubLook.t("summary_saving"), InkUi.MUTED))
+			var back := _add_button(HubLook.t("summary_back"), GameState.end_journey)
 			if GameState.remote_session != null and not GameState.remote_session.can_return_to_hub():
 				back.disabled = true
-				back.text = "กำลังบันทึกผล…"
+				back.text = HubLook.t("summary_saving")
 			else: back.grab_focus.call_deferred()
 
 
 func _status_text(j) -> String:
 	if j.state == Journey.LOST:
-		return "ของที่เก็บได้ยังอยู่ครบ ตรวจดูได้ที่คลังในแคมป์หลัก"
+		return HubLook.t("summary_safe")
 	var text := "Health %d%%    Bag %d/%d    Gold %d" % [roundi(j.hp_fraction * 100.0), j.run.bag.slots_used(), j.run.bag.capacity, j.run.bag.gold]
 	if not j.last_reward.is_empty() and j.state == Journey.CHOOSING:
 		text += "\nChallenge reward: " + _reward_text(j.last_reward)
@@ -239,54 +238,177 @@ func _open_online_treasure() -> void:
 	GameState.get_session().command({"type": "journey_treasure"})
 
 
-## The auto-battler's end screen uses the class card look (cartoon sky, paper panel, orange button) instead of
-## the old brass route window.
+## The auto-battler's end screen in the approved hub look (Boss 2026-11-12): a leather / parchment panel over the
+## dimmed ruins background with the outcome, the stage, waves cleared and what this run picked up (items in their
+## tier colours, gold, materials), and a leather "Back to Cards" button. Display only: the loot list is
+## GameState.run_loot (noted from the fight's loot events); the bag itself was already settled by the rules.
 func _is_wave_summary() -> bool:
 	var j = journey()
-	return j != null and GameState.remote_session == null and bool(j.data.wave_mode) 		and j.state in [Journey.WON, Journey.LOST, Journey.RETREATED, Journey.ABANDONED]
+	return j != null and GameState.remote_session == null and bool(j.data.wave_mode) \
+		and j.state in [Journey.WON, Journey.LOST, Journey.RETREATED, Journey.ABANDONED]
+
+
+const HubLook := preload("res://client/hub_look.gd")
+const HubItemCell := preload("res://client/hub_item_cell.gd")
+const Item := preload("res://logic/item.gd")
+const SUMMARY_TITLES := {Journey.WON: "summary_won", Journey.LOST: "summary_lost", Journey.RETREATED: "summary_retreated", Journey.ABANDONED: "summary_abandoned"}
+
+
+## Waves the squad got through: all of them on a win, else every wave before the one it fell / left on.
+static func waves_cleared(state: String, wave_reached: int, total: int) -> int:
+	if state == Journey.WON:
+		return total
+	return clampi(wave_reached - 1, 0, total)
 
 
 func _build_wave_summary() -> void:
 	var j = journey()
-	var s := CardTokens.scale_for(get_viewport().get_visible_rect().size)
-	var sky := TextureRect.new()
-	sky.texture = CardTokens.tex("bg_sky") if CardTokens.tex("bg_sky") != null else CardTokens.sky_gradient()
-	sky.stretch_mode = TextureRect.STRETCH_SCALE
-	sky.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	sky.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(sky)
+	var screen := get_viewport().get_visible_rect().size
+	var s := CardTokens.scale_for(screen)
+	var back_art := CardTokens.art_rect(CardTokens.HUB_BG)
+	back_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	back_art.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(back_art)
+	var dim := Panel.new()
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	CardTokens.panel(dim, CardTokens.hub_shade(CardTokens.HUB_DIM))
+	add_child(dim)
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
-	var panel := PanelContainer.new()
-	CardTokens.panel(panel, CardTokens.panel_paper(s))
-	center.add_child(panel)
+	var leather := PanelContainer.new()
+	CardTokens.panel(leather, HubLook.leather(s))
+	center.add_child(leather)
+	var rim := MarginContainer.new()
+	CardTokens.margin(rim, CardTokens.SVC_LEATHER, s)
+	leather.add_child(rim)
+	var paper := PanelContainer.new()
+	CardTokens.panel(paper, HubLook.parchment(s))
+	rim.add_child(paper)
 	var pad := MarginContainer.new()
-	CardTokens.margin(pad, 48.0, s)
-	panel.add_child(pad)
+	CardTokens.margin(pad, CardTokens.SUMMARY_PAD, s)
+	paper.add_child(pad)
+	var width := minf(CardTokens.SUMMARY_PANEL_W * s, screen.x - (CardTokens.SVC_LEATHER + CardTokens.SUMMARY_PAD) * 2.0 * s - CardTokens.hub_safe_x(screen, s) * 2.0)
 	_box = VBoxContainer.new()
 	_box.alignment = BoxContainer.ALIGNMENT_CENTER
-	CardTokens.gap(_box, 28.0, s)
+	_box.custom_minimum_size = Vector2(width, 0.0)
+	CardTokens.gap(_box, CardTokens.SUMMARY_GAP, s)
 	pad.add_child(_box)
 	var won: bool = j.state == Journey.WON
-	var headline := {Journey.WON: "ชนะ!", Journey.LOST: "พ่ายแพ้", Journey.RETREATED: "ถอนทัพ", Journey.ABANDONED: "ออกจากด่าน"}
-	var detail := {Journey.WON: "บอสล้มแล้ว", Journey.LOST: "ทัพล้มก่อนจบเวฟ", Journey.RETREATED: "ถอนทัพกลับแล้ว", Journey.ABANDONED: "ออกจากด่านกลางทาง"}
-	var title := CardTokens.label(str(headline.get(j.state, "")), CardTokens.FONT_SCREEN_TITLE * 2, CardTokens.FRAME if won else CardTokens.ERROR, s, CardTokens.OUTLINE_FRAME)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_box.add_child(title)
-	var stage := CardTokens.label(str(j.data.display_name), CardTokens.FONT_EDITOR_NAME, CardTokens.TEXT_DARK, s, 0, "medium")
-	stage.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_box.add_child(stage)
-	var line := CardTokens.label(str(detail.get(j.state, "")), CardTokens.FONT_TAB, CardTokens.SLATE, s, 0, "body")
-	line.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_box.add_child(CardTokens.hub_label(HubLook.t(str(SUMMARY_TITLES.get(j.state, "summary_lost"))), CardTokens.FONT_SUMMARY_TITLE, CardTokens.HUB_INK if won else CardTokens.HUB_BAD, s))
+	_box.add_child(CardTokens.hub_label(str(j.data.display_name), CardTokens.FONT_SUMMARY_STAGE, CardTokens.HUB_INK, s))
+	var loot: Dictionary = GameState.run_loot
+	var total: int = j.wave_total() if j.has_method("wave_total") else int(j.data.stage_count)
+	var cleared := waves_cleared(j.state, int(loot.get("wave", 1)), total)
+	_box.add_child(CardTokens.hub_label(HubLook.t("summary_waves") % [cleared, total], CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_SUBTEXT, s, 0, "medium"))
+	var line := Panel.new()
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.custom_minimum_size = Vector2(width, CardTokens.SUMMARY_DIVIDER_H * s)
+	CardTokens.panel(line, CardTokens.hub_line(CardTokens.HUB_DIVIDER))
 	_box.add_child(line)
+	_box.add_child(CardTokens.hub_label(HubLook.t("summary_loot"), CardTokens.FONT_SUMMARY_STAGE, CardTokens.HUB_INK, s))
+	_add_loot(loot, width, s)
+	if not _loot_empty(loot):
+		var lost: bool = j.state == Journey.ABANDONED
+		_box.add_child(CardTokens.hub_label(HubLook.t("summary_left_lost" if lost else "summary_safe"), CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_BAD if lost else CardTokens.HUB_GOOD, s, 0, "medium"))
+	var row := CenterContainer.new()
+	_box.add_child(row)
 	var back := Button.new()
-	back.text = "กลับหน้าการ์ด"
-	back.custom_minimum_size = Vector2(420.0, 96.0) * s
-	CardTokens.button_skin(back, "primary", s)
-	CardTokens.style_text(back, CardTokens.FONT_FIGHT, CardTokens.TEXT_LIGHT, s, CardTokens.OUTLINE_PRIMARY)
-	back.pressed.connect(GameState.end_journey)
-	_box.add_child(back)
+	back.text = HubLook.t("summary_back")
+	back.focus_mode = Control.FOCUS_ALL
+	back.custom_minimum_size = Vector2(CardTokens.SUMMARY_BUTTON.x * s, CardTokens.tap(CardTokens.SUMMARY_BUTTON.y, CardTokens.is_phone(screen)) * s)
+	CardTokens.hub_plate_button(back, s)
+	CardTokens.hub_fit(back, back.text, CardTokens.FONT_SUMMARY_BUTTON, back.custom_minimum_size.x - (CardTokens.HUB_PLATE_MARGINS[0] + CardTokens.HUB_PLATE_MARGINS[2]), CardTokens.HUB_INK, s)
+	back.pressed.connect(_back_to_cards)
+	row.add_child(back)
 	_buttons.append(back)
 	back.grab_focus.call_deferred()
 
+
+func _back_to_cards() -> void:
+	Audio.play_ui("click")
+	GameState.end_journey()
+
+
+static func _loot_empty(loot: Dictionary) -> bool:
+	return loot.get("items", []).is_empty() and int(loot.get("gold", 0)) <= 0 and loot.get("materials", {}).is_empty()
+
+
+## Gold and materials on one line (icon + count), then the items as hub cells (real icon, tier pips), then a
+## per-tier count line (the tier word and pips as well as the colour).
+func _add_loot(loot: Dictionary, width: float, s: float) -> void:
+	if _loot_empty(loot):
+		_box.add_child(CardTokens.hub_label(HubLook.t("summary_loot_none"), CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_TAB_IDLE, s, 0, "medium"))
+		return
+	var money := _flow(width, CardTokens.SUMMARY_GAP * 1.5, s)
+	if int(loot.get("gold", 0)) > 0:
+		money.add_child(_amount(CardTokens.tex(CardTokens.HUB_SYS_PREFIX + "gold"), HubLook.t("summary_gold") % int(loot["gold"]), s))
+	for id in loot.get("materials", {}):
+		var name := str(GameState.camp_data.materials.get(id, {}).get("name", id)) if GameState.camp_data != null else str(id)
+		money.add_child(_amount(InkUi.icon(str(id), int(CardTokens.SUMMARY_ICON)), HubLook.t("summary_material") % [int(loot["materials"][id]), name], s))
+	if money.get_child_count() == 0:
+		money.queue_free()
+	var items: Array = loot.get("items", [])
+	if items.is_empty():
+		return
+	var sorted := items.duplicate()
+	sorted.sort_custom(func(a, b) -> bool: return int(a["tier"]) > int(b["tier"]))
+	var grid := _flow(width, CardTokens.SUMMARY_CELL_GAP, s)
+	var cell_px := CardTokens.SUMMARY_CELL * s
+	for index in mini(sorted.size(), CardTokens.SUMMARY_MAX_ITEMS):
+		var entry: Dictionary = sorted[index]
+		var piece := Item.new()
+		piece.item_id = str(entry["item_id"])
+		piece.tier = int(entry["tier"])
+		piece.slot = str(entry["slot"])
+		var cell := HubItemCell.new()
+		cell.setup()
+		cell.s = s
+		cell.focus_mode = Control.FOCUS_NONE
+		cell.mouse_filter = Control.MOUSE_FILTER_PASS
+		cell.custom_minimum_size = Vector2(cell_px, cell_px)
+		cell.show_item(piece, GameState.item_rules, "")
+		cell.tooltip_text = str(GameState.item_rules.catalog.entry(piece.item_id).get("name", CardTokens.slot_name(piece.slot)))
+		grid.add_child(cell)
+	if sorted.size() > CardTokens.SUMMARY_MAX_ITEMS:
+		var more := CardTokens.label(HubLook.t("summary_more") % (sorted.size() - CardTokens.SUMMARY_MAX_ITEMS), CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_INK, s, 0, "medium")
+		more.custom_minimum_size = Vector2(0.0, cell_px)
+		grid.add_child(more)
+	var counts := {}
+	for entry in sorted:
+		counts[int(entry["tier"])] = int(counts.get(int(entry["tier"]), 0)) + 1
+	var tiers := _flow(width, CardTokens.SUMMARY_GAP * 1.5, s)
+	var order := counts.keys()
+	order.sort()
+	order.reverse()
+	for tier in order:
+		var tier_id := str(GameState.item_rules.tiers[tier]["id"]) if tier < GameState.item_rules.tiers.size() else "normal"
+		var words := "%s %s" % ["◆".repeat(tier + 1), HubLook.t("summary_tiers") % [counts[tier], CardTokens.t("tier_" + tier_id)]]
+		tiers.add_child(CardTokens.label(words, CardTokens.FONT_SUMMARY_LINE, HubLook.tier_color(tier), s, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE))
+
+
+func _flow(width: float, gap: float, s: float) -> HFlowContainer:
+	var flow := HFlowContainer.new()
+	flow.alignment = FlowContainer.ALIGNMENT_CENTER
+	flow.custom_minimum_size = Vector2(width, 0.0)
+	flow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CardTokens.flow_gap(flow, gap, s)
+	_box.add_child(flow)
+	return flow
+
+
+func _amount(icon: Texture2D, text: String, s: float) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CardTokens.gap(row, 8.0, s)
+	if icon != null:
+		var picture := TextureRect.new()
+		picture.texture = icon
+		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		picture.custom_minimum_size = Vector2.ONE * CardTokens.SUMMARY_ICON * s
+		picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(picture)
+	row.add_child(CardTokens.label(text, CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_INK, s))
+	return row

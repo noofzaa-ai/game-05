@@ -802,6 +802,7 @@ func _handle_events() -> void:
 					_add_fighter_view(int(new_id), arrived_type, boss_here)
 				if _journey != null and _journey.data.wave_mode:
 					_wave_now = int(event["wave"])
+					GameState.run_loot["wave"] = _wave_now
 					_hud.show_skill_banner("BOSS WAVE" if boss_wave else "Wave %d" % _wave_now)
 				else:
 					_hud.show_skill_banner("Reinforcements!")
@@ -814,6 +815,8 @@ func _handle_events() -> void:
 				else:
 					_bank_loot()
 			"loot":
+				if _journey != null and _is_our_team(int(event["player"])):  # the summary lists the whole squad's pick-ups
+					GameState.note_run_loot(int(event["gold"]), event["materials"], event["items"])
 				if event["player"] == _local_player_id:
 					_show_loot(event)
 					_play_loot(event)
@@ -898,6 +901,15 @@ func _announce_cast(id: int, skill: String) -> void:
 		_squad_panel.callout(id, name, _vfx.skill_color(skill, DEFAULT_WEAPON_COLOR))
 	elif id == _local_player_id:
 		_hud.show_skill_banner(name)
+
+
+## True for the local player and the fighters on its team (the auto-battle squad).
+func _is_our_team(id: int) -> bool:
+	if id == _local_player_id:
+		return true
+	var me = _session.fighters.get(_local_player_id)
+	var them = _session.fighters.get(id)
+	return me != null and them != null and str(me.team) == str(them.team)
 
 
 static var _skill_names: Dictionary = {}
@@ -1429,6 +1441,7 @@ func _on_chest_opened() -> void:
 	if not is_inside_tree() or _journey == null:
 		return
 	var reward: Dictionary = _session.command({"type": "journey_treasure"}).get("result", {})
+	GameState.note_run_loot(int(reward.get("gold", 0)), reward.get("materials", {}), reward.get("items", []))
 	var at: Vector3 = _chest.loot_position()
 	_effects.play("loot", Effects.context(at, at, Vector2.RIGHT, ExitPortal.COLORS["treasure"]))
 	_hud.flash(Color(1.0, 0.85, 0.35, 0.25), 0.25)

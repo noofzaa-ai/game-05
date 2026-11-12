@@ -648,7 +648,8 @@
    "slot": "offhand",
    "name_th": "โล่กลม",
    "drop_level": 1,
-   "procedural": true
+   "procedural": true,
+   "icon_path": "res://art/items/icons/offhand_round_shield.png"
   }
  },
  "_comment": "Game items made from the model team's assets (art/items/item_manifest.json). The key is the item_id the game and saves use; asset_id finds the model. slot is the game's slot, weapon_type the combat style, set a set id in sets.json, drop_level the lowest monster level that drops it. tools/items/build_catalog.py adds new assets and never changes entries already here."

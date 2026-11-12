@@ -63,6 +63,9 @@ var camp_data  ## the camp rules (data/camp/camp.json)
 var loot_data  ## the monster drop tables (data/loot/loot.json)
 var profile  ## the player's stash, worn gear and camp (null until ensure_profile())
 var last_trip := {}  ## what the last trip brought back to camp (for the camp screen)
+## What the current / last journey picked up, for the end-of-run summary (display only; the bag itself is the rule):
+## {"items": [{"item_id", "tier", "slot"}], "gold": int, "materials": {id: count}, "wave": wave reached}.
+var run_loot := {}
 var journey  ## the PvE journey being played (logic/journey.gd), null when none
 
 
@@ -137,6 +140,7 @@ func start_journey(journey_id: String = DEFAULT_JOURNEY, seed: int = 0) -> bool:
 		return false
 	if seed == 0:
 		seed = randi()
+	run_loot = {"items": [], "gold": 0, "materials": {}, "wave": 1}
 	mode = Mode.PVE
 	var guests := {}
 	var squad_cards: Array = []
@@ -204,6 +208,21 @@ func journey_map_id(node: Dictionary) -> String:
 		if MapLoader.load_by_id(str(map_id)).is_valid():
 			return str(map_id)
 	return wanted
+
+
+## Adds a pick-up to run_loot (the summary's list): a "loot" event or a treasure / challenge reward. `items` are
+## summaries ({"item_id", "tier", "slot"}) or Item objects.
+func note_run_loot(gold: int, materials: Dictionary, items: Array) -> void:
+	if run_loot.is_empty():
+		run_loot = {"items": [], "gold": 0, "materials": {}, "wave": 1}
+	run_loot["gold"] = int(run_loot["gold"]) + gold
+	for id in materials:
+		run_loot["materials"][id] = int(run_loot["materials"].get(id, 0)) + int(materials[id])
+	for item in items:
+		if item is Dictionary:
+			run_loot["items"].append({"item_id": str(item.get("item_id", "")), "tier": int(item.get("tier", 0)), "slot": str(item.get("slot", ""))})
+		elif item != null:
+			run_loot["items"].append({"item_id": str(item.item_id), "tier": int(item.tier), "slot": str(item.slot)})
 
 
 ## Ends the journey and goes back to the campfire. A won journey brings the bag home.

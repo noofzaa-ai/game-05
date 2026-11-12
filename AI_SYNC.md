@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-12 | ui-programmer via PO | feature/class-weapons-card-screen | หน้าสรุปหลังสู้แบบหนัง/กระดาษ (VICTORY/DEFEAT, เวฟที่ผ่าน, ของที่ได้: `GameState.run_loot` เก็บจาก event loot ใน stage_view) · ไอคอนโล่เรนเดอร์จากโมเดล Studio (`tools/shots/shield_icon.gd`, catalog icon_path) · `client/hub_look.gd` helper · ยังไม่ได้: HUD ฉากสู้, ป้ายออนไลน์, ชื่อยาวถูกตัด · เทสต์ 2195/82
+
 - 2026-11-12 | PO | feature/class-weapons-card-screen | ดาบโล่โชว์โล่จากชุดเกราะ Studio แทนโล่กลมวาดด้วยโค้ด (`shield_kind`: procedural ใช้เฉพาะเมื่อชุดไม่มีโล่) ค่าตีบวกโล่ยังมาจากช่อง offhand · เทสต์ 2194/82
 
 - 2026-11-12 | gameplay-programmer via PO | feature/class-weapons-card-screen | ชื่ออังกฤษ: แฟชั่น/cosmetics (`tools/items/cosmetic_names.py`, ไทยเก็บใน name_th), สกิล (`display_name` + `display_name_th`) · สต็อกร้าน 11 ชิ้น (ดาบ 2, โล่, เกราะ 8) · กัน `_nose` Nil ใน fighter_view · เทสต์ 2194/82

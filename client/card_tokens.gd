@@ -1143,3 +1143,81 @@ static func art_rect(art_name: String) -> TextureRect:
 static func art_aspect(art_name: String, fallback: float) -> float:
 	var image := tex(art_name)
 	return float(image.get_height()) / float(image.get_width()) if image != null else fallback
+
+
+# ------------------------------------------------------------------ hub look outside the hub (Boss 2026-11-12)
+## End-of-run summary (client/journey_screen.gd _build_wave_summary), reference units at 1080p.
+const SUMMARY_PANEL_W := 1100.0
+const SUMMARY_PAD := 44.0
+const SUMMARY_GAP := 18.0
+const SUMMARY_CELL := 84.0  ## one looted item (hub_item_cell.gd)
+const SUMMARY_CELL_GAP := 10.0
+const SUMMARY_COLUMNS := 8
+const SUMMARY_MAX_ITEMS := 16  ## more than this: "+N more"
+const SUMMARY_ICON := 40.0  ## gold coin / material icon
+const SUMMARY_BUTTON := Vector2(420.0, 104.0)
+const SUMMARY_DIVIDER_H := 3.0
+const FONT_SUMMARY_TITLE := 96
+const FONT_SUMMARY_STAGE := 34
+const FONT_SUMMARY_LINE := 26
+const FONT_SUMMARY_BUTTON := 34
+## Battle HUD squad cards (client/squad_panel.gd), in the stage's logical pixels (1280x720 base).
+const SQUAD_HUD_CARD := Vector2(280.0, 74.0)
+const SQUAD_HUD_MARGIN := 10.0
+const SQUAD_HUD_GAP := 10.0
+const SQUAD_HUD_EMBLEM := 62.0
+const SQUAD_HUD_LEATHER := 5.0  ## leather rim around the name parchment
+const SQUAD_HUD_BAR_H := 18.0
+const SQUAD_HUD_CALLOUT_H := 30.0
+const SQUAD_HUD_RADIUS := 12.0
+const SQUAD_HUD_SELECT := 4.0  ## the picked card's cream ring
+const FONT_SQUAD_HUD_NAME := 17
+const FONT_SQUAD_HUD_HP := 14
+const FONT_SQUAD_HUD_CALLOUT := 22
+const SQUAD_HUD_DEAD := Color(0.55, 0.52, 0.5, 0.75)  ## a fallen card: dimmed (plus the grey shader and "DOWN")
+## The class emblem medallion on each card frame (card_frame_<class>.png, 640x960): its region in art px.
+const CARD_FRAME_EMBLEM := Rect2(496.0, 14.0, 118.0, 118.0)
+## Battle HUD trip panel and banners (client/hud.gd, auto-battle look).
+const HUD_TRIP_PAD := Vector2(14.0, 6.0)
+const HUD_TRIP_H := 38.0
+const HUD_TRIP_LEATHER := 4.0
+const FONT_HUD_TRIP := 17
+const FONT_HUD_BANNER := 40
+const FONT_HUD_BOSS := 18
+const HUD_BANNER_LEATHER := 7.0
+const HUD_BOSS_PLATE_PAD := Vector2(12.0, 6.0)
+const HUD_HP := Color("B3352A")  ## HP fill on leather (red, with the number on top)
+const HUD_HP_BACK := Color("2A140C")
+## Online status pill (client/online/online_account.gd), reference units at 1080p.
+const ONLINE_PILL_H := 44.0
+const ONLINE_PILL_PAD := 18.0
+const ONLINE_DOT := 14.0
+const FONT_ONLINE := 20
+const ONLINE_OFF := Color("C8372D")  ## dot colours (the word says it too)
+const ONLINE_WAIT := Color("E0A83A")
+const ONLINE_ON := Color("5FB65A")
+## Long names in tiles (client/hub_look.gd fit_lines): shrink to FONT_MIN, then wrap to this many lines, then "…".
+const FIT_MAX_LINES := 2
+const FIT_LINE_HEIGHT := 1.22  ## line height / font size
+
+const STRINGS_HUB_LOOK := {
+	"summary_won": ["ชนะ", "VICTORY"],
+	"summary_lost": ["พ่ายแพ้", "DEFEAT"],
+	"summary_retreated": ["ถอนทัพ", "RETREATED"],
+	"summary_abandoned": ["ออกจากด่าน", "LEFT"],
+	"summary_waves": ["ผ่านเวฟ %d / %d", "Waves cleared  %d / %d"],
+	"summary_loot": ["ของที่ได้รอบนี้", "Loot this run"],
+	"summary_loot_none": ["รอบนี้ไม่ได้ของ", "Nothing was picked up this run."],
+	"summary_gold": ["+%d ทอง", "+%d gold"],
+	"summary_material": ["%d %s", "%d %s"],
+	"summary_more": ["+%d ชิ้น", "+%d more"],
+	"summary_tiers": ["%d %s", "%d %s"],
+	"summary_safe": ["ของที่เก็บได้อยู่ในคลังแล้ว", "Everything picked up is safe in Storage."],
+	"summary_left_lost": ["ของในกระเป๋าหายไป", "The bag's loot was left behind."],
+	"summary_back": ["กลับหน้าการ์ด", "Back to Cards"],
+	"summary_saving": ["กำลังบันทึกผล…", "Saving the result..."],
+	"online_offline": ["ออฟไลน์", "Offline"],
+	"online_connecting": ["กำลังเชื่อมต่อ…", "Connecting..."],
+	"online_online": ["ออนไลน์", "Online"],
+	"squad_down": ["ล้ม", "DOWN"],
+}
