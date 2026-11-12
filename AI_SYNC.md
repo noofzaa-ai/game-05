@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | ui-programmer via PO | feature/class-weapons-card-screen | ฉากในการ์ด 3 ชั้น (far/mid/near + เงาใต้เท้า) `client/card_scene_layers.gd`, art `art/ui/class_cards/scene/` (VRAM compress, 768px) เลื่อนตามการเอียง; หน้าตัวละครใช้ฉากนิ่ง · เทสต์ 2197/82
+
 - 2026-11-13 | ui-programmer via PO | feature/class-weapons-card-screen | การ์ดสลับท่า idle (`idle_variants` ใน data/classes, `play_idle_clip()` ในโมเดล, เฉพาะการ์ด/หน้าตัวละคร) · แถบทัพเป็นภาพครึ่งตัวพอดีช่อง · เทสต์ 2196/82
 
 - 2026-11-13 | ui-programmer x2 via PO | feature/class-weapons-card-screen | การ์ดฮับเอียง 3D + ความลึก + แสงวาว (`client/card_tilt*.gdshader`), ชื่อการ์ดไม่ถูกตัด · HUD ฉากสู้เป็นแผ่นหนัง (squad_panel/hud แถบบอส/ขวาบน) · ป้าย Offline/Online อังกฤษบนฮับ · ชื่อยาวในร้าน/คลัง/Tailor ย่อพอดี · เทสต์ 2196/82

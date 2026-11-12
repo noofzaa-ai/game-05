@@ -15,6 +15,7 @@ extends Control
 const CardTokens := preload("res://client/card_tokens.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
 const CardPortrait := preload("res://client/card_portrait.gd")
+const CardSceneLayers := preload("res://client/card_scene_layers.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
 const ItemIcon := preload("res://client/item_icon.gd")
 const ItemText := preload("res://client/item_text.gd")
@@ -71,6 +72,9 @@ var _other_page: Control
 var _other_text: Label
 var _other_button: Button
 var _window: Panel
+var _scene_back: CardSceneLayers  ## the card's painted far + mid + contact shadow behind the character (static here)
+var _scene_front: CardSceneLayers  ## its near layer over the feet
+var _scene_masks: Array[Panel] = []  ## rounded window shapes (inside the window line) clipping the two scene parts
 var _portrait: Control
 var _strip: Panel
 var _stat_keys: Array = []
@@ -175,9 +179,13 @@ func _build_panel() -> void:
 	_window.clip_contents = true
 	_window.gui_input.connect(_on_window_input)
 	_equip_page.add_child(_window)
+	_scene_back = CardSceneLayers.new()
+	_window.add_child(_scene_mask(_scene_back))
 	_portrait = CardPortrait.new()
 	_portrait.framing = "stage"
 	_window.add_child(_portrait)
+	_scene_front = CardSceneLayers.new()
+	_window.add_child(_scene_mask(_scene_front))
 	_strip = Panel.new()
 	_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_window.add_child(_strip)
@@ -302,12 +310,25 @@ func _show_card(class_id: String) -> void:
 	_sel_item = ""
 	_portrait.set_class(class_id)
 	_portrait.set_look(CardDeck.look_of(_deck, class_id))
+	_scene_back.setup(class_id, CardSceneLayers.Part.BACK)
+	_scene_front.setup(class_id, CardSceneLayers.Part.FRONT)
+	_scene_back.set_feet(CardTokens.PORTRAIT_STAGE_BOTTOM)
 	_portrait.set_idle_variants(not reduced_motion)  # idle variants (Boss 2026-11-12), off for reduced motion
 	_portrait.set_render_mode(CardPortrait.Mode.LIVE)
 	_layout()
 
 
 # ================================================================== layout
+## A rounded window-shaped mask (sized in _layout_equipment) that clips `layer` inside the window line.
+func _scene_mask(layer: Control) -> Panel:
+	var mask := Panel.new()
+	mask.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	mask.clip_children = CanvasItem.CLIP_CHILDREN_ONLY
+	mask.add_child(layer)
+	_scene_masks.append(mask)
+	return mask
+
+
 func _layout() -> void:
 	if _panel == null:
 		return
@@ -411,6 +432,11 @@ func _layout_equipment(pw: float, ph: float) -> void:
 	CardTokens.panel(_window, CardTokens.hub_box(CardTokens.palette(card)["shadow"], CardTokens.HUB_WINDOW_EDGE, CardTokens.CHAR_WINDOW_LINE, CardTokens.CHAR_WINDOW_RADIUS, s))
 	_portrait.position = Vector2.ZERO
 	_portrait.size = _window.size
+	var line := CardTokens.CHAR_WINDOW_LINE * s
+	for mask in _scene_masks:
+		mask.position = Vector2(line, line)
+		mask.size = _window.size - Vector2(line, line) * 2.0
+		CardTokens.panel(mask, CardTokens.hub_box(CardTokens.HUB_WINDOW_BOTTOM, CardTokens.HUB_WINDOW_BOTTOM, 0.0, CardTokens.CHAR_WINDOW_RADIUS - CardTokens.CHAR_WINDOW_LINE, s))
 	var strip_h := CardTokens.CHAR_STAT_STRIP_H * s
 	_strip.position = Vector2(6.0 * s, _window.size.y - strip_h - 6.0 * s)
 	_strip.size = Vector2(_window.size.x - 12.0 * s, strip_h)

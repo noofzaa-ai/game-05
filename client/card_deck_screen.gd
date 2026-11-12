@@ -16,6 +16,7 @@ const TILT_SHADER := preload("res://client/card_tilt.gdshader")
 const TILT_SHEEN_SHADER := preload("res://client/card_tilt_sheen.gdshader")
 const TILT_CLIP_SHADER := preload("res://client/card_tilt_clip.gdshader")
 const CardFrame := preload("res://client/card_frame.gd")
+const CardSceneLayers := preload("res://client/card_scene_layers.gd")
 const CardHolo := preload("res://client/card_holo.gd")
 const CardCharacterScreen := preload("res://client/card_character_screen.gd")
 const HubBlacksmithPanel := preload("res://client/hub_blacksmith_panel.gd")
@@ -474,6 +475,8 @@ class HubCard extends Control:
 	var _lock: Label
 	var _focus: Panel
 	var _back_glow: TextureRect  ## soft class light on the backdrop (slides with the backdrop: the depth cue)
+	var _scene_back: CardSceneLayers  ## painted far + mid + contact shadow (replaces _back / _back_glow when the art exists)
+	var _scene_front: CardSceneLayers  ## painted near layer, over the character's feet
 	# Depth on hover / focus / tap (Boss 2026-11-12 option A): one perspective material shared by every layer of
 	# this card (client/card_tilt.gdshader) and one for the frame art with the sheen. They are set only while the
 	# card is tilted or easing back; an idle card has no material (nothing extra to draw).
@@ -510,6 +513,8 @@ class HubCard extends Control:
 		_back_glow.stretch_mode = TextureRect.STRETCH_SCALE
 		_back_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_mask.add_child(_back_glow)
+		_scene_back = CardSceneLayers.new()
+		_mask.add_child(_scene_back)
 		window_slot = Control.new()
 		window_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_mask.add_child(window_slot)
@@ -517,6 +522,11 @@ class HubCard extends Control:
 		portrait.framing = "hub"
 		portrait.set_anchors_preset(Control.PRESET_FULL_RECT)
 		window_slot.add_child(portrait)
+		_scene_front = CardSceneLayers.new()
+		_mask.add_child(_scene_front)
+		var painted := _scene_back.setup(id, CardSceneLayers.Part.BACK) and _scene_front.setup(id, CardSceneLayers.Part.FRONT)
+		_scene_back.set_feet(CardTokens.PORTRAIT_HUB_BOTTOM)
+		_back.visible = not painted
 		_frame = CardTokens.art_rect(CardTokens.HUB_CARD_FRAME_PREFIX + id)
 		add_child(_frame)
 		_name = CardTokens.hub_label("", CardTokens.FONT_HUB_CARD_NAME, CardTokens.HUB_INK, 1.0)
@@ -554,7 +564,9 @@ class HubCard extends Control:
 			portrait.set_class(class_id)
 		portrait.set_look(look)
 		_back.texture = CardTokens.window_gradient(class_id, locked)
-		_back_glow.visible = not locked
+		_back_glow.visible = not locked and not _scene_back.visible
+		_scene_back.set_locked(locked)
+		_scene_front.set_locked(locked)
 		portrait.material = CardTokens.grey_material() if locked else null
 		portrait.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
 		_lock.visible = locked
@@ -650,6 +662,8 @@ class HubCard extends Control:
 		_back_glow.size = win * CardTokens.HUB_BACK_GLOW_SIZE
 		_back_glow.position = win * CardTokens.HUB_BACK_GLOW_AT - _back_glow.size * 0.5 + back
 		window_slot.position = _tilt * CardTokens.HUB_FIGURE_PARALLAX * win
+		_scene_back.set_depth(_tilt, window_slot.position)
+		_scene_front.set_depth(_tilt, window_slot.position)
 
 	func _set_warp(on: bool) -> void:
 		_warped = on
@@ -670,6 +684,8 @@ class HubCard extends Control:
 		var clip: ShaderMaterial = _clip_mat if on else null
 		_back.material = clip
 		_back_glow.material = clip
+		_scene_back.set_clip(clip)
+		_scene_front.set_clip(clip)
 		portrait.set_view_material(clip)
 		_frame.material = _sheen_mat if on else null
 

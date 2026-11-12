@@ -360,6 +360,22 @@ const HUB_FIGURE_PARALLAX := 0.055  ## character shift WITH the tilt, fraction o
 const HUB_BACK_GLOW_SIZE := Vector2(1.1, 0.75)  ## soft class-tinted light behind the character, fraction of the window
 const HUB_BACK_GLOW_AT := Vector2(0.5, 0.36)  ## its centre
 const HUB_BACK_GLOW_ALPHA := 0.4
+## Painted depth scene in the card window (Boss 2026-11-13, client/card_scene_layers.gd): far, mid, contact shadow,
+## the character, near. Layers are 1000x1460; they sit centred on the 904x1320 frame window (WIN = 60,150-964,1470
+## on the 1024x1536 frame) as in art_source/ui/class_cards/v11/card_scene/_preview_all_near_raised.png, the
+## ~5% overscan per side hides the edges while they slide.
+const SCENE_ART_DIR := "res://art/ui/class_cards/scene/"  ## + class id + "_far|_mid|_near.png"
+const SCENE_LAYER := Vector2(1000.0, 1460.0)
+const SCENE_WINDOW := Vector2(904.0, 1320.0)
+const SCENE_FAR_PARALLAX := 0.03  ## far shift AGAINST the tilt, fraction of the window
+const SCENE_MID_PARALLAX := 0.015  ## mid shift against the tilt
+const SCENE_NEAR_PARALLAX := 0.02  ## near shift WITH the tilt
+const SCENE_NEAR_RAISE := 110.0  ## near layer lifted this many layer px so the bottom nameplate does not hide it
+const SCENE_NEAR_EXTEND := 0.12  ## the near ground's last row is stretched this much (of the layer) below it
+const SCENE_SHADOW_SIZE := Vector2(0.46, 0.065)  ## contact shadow ellipse under the feet, fraction of the window
+const SCENE_SHADOW_COLOR := Color(0.03, 0.02, 0.03, 0.62)
+const SCENE_SHADOW_CLEAR := Color(0.03, 0.02, 0.03, 0.0)
+const SCENE_SHADOW_INNER := 0.2
 const HUB_SHEEN := 0.42  ## warm sheen band across the leather / parchment frame at full tilt
 const HUB_SHEEN_EDGE := 0.6  ## rim highlight of the edge facing the pointer
 const HUB_SHEEN_WIDTH := 0.17  ## band half-width, fraction of the card
@@ -788,6 +804,11 @@ static func radial(key: String, centre: Color, edge: Color, inner: float) -> Gra
 
 static func vignette() -> GradientTexture2D:
 	return radial("vignette", VIGNETTE_CLEAR, VIGNETTE_COLOR, VIGNETTE_INNER)
+
+
+## Soft contact shadow under a card character's feet (stretched to an ellipse by the caller).
+static func scene_shadow() -> GradientTexture2D:
+	return radial("scene_shadow", SCENE_SHADOW_COLOR, SCENE_SHADOW_CLEAR, SCENE_SHADOW_INNER)
 
 
 static func figure_halo() -> GradientTexture2D:
