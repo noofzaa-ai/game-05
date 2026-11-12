@@ -103,7 +103,7 @@ static func _load(pack: Dictionary) -> void:
 		_scenes[id] = load(str(pack["folder"]) + "vfx.glb") as PackedScene
 	if not _motions.has(id):
 		var found := {}
-		var path: String = "res://art/characters/studio05/our_character_lowpoly_toon_hair_a_5k.glb"
+		var path: String = "res://art/characters/studio05/split/body_sword_shield.glb"
 		var library: RefCounted = AnimationSet.load_file(path) if ResourceLoader.exists(path) else null
 		if library != null:
 			var clip := str(pack.get("animation", ""))

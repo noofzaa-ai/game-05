@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | character-artist via PO | develop | แยกผมออกจากตัว: `art/characters/studio05/split/` (body ต่อคลาส + hair_*.glb + outfit_silver_silk) จาก `tools/characters/split_studio05_hair.py` (คัดลอก byte ตรง, rig/weights ไม่เปลี่ยน) 200 MB -> 30 MB · ไฟล์ตัวละครเต็มตัวเก่า 28 ไฟล์เกมไม่ใช้แล้ว (ยังไม่ลบ) · เทสต์ 2238/81
+
 - 2026-11-13 | PO | develop | Boss: ตัดหน้า title ออก boot -> หน้าการ์ดเลย (`client/pack_loader.gd` `_open_game`): มี session บัญชีจากหน้าเว็บ = ล็อกอินออนไลน์ก่อน (ล้มเหลวถึงกลับหน้า title), ไม่มี = เล่นออฟไลน์ · เว็บ build 8442ee5d7712 · เทสต์ 2225/81
 
 - 2026-11-13 | PO | develop | `play_template.html`: บน localhost/127.0.0.1 ข้ามการล็อกอินบัญชีออนไลน์ (เล่นออฟไลน์บนเครื่อง dev) เว็บจริงยังต้องล็อกอิน · ขนาดดาวน์โหลดครั้งแรก 222 MB

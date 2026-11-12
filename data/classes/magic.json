@@ -4,7 +4,7 @@
  "weapon": "magic",
  "weapon_families": ["blade"],
  "_weapon_families": "Weapon items (catalog weapon_type) this class card may wear in its weapon slot, logic/profile.gd card_can_wear (Boss 2026-11-11) (placeholder: the catalog has only blade weapons; list the class weapon family here once its items exist).",
- "animations": "res://art/characters/studio05/v1111/hair/our_character_magic_hair_c_5k.glb",
+ "animations": "res://art/characters/studio05/split/body_magic.glb",
  "clip_marks": "res://art/characters/studio05/classes/magic_clips.json",
  "moves": {
   "light_1": "mg_spell_1h_magic_attack_01",
@@ -44,5 +44,5 @@
   "f",
   "g"
  ],
- "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb swapped onto the hair A file."
+ "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body."
 }

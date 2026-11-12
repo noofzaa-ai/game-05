@@ -23,4 +23,5 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-12 | Trinkets in the shop | none until trinket items exist in the catalog (no art yet) | avoid placeholder items | `data/items/shop.json`
 - 2026-11-12 | Shop prices | flat 1000 gold at tier 1 (existing `logic/shop.gd` rule) | unchanged rule; tune later | `data/items/shop.json`, `logic/shop.gd`
 - 2026-11-13 | Card scene depth (Boss: make the card scene have depth) | painted 3-layer parallax per class (far / mid / near foreground in front of the feet) + floor shadow and rim light on the character | cheap on web, matches the painted ruins hub; a 3D diorama per card would cost 4 extra scenes on phones | `art/ui/class_cards/`, `client/card_deck_screen.gd`, `client/card_portrait.gd`
+- 2026-11-13 | Great Sword / Longbow with hair F animation speed | use the class clip speed (old files played 2.5x slower, likely a 24 fps export mistake) | attack timing marks fit the class speed | `tools/characters/split_studio05_hair.py`, docs/tech/studio_v20261111_inventory.md section 7
 

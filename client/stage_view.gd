@@ -40,7 +40,7 @@ const MATERIAL_COLORS := {
 	"stone": Color(0.55, 0.55, 0.5),
 	"ink": Color(0.30, 0.34, 0.29),
 }
-const PLAYER_MODEL := "res://art/characters/studio05/our_character_lowpoly_toon_hair_a_5k.glb"  # (the model team's chibi; earlier: chibi/chibi_painted.glb, base/base_character.glb)
+const PLAYER_MODEL := "res://art/characters/studio05/split/body_sword_shield.glb"  # (the model team's chibi; earlier: chibi/chibi_painted.glb, base/base_character.glb)
 const InkUi := preload("res://client/ink_ui.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
 const PLAYER_COLOR := Color(0.85, 0.85, 0.95)

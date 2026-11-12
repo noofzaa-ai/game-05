@@ -1,0 +1,45 @@
+{
+ "_comment": "Written by tools/characters/split_studio05_hair.py. The game loads body_<class> once and merges one hair file (and the Silver Silk outfit) onto its skeleton, like class-gear.js replaceCharacterHair(). Hair G is the Studio's own hair-only file.",
+ "bodies": {
+  "sword_shield": "res://art/characters/studio05/split/body_sword_shield.glb",
+  "greatsword": "res://art/characters/studio05/split/body_greatsword.glb",
+  "longbow": "res://art/characters/studio05/split/body_longbow.glb",
+  "magic": "res://art/characters/studio05/split/body_magic.glb"
+ },
+ "hair": {
+  "sword_shield": {
+   "a": "res://art/characters/studio05/split/hair_a.glb",
+   "b": "res://art/characters/studio05/split/hair_b.glb",
+   "c": "res://art/characters/studio05/split/hair_c.glb",
+   "e": "res://art/characters/studio05/split/hair_e_sword_shield.glb",
+   "f": "res://art/characters/studio05/split/hair_f.glb",
+   "g": "res://art/characters/studio05/v1111/hair/hair_g.glb"
+  },
+  "greatsword": {
+   "a": "res://art/characters/studio05/split/hair_a.glb",
+   "b": "res://art/characters/studio05/split/hair_b.glb",
+   "c": "res://art/characters/studio05/split/hair_c.glb",
+   "e": "res://art/characters/studio05/split/hair_e.glb",
+   "f": "res://art/characters/studio05/split/hair_f.glb",
+   "g": "res://art/characters/studio05/v1111/hair/hair_g.glb"
+  },
+  "longbow": {
+   "a": "res://art/characters/studio05/split/hair_a.glb",
+   "b": "res://art/characters/studio05/split/hair_b.glb",
+   "c": "res://art/characters/studio05/split/hair_c.glb",
+   "e": "res://art/characters/studio05/split/hair_e.glb",
+   "f": "res://art/characters/studio05/split/hair_f.glb",
+   "g": "res://art/characters/studio05/v1111/hair/hair_g.glb"
+  },
+  "magic": {
+   "a": "res://art/characters/studio05/split/hair_a.glb",
+   "b": "res://art/characters/studio05/split/hair_b.glb",
+   "c": "res://art/characters/studio05/split/hair_c.glb",
+   "e": "res://art/characters/studio05/split/hair_e.glb",
+   "f": "res://art/characters/studio05/split/hair_f_magic.glb",
+   "g": "res://art/characters/studio05/v1111/hair/hair_g.glb"
+  }
+ },
+ "silver": "res://art/characters/studio05/split/outfit_silver_silk.glb",
+ "hair_g": "res://art/characters/studio05/v1111/hair/hair_g.glb"
+}

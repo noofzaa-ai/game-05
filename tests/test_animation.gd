@@ -27,8 +27,9 @@ func run(ctx) -> void:
 	ctx.check("a sample moves the hips and the hair chains", sample.has("mixamorig_Hips") and sample.has("hair_CB_1"))
 	ctx.check("loading twice gives the same cached object", AnimationSet.load_file(str(spec.animations), str(spec.clip_marks)) == library)
 	for hair in StudioModel.HAIR_STYLES:
-		for silver in [false, true]:
-			ctx.check("variant %s%s exists" % [hair, " silver" if silver else ""], ResourceLoader.exists(StudioModel.variant_path(hair, silver)))
+		for class_id in ["sword_shield", "greatsword", "longbow", "magic"]:
+			ctx.check("hair %s file for %s exists" % [hair, class_id], ResourceLoader.exists(StudioModel.hair_path(class_id, hair)))
+	ctx.check("the silver silk outfit file exists", ResourceLoader.exists(StudioModel.silver_path()))
 	ctx.check("the ultimate and the heavy hit use different clips", spec.moves["ultimate"] == "attack_2" and spec.moves["heavy"] != "attack_2")
 	ctx.check("hair ids map to a stable file", StudioModel.hair_for("anything") == StudioModel.hair_for("anything") and StudioModel.hair_for("c") == "c")
 

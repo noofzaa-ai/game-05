@@ -129,3 +129,19 @@ classes show no shield.
 7. Silver Silk files for the other classes were not copied (silk mesh merged from our Sword & Shield silver file); outcome is the
    same geometry, skin and material.
 8. Textures are imported VRAM-compressed with mipmaps (Godot default); 12 × 2048² maps — web memory cost not measured.
+
+## 7. Body / hair split (Boss 2026-11-13 item B: "load the body once, swap only the hair")
+
+`tools/characters/split_studio05_hair.py` (glTF JSON/binary split, bytes copied as-is, self-checking by hash) writes
+`art/characters/studio05/split/`: `body_<class>.glb` (Base_Body + Head_Anime + rig + class clips, from the class's
+hair C file), `hair_{a,b,c,e,f}.glb` (+ `hair_e_sword_shield`, `hair_f_magic`: those two hair meshes differ from the
+other classes'), `outfit_silver_silk.glb`, and `manifest.json` (class -> body, class -> hair -> file). Hair G stays
+`v1111/hair/hair_g.glb`. `studio05_character_model.gd` loads the body and merges the hair (and the silk) onto its
+skeleton like `replaceCharacterHair()`. 28 whole-character files (200.1 MB) -> 12 files (29.1 MB) + hair G 0.9 MB.
+
+Clips per hair: A/B/C/E (and Magic F) are byte-identical to the body's. Sword & Shield F only marks constant end-bone
+channels STEP (no visible change). **Great Sword F and Longbow F** hold the same key values on a timeline 2.5x longer
+(1/24 s steps instead of 1/60 s, an export slip): the Studio plays them 2.5x slower with those hairs; the game now
+plays them at the class speed with every hair (our clip marks are timed for 1/60 s). OPEN until the Boss accepts it.
+Sword & Shield hair A/B files' `Head_Anime` carried `COLOR_0` (all 1.0) and `COLOR_1` that no shader reads; the body
+uses the C file's head (same positions, weights and material) - no visible change (compared).

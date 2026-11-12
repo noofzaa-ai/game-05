@@ -21,7 +21,7 @@ const InkStyle := preload("res://client/ink_style.gd")
 const SimBody := preload("res://logic/sim_body.gd")
 
 ## Original Chibi restored for the approved silhouette and matching wardrobe/ultimate rig.
-const MODEL_PATH := "res://art/characters/studio05/our_character_lowpoly_toon_hair_a_5k.glb"
+const MODEL_PATH := "res://art/characters/studio05/split/body_sword_shield.glb"
 ## The hair style the body shows (its hair meshes are tagged studio_hair_style); the others are hidden.
 const BODY_HAIR_STYLE := "original"
 const TURN_SPEED := 14.0

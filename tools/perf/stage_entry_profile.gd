@@ -6,7 +6,7 @@ extends SceneTree
 ##   godot --path . --script res://tools/perf/stage_entry_profile.gd [-- [--no-loads] [--twice] [map_id]]
 ## --twice opens the stage a second time in the same process: what is left then is not first-use compiling.
 const Options := preload("res://client/graphics_options.gd")
-const LOADS := ["res://art/characters/studio05/our_character_lowpoly_toon_hair_a_5k.glb", "res://art/monsters/goblin/goblin.glb",
+const LOADS := ["res://art/characters/studio05/split/body_sword_shield.glb", "res://art/monsters/goblin/goblin.glb",
 	"res://art/animations/goblin.glb", "res://art/monsters/goblin_knight/goblin_knight.glb",
 	"res://art/animations/goblin_knight.glb", "res://art/monsters/goblin_archer/goblin_archer.glb",
 	"res://art/animations/goblin_archer.glb", "res://art/maps/goblin_base/goblin_base_quarry.tscn"]

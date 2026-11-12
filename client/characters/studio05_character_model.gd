@@ -1,11 +1,13 @@
 extends "res://client/character_model.gd"
 ## Production player (Boss goal 2026-11-10): the studio05 toon character on its own Mixamo rig (102 joints,
 ## 6x3 hair chain). Source of truth: the Studio drop of 2026-11-11 (docs/tech/studio_v20261111_inventory.md).
-## Per class the body file is the class's own GLB (hair A/B/C/E/F, the class clips); the class gear
+## Per class one base body file is loaded once (split/body_<class>.glb: body, face, rig, the class clips, no hair)
+## and the chosen hair (split/hair_<x>.glb, or the Studio's hair/hair_g.glb) is merged onto its skeleton like
+## class-gear.js replaceCharacterHair() (Boss 2026-11-13; files made by tools/characters/split_studio05_hair.py
+## from the Studio's whole-character files, bytes unchanged). The class gear
 ## (outfits/armor_<class>.glb, same 102 joints and rest) is merged onto that skeleton like class-gear.js:
 ## "outfit" = every gear mesh and the base body hidden, "weapons" = only "| Sword/Shield/Bow/Quiver/Staff/
-## Spellbook" pieces (Silver Silk shows the silk over the body plus the class weapons). Hair G
-## (hair/hair_g.glb) replaces the file's hair mesh like replaceCharacterHair(). The source rig, weights,
+## Spellbook" pieces (Silver Silk = split/outfit_silver_silk.glb over the body plus the class weapons). The source rig, weights,
 ## blend shapes and clips are used as they are; the game only adds two weapon socket bones under the hands.
 ## Looks follow STUDIO_SPEC.md: fixed-key cel bands, procedural anime eyes (iris presets, makeup, blink),
 ## face/hair ink and the ink hulls.
@@ -18,6 +20,8 @@ const InkShader := preload("res://client/characters/studio05_ink.gdshader")
 const RefineEffect := preload("res://client/refine_equipment.gd")
 const FOLDER := "res://art/characters/studio05/"
 const V1111 := "res://art/characters/studio05/v1111/"
+## Written by tools/characters/split_studio05_hair.py: class -> body file, class -> hair letter -> hair file, silver.
+const SPLIT_MANIFEST := "res://art/characters/studio05/split/manifest.json"
 const HAIR_STYLES: Array[String] = ["a", "b", "c", "e", "f", "g"]  ## Studio hair buttons (hair D was retired; G is new)
 const HEIGHT := 1.35  ## Boss: characters at most 135cm
 const HIPS := "mixamorig_Hips"
@@ -54,6 +58,7 @@ const CAPE_SHAPES: Array[String] = ["Cape Trail", "Cape Ripple Sine", "Cape Ripp
 static var _classes: Dictionary = {}
 static var _cape_tracks: Dictionary = {}  ## gear path -> {clip: {shape: Animation track}} (+ "_animation" refs)
 static var _weapon_regex: RegEx
+static var _split: Dictionary = {}
 
 
 ## The class file (data/classes/<id>.json): its animation clips, how our moves and states map onto them.
@@ -118,26 +123,40 @@ var _idle_start := 0.0  ## _clock when _idle_clip started
 var _idle_from := ""  ## clip faded out ("" = nothing to fade)
 var _idle_from_start := 0.0
 var _idle_blend := 0.0  ## seconds of the crossfade
+var _retired: Array = []  ## the previous look's meshes and materials, kept one switch longer (_load_variant)
 
 
-## The body file a variant starts from (index.html loadInPlaceRun): the class's own GLB with hair A-F;
-## hair G starts from the hair A file and swaps the hair mesh. Silver Silk is merged on top (_dress_class_gear).
-static func body_path(class_name_id: String, hair: String) -> String:
-	var letter := "a" if hair == "g" else hair
-	var model := str(CLASS_FILES.get(class_name_id, CLASS_FILES[DEFAULT_CLASS])["model"])
-	if model == "lowpoly_toon":
-		return FOLDER + "our_character_lowpoly_toon_hair_" + letter + "_5k.glb"
-	return V1111 + "hair/our_character_" + model + "_hair_" + letter + "_5k.glb"
+static func _split_files() -> Dictionary:
+	if _split.is_empty() and FileAccess.file_exists(SPLIT_MANIFEST):
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(SPLIT_MANIFEST))
+		_split = parsed if parsed is Dictionary else {}
+	return _split
+
+
+static func _known_class(class_name_id: String) -> String:
+	return class_name_id if CLASS_FILES.has(class_name_id) else DEFAULT_CLASS
+
+
+## The class's base body (body, face, rig and the class clips; no hair), loaded once per class. The Studio's
+## per-hair body files carry the same body, rig and clips (byte-identical, except hair F's export-rate slip:
+## see tools/characters/split_studio05_hair.py).
+static func body_path(class_name_id: String, _hair: String = "") -> String:
+	return str(_split_files().get("bodies", {}).get(_known_class(class_name_id), ""))
+
+
+## The hair-only file merged onto the body (index.html hair buttons A, B, C, E, F, G; G = hair/hair_g.glb).
+static func hair_path(class_name_id: String, hair: String) -> String:
+	var table: Dictionary = _split_files().get("hair", {}).get(_known_class(class_name_id), {})
+	return str(table.get(hair, table.get("a", "")))
 
 
 static func gear_path(class_name_id: String) -> String:
 	return V1111 + "outfits/" + str(CLASS_FILES.get(class_name_id, CLASS_FILES[DEFAULT_CLASS])["gear"]) + ".glb"
 
 
-## The Sword & Shield body files the game shipped before 2026-11-11 (byte-identical to the Studio's).
-static func variant_path(hair: String, silver: bool) -> String:
-	var letter := "a" if hair == "g" else hair
-	return FOLDER + "our_character_lowpoly_toon_hair_" + letter + "_5k" + ("_silver" if silver else "") + ".glb"
+## The Silver Silk outfit (Outfit_SilverSilk only; the same mesh as in every Studio *_silver file).
+static func silver_path() -> String:
+	return str(_split_files().get("silver", ""))
 
 
 ## The hair letter for a cosmetic hair id: stable per id so remote players see the same.
@@ -179,8 +198,17 @@ func _load_variant(cls: String, hair: String, silver: bool) -> bool:
 	var weapon := _weapon_args.duplicate()
 	if _model_root != null:
 		_show_weapon("", "")
-		_model_root.queue_free()
+		# The renderer may still hold an update for the old meshes this frame: keep their materials and meshes
+		# referenced until the next switch, else it reads a freed material ("Parameter material is null").
+		_retired.clear()
+		for node in _model_root.find_children("*", "MeshInstance3D", true, false):
+			var instance := node as MeshInstance3D
+			_retired.append(instance.mesh)
+			_retired.append(instance.material_override)
+			for surface in instance.get_surface_override_material_count():
+				_retired.append(instance.get_surface_override_material(surface))
 		_lie.remove_child(_model_root)
+		_model_root.queue_free()
 	_meshes.clear()
 	_body_meshes.clear()
 	_hair_meshes.clear()
@@ -223,12 +251,9 @@ func _load_variant(cls: String, hair: String, silver: bool) -> bool:
 		_rest[bone_name] = _skeleton.get_bone_rest(index).basis.get_rotation_quaternion()
 		_global_rest[bone_name] = _skeleton.get_bone_global_rest(index).basis.get_rotation_quaternion()
 		_rest_position[bone_name] = _skeleton.get_bone_rest(index).origin
-	if hair == "g":  # replaceCharacterHair(): the file's hair mesh goes, Hair_G (hair/hair_g.glb) comes in
-		for mesh in _meshes.duplicate():
-			if str(mesh.name).begins_with("Hair_"):
-				_meshes.erase(mesh)
-				mesh.queue_free()
-		_meshes.append_array(_merge(V1111 + "hair/hair_g.glb", func(_n: String) -> bool: return true))
+	# replaceCharacterHair(): the chosen hair's mesh joins the body's skeleton (before sizing, as in the old
+	# whole-character files whose bounds included the hair).
+	_meshes.append_array(_merge(hair_path(cls, hair), func(n: String) -> bool: return n.begins_with("Hair_")))
 	for mesh in _meshes:
 		if str(mesh.name).begins_with("Hair_"):
 			_hair_meshes.append(mesh)
@@ -240,7 +265,8 @@ func _load_variant(cls: String, hair: String, silver: bool) -> bool:
 	_body_meshes = _meshes.duplicate()
 	_dress_class_gear(cls, silver)
 	var spec := class_data(cls)
-	# The clips come from this very file: the Studio bakes each hair's own secondary motion into its clips.
+	# The class clips live in the body file: they are the same for every hair (the hair chains' secondary
+	# motion included), so one library per class.
 	_library = AnimationSet.load_file(path, str(spec.get("clip_marks", "")))
 	if _library == null:
 		_library = AnimationSet.load_file(str(spec.get("animations", "")), str(spec.get("clip_marks", "")))
@@ -265,7 +291,7 @@ func _dress_class_gear(cls: String, silver: bool) -> void:
 	if not ResourceLoader.exists(gear):
 		return
 	if silver:
-		var silk := _merge(variant_path("c", true), func(n: String) -> bool: return n.begins_with("Outfit_SilverSilk"))
+		var silk := _merge(silver_path(), func(n: String) -> bool: return n.begins_with("Outfit_SilverSilk"))
 		_meshes.append_array(silk)
 		_gear_meshes.append_array(silk)
 	else:
