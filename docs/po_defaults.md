@@ -42,3 +42,4 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-13 | Skill clip root motion (stepping/leaping clips slide feet) | (a) sim movement follows the clip's travel frames | no client hack, no sliding | design/gdd/class-skills.md
 - 2026-11-13 | New skill clips | (a) existing clips only for now (Intercept -> jump_2); no new clips commissioned yet | fastest; revisit after Boss watches previews | design/gdd/class-skills.md
 - 2026-11-13 | Skill tree phone tap size | A: keep the whole tree visible, nodes ~80–100 px (under the 96 px GDD minimum) | both branches on one screen beats panning | design/gdd/skill-tree.md 9.1
+- 2026-11-13 | Iron Guard counters vs 1.39 s counter clip | cap counters at 2 per stance | fits the 3 s stance with the clip as-is | design/gdd/class-skills.md

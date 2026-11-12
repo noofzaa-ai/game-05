@@ -11,16 +11,16 @@
   "light_2": "lb_aim_recoil",
   "light_3": "lb_aim_recoil",
   "light_4": "lb_draw_arrow",
-  "heavy": "lb_aim_overdraw",
+  "heavy": "lb_aim_recoil",
   "run_light": "lb_aim_recoil",
-  "run_heavy": "lb_aim_overdraw",
+  "run_heavy": "lb_aim_recoil",
   "air_light": "lb_aim_recoil",
-  "air_heavy": "lb_aim_overdraw",
+  "air_heavy": "lb_aim_recoil",
   "kick": "lb_melee_kick",
   "flying_kick": "lb_melee_kick",
-  "ultimate": "lb_aim_overdraw",
+  "ultimate": "lb_aim_recoil",
   "special": "lb_draw_arrow",
-  "charge": "lb_aim_overdraw"
+  "charge": "lb_aim_recoil"
  },
  "states": {
   "idle": "lb_idle_01",

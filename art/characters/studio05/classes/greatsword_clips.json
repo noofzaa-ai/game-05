@@ -134,10 +134,10 @@
  "gs_jump_attack": {
   "length": 2.1833,
   "loop": false,
-  "windup_end": 0.05,
-  "strike_end": 0.153,
+  "windup_end": 1.0,
+  "strike_end": 1.25,
   "begin": 0.0,
-  "finish": 0.753
+  "finish": 2.0
  },
  "gs_kick": {
   "length": 1.5167,

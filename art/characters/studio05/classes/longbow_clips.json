@@ -10,8 +10,8 @@
  "lb_aim_recoil": {
   "length": 0.7,
   "loop": false,
-  "windup_end": 0.1,
-  "strike_end": 0.32,
+  "windup_end": 0.18,
+  "strike_end": 0.25,
   "begin": 0.0,
   "finish": 0.7
  },

@@ -1,0 +1,461 @@
+{
+ "_comment": "Class-skill clip windows v2 (animator 2026-11-13), mirrors design/gdd/class-skills.md 3.2-3.5. segs: [clip, start, end, speed, [release clip-times]]. travel: [from, to] clip-time span of segment `travel_seg` where the sim moves the body (root-motion rule). blend: seconds between segments (default 0.12).",
+ "S1": {
+  "cls": "sword_shield",
+  "name": "Shield Rush",
+  "travel_seg": 0,
+  "travel": [
+   0.3,
+   0.62
+  ],
+  "segs": [
+   [
+    "attack_4",
+    0.3,
+    0.62,
+    0.8,
+    [
+     0.62
+    ]
+   ],
+   [
+    "attack_4",
+    0.62,
+    1.98,
+    1.5,
+    []
+   ]
+  ]
+ },
+ "S2": {
+  "cls": "sword_shield",
+  "name": "Iron Guard",
+  "segs": [
+   [
+    "block",
+    0.0,
+    1.45,
+    1.6,
+    []
+   ],
+   [
+    "block_idle",
+    0.0,
+    0.6,
+    1.0,
+    []
+   ],
+   [
+    "block_2",
+    0.0,
+    0.6,
+    4.0,
+    []
+   ],
+   [
+    "attack_4",
+    0.0,
+    2.2,
+    2.5,
+    [
+     0.62
+    ]
+   ],
+   [
+    "block",
+    0.0,
+    1.45,
+    4.0,
+    []
+   ],
+   [
+    "block_idle",
+    0.0,
+    0.4,
+    1.0,
+    []
+   ],
+   [
+    "block_2",
+    0.0,
+    1.7,
+    1.4,
+    []
+   ]
+  ]
+ },
+ "S3": {
+  "cls": "sword_shield",
+  "name": "Intercept",
+  "travel_seg": 1,
+  "travel": [
+   0.5,
+   1.97
+  ],
+  "segs": [
+   [
+    "jump_2",
+    0.33,
+    0.5,
+    1.0,
+    []
+   ],
+   [
+    "jump_2",
+    0.5,
+    1.97,
+    2.94,
+    [
+     1.97
+    ]
+   ],
+   [
+    "jump_2",
+    1.97,
+    2.45,
+    1.2,
+    []
+   ],
+   [
+    "block",
+    0.0,
+    0.45,
+    1.0,
+    []
+   ]
+  ]
+ },
+ "S4": {
+  "cls": "sword_shield",
+  "name": "Breaker Slam",
+  "travel_seg": 0,
+  "travel": [
+   3.0,
+   3.35
+  ],
+  "segs": [
+   [
+    "slash_4",
+    0.43,
+    5.38,
+    2.5,
+    [
+     3.58
+    ]
+   ]
+  ]
+ },
+ "G1": {
+  "cls": "greatsword",
+  "name": "Reaping Arc",
+  "travel_seg": 0,
+  "travel": [
+   0.27,
+   0.75
+  ],
+  "segs": [
+   [
+    "gs_slash_3",
+    0.167,
+    1.533,
+    1.0,
+    [
+     0.82
+    ]
+   ]
+  ]
+ },
+ "G2": {
+  "cls": "greatsword",
+  "name": "Crater Leap",
+  "travel_seg": 1,
+  "travel": [
+   0.63,
+   1.0
+  ],
+  "segs": [
+   [
+    "gs_jump_attack",
+    0.067,
+    0.63,
+    1.0,
+    []
+   ],
+   [
+    "gs_jump_attack",
+    0.63,
+    1.0,
+    0.74,
+    []
+   ],
+   [
+    "gs_jump_attack",
+    1.0,
+    1.25,
+    1.0,
+    [
+     1.22
+    ]
+   ],
+   [
+    "gs_jump_attack",
+    1.25,
+    2.0,
+    1.5,
+    []
+   ]
+  ]
+ },
+ "G3": {
+  "cls": "greatsword",
+  "name": "Hook Sweep",
+  "travel_seg": 0,
+  "travel": [
+   0.27,
+   0.8
+  ],
+  "segs": [
+   [
+    "gs_slash_4",
+    0.117,
+    1.433,
+    1.0,
+    [
+     0.74
+    ]
+   ]
+  ]
+ },
+ "G4": {
+  "cls": "greatsword",
+  "name": "Battle Trance",
+  "segs": [
+   [
+    "gs_power_up",
+    1.3,
+    3.0,
+    1.4,
+    [
+     2.05
+    ]
+   ]
+  ]
+ },
+ "L1": {
+  "cls": "longbow",
+  "name": "Heartseeker",
+  "segs": [
+   [
+    "lb_draw_arrow",
+    0.0,
+    1.017,
+    1.0,
+    []
+   ],
+   [
+    "lb_aim_recoil",
+    0.0,
+    0.7,
+    1.0,
+    [
+     0.18
+    ]
+   ]
+  ]
+ },
+ "L2": {
+  "cls": "longbow",
+  "name": "Pinning Shot",
+  "segs": [
+   [
+    "lb_draw_arrow",
+    0.0,
+    1.017,
+    1.5,
+    []
+   ],
+   [
+    "lb_aim_recoil",
+    0.0,
+    0.7,
+    0.8,
+    [
+     0.18
+    ]
+   ]
+  ]
+ },
+ "L3": {
+  "cls": "longbow",
+  "name": "Rapid Fire",
+  "blend": 0.05,
+  "segs": [
+   [
+    "lb_draw_arrow",
+    0.0,
+    1.017,
+    2.0,
+    []
+   ],
+   [
+    "lb_aim_recoil",
+    0.0,
+    0.18,
+    1.0,
+    [
+     0.18
+    ]
+   ],
+   [
+    "lb_aim_recoil",
+    0.18,
+    0.233,
+    0.332,
+    []
+   ],
+   [
+    "lb_aim_recoil",
+    0.15,
+    0.18,
+    0.332,
+    [
+     0.18
+    ]
+   ],
+   [
+    "lb_aim_recoil",
+    0.18,
+    0.233,
+    0.332,
+    []
+   ],
+   [
+    "lb_aim_recoil",
+    0.15,
+    0.18,
+    0.332,
+    [
+     0.18
+    ]
+   ],
+   [
+    "lb_aim_recoil",
+    0.18,
+    0.233,
+    0.332,
+    []
+   ],
+   [
+    "lb_aim_recoil",
+    0.15,
+    0.18,
+    0.332,
+    [
+     0.18
+    ]
+   ],
+   [
+    "lb_aim_recoil",
+    0.18,
+    0.7,
+    1.0,
+    []
+   ]
+  ],
+  "_note": "loop 0.15-0.233 (one re-nock, 0.25 s per arrow at 0.332x); same-clip joins at 0.18 are seamless"
+ },
+ "L4": {
+  "cls": "longbow",
+  "name": "Vault Shot",
+  "travel_seg": 0,
+  "travel": [
+   0.25,
+   0.85
+  ],
+  "segs": [
+   [
+    "lb_dodge_backward",
+    0.0,
+    0.95,
+    1.5,
+    []
+   ],
+   [
+    "lb_draw_arrow",
+    0.0,
+    1.017,
+    2.0,
+    []
+   ],
+   [
+    "lb_aim_recoil",
+    0.0,
+    0.7,
+    1.0,
+    [
+     0.18
+    ]
+   ]
+  ]
+ },
+ "M1": {
+  "cls": "magic",
+  "name": "Arcane Orb",
+  "segs": [
+   [
+    "mg_spell_1h_cast_spell_01",
+    0.167,
+    1.55,
+    1.0,
+    [
+     0.58
+    ]
+   ]
+  ]
+ },
+ "M2": {
+  "cls": "magic",
+  "name": "Repulse Nova",
+  "segs": [
+   [
+    "mg_spell_2h_magic_area_attack_01",
+    0.1,
+    2.683,
+    1.5,
+    [
+     1.32
+    ]
+   ]
+  ]
+ },
+ "M3": {
+  "cls": "magic",
+  "name": "Starfall",
+  "segs": [
+   [
+    "mg_spell_2h_cast_spell_01",
+    0.167,
+    1.967,
+    1.0,
+    [
+     1.25
+    ]
+   ]
+  ]
+ },
+ "M4": {
+  "cls": "magic",
+  "name": "Warding Veil",
+  "segs": [
+   [
+    "mg_spell_2h_magic_attack_05",
+    0.267,
+    3.067,
+    1.6,
+    [
+     2.03
+    ]
+   ]
+  ]
+ }
+}
