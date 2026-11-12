@@ -93,12 +93,16 @@ func attack_speed_factor() -> float:
 	return maxf(0.1, 1.0 + stat("ATKSPD") / 100.0)
 
 
-## A stat with the buffs and debuffs counted: (base + adds) x (1 + muls). Damage, speed and regeneration
+## A stat with the buffs and debuffs counted: (base + adds) x (1 + muls + race low-HP bonus). Damage, speed and regeneration
 ## read this; the sizes of the health and stamina bars (HP, STAMINA) are the base values.
 func stat(stat_name: String, default_value: float = 0.0) -> float:
 	var value := float(stats.get(stat_name, default_value))
-	if stat_mods.has(stat_name):
-		value = (value + float(stat_mods[stat_name]["add"])) * (1.0 + float(stat_mods[stat_name]["mul"]))
+	var race_mul := 0.0
+	if not race_state.get("scaling", []).is_empty():  # race low_hp_scaling (GDD races 4.1): moves with current HP
+		race_mul = preload("res://logic/race_passives.gd").scaling_mul(self, stat_name)
+	if stat_mods.has(stat_name) or race_mul != 0.0:
+		var mod: Dictionary = stat_mods.get(stat_name, {"add": 0.0, "mul": 0.0})
+		value = (value + float(mod["add"])) * (1.0 + float(mod["mul"]) + race_mul)
 	if stat_name == "ATKSPD" or stat_name == "MOVESPD":
 		return maxf(-90.0, value)
 	return maxf(0.0, value)

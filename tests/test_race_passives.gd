@@ -11,6 +11,7 @@ const Fighter := preload("res://logic/fighter.gd")
 const Map := preload("res://logic/map_loader.gd")
 const Deck := preload("res://logic/card_deck.gd")
 const RacePassives := preload("res://logic/race_passives.gd")
+const RaceData := preload("res://logic/race_data.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 const Pilot := preload("res://logic/auto_pilot.gd")
 const CARDS := ["sword_shield", "greatsword", "longbow"]
@@ -71,6 +72,7 @@ func run(ctx) -> void:
 	_moonlit_and_bloom(ctx)
 	_inert_cells(ctx)
 	_shield(ctx)
+	_low_hp_scaling(ctx)
 	_synergy(ctx)
 	_checkpoint_and_determinism(ctx)
 
@@ -177,10 +179,6 @@ func _inert_cells(ctx) -> void:
 		out.append_array(react(sim, {"type": "hit", "attacker": 2, "target": foe, "damage": 10, "move": "heavy"}))
 		out.append_array(react(sim, {"type": "hit", "attacker": foe, "target": 1, "damage": 10, "move": "light_1"}))
 	ctx.check("inert: Runeborn rune cells fire nothing yet", procs(out, 1).is_empty() and procs(out, 2).is_empty() and sim.fighters[foe].hp == hp_before)
-	var g := squad(["human", "viking", "elf"])
-	var gsim = g.sim
-	gsim.fighters[2].hp = gsim.fighters[2].max_hp() * 0.2
-	ctx.check("inert: Berserker low-HP ATK scaling is not applied yet", is_equal_approx(gsim.fighters[2].stat("ATK"), float(gsim.fighters[2].stats["ATK"])))
 
 
 ## Fighter shield (GDD 4.3, phase 4 step 1): an absorb pool capped at 30% max HP, absorbs before HP, lasts
@@ -252,6 +250,53 @@ func _shield(ctx) -> void:
 	vsim.events.clear()
 	RacePassives.step(vsim)
 	ctx.check("Unbroken: once per wave", procs(vsim.events, 1).is_empty())
+
+
+## low_hp_scaling (GDD 4.1, phase 4 step 2): bonus = max_mul x clamp((from_hp - h) / (from_hp - full_at_hp), 0, 1);
+## a `below` gate makes it a step (0 above, max_mul below). Read live through Fighter.stat, so damage follows HP.
+func _low_hp_scaling(ctx) -> void:
+	var berserker := {"type": "low_hp_scaling", "stat": "ATK", "max_mul": 0.4, "from_hp": 1.0, "full_at_hp": 0.2}
+	var got := []
+	for h in [1.0, 0.6, 0.5, 0.2, 0.1]:
+		got.append(snappedf(RacePassives.low_hp_bonus(berserker, h), 0.0001))
+	ctx.check("formula 4.1: Berserker at h=1.0/0.6/0.5/0.2/0.1 -> 0/0.20/0.25/0.40/0.40 (%s)" % [got], got == [0.0, 0.2, 0.25, 0.4, 0.4])
+	var pair := {"type": "low_hp_scaling", "stat": "ATK", "max_mul": 0.15, "below": 0.5}
+	ctx.check("formula 4.1: Viking Pair gate -> 0 at 50%, 0.15 at 49%",
+		RacePassives.low_hp_bonus(pair, 0.5) == 0.0 and is_equal_approx(RacePassives.low_hp_bonus(pair, 0.49), 0.15))
+	# Viking greatsword (Berserker) in an Alliance squad: ATK follows HP, live.
+	var f := squad(["human", "viking", "elf"])
+	var gs = f.sim.fighters[2]
+	var base: float = gs.stat("ATK")
+	gs.hp = gs.max_hp() * 0.6
+	ctx.check("Berserker: ATK +20%% at 60%% HP (%.2f vs %.2f)" % [gs.stat("ATK"), base], is_equal_approx(gs.stat("ATK"), base * 1.2))
+	gs.hp = gs.max_hp() * 0.1
+	ctx.check("Berserker: ATK +40% at 10% HP", is_equal_approx(gs.stat("ATK"), base * 1.4))
+	var low_def: float = gs.stat("DEF")
+	gs.hp = gs.max_hp()
+	ctx.check("Berserker: DEF does not scale", is_equal_approx(gs.stat("DEF"), low_def))
+	ctx.check("Berserker: no bonus at full HP", is_equal_approx(gs.stat("ATK"), base))
+	# Viking magic (Blood Rite, no scaling) in a Viking Pair: only the Pair's step bonus.
+	var v := squad(["viking", "viking", "elf"], ["magic", "sword_shield", "longbow"])
+	var mage = v.sim.fighters[1]
+	var mbase: float = mage.stat("ATK")
+	mage.hp = mage.max_hp() * 0.51
+	ctx.check("Viking Pair: nothing at 51% HP", is_equal_approx(mage.stat("ATK"), mbase))
+	mage.hp = mage.max_hp() * 0.4
+	ctx.check("Viking Pair: ATK +15%% below 50%% (%.2f vs %.2f)" % [mage.stat("ATK"), mbase], is_equal_approx(mage.stat("ATK"), mbase * 1.15))
+	# Viking default_class (every current class has a Viking cell, so a class without one is faked): +20% below 50%,
+	# stacking additively with the Pair's +15%.
+	var default_effects: Array = RaceData.load_default().races["viking"]["default_class"]["passive"]["effects"]
+	mage.race_state["scaling"] = mage.race_state["scaling"] + default_effects.filter(func(e): return e["type"] == "low_hp_scaling")
+	ctx.check("Viking default + Pair: ATK x(1 + 0.20 + 0.15) below 50%", is_equal_approx(mage.stat("ATK"), mbase * 1.35))
+	var bow = v.sim.fighters[3]
+	var bbase: float = bow.stat("ATK")
+	bow.hp = bow.max_hp() * 0.4
+	ctx.check("Viking Pair: the Elf member gets +15% below 50% too", is_equal_approx(bow.stat("ATK"), bbase * 1.15))
+	var t := squad(["viking", "viking", "viking"])
+	var tank = t.sim.fighters[1]
+	var tbase: float = tank.stat("ATK")
+	tank.hp = tank.max_hp() * 0.3
+	ctx.check("Viking Trio: ATK +20% below 50% (sword & shield has no scaling cell)", is_equal_approx(tank.stat("ATK"), tbase * 1.2))
 
 
 func _synergy(ctx) -> void:

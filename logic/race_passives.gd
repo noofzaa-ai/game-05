@@ -6,7 +6,8 @@ extends RefCounted
 ## What runs now: `stat_mod` (real stats on the stat refresh, HEALING via Fighter.heal_factor) and `trigger` with the
 ## actions `apply_status`, `heal` and `shield` (Fighter.shield, 4.3), on the events wave_start, hit, heavy_hit, skill_cast, skill_hit, kill, hurt,
 ## guard_block, self_low_hp (fields: chance, every_n, cooldown_ticks, once_per_wave, hp_below).
-## INERT until their phase-4 feature exists (loaded and validated, no effect): low_hp_scaling, skill_mod, charges,
+## `low_hp_scaling` (4.1) is read live by Fighter.stat through scaling_mul (race_state.scaling).
+## INERT until their phase-4 feature exists (loaded and validated, no effect): skill_mod, charges,
 ## aggro, and the actions burst, pulse_aggro, zone, skill_refresh. The event ultimate_cast never fires yet.
 ## Deterministic: a `chance` roll uses the sim RNG; nothing else is random. Order = fighter id, then effect order.
 
@@ -36,7 +37,10 @@ static func attach(fighter, run) -> void:
 	for effect in synergy.get("effects", []):
 		effects.append({"src": "synergy", "effect": effect.duplicate(true)})
 	var pseudo := {}
+	var scaling: Array = []
 	for entry in effects:
+		if entry["effect"]["type"] == "low_hp_scaling":
+			scaling.append(entry["effect"])
 		var effect: Dictionary = entry["effect"]
 		if effect["type"] == "stat_mod" and not RaceData.STAT_NAMES.has(str(effect["stat"])):
 			var mod: Dictionary = pseudo.get(str(effect["stat"]), {"add": 0.0, "mul": 0.0})
@@ -44,7 +48,7 @@ static func attach(fighter, run) -> void:
 			mod["mul"] += float(effect.get("mul", 0.0))
 			pseudo[str(effect["stat"])] = mod
 	fighter.race_state = {"race": race, "class": class_id, "passive": str(passive.get("name", "")), "synergy": str(synergy.get("kind", "none")),
-		"effects": effects, "fx": {}, "pseudo": pseudo, "wave": 0, "heal_window": [-1, 0.0]}
+		"effects": effects, "fx": {}, "pseudo": pseudo, "scaling": scaling, "wave": 0, "heal_window": [-1, 0.0]}
 
 
 ## stat_mod on real stats, applied to freshly computed base stats (GameSim._refresh_run_stats): (base + add) x (1 + mul).
@@ -55,6 +59,29 @@ static func apply_stats(fighter) -> void:
 			continue
 		var stat := str(effect["stat"])
 		fighter.stats[stat] = (float(fighter.stats.get(stat, 0.0)) + float(effect.get("add", 0.0))) * (1.0 + float(effect.get("mul", 0.0)))
+
+
+## Extra stat multiplier from every low_hp_scaling effect on `stat_name` at the fighter's current HP (summed, 4.1).
+static func scaling_mul(fighter, stat_name: String) -> float:
+	var total := 0.0
+	var h: float = clampf(fighter.hp / maxf(1.0, fighter.max_hp()), 0.0, 1.0)
+	for effect in fighter.race_state.get("scaling", []):
+		if str(effect["stat"]) == stat_name:
+			total += low_hp_bonus(effect, h)
+	return total
+
+
+## Formula 4.1: bonus = max_mul x clamp((from_hp - h) / (from_hp - full_at_hp), 0, 1), h = HP / max HP.
+## With `below`: a step, 0 at h >= below, max_mul under it.
+static func low_hp_bonus(effect: Dictionary, h: float) -> float:
+	var max_mul := float(effect["max_mul"])
+	if effect.has("below"):
+		return max_mul if h < float(effect["below"]) else 0.0
+	var from_hp := float(effect.get("from_hp", 1.0))
+	var full_at := float(effect.get("full_at_hp", 0.2))
+	if from_hp <= full_at:
+		return max_mul if h <= full_at else 0.0
+	return max_mul * clampf((from_hp - h) / (from_hp - full_at), 0.0, 1.0)
 
 
 ## Healing received multiplier from race pseudo-stat HEALING (Elf default/pair/trio), for Fighter.heal_factor.

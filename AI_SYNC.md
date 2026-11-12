@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.2: `low_hp_scaling` (Viking Berserker, Viking Pair/Trio/default ATK ตอนเลือดน้อย) คิดสดใน `Fighter.stat()` · เทสต์ 2370/81
+
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.1: โล่ของนักสู้ (cap 30% max HP, ดูดดาเมจก่อน HP ทุกทาง, หายตอนจบเวฟ, event race_shield/race_shield_end) · ยังไม่ส่งผ่าน net_wire ออนไลน์ · เทสต์ 2360/81
 
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 2+5: `logic/race_passives.gd` (stat_mod/trigger, event จาก sim) ทำงานในฉากสู้ + โบนัสทัพ (Trio/Pair/Alliance) คิดตอนเริ่มรอบ, `journey.synergy()` · event ใหม่ race_proc/race_heal (เสียงยืม buff_up/rest) · ทัพชนะ 100% (ปิดเผ่า 70%) ยังไม่จูน รอขั้น 4+ท่าไม้ตาย · เทสต์ 2344/81
