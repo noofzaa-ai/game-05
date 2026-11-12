@@ -8,14 +8,17 @@ extends RefCounted
 ## guard_block, self_low_hp (fields: chance, every_n, cooldown_ticks, once_per_wave, hp_below).
 ## `low_hp_scaling` (4.1) is read live by Fighter.stat through scaling_mul (race_state.scaling).
 ## `skill_mod` (4.4) changes a skill-build cast in logic/skills/system.gd cast() through modify_skill_stats.
-## INERT until their phase-4 feature exists (loaded and validated, no effect): charges,
-## aggro, and the actions burst, pulse_aggro, zone, skill_refresh. The event ultimate_cast never fires yet.
+## `charges` (runes): count events in fx[index].charges, run the actions at `max`, reset; RUNE_GAIN adds to int gains.
+## `burst` hits enemies within `radius` of `center` (self | target) for atk_mul x ATK (vs DEF), + optional status.
+## INERT until their phase-4 feature exists (loaded and validated, no effect):
+## aggro, and the actions pulse_aggro, zone, skill_refresh. The event ultimate_cast never fires yet.
 ## Deterministic: a `chance` roll uses the sim RNG; nothing else is random. Order = fighter id, then effect order.
 
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const Effects := preload("res://logic/effects.gd")
-const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield"]
+const Fighter := preload("res://logic/fighter.gd")
+const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield", "burst"]
 const SHIELD_TICKS := 600  ## default shield life when an action has no duration_ticks (GDD 4.3)
 
 
@@ -221,6 +224,9 @@ static func fire(sim, id: int, event_name: String, context: Dictionary) -> void:
 	var effects: Array = fighter.race_state.get("effects", [])
 	for index in effects.size():
 		var effect: Dictionary = effects[index]["effect"]
+		if effect["type"] == "charges":
+			_gain_charges(sim, id, index, event_name, context)
+			continue
 		if effect["type"] != "trigger" or str(effect["on"]) != event_name:
 			continue
 		var fx: Dictionary = fighter.race_state["fx"].get(str(index), {"last": -1, "n": 0, "wave": 0, "low": false})
@@ -247,11 +253,48 @@ static func fire(sim, id: int, event_name: String, context: Dictionary) -> void:
 		sim.events.append({"type": "race_proc", "player": id, "source": effects[index]["src"], "name": fighter.race_state["passive"] if effects[index]["src"] == "passive" else fighter.race_state["synergy"], "on": event_name})
 
 
+## charges (3.4 Runeborn, 3.6 #5): +gain per listed event (+RUNE_GAIN for int gains; "max" fills at once).
+## ultimate_cast always fills (GDD 3.4 "gain: max" on ultimate_cast; the data has one `gain` for all gain_on events).
+## At `max` the actions run once and the count resets (a "max" gain near max discharges once, never twice).
+## The count lives in fx[index].charges (checkpointed) and carries across waves. Emits race_runes for the rune pips.
+static func _gain_charges(sim, id: int, index: int, event_name: String, context: Dictionary) -> void:
+	var fighter = sim.fighters[id]
+	var entry: Dictionary = fighter.race_state["effects"][index]
+	var effect: Dictionary = entry["effect"]
+	var gains = effect.get("gain_on", [])
+	if not (gains if gains is Array else [gains]).has(event_name):
+		return
+	var fx: Dictionary = fighter.race_state["fx"].get(str(index), {"last": -1, "n": 0, "wave": 0, "low": false})
+	fighter.race_state["fx"][str(index)] = fx
+	var top := int(effect["max"])
+	var have := int(fx.get("charges", 0))
+	if str(effect.get("gain", 1)) == "max" or event_name == "ultimate_cast":  # GDD 3.4: an ultimate fills the runes
+		have = top
+	else:
+		var bonus: Dictionary = fighter.race_state.get("pseudo", {}).get("RUNE_GAIN", {})
+		have += maxi(0, int(effect.get("gain", 1)) + int(bonus.get("add", 0.0)))
+	have = mini(have, top)
+	fx["charges"] = have
+	if have < top:
+		sim.events.append({"type": "race_runes", "player": id, "runes": have, "max": top})
+		return
+	fx["charges"] = 0
+	sim.events.append({"type": "race_runes", "player": id, "runes": 0, "max": top})
+	var done := 0
+	for action in effect["actions"]:
+		if run_action(sim, id, action, context):
+			done += 1
+	fx["last"] = sim.tick_count
+	sim.events.append({"type": "race_proc", "player": id, "source": entry["src"], "name": fighter.race_state["passive"] if entry["src"] == "passive" else fighter.race_state["synergy"], "on": event_name, "discharge": true, "did": done})
+
+
 ## Runs one action; returns true when it did something. Inert (not yet built) actions return false.
 static func run_action(sim, id: int, action: Dictionary, context: Dictionary) -> bool:
 	if not RUNNING_ACTIONS.has(str(action["action"])):
 		return false
 	var source = sim.fighters[id]
+	if str(action["action"]) == "burst":
+		return _burst(sim, id, action, context)
 	var did := false
 	for target_id in targets(sim, id, str(action.get("target", "self")), context):
 		var target = sim.fighters[target_id]
@@ -274,6 +317,59 @@ static func run_action(sim, id: int, action: Dictionary, context: Dictionary) ->
 					sim.events.append({"type": "race_shield", "player": id, "target": target_id, "amount": added, "shield": target.shield, "until": target.shield_until})
 					did = true
 	return did
+
+
+## burst (3.6): every living enemy within `radius` m of `center` takes atk_mul x ATK, reduced by its DEF like a
+## weapon hit (no crit roll unless force_crit; min_damage floor), then `status`. Shields absorb first. A kill is a
+## normal "killed" event by the caster (loot, waves). Emits race_burst (the client's ring) and race_burst_hit per enemy.
+## Returns true when the burst went off (even if nobody stood in it: the runes are spent). v2 fields (hits,
+## interval_ticks, chain_on_kill, fury, delayed, bonus_target_below_hp) belong to the ultimates phase.
+static func _burst(sim, id: int, action: Dictionary, context: Dictionary) -> bool:
+	var source = sim.fighters[id]
+	var center = _center(sim, id, str(action.get("center", "self")), context)
+	if center == null:
+		return false
+	var radius := float(action["radius"])
+	var rules: Dictionary = sim.combat.rules
+	sim.events.append({"type": "race_burst", "player": id, "pos": center, "radius": radius})
+	var ids: Array = sim.fighters.keys()
+	ids.sort()
+	for target_id in ids:
+		var target = sim.fighters[target_id]
+		if target.team == source.team or not target.is_alive():
+			continue
+		var pos: Vector3 = sim.bodies[target_id].position
+		if Vector2(pos.x - center.x, pos.z - center.z).length() > radius:
+			continue
+		var defense: float = target.stat("DEF")
+		var damage: float = source.stat("ATK") * float(action["atk_mul"]) * (1.0 - defense / (defense + float(rules["defense_constant"])))
+		if bool(action.get("force_crit", false)):
+			damage *= source.stat("CRIDMG", 100.0) / 100.0
+		damage = maxf(float(rules["min_damage"]), roundf(damage))
+		var absorbed: float = target.absorb(damage)
+		target.hp = maxf(0.0, target.hp - (damage - absorbed))
+		sim.events.append({"type": "race_burst_hit", "attacker": id, "target": target_id, "damage": damage, "absorbed": absorbed, "pos": pos})
+		if target.hp <= 0.0:
+			target.state = Fighter.State.DEAD
+			target.state_ticks = 0
+			target.move_id = ""
+			target.launched = false
+			Effects.clear(target, sim.combat)
+			sim.events.append({"type": "killed", "target": target_id, "by": id})
+		elif action.has("status"):
+			Effects.apply(id, source, target_id, target, {"id": str(action["status"]), "chance": 100.0, "duration": int(action.get("duration", 0))}, sim.combat, sim.rng, sim.events)
+	return true
+
+
+## Where a burst sits. self | target (the event's target, else self). Other centers come with the ultimates.
+static func _center(sim, id: int, kind: String, context: Dictionary):
+	match kind:
+		"self":
+			return sim.bodies[id].position
+		"target":
+			var target := int(context.get("target", -1))
+			return sim.bodies[target].position if sim.bodies.has(target) else sim.bodies[id].position
+	return null
 
 
 ## Formula 4.3: amount = fraction x source max HP (or x the damage dealt). The target's cap is applied by Fighter.add_shield.

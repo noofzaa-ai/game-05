@@ -1383,6 +1383,30 @@
 				]
 			}
 		],
+		"race_runes": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"race_burst": [
+			{
+				"play": [
+					"guard_break"
+				]
+			}
+		],
+		"race_burst_hit": [
+			{
+				"play": [
+					"dot_tick"
+				]
+			}
+		],
 		"race_heal": [
 			{
 				"when": {

@@ -70,10 +70,10 @@ func run(ctx) -> void:
 	_living_bark(ctx)
 	_rallying_drill(ctx)
 	_moonlit_and_bloom(ctx)
-	_inert_cells(ctx)
 	_shield(ctx)
 	_low_hp_scaling(ctx)
 	_skill_mod(ctx)
+	_charges_and_burst(ctx)
 	_synergy(ctx)
 	_checkpoint_and_determinism(ctx)
 
@@ -166,20 +166,6 @@ func _moonlit_and_bloom(ctx) -> void:
 	ctx.check("Bloomcaster: a skill hit heals the most-hurt ally 25% of the damage", is_equal_approx(msim.fighters[3].hp - before, 25.0 * msim.fighters[3].heal_factor()))
 	for id in [1, 2, 3]: msim.fighters[id].hp = msim.fighters[id].max_hp()
 	ctx.check("nobody hurt: Bloomcaster does not proc", procs(react(msim, {"type": "skill_hit", "attacker": 1, "target": enemy_of(msim), "damage": 100}), 1).is_empty())
-
-
-## Cells that need phase-4 features load but do nothing yet (no shield, burst, skill_mod, charges, scaling).
-func _inert_cells(ctx) -> void:
-	var f := squad(["runeborn", "runeborn", "viking"])
-	var sim = f.sim
-	RacePassives.step(sim)
-	var foe := enemy_of(sim)
-	var hp_before: float = sim.fighters[foe].hp
-	var out: Array = []
-	for i in 6:
-		out.append_array(react(sim, {"type": "hit", "attacker": 2, "target": foe, "damage": 10, "move": "heavy"}))
-		out.append_array(react(sim, {"type": "hit", "attacker": foe, "target": 1, "damage": 10, "move": "light_1"}))
-	ctx.check("inert: Runeborn rune cells fire nothing yet", procs(out, 1).is_empty() and procs(out, 2).is_empty() and sim.fighters[foe].hp == hp_before)
 
 
 ## Fighter shield (GDD 4.3, phase 4 step 1): an absorb pool capped at 30% max HP, absorbs before HP, lasts
@@ -369,6 +355,112 @@ func _skill_mod(ctx) -> void:
 	var low := squad(["viking", "human", "elf"], ["magic", "greatsword", "longbow"])
 	low.sim.fighters[1].hp = low.sim.fighters[1].max_hp() * 0.09
 	ctx.check("Blood Rite: cannot cast below 10% HP", cast_slot0(low.sim, 1).get("refused", "") == "race_min_hp")
+
+
+## charges + burst (phase 4 step 4): the 4 Runeborn cells and the Runeborn Trio's RUNE_GAIN.
+func _charges_and_burst(ctx) -> void:
+	# Rune Aegis (Runeborn sword & shield): +1 per hit taken or blocked, at 5 -> shield 20% max HP + fortify 4 s, reset.
+	var f := squad(["runeborn", "human", "elf"])
+	var sim = f.sim
+	RacePassives.step(sim)
+	var foe := enemy_of(sim)
+	var tank = sim.fighters[1]
+	var discharges := []
+	for i in 5:
+		var event := {"type": "hit", "attacker": foe, "target": 1, "damage": 10, "move": "light_1"} if i % 2 == 0 else {"type": "blocked", "attacker": foe, "target": 1, "damage": 3}
+		discharges.append(procs(react(sim, event), 1).size())
+	ctx.check("Rune Aegis: discharges on the 5th hit/block only (%s)" % [discharges], discharges == [0, 0, 0, 0, 1])
+	ctx.check("Rune Aegis: shield 20% max HP + fortify 240 ticks", is_equal_approx(tank.shield, tank.max_hp() * 0.2) and int(tank.effects.get("fortify", {}).get("left", 0)) == 240)
+	ctx.check("Rune Aegis: runes reset to 0", int(tank.race_state["fx"]["0"]["charges"]) == 0)
+	var pips: Array = react(sim, {"type": "hit", "attacker": foe, "target": 1, "damage": 10, "move": "light_1"}).filter(func(e): return e["type"] == "race_runes")
+	ctx.check("Rune Aegis: a race_runes event for the pips (1/5)", pips.size() == 1 and int(pips[0]["runes"]) == 1 and int(pips[0]["max"]) == 5)
+	ctx.check("Rune Aegis: dealing a hit gains nothing", procs(react(sim, {"type": "hit", "attacker": 1, "target": foe, "damage": 10, "move": "light_1"}), 1).is_empty() and int(tank.race_state["fx"]["0"]["charges"]) == 1)
+	# Runic Edge (Runeborn greatsword): +1 per heavy hit, at 4 -> burst 80% ATK within 3 m + shock.
+	var g := squad(["human", "runeborn", "elf"])
+	var gsim = g.sim
+	RacePassives.step(gsim)
+	var enemies: Array = gsim.fighters.keys().filter(func(id): return gsim.fighters[id].team == "enemy" and gsim.fighters[id].is_alive())
+	enemies.sort()
+	var at: Vector3 = gsim.bodies[2].position
+	for other in enemies:
+		gsim.bodies[other].position = at + Vector3(20.0, 0, 20.0)  # everyone else far away
+	gsim.bodies[enemies[0]].position = at + Vector3(2.0, 0, 0)  # inside 3 m
+	gsim.bodies[enemies[1]].position = at + Vector3(0, 0, 2.9)  # inside
+	gsim.bodies[enemies[2]].position = at + Vector3(3.5, 0, 0)  # outside
+	var near = gsim.fighters[enemies[0]]
+	near.stats["HP"] = 100000.0
+	near.hp = 100000.0
+	var gs = gsim.fighters[2]
+	var defense: float = near.stat("DEF")
+	var expected := roundf(gs.stat("ATK") * 0.8 * (1.0 - defense / (defense + float(gsim.combat.rules["defense_constant"]))))
+	var hp_far: float = gsim.fighters[enemies[2]].hp
+	var counts := []
+	var out := []
+	for i in 4:
+		out = react(gsim, {"type": "hit", "attacker": 2, "target": enemies[0], "damage": 10, "move": "heavy"})
+		counts.append(procs(out, 2).size())
+	react(gsim, {"type": "hit", "attacker": 2, "target": enemies[0], "damage": 10, "move": "light_1"})  # a light hit is not a rune
+	ctx.check("Runic Edge: bursts on the 4th heavy only (%s)" % [counts], counts == [0, 0, 0, 1] and int(gs.race_state["fx"]["0"]["charges"]) == 0)
+	var hits: Array = out.filter(func(e): return e["type"] == "race_burst_hit")
+	ctx.check("Runic Edge: hits the 2 enemies within 3 m, not the one at 3.5 m", hits.map(func(e): return int(e["target"])) == [enemies[0], enemies[1]] and gsim.fighters[enemies[2]].hp == hp_far)
+	ctx.check("Runic Edge: 80%% ATK vs DEF (%.0f, expected %.0f)" % [float(hits[0]["damage"]) if not hits.is_empty() else -1.0, expected],
+		not hits.is_empty() and is_equal_approx(float(hits[0]["damage"]), expected) and is_equal_approx(near.hp, 100000.0 - expected))
+	ctx.check("Runic Edge: shock on the enemies hit (applied or resisted by the normal rule)", out.any(func(e): return e["type"] in ["effect_applied", "effect_resisted"] and e.get("effect", "") == "shock" and int(e["target"]) == enemies[0]))
+	ctx.check("Runic Edge: a race_burst event for the client", out.any(func(e): return e["type"] == "race_burst" and is_equal_approx(float(e["radius"]), 3.0)))
+	# A burst kill is a normal kill (loot, waves).
+	var weak = gsim.fighters[enemies[1]]
+	weak.hp = 1.0
+	for i in 4:
+		out = react(gsim, {"type": "hit", "attacker": 2, "target": enemies[0], "damage": 10, "move": "heavy"})
+	ctx.check("Runic Edge: a burst kill is a killed event by the caster", not weak.is_alive() and out.any(func(e): return e["type"] == "killed" and int(e["target"]) == enemies[1] and int(e["by"]) == 2))
+	# Glyph Shot (Runeborn longbow): +1 per basic hit, at 6 -> focus 8 s + shield 8% max HP.
+	var b := squad(["human", "elf", "runeborn"])
+	var bsim = b.sim
+	RacePassives.step(bsim)
+	var bfoe := enemy_of(bsim)
+	counts = []
+	for i in 6:
+		counts.append(procs(react(bsim, {"type": "hit", "attacker": 3, "target": bfoe, "damage": 10, "move": "light_1"}), 3).size())
+	var bow = bsim.fighters[3]
+	ctx.check("Glyph Shot: discharges on the 6th hit (%s)" % [counts], counts == [0, 0, 0, 0, 0, 1])
+	ctx.check("Glyph Shot: focus 480 ticks + shield 8% max HP", int(bow.effects.get("focus", {}).get("left", 0)) == 480 and is_equal_approx(bow.shield, bow.max_hp() * 0.08))
+	# Runeweaver (Runeborn magic): +1 per skill cast, at 3 -> shield every ally 10% of the caster's max HP (4.3).
+	var m := squad(["runeborn", "human", "elf"], ["magic", "greatsword", "longbow"])
+	var msim = m.sim
+	RacePassives.step(msim)
+	counts = []
+	for i in 3:
+		counts.append(procs(react(msim, {"type": "skill_cast", "player": 1}), 1).size())
+	var mage_hp: float = msim.fighters[1].max_hp()
+	ctx.check("Runeweaver: discharges on the 3rd cast (%s)" % [counts], counts == [0, 0, 1])
+	ctx.check("Runeweaver: every ally gets 10%% of the caster's max HP (%s)" % [[1, 2, 3].map(func(id): return snappedf(msim.fighters[id].shield, 0.01))],
+		[1, 2, 3].all(func(id): return is_equal_approx(msim.fighters[id].shield, minf(mage_hp * 0.1, msim.fighters[id].max_hp() * 0.3))))
+	# Runes carry across waves.
+	react(msim, {"type": "skill_cast", "player": 1})
+	msim._waves_released += 1
+	msim.events.clear()
+	RacePassives.step(msim)
+	ctx.check("runes carry across waves", int(msim.fighters[1].race_state["fx"]["0"]["charges"]) == 1)
+	# ultimate_cast (gain "max"): fills and discharges once, even with runes already near max (GDD 5).
+	msim.events.clear()
+	RacePassives.fire(msim, 1, "ultimate_cast", {})
+	ctx.check("ultimate_cast fills the runes and discharges exactly once", procs(msim.events, 1).size() == 1 and int(msim.fighters[1].race_state["fx"]["0"]["charges"]) == 0)
+	# Runeborn Trio: RUNE_GAIN +1 -> Rune Aegis gains 2 per hit: 2, 4, 5 (capped) -> discharges on the 3rd hit.
+	var t := squad(["runeborn", "runeborn", "runeborn"])
+	var tsim = t.sim
+	RacePassives.step(tsim)
+	var tfoe := enemy_of(tsim)
+	counts = []
+	for i in 3:
+		counts.append(procs(react(tsim, {"type": "hit", "attacker": tfoe, "target": 1, "damage": 10, "move": "light_1"}), 1).filter(func(e): return e.get("discharge", false)).size())
+	ctx.check("Runeborn Trio: rune gains +1 (Rune Aegis on the 3rd hit) (%s)" % [counts], counts == [0, 0, 1])
+	# Charges are in the checkpoint.
+	react(tsim, {"type": "hit", "attacker": tfoe, "target": 1, "damage": 10, "move": "light_1"})
+	var copy = Sim.new(World.new(), t.combat, F.rng(1))
+	copy.item_rules = t.rules
+	copy.loot_data = t.loot
+	copy.restore({"v": 1, "checkpoint": JSON.parse_string(JSON.stringify(tsim.snapshot()["checkpoint"]))}, t.camp)
+	ctx.check("runes are saved in the checkpoint", int(copy.fighters[1].race_state["fx"]["0"]["charges"]) == 2)
 
 
 func _synergy(ctx) -> void:

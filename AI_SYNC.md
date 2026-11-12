@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.4: `charges` (อักษร Runeborn สะสมข้ามเวฟ, เก็บใน checkpoint) + `burst` (ระเบิดวง ATK x atk_mul หัก DEF) ทั้ง 4 ช่อง Runeborn + Trio rune gain · event race_runes/race_burst/race_burst_hit · class_sim ยังไม่นับดาเมจ burst · เทสต์ 2404/81
+
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.3: `skill_mod` ใน `skills/system.gd` cast() (Human greatsword/longbow crit/magic, Viking Blood Rite, Human default/Pair/Trio), cooldown ต่ำสุด 0.6x · event ใหม่ race_hp_cost · เทสต์ 2383/81
 
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 4.2: `low_hp_scaling` (Viking Berserker, Viking Pair/Trio/default ATK ตอนเลือดน้อย) คิดสดใน `Fighter.stat()` · เทสต์ 2370/81
