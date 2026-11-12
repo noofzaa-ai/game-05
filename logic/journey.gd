@@ -55,6 +55,14 @@ static func start(journey_data: JourneyData, trip: Run, rules, loot, weapons: Ar
 
 
 ## The stage the player is about to play or is playing (1-based).
+## The squad's race synergy for this run (design/gdd/races-and-classes.md 3.5), read-only for the UI.
+## {"kind": "none", ...} for a trip that is not a squad (single profile, old saves).
+func synergy() -> Dictionary:
+	if run != null and run.has_method("synergy"):
+		return run.synergy()
+	return {"kind": "none", "race": "", "name": "", "text": "", "effects": []}
+
+
 func stage_number() -> int:
 	return mini(completed + 1, total_stages())
 

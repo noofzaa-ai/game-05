@@ -9,6 +9,10 @@ extends "res://logic/run.gd"
 var card_id := ""
 var shared  ## the account's Run (owns the bag)
 var squad: Array = []  ## every member of this squad, this one included (one shared Array)
+## The squad's race synergy (design/gdd/races-and-classes.md 3.5), computed ONCE at run start from the races of the
+## squad's cards (logic/race_data.gd synergy_for) and fixed for the whole run, deaths included. Saved with the member.
+## {"kind": "trio"|"pair"|"alliance"|"none", "race", "name", "text", "effects"}; read-only for the UI.
+var squad_synergy: Dictionary = {}
 
 
 ## The members for `cards` (class ids, in fighter order) on the account trip `base`.
@@ -25,7 +29,17 @@ static func make_squad(base, cards: Array) -> Array:
 		member.card_id = str(card)
 		member.squad = members
 		members.append(member)
+	var deck: Dictionary = base.profile.card_deck
+	var races: Array = cards.map(func(card): return preload("res://logic/card_deck.gd").race_of(deck, str(card)))
+	var synergy: Dictionary = preload("res://logic/race_data.gd").load_default().synergy_for(races)
+	for member in members:
+		member.squad_synergy = synergy.duplicate(true)
 	return members
+
+
+## The squad synergy of this run (read-only copy).
+func synergy() -> Dictionary:
+	return squad_synergy.duplicate(true)
 
 
 func loadout() -> Loadout:
@@ -71,9 +85,11 @@ func to_dict(include_profile: bool = true) -> Dictionary:
 
 
 func member_fields() -> Dictionary:
-	return {"card": card_id, "member_died": died, "member_cooldowns": skill_cooldowns.duplicate(true)}
+	return {"card": card_id, "member_died": died, "member_cooldowns": skill_cooldowns.duplicate(true), "squad_synergy": squad_synergy.duplicate(true)}
 
 
 func apply_member_fields(d: Dictionary) -> void:
 	died = bool(d.get("member_died", false))
 	skill_cooldowns = d.get("member_cooldowns", {}).duplicate(true)
+	if d.get("squad_synergy") is Dictionary:  # saved before races: keep the one make_squad computed
+		squad_synergy = d["squad_synergy"].duplicate(true)

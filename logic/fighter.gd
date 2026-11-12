@@ -5,6 +5,7 @@ extends RefCounted
 
 enum State { IDLE, ATTACK, HITSTUN, DOWN, DEAD, GUARD, DODGE, DOWNED }
 
+var race_state: Dictionary = {}  ## Squad members only: race passive + synergy runtime (logic/race_passives.gd); saved in checkpoints.
 var relic_state: Dictionary = {}  ## Authoritative per-stage Relic loadout, charge and cooldown timers.
 var team := "player"  ## fighters on the same team never hit each other
 var style := "fists"  ## which move set this fighter uses (chosen by the weapon)
@@ -104,9 +105,10 @@ func stat(stat_name: String, default_value: float = 0.0) -> float:
 ## How well healing works on this fighter (1 = normal; a wound lowers it).
 func heal_factor() -> float:
 	if float(skill_view.get("heal_allowed",1)) <= 0: return 0.0
+	var race := 1.0 if race_state.is_empty() else preload("res://logic/race_passives.gd").healing_factor(self)  # race HEALING (Elf)
 	if not stat_mods.has("HEALING"):
-		return 1.0
-	return maxf(0.0, (1.0 + float(stat_mods["HEALING"]["add"])) * (1.0 + float(stat_mods["HEALING"]["mul"])))
+		return race
+	return race * maxf(0.0, (1.0 + float(stat_mods["HEALING"]["add"])) * (1.0 + float(stat_mods["HEALING"]["mul"])))
 
 
 ## Co-op-only incapacitation; ordinary combat knockdown remains State.DOWN.

@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 2+5: `logic/race_passives.gd` (stat_mod/trigger, event จาก sim) ทำงานในฉากสู้ + โบนัสทัพ (Trio/Pair/Alliance) คิดตอนเริ่มรอบ, `journey.synergy()` · event ใหม่ race_proc/race_heal (เสียงยืม buff_up/rest) · ทัพชนะ 100% (ปิดเผ่า 70%) ยังไม่จูน รอขั้น 4+ท่าไม้ตาย · เทสต์ 2344/81
+
 - 2026-11-13 | gameplay-programmer via PO | develop | เผ่า ขั้น 1: `data/races/*.json` (4 เผ่า + rules.json), `logic/race_data.gd` (ตรวจเข้มงวด), การ์ดมี `race` (เซฟเก่าได้เผ่าเริ่มต้น), คำสั่ง `card_race` · ยังไม่มีผลในการสู้ (ขั้น 2) · เทสต์ 2297/81
 
 - 2026-11-13 | game-designer via PO | develop | GDD skill tree ใหม่ `design/gdd/skill-tree.md` (25 ช่อง/การ์ด: คลาส 16 + เผ่า 8 + combo 1, แต้มถาวรจากเลเวลการ์ด, ไอคอน 112 ชิ้น) ยังไม่ทำโค้ด ตัวเลขยังไม่วัด

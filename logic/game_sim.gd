@@ -25,6 +25,7 @@ const LootData := preload("res://logic/loot_data.gd")
 const Run := preload("res://logic/run.gd")
 const SquadMember := preload("res://logic/squad_member.gd")
 const Wear := preload("res://logic/wear.gd")
+const RacePassives := preload("res://logic/race_passives.gd")
 
 var world: SimWorld
 var combat: CombatData  ## null = movement only, no fighting
@@ -111,6 +112,7 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 	loot_data = loot
 	runs[id] = run
 	preload("res://logic/relic_effects.gd").attach(fighters[id],run.profile)
+	RacePassives.attach(fighters[id], run)  # a squad card: its race x class passive + the squad synergy (GDD races 3.4-3.5)
 	fighters[id].style = run.loadout().weapon_style(combat.styles.keys())  # the weapon decides the fighting style
 	_apply_class_style(id)
 	_refresh_run_stats(id)
@@ -256,6 +258,7 @@ func tick(prediction_player: int = -1) -> void:
 				if event.type == "dodge_started": skill_system.on_dodge(int(event.player))
 			skill_system.advance()
 		_release_waves()
+		RacePassives.step(self)  # after hits, skills and waves of this tick: race triggers react to them
 		_check_stage_clear()
 		_process_economy()
 		Coop.step(self)
@@ -412,6 +415,7 @@ func _give_drop(target_id: int, killer_id: int) -> void:
 func _refresh_run_stats(id: int) -> void:
 	var fighter: Fighter = fighters[id]
 	fighter.stats = combat.full_stats(runs[id].stats(item_rules))
+	RacePassives.apply_stats(fighter)  # race/synergy stat_mod (HP, ATK ...) on top of gear
 	if skill_system != null and skill_system.casters.has(id):
 		skill_system._base_stats[id] = fighter.stats.duplicate(true)
 		fighter.stats.HP *= float(skill_system.casters[id].actor.passive_stats.get("hp_max_mul",1))

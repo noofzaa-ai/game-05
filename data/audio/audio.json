@@ -1343,6 +1343,26 @@
 				]
 			}
 		],
+		"race_proc": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"race_heal": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"rest"
+				]
+			}
+		],
 		"rested": [
 			{
 				"when": {
