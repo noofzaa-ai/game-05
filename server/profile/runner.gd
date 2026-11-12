@@ -3,7 +3,7 @@ extends RefCounted
 const Profile := preload("res://logic/profile.gd")
 const Commands := preload("res://logic/commands.gd")
 const Camp := preload("res://logic/camp.gd")
-const ALLOWED := ["card_look", "card_squad", "card_fashion", "relic_equip", "mall_buy", "farm_seed", "farm_plant", "farm_harvest", "skill_build", "storage_item", "storage_material", "upgrade", "shop_buy", "shop_sell", "shop_sell_material", "shop_sell_batch", "refine", "equip", "unequip", "discard", "discard_material", "repair", "repair_all", "upgrade_camp", "upgrade_facility", "appearance", "randomize_appearance", "enhance", "upgrade_tier"]
+const ALLOWED := ["card_look", "card_squad", "card_race", "card_fashion", "relic_equip", "mall_buy", "farm_seed", "farm_plant", "farm_harvest", "skill_build", "storage_item", "storage_material", "upgrade", "shop_buy", "shop_sell", "shop_sell_material", "shop_sell_batch", "refine", "equip", "unequip", "discard", "discard_material", "repair", "repair_all", "upgrade_camp", "upgrade_facility", "appearance", "randomize_appearance", "enhance", "upgrade_tier"]
 var rules = preload("res://logic/item_rules_loader.gd").load_default()
 var camp = preload("res://logic/camp_data_loader.gd").load_default(rules.tiers.size())
 var cosmetics = preload("res://logic/cosmetic_options.gd").load_default()

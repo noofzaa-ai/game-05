@@ -1,0 +1,19 @@
+{
+ "_comment": "Shared race rules (design/gdd/races-and-classes.md 3.5-3.7). starter_races: the race a class card starts with (Boss 2026-11-13); old saves without a race get it too. vocabulary: the ONLY effect types / events / actions / targets / centers / pseudo-stats a race file may use; anything else fails the load (logic/race_data.gd). Status ids are checked against data/combat/effects.json. The engine (logic/race_passives.gd) runs stat_mod and trigger (apply_status, heal) today; the other entries load but stay inert until their phase-4 feature is built. Numbers are placeholders until class_sim measures them.",
+ "default_race": "human",
+ "starter_races": {"sword_shield": "human", "greatsword": "viking", "longbow": "elf", "magic": "runeborn"},
+ "alliance": {"name": "Alliance", "text": "Three different races: max HP +8%, ATK +8%.",
+  "effects": [{"type": "stat_mod", "stat": "HP", "mul": 0.08}, {"type": "stat_mod", "stat": "ATK", "mul": 0.08}]},
+ "shield_cap_max_hp": 0.30,
+ "ult_shield_cap_max_hp": 0.50,
+ "heal_cap_per_second_max_hp": 0.06,
+ "cooldown_mul_floor": 0.60,
+ "vocabulary": {
+  "effect_types": ["stat_mod", "low_hp_scaling", "skill_mod", "trigger", "charges", "aggro"],
+  "events": ["wave_start", "hit", "heavy_hit", "skill_cast", "skill_hit", "kill", "hurt", "guard_block", "self_low_hp", "ultimate_cast"],
+  "actions": ["apply_status", "heal", "shield", "burst", "pulse_aggro", "zone", "skill_refresh"],
+  "targets": ["self", "target", "allies_all", "ally_most_hurt", "enemies_in_radius", "ally_downed", "allies_in_zone", "enemies_in_zone", "enemy_lowest_hp_pct", "enemy_highest_hp"],
+  "centers": ["self", "target", "densest", "boss_or_highest_hp", "ally_most_hurt"],
+  "pseudo_stats": ["HEALING", "RUNE_GAIN", "SKILL_DMG"]
+ }
+}

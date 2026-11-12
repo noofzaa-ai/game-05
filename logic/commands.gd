@@ -27,6 +27,7 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"card_fashion": {"class": TYPE_STRING, "part": TYPE_STRING, "choice": TYPE_STRING},
 		"set_name": {"name": TYPE_STRING},
 		"card_look": {"class": TYPE_STRING, "part": TYPE_STRING, "choice": TYPE_STRING}, "card_squad": {"squad": TYPE_ARRAY},
+		"card_race": {"class": TYPE_STRING, "race": TYPE_STRING},  # design/gdd/races-and-classes.md 3.7: free switch (Boss 2026-11-13)
 		"farm_seed": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_plant": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_harvest": {"plot":TYPE_INT},
 		"shop_buy": {"sku": TYPE_STRING},
 		"skill_build": {"action": TYPE_STRING, "build": TYPE_DICTIONARY, "card": TYPE_STRING},
@@ -178,6 +179,11 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 					return _error("invalid_card")
 			elif not deck_rules.set_squad(p.card_deck, command["squad"]):
 				return _error("invalid_squad")
+		"card_race":
+			if location != "camp": return _error("not_available_here")
+			if not command.has_all(["class", "race"]): return _error("invalid_command")
+			if not preload("res://logic/card_deck.gd").set_race(p.card_deck, command["class"], command["race"]):
+				return _error("invalid_race")
 		"set_name", "appearance", "randomize_appearance":
 			if location != "camp" and not (kind == "appearance" and command.get("part") == "fashion_display"):
 				return _error("not_available_here")

@@ -1,0 +1,33 @@
+{
+ "id": "runeborn", "name": "Runeborn", "order": 4, "theme": "runes",
+ "summary": "A rhythm of build-up and release; arcane wards.",
+ "color": "#3fe6ff", "color_2": "#9a5cff",
+ "look": {"ears": "", "hair_extra": "", "beard": "", "face_paint": "", "skin_decal": "runes_a", "emblem": ""},
+ "mockup": {"plate_color": "#3fe6ff", "rim_color": "#9a5cff", "aura_vfx": "race_aura/runeborn", "badge_text": "R"},
+ "classes": {
+  "sword_shield": {"passive": {"name": "Rune Aegis", "text": "+1 rune per hit taken or blocked (max 5). At 5: shield self 20% max HP + Fortify 4 s.",
+   "effects": [{"type": "charges", "gain_on": ["hurt", "guard_block", "ultimate_cast"], "gain": 1, "max": 5,
+    "actions": [{"action": "shield", "target": "self", "fraction_of": "source_max_hp", "fraction": 0.20, "duration_ticks": 600},
+                {"action": "apply_status", "status": "fortify", "target": "self", "duration": 240}]}]}},
+  "greatsword": {"passive": {"name": "Runic Edge", "text": "+1 rune per heavy hit (max 4). At 4: rune burst 80% ATK in 3 m + Shock.",
+   "effects": [{"type": "charges", "gain_on": ["heavy_hit", "ultimate_cast"], "gain": 1, "max": 4,
+    "actions": [{"action": "burst", "center": "self", "radius": 3.0, "atk_mul": 0.8, "status": "shock"}]}]}},
+  "longbow": {"passive": {"name": "Glyph Shot", "text": "+1 rune per basic hit (max 6). At 6: Focus 8 s + shield self 8% max HP.",
+   "effects": [{"type": "charges", "gain_on": ["hit", "ultimate_cast"], "gain": 1, "max": 6,
+    "actions": [{"action": "apply_status", "status": "focus", "target": "self", "duration": 480},
+                {"action": "shield", "target": "self", "fraction_of": "source_max_hp", "fraction": 0.08, "duration_ticks": 600}]}]}},
+  "magic": {"passive": {"name": "Runeweaver", "text": "+1 rune per skill cast (max 3). At 3: shield all allies for 10% of the caster's max HP.",
+   "effects": [{"type": "charges", "gain_on": ["skill_cast", "ultimate_cast"], "gain": 1, "max": 3,
+    "actions": [{"action": "shield", "target": "allies_all", "fraction_of": "source_max_hp", "fraction": 0.10, "duration_ticks": 600}]}]}}
+ },
+ "default_class": {"passive": {"name": "Runes", "text": "Shield self 6% max HP at wave start.",
+  "effects": [{"type": "trigger", "on": "wave_start", "actions": [{"action": "shield", "target": "self", "fraction_of": "source_max_hp", "fraction": 0.06, "duration_ticks": 600}]}]}},
+ "synergy": {
+  "2": {"text": "Shield every ally for 8% of their max HP at wave start.",
+   "effects": [{"type": "trigger", "on": "wave_start", "actions": [{"action": "shield", "target": "self", "fraction_of": "source_max_hp", "fraction": 0.08, "duration_ticks": 600}]}]},
+  "3": {"text": "Shield 12% at wave start, and the squad's rune gains are +1.",
+   "effects": [{"type": "trigger", "on": "wave_start", "actions": [{"action": "shield", "target": "self", "fraction_of": "source_max_hp", "fraction": 0.12, "duration_ticks": 600}]},
+               {"type": "stat_mod", "stat": "RUNE_GAIN", "add": 1}]}
+ },
+ "unlock": null
+}

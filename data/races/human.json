@@ -1,0 +1,25 @@
+{
+ "id": "human", "name": "Human", "order": 1, "theme": "mastery",
+ "summary": "Trained, disciplined: their skills hit harder and come back sooner.",
+ "color": "#ffc23a", "color_2": "",
+ "look": {"ears": "", "hair_extra": "", "beard": "", "face_paint": "", "skin_decal": "", "emblem": ""},
+ "mockup": {"plate_color": "#ffc23a", "rim_color": "#ffc23a", "aura_vfx": "race_aura/human", "badge_text": "H"},
+ "classes": {
+  "sword_shield": {"passive": {"name": "Rallying Drill", "text": "Every skill cast gives Fortify to all allies for 3 s (10 s cooldown).",
+   "effects": [{"type": "trigger", "on": "skill_cast", "cooldown_ticks": 600,
+    "actions": [{"action": "apply_status", "status": "fortify", "target": "allies_all", "duration": 180}]}]}},
+  "greatsword": {"passive": {"name": "Wide Arcs", "text": "Skill radius +25%, skill damage +10%.",
+   "effects": [{"type": "skill_mod", "radius_mul": 1.25, "damage_mul": 1.10}]}},
+  "longbow": {"passive": {"name": "Trained Eye", "text": "Skill hits apply Sunder; skill crit rate +20.",
+   "effects": [{"type": "trigger", "on": "skill_hit", "actions": [{"action": "apply_status", "status": "sunder", "target": "target"}]},
+               {"type": "skill_mod", "crit_add": 20}]}},
+  "magic": {"passive": {"name": "Archmage", "text": "Skill damage +30%, skill cooldowns x0.85.",
+   "effects": [{"type": "skill_mod", "damage_mul": 1.30, "cooldown_mul": 0.85}]}}
+ },
+ "default_class": {"passive": {"name": "Mastery", "text": "Skill damage +10%.", "effects": [{"type": "skill_mod", "damage_mul": 1.10}]}},
+ "synergy": {
+  "2": {"text": "All skill damage +10%.", "effects": [{"type": "skill_mod", "damage_mul": 1.10}]},
+  "3": {"text": "Skill damage +20%, skill cooldowns x0.90.", "effects": [{"type": "skill_mod", "damage_mul": 1.20, "cooldown_mul": 0.90}]}
+ },
+ "unlock": null
+}

@@ -9,7 +9,8 @@ extends RefCounted
 ## deck = {"v": 1, "cards": {class_id: card}, "squad": [class_id, ...]}
 ## card = {"hair": "a", "outfit": "none"|"silver", "eye_color": id or "#rrggbb", "skin": id or "#rrggbb",
 ##         "makeup": "none"|"sharp_wing", "iris_style": id of data/cosmetics/iris_styles.json,
-##         "hair_color": "" (the hair's Studio default) or any "#rrggbb" (Studio #hair-color free input), "skills": []}
+##         "hair_color": "" (the hair's Studio default) or any "#rrggbb" (Studio #hair-color free input), "skills": [],
+##         "race": a race id of data/races/ (design/gdd/races-and-classes.md 3.7; changed only by the card_race command)}
 
 const CLASS_FOLDER := "res://data/classes/"
 const CLASS_ORDER: Array[String] = ["sword_shield", "greatsword", "longbow", "magic"]
@@ -20,6 +21,11 @@ const PARTS: Array[String] = ["hair", "outfit", "eye_color", "skin", "makeup", "
 ## Parts added after cards shipped: a saved card without them uses this value (the card stays valid).
 const LATER_PARTS := {"iris_style": "0", "hair_color": ""}
 ## Starter flavour palette (Boss 2026-11-13): new cards draw distinct hair colours from it. Not an option list.
+## The card's race (Boss 2026-11-13: any card may be any race, switchable any time). Not a look PART: card_look cannot
+## change it, only the server-validated `card_race` command. A saved card without it is valid and uses its class's
+## starter race (data/races/rules.json starter_races), like LATER_PARTS.
+const RACE_PART := "race"
+const RaceData := preload("res://logic/race_data.gd")
 const STARTER_HAIR_COLORS := "res://data/cosmetics/starter_hair_colors.json"
 ## The card each class starts with. Every class starts in its class armor (outfit "none", PO default 2026-11-12,
 ## docs/po_defaults.md); saved cards keep their own choice.
@@ -98,7 +104,32 @@ static func starter_card(class_id: String, cosmetics) -> Dictionary:
 		"iris_style": str(cosmetics.defaults.get("iris_style", "0")) if cosmetics != null else "0",
 		"hair_color": "",
 		"skills": [],
+		"race": starter_race(class_id),
 	}
+
+
+## The race a card of this class starts with (and an old card without a race has).
+static func starter_race(class_id: String) -> String:
+	return RaceData.load_default().starter_race(class_id)
+
+
+## The card's race: its own, or its class's starter race (an older card).
+static func race_of(deck: Dictionary, class_id: String) -> String:
+	var card: Dictionary = deck.get("cards", {}).get(class_id, {})
+	return str(card.get(RACE_PART, starter_race(class_id)))
+
+
+## The squad's races in squad order (for the run-start synergy, logic/race_passives.gd).
+static func squad_races(deck: Dictionary) -> Array:
+	return deck.get("squad", []).map(func(class_id): return race_of(deck, str(class_id)))
+
+
+## Switches one card's race. Returns false (nothing changed) for an unknown class or race.
+static func set_race(deck: Dictionary, class_id: String, race: String) -> bool:
+	if not deck.get("cards", {}).has(class_id) or not RaceData.load_default().has_race(race):
+		return false
+	deck["cards"][class_id][RACE_PART] = race
+	return true
 
 
 ## A brand new player's deck: every class's starter card and the starter squad.
@@ -233,6 +264,8 @@ static func validate_card(class_id: String, card: Variant, cosmetics = null) -> 
 			return "bad_card"
 	if not card.get("skills") is Array or not (card["skills"] as Array).is_empty():
 		return "bad_card"  # skills are not part of cards yet
+	if card.has(RACE_PART) and (not card[RACE_PART] is String or not RaceData.load_default().has_race(card[RACE_PART])):
+		return "bad_card"
 	return ""
 
 
@@ -277,7 +310,7 @@ static func set_squad(deck: Dictionary, squad: Array) -> bool:
 
 
 ## What the card looks like, as plain data the client dresses a model with:
-## {"class", "hair", "silver", "eye_color", "skin", "makeup", "iris_style", "hair_color"}.
+## {"class", "hair", "silver", "eye_color", "skin", "makeup", "iris_style", "hair_color", "race"}.
 static func look_of(deck: Dictionary, class_id: String) -> Dictionary:
 	var card: Dictionary = deck.get("cards", {}).get(class_id, {})
 	return {
@@ -289,6 +322,7 @@ static func look_of(deck: Dictionary, class_id: String) -> Dictionary:
 		"makeup": str(card.get("makeup", "none")),
 		"iris_style": str(card.get("iris_style", LATER_PARTS["iris_style"])),
 		"hair_color": str(card.get("hair_color", LATER_PARTS["hair_color"])),
+		"race": race_of(deck, class_id),
 	}
 
 
@@ -308,8 +342,13 @@ static func repaired(deck: Variant, cosmetics = null) -> Dictionary:
 	var saved_cards = deck.get("cards", {})
 	if saved_cards is Dictionary:
 		for class_id in fresh["cards"]:
-			if saved_cards.has(class_id) and validate_card(class_id, saved_cards[class_id], cosmetics).is_empty():
-				fresh["cards"][class_id] = (saved_cards[class_id] as Dictionary).duplicate(true)
+			if not saved_cards.has(class_id) or not saved_cards[class_id] is Dictionary:
+				continue
+			var saved_card: Dictionary = (saved_cards[class_id] as Dictionary).duplicate(true)
+			if saved_card.has(RACE_PART) and not RaceData.load_default().has_race(str(saved_card[RACE_PART])):
+				saved_card[RACE_PART] = RaceData.load_default().default_race()  # a removed race file (GDD 5): keep the card, default race
+			if validate_card(class_id, saved_card, cosmetics).is_empty():
+				fresh["cards"][class_id] = saved_card
 	if deck.get("squad") is Array:
 		var squad: Array = fresh["squad"].duplicate()
 		if set_squad(fresh, deck["squad"]):

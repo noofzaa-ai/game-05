@@ -1,0 +1,29 @@
+{
+ "id": "elf", "name": "Elf", "order": 3, "theme": "lifebloom",
+ "summary": "Healing that flows to allies.",
+ "color": "#4fe07a", "color_2": "",
+ "look": {"ears": "elf_long", "hair_extra": "", "beard": "", "face_paint": "", "skin_decal": "", "emblem": ""},
+ "mockup": {"plate_color": "#4fe07a", "rim_color": "#4fe07a", "aura_vfx": "race_aura/elf", "badge_text": "E"},
+ "classes": {
+  "sword_shield": {"passive": {"name": "Warden's Grove", "text": "Blocking heals the most-hurt ally 2% max HP (1 s).",
+   "effects": [{"type": "trigger", "on": "guard_block", "cooldown_ticks": 60,
+    "actions": [{"action": "heal", "target": "ally_most_hurt", "fraction_of": "max_hp", "fraction": 0.02}]}]}},
+  "greatsword": {"passive": {"name": "Living Bark", "text": "Regen at wave start; each kill refreshes it.",
+   "effects": [{"type": "trigger", "on": "wave_start", "actions": [{"action": "apply_status", "status": "regen", "target": "self"}]},
+               {"type": "trigger", "on": "kill", "actions": [{"action": "apply_status", "status": "regen", "target": "self"}]}]}},
+  "longbow": {"passive": {"name": "Moonlit Arrow", "text": "Every 5th shot heals the most-hurt ally 6% max HP.",
+   "effects": [{"type": "trigger", "on": "hit", "every_n": 5,
+    "actions": [{"action": "heal", "target": "ally_most_hurt", "fraction_of": "max_hp", "fraction": 0.06}]}]}},
+  "magic": {"passive": {"name": "Bloomcaster", "text": "Skill hits heal the most-hurt ally 25% of damage (cap 8%).",
+   "effects": [{"type": "trigger", "on": "skill_hit",
+    "actions": [{"action": "heal", "target": "ally_most_hurt", "fraction_of": "damage", "fraction": 0.25, "cap_max_hp": 0.08}]}]}}
+ },
+ "default_class": {"passive": {"name": "Lifebloom", "text": "Healing received +15%.", "effects": [{"type": "stat_mod", "stat": "HEALING", "mul": 0.15}]}},
+ "synergy": {
+  "2": {"text": "Healing received +20%.", "effects": [{"type": "stat_mod", "stat": "HEALING", "mul": 0.20}]},
+  "3": {"text": "Healing received +30%; regen on every ally at wave start.",
+   "effects": [{"type": "stat_mod", "stat": "HEALING", "mul": 0.30},
+               {"type": "trigger", "on": "wave_start", "actions": [{"action": "apply_status", "status": "regen", "target": "self"}]}]}
+ },
+ "unlock": null
+}

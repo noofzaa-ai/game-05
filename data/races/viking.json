@@ -1,0 +1,30 @@
+{
+ "id": "viking", "name": "Viking", "order": 2, "theme": "fury",
+ "summary": "Most dangerous when nearly dead.",
+ "color": "#e0302a", "color_2": "",
+ "look": {"ears": "", "hair_extra": "braids", "beard": "beard_a", "face_paint": "war_paint_a", "skin_decal": "", "emblem": ""},
+ "mockup": {"plate_color": "#e0302a", "rim_color": "#e0302a", "aura_vfx": "race_aura/viking", "badge_text": "V"},
+ "classes": {
+  "sword_shield": {"passive": {"name": "Unbroken", "text": "The first time each wave HP drops below 35%: shield 25% max HP and pulse Bulwark.",
+   "effects": [{"type": "trigger", "on": "self_low_hp", "hp_below": 0.35, "once_per_wave": true,
+    "actions": [{"action": "shield", "target": "self", "fraction_of": "source_max_hp", "fraction": 0.25, "duration_ticks": 600},
+                {"action": "pulse_aggro"}]}]}},
+  "greatsword": {"passive": {"name": "Berserker", "text": "ATK +0% at full HP, up to +40% at 20% HP. A kill heals 6% max HP.",
+   "effects": [{"type": "low_hp_scaling", "stat": "ATK", "max_mul": 0.40, "from_hp": 1.0, "full_at_hp": 0.2},
+               {"type": "trigger", "on": "kill", "actions": [{"action": "heal", "target": "self", "fraction_of": "max_hp", "fraction": 0.06}]}]}},
+  "longbow": {"passive": {"name": "Headhunter", "text": "A kill grants Rage for 8 s and Haste for 4 s.",
+   "effects": [{"type": "trigger", "on": "kill", "actions": [
+    {"action": "apply_status", "status": "rage", "target": "self", "duration": 480},
+    {"action": "apply_status", "status": "haste", "target": "self", "duration": 240}]}]}},
+  "magic": {"passive": {"name": "Blood Rite", "text": "Each skill costs 5% of current HP but deals +40% damage. Cannot cast below 10% HP.",
+   "effects": [{"type": "skill_mod", "hp_cost": 0.05, "min_hp": 0.10, "damage_mul": 1.40}]}}
+ },
+ "default_class": {"passive": {"name": "Fury", "text": "ATK +20% while below 50% HP.", "effects": [{"type": "low_hp_scaling", "stat": "ATK", "max_mul": 0.20, "below": 0.5}]}},
+ "synergy": {
+  "2": {"text": "All allies: ATK +15% while below 50% HP.", "effects": [{"type": "low_hp_scaling", "stat": "ATK", "max_mul": 0.15, "below": 0.5}]},
+  "3": {"text": "ATK +20% below 50% HP; every kill heals the killer 4% max HP.",
+   "effects": [{"type": "low_hp_scaling", "stat": "ATK", "max_mul": 0.20, "below": 0.5},
+               {"type": "trigger", "on": "kill", "actions": [{"action": "heal", "target": "self", "fraction_of": "max_hp", "fraction": 0.04}]}]}
+ },
+ "unlock": null
+}
