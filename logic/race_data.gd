@@ -65,6 +65,10 @@ static func load_from(folder: String, status_ids: Array = [], class_ids: Array =
 			data.errors.append("starter_races.%s: unknown race %s" % [class_id, data.rules["starter_races"][class_id]])
 	if not data.races.has(str(data.rules.get("default_race", ""))):
 		data.errors.append("default_race: unknown race")
+	for class_id in data._class_ids:  # class signatures (3.2) use the same vocabulary
+		var class_file = _read(CLASS_FOLDER + str(class_id) + ".json")
+		if class_file is Dictionary and class_file.has("signature"):
+			data._check_effects("class %s.signature" % class_id, class_file["signature"])
 	return data
 
 

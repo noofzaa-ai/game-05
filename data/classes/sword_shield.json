@@ -44,5 +44,7 @@
   "f",
   "g"
  ],
- "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body."
+ "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body.",
+ "_signature": "GDD races-and-classes 3.2 class signature, read by logic/race_passives.gd (any race). Bulwark: every 8 s, enemies within 5 m attack this card for 3 s (it pulses once an enemy is in range).",
+ "signature": [{"type": "aggro", "name": "Bulwark", "radius": 5.0, "every_ticks": 480.0, "duration_ticks": 180.0}]
 }

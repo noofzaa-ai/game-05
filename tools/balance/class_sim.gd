@@ -211,6 +211,10 @@ func play(classes: Array, seed: int) -> Dictionary:
 					if members.has(t) and not members.has(a):
 						members[t]["taken"] += float(event["damage"])
 						wave_taken[waves] += float(event["damage"])
+				"race_burst_hit":  # race rune bursts (Runic Edge): dealt damage, counted with the weapon hits
+					var a := int(event.get("attacker", -1))
+					if members.has(a) and not members.has(int(event.get("target", -1))):
+						members[a]["dealt"] += float(event["damage"])
 				"skill_cast":
 					if members.has(int(event.get("player", -1))):
 						members[int(event["player"])]["casts"] += 1

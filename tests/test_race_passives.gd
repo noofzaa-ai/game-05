@@ -74,6 +74,7 @@ func run(ctx) -> void:
 	_low_hp_scaling(ctx)
 	_skill_mod(ctx)
 	_charges_and_burst(ctx)
+	_aggro(ctx)
 	_synergy(ctx)
 	_checkpoint_and_determinism(ctx)
 
@@ -461,6 +462,91 @@ func _charges_and_burst(ctx) -> void:
 	copy.loot_data = t.loot
 	copy.restore({"v": 1, "checkpoint": JSON.parse_string(JSON.stringify(tsim.snapshot()["checkpoint"]))}, t.camp)
 	ctx.check("runes are saved in the checkpoint", int(copy.fighters[1].race_state["fx"]["0"]["charges"]) == 2)
+
+
+## aggro / pulse_aggro (phase 4 step 5): Bulwark, the sword & shield signature (GDD 3.2), any race; the enemy AI
+## target override (logic/enemy_ai.gd taunt) that the race engine sets through GameSim.taunt_enemy.
+func _aggro(ctx) -> void:
+	var f := squad(["elf", "elf", "human"])  # Elf S&S: no taunt in its passive, so only the class signature taunts
+	var sim = f.sim
+	var enemies: Array = sim.fighters.keys().filter(func(id): return sim.fighters[id].team == "enemy" and sim.fighters[id].is_alive())
+	enemies.sort()
+	var tank_at: Vector3 = sim.bodies[1].position
+	for other in enemies:
+		sim.bodies[other].position = tank_at + Vector3(30.0, 0, 30.0)
+	sim.events.clear()
+	RacePassives.step(sim)
+	ctx.check("Bulwark: no pulse while no enemy is within 5 m", sim.events.filter(func(e): return e["type"] == "race_taunt").is_empty())
+	# Enemy A at 4 m from the tank but 1 m from the bow: without a taunt it targets the bow (nearest).
+	sim.bodies[3].position = tank_at + Vector3(5.0, 0, 0)
+	sim.bodies[2].position = tank_at + Vector3(-20.0, 0, 0)
+	sim.bodies[enemies[0]].position = tank_at + Vector3(4.0, 0, 0)
+	sim.bodies[enemies[1]].position = tank_at + Vector3(5.5, 0, 0)  # outside 5 m of the tank
+	var brain = sim._ai[enemies[0]]
+	ctx.check("enemy AI: no taunt -> attacks the nearest player", brain.taunted_by(sim.fighters[enemies[0]], sim.fighters) == -1)
+	sim.events.clear()
+	RacePassives.step(sim)
+	var taunts: Array = sim.events.filter(func(e): return e["type"] == "race_taunt")
+	ctx.check("Bulwark: pulses once an enemy is within 5 m, taunting only those (%s)" % [taunts], taunts.size() == 1 and taunts[0]["enemies"] == [enemies[0]] and int(taunts[0]["ticks"]) == 180)
+	ctx.check("Bulwark: a signature race_proc", procs(sim.events, 1).any(func(e): return e["source"] == "signature" and e["name"] == "Bulwark"))
+	ctx.check("enemy AI: taunted -> attacks the tank, not the nearer bow", brain.taunted_by(sim.fighters[enemies[0]], sim.fighters) == 1 and int(brain.taunt_left) == 180)
+	ctx.check("enemy AI: the one outside 5 m is not taunted", int(sim._ai[enemies[1]].taunt_left) == 0)
+	# The override really steers the brain: it walks toward the tank (left), not the bow (right).
+	sim.fighters[enemies[0]].state = Fighter.State.IDLE
+	var input = brain.think(sim.fighters[enemies[0]], sim.bodies[enemies[0]], sim.bodies, sim.fighters, sim.rng, true)
+	ctx.check("enemy AI: a taunted monster moves toward the tank (move.x %.2f < 0)" % input.move.x, input.move.x < 0.0)
+	# Every 8 s: not again at 479 ticks, again at 480.
+	sim.tick_count += 479
+	sim.events.clear()
+	RacePassives.step(sim)
+	ctx.check("Bulwark: no second pulse at 479 ticks", sim.events.filter(func(e): return e["type"] == "race_taunt").is_empty())
+	sim.tick_count += 1
+	sim.events.clear()
+	RacePassives.step(sim)
+	ctx.check("Bulwark: pulses again at 480 ticks", sim.events.filter(func(e): return e["type"] == "race_taunt").size() == 1)
+	# The taunt runs out after 180 AI ticks, then the nearest rule is back.
+	for i in 180:
+		brain.think(sim.fighters[enemies[0]], sim.bodies[enemies[0]], sim.bodies, sim.fighters, sim.rng, true)
+	ctx.check("enemy AI: the taunt ends after 180 ticks", int(brain.taunt_left) == 0 and brain.taunted_by(sim.fighters[enemies[0]], sim.fighters) == -1)
+	# Overlap: the longer remaining taunt wins; a shorter one from someone else does not take over.
+	ctx.check("taunt: a fresh taunt lands", sim.taunt_enemy(enemies[0], 1, 180))
+	ctx.check("taunt: a shorter one by another card does not override", not sim.taunt_enemy(enemies[0], 3, 60) and int(brain.taunt_target) == 1 and int(brain.taunt_left) == 180)
+	ctx.check("taunt: the same card does not stack duration", sim.taunt_enemy(enemies[0], 1, 180) and int(brain.taunt_left) == 180)
+	# A downed or dead taunter releases the monster at once.
+	sim.fighters[1].state = Fighter.State.DEAD
+	ctx.check("taunt: a dead taunter releases the monster", brain.taunted_by(sim.fighters[enemies[0]], sim.fighters) == -1)
+	sim.fighters[1].state = Fighter.State.IDLE
+	# Taunt is not a control effect: control immunity does not block it (the boss, GDD 5).
+	sim.fighters[enemies[0]].control_immune_left = 300
+	brain.taunt_left = 0
+	ctx.check("taunt ignores control immunity", sim.taunt_enemy(enemies[0], 1, 180))
+	# Saved in checkpoints (AI state is checkpointed).
+	var copy = Sim.new(World.new(), f.combat, F.rng(1))
+	copy.item_rules = f.rules
+	copy.loot_data = f.loot
+	copy.restore({"v": 1, "checkpoint": JSON.parse_string(JSON.stringify(sim.snapshot()["checkpoint"]))}, f.camp)
+	ctx.check("taunt is saved in the checkpoint", int(copy._ai[enemies[0]].taunt_target) == 1 and int(copy._ai[enemies[0]].taunt_left) == int(brain.taunt_left))
+	ctx.check("Bulwark timer is saved in the checkpoint", copy.fighters[1].race_state["fx"] == sim.fighters[1].race_state["fx"])
+	# Other classes have no signature taunt.
+	ctx.check("only sword & shield carries Bulwark", sim.fighters[2].race_state["effects"].all(func(e): return e["effect"]["type"] != "aggro")
+		and sim.fighters[1].race_state["effects"].any(func(e): return e["effect"]["type"] == "aggro"))
+	# Viking S&S Unbroken: below 35% HP -> shield AND an immediate Bulwark pulse (pulse_aggro), even off its timer.
+	var v := squad(["viking", "human", "elf"])
+	var vsim = v.sim
+	var ven: Array = vsim.fighters.keys().filter(func(id): return vsim.fighters[id].team == "enemy" and vsim.fighters[id].is_alive())
+	ven.sort()
+	for other in ven:
+		vsim.bodies[other].position = vsim.bodies[1].position + Vector3(30.0, 0, 30.0)
+	vsim.bodies[ven[0]].position = vsim.bodies[1].position + Vector3(3.0, 0, 0)
+	RacePassives.step(vsim)  # wave start + the first Bulwark pulse
+	vsim.tick_count += 60
+	vsim._ai[ven[0]].taunt_left = 0
+	var viking = vsim.fighters[1]
+	viking.hp = viking.max_hp() * 0.3
+	vsim.events.clear()
+	RacePassives.step(vsim)
+	ctx.check("Unbroken: shield + an immediate taunt pulse (Bulwark still on cooldown)",
+		viking.shield > 0.0 and vsim.events.any(func(e): return e["type"] == "race_taunt") and int(vsim._ai[ven[0]].taunt_target) == 1 and int(vsim._ai[ven[0]].taunt_left) == 180)
 
 
 func _synergy(ctx) -> void:

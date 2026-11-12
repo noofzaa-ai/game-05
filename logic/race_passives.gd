@@ -10,15 +10,18 @@ extends RefCounted
 ## `skill_mod` (4.4) changes a skill-build cast in logic/skills/system.gd cast() through modify_skill_stats.
 ## `charges` (runes): count events in fx[index].charges, run the actions at `max`, reset; RUNE_GAIN adds to int gains.
 ## `burst` hits enemies within `radius` of `center` (self | target) for atk_mul x ATK (vs DEF), + optional status.
-## INERT until their phase-4 feature exists (loaded and validated, no effect):
-## aggro, and the actions pulse_aggro, zone, skill_refresh. The event ultimate_cast never fires yet.
+## `aggro` (a class signature, data/classes/<id>.json "signature": Bulwark) pulses every `every_ticks` once an enemy
+## is within `radius`; `pulse_aggro` taunts enemies within radius (5) for duration_ticks (180) via GameSim.taunt_enemy.
+## INERT until their phase (loaded and validated, no effect): the actions zone, skill_refresh. The event ultimate_cast never fires yet.
 ## Deterministic: a `chance` roll uses the sim RNG; nothing else is random. Order = fighter id, then effect order.
 
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const Effects := preload("res://logic/effects.gd")
 const Fighter := preload("res://logic/fighter.gd")
-const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield", "burst"]
+const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield", "burst", "pulse_aggro"]
+const PULSE_RADIUS := 5.0  ## pulse_aggro defaults (GDD 3.6: the Bulwark values)
+const PULSE_TICKS := 180
 const SHIELD_TICKS := 600  ## default shield life when an action has no duration_ticks (GDD 4.3)
 
 
@@ -40,6 +43,8 @@ static func attach(fighter, run) -> void:
 		effects.append({"src": "passive", "effect": effect.duplicate(true)})
 	for effect in synergy.get("effects", []):
 		effects.append({"src": "synergy", "effect": effect.duplicate(true)})
+	for effect in CardDeck.class_data(class_id).get("signature", []):  # the class signature (3.2), any race
+		effects.append({"src": "signature", "effect": effect.duplicate(true)})
 	var pseudo := {}
 	var scaling: Array = []
 	for entry in effects:
@@ -187,6 +192,7 @@ static func step(sim) -> void:
 			for raced in race_events(id, fighter, event, sim.fighters):
 				fire(sim, id, raced, event)
 		_check_low_hp(sim, id, fighter)
+		_check_aggro(sim, id, fighter)
 
 
 ## The race events one sim event means for fighter `id` (the doc's event list, 3.6).
@@ -295,6 +301,8 @@ static func run_action(sim, id: int, action: Dictionary, context: Dictionary) ->
 	var source = sim.fighters[id]
 	if str(action["action"]) == "burst":
 		return _burst(sim, id, action, context)
+	if str(action["action"]) == "pulse_aggro":
+		return pulse_aggro(sim, id, float(action.get("radius", PULSE_RADIUS)), int(action.get("duration_ticks", PULSE_TICKS)))
 	var did := false
 	for target_id in targets(sim, id, str(action.get("target", "self")), context):
 		var target = sim.fighters[target_id]
@@ -443,6 +451,43 @@ static func targets(sim, id: int, kind: String, context: Dictionary) -> Array:
 			var target := int(context.get("target", -1))
 			return [target] if sim.fighters.has(target) and sim.fighters[target].is_alive() and target != id else []
 	return []
+
+
+## Taunt (3.6): every living enemy within `radius` m of fighter `id` attacks it for `ticks` (the longer remaining
+## taunt wins on overlap). Returns true when at least one enemy was taunted. Emits race_taunt for the client.
+static func pulse_aggro(sim, id: int, radius: float, ticks: int) -> bool:
+	var me: Vector3 = sim.bodies[id].position
+	var taunted: Array = []
+	var ids: Array = sim.fighters.keys()
+	ids.sort()
+	for other in ids:
+		var f = sim.fighters[other]
+		if f.team == sim.fighters[id].team or not f.is_alive():
+			continue
+		var pos: Vector3 = sim.bodies[other].position
+		if Vector2(pos.x - me.x, pos.z - me.z).length() <= radius and sim.taunt_enemy(other, id, ticks):
+			taunted.append(other)
+	if taunted.is_empty():
+		return false
+	sim.events.append({"type": "race_taunt", "player": id, "enemies": taunted, "radius": radius, "ticks": ticks, "pos": me})
+	return true
+
+
+## aggro (class signature, Bulwark): a pulse every `every_ticks`; it waits until an enemy is in range, so a pulse is
+## never spent on nobody. The timer is in fx[index].last (checkpointed).
+static func _check_aggro(sim, id: int, fighter) -> void:
+	var effects: Array = fighter.race_state["effects"]
+	for index in effects.size():
+		var effect: Dictionary = effects[index]["effect"]
+		if effect["type"] != "aggro":
+			continue
+		var fx: Dictionary = fighter.race_state["fx"].get(str(index), {"last": -1, "n": 0, "wave": 0, "low": false})
+		fighter.race_state["fx"][str(index)] = fx
+		if int(fx["last"]) >= 0 and sim.tick_count - int(fx["last"]) < int(effect["every_ticks"]):
+			continue
+		if pulse_aggro(sim, id, float(effect["radius"]), int(effect["duration_ticks"])):
+			fx["last"] = sim.tick_count
+			sim.events.append({"type": "race_proc", "player": id, "source": "signature", "name": str(effect.get("name", "")), "on": "aggro"})
 
 
 ## self_low_hp: fires when HP crosses below `hp_below` (not every tick it stays low); once_per_wave gates it further.

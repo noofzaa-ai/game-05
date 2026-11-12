@@ -54,6 +54,10 @@ var escape_input := ""  ## ranged: the attack that gets it out of reach (a blink
 var escape_range := 0.0
 var escape_cooldown := 300
 var world: SimWorld  ## the walls, for its line of sight (set by the simulation)
+## Taunt (GDD races 3.2 Bulwark, 3.6 aggro/pulse_aggro): while taunt_left > 0 and that fighter is alive, it is the
+## target instead of the nearest player. Set through taunt() (GameSim.taunt_enemy); saved in checkpoints.
+var taunt_target := -1
+var taunt_left := 0
 var _escape_left := 0
 
 var _phase := 0.0
@@ -122,8 +126,30 @@ func _steer_around_obstacles(input: SimInput, body: SimBody) -> SimInput:
 	return input
 
 
+## Taunts this monster onto fighter `by` for `ticks`. Overlapping taunts do not add up: the longer remaining
+## one wins (GDD races 5). Not a control effect, so control immunity does not apply (works on the boss too).
+func taunt(by: int, ticks: int) -> bool:
+	if ticks <= 0 or (taunt_left > ticks and taunt_target != by):
+		return false
+	taunt_target = by
+	taunt_left = maxi(taunt_left, ticks)
+	return true
+
+
+## The fighter this monster is forced to attack, or -1 (no taunt, it ran out, or the taunter is down or gone).
+func taunted_by(fighter: Fighter, fighters: Dictionary) -> int:
+	if taunt_left <= 0 or not fighters.has(taunt_target):
+		return -1
+	var other: Fighter = fighters[taunt_target]
+	return taunt_target if other.team != fighter.team and other.is_alive() else -1
+
+
 func _decide(fighter: Fighter, body: SimBody, bodies: Dictionary, fighters: Dictionary, rng: RandomNumberGenerator, may_attack: bool) -> SimInput:
 	var input := SimInput.new()
+	if taunt_left > 0:
+		taunt_left -= 1
+		if taunt_left == 0:
+			taunt_target = -1
 	if cooldown > 0:
 		cooldown -= 1
 	_phase += 0.03
@@ -145,6 +171,9 @@ func _decide(fighter: Fighter, body: SimBody, bodies: Dictionary, fighters: Dict
 		if distance < nearest:
 			nearest = distance
 			target_id = id
+	var taunter := taunted_by(fighter, fighters)
+	if taunter >= 0:
+		target_id = taunter
 	if target_id < 0:
 		return input
 

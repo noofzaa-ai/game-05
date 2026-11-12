@@ -313,6 +313,12 @@ func _with_aim_assist(fighter: Fighter, body: SimBody, input: SimInput,owner:int
 	return aimed
 
 
+## The race engine's taunt hook (GDD races 3.6 aggro/pulse_aggro): monster `id` attacks fighter `by` for `ticks`.
+## Returns false for a fighter without a brain (a player) or when a longer taunt is already running.
+func taunt_enemy(id: int, by: int, ticks: int) -> bool:
+	return _ai.has(id) and fighters[id].is_alive() and _ai[id].taunt(by, ticks)
+
+
 func living_enemy_count() -> int:
 	var count := 0
 	for id in fighters:

@@ -1407,6 +1407,13 @@
 				]
 			}
 		],
+		"race_taunt": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
 		"race_heal": [
 			{
 				"when": {
