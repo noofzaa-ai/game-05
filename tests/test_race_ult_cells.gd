@@ -18,6 +18,8 @@ func run(ctx) -> void:
 	_human(ctx)
 	_viking(ctx)
 	_elf(ctx)
+	_runeborn(ctx)
+	_all_fire_in_play(ctx)
 
 
 ## A squad of these races with each card's own ultimate from the data, gauges full, bodies grounded.
@@ -438,3 +440,163 @@ func _elf(ctx) -> void:
 	for id in [1, 2, 3]:
 		ru.sim.fighters[id].hp = ru.sim.fighters[id].max_hp() * 0.5
 	ctx.check("Rebirth Bloom use: squad average below 55% -> fires", _matches(ru.sim, 3))
+
+
+## Runeborn (cyan/violet): release in 4 shapes (team shield, slam + lingering zone, delayed glyphs, damage-to-shield);
+## every cast also fills the card's rune passive (ultimate_cast, gain max) so it discharges at once (3.4).
+func _runeborn(ctx) -> void:
+	var data = RaceData.load_default()
+	ctx.check("Runeborn: 4 class ultimates + a default; Runebreaker plays the class charge clip", ["sword_shield", "greatsword", "longbow", "magic"].all(func(c): return not str(data.ultimate_for("runeborn", c).get("name", "")).is_empty())
+		and data.ultimate_for("runeborn", "no_such_class")["name"] == "Rune Ward" and str(data.ultimate_for("runeborn", "greatsword")["clip"]) == "charge")
+	# R/S&S Bastion Glyph: shield all 15% of the caster's max HP 8 s (ultimate cap 50%), taunt r5 3 s; Rune Aegis discharges.
+	var f := squad(["runeborn", "runeborn", "runeborn"])
+	var sim = f.sim
+	var foes := Act.enemies(sim)
+	Act.place(sim, sim.bodies[1].position, {foes[0]: Vector3(2, 0, 0)})
+	RacePassives.step(sim)  # wave start (the Runeborn Trio wave shield lands first)
+	for id in [1, 2, 3]:
+		sim.fighters[id].clear_shield()
+	var tank = sim.fighters[1]
+	var out := cast(f, 1)
+	var shields: Array = out.filter(func(e): return e["type"] == "race_shield" and bool(e["ultimate"]))
+	var ok := shields.size() == 3
+	for e in shields:
+		var target = sim.fighters[int(e["target"])]
+		ok = ok and is_equal_approx(float(e["amount"]), minf(0.15 * tank.max_hp(), 0.5 * target.max_hp()))
+	ctx.check("Bastion Glyph: every ally shielded 15%% of the tank's max HP (%s)" % [shields.map(func(e): return snappedf(float(e["amount"]), 0.1))], ok)
+	ctx.check("Bastion Glyph: taunt 3 s", out.any(func(e): return e["type"] == "race_taunt" and int(e["ticks"]) == 180))
+	ctx.check("Bastion Glyph: Rune Aegis discharges at once (ultimate_cast fills the runes)", out.any(func(e): return e["type"] == "race_proc" and int(e["player"]) == 1 and e["on"] == "ultimate_cast" and bool(e.get("discharge", false)))
+		and tank.effects.has("fortify"))
+	var b := squad(["runeborn", "runeborn", "runeborn"])
+	var bf := Act.enemies(b.sim)
+	Act.place(b.sim, b.sim.bodies[1].position, {bf[0]: Vector3(2, 0, 0), bf[1]: Vector3(-2, 0, 0)})
+	ctx.check("Bastion Glyph use: 2 enemies in 5 m, nobody hurt -> holds", not _matches(b.sim, 1))
+	Act.place(b.sim, b.sim.bodies[1].position, {bf[0]: Vector3(2, 0, 0), bf[1]: Vector3(-2, 0, 0), bf[2]: Vector3(0, 0, 3)})
+	ctx.check("Bastion Glyph use: 3 enemies in 5 m -> fires", _matches(b.sim, 1))
+	Act.place(b.sim, b.sim.bodies[1].position, {})
+	b.sim.fighters[2].hp = b.sim.fighters[2].max_hp() * 0.6
+	b.sim.fighters[3].hp = b.sim.fighters[3].max_hp() * 0.6
+	ctx.check("Bastion Glyph use: 2 allies below 70% -> fires", _matches(b.sim, 1))
+
+	# R/GS Runebreaker: 200% + shock in r3 at densest within 4 m; a zone there 3 s, 35% every 0.5 s; Runic Edge discharges.
+	var r := squad(["runeborn", "runeborn", "runeborn"])
+	var rsim = r.sim
+	var rf := Act.enemies(rsim)
+	Act.place(rsim, rsim.bodies[2].position, {rf[0]: Vector3(3, 0, 0), rf[1]: Vector3(3.5, 0, 1), rf[2]: Vector3(3.5, 0, -1), rf[3]: Vector3(-3.5, 0, 0)})
+	for e in rf:
+		rsim.fighters[e].control_immune_left = 0
+		rsim.fighters[e].stats["EFFECT_RES"] = 0.0
+	var gatk: float = rsim.fighters[2].stat("ATK")
+	var all := cast(r, 2)
+	var slam: Array = damage_by(all, 2).filter(func(e): return is_equal_approx(float(e["damage"]), roundf(gatk * 2.0)))
+	ctx.check("Runebreaker: 200%% on the 3-pack at the densest point, not the lone one (%d)" % slam.size(), slam.size() == 3 and not slam.any(func(e): return int(e["target"]) == rf[3]))
+	ctx.check("Runebreaker: the pack is shocked", [rf[0], rf[1], rf[2]].all(func(e): return rsim.fighters[e].effects.has("shock")))
+	ctx.check("Runebreaker: Runic Edge discharges at once", all.any(func(e): return e["type"] == "race_proc" and int(e["player"]) == 2 and e["on"] == "ultimate_cast"))
+	all.append_array(run_ticks(rsim, 200))
+	var glyph: Array = damage_by(all, 2).filter(func(e): return int(e["target"]) == rf[0] and is_equal_approx(float(e["damage"]), roundf(gatk * 0.35)))
+	ctx.check("Runebreaker: the glyph zone hits 35%% every 0.5 s for 3 s = 6 pulses (%d)" % glyph.size(), glyph.size() == 6)
+	var ru := squad(["runeborn", "runeborn", "runeborn"])
+	var ruf := Act.enemies(ru.sim)
+	Act.place(ru.sim, ru.sim.bodies[2].position, {ruf[0]: Vector3(3, 0, 0), ruf[1]: Vector3(3.5, 0, 1)})
+	ctx.check("Runebreaker use: 2 enemies in r3 -> holds", not _matches(ru.sim, 2))
+	Act.place(ru.sim, ru.sim.bodies[2].position, {ruf[0]: Vector3(3, 0, 0), ruf[1]: Vector3(3.5, 0, 1), ruf[2]: Vector3(3.5, 0, -1)})
+	ctx.check("Runebreaker use: 3 enemies in r3 of a point within 4 m -> fires", _matches(ru.sim, 2))
+	Act.place(ru.sim, ru.sim.bodies[2].position, {ruf[0]: Vector3(8, 0, 0), ruf[1]: Vector3(8.5, 0, 1), ruf[2]: Vector3(8.5, 0, -1)})
+	ctx.check("Runebreaker use: the pack beyond 4 m -> holds", not _matches(ru.sim, 2))
+
+	# R/Bow Glyph Barrage: 6 arrows 70% over 1.2 s spread over distinct enemies within 12 m (the rest on the boss, else
+	# the nearest); each hit leaves a glyph: 2 s later 60% in r1.5 + sunder; Glyph Shot discharges (focus + shield).
+	var g := squad(["runeborn", "runeborn", "runeborn"])
+	var gsim = g.sim
+	var gf := Act.enemies(gsim)
+	Act.place(gsim, gsim.bodies[3].position, {gf[0]: Vector3(5, 0, 0), gf[1]: Vector3(7, 0, 3), gf[2]: Vector3(9, 0, -3)})
+	var batk: float = gsim.fighters[3].stat("ATK")
+	all = cast(g, 3)
+	all.append_array(run_ticks(gsim, 220))
+	var arrows: Array = damage_by(all, 3).filter(func(e): return is_equal_approx(float(e["damage"]), roundf(batk * 0.7)))
+	var targets := {}
+	for e in arrows:
+		targets[int(e["target"])] = int(targets.get(int(e["target"]), 0)) + 1
+	ctx.check("Glyph Barrage: 6 arrows of 70%%, each of the 3 enemies hit first, then the nearest (%s)" % [targets], arrows.size() == 6 and targets.size() == 3 and int(targets[gf[0]]) == 4)
+	var glyphs: Array = damage_by(all, 3).filter(func(e): return is_equal_approx(float(e["damage"]), roundf(batk * 0.6)))
+	ctx.check("Glyph Barrage: 6 glyphs detonate 60%% 2 s later (%d hits on enemies standing in them)" % glyphs.size(), glyphs.size() >= 6 and gsim.fighters[gf[1]].effects.has("sunder"))
+	ctx.check("Glyph Barrage: Glyph Shot discharges (focus)", gsim.fighters[3].effects.has("focus"))
+	var gu := squad(["runeborn", "runeborn", "runeborn"])
+	var guf := Act.enemies(gu.sim)
+	Act.place(gu.sim, gu.sim.bodies[3].position, {guf[0]: Vector3(6, 0, 0), guf[1]: Vector3(8, 0, 0)})
+	ctx.check("Glyph Barrage use: 2 enemies in 12 m -> holds", not _matches(gu.sim, 3))
+	gu.sim.fighters[guf[0]].enemy_type = "goblin_chief"
+	ctx.check("Glyph Barrage use: the boss within 12 m -> fires", _matches(gu.sim, 3))
+
+	# R/Magic Arcane Singularity: zone r4 4 s at densest within 9 m, 45% every 0.5 s, shock on the first pulse;
+	# on_end: shield all 30% of the zone's damage, split, cap 15% max HP each; Runeweaver discharges (shield all 10%).
+	var a := squad(["runeborn", "runeborn", "runeborn"], MAGIC_SQUAD)
+	var asim = a.sim
+	var af := Act.enemies(asim)
+	Act.place(asim, asim.bodies[3].position, {af[0]: Vector3(6, 0, 0), af[1]: Vector3(6.5, 0, 1), af[2]: Vector3(6.5, 0, -1)})
+	for e in af:
+		asim.fighters[e].control_immune_left = 0
+		asim.fighters[e].stats["EFFECT_RES"] = 0.0
+	RacePassives.step(asim)
+	for id in [1, 2, 3]:
+		asim.fighters[id].clear_shield()
+	var matk: float = asim.fighters[3].stat("ATK")
+	all = cast(a, 3)
+	ctx.check("Singularity: Runeweaver discharges on the cast (shield all 10% of the mage's max HP)", all.any(func(e): return e["type"] == "race_proc" and int(e["player"]) == 3 and e["on"] == "ultimate_cast"))
+	all.append_array(run_ticks(asim, 260))
+	var shocks: Array = all.filter(func(e): return e["type"] == "effect_applied" and e["effect"] == "shock" and int(e["source"]) == 3)
+	var pulses: Array = damage_by(all, 3).filter(func(e): return int(e["target"]) == af[0] and is_equal_approx(float(e["damage"]), roundf(matk * 0.45)))
+	ctx.check("Singularity: 8 pulses of 45%% on each enemy inside (%d)" % pulses.size(), pulses.size() == 8)
+	var first_pulse := all.find(all.filter(func(e): return e["type"] == "race_zone_pulse")[0])
+	var at_first: int = all.slice(0, first_pulse + 1).filter(func(e): return e["type"] == "effect_applied" and e["effect"] == "shock").size()
+	ctx.check("Singularity: shock on the first pulse only (%d at the first pulse, %d in all)" % [at_first, shocks.size()], at_first == 3 and shocks.size() == 3)
+	var zone_dmg := 0.0
+	for e in all:
+		if e["type"] == "race_zone_end" and int(e["player"]) == 3:
+			zone_dmg = float(e["damage"])
+	var end_at := -1
+	for i in all.size():
+		if all[i]["type"] == "race_zone_end" and int(all[i]["player"]) == 3:
+			end_at = i
+	var ends: Array = []
+	for i in range(maxi(0, end_at - 6), end_at):  # the on_end shields come just before the zone_end event
+		if all[i]["type"] == "race_shield" and int(all[i]["player"]) == 3 and bool(all[i]["ultimate"]):
+			ends.append(all[i])
+	var ok_end := ends.size() == 3
+	for e in ends:
+		ok_end = ok_end and absf(float(e["amount"]) - minf(0.30 * zone_dmg / 3.0, 0.15 * asim.fighters[3].max_hp())) < 0.01  # cap_max_hp is of the caster (4.3 shield_amount)
+	ctx.check("Singularity on_end: 30%% of the zone's %.0f damage, split over 3, cap 15%% max HP (%s)" % [zone_dmg, ends.map(func(e): return snappedf(float(e["amount"]), 0.1))], ok_end and zone_dmg > 0.0)
+	var au := squad(["runeborn", "runeborn", "runeborn"], MAGIC_SQUAD)
+	var auf := Act.enemies(au.sim)
+	Act.place(au.sim, au.sim.bodies[3].position, {auf[0]: Vector3(6, 0, 0), auf[1]: Vector3(6.5, 0, 1)})
+	ctx.check("Singularity use: 2 enemies in r4 -> holds", not _matches(au.sim, 3))
+	Act.place(au.sim, au.sim.bodies[3].position, {auf[0]: Vector3(6, 0, 0), auf[1]: Vector3(6.5, 0, 1), auf[2]: Vector3(7, 0, -2)})
+	ctx.check("Singularity use: 3 enemies in r4 of a point within 9 m -> fires", _matches(au.sim, 3))
+
+
+## Every one of the 16 ultimates fires in a real squad fight driven by the pilot (GDD 10: fired count > 0 per cell).
+func _all_fire_in_play(ctx) -> void:
+	var fired := {}
+	for races in [["human", "human", "human"], ["viking", "viking", "viking"], ["elf", "elf", "elf"], ["runeborn", "runeborn", "runeborn"]]:
+		for cards in [RaceTest.CARDS, MAGIC_SQUAD]:
+			var f := RaceTest.squad(races, cards)
+			var sim = f.sim
+			var memories := {}
+			for id in [1, 2, 3]:
+				sim.set_class_style(id, str(preload("res://logic/card_deck.gd").class_data(cards[id - 1]).get("weapon", "")))
+				memories[id] = Pilot.new_memory(id * 7919 + 1)
+			for tick in 60 * 150:
+				if sim.living_enemy_count() + sim.pending_wave_count() == 0:
+					break
+				for id in [1, 2, 3]:
+					sim.set_input(id, preload("res://logic/sim_input.gd").decode(Pilot.decide(sim, f.combat, id, memories[id], tick).encode()))
+				sim.tick()
+				for e in sim.events:
+					if e["type"] == "ultimate_cast":
+						fired["%s:%s" % [e["race"], e["class"]]] = int(fired.get("%s:%s" % [e["race"], e["class"]], 0)) + 1
+	var missing: Array = []
+	for race in ["human", "viking", "elf", "runeborn"]:
+		for c in ["sword_shield", "greatsword", "longbow", "magic"]:
+			if not fired.has("%s:%s" % [race, c]):
+				missing.append("%s:%s" % [race, c])
+	ctx.check("all 16 ultimates fire in a 150 s pilot squad fight (missing %s)" % [missing], missing.is_empty())

@@ -853,7 +853,8 @@ func _detail_item(item, worn: bool) -> void:
 	_detail.add_child(ItemText.base_label(item, rules))
 	for index in item.substats.size():
 		_detail.add_child(_line("   " + ItemText.substat_text(item, rules, index), InkUi.SUBSTAT, InkUi.FONT_LABEL))
-	_detail.add_child(_line("Upgrade %d/%d" % [item.upgrade_count, int(rules.upgrade.get("max_attempts", 5))], InkUi.MUTED, InkUi.FONT_SMALL))
+	var max_upgrades := int(rules.upgrade.get("max_attempts", 5))
+	_detail.add_child(_line("Upgrade %d/%d" % [item.upgrade_count, max_upgrades], InkUi.MUTED, InkUi.FONT_SMALL))
 	_detail.add_child(_line(ItemText.durability_text(item, rules), ItemText.durability_color(item, rules), InkUi.FONT_SMALL))
 	var worn_ids: Array = profile.loadout.items().map(func(piece): return piece.item_id)
 	var set_line := ItemText.set_text(item, rules, worn_ids)

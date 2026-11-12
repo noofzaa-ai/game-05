@@ -137,9 +137,13 @@ static func burst(sim, id: int, action: Dictionary, ctx: Dictionary) -> bool:
 	if hits > 1 and index == 1:
 		var every := maxi(1, int(action.get("interval_ticks", 15)))
 		var jobs: Array = sim.fighters[id].race_state.get("jobs", [])
+		if not ctx.has("hit"):
+			ctx["hit"] = []
+		var shared := {"hit": ctx["hit"], "refreshed": ctx["refreshed"]}  # all hits of this burst share one hit list and one refresh cap
 		for k in range(2, hits + 1):
 			var later := _job_ctx(ctx)
 			later["hit_index"] = k
+			later["shared"] = shared
 			jobs.append({"at": sim.tick_count + every * (k - 1), "action": action, "ctx": later})
 		sim.fighters[id].race_state["jobs"] = jobs
 	return _burst_once(sim, id, action, ctx, index, hits)
@@ -374,6 +378,9 @@ static func _run_jobs(sim, id: int, fighter) -> void:
 	for job in due:
 		var ctx: Dictionary = job["ctx"]
 		var action: Dictionary = job["action"]
+		if ctx.has("shared"):  # the burst's earlier hits so far (spread picks a new enemy; the refresh cap is per cast)
+			ctx["hit"] = ctx["shared"]["hit"]
+			ctx["refreshed"] = ctx["shared"]["refreshed"]
 		_burst_once(sim, id, action, ctx, int(ctx.get("hit_index", 1)), maxi(1, int(action.get("hits", 1))) if not action.has("ticks") else 1)
 
 
