@@ -1297,6 +1297,7 @@ const TREE_ICON_HOLE := {"minor": 0.71, "major": 0.71, "capstone": 0.6, "combo":
 const TREE_HEADER_H := 96.0
 const TREE_DETAIL_W := 430.0
 const TREE_GAP := 14.0
+const TREE_COMBO_COLUMN := 1.25  ## the combo's own column between the branches, x the combo node size
 const TREE_PLATE_MIN_SCALE := 0.8  ## below this layout scale the Skills tab buttons use the flat parchment skin
 const TREE_BADGE := 0.34  ## OR / lock / tick badge size, of the node size
 const TREE_PATH_W := 5.0
@@ -1345,6 +1346,7 @@ const STRINGS_TREE := {
 	"tree_branch_combo": ["คอมโบ", "Combo"],
 	"tree_pick": ["แตะโหนดเพื่อดูรายละเอียด", "Tap a node to see it"],
 	"tree_needs": ["ต้องการ %d", "Needs %d"],
+	"tree_needs_short": ["%d+", "%d+"],
 	"tree_hint": ["แตะ = รายละเอียด · แตะสองครั้ง = เรียน · Q / E = เปลี่ยนการ์ด · Esc / B = กลับ", "Tap = details  ·  Double-tap = learn  ·  Q / E = switch card  ·  Esc / B = back"],
 	"tree_saved_ok": ["บันทึกต้นไม้สกิลแล้ว", "Skill tree saved"],
 	"tree_reset_ok": ["รีเซ็ตแล้ว คืน %d แต้ม", "Reset: %d points back"],

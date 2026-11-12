@@ -406,7 +406,17 @@ func _set_enabled(b: Button, on: bool) -> void:
 ## Width kept free at the left of each branch for the gate tags ("Needs 13").
 func _gutter() -> float:
 	var px := maxi(int(round(CardTokens.TREE_FONT_GATE * s)), CardTokens.FONT_MIN)
-	return CardTokens.display_font().get_string_size(CardTokens.tt("tree_needs") % 13, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x + 22.0 * s
+	var widest := 0
+	for branch in ["class", "race"]:
+		for rule in _data().tiers(branch):
+			widest = maxi(widest, int(rule["gate"]))
+	var label := _gate_text(widest)
+	return CardTokens.display_font().get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x + 22.0 * s
+
+
+## "Needs 13", or "13+" below TREE_PLATE_MIN_SCALE (small screens, where the long tag would squeeze the nodes).
+func _gate_text(gate: int) -> String:
+	return CardTokens.tt("tree_needs" if s >= CardTokens.TREE_PLATE_MIN_SCALE else "tree_needs_short") % gate
 
 
 ## Screen px of a font token (never under FONT_MIN).
@@ -459,9 +469,12 @@ func _layout_nodes(canvas: Rect2) -> void:
 	var race_tiers := _by_tier(data.race_nodes(race))
 	var gap := CardTokens.TREE_GAP * s
 	var gutter := _gutter()
-	var class_w := canvas.size.x * 0.66
-	var race_x := canvas.position.x + class_w + gap
-	var race_w := canvas.size.x - class_w - gap
+	# three columns: class branch | combo column (its own clear spot, top centre) | race branch
+	var combo_col: float = float(CardTokens.TREE_NODE["combo"]) * s * CardTokens.TREE_COMBO_COLUMN
+	var class_w := (canvas.size.x - combo_col) * 0.66
+	var combo_x := canvas.position.x + class_w
+	var race_x := combo_x + combo_col
+	var race_w := canvas.end.x - race_x - gap * 0.3
 	# fit: widest class row, the tier heights
 	var widest := 0.0
 	for tier in class_tiers:
@@ -495,10 +508,10 @@ func _layout_nodes(canvas: Rect2) -> void:
 		var band_y := y + step * 0.5
 		_bands.append({"y": band_y, "x0": canvas.position.x + gap * 0.3, "x1": canvas.position.x + class_w, "gate": int(data.tier_rule("class", tier).get("gate", 0)), "color": class_color})
 		_bands.append({"y": band_y, "x0": race_x, "x1": race_x + race_w - gap * 0.3, "gate": int(data.tier_rule("race", tier).get("gate", 0)), "color": race_color, "right": true})
-	if not combo.is_empty():
+	if not combo.is_empty():  # centred in its own column, at the capstone row
 		var top_y := canvas.end.y - gap - step * 3.5
-		var cx := canvas.position.x + class_w + gap * 0.5
-		_put(str(combo["id"]), Vector2(cx, top_y - step * 0.08), _size_of(combo, k))
+		var side := minf(_size_of(combo, k), combo_col - gap)
+		_put(str(combo["id"]), Vector2(combo_x + combo_col * 0.5, top_y), side)
 	_lines.queue_redraw()
 
 
@@ -624,6 +637,13 @@ func _refresh_detail() -> void:
 			if str(other["excl"]) == str(n["excl"]) and other["id"] != n["id"]:
 				lines.append(CardTokens.tt("tree_or") % str(other["name"]))
 	_d_cost.text = "\n".join(lines)
+	# the cost lines take the height they need above the buttons; the description fills what is left
+	var bottom := _learn.position.y - CardTokens.CHAR_PAD * s * 0.5
+	_d_cost.size.y = _px(CardTokens.FONT_CHAR_SLOT) * 6.0
+	var needed := (_d_cost.get_line_height() + 2.0 * s) * float(maxi(1, _d_cost.get_line_count()))
+	_d_cost.size.y = needed
+	_d_cost.position.y = bottom - needed
+	_d_text.size.y = maxf(0.0, _d_cost.position.y - _d_text.position.y - 4.0 * s)
 	_learn.text = CardTokens.tt("tree_learn")
 	_set_enabled(_learn, state == SkillTreeNode.State.AVAILABLE)
 	_unlearn.text = CardTokens.tt("tree_unlearn")
@@ -641,7 +661,7 @@ func _draw_lines() -> void:
 	for band in _bands:
 		_lines.draw_line(Vector2(band["x0"], band["y"]), Vector2(band["x1"], band["y"]), CardTokens.TREE_BAND, maxf(1.0, 2.0 * s))
 		if int(band["gate"]) > 0:  # the gate as an ink label on a parchment tag: "Needs 8"
-			var text := CardTokens.tt("tree_needs") % int(band["gate"])
+			var text := _gate_text(int(band["gate"]))
 			var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 			var tag_x: float = float(band["x1"]) - w - 12.0 * s if bool(band.get("right", false)) else float(band["x0"])
 			var tag := Rect2(tag_x, float(band["y"]) - font_size * 0.65, w + 12.0 * s, font_size * 1.3)
