@@ -70,6 +70,7 @@ func run(ctx) -> void:
 	_rallying_drill(ctx)
 	_moonlit_and_bloom(ctx)
 	_inert_cells(ctx)
+	_shield(ctx)
 	_synergy(ctx)
 	_checkpoint_and_determinism(ctx)
 
@@ -180,6 +181,77 @@ func _inert_cells(ctx) -> void:
 	var gsim = g.sim
 	gsim.fighters[2].hp = gsim.fighters[2].max_hp() * 0.2
 	ctx.check("inert: Berserker low-HP ATK scaling is not applied yet", is_equal_approx(gsim.fighters[2].stat("ATK"), float(gsim.fighters[2].stats["ATK"])))
+
+
+## Fighter shield (GDD 4.3, phase 4 step 1): an absorb pool capped at 30% max HP, absorbs before HP, lasts
+## duration_ticks, cleared at wave end, saved in checkpoints, announced with a race_shield event.
+func _shield(ctx) -> void:
+	# Formula 4.3: Runeweaver, mage max HP 750 -> 0.10 x 750 = 75 per ally per discharge.
+	var mage := Fighter.new()
+	mage.stats = {"HP": 750.0}
+	var runeweaver := {"action": "shield", "target": "allies_all", "fraction_of": "source_max_hp", "fraction": 0.10, "duration_ticks": 600}
+	ctx.check("formula 4.3: Runeweaver 750 max HP -> 75 shield", is_equal_approx(RacePassives.shield_amount(runeweaver, mage, 0.0), 75.0))
+	var pool := Fighter.new()
+	pool.stats = {"HP": 1000.0}
+	pool.hp = 1000.0
+	ctx.check("shield: a 200 gain on 1000 max HP adds 200", is_equal_approx(pool.add_shield(200.0, 600, 0, 0.30), 200.0) and is_equal_approx(pool.shield, 200.0))
+	ctx.check("shield: capped at 30% max HP (only 100 more of 250 fits)", is_equal_approx(pool.add_shield(250.0, 600, 0, 0.30), 100.0) and is_equal_approx(pool.shield, 300.0))
+	ctx.check("shield: absorbs before HP (120 hit -> 120 absorbed)", is_equal_approx(pool.absorb(120.0), 120.0) and is_equal_approx(pool.shield, 180.0))
+	ctx.check("shield: the rest goes to HP (500 hit -> 180 absorbed)", is_equal_approx(pool.absorb(500.0), 180.0) and pool.shield == 0.0)
+	# Runeborn Pair: every ally gets 8% of their own max HP at wave start.
+	var f := squad(["runeborn", "runeborn", "human"])
+	var sim = f.sim
+	sim.events.clear()
+	RacePassives.step(sim)
+	ctx.check("Runeborn Pair: 8%% max HP shield on every ally at wave start (%s)" % [[1, 2, 3].map(func(id): return snappedf(sim.fighters[id].shield / sim.fighters[id].max_hp(), 0.001))],
+		[1, 2, 3].all(func(id): return is_equal_approx(sim.fighters[id].shield, sim.fighters[id].max_hp() * 0.08)))
+	ctx.check("shield: a race_shield event for the client", sim.events.any(func(e): return e["type"] == "race_shield" and int(e["target"]) == 1 and float(e["amount"]) > 0.0))
+	# A real enemy hit is absorbed by the shield before HP.
+	var foe := enemy_of(sim)
+	var tank = sim.fighters[1]
+	tank.add_shield(tank.max_hp(), 600, sim.tick_count, 0.30)  # top up to the cap so one goblin blow fits in it
+	var hp_before: float = tank.hp
+	var shield_before: float = tank.shield
+	sim.events.clear()
+	sim.fighters[foe].direction = Vector2i(1, 0)
+	var move: String = sim.combat.styles[sim.fighters[foe].style]["ground_light"]
+	preload("res://logic/combat.gd").apply_hit(foe, 1, move, sim.fighters, sim.bodies, sim.combat, sim.rng, sim.events)
+	var hit: Array = sim.events.filter(func(e): return e["type"] in ["hit", "blocked"] and int(e["target"]) == 1)
+	ctx.check("shield: an enemy hit is absorbed before HP (hp %.1f -> %.1f, shield %.1f -> %.1f)" % [hp_before, tank.hp, shield_before, tank.shield],
+		tank.hp == hp_before and tank.shield < shield_before and not hit.is_empty() and float(hit[0].get("absorbed", 0.0)) > 0.0)
+	# Saved in checkpoints.
+	var copy = Sim.new(World.new(), f.combat, F.rng(1))
+	copy.item_rules = f.rules
+	copy.loot_data = f.loot
+	copy.restore({"v": 1, "checkpoint": JSON.parse_string(JSON.stringify(sim.snapshot()["checkpoint"]))}, f.camp)
+	ctx.check("shield: saved in the checkpoint", is_equal_approx(copy.fighters[1].shield, tank.shield) and int(copy.fighters[1].shield_until) == int(tank.shield_until))
+	# Expires after duration_ticks; cleared at wave end.
+	sim.tick_count = int(tank.shield_until)
+	RacePassives.step(sim)
+	ctx.check("shield: gone after its duration", tank.shield == 0.0)
+	var g := squad(["runeborn", "runeborn", "runeborn"])
+	RacePassives.step(g.sim)
+	ctx.check("Runeborn Trio: 12% max HP shield at wave start", is_equal_approx(g.sim.fighters[2].shield, g.sim.fighters[2].max_hp() * 0.12))
+	g.sim.fighters[2].shield_until = g.sim.tick_count + 100000
+	g.sim._waves_released += 1
+	g.sim.fighters[2].shield = 1.0
+	RacePassives.step(g.sim)
+	ctx.check("shield: cleared at wave end (the new wave regrants only 12%)", is_equal_approx(g.sim.fighters[2].shield, g.sim.fighters[2].max_hp() * 0.12))
+	# Viking sword & shield, Unbroken: first drop below 35% HP each wave -> shield 25% max HP.
+	var v := squad(["viking", "human", "elf"])
+	var vsim = v.sim
+	RacePassives.step(vsim)
+	var viking = vsim.fighters[1]
+	viking.hp = viking.max_hp() * 0.30
+	vsim.events.clear()
+	RacePassives.step(vsim)
+	ctx.check("Unbroken: below 35% HP -> shield 25% max HP, one proc", is_equal_approx(viking.shield, viking.max_hp() * 0.25) and procs(vsim.events, 1).size() == 1)
+	viking.hp = viking.max_hp()
+	RacePassives.step(vsim)
+	viking.hp = viking.max_hp() * 0.30
+	vsim.events.clear()
+	RacePassives.step(vsim)
+	ctx.check("Unbroken: once per wave", procs(vsim.events, 1).is_empty())
 
 
 func _synergy(ctx) -> void:

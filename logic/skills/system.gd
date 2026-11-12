@@ -241,8 +241,8 @@ func _filter_damage(amount: float, context: Dictionary, id: int) -> float:
 	var incoming: float = amount * (1.0 - reduction)
 	if casters.has(id):
 		var source: ZorxSkillTarget = targets.get(int(context.get("owner_id",0)))
-		return casters[id].actor.receive_attack(incoming, source, false)
-	return incoming
+		incoming = casters[id].actor.receive_attack(incoming, source, false)
+	return incoming - fighter.absorb(incoming)  # race shield (GDD races 4.3) after the skill actor's own shield
 
 func _hit_allowed(id: int) -> bool:
 	return sim != null and sim.fighters.has(id) and sim.fighters[id].is_alive() and not preload("res://logic/combat.gd").is_invulnerable(sim.fighters[id],sim.combat)

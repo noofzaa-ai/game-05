@@ -153,8 +153,9 @@ static func _end(id: int, fighter: Fighter, effect_id: String, data: CombatData,
 
 ## Returns true if the damage killed the fighter.
 static func _damage_over_time(id: int, fighter: Fighter, damage: float, effect_id: String, source_id: int, data: CombatData, events: Array[Dictionary]) -> bool:
-	fighter.hp = maxf(0.0, fighter.hp - damage)
-	events.append({"type": "dot", "target": id, "effect": effect_id, "damage": damage if effect_id=="relic_goblin_poison" else int(damage)})
+	var absorbed := fighter.absorb(damage)  # race shield first (GDD races 4.3)
+	fighter.hp = maxf(0.0, fighter.hp - (damage - absorbed))
+	events.append({"type": "dot", "target": id, "effect": effect_id, "damage": damage if effect_id=="relic_goblin_poison" else int(damage), "absorbed": absorbed})
 	if fighter.hp <= 0.0:
 		fighter.launched = false
 		fighter.move_id = ""

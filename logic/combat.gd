@@ -350,7 +350,8 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	if target.skill_hit_filter.is_valid():
 		damage = target.skill_hit_filter.call(damage, attacker_id, not ranged)
 		if damage <= 0.0: return "blocked"
-	target.hp = maxf(0.0, target.hp - damage)
+	var absorbed := target.absorb(damage)  # race shield first (GDD races 4.3); the event keeps the full damage
+	target.hp = maxf(0.0, target.hp - (damage - absorbed))
 	if attacker.skill_base_hit.is_valid(): attacker.skill_base_hit.call(target_id, damage)
 	Effects.wake(target_id, target, data, events)  # a blow wakes a sleeper
 
@@ -363,7 +364,7 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	var hit_point: Vector3 = source["pos"] if source.has("pos") else target_body.position + Vector3(-push.x * 0.25, 1.1, -push.y * 0.25)  ## roughly where the blow lands
 	if blocked and not killed:
 		target_body.knockback = push * float(move["knockback"]) * float(data.rules["guard_knockback_factor"])
-		events.append({"type": "blocked", "attacker": attacker_id, "target": target_id, "damage": int(damage), "pos": hit_point, "dir": push, "move": move_id, "ranged": ranged})
+		events.append({"type": "blocked", "attacker": attacker_id, "target": target_id, "damage": int(damage), "pos": hit_point, "dir": push, "move": move_id, "ranged": ranged, "absorbed": absorbed})
 		return "blocked"
 
 	# The ultimate gauge is hard to fill: it only grows by landing hits (taking hits adds
@@ -418,6 +419,7 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 		"move": move_id, "power": float(move["power"]), "pos": hit_point, "dir": push,
 		"attacker_combo": attacker.combo_dealt, "attacker_combo_damage": attacker.combo_damage,
 		"ranged": ranged, "projectile": str(source.get("projectile", "")), "area": str(source.get("area", "")),
+		"absorbed": absorbed,
 	})
 	if killed:
 		events.append({"type": "killed", "target": target_id, "by": attacker_id})

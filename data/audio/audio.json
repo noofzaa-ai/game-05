@@ -1353,6 +1353,26 @@
 				]
 			}
 		],
+		"race_shield": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"race_shield_end": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"guard_break"
+				]
+			}
+		],
 		"race_heal": [
 			{
 				"when": {

@@ -6,6 +6,8 @@ extends RefCounted
 enum State { IDLE, ATTACK, HITSTUN, DOWN, DEAD, GUARD, DODGE, DOWNED }
 
 var race_state: Dictionary = {}  ## Squad members only: race passive + synergy runtime (logic/race_passives.gd); saved in checkpoints.
+var shield := 0.0  ## race shield (GDD races 4.3): absorbs damage before HP; capped by add_shield; saved in checkpoints
+var shield_until := -1  ## sim tick at which the shield runs out (-1 = no shield)
 var relic_state: Dictionary = {}  ## Authoritative per-stage Relic loadout, charge and cooldown timers.
 var team := "player"  ## fighters on the same team never hit each other
 var style := "fists"  ## which move set this fighter uses (chosen by the weapon)
@@ -109,6 +111,31 @@ func heal_factor() -> float:
 	if not stat_mods.has("HEALING"):
 		return race
 	return race * maxf(0.0, (1.0 + float(stat_mods["HEALING"]["add"])) * (1.0 + float(stat_mods["HEALING"]["mul"])))
+
+
+## Adds to the shield pool (GDD races 4.3): the total stays <= cap_fraction x max HP; the pool lasts until
+## now + duration_ticks (a later, longer gain extends it). Returns how much was really added.
+func add_shield(amount: float, duration_ticks: int, now: int, cap_fraction: float) -> float:
+	var added := clampf(cap_fraction * max_hp() - shield, 0.0, maxf(0.0, amount))
+	if added <= 0.0:
+		return 0.0
+	shield += added
+	shield_until = maxi(shield_until, now + duration_ticks)
+	return added
+
+
+## Takes `damage` out of the shield first; returns the part the shield absorbed (the caller removes the rest from HP).
+func absorb(damage: float) -> float:
+	var absorbed := clampf(damage, 0.0, shield)
+	shield -= absorbed
+	if shield <= 0.0:
+		clear_shield()
+	return absorbed
+
+
+func clear_shield() -> void:
+	shield = 0.0
+	shield_until = -1
 
 
 ## Co-op-only incapacitation; ordinary combat knockdown remains State.DOWN.

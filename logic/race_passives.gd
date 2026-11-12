@@ -4,16 +4,17 @@ extends RefCounted
 ##   {"race", "class", "passive", "synergy", "effects": [{"src": "passive"|"synergy", "effect": {...}}],
 ##    "fx": {index: {"last", "n", "wave", "low"}}, "pseudo": {stat: {"add", "mul"}}, "wave", "heal_window": [tick, amount]}
 ## What runs now: `stat_mod` (real stats on the stat refresh, HEALING via Fighter.heal_factor) and `trigger` with the
-## actions `apply_status` and `heal`, on the events wave_start, hit, heavy_hit, skill_cast, skill_hit, kill, hurt,
+## actions `apply_status`, `heal` and `shield` (Fighter.shield, 4.3), on the events wave_start, hit, heavy_hit, skill_cast, skill_hit, kill, hurt,
 ## guard_block, self_low_hp (fields: chance, every_n, cooldown_ticks, once_per_wave, hp_below).
 ## INERT until their phase-4 feature exists (loaded and validated, no effect): low_hp_scaling, skill_mod, charges,
-## aggro, and the actions shield, burst, pulse_aggro, zone, skill_refresh. The event ultimate_cast never fires yet.
+## aggro, and the actions burst, pulse_aggro, zone, skill_refresh. The event ultimate_cast never fires yet.
 ## Deterministic: a `chance` roll uses the sim RNG; nothing else is random. Order = fighter id, then effect order.
 
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const Effects := preload("res://logic/effects.gd")
-const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal"]
+const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield"]
+const SHIELD_TICKS := 600  ## default shield life when an action has no duration_ticks (GDD 4.3)
 
 
 ## Gives a squad member's fighter its card's race passive and the squad's synergy bonus. A trip that is not a squad
@@ -80,7 +81,11 @@ static func step(sim) -> void:
 		var fighter = sim.fighters[id]
 		if not fighter.is_alive():
 			continue
+		if fighter.shield_until >= 0 and sim.tick_count >= fighter.shield_until:
+			_end_shield(sim, id, fighter, "expired")
 		if int(fighter.race_state["wave"]) != wave:
+			if int(fighter.race_state["wave"]) != 0 and fighter.shield > 0.0:
+				_end_shield(sim, id, fighter, "wave_end")  # shields are cleared at wave end (4.3)
 			fighter.race_state["wave"] = wave
 			fire(sim, id, "wave_start", {})
 		for event in seen:
@@ -170,7 +175,28 @@ static func run_action(sim, id: int, action: Dictionary, context: Dictionary) ->
 					target.hp += healed
 					sim.events.append({"type": "race_heal", "player": id, "target": target_id, "amount": healed})
 					did = true
+			"shield":
+				var cap := float(RaceData.load_default().rules.get("shield_cap_max_hp", 0.30))
+				var added: float = target.add_shield(shield_amount(action, source, float(context.get("damage", 0.0))), int(action.get("duration_ticks", SHIELD_TICKS)), sim.tick_count, cap)
+				if added > 0.0:
+					sim.events.append({"type": "race_shield", "player": id, "target": target_id, "amount": added, "shield": target.shield, "until": target.shield_until})
+					did = true
 	return did
+
+
+## Formula 4.3: amount = fraction x source max HP (or x the damage dealt). The target's cap is applied by Fighter.add_shield.
+static func shield_amount(action: Dictionary, source, damage: float) -> float:
+	var base: float = damage if str(action["fraction_of"]) == "damage" else source.max_hp()
+	var amount := float(action["fraction"]) * base
+	if action.has("cap_max_hp"):
+		amount = minf(amount, float(action["cap_max_hp"]) * source.max_hp())
+	return maxf(0.0, amount)
+
+
+## Shield gone (its time ran out, or the wave ended); the client hides the shield bar on this event.
+static func _end_shield(sim, id: int, fighter, why: String) -> void:
+	fighter.clear_shield()
+	sim.events.append({"type": "race_shield_end", "target": id, "reason": why})
 
 
 ## Formula 4.2: heal = min(fraction x base, cap_max_hp x target max HP) x target.heal_factor().
