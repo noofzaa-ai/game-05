@@ -25,3 +25,7 @@ codex exec --ephemeral --skip-git-repo-check -m gpt-6.1-sol -c model_reasoning_e
 4. **Review first, never auto-import.** Do not copy anything into `art/` or reference it from a scene until the PO reports that the Boss accepted it. Report the path, the prompt you used, and what is wrong with it.
 5. **Use sparingly:** a few tries per asset, one image per call. Each call uses the Boss's ChatGPT quota.
 6. Report only to the PO, in English (the normal reporting-line rule).
+
+## Quota / rate limit (Boss 2026-11-13)
+If a Codex call fails for usage, quota or rate limits: stop generating at once, do not retry in a loop, and report to the PO the exact error text, the reset time Codex gives (convert to Bangkok time, UTC+7) and how many images were finished before the limit. The PO tells the Boss when it resets.
+
