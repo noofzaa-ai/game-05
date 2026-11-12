@@ -1,0 +1,825 @@
+{
+ "_note": "Skill tree art, Boss-approved 2026-11-12. Sources and Codex prompts: art_source/ui/skill_tree/. Node ids/names: design/gdd/skill-tree.md 9.5. Icons are square, painted inside a circle; draw them clipped to a circle under the frame. Frame hole ~0.71 (class/race), ~0.62/0.56 (capstones), ~0.48 (combo) of the frame width.",
+ "background": "res://art/ui/skill_tree/skill_tree_map_bg.png",
+ "frames": {
+  "class": "res://art/ui/skill_tree/frames/frame_class.png",
+  "class_capstone": "res://art/ui/skill_tree/frames/frame_class_capstone.png",
+  "combo": "res://art/ui/skill_tree/frames/frame_combo.png",
+  "race_human": "res://art/ui/skill_tree/frames/frame_race_human.png",
+  "race_capstone_human": "res://art/ui/skill_tree/frames/frame_race_capstone_human.png",
+  "race_viking": "res://art/ui/skill_tree/frames/frame_race_viking.png",
+  "race_capstone_viking": "res://art/ui/skill_tree/frames/frame_race_capstone_viking.png",
+  "race_elf": "res://art/ui/skill_tree/frames/frame_race_elf.png",
+  "race_capstone_elf": "res://art/ui/skill_tree/frames/frame_race_capstone_elf.png",
+  "race_runeborn": "res://art/ui/skill_tree/frames/frame_race_runeborn.png",
+  "race_capstone_runeborn": "res://art/ui/skill_tree/frames/frame_race_capstone_runeborn.png"
+ },
+ "badges": {
+  "locked_seal": "res://art/ui/skill_tree/badges/badge_locked_seal.png",
+  "or_seal": "res://art/ui/skill_tree/badges/badge_or_seal.png",
+  "taken_tick": "res://art/ui/skill_tree/badges/badge_taken_tick.png",
+  "point_coin": "res://art/ui/skill_tree/badges/badge_point_coin.png"
+ },
+ "nodes": {
+  "ss_t1_storm": {
+   "name": "Tempest Step",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t1_storm.png",
+   "class": "sword_shield"
+  },
+  "ss_t1_riposte": {
+   "name": "Iron Answer",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t1_riposte.png",
+   "class": "sword_shield"
+  },
+  "ss_t1_blood": {
+   "name": "Shared Blood",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t1_blood.png",
+   "class": "sword_shield"
+  },
+  "ss_t1_flame": {
+   "name": "Ward Line",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t1_flame.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_storm_a": {
+   "name": "Echo Edge",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_storm_a.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_storm_b": {
+   "name": "Shield Bash",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_storm_b.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_riposte_a": {
+   "name": "Heavy Counter",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_riposte_a.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_riposte_b": {
+   "name": "Bleeding Riposte",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_riposte_b.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_blood_a": {
+   "name": "Thorned Shell",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_blood_a.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_blood_b": {
+   "name": "Mending Shell",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_blood_b.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_flame_a": {
+   "name": "Wide Trail",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_flame_a.png",
+   "class": "sword_shield"
+  },
+  "ss_t2_flame_b": {
+   "name": "Quick Step",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t2_flame_b.png",
+   "class": "sword_shield"
+  },
+  "ss_t3_a": {
+   "name": "Unyielding Bulwark",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t3_a.png",
+   "class": "sword_shield"
+  },
+  "ss_t3_b": {
+   "name": "Rallying Wall",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/ss_t3_b.png",
+   "class": "sword_shield"
+  },
+  "ss_t4_a": {
+   "name": "Spiked Bastion",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/ss_t4_a.png",
+   "class": "sword_shield"
+  },
+  "ss_t4_b": {
+   "name": "Immovable",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/ss_t4_b.png",
+   "class": "sword_shield"
+  },
+  "gs_t1_slam": {
+   "name": "Faultline",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t1_slam.png",
+   "class": "greatsword"
+  },
+  "gs_t1_shatter": {
+   "name": "Cold Iron",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t1_shatter.png",
+   "class": "greatsword"
+  },
+  "gs_t1_eruption": {
+   "name": "Banked Embers",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t1_eruption.png",
+   "class": "greatsword"
+  },
+  "gs_t1_cry": {
+   "name": "Battle Hymn",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t1_cry.png",
+   "class": "greatsword"
+  },
+  "gs_t2_slam_a": {
+   "name": "Wide Quake",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_slam_a.png",
+   "class": "greatsword"
+  },
+  "gs_t2_slam_b": {
+   "name": "Aftershock",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_slam_b.png",
+   "class": "greatsword"
+  },
+  "gs_t2_shatter_a": {
+   "name": "Dense Impact",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_shatter_a.png",
+   "class": "greatsword"
+  },
+  "gs_t2_shatter_b": {
+   "name": "Shock Shatter",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_shatter_b.png",
+   "class": "greatsword"
+  },
+  "gs_t2_eruption_a": {
+   "name": "Wide Eruption",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_eruption_a.png",
+   "class": "greatsword"
+  },
+  "gs_t2_eruption_b": {
+   "name": "Charged Eruption",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_eruption_b.png",
+   "class": "greatsword"
+  },
+  "gs_t2_cry_a": {
+   "name": "Long Hymn",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_cry_a.png",
+   "class": "greatsword"
+  },
+  "gs_t2_cry_b": {
+   "name": "Thorn Hymn",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t2_cry_b.png",
+   "class": "greatsword"
+  },
+  "gs_t3_a": {
+   "name": "Executioner's Arc",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t3_a.png",
+   "class": "greatsword"
+  },
+  "gs_t3_b": {
+   "name": "Momentum",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/gs_t3_b.png",
+   "class": "greatsword"
+  },
+  "gs_t4_a": {
+   "name": "Titan's Swing",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/gs_t4_a.png",
+   "class": "greatsword"
+  },
+  "gs_t4_b": {
+   "name": "Unstoppable",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/gs_t4_b.png",
+   "class": "greatsword"
+  },
+  "lb_t1_pierce": {
+   "name": "Marked Line",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t1_pierce.png",
+   "class": "longbow"
+  },
+  "lb_t1_trap": {
+   "name": "Kiting Snare",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t1_trap.png",
+   "class": "longbow"
+  },
+  "lb_t1_lance": {
+   "name": "Frostbite",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t1_lance.png",
+   "class": "longbow"
+  },
+  "lb_t1_chain": {
+   "name": "Arc Seeker",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t1_chain.png",
+   "class": "longbow"
+  },
+  "lb_t2_pierce_a": {
+   "name": "Split Volley",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_pierce_a.png",
+   "class": "longbow"
+  },
+  "lb_t2_pierce_b": {
+   "name": "Heavy Draw",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_pierce_b.png",
+   "class": "longbow"
+  },
+  "lb_t2_trap_a": {
+   "name": "Briar Field",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_trap_a.png",
+   "class": "longbow"
+  },
+  "lb_t2_trap_b": {
+   "name": "Bleeding Thorns",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_trap_b.png",
+   "class": "longbow"
+  },
+  "lb_t2_lance_a": {
+   "name": "Glacier Pierce",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_lance_a.png",
+   "class": "longbow"
+  },
+  "lb_t2_lance_b": {
+   "name": "Quickdraw",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_lance_b.png",
+   "class": "longbow"
+  },
+  "lb_t2_chain_a": {
+   "name": "Forked Storm",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_chain_a.png",
+   "class": "longbow"
+  },
+  "lb_t2_chain_b": {
+   "name": "Stunning Bolt",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t2_chain_b.png",
+   "class": "longbow"
+  },
+  "lb_t3_a": {
+   "name": "Deep Mark",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t3_a.png",
+   "class": "longbow"
+  },
+  "lb_t3_b": {
+   "name": "Pack Hunt",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/lb_t3_b.png",
+   "class": "longbow"
+  },
+  "lb_t4_a": {
+   "name": "Deadeye",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/lb_t4_a.png",
+   "class": "longbow"
+  },
+  "lb_t4_b": {
+   "name": "Skirmisher",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/lb_t4_b.png",
+   "class": "longbow"
+  },
+  "mg_t1_fireball": {
+   "name": "Kindling",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t1_fireball.png",
+   "class": "magic"
+  },
+  "mg_t1_ring": {
+   "name": "Repelling Ring",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t1_ring.png",
+   "class": "magic"
+  },
+  "mg_t1_strike": {
+   "name": "Conductor",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t1_strike.png",
+   "class": "magic"
+  },
+  "mg_t1_armor": {
+   "name": "Biting Frost",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t1_armor.png",
+   "class": "magic"
+  },
+  "mg_t2_fireball_a": {
+   "name": "Triple Fireball",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_fireball_a.png",
+   "class": "magic"
+  },
+  "mg_t2_fireball_b": {
+   "name": "Echo Fireball",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_fireball_b.png",
+   "class": "magic"
+  },
+  "mg_t2_ring_a": {
+   "name": "Remote Ring",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_ring_a.png",
+   "class": "magic"
+  },
+  "mg_t2_ring_b": {
+   "name": "Dense Ring",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_ring_b.png",
+   "class": "magic"
+  },
+  "mg_t2_strike_a": {
+   "name": "Wide Strike",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_strike_a.png",
+   "class": "magic"
+  },
+  "mg_t2_strike_b": {
+   "name": "Quick Strike",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_strike_b.png",
+   "class": "magic"
+  },
+  "mg_t2_armor_a": {
+   "name": "Long Frost",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_armor_a.png",
+   "class": "magic"
+  },
+  "mg_t2_armor_b": {
+   "name": "Thorned Frost",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t2_armor_b.png",
+   "class": "magic"
+  },
+  "mg_t3_a": {
+   "name": "Weave Rhythm",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t3_a.png",
+   "class": "magic"
+  },
+  "mg_t3_b": {
+   "name": "Overload",
+   "branch": "class",
+   "frame": "class",
+   "icon": "res://art/ui/skill_tree/icons/mg_t3_b.png",
+   "class": "magic"
+  },
+  "mg_t4_a": {
+   "name": "Elemental Convergence",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/mg_t4_a.png",
+   "class": "magic"
+  },
+  "mg_t4_b": {
+   "name": "Blink Caster",
+   "branch": "class",
+   "frame": "class_capstone",
+   "icon": "res://art/ui/skill_tree/icons/mg_t4_b.png",
+   "class": "magic"
+  },
+  "hu_1": {
+   "name": "Drilled Ranks",
+   "branch": "race",
+   "frame": "race_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_1.png",
+   "race": "human"
+  },
+  "hu_2": {
+   "name": "Ready Stance",
+   "branch": "race",
+   "frame": "race_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_2.png",
+   "race": "human"
+  },
+  "hu_3": {
+   "name": "Disciplined Casting",
+   "branch": "race",
+   "frame": "race_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_3.png",
+   "race": "human"
+  },
+  "hu_4": {
+   "name": "Grand Command",
+   "branch": "race",
+   "frame": "race_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_4.png",
+   "race": "human"
+  },
+  "hu_5": {
+   "name": "Field Command",
+   "branch": "race",
+   "frame": "race_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_5.png",
+   "race": "human"
+  },
+  "hu_6": {
+   "name": "Scholar's Edge",
+   "branch": "race",
+   "frame": "race_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_6.png",
+   "race": "human"
+  },
+  "hu_7": {
+   "name": "Twin Ultimate",
+   "branch": "race",
+   "frame": "race_capstone_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_7.png",
+   "race": "human"
+  },
+  "hu_8": {
+   "name": "Mastery Overflow",
+   "branch": "race",
+   "frame": "race_capstone_human",
+   "icon": "res://art/ui/skill_tree/icons/hu_8.png",
+   "race": "human"
+  },
+  "vk_1": {
+   "name": "Thick Blood",
+   "branch": "race",
+   "frame": "race_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_1.png",
+   "race": "viking"
+  },
+  "vk_2": {
+   "name": "Battle Scent",
+   "branch": "race",
+   "frame": "race_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_2.png",
+   "race": "viking"
+  },
+  "vk_3": {
+   "name": "Blood Price",
+   "branch": "race",
+   "frame": "race_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_3.png",
+   "race": "viking"
+  },
+  "vk_4": {
+   "name": "Red Harvest",
+   "branch": "race",
+   "frame": "race_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_4.png",
+   "race": "viking"
+  },
+  "vk_5": {
+   "name": "Red Mist",
+   "branch": "race",
+   "frame": "race_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_5.png",
+   "race": "viking"
+  },
+  "vk_6": {
+   "name": "Trophy Hunter",
+   "branch": "race",
+   "frame": "race_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_6.png",
+   "race": "viking"
+  },
+  "vk_7": {
+   "name": "Valhalla's Call",
+   "branch": "race",
+   "frame": "race_capstone_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_7.png",
+   "race": "viking"
+  },
+  "vk_8": {
+   "name": "Berserkergang",
+   "branch": "race",
+   "frame": "race_capstone_viking",
+   "icon": "res://art/ui/skill_tree/icons/vk_8.png",
+   "race": "viking"
+  },
+  "el_1": {
+   "name": "Deep Roots",
+   "branch": "race",
+   "frame": "race_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_1.png",
+   "race": "elf"
+  },
+  "el_2": {
+   "name": "Sap Flow",
+   "branch": "race",
+   "frame": "race_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_2.png",
+   "race": "elf"
+  },
+  "el_3": {
+   "name": "Overgrowth",
+   "branch": "race",
+   "frame": "race_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_3.png",
+   "race": "elf"
+  },
+  "el_4": {
+   "name": "Cleansing Dew",
+   "branch": "race",
+   "frame": "race_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_4.png",
+   "race": "elf"
+  },
+  "el_5": {
+   "name": "Kin Bond",
+   "branch": "race",
+   "frame": "race_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_5.png",
+   "race": "elf"
+  },
+  "el_6": {
+   "name": "Evergreen",
+   "branch": "race",
+   "frame": "race_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_6.png",
+   "race": "elf"
+  },
+  "el_7": {
+   "name": "World Tree",
+   "branch": "race",
+   "frame": "race_capstone_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_7.png",
+   "race": "elf"
+  },
+  "el_8": {
+   "name": "Bloom Cascade",
+   "branch": "race",
+   "frame": "race_capstone_elf",
+   "icon": "res://art/ui/skill_tree/icons/el_8.png",
+   "race": "elf"
+  },
+  "rb_1": {
+   "name": "Quick Glyphs",
+   "branch": "race",
+   "frame": "race_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_1.png",
+   "race": "runeborn"
+  },
+  "rb_2": {
+   "name": "Stored Power",
+   "branch": "race",
+   "frame": "race_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_2.png",
+   "race": "runeborn"
+  },
+  "rb_3": {
+   "name": "Empowered Discharge",
+   "branch": "race",
+   "frame": "race_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_3.png",
+   "race": "runeborn"
+  },
+  "rb_4": {
+   "name": "Runic Ultimate",
+   "branch": "race",
+   "frame": "race_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_4.png",
+   "race": "runeborn"
+  },
+  "rb_5": {
+   "name": "Rune Battery",
+   "branch": "race",
+   "frame": "race_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_5.png",
+   "race": "runeborn"
+  },
+  "rb_6": {
+   "name": "Warding Sigil",
+   "branch": "race",
+   "frame": "race_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_6.png",
+   "race": "runeborn"
+  },
+  "rb_7": {
+   "name": "Overcharge",
+   "branch": "race",
+   "frame": "race_capstone_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_7.png",
+   "race": "runeborn"
+  },
+  "rb_8": {
+   "name": "Resonance",
+   "branch": "race",
+   "frame": "race_capstone_runeborn",
+   "icon": "res://art/ui/skill_tree/icons/rb_8.png",
+   "race": "runeborn"
+  },
+  "combo_hu_ss": {
+   "name": "Drillmaster's Wall",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_hu_ss.png",
+   "class": "sword_shield",
+   "race": "human"
+  },
+  "combo_hu_gs": {
+   "name": "Perfect Form",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_hu_gs.png",
+   "class": "greatsword",
+   "race": "human"
+  },
+  "combo_hu_lb": {
+   "name": "Called Target",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_hu_lb.png",
+   "class": "longbow",
+   "race": "human"
+  },
+  "combo_hu_mg": {
+   "name": "Grand Archmage",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_hu_mg.png",
+   "class": "magic",
+   "race": "human"
+  },
+  "combo_vk_ss": {
+   "name": "Wall of Fury",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_vk_ss.png",
+   "class": "sword_shield",
+   "race": "viking"
+  },
+  "combo_vk_gs": {
+   "name": "Blood Cyclone",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_vk_gs.png",
+   "class": "greatsword",
+   "race": "viking"
+  },
+  "combo_vk_lb": {
+   "name": "Trophy Volley",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_vk_lb.png",
+   "class": "longbow",
+   "race": "viking"
+  },
+  "combo_vk_mg": {
+   "name": "Blood Sorcery",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_vk_mg.png",
+   "class": "magic",
+   "race": "viking"
+  },
+  "combo_el_ss": {
+   "name": "Grove Warden",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_el_ss.png",
+   "class": "sword_shield",
+   "race": "elf"
+  },
+  "combo_el_gs": {
+   "name": "Bark and Blade",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_el_gs.png",
+   "class": "greatsword",
+   "race": "elf"
+  },
+  "combo_el_lb": {
+   "name": "Moonwell Arrows",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_el_lb.png",
+   "class": "longbow",
+   "race": "elf"
+  },
+  "combo_el_mg": {
+   "name": "Spring Rite",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_el_mg.png",
+   "class": "magic",
+   "race": "elf"
+  },
+  "combo_rb_ss": {
+   "name": "Runic Bulwark",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_rb_ss.png",
+   "class": "sword_shield",
+   "race": "runeborn"
+  },
+  "combo_rb_gs": {
+   "name": "Shatterglyph",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_rb_gs.png",
+   "class": "greatsword",
+   "race": "runeborn"
+  },
+  "combo_rb_lb": {
+   "name": "Glyph Arrows",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_rb_lb.png",
+   "class": "longbow",
+   "race": "runeborn"
+  },
+  "combo_rb_mg": {
+   "name": "Grand Runeweaver",
+   "branch": "combo",
+   "frame": "combo",
+   "icon": "res://art/ui/skill_tree/icons/combo_rb_mg.png",
+   "class": "magic",
+   "race": "runeborn"
+  }
+ }
+}
