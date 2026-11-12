@@ -8,6 +8,7 @@ extends RefCounted
 ## Pure data. The rules that learn/validate a card's tree are in logic/skill_tree.gd.
 
 const RULES_FILE := "res://data/skill_tree/rules.json"
+const TEXTS_FILE := "res://data/skill_tree/texts.json"  ## player-facing node descriptions (the node `text` is the spec line)
 const CLASS_FOLDER := "res://data/classes/"
 const RACE_FOLDER := "res://data/races/"
 const RaceData := preload("res://logic/race_data.gd")
@@ -21,6 +22,7 @@ var rules: Dictionary = {}
 var classes: Dictionary = {}  ## class id -> {"skills": [4 skill ids], "nodes": [node]}
 var races: Dictionary = {}  ## race id -> {"nodes": [node], "combo": {class id: node}}
 var by_id: Dictionary = {}  ## node id -> {"node", "branch", "owner": class or race id, "class"?: combo class}
+var texts: Dictionary = {}  ## language -> {node id: player sentence}
 var errors: Array[String] = []
 var warnings: Array[String] = []
 var _race_data
@@ -75,7 +77,20 @@ static func load_from(class_folder: String, race_folder: String, rules_file: Str
 		for class_id in data.classes:
 			if not data.races[race_id]["combo"].has(class_id):
 				data.warnings.append("race %s: no combo for class %s" % [race_id, class_id])
+	var parsed_texts = RaceData._read(TEXTS_FILE)
+	data.texts = parsed_texts if parsed_texts is Dictionary else {}
+	if rules_file == RULES_FILE:  # the game's own data: every node needs its player sentence
+		for id in data.by_id:
+			if str(data.texts.get("en", {}).get(id, "")).is_empty():
+				data.errors.append("texts.json: no description for %s" % id)
 	return data
+
+
+## The player-facing sentence of a node in `language` (English when missing; the spec line as the last resort,
+## without backticks).
+func description(node_id: String, language: String = "en") -> String:
+	var text := str(texts.get(language, {}).get(node_id, texts.get("en", {}).get(node_id, "")))
+	return text if not text.is_empty() else str(node(node_id).get("text", "")).replace("`", "")
 
 
 # ---------------------------------------------------------------- queries

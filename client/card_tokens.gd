@@ -1287,3 +1287,122 @@ const STRINGS_HUB_LOOK := {
 	"online_online": ["ออนไลน์", "Online"],
 	"squad_down": ["ล้ม", "DOWN"],
 }
+
+# ------------------------------------------------------------------ Skills tab (design/gdd/skill-tree.md 9)
+## Art of the card skill tree (art/ui/skill_tree/manifest.json, Boss-approved 2026-11-12).
+const TREE_MANIFEST := "res://art/ui/skill_tree/manifest.json"
+## Node drawing size (reference px, GDD 9.1): minor / major / capstone / combo. Phones keep >= HUB_TAP_MIN_PHONE.
+const TREE_NODE := {"minor": 96.0, "major": 112.0, "capstone": 144.0, "combo": 160.0}
+const TREE_ICON_HOLE := {"minor": 0.71, "major": 0.71, "capstone": 0.6, "combo": 0.48}  ## icon size / frame size (manifest note)
+const TREE_HEADER_H := 96.0
+const TREE_DETAIL_W := 430.0
+const TREE_GAP := 14.0
+const TREE_PLATE_MIN_SCALE := 0.8  ## below this layout scale the Skills tab buttons use the flat parchment skin
+const TREE_BADGE := 0.34  ## OR / lock / tick badge size, of the node size
+const TREE_PATH_W := 5.0
+const TREE_FONT_COST := 18
+const TREE_FONT_HEAD := 22
+const TREE_FONT_NAME := 30
+const TREE_FONT_BODY := 20
+const TREE_FONT_GATE := 18
+## Node states (GDD 9.2) as a modulate on the node art.
+const TREE_LOCKED := Color(0.52, 0.47, 0.42)
+const TREE_AVAILABLE := Color(0.82, 0.82, 0.82)
+const TREE_TAKEN := Color(1.0, 1.0, 1.0)
+const TREE_DRAFT := Color(1.0, 0.96, 0.84)
+const TREE_PATH_OFF := Color(0.29, 0.19, 0.11, 0.45)  ## ink path to a node not taken
+const TREE_PATH_ON := Color(0.48, 0.16, 0.09, 0.9)  ## ink path to a taken node (class branch)
+const TREE_COST_NO := Color("B3261E")  ## cost in red ink: not enough points
+const TREE_SELECT := Color("FFE7A8")  ## selected node ring
+const TREE_PLATE_OFF := Color(0.55, 0.5, 0.46)  ## a disabled Skills button: the same plate, clearly dimmed
+const TREE_TEXT_OFF := Color("E8D9BC")  ## its text in light parchment ink: readable on the dimmed plate
+const TREE_BAND := Color(0.29, 0.19, 0.11, 0.18)  ## tier contour line
+const TREE_CANVAS := Color(0.95, 0.89, 0.76, 0.0)  ## the map art is the canvas; this only fills if the art is missing
+
+const STRINGS_TREE := {
+	"tree_level": ["เลเวล %d", "Level %d"],
+	"tree_xp": ["%d / %d XP", "%d / %d XP"],
+	"tree_xp_max": ["สูงสุด", "MAX"],
+	"tree_points": ["แต้ม %d", "Points %d"],
+	"tree_branch_points": ["คลาส %d · เผ่า %d · คอมโบ %d", "Class %d · Race %d · Combo %d"],
+	"tree_reset_class": ["รีเซ็ตคลาส (%d ทอง)", "Reset Class (%d gold)"],
+	"tree_reset_race": ["รีเซ็ตเผ่า (ฟรี)", "Reset Race (free)"],
+	"tree_confirm": ["ยืนยัน", "Confirm"],
+	"tree_cancel": ["ยกเลิกร่าง", "Cancel draft"],
+	"tree_learn": ["เรียน", "Learn"],
+	"tree_unlearn": ["เอาออก (ร่าง)", "Unlearn (draft)"],
+	"tree_cost": ["ใช้ %d แต้ม", "Cost %d"],
+	"tree_gate": ["ต้องลงแต้มในสาขานี้ %d", "Needs %d points in this branch"],
+	"tree_gate_combo": ["ต้องมีแต้มคลาส %d และเผ่า %d", "Needs Class %d and Race %d points"],
+	"tree_or": ["เลือกได้อย่างเดียว: %s", "Only one: %s"],
+	"tree_state_locked": ["ยังล็อก", "Locked"],
+	"tree_state_available": ["เรียนได้", "Available"],
+	"tree_state_no_points": ["แต้มไม่พอ", "Not enough points"],
+	"tree_state_taken": ["เรียนแล้ว", "Learned"],
+	"tree_state_draft": ["ร่าง (ยังไม่ยืนยัน)", "Draft (not confirmed)"],
+	"tree_branch_class": ["สาขาคลาส", "Class branch"],
+	"tree_branch_race": ["สาขาเผ่า", "Race branch"],
+	"tree_branch_combo": ["คอมโบ", "Combo"],
+	"tree_pick": ["แตะโหนดเพื่อดูรายละเอียด", "Tap a node to see it"],
+	"tree_needs": ["ต้องการ %d", "Needs %d"],
+	"tree_hint": ["แตะ = รายละเอียด · แตะสองครั้ง = เรียน · Q / E = เปลี่ยนการ์ด · Esc / B = กลับ", "Tap = details  ·  Double-tap = learn  ·  Q / E = switch card  ·  Esc / B = back"],
+	"tree_saved_ok": ["บันทึกต้นไม้สกิลแล้ว", "Skill tree saved"],
+	"tree_reset_ok": ["รีเซ็ตแล้ว คืน %d แต้ม", "Reset: %d points back"],
+	"tree_complete": ["ต้นไม้ครบแล้ว", "Tree complete"],
+	"tree_reset_confirm": ["กดอีกครั้งเพื่อยืนยัน", "Tap again to confirm"],
+	"err_unknown_node": ["ไม่พบโหนดนี้", "Unknown skill"],
+	"err_not_enough_points": ["แต้มไม่พอ", "Not enough points"],
+	"err_gate_not_met": ["ยังไม่ถึงขั้นนี้", "Spend more points in this branch first"],
+	"err_exclusive_conflict": ["เลือกอีกทางไปแล้ว", "You took the other path"],
+	"err_combo_mismatch": ["คอมโบนี้ไม่ใช่ของการ์ดนี้", "This combo is not for this card"],
+	"err_in_run": ["แก้ต้นไม้ระหว่างรอบไม่ได้", "Not during a run"],
+	"err_already_learned": ["เรียนไปแล้ว", "Already learned"],
+	"err_confirmed_removed": ["เอาโหนดที่ยืนยันแล้วออกไม่ได้", "Learned skills need a reset"],
+	"err_nothing_to_reset": ["ไม่มีอะไรให้รีเซ็ต", "Nothing to reset"],
+	"err_bad_tree": ["ต้นไม้ไม่ถูกต้อง", "That tree is not valid"],
+}
+
+
+## A word of the Skills tab (STRINGS_TREE), else of the shared table.
+static func tt(key: String) -> String:
+	if STRINGS_TREE.has(key):
+		var entry: Array = STRINGS_TREE[key]
+		return str(entry[0 if language == "th" else 1])
+	return t(key)
+
+
+## A tree command refusal in words.
+static func tree_error(reason: String) -> String:
+	return tt("err_" + reason) if STRINGS_TREE.has("err_" + reason) else error_text(reason)
+
+
+## Race colour from its race file ("color"), for the race branch paths.
+static func race_color(race_id: String) -> Color:
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string("res://data/races/%s.json" % race_id)) if FileAccess.file_exists("res://data/races/%s.json" % race_id) else null
+	var hex := str(parsed.get("color", "")) if parsed is Dictionary else ""
+	return Color.html(hex) if Color.html_is_valid(hex) else HUB_GOLD_EDGE
+
+
+## The thin ink line of a tree path / tier band.
+static func tree_line(color: Color) -> StyleBox:
+	return hub_line(color)
+
+
+## A disabled Skills button keeps readable ink (not the faded default).
+static func tree_disabled_text(button: Button) -> void:
+	button.add_theme_color_override("font_disabled_color", TREE_TEXT_OFF)
+
+
+## A disabled Skills button keeps its own plate (the art or the parchment box), dimmed by TREE_PLATE_OFF; not the grey box.
+static func tree_keep_plate_when_disabled(button: Button) -> void:
+	var plate: StyleBox = button.get_theme_stylebox("normal").duplicate()
+	if plate is StyleBoxTexture:
+		(plate as StyleBoxTexture).modulate_color = TREE_PLATE_OFF
+	elif plate is StyleBoxFlat:
+		(plate as StyleBoxFlat).bg_color = (plate as StyleBoxFlat).bg_color * TREE_PLATE_OFF
+	button.add_theme_stylebox_override("disabled", plate)
+
+
+## A round ring (selected node) from tokens.
+static func tree_ring(color: Color, s: float, radius: float) -> StyleBoxFlat:
+	return ring(color, 4.0, radius, s)

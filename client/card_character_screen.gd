@@ -25,6 +25,7 @@ const Repair := preload("res://logic/repair.gd")
 const Camp := preload("res://logic/camp.gd")
 const SlotCell := preload("res://client/hub_item_cell.gd")
 const HubItemDetails := preload("res://client/hub_item_details.gd")
+const SkillTreeTab := preload("res://client/skill_tree_tab.gd")  ## the Skills tab (design/gdd/skill-tree.md 9.1)
 
 signal closed()
 signal settings_pressed()
@@ -89,6 +90,7 @@ var _store_scroll: ScrollContainer
 var _store_grid: GridContainer
 var _store_cells: Array = []
 var _hint: Label
+var _skills: SkillTreeTab
 
 
 # ================================================================== build
@@ -242,6 +244,15 @@ func _build_panel() -> void:
 	_other_button.text = CardTokens.t("open_editor")
 	_other_button.pressed.connect(func() -> void: outfit_requested.emit(card))
 	_other_page.add_child(_other_button)
+	# Skills page: the card's skill tree
+	_skills = SkillTreeTab.new()
+	_skills.visible = false
+	_skills.send = _send_tree
+	_skills.notify = _say
+	_skills.changed.connect(func() -> void:
+		changed.emit()
+		_refresh_skills())
+	_panel.add_child(_skills)
 
 
 func _build_detail() -> void:
@@ -409,6 +420,7 @@ func _layout() -> void:
 	CardTokens.hub_fit(_hint, _hint.text, CardTokens.FONT_HUB_HINT, size.x - side * 2.0, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
 	_layout_equipment(pw, ph)
 	_layout_other(pw, ph)
+	_layout_skills(pw, ph)
 	_refresh_tabs()
 
 
@@ -497,6 +509,32 @@ func _layout_other(pw: float, ph: float) -> void:
 	CardTokens.hub_text(_other_button, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, s)
 
 
+func _layout_skills(pw: float, ph: float) -> void:
+	var s := _s
+	_skills.position = Vector2(CardTokens.CHAR_CONTENT.position.x * s, CardTokens.CHAR_CONTENT.position.y * s)
+	_skills.size = Vector2(pw - (CardTokens.CHAR_CONTENT.position.x + CardTokens.CHAR_CONTENT.size.x) * s, ph - (CardTokens.CHAR_CONTENT.position.y + CardTokens.CHAR_CONTENT.size.y) * s)
+	_skills.s = s
+	_skills.phone = _phone
+	_refresh_skills()
+
+
+## The Skills tab's commands go through the hub's sender like the gear commands.
+func _send_tree(request: Dictionary) -> Dictionary:
+	if not send.is_valid():
+		return {"ok": false, "error": "no_session"}
+	return await send.call(request)
+
+
+## Redraws the Skills tab from the profile (its card deck and gold).
+func _refresh_skills() -> void:
+	var p = _profile()
+	if _skills == null or p == null or card.is_empty():
+		return
+	_skills.show_card(card, p.card_deck, p.stash.gold)
+	if _gold_label != null:
+		_gold_label.text = str(p.stash.gold)
+
+
 func _refresh_tabs() -> void:
 	var s := _s
 	var sy := _panel.size.y / CardTokens.CHAR_PANEL_ART.y
@@ -513,7 +551,12 @@ func _refresh_tabs() -> void:
 			_underline.size = Vector2(w, 4.0 * s)
 	CardTokens.panel(_underline, CardTokens.hub_line(CardTokens.HUB_UNDERLINE))
 	_equip_page.visible = _tab == "equipment"
-	_other_page.visible = _tab != "equipment"
+	_other_page.visible = _tab == "outfit"
+	_skills.visible = _tab == "skills"
+	var hint := CardTokens.tt("tree_hint") if _tab == "skills" else CardTokens.t("char_hint_touch")
+	if _hint.text != hint:
+		_hint.text = hint
+		CardTokens.hub_fit(_hint, hint, CardTokens.FONT_HUB_HINT, _hint.size.x, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
 	_other_button.visible = _tab == "outfit"
 	_other_text.text = CardTokens.t("outfit_body") if _tab == "outfit" else CardTokens.t("skills_soon")
 
