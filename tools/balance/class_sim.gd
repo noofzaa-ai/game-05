@@ -56,6 +56,8 @@ func _init() -> void:
 		scenarios.append({"name": "solo " + class_id, "classes": [class_id], "kind": "solo"})
 	scenarios.append({"name": "starter squad", "classes": Array(Deck.STARTER_SQUAD), "kind": "squad"})
 	scenarios.append({"name": "starter duo", "classes": Array(Deck.STARTER_SQUAD).slice(0, 2), "kind": "duo"})  # loot by squad size (Boss 2026-11-12)
+	# A squad with magic (magic is not in the starter squad): measures the magic kit (class-skills.md 4.5).
+	scenarios.append({"name": "magic squad", "classes": ["sword_shield", "longbow", "magic"], "kind": "squad"})
 	for class_id in ["sword_shield", "greatsword", "longbow"]:
 		scenarios.append({"name": "3x " + class_id, "classes": [class_id, class_id, class_id], "kind": "mono"})
 	print("CLASS SIM  seeds=%d  reaction=class pilot  max=%ds" % [seeds, MAX_TICKS / 60])
@@ -98,11 +100,16 @@ func _init() -> void:
 				if true:
 					var key := "%s in %s" % [m["class"], scenario["name"]]
 					if not per_class.has(key):
-						per_class[key] = {"dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "n": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": ""}
-					for field in ["dealt", "taken", "deaths", "ults", "attack", "walk", "alive", "kills", "gauge_full", "skill_dealt", "casts", "casting",
+						per_class[key] = {"dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "n": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": "", "per_skill": {}, "hits": 0, "atk": 0.0}
+					for field in ["hits", "atk", "dealt", "taken", "deaths", "ults", "attack", "walk", "alive", "kills", "gauge_full", "skill_dealt", "casts", "casting",
 							"ult_dealt", "ult_support", "support", "ult_lost", "ult_gap_ticks", "ult_gaps", "ult_first", "ult_firsts"]:
 						per_class[key][field] += m[field]
 					per_class[key]["race"] = m["race"]
+					for skill in m["per_skill"]:
+						if not per_class[key]["per_skill"].has(skill):
+							per_class[key]["per_skill"][skill] = {"dmg": 0.0, "casts": 0, "ticks": 0, "hits": 0}
+						for field in ["dmg", "casts", "ticks", "hits"]:
+							per_class[key]["per_skill"][skill][field] += m["per_skill"][skill][field]
 					per_class[key]["n"] += 1
 		print("%-19s | %3d%% | %5.1f / %2d    | %7s | %9.0f | %9.0f | %6.2f | %4.1f | %d" % [scenario["name"], 100 * wins / seeds, float(waves_total) / seeds, waves_min,
 			("%.0f" % (clear_ticks / 60.0 / wins)) if wins > 0 else "-", dealt / seeds, taken / seeds, float(deaths) / seeds, float(ults) / seeds, timeouts])
@@ -115,6 +122,20 @@ func _init() -> void:
 		var n := float(c["n"])
 		var alive := maxf(1.0, float(c["alive"]))
 		print("%-34s | %10.0f | %9.0f | %5.1f | %9.0f | %5.1f | %6.2f | %4.1f | %12.1f | %9.0f%% | %7.0f%% | %7.0f%%" % [key, c["dealt"] / n, c["skill_dealt"] / n, c["casts"] / n, c["taken"] / n, c["kills"] / n, c["deaths"] / n, c["ults"] / n, c["gauge_full"] / 60.0 / n, 100.0 * c["attack"] / alive, 100.0 * c["walk"] / alive, 100.0 * c["casting"] / alive])
+	# Class skills per skill (class-skills.md 4.5): share of the class's damage, share of its skill damage (rule: none
+	# above 60%), casts, enemies hit per cast and time spent in the clip (share of the card's alive time).
+	print("")
+	print("skill (per run avg)                               | casts | hits/cast | skill dmg | % of class dmg | % of class skill dmg | in clip %")
+	for key in per_class:
+		var c: Dictionary = per_class[key]
+		var n := float(c["n"])
+		var own: float = c["dealt"] + c["skill_dealt"]
+		print("%-49s | %5s | %9s | %9.0f | %13.1f%% | %19s | %8.0f%%" % [key + " (all skills)", "%.1f" % (c["casts"] / n), "", c["skill_dealt"] / n, 100.0 * c["skill_dealt"] / maxf(1.0, own), "", 100.0 * c["casting"] / maxf(1.0, float(c["alive"]))])
+		print("%-49s | ATK %.0f, weapon hits %.0f, %.0f per hit, %.0f per attacking second" % ["  (weapon)", c["atk"] / n, c["hits"] / n, c["dealt"] / maxf(1.0, float(c["hits"])), c["dealt"] / maxf(1.0, float(c["attack"]) / 60.0)])
+		for skill in c["per_skill"]:
+			var k: Dictionary = c["per_skill"][skill]
+			print("%-49s | %5.1f | %9.2f | %9.0f | %13.1f%% | %18.1f%% | %8.1f%%" % ["  " + str(skill), k["casts"] / n, float(k["hits"]) / maxf(1.0, float(k["casts"])), k["dmg"] / n,
+				100.0 * k["dmg"] / maxf(1.0, own), 100.0 * k["dmg"] / maxf(1.0, c["skill_dealt"]), 100.0 * k["ticks"] / maxf(1.0, float(c["alive"]))])
 	# Race ultimates (GDD races section 8): per card, then the squad share of damage and of heal+shield.
 	print("")
 	print("ultimates (per run avg)            | race      | fired | first s | mean gap s | lost | ult dmg | ult dmg % | ult heal+shield | heal+shield % of own")
@@ -201,7 +222,10 @@ func play(classes: Array, seed: int) -> Dictionary:
 		if no_skills:
 			sim.fighters[id].skill_state = {}  # (set_class_style gives a skill-less fighter its class skills)
 		memories[id] = Pilot.new_memory(id * 7919 + 1 + seed)
-		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": ""}
+		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": "", "per_skill": {}, "hits": 0, "atk": 0.0}
+		members[id]["atk"] = sim.fighters[id].stat("ATK")
+		for skill in sim.fighters[id].skill_state.get("skills", []):
+			members[id]["per_skill"][str(skill)] = {"dmg": 0.0, "casts": 0, "ticks": 0, "hits": 0}
 		members[id]["race"] = str(sim.fighters[id].race_state.get("race", ""))
 	var waves := 1
 	var loot_seen := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0}  ## "loot" events: what reached a run bag
@@ -227,6 +251,7 @@ func play(classes: Array, seed: int) -> Dictionary:
 					var t := int(event.get("target", -1))
 					if members.has(a) and not members.has(t):
 						members[a]["dealt"] += float(event["damage"])
+						members[a]["hits"] += 1
 					if members.has(t) and not members.has(a):
 						members[t]["taken"] += float(event["damage"])
 						wave_taken[waves] += float(event["damage"])
@@ -235,6 +260,12 @@ func play(classes: Array, seed: int) -> Dictionary:
 					var t := int(event.get("target", -1))
 					if members.has(a) and not members.has(t):
 						members[a]["skill_dealt"] += float(event["damage"])
+						var per: Dictionary = members[a]["per_skill"]
+						var skill_id := str(event.get("skill", "?"))
+						if not per.has(skill_id):
+							per[skill_id] = {"dmg": 0.0, "casts": 0, "ticks": 0, "hits": 0}
+						per[skill_id]["dmg"] += float(event["damage"])
+						per[skill_id]["hits"] += 1
 					if members.has(t) and not members.has(a):
 						members[t]["taken"] += float(event["damage"])
 						wave_taken[waves] += float(event["damage"])
@@ -256,6 +287,9 @@ func play(classes: Array, seed: int) -> Dictionary:
 				"skill_cast":
 					if members.has(int(event.get("player", -1))):
 						members[int(event["player"])]["casts"] += 1
+						var per: Dictionary = members[int(event["player"])]["per_skill"]
+						if per.has(str(event.get("skill", ""))):
+							per[str(event["skill"])]["casts"] += 1
 				"dot":
 					var t := int(event.get("target", -1))
 					if members.has(t):
@@ -297,6 +331,9 @@ func play(classes: Array, seed: int) -> Dictionary:
 			members[id]["alive"] += 1
 			if f.skill_view.get("casting", false) or f.skill_view.get("moving", false):
 				members[id]["casting"] += 1
+				var now_skill := str(f.skill_state.get("cast", {}).get("skill", ""))
+				if members[id]["per_skill"].has(now_skill):
+					members[id]["per_skill"][now_skill]["ticks"] += 1
 			elif f.state == Fighter.State.ATTACK:
 				members[id]["attack"] += 1
 			elif sim.bodies[id].velocity.length() > 0.5:

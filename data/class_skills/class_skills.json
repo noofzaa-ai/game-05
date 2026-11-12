@@ -14,13 +14,13 @@
  "skills": {
   "shield_rush": {
    "name": "Shield Rush", "class": "sword_shield", "kind": "dash_strike", "stamina": 14, "impact_tier": 2, "priority": 1, "vfx": "class_skill/shield_rush",
-   "stats": {"cooldown": 8.0, "damage": 0.7, "range": 7.0, "dash_max": 6.0, "stop_short": 1.0, "reach": 2.0, "stun": 0.8},
+   "stats": {"cooldown": 16.0, "damage": 1.1, "range": 7.0, "dash_max": 6.0, "stop_short": 1.0, "reach": 2.0, "stun": 0.8},
    "use": {"any_of": [{"if": "peel_target_attacking_ally", "min": 2.0, "max": 7.0}, {"if": "target_within", "radius": 3.0}]},
    "motion": {"segs": [["attack_4", 0.30, 0.62, 0.8, [0.62]], ["attack_4", 0.62, 1.98, 1.5, []]], "travel": [0, 0.30, 0.62], "invulnerable": "travel"}
   },
   "iron_guard": {
    "name": "Iron Guard", "class": "sword_shield", "kind": "stance", "stamina": 10, "impact_tier": 2, "priority": 0.5, "vfx": "class_skill/iron_guard",
-   "stats": {"cooldown": 12.0, "duration": 3.0, "taken_mul": 0.5, "counter": 0.5, "max_counters": 2, "counter_icd": 0.3},
+   "stats": {"cooldown": 18.0, "duration": 3.0, "taken_mul": 0.5, "counter": 2.0, "max_counters": 2, "counter_icd": 0.3},
    "use": {"any_of": [{"if": "self_attacked_by", "count": 2, "radius": 3.0}, {"if": "boss_telegraph", "radius": 4.0}, {"if": "self_hurt", "below": 0.5, "enemies_within": 3.0, "min": 1}],
     "and": [{"if": "enemies_near", "radius": 3.0, "min": 1}]},
    "motion": {"segs": [["block", 0.0, 1.45, 1.6, []]], "loop": ["block_idle", 0.0, 3.5, 1.0],
@@ -35,77 +35,77 @@
   },
   "breaker_slam": {
    "name": "Breaker Slam", "class": "sword_shield", "kind": "circle", "stamina": 14, "impact_tier": 3, "priority": 2, "vfx": "class_skill/breaker_slam",
-   "stats": {"cooldown": 9.0, "damage": 0.9, "radius": 3.0, "weaken": 4.0, "hop": 0.3},
+   "stats": {"cooldown": 16.0, "damage": 1.3, "radius": 3.0, "weaken": 4.0, "hop": 0.3},
    "use": {"any_of": [{"if": "enemies_near", "radius": 3.0, "min": 2}, {"if": "boss_near", "radius": 3.0}]},
    "motion": {"segs": [["slash_4", 0.43, 5.38, 2.5, [3.58]]], "travel": [0, 3.00, 3.35]}
   },
   "reaping_arc": {
    "name": "Reaping Arc", "class": "greatsword", "kind": "arc", "stamina": 16, "impact_tier": 3, "priority": 2, "vfx": "class_skill/reaping_arc",
-   "stats": {"cooldown": 5.0, "damage": 1.4, "radius": 3.0, "arc_deg": 240.0, "heavy": 1.0, "step": 0.22},
+   "stats": {"cooldown": 14.0, "damage": 5.5, "radius": 3.0, "arc_deg": 240.0, "heavy": 1.0, "step": 0.22},
    "use": {"any_of": [{"if": "enemies_in_arc", "min": 2}, {"if": "boss_in_arc"}, {"if": "held_for", "seconds": 3.0, "and": [{"if": "enemies_in_arc", "min": 1}]}]},
    "motion": {"segs": [["gs_slash_3", 0.167, 1.533, 1.0, [0.82]]], "travel": [0, 0.27, 0.75]}
   },
   "crater_leap": {
    "name": "Crater Leap", "class": "greatsword", "kind": "leap_slam", "stamina": 14, "impact_tier": 3, "priority": 1, "vfx": "class_skill/crater_leap",
-   "stats": {"cooldown": 10.0, "damage": 1.6, "range": 7.0, "radius": 2.5, "stun": 0.4},
+   "stats": {"cooldown": 26.0, "damage": 3.5, "range": 7.0, "radius": 2.5, "stun": 0.4},
    "use": {"any_of": [{"if": "dense_point", "reach": 7.0, "radius": 2.5, "min": 3}, {"if": "dense_point", "reach": 7.0, "radius": 2.5, "min": 2, "farther_than": 3.0}, {"if": "boss_between", "min": 3.0, "max": 7.0}]},
    "motion": {"segs": [["gs_jump_attack", 0.067, 0.63, 1.0, []], ["gs_jump_attack", 0.63, 1.00, 0.74, []], ["gs_jump_attack", 1.00, 1.25, 1.0, [1.22]], ["gs_jump_attack", 1.25, 2.00, 1.5, []]], "travel": [1, 0.63, 1.00], "invulnerable": "travel"}
   },
   "hook_sweep": {
    "name": "Hook Sweep", "class": "greatsword", "kind": "pull_circle", "stamina": 16, "impact_tier": 2, "priority": 2, "vfx": "class_skill/hook_sweep",
-   "stats": {"cooldown": 9.0, "damage": 0.9, "pull_range": 5.0, "pull": 2.0, "pull_min": 1.0, "radius": 2.5, "slow": 2.0, "step": 0.24},
+   "stats": {"cooldown": 22.0, "damage": 3.0, "pull_range": 5.0, "pull": 2.0, "pull_min": 1.0, "radius": 2.5, "slow": 2.0, "step": 0.24},
    "use": {"any_of": [{"if": "loose_pack", "radius": 5.0, "min": 3, "inner": 2.5, "inner_below": 2}]},
    "motion": {"segs": [["gs_slash_4", 0.117, 1.433, 1.0, [0.74]]], "pull_at": [0, 0.20], "travel": [0, 0.27, 0.80]}
   },
   "battle_trance": {
    "name": "Battle Trance", "class": "greatsword", "kind": "self_buff", "stamina": 16, "impact_tier": 0, "priority": 3, "boss_priority": -1, "boss_radius": 3.0, "vfx": "class_skill/battle_trance",
-   "stats": {"cooldown": 18.0, "duration": 6.0, "heavy_every": 2},
+   "stats": {"cooldown": 24.0, "duration": 6.0, "heavy_every": 2},
    "use": {"any_of": [{"if": "enemies_near", "radius": 3.0, "min": 2}, {"if": "boss_near", "radius": 3.0}]},
    "motion": {"segs": [["gs_power_up", 1.30, 3.00, 1.4, [2.05]]]}
   },
   "heartseeker_shot": {
    "name": "Heartseeker", "class": "longbow", "kind": "shot", "stamina": 12, "impact_tier": 2, "priority": 2, "vfx": "class_skill/heartseeker_shot",
-   "stats": {"cooldown": 6.0, "damage": 2.6, "range": 12.0, "crit_add": 25.0, "bonus_status": "sunder", "bonus_mul": 1.5},
+   "stats": {"cooldown": 16.0, "damage": 9.5, "range": 12.0, "crit_add": 25.0, "bonus_status": "sunder", "bonus_mul": 1.5},
    "use": {"any_of": [{"if": "best_shot", "range": 12.0}]},
-   "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.0, []], ["lb_aim_recoil", 0.0, 0.70, 1.0, [0.18]]]}
+   "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.2, []], ["lb_aim_recoil", 0.0, 0.70, 1.2, [0.18]]]}
   },
   "pinning_shot": {
    "name": "Pinning Shot", "class": "longbow", "kind": "shot", "stamina": 10, "impact_tier": 2, "priority": 0.5, "vfx": "class_skill/pinning_shot",
-   "stats": {"cooldown": 8.0, "damage": 1.2, "range": 12.0, "shock": 1.5},
+   "stats": {"cooldown": 20.0, "damage": 2.75, "range": 12.0, "shock": 1.5},
    "use": {"any_of": [{"if": "enemy_near_backline", "distance": 3.0, "range": 12.0}, {"if": "closing_enemy", "range": 8.0}]},
-   "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.5, []], ["lb_aim_recoil", 0.0, 0.70, 0.8, [0.18]]]}
+   "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.8, []], ["lb_aim_recoil", 0.0, 0.70, 0.96, [0.18]]]}
   },
   "rapid_fire": {
    "name": "Rapid Fire", "class": "longbow", "kind": "volley", "stamina": 14, "impact_tier": 1, "priority": 2, "vfx": "class_skill/rapid_fire",
-   "stats": {"cooldown": 7.0, "damage": 0.55, "range": 12.0, "arrows": 4},
+   "stats": {"cooldown": 19.0, "damage": 1.55, "range": 12.0, "arrows": 4},
    "use": {"any_of": [{"if": "target_within", "radius": 12.0}]},
-   "motion": {"blend": 0.05, "segs": [["lb_draw_arrow", 0.0, 1.017, 2.0, []], ["lb_aim_recoil", 0.0, 0.18, 1.0, [0.18]],
-    ["lb_aim_recoil", 0.18, 0.233, 0.332, []], ["lb_aim_recoil", 0.15, 0.18, 0.332, [0.18]],
-    ["lb_aim_recoil", 0.18, 0.233, 0.332, []], ["lb_aim_recoil", 0.15, 0.18, 0.332, [0.18]],
-    ["lb_aim_recoil", 0.18, 0.233, 0.332, []], ["lb_aim_recoil", 0.15, 0.18, 0.332, [0.18]],
-    ["lb_aim_recoil", 0.18, 0.70, 1.0, []]]}
+   "motion": {"blend": 0.05, "segs": [["lb_draw_arrow", 0.0, 1.017, 2.4, []], ["lb_aim_recoil", 0.0, 0.18, 1.2, [0.18]],
+    ["lb_aim_recoil", 0.18, 0.233, 0.398, []], ["lb_aim_recoil", 0.15, 0.18, 0.398, [0.18]],
+    ["lb_aim_recoil", 0.18, 0.233, 0.398, []], ["lb_aim_recoil", 0.15, 0.18, 0.398, [0.18]],
+    ["lb_aim_recoil", 0.18, 0.233, 0.398, []], ["lb_aim_recoil", 0.15, 0.18, 0.398, [0.18]],
+    ["lb_aim_recoil", 0.18, 0.70, 1.2, []]]}
   },
   "vault_shot": {
    "name": "Vault Shot", "class": "longbow", "kind": "vault_shot", "stamina": 12, "impact_tier": 1, "priority": 0, "vfx": "class_skill/vault_shot",
-   "stats": {"cooldown": 9.0, "damage": 0.9, "distance": 4.0, "min_distance": 1.0, "slow": 3.0, "range": 12.0},
+   "stats": {"cooldown": 20.0, "damage": 2.25, "distance": 4.0, "min_distance": 1.0, "slow": 3.0, "range": 12.0},
    "use": {"any_of": [{"if": "nearest_within", "radius": 3.0}]},
-   "motion": {"segs": [["lb_dodge_backward", 0.0, 0.95, 1.5, []], ["lb_draw_arrow", 0.0, 1.017, 2.0, []], ["lb_aim_recoil", 0.0, 0.70, 1.0, [0.18]]], "travel": [0, 0.25, 0.85], "invulnerable": "travel"}
+   "motion": {"segs": [["lb_dodge_backward", 0.0, 0.95, 1.8, []], ["lb_draw_arrow", 0.0, 1.017, 2.4, []], ["lb_aim_recoil", 0.0, 0.70, 1.2, [0.18]]], "travel": [0, 0.25, 0.85], "invulnerable": "travel"}
   },
   "arcane_orb": {
    "name": "Arcane Orb", "class": "magic", "kind": "orb", "stamina": 10, "impact_tier": 2, "priority": 2, "vfx": "class_skill/arcane_orb",
-   "stats": {"cooldown": 3.5, "damage": 1.0, "range": 12.0, "speed": 12.0, "radius": 2.0, "count": 1, "spread_deg": 15.0},
+   "stats": {"cooldown": 7.0, "damage": 21.0, "range": 12.0, "speed": 12.0, "radius": 2.0, "count": 1, "spread_deg": 15.0},
    "use": {"any_of": [{"if": "target_cluster", "radius": 2.0, "min": 2, "range": 12.0}, {"if": "target_is_boss", "range": 12.0}, {"if": "held_for", "seconds": 4.0, "and": [{"if": "target_within", "radius": 12.0}]}]},
    "motion": {"segs": [["mg_spell_1h_cast_spell_01", 0.167, 1.55, 1.0, [0.58]]]}
   },
   "repulse_nova": {
    "name": "Repulse Nova", "class": "magic", "kind": "circle", "stamina": 12, "impact_tier": 2, "priority": 0, "vfx": "class_skill/repulse_nova",
-   "stats": {"cooldown": 8.0, "damage": 0.9, "radius": 3.0, "knockback": 2.5, "slow": 2.0},
+   "stats": {"cooldown": 14.0, "damage": 6.5, "radius": 3.0, "knockback": 2.5, "slow": 2.0},
    "use": {"any_of": [{"if": "enemies_near", "radius": 2.5, "min": 1}, {"if": "enemies_near", "radius": 3.0, "min": 2}]},
    "motion": {"segs": [["mg_spell_2h_magic_area_attack_01", 0.10, 2.683, 1.5, [1.32]]]}
   },
   "starfall": {
    "name": "Starfall", "class": "magic", "kind": "delayed_circle", "stamina": 16, "impact_tier": 3, "priority": 1, "vfx": "class_skill/starfall",
-   "stats": {"cooldown": 10.0, "damage": 2.2, "range": 9.0, "radius": 2.5, "delay": 0.8, "stun": 0.3},
+   "stats": {"cooldown": 12.0, "damage": 14.5, "range": 9.0, "radius": 2.5, "delay": 0.8, "stun": 0.3},
    "use": {"any_of": [{"if": "dense_point", "reach": 9.0, "radius": 2.5, "min": 3}, {"if": "dense_point", "reach": 9.0, "radius": 2.5, "min": 2, "with_elite": true}, {"if": "boss_near", "radius": 9.0}]},
    "motion": {"segs": [["mg_spell_2h_cast_spell_01", 0.167, 1.967, 1.0, [1.25]]]}
   },

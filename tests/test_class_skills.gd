@@ -137,8 +137,8 @@ func _data(ctx) -> void:
 func _timing(ctx) -> void:
 	var data = SkillData.load_default()
 	var expect := {"shield_rush": [[0.40], 1.31], "intercept": [[0.67], 1.52], "breaker_slam": [[1.26], 1.98], "reaping_arc": [[0.65], 1.37],
-		"crater_leap": [[1.28], 1.81], "hook_sweep": [[0.62], 1.32], "battle_trance": [[0.54], 1.21], "heartseeker_shot": [[1.20], 1.72],
-		"pinning_shot": [[0.90], 1.55], "rapid_fire": [[0.69, 0.94, 1.19, 1.44], 1.96], "vault_shot": [[1.32], 1.84], "arcane_orb": [[0.41], 1.38],
+		"crater_leap": [[1.28], 1.81], "hook_sweep": [[0.62], 1.32], "battle_trance": [[0.54], 1.21], "heartseeker_shot": [[1.00], 1.43],
+		"pinning_shot": [[0.75], 1.29], "rapid_fire": [[0.57, 0.78, 0.99, 1.20], 1.63], "vault_shot": [[1.10], 1.53], "arcane_orb": [[0.41], 1.38],
 		"repulse_nova": [[0.81], 1.72], "starfall": [[1.08], 1.80], "warding_veil": [[1.10], 1.75]}
 	for skill in expect:
 		var t: Dictionary = data.skill(skill)["timing"]
@@ -148,7 +148,7 @@ func _timing(ctx) -> void:
 			ok = ok and absf(float(rel[i]) - float(expect[skill][0][i])) <= 0.015
 		ctx.check("%s release %s / total %.2f s match GDD 3.2-3.5" % [skill, rel.map(func(x): return snappedf(x, 0.01)), t["end"]], ok)
 	var travel := {"shield_rush": [0.0, 0.40], "intercept": [0.17, 0.67], "breaker_slam": [1.03, 1.17], "reaping_arc": [0.10, 0.58],
-		"crater_leap": [0.56, 1.06], "hook_sweep": [0.15, 0.68], "vault_shot": [0.17, 0.57]}
+		"crater_leap": [0.56, 1.06], "hook_sweep": [0.15, 0.68], "vault_shot": [0.14, 0.47]}
 	for skill in travel:
 		var tr: Array = data.skill(skill)["timing"]["travel"]
 		ctx.check("%s travel frames %s = skill t %s" % [skill, tr.map(func(x): return snappedf(x, 0.01)), travel[skill]],
@@ -173,7 +173,7 @@ func _shield_rush(ctx) -> void:
 	var x_mid: float = sim.bodies[1].position.x
 	var ev := step(sim, 20)
 	ctx.check("S1 dashes only in its travel frames, to 1 m from the target (x %.2f -> %.2f)" % [x_mid, sim.bodies[1].position.x], x_mid > 0.5 and x_mid < 4.5 and absf(sim.bodies[1].position.x - 4.5) < 0.05)
-	ctx.check("S1 70%% ATK = 70 (%s)" % [lost(sim, 10)], is_equal_approx(lost(sim, 10), 70.0))
+	ctx.check("S1 110%% ATK = 110 (%s)" % [lost(sim, 10)], is_equal_approx(lost(sim, 10), 110.0))
 	ctx.check("S1 stuns 0.8 s", sim.fighters[10].effects.has("stun") and int(sim.fighters[10].effects["stun"]["left"]) <= 48 and int(sim.fighters[10].effects["stun"]["left"]) > 30)
 	ctx.check("S1 fires skill_cast once and one skill_hit", of(mid + ev, "skill_cast").size() == 1 and hits(mid + ev, "shield_rush").size() == 1)
 	var neg := world(["sword_shield"])
@@ -218,7 +218,7 @@ func _iron_guard(ctx) -> void:
 	for k in 6:
 		Skills.incoming(1, 10, 10.0, true, sim.fighters, sim.bodies, sim.combat, [], sim.tick_count)
 		step(sim, 20)
-	ctx.check("S2 counters capped at 2 per stance (PO default), 50%% ATK each (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 100.0))
+	ctx.check("S2 counters capped at 2 per stance (PO default), 200%% ATK each (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 400.0))
 	Skills.incoming(1, 11, 10.0, false, sim.fighters, sim.bodies, sim.combat, [], sim.tick_count)
 	step(sim, 2)
 	ctx.check("S2 ranged hits are not countered", lost(sim, 11) == 0.0)
@@ -277,8 +277,8 @@ func _breaker_slam(ctx) -> void:
 	var early := step(sim, 60)
 	ctx.check("S4 does not move before its hop frames", is_equal_approx(sim.bodies[1].position.x, before))
 	var ev := step(sim, 70)
-	ctx.check("S4 90%% ATK to all within 3 m + weaken (%s, %s, far %s)" % [lost(sim, 10), lost(sim, 11), lost(sim, 12)],
-		is_equal_approx(lost(sim, 10), 90.0) and is_equal_approx(lost(sim, 11), 90.0) and lost(sim, 12) == 0.0 and sim.fighters[10].effects.has("weaken"))
+	ctx.check("S4 130%% ATK to all within 3 m + weaken (%s, %s, far %s)" % [lost(sim, 10), lost(sim, 11), lost(sim, 12)],
+		is_equal_approx(lost(sim, 10), 130.0) and is_equal_approx(lost(sim, 11), 130.0) and lost(sim, 12) == 0.0 and sim.fighters[10].effects.has("weaken"))
 	ctx.check("S4 hops about 0.3 m forward", absf(sim.bodies[1].position.x - before - 0.3) < 0.05)
 	var neg := world(["sword_shield"])
 	put(neg, 10, Vector3(1.5, 0, 0))
@@ -297,8 +297,8 @@ func _reaping_arc(ctx) -> void:
 	ctx.check("G1 pilot: 2+ enemies in the arc", not UseRules.choose(sim, 1, "reaping_arc", 10).is_empty())
 	Skills.cast(sim, 1, "reaping_arc", {"target": 10})
 	var ev := step(sim, 45)
-	ctx.check("4.1 example: 3 enemies at ATK 100 -> 182 each (%s %s %s)" % [lost(sim, 10), lost(sim, 11), lost(sim, 12)],
-		is_equal_approx(lost(sim, 10), 182.0) and is_equal_approx(lost(sim, 11), 182.0) and is_equal_approx(lost(sim, 12), 182.0))
+	ctx.check("4.1 example: 3 enemies at ATK 100 -> 715 each (%s %s %s)" % [lost(sim, 10), lost(sim, 11), lost(sim, 12)],
+		is_equal_approx(lost(sim, 10), 715.0) and is_equal_approx(lost(sim, 11), 715.0) and is_equal_approx(lost(sim, 12), 715.0))
 	ctx.check("G1 the enemy behind is outside the 240 degree arc", lost(sim, 13) == 0.0)
 	ctx.check("G1 fires one heavy event per cast", of(ev, "skill_heavy").size() == 1)
 	var races: Array = []
@@ -324,7 +324,7 @@ func _crater_leap(ctx) -> void:
 	var still: float = sim.bodies[1].position.x
 	var ev := step(sim, 50)
 	ctx.check("G2 stands still in the wind-up, then leaps to the point", absf(still) < 0.01 and absf(sim.bodies[1].position.x - 5.0) < 0.6)
-	ctx.check("G2 160%% ATK + stagger to everything within 2.5 m (%s)" % [lost(sim, 11)], is_equal_approx(lost(sim, 10), 160.0) and is_equal_approx(lost(sim, 11), 160.0) and sim.fighters[11].effects.has("stun"))
+	ctx.check("G2 350%% ATK + stagger to everything within 2.5 m (%s)" % [lost(sim, 11)], is_equal_approx(lost(sim, 10), 350.0) and is_equal_approx(lost(sim, 11), 350.0) and sim.fighters[11].effects.has("stun"))
 	var neg := world(["greatsword"])
 	put(neg, 10, Vector3(2, 0, 0))
 	put(neg, 11, Vector3(2.5, 0, 0.5))
@@ -344,7 +344,7 @@ func _hook_sweep(ctx) -> void:
 	step(sim, 6)
 	ctx.check("4.3 example: an enemy at 4.5 m pulled 2 -> 2.5 m (%.2f)" % sim.bodies[10].position.x, absf(sim.bodies[10].position.x - 2.5) < 0.01)
 	step(sim, 40)
-	ctx.check("G3 90%% ATK + slow on the pulled pack (%s)" % lost(sim, 10), lost(sim, 10) == 90.0 and sim.fighters[10].effects.has("slow"))
+	ctx.check("G3 300%% ATK + slow on the pulled pack (%s)" % lost(sim, 10), lost(sim, 10) == 300.0 and sim.fighters[10].effects.has("slow"))
 	var pull := world(["greatsword"], 2, "goblin_chief")
 	put(pull, 10, Vector3(1.2, 0, 0))
 	Skills.pull(pull, 1, Vector3.ZERO, 5.0, 2.0, 1.0)
@@ -391,7 +391,7 @@ func _heartseeker(ctx) -> void:
 	sim.fighters[1].stats["CRIRATE"] = -25.0  # crit off for the exact number (+25 from the skill)
 	Skills.cast(sim, 1, "heartseeker_shot", choice)
 	step(sim, 110)
-	ctx.check("L1 260%% ATK x1.5 on a sundered target = 390 (%s)" % lost(sim, 20), is_equal_approx(lost(sim, 20), 390.0))
+	ctx.check("L1 950%% ATK x1.5 on a sundered target = 1425 (%s)" % lost(sim, 20), is_equal_approx(lost(sim, 20), 1425.0))
 	var far := world(["longbow"])
 	put(far, 10, Vector3(13, 0, 0))
 	ctx.check("L1 pilot: nobody within 12 m -> no shot", UseRules.choose(far, 1, "heartseeker_shot", 10).is_empty())
@@ -411,7 +411,7 @@ func _pinning_shot(ctx) -> void:
 	ctx.check("L2 pilot: the enemy near a back-line ally", int(choice.get("target", -1)) == 10)
 	Skills.cast(sim, 1, "pinning_shot", choice)
 	step(sim, 95)
-	ctx.check("L2 120%% ATK + shock 1.5 s (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 120.0) and sim.fighters[10].effects.has("shock") and sim.fighters[10].rooted)
+	ctx.check("L2 275%% ATK + shock 1.5 s (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 275.0) and sim.fighters[10].effects.has("shock") and sim.fighters[10].rooted)
 	ctx.check("L2 pilot: never on a target already shocked", UseRules.choose(sim, 1, "pinning_shot", 11).get("target", -1) != 10)
 	var neg := world(["longbow"])
 	put(neg, 10, Vector3(9, 0, 0))
@@ -422,12 +422,12 @@ func _rapid_fire(ctx) -> void:
 	var sim := world(["longbow"])
 	put(sim, 10, Vector3(6, 0, 0))
 	put(sim, 11, Vector3(8, 0, 0))
-	sim.fighters[10].hp = 120.0
+	sim.fighters[10].hp = 400.0  # dies to the 3rd 155% arrow
 	ctx.check("L3 pilot: target within 12 m", not UseRules.choose(sim, 1, "rapid_fire", 10).is_empty())
 	Skills.cast(sim, 1, "rapid_fire", {"target": 10})
 	var ev := step(sim, 120)
 	ctx.check("L3 four skill_hits, no basic hit", hits(ev, "rapid_fire").size() == 4 and of(ev, "hit").is_empty())
-	ctx.check("L3 55%% each; target dies after arrow 3, arrow 4 retargets (%s)" % lost(sim, 11), not sim.fighters[10].is_alive() and is_equal_approx(lost(sim, 11), 55.0))
+	ctx.check("L3 155%% each; target dies after arrow 3, arrow 4 retargets (%s)" % lost(sim, 11), not sim.fighters[10].is_alive() and is_equal_approx(lost(sim, 11), 155.0))
 	var gaps: Array = []
 	var hit_ticks: Array = []
 	for e in of(ev, "class_skill_release"):
@@ -441,12 +441,12 @@ func _vault_shot(ctx) -> void:
 	var choice := UseRules.choose(sim, 1, "vault_shot", 10)
 	ctx.check("L4 pilot: an enemy within 3 m", int(choice.get("target", -1)) == 10)
 	Skills.cast(sim, 1, "vault_shot", choice)
-	step(sim, 9)
+	step(sim, 7)
 	ctx.check("L4 stays still before its travel frames", is_equal_approx(sim.bodies[1].position.x, 0.0))
 	step(sim, 30)
 	ctx.check("L4 moves 4 m away from the nearest enemy (x %.2f)" % sim.bodies[1].position.x, absf(sim.bodies[1].position.x + 4.0) < 0.05)
 	step(sim, 60)
-	ctx.check("L4 90%% ATK + slow (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 90.0) and sim.fighters[10].effects.has("slow"))
+	ctx.check("L4 225%% ATK + slow (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 225.0) and sim.fighters[10].effects.has("slow"))
 	var neg := world(["longbow"])
 	put(neg, 10, Vector3(5, 0, 0))
 	ctx.check("L4 pilot: nobody within 3 m -> no cast", UseRules.choose(neg, 1, "vault_shot", 10).is_empty())
@@ -463,7 +463,7 @@ func _arcane_orb(ctx) -> void:
 	step(sim, 27)
 	ctx.check("M1 the orb is in flight after the throw", lost(sim, 10) == 0.0 and not sim.fighters[1].skill_state["jobs"].is_empty())
 	step(sim, 40)
-	ctx.check("M1 bursts on the first enemy: 100%% to both in r2 (%s %s)" % [lost(sim, 10), lost(sim, 11)], is_equal_approx(lost(sim, 10), 100.0) and is_equal_approx(lost(sim, 11), 100.0))
+	ctx.check("M1 bursts on the first enemy: 2100%% to both in r2 (%s %s)" % [lost(sim, 10), lost(sim, 11)], is_equal_approx(lost(sim, 10), 2100.0) and is_equal_approx(lost(sim, 11), 2100.0))
 	var neg := world(["magic"])
 	put(neg, 10, Vector3(6, 0, 0))
 	ctx.check("M1 pilot: one target -> hold", UseRules.choose(neg, 1, "arcane_orb", 10).is_empty())
@@ -477,7 +477,7 @@ func _repulse_nova(ctx) -> void:
 	ctx.check("M2 pilot: 1 enemy within 2.5 m", not UseRules.choose(sim, 1, "repulse_nova", 10).is_empty())
 	Skills.cast(sim, 1, "repulse_nova", {"target": 10})
 	step(sim, 55)
-	ctx.check("M2 90%% ATK, knockback 2.5 m, slow (%s, x %.2f)" % [lost(sim, 10), sim.bodies[10].position.x], is_equal_approx(lost(sim, 10), 90.0) and absf(sim.bodies[10].position.x - 4.0) < 0.01 and sim.fighters[10].effects.has("slow"))
+	ctx.check("M2 650%% ATK, knockback 2.5 m, slow (%s, x %.2f)" % [lost(sim, 10), sim.bodies[10].position.x], is_equal_approx(lost(sim, 10), 650.0) and absf(sim.bodies[10].position.x - 4.0) < 0.01 and sim.fighters[10].effects.has("slow"))
 	var neg := world(["magic"])
 	put(neg, 10, Vector3(3.5, 0, 0))
 	ctx.check("M2 pilot: no enemy within 3 m -> no cast", UseRules.choose(neg, 1, "repulse_nova", 10).is_empty())
@@ -499,7 +499,7 @@ func _starfall(ctx) -> void:
 	var ev := step(sim, 66)
 	ctx.check("M3 telegraph at release, no damage yet", of(ev, "class_skill_telegraph").size() == 1 and lost(sim, 10) == 0.0)
 	ev = step(sim, 48)
-	ctx.check("M3 impact 0.8 s later: 220%% + stagger (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 220.0) and sim.fighters[11].effects.has("stun"))
+	ctx.check("M3 impact 0.8 s later: 1450%% + stagger (%s)" % lost(sim, 10), is_equal_approx(lost(sim, 10), 1450.0) and sim.fighters[11].effects.has("stun"))
 	var neg := world(["magic"])
 	put(neg, 10, Vector3(7, 0, 0))
 	put(neg, 11, Vector3(7.5, 0, 1))
@@ -553,7 +553,7 @@ func _tree_and_race_hooks(ctx) -> void:
 		"tree": {"skills": {"reaping_arc": [{"type": "skill_upgrade", "skill": "reaping_arc", "mods": [{"stat": "radius", "op": 2, "value": 3.75}]}]}}}
 	var stats := Skills.cast_stats(sim.fighters[1], "reaping_arc")
 	ctx.check("tree skill_upgrade then race skill_mod apply to the new skills (radius %s, dmg %s, cd %s)" % [stats["radius"], stats["damage"], stats["cooldown"]],
-		is_equal_approx(float(stats["radius"]), 3.75) and is_equal_approx(float(stats["damage"]), 2.1) and is_equal_approx(float(stats["cooldown"]), 3.0))
+		is_equal_approx(float(stats["radius"]), 3.75) and is_equal_approx(float(stats["damage"]), 8.25) and is_equal_approx(float(stats["cooldown"]), 8.4))
 	var r := world(["magic"])
 	r.fighters[1].skill_state["cd"]["starfall"] = r.tick_count + 600
 	var cut := Skills.refresh_cooldowns(r, 1, 0.5, 1.0)

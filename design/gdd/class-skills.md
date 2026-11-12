@@ -40,14 +40,14 @@ MDA aesthetics: Challenge (reading the pilot's good choices), Fantasy (class rol
 | S3 | `intercept` | Intercept | "Leap to a hurt ally and take a share of every blow meant for them." | Ally protection |
 | S4 | `breaker_slam` | Breaker Slam | "Slam the shield into the ground; nearby enemies hit weaker." | AoE control |
 
-**S1 Shield Rush** — cooldown 8 s. Target: the enemy nearest the most-hurt ally (the `peel` target) within 7 m; if none, the current target. The caster dashes in a straight line to 1 m from it (max 6 m, stops on the first enemy in the path) and hits it for **70% ATK** + `stun` 0.8 s (48 ticks; control immunity applies). Invulnerable during the dash travel (not the wind-up or recovery).
+**S1 Shield Rush** — cooldown 16 s (tuned 2026-11-13, 4.6). Target: the enemy nearest the most-hurt ally (the `peel` target) within 7 m; if none, the current target. The caster dashes in a straight line to 1 m from it (max 6 m, stops on the first enemy in the path) and hits it for **110% ATK** + `stun` 0.8 s (48 ticks; control immunity applies). Invulnerable during the dash travel (not the wind-up or recovery).
 - AI rule: cast when the peel target is attacking an ally other than self and is 2-7 m away; otherwise cast on the current target when it is ready and within 3 m (do not waste it at range).
 - Motion: `attack_4` 0.30–0.62 @ 0.8× (crouch behind the shield and drive in) → `attack_4` 0.62–1.98 @ 1.5× (sword follow-through and recover). Release at clip 0.62 = **skill t 0.40 s** (shield punch, left hand fully out). Total 1.31 s. (`attack_3`, the old choice, starts mid-lunge and ends in a deep lunge: 46-54 cm pops; it has no idle-clean edge before 4.15 s.)
 - Travel: clip 0.30–0.62 = skill t 0.00–0.40 (the dash). The 0.4 s VFX travel matches.
 - VFX: steel-white streak along the dash path; on impact a flat silver shield-shaped shockwave (cone forward, 1 m) and stun stars on the target. Cast 0 s / travel 0.4 s / impact 0.1 s (impact at skill t 0.40).
 - SFX: heavy footsteps into a metal shield "clang-thud" with a short dull ring.
 
-**S2 Iron Guard** — cooldown 12 s. Self stance for **3 s**: damage taken ×0.5 from all sides, the card cannot move or attack, and cannot be staggered. Each melee hit it takes during the stance triggers a counter on that attacker for **50% ATK** (max 4 counters per stance, at most one counter per 0.3 s). Ranged hits are reduced but not countered.
+**S2 Iron Guard** — cooldown 18 s (tuned 2026-11-13, 4.6). Self stance for **3 s**: damage taken ×0.5 from all sides, the card cannot move or attack, and cannot be staggered. Each melee hit it takes during the stance triggers a counter on that attacker for **200% ATK** (max 2 counters per stance, PO default; at most one counter per 0.3 s). Ranged hits are reduced but not countered.
 - AI rule: cast when 2+ enemies within 3 m are attacking this card, or a boss telegraphed move targets a point within 4 m (`boss_telegraph`), or own HP below 50% with 1+ enemy within 3 m. Never cast with no enemy within 3 m.
 - Motion: enter `block` 0.0–1.45 @ 1.6× (0.91 s, raise shield) → `block_idle` loop for the rest of the stance → each counter: `block_2` 0.0–0.60 @ 4× (0.15 s, bridge) → `attack_4` 0.0–2.20 @ 2.5× (0.88 s; shield-punch release at clip 0.62 = **0.40 s after the counter starts**) → `block` 0.0–1.45 @ 4× (0.36 s, back behind the shield) → `block_idle`. One counter takes 1.39 s, so only about 2 counter animations fit in the 3 s stance. OPEN for combat-designer: either cap counters at 2, or let counters 3-4 deal damage on a shorter visual (shield punch only, `attack_4` 0.0–0.85 @ 2.5× then `block` @ 4×, 0.70 s; not pop-checked yet). Exit with `block_2` 0.0–1.70 @ 1.4× (1.21 s). (A direct `block_idle` ↔ `attack_4` join popped 16-17 cm; the bridges keep every join at or under 9.4 cm.)
 - VFX: a pale steel half-dome in front of the card while the stance lasts; each blocked hit flashes a spark on the shield rim; each counter a short silver arc.
@@ -60,7 +60,7 @@ MDA aesthetics: Challenge (reading the pilot's good choices), Fantasy (class rol
 - VFX: a silver arc trail through the air; on landing a ring of dust r3 m; a thin silver tether line from the caster to the linked ally for 6 s that pulses when damage is redirected.
 - SFX: grunt + armour rattle on take-off, heavy landing thump, a soft metallic "hum" on each redirected hit.
 
-**S4 Breaker Slam** — cooldown 9 s. Self-centred circle r3 m: **90% ATK** to every enemy inside + `weaken` 4 s (ATK −30%).
+**S4 Breaker Slam** — cooldown 16 s (tuned 2026-11-13, 4.6). Self-centred circle r3 m: **130% ATK** to every enemy inside + `weaken` 4 s (ATK −30%).
 - AI rule: 2+ enemies within 3 m, or the boss within 3 m.
 - Motion: `slash_4` 0.43–5.38 @ 2.5× (1.98 s: guard, jump, shield slam into the ground, rise). Release (the ground hit) at clip 3.58 = **skill t 1.26 s**. (The old window 3.00–4.22 started in mid-air and ended crouched: 61/84 cm pops. The `windup_end` 3.40 mark is the feet landing; the ground hit is 3.58.)
 - Travel: clip 3.00–3.35 = skill t 1.03–1.17 (a short forward hop, about 30 cm).
@@ -76,28 +76,28 @@ MDA aesthetics: Challenge (reading the pilot's good choices), Fantasy (class rol
 | G3 | `hook_sweep` | Hook Sweep | "Drag nearby enemies into a tight knot, then cut through them." | Grouping / control |
 | G4 | `battle_trance` | Battle Trance | "Swing faster, refuse to flinch, and land heavies every other swing." | Self power window |
 
-**G1 Reaping Arc** — cooldown 5 s. Frontal arc 240°, radius 3 m: **140% ATK** to every enemy inside. It **counts as a heavy hit** for the Cleave signature (+15% per extra enemy hit, max +45%) and for every `heavy_hit` event (Runic Edge, Momentum...).
+**G1 Reaping Arc** — cooldown 14 s (tuned 2026-11-13, 4.6). Frontal arc 240°, radius 3 m: **550% ATK** to every enemy inside. It **counts as a heavy hit** for the Cleave signature (+15% per extra enemy hit, max +45%) and for every `heavy_hit` event (Runic Edge, Momentum...).
 - AI rule: 2+ enemies inside the arc, or the boss in the arc. Otherwise hold up to 3 s, then cast on whatever is in front.
 - Motion: `gs_slash_3` 0.167–1.533 @ 1× (1.37 s). Release (the blade sweeps through the front arc) at clip 0.82 = **skill t 0.65 s**; the old 0.633 is still the overhead wind-up.
 - Travel: clip 0.27–0.75 = skill t 0.10–0.58 (a step of about 22 cm into the swing; the clip steps back afterwards, so net travel is about 0).
 - VFX: a wide pale steel crescent (240°) on the ground plane, slight motion blur; small dust kicks where it touches enemies. Cast 0.65 s / impact 0.2 s.
 - SFX: long low "whoom" of a heavy blade, layered flesh/armour hits per enemy.
 
-**G2 Crater Leap** — cooldown 10 s. Target point: the `densest` point within 7 m (most enemies within 2.5 m). The caster leaps there (0.5 s air time, cannot be hit in the air) and lands: circle r2.5 m, **160% ATK** + `stun` 0.4 s (24 ticks, a stagger).
+**G2 Crater Leap** — cooldown 26 s (tuned 2026-11-13, 4.6). Target point: the `densest` point within 7 m (most enemies within 2.5 m). The caster leaps there (0.5 s air time, cannot be hit in the air) and lands: circle r2.5 m, **350% ATK** + `stun` 0.4 s (24 ticks, a stagger).
 - AI rule: the densest point has 3+ enemies; or it has 2+ enemies and is more than 3 m away (gap closer); or the boss is 3-7 m away.
 - Motion: `gs_jump_attack` 0.067–0.63 @ 1× (wind-up, 0.56 s) → 0.63–1.00 @ 0.74× (air, 0.50 s) → 1.00–1.25 @ 1× (land and slam) → 1.25–2.00 @ 1.5× (recover). The front foot lands at clip 1.00; the blade hits the ground at clip **1.22 = skill t 1.28 s** (release). Total 1.81 s. Clip marks fixed to `windup_end` 1.00 / `strike_end` 1.25 (were auto-generated 0.05/0.153).
 - Travel: clip 0.63–1.00 = skill t 0.56–1.06 (the 0.5 s leap; take-off is the rear foot leaving the ground at 0.63).
 - VFX: on landing, a stone crater decal r2.5 m with cracks and flying rocks; brown-grey dust ring outward. Cast 0.56 s / travel 0.5 s / impact 0.3 s (impact at skill t 1.28).
 - SFX: rising whoosh, then a ground-shaking crash with debris.
 
-**G3 Hook Sweep** — cooldown 9 s. First a `pull`: every enemy within 5 m is pulled 2 m toward the caster (never past 1 m from it; bosses and elites are not pulled). Then a circle r2.5 m: **90% ATK** + `slow` 2 s.
+**G3 Hook Sweep** — cooldown 22 s (tuned 2026-11-13, 4.6). First a `pull`: every enemy within 5 m is pulled 2 m toward the caster (never past 1 m from it; bosses and elites are not pulled). Then a circle r2.5 m: **300% ATK** + `slow` 2 s.
 - AI rule: 3+ enemies within 5 m but fewer than 2 within 2.5 m (the pack is loose); never if all enemies in 5 m are bosses/elites.
 - Motion: `gs_slash_4` 0.117–1.433 @ 1× (1.32 s). Pull over clip 0.20–0.45 (the back-swing, skill t 0.08–0.33); release (the sweep) at clip 0.74 = **skill t 0.62 s**. The old release 0.167–0.387 was the back-swing.
 - Travel: clip 0.27–0.80 = skill t 0.15–0.68 (a step of about 24 cm into the sweep).
 - VFX: a low swirl of dust drawn inward toward the caster (reads as "pulled in"), then a flat steel ring cut r2.5 m.
 - SFX: rushing air inhale, then a short heavy swipe.
 
-**G4 Battle Trance** — cooldown 18 s. Self only, 6 s: `haste` (ATKSPD +25, MOVESPD +25), cannot be staggered (poise unbreakable on its normal attacks), and `heavy_every` becomes 2 (every 2nd swing is a heavy) for the duration. No healing, no team effect (old War Cry's team buff is gone: team buffs are a Human-passive theme).
+**G4 Battle Trance** — cooldown 24 s (tuned 2026-11-13, 4.6). Self only, 6 s: `haste` (ATKSPD +25, MOVESPD +25), cannot be staggered (poise unbreakable on its normal attacks), and `heavy_every` becomes 2 (every 2nd swing is a heavy) for the duration. No healing, no team effect (old War Cry's team buff is gone: team buffs are a Human-passive theme).
 - AI rule: 2+ enemies within 3 m, or the boss within 3 m. Do not cast with no enemy within 3 m.
 - Motion: `gs_power_up` 1.30–3.00 @ 1.4× (1.21 s: the head-back roar). Release (buff starts) at the roar peak, clip 2.05 = **skill t 0.54 s**. The old window 0.017–1.237 was only a slow sword raise, nearly invisible from the board camera.
 - VFX: on release a heat-haze shimmer burst around the body (colourless distortion + white sparks), then a faint pale aura on the blade for 6 s.
@@ -112,28 +112,28 @@ MDA aesthetics: Challenge (reading the pilot's good choices), Fantasy (class rol
 | L3 | `rapid_fire` | Rapid Fire | "Loose four quick arrows into one target." | Sustained single-target |
 | L4 | `vault_shot` | Vault Shot | "Flip away from an attacker and shoot it as you land." | Escape / kite |
 
-**L1 Heartseeker** — cooldown 6 s. Range 12 m, one arrow at the pilot's target: **260% ATK**, crit rate +25 for this hit, and ×1.5 if the target has `sunder` (Hunter's Mark).
+**L1 Heartseeker** — cooldown 16 s (tuned 2026-11-13, 4.6). Range 12 m, one arrow at the pilot's target: **950% ATK**, crit rate +25 for this hit, and ×1.5 if the target has `sunder` (Hunter's Mark).
 - AI rule: target the boss if alive and in range, else an elite in range, else the pilot target. Cast when ready; prefer a marked target.
-- Motion: `lb_draw_arrow` 0.0–1.017 @ 1× (slow draw) → `lb_aim_recoil` 0.0–0.70 @ 1×. Release (string let go) at `lb_aim_recoil` 0.18 = **skill t 1.20 s**. Total 1.72 s. (`lb_aim_recoil` 0.10 is still at full draw; the loose is 0.18. Clip marks fixed to `windup_end` 0.18 / `strike_end` 0.25.)
+- Motion: `lb_draw_arrow` 0.0–1.017 @ 1.2× (draw) → `lb_aim_recoil` 0.0–0.70 @ 1.2×. Release (string let go) at `lb_aim_recoil` 0.18 = **skill t 1.00 s**. Total 1.43 s (bow segments +20%, 4.6; was 1×, release 1.20, total 1.72). (`lb_aim_recoil` 0.10 is still at full draw; the loose is 0.18. Clip marks fixed to `windup_end` 0.18 / `strike_end` 0.25.)
 - VFX: a thin white light gathers on the arrow tip during the draw; the arrow leaves a straight silver streak; impact is a sharp white star burst (bigger on crit).
 - SFX: long creaking bow draw, sharp "thwip", hard impact crack.
 
-**L2 Pinning Shot** — cooldown 8 s. Range 12 m. Target: the enemy nearest a back-line ally (or nearest to self if no back-line ally is threatened). **120% ATK** + `shock` 1.5 s (cannot move; it may still attack in reach).
+**L2 Pinning Shot** — cooldown 20 s (tuned 2026-11-13, 4.6). Range 12 m. Target: the enemy nearest a back-line ally (or nearest to self if no back-line ally is threatened). **275% ATK** + `shock` 1.5 s (cannot move; it may still attack in reach).
 - AI rule: an enemy within 3 m of a back-line ally (magic/longbow) or of self; else the fastest-closing enemy within 8 m. Never on a target already shocked.
-- Motion: `lb_draw_arrow` 0.0–1.017 @ 1.5× (0.68 s) → `lb_aim_recoil` 0.0–0.70 @ 0.8× (0.88 s, deliberate). Release at `lb_aim_recoil` 0.18 = **skill t 0.90 s**. Total 1.55 s. (Starting straight in `lb_aim_recoil` snapped the bow up from idle: a 36 cm pop.)
+- Motion: `lb_draw_arrow` 0.0–1.017 @ 1.8× (0.57 s) → `lb_aim_recoil` 0.0–0.70 @ 0.96× (0.73 s, deliberate). Release at `lb_aim_recoil` 0.18 = **skill t 0.75 s**. Total 1.29 s (+20%, 4.6; was 1.5×/0.8×, release 0.90, total 1.55). (Starting straight in `lb_aim_recoil` snapped the bow up from idle: a 36 cm pop.)
 - VFX: a heavy arrow with a short silver trail; on hit the arrow sticks in the ground at the target's feet with a small circle of pale cracks for 1.5 s.
 - SFX: heavier "thunk" of an arrow into earth, a short rope-tight twang.
 
-**L3 Rapid Fire** — cooldown 7 s. 4 arrows at the current target, 0.25 s apart, **55% ATK each** (220% total). If the target dies, the remaining arrows go to the next pilot target within 12 m. Each arrow is a skill hit (not a basic hit, see 5.2).
+**L3 Rapid Fire** — cooldown 19 s (tuned 2026-11-13, 4.6). 4 arrows at the current target, 0.21 s apart, **155% ATK each** (620% total). If the target dies, the remaining arrows go to the next pilot target within 12 m. Each arrow is a skill hit (not a basic hit, see 5.2).
 - AI rule: cast when ready on the pilot target within 12 m.
-- Motion: `lb_draw_arrow` 0.0–1.017 @ 2× (0.51 s) → `lb_aim_recoil` 0.0–0.18 (arrow 1) → three re-nocks, each `lb_aim_recoil` 0.18–0.233 then 0.15–0.18 @ 0.332× with a 0.05 s cross-fade at the 0.233 → 0.15 seam (0.25 s per arrow) → `lb_aim_recoil` 0.18–0.70 @ 1× (recover). Releases at **skill t 0.69 / 0.94 / 1.19 / 1.44 s** (0.25 s apart). Total 1.96 s. The re-nock seam is 15.4 cm, the only edge in the 16 skills over the 15 cm target (the clip has no closer loop); it reads as a small bow jerk per arrow. A dedicated "rapid nock" clip would remove it (not requested for v1).
+- Motion: `lb_draw_arrow` 0.0–1.017 @ 2.4× (0.42 s) → `lb_aim_recoil` 0.0–0.18 @ 1.2× (arrow 1) → three re-nocks, each `lb_aim_recoil` 0.18–0.233 then 0.15–0.18 @ 0.398× with a 0.05 s cross-fade at the 0.233 → 0.15 seam (0.21 s per arrow) → `lb_aim_recoil` 0.18–0.70 @ 1.2× (recover). Releases at **skill t 0.57 / 0.78 / 0.99 / 1.20 s** (0.21 s apart). Total 1.63 s (all segments +20%, 4.6; was 2×/1×/0.332×, releases 0.69/0.94/1.19/1.44, total 1.96). The re-nock seam is 15.4 cm, the only edge in the 16 skills over the 15 cm target (the clip has no closer loop); it reads as a small bow jerk per arrow. A dedicated "rapid nock" clip would remove it (not requested for v1).
 - VFX: four short silver tracers; small spark per hit.
 - SFX: four fast "thwip" sounds with slight pitch variation.
 
-**L4 Vault Shot** — cooldown 9 s. The caster flips 4 m directly away from the nearest enemy (0.4 s, invulnerable during the flip), then shoots that enemy: **90% ATK** + `slow` 3 s. If the landing spot is blocked, it moves as far as it can (min 1 m).
+**L4 Vault Shot** — cooldown 20 s (tuned 2026-11-13, 4.6). The caster flips 4 m directly away from the nearest enemy (0.4 s, invulnerable during the flip), then shoots that enemy: **225% ATK** + `slow` 3 s. If the landing spot is blocked, it moves as far as it can (min 1 m).
 - AI rule: an enemy within 3 m. This is the kite rule (pilot `kite_distance`); when Vault Shot is ready the pilot uses it instead of the plain dodge.
-- Motion: `lb_dodge_backward` 0.0–0.95 @ 1.5× (0.63 s) → `lb_draw_arrow` 0.0–1.017 @ 2× (0.51 s) → `lb_aim_recoil` 0.0–0.70 @ 1×. Release at `lb_aim_recoil` 0.18 = **skill t 1.32 s**. Total 1.84 s. The clip is a backward step-hop, not a flip; a backflip-shot clip would match the name better (not requested for v1).
-- Travel: clip 0.25–0.85 of `lb_dodge_backward` = skill t 0.17–0.57 (the 0.4 s move).
+- Motion: `lb_dodge_backward` 0.0–0.95 @ 1.8× (0.53 s) → `lb_draw_arrow` 0.0–1.017 @ 2.4× (0.42 s) → `lb_aim_recoil` 0.0–0.70 @ 1.2×. Release at `lb_aim_recoil` 0.18 = **skill t 1.10 s**. Total 1.53 s (+20%, 4.6; was 1.5×/2×/1×, release 1.32, total 1.84). The clip is a backward step-hop, not a flip; a backflip-shot clip would match the name better (not requested for v1).
+- Travel: clip 0.25–0.85 of `lb_dodge_backward` = skill t 0.14–0.47 (the 0.33 s move; was 0.17–0.57 before the +20% speed).
 - VFX: a pale dust puff at the take-off spot, a silver arrow streak on the shot, slowed enemy gets a grey trailing smear.
 - SFX: cloth whoosh and boot scuff, then a "thwip".
 
@@ -146,19 +146,19 @@ MDA aesthetics: Challenge (reading the pilot's good choices), Fantasy (class rol
 | M3 | `starfall` | Starfall | "Call a falling star onto the thickest pack." | Big AoE burst |
 | M4 | `warding_veil` | Warding Veil | "Wrap a threatened ally in a veil that dulls blows and quickens them." | Ally support (no heal/shield) |
 
-**M1 Arcane Orb** — cooldown 3.5 s. Projectile, speed 12 m/s, range 12 m, aimed at the target; it bursts on the first enemy hit or at max range: circle r2 m, **100% ATK**.
+**M1 Arcane Orb** — cooldown 7 s (tuned 2026-11-13, 4.6). Projectile, speed 12 m/s, range 12 m, aimed at the target; it bursts on the first enemy hit or at max range: circle r2 m, **2100% ATK**.
 - AI rule (class hold rule): 2+ enemies within 2 m of the target, or the target is the boss; else hold, max 4 s, then cast anyway.
 - Motion: `mg_spell_1h_cast_spell_01` 0.167–1.55 @ 1× (1.38 s). Release (the throw) at clip 0.58 = **skill t 0.41 s**.
 - VFX: a white-core orb with a deep blue rim (`#3a5cff`, the class tone), slight trail; a round white-blue shockwave burst r2 m. Cast 0.41 s / travel ~0.6 s / impact 0.25 s.
 - SFX: rising hum during the cast, low "whum" pop on burst.
 
-**M2 Repulse Nova** — cooldown 8 s. Self-centred circle r3 m: **90% ATK**, knockback 2.5 m away from the caster, `slow` 2 s. Bosses and elites take damage and slow but no knockback.
+**M2 Repulse Nova** — cooldown 14 s (tuned 2026-11-13, 4.6). Self-centred circle r3 m: **650% ATK**, knockback 2.5 m away from the caster, `slow` 2 s. Bosses and elites take damage and slow but no knockback.
 - AI rule: 1+ enemy within 2.5 m of the caster (self-defence; the hold rule does not apply), or 2+ enemies within 3 m.
 - Motion: `mg_spell_2h_magic_area_attack_01` 0.10–2.683 @ 1.5× (1.72 s). Release (the staff slams the ground) at clip 1.32 = **skill t 0.81 s**. (The old window started with the staff already raised: a 55 cm pop.)
 - VFX: a flat expanding ring of blue-white force r3 m at waist height, ground ripple.
 - SFX: sharp air "fwoomp" with a deep sub-bass push.
 
-**M3 Starfall** — cooldown 10 s. Target point: the densest point within 9 m (most enemies within 2.5 m). A 0.8 s telegraph circle appears, then impact: circle r2.5 m, **220% ATK** + `stun` 0.3 s (18 ticks, a stagger). One impact only (not a lasting zone).
+**M3 Starfall** — cooldown 12 s (tuned 2026-11-13, 4.6). Target point: the densest point within 9 m (most enemies within 2.5 m). A 0.8 s telegraph circle appears, then impact: circle r2.5 m, **1450% ATK** + `stun` 0.3 s (18 ticks, a stagger). One impact only (not a lasting zone).
 - AI rule: 3+ enemies inside r2.5 of a point within 9 m; or 2+ and one of them is an elite; or the boss within 9 m.
 - Motion (swapped with M4, animator 2026-11-13): `mg_spell_2h_cast_spell_01` 0.167–1.967 @ 1× (1.80 s: bow, then raise the staff to the sky). Release (the telegraph starts) at the hand flick, clip 1.25 = **skill t 1.08 s**; impact lands 0.8 s later while the caster is in recovery.
 - VFX: a thin blue-white telegraph ring on the ground for 0.8 s, then a white streak falling from above and a bright blue-white crater flash r2.5 m with sparks.
@@ -256,38 +256,38 @@ Each skill's AI rule above is data: a `use` block per skill in the new skill dat
 ## 4. Formulas
 
 **4.1 Damage.** `dmg = atk_pct × ATK × status_bonus × crit × (1 − DEF rule)`, using the existing damage rule. `status_bonus` = 1.5 for Heartseeker vs `sunder`, else 1. Cleave on Reaping Arc: `× (1 + min(0.15 × (n − 1), 0.45))`, n = enemies hit.
-Example: ATK 100, Reaping Arc hits 3 enemies: 140 × 1.30 = **182** each before DEF (546 total).
+Example: ATK 100, Reaping Arc hits 3 enemies: 550 × 1.30 = **715** each before DEF (2145 total). (Was 140% → 182 before the 4.6 tuning.)
 
 **4.2 Intercept link.** For a hit of raw damage D on the linked ally: ally takes `0.6 × D` through its own DEF; caster takes `0.4 × D` through the caster's DEF and modifiers (Iron Guard ×0.5 applies). Example: D = 200, tank DEF rule reduces 30%, tank in Iron Guard: tank takes 0.4 × 200 × 0.7 × 0.5 = **28**; ally takes 0.6 × 200 × its rule.
 
 **4.3 Pull.** Final distance to caster = `max(1.0, d − pull)`. Example: enemy at 4.5 m, pull 2 → 2.5 m (inside the 2.5 m cut).
 
-**4.4 Skill DPS (single target, % ATK per second, all hits land)** — `rate = total_atk_pct / cooldown`.
+**4.4 Skill DPS (single target, % ATK per second, all hits land)** — `rate = total_atk_pct / cooldown`. Tuned numbers (4.6). Skill % look large because a basic weapon hit is ATK × move power (0.8-3.0) on a fast loop; a skill must beat the basic attacks it replaces during its clip (4.6).
 
-| Class | Skill | Total % | CD s | %/s single | Typical targets | %/s at typical |
+| Class | Skill | Total % | CD s | %/s single | Typical targets (class_sim) | %/s at typical |
 |---|---|---|---|---|---|---|
-| S&S | Shield Rush | 70 | 8 | 8.8 | 1 | 8.8 |
-| | Iron Guard (4 counters max, 2 typical) | 100 | 12 | 8.3 | — | 8.3 |
+| S&S | Shield Rush | 110 | 16 | 6.9 | 0.7 | 4.8 |
+| | Iron Guard (2 counters max, ~1 typical) | 400 | 18 | 22 | ~1 | ~11 |
 | | Intercept | 0 | 14 | 0 | — | utility |
-| | Breaker Slam | 90 | 9 | 10.0 | 2.5 | 25 |
-| | **total** | | | **27** | | **42** |
-| GS | Reaping Arc (+Cleave at 3) | 140 (182) | 5 | 28 | 3 | 109 |
-| | Crater Leap | 160 | 10 | 16 | 3 | 48 |
-| | Hook Sweep | 90 | 9 | 10 | 3 | 30 |
-| | Battle Trance | 0 | 18 | buff ~+25% basic DPS for 6 s | — | ≈ 8 equiv. |
-| | **total** | | | **62** | | **195** |
-| LB | Heartseeker (marked ×1.5) | 260 (390) | 6 | 43 (65) | 1 | 65 |
-| | Pinning Shot | 120 | 8 | 15 | 1 | 15 |
-| | Rapid Fire | 220 | 7 | 31 | 1 | 31 |
-| | Vault Shot | 90 | 9 | 10 | 1 | 10 (situational) |
-| | **total** | | | **99** | | **121** |
-| Magic | Arcane Orb | 100 | 3.5 | 29 | 2.5 | 71 |
-| | Repulse Nova | 90 | 8 | 11 | 2 | 22 |
-| | Starfall | 220 | 10 | 22 | 3 | 66 |
+| | Breaker Slam | 130 | 16 | 8.1 | 1.4 | 11 |
+| | **total** | | | **37** | | **~27** |
+| GS | Reaping Arc (+Cleave) | 550 | 14 | 39 | 1.25 | 49+ |
+| | Crater Leap | 350 | 26 | 13 | 2.5 | 34 |
+| | Hook Sweep | 300 | 22 | 14 | 2.3 | 31 |
+| | Battle Trance | 0 | 24 | buff ~+25% basic DPS for 6 s | — | — |
+| | **total** | | | **66** | | **~114** |
+| LB | Heartseeker (marked ×1.5) | 950 (1425) | 16 | 59 (89) | 0.75 | 45-67 |
+| | Pinning Shot | 275 | 20 | 14 | 0.9 | 12 |
+| | Rapid Fire | 620 | 19 | 33 | 1 (4 arrows) | 33 |
+| | Vault Shot | 225 | 20 | 11 | 0.9 | 10 |
+| | **total** | | | **117** | | **~100-120** |
+| Magic | Arcane Orb | 2100 | 7 | 300 | 1.0 | 300 |
+| | Repulse Nova | 650 | 14 | 46 | 1.7 | 79 |
+| | Starfall | 1450 | 12 | 121 | 1.55 | 187 |
 | | Warding Veil | 0 | 14 | utility (−30% dmg on 1 ally 5 s) | — | — |
-| | **total** | | | **62** | | **159** |
+| | **total** | | | **467** | | **~566** |
 
-**Old set for comparison** (rough, old `.tres` damage ÷ `reference_atk` 20 ÷ cooldown, single target): S&S ≈ 12 (storm 60%/5 s) + 7 (flame dash) + 15 (riposte, only on a parry) ≈ **34 %/s**; GS ≈ 12.5 (slam) + 22 (shatter 110%/5 s) + 13 (eruption) ≈ **48 %/s**; LB ≈ 33 (piercing) + 12 (trap) + 28 (lance) + 20 (chain first target) ≈ **93 %/s**; magic ≈ 27 (fireball) + 25 (ring) + 21 (strike) ≈ **73 %/s**. These are estimates for direction only; class_sim gives the real baseline. The new single-target totals are within about ±30% of these (S&S lower on purpose, GS higher because Cleave/heavy now matter more). Combat-designer must re-baseline before tuning.
+**Old set for comparison** (rough, old `.tres` damage ÷ `reference_atk` 20 ÷ cooldown, single target): S&S ≈ 12 (storm 60%/5 s) + 7 (flame dash) + 15 (riposte, only on a parry) ≈ **34 %/s**; GS ≈ 12.5 (slam) + 22 (shatter 110%/5 s) + 13 (eruption) ≈ **48 %/s**; LB ≈ 33 (piercing) + 12 (trap) + 28 (lance) + 20 (chain first target) ≈ **93 %/s**; magic ≈ 27 (fireball) + 25 (ring) + 21 (strike) ≈ **73 %/s**. These are estimates for direction only; class_sim gives the real baseline. The first-pass new totals were within about ±30% of these; class_sim then showed that scale was far too low (each skill clip blocks more basic-attack damage than it dealt), so the 4.6 tuning replaced them.
 
 **4.5 Balance intent (skill share of each class's total output, combat-designer to verify with class_sim):**
 
@@ -298,7 +298,21 @@ Example: ATK 100, Reaping Arc hits 3 enemies: 140 × 1.30 = **182** each before 
 | longbow | 35-40%, highest **single-target/boss** share of the squad | Heartseeker 50%, Rapid 30%, Pin 12%, Vault 8% |
 | magic | 55-65% (Spellweave: most damage from skills) | Orb 45%, Starfall 40%, Nova 15%; Veil = utility |
 
-Rule: per class, new skill DPS at typical targets within ±15% of the old set before tuning; S&S is deliberately −15% damage / + utility. No single skill above 60% of its class's skill damage.
+Rule: no single skill above 60% of its class's skill damage. (The old "±15% of the old set" rule is retired: the old %/s figures were ÷ an old `reference_atk` and do not compare with the class_sim ATK; class_sim is the baseline now.)
+
+**4.6 Tuning pass 1 (combat-designer, 2026-11-13, class_sim 30 seeds, same difficulty, `wave_power_by_squad` not touched).**
+Problem: with the first-pass numbers the starter squad did worse with skills than without (90% vs 100% win, 267 s vs 179 s clear, 11.2k vs 7.3k damage taken). Every skill clip blocks basic attacks, and basic attacks are fast (a light hit loops in ~0.3 s at ATK × 0.8-1.2); the bow spent 71% of its alive time in skill clips. Fix (Boss: tune numbers + play bow clips faster within ±20%; clip choices and windows unchanged): fewer casts (cooldowns ×1.2-×2.7) that each hit much harder, and every longbow skill segment played +20% faster (total clip time −17%).
+
+| Measure (class_sim, 30 seeds) | no skills | first pass | tuned |
+|---|---|---|---|
+| starter squad win / clear s / dmg taken | 100% / 176 / 7.1k | 90% / 267 / 11.2k (10 seeds) | 100% / 154 / 6.2k |
+| magic squad (S&S + LB + magic) win / clear s / dmg taken | 100% / 123 / 4.0k | 100% / 209 / 8.2k (10 seeds) | 100% / 110 / 3.8k |
+| skill share S&S / GS / LB / magic | — | 32% / 30% / 53% / 21% | 26% (21% in magic squad) / 39% / 37% / 59% |
+| largest single skill share of its class's skill damage | — | 60.0% (Breaker Slam, magic squad) | 52.5% Slam, 50.8% Arc, 51.6% Heartseeker, 49.9% Orb |
+| time in skill clips S&S / GS / LB / magic | — | 36% / 35% / 71% / 41% | 24% / 24% / 33% / 33% |
+
+Targets locked by this pass: skills must be a power gain over no skills at the same difficulty (faster clear and less damage taken); skill share per class inside the first table of 4.5; no skill above 60% of its class's skill damage. The 72-75% squad win rate (section 8) is reached later by the difficulty pass (`wave_power_by_squad`), not by weakening skills.
+
 
 ## 5. Edge Cases
 
@@ -380,19 +394,19 @@ All per skill in the new skill data file (owner: combat-designer). Category: **f
 
 | Knob | Default | Safe range | Category | Affects |
 |---|---|---|---|---|
-| `atk_pct` per skill | see 3.2-3.5 | ±40% | curve | skill damage share (4.5) |
-| `cooldown` per skill | 3.5-18 s | ×0.6-×1.5 (floor 0.60 incl. race mods) | gate | cast rate, pilot rhythm |
+| `atk_pct` per skill | see 3.2-3.5 (tuned 4.6) | ±40% | curve | skill damage share (4.5) |
+| `cooldown` per skill | 7-26 s (tuned 4.6) | ×0.6-×1.5 (floor 0.60 incl. race mods) | gate | cast rate, pilot rhythm, time lost to clips (skills block basic attacks) |
 | stun durations (Rush 0.8, Leap 0.4, Starfall 0.3 s) | — | 0.2-1.2 s | curve | control power, stun lock risk |
-| Iron Guard DR / duration / max counters | 0.5 / 3 s / 4 | 0.3-0.7 / 2-5 s / 2-6 | curve | tank survival vs. lost action time |
+| Iron Guard DR / duration / max counters / counter % | 0.5 / 3 s / 2 / 200% | 0.3-0.7 / 2-5 s / 2-6 / ±40% | curve | tank survival vs. lost action time |
 | Intercept link fraction / duration | 0.40 / 6 s | 0.25-0.6 / 4-9 s | curve | how much the tank shields squishies |
 | Hook Sweep pull distance | 2 m | 1-3.5 m | feel | how tight packs get for Cleave |
 | Heartseeker marked bonus | ×1.5 | ×1.2-×2.0 | curve | focus-fire payoff |
-| Rapid Fire arrows × % | 4 × 55% | 3-6 × 40-70% | curve | sustained single target |
+| Rapid Fire arrows × % | 4 × 155% | 3-6 × ±40% | curve | sustained single target |
 | Vault distance / trigger range | 4 m / 3 m | 3-6 m / 2-4 m | feel | kiting success |
 | Starfall telegraph | 0.8 s | 0.5-1.2 s | feel | readability vs. enemies walking out |
 | Warding Veil DR / duration / threshold | 0.7 / 5 s / 60% HP | 0.6-0.85 / 3-7 s / 40-75% | curve | support value |
 | Battle Trance duration / `heavy_every` | 6 s / 2 | 4-8 s / 2-3 | curve | bruiser burst window |
-| Clip play speed per skill | per segment in 3.2-3.5 (0.74-4.0; 2.5-4.0 only on short bridge/recover segments) | ±20% of the listed value | feel | cast feel; changing a speed moves the skill t of release and travel, so recompute them |
+| Clip play speed per skill | per segment in 3.2-3.5 (0.74-4.0; 2.5-4.0 only on short bridge/recover segments); longbow segments already at +20% (4.6), so they have no faster headroom left | ±20% of the first-pass value | feel | cast feel; changing a speed moves the skill t of release and travel, so recompute them (and `tools/shots/skill_windows_v2.json`) |
 
 ## 8. Acceptance Criteria
 
