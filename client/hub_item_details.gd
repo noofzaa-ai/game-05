@@ -8,6 +8,7 @@ extends Panel
 const CardTokens := preload("res://client/card_tokens.gd")
 const HubItemCell := preload("res://client/hub_item_cell.gd")
 const ItemText := preload("res://client/item_text.gd")
+const HubLook := preload("res://client/hub_look.gd")
 
 var s := 1.0
 var cell: HubItemCell
@@ -114,6 +115,7 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 		cost.position = Vector2(pad, bar_y + dur_key.size.y)
 	cost.size = Vector2(maxf(w - cost.position.x - pad, 0.0), dur_key.size.y)
 	CardTokens.hub_text(cost, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, s, 0, "medium")
+	_fit_title()
 	actions.position = Vector2(pad, h - pad * 0.7 - button_h)
 	actions.size = Vector2(w - pad * 2.0, button_h)
 	CardTokens.gap(actions, 18.0, s)
@@ -128,6 +130,7 @@ func show_empty(heading: String, line_sub: String, line_main: String, line_subs:
 	for node in [dur_key, dur_back, dur_text, cost]:
 		node.visible = false
 	title.text = heading
+	_fit_title()
 	sub.text = line_sub
 	main_line.text = line_main
 	subs.text = line_subs
@@ -141,6 +144,7 @@ func show_item(item, rules) -> void:
 	for node in [dur_key, dur_back, dur_text, cost]:
 		node.visible = true
 	title.text = item_name(item, rules) + ("  +%d" % item.refine_level if item.refine_level > 0 else "")
+	_fit_title()
 	var tier_id := str(rules.tiers[clampi(item.tier, 0, rules.tiers.size() - 1)]["id"])
 	sub.text = "%s  ·  %s  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), "◆".repeat(item.tier + 1)]
 	var factor: float = rules.durability_factor(item.durability_ratio())
@@ -189,6 +193,15 @@ func clear_actions() -> void:
 			child.queue_free()
 
 
+## The title (an item name can be long): shrink to FONT_MIN on one line, then "…" (the box has one title line).
+func _fit_title() -> void:
+	if title.size.x <= 0.0:
+		return
+	var full: String = title.get_meta("full_text", "") if title.text.ends_with("…") else title.text
+	title.set_meta("full_text", full)
+	HubLook.fit(title, full, CardTokens.FONT_CHAR_ITEM, title.size.x, CardTokens.HUB_INK, s, 1)
+
+
 ## One parchment plate button in the action row (fills the row; the row height is the tap size).
 func add_action(text: String, callback: Callable) -> Button:
 	var b := Button.new()
@@ -209,12 +222,26 @@ func add_action(text: String, callback: Callable) -> Button:
 static func fit_buttons(row: Container, p_s: float, columns: int = 0) -> void:
 	var n := columns if columns > 0 else maxi(row.get_child_count(), 1)
 	var gap := 18.0 * p_s
-	# the plate art's 9-slice margins (left + arrow tip) are content margins in screen px, not scaled
-	var w := (row.size.x - gap * float(n - 1)) / float(n) - CardTokens.HUB_PLATE_MARGINS[0] - CardTokens.HUB_PLATE_MARGINS[2] - 8.0 * p_s
+	# The plate art's 9-slice margins (left + arrow tip) were content margins in unscaled art px: on a small screen
+	# they ate the whole label ("To vau", "Discar"). Scale them with the layout so the text keeps its room.
+	var left := CardTokens.HUB_PLATE_MARGINS[0] * minf(p_s, 1.0)
+	var right := CardTokens.HUB_PLATE_MARGINS[2] * minf(p_s, 1.0)
+	var w := (row.size.x - gap * float(n - 1)) / float(n) - left - right - 8.0 * p_s
 	for child in row.get_children():
 		var b := child as Button
-		if b != null:
-			CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_BUTTON, w, CardTokens.HUB_INK, p_s)
+		if b == null:
+			continue
+		for state in ["normal", "hover", "pressed", "disabled", "hover_pressed"]:
+			var box := b.get_theme_stylebox(state) as StyleBoxTexture
+			if box != null:
+				box.content_margin_left = left
+				box.content_margin_right = right
+		var full: String = b.get_meta("full_text", b.text)
+		b.set_meta("full_text", full)
+		var vertical := CardTokens.HUB_PLATE_MARGINS[1] * 2.0 * minf(p_s, 1.0)
+		var fitted := HubLook.fit(b, full, CardTokens.FONT_CHAR_BUTTON, w, CardTokens.HUB_INK, p_s, CardTokens.FIT_MAX_LINES)
+		if int(fitted["lines"]) > 1 and HubLook.lines_height(int(fitted["lines"]), int(fitted["px"])) > row.size.y - vertical:
+			HubLook.fit(b, full, CardTokens.FONT_CHAR_BUTTON, w, CardTokens.HUB_INK, p_s, 1)  # no room for 2 lines: "…"
 
 
 func _draw_bar() -> void:

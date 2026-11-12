@@ -90,6 +90,7 @@ func run():
 	if only.is_empty() or only == "tiles":
 		gs.journey = null
 		gs.profile.stash.gold = 5000
+		root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED  # (as the hub panel shot tools: real pixels)
 		var screen: Control = load("res://scenes/card_deck_screen.tscn").instantiate()
 		screen.auto_wire = false
 		change_scene_to_node(screen)
@@ -113,5 +114,16 @@ func run():
 		tailor.close()
 		await _wait(4)
 		screen.open_service("storage")
+		var storage = screen._panels["storage"]
+		var longest := ""
+		var longest_name := ""
+		for piece in gs.profile.stash.items:
+			var name := str(gs.item_rules.catalog.entry(piece.item_id).get("name", ""))
+			if name.length() > longest_name.length():
+				longest = piece.id
+				longest_name = name
+		if not longest.is_empty():
+			storage.select_item(longest)
+			print("LONGEST ", longest_name)
 		await _shot("storage_names")
 	quit()

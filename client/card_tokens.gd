@@ -346,6 +346,25 @@ const HUB_CARD_NAME := Rect2(0.06, 0.035, 0.55, 0.066)  ## top plate text box
 const HUB_CARD_SQUAD := Rect2(0.42, 0.885, 0.36, 0.066)  ## bottom plate text box
 const HUB_CARD_LOCK_Y := 0.47
 const HUB_CARD_PLATE_TAP := 0.16  ## squad tap area: the bottom fraction of the card
+## Hub card depth on hover / focus / tap (Boss 2026-11-12 option A): the whole card turns in perspective toward the
+## pointer (client/card_tilt.gdshader), the backdrop slides against the tilt, the character with it, the frame stays.
+const HUB_TILT_ANGLE := Vector2(0.17, 0.12)  ## radians at full tilt: yaw (x), pitch (y); about 10 and 7 degrees
+const HUB_TILT_FOCAL := 1.7  ## perspective distance, in card widths (smaller = stronger perspective)
+const HUB_TILT_SMOOTH := 9.0  ## how fast the tilt follows the pointer and eases back (per second)
+const HUB_TILT_TAP_SECONDS := 0.7  ## touch: a tap tilts the card toward the touch point this long
+const HUB_TILT_SWAY := Vector2(0.45, 0.25)  ## keyboard / gamepad focus without a pointer: slow sway (-1..1)
+const HUB_TILT_SWAY_SPEED := Vector2(0.9, 0.7)
+const HUB_BACK_PARALLAX := 0.05  ## backdrop shift AGAINST the tilt, fraction of the window size
+const HUB_BACK_ZOOM := 1.12  ## the backdrop is drawn this much bigger than the window so the shift never shows an edge
+const HUB_FIGURE_PARALLAX := 0.055  ## character shift WITH the tilt, fraction of the window size
+const HUB_BACK_GLOW_SIZE := Vector2(1.1, 0.75)  ## soft class-tinted light behind the character, fraction of the window
+const HUB_BACK_GLOW_AT := Vector2(0.5, 0.36)  ## its centre
+const HUB_BACK_GLOW_ALPHA := 0.4
+const HUB_SHEEN := 0.42  ## warm sheen band across the leather / parchment frame at full tilt
+const HUB_SHEEN_EDGE := 0.6  ## rim highlight of the edge facing the pointer
+const HUB_SHEEN_WIDTH := 0.17  ## band half-width, fraction of the card
+const HUB_SHEEN_COLOR := Color(1.0, 0.86, 0.62)
+const HUB_SHEEN_FADE_SECONDS := 0.2
 ## Squad tray windows, fractions of the tray art (measured on hub_squad_tray_v1).
 const HUB_TRAY_SLOTS: Array[Rect2] = [Rect2(0.098, 0.215, 0.17, 0.69), Rect2(0.413, 0.215, 0.17, 0.69), Rect2(0.728, 0.215, 0.17, 0.69)]
 const HUB_TRAY_NUM_Y := 0.075
@@ -843,6 +862,14 @@ static func hub_fit(control: Control, text: String, size: int, width: float, col
 	var px := maxi(int(round(size * s)), FONT_MIN)
 	while px > FONT_MIN and font != null and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
 		px -= 1
+	# Still too wide at FONT_MIN in the serif display face: use the narrower medium face instead of an ellipsis.
+	if face == "display" and font != null and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+		var narrow := medium_font()
+		if narrow != null and narrow.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x < font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x:
+			face = "medium"
+			px = maxi(int(round(size * s)), FONT_MIN)
+			while px > FONT_MIN and narrow.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > width:
+				px -= 1
 	style_text(control, 1, color, 1.0, 0, face, HUB_OUTLINE)
 	control.add_theme_font_size_override("font_size", px)
 	control.add_theme_constant_override("outline_size", int(round(outline * s)) if outline > 0 else 0)
@@ -898,6 +925,12 @@ static func hub_line(color: Color) -> StyleBox:
 
 
 ## A vertical window gradient: the class accent on top, dark leather at the bottom.
+## Soft class-tinted light behind the hub card character (the backdrop layer that slides against the tilt).
+static func hub_window_glow(class_id: String) -> GradientTexture2D:
+	var light: Color = palette(class_id)["light"]
+	return radial("hub_glow_" + class_id, Color(light, HUB_BACK_GLOW_ALPHA), Color(light, 0.0), 0.0)
+
+
 static func window_gradient(class_id: String, locked: bool = false) -> GradientTexture2D:
 	var gradient := Gradient.new()
 	var top: Color = HUB_WINDOW_LOCKED if locked else palette(class_id)["shadow"]

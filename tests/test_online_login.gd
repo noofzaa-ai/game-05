@@ -99,7 +99,7 @@ func run(ctx) -> void:
 	fake.rejected = true
 	await service.connect_account(config)
 	ctx.check("network/server failure falls back offline without new account", service.status == Account.Status.OFFLINE and fake.auth_count == 2)
-	ctx.check("offline status warns about no cloud save", "ต้องต่ออินเทอร์เน็ต" in service.status_text())
+	ctx.check("offline status says Offline (hub pill, English since Boss 2026-11-12)", service.status_text() == "Offline")
 	fake.rejected = false
 	first.token = ""
 	first.refresh_token = ""

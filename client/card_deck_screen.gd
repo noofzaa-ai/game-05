@@ -12,6 +12,9 @@ extends Control
 const CardTokens := preload("res://client/card_tokens.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
 const CardPortrait := preload("res://client/card_portrait.gd")
+const TILT_SHADER := preload("res://client/card_tilt.gdshader")
+const TILT_SHEEN_SHADER := preload("res://client/card_tilt_sheen.gdshader")
+const TILT_CLIP_SHADER := preload("res://client/card_tilt_clip.gdshader")
 const CardFrame := preload("res://client/card_frame.gd")
 const CardHolo := preload("res://client/card_holo.gd")
 const CardCharacterScreen := preload("res://client/card_character_screen.gd")
@@ -470,6 +473,20 @@ class HubCard extends Control:
 	var _squad_label: Label
 	var _lock: Label
 	var _focus: Panel
+	var _back_glow: TextureRect  ## soft class light on the backdrop (slides with the backdrop: the depth cue)
+	# Depth on hover / focus / tap (Boss 2026-11-12 option A): one perspective material shared by every layer of
+	# this card (client/card_tilt.gdshader) and one for the frame art with the sheen. They are set only while the
+	# card is tilted or easing back; an idle card has no material (nothing extra to draw).
+	var _tilt_mat: ShaderMaterial
+	var _sheen_mat: ShaderMaterial
+	var _clip_mat: ShaderMaterial  ## window content while tilted (the mask's clip_children cannot be warped)
+	var _tilt := Vector2.ZERO  ## smoothed, -1..1 (x right, y down)
+	var _pointer := Vector2.ZERO  ## pointer from the card centre, -1..1
+	var _has_pointer := false
+	var _tap_left := 0.0  ## touch: seconds the tap tilt still holds
+	var _sway := 0.0
+	var _fx := 0.0  ## sheen fade 0..1
+	var _warped := false
 
 	func build(id: String) -> void:
 		class_id = id
@@ -486,11 +503,15 @@ class HubCard extends Control:
 		_back.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_back.stretch_mode = TextureRect.STRETCH_SCALE
 		_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_back.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_mask.add_child(_back)
+		_back_glow = TextureRect.new()
+		_back_glow.texture = CardTokens.hub_window_glow(id)
+		_back_glow.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_back_glow.stretch_mode = TextureRect.STRETCH_SCALE
+		_back_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_mask.add_child(_back_glow)
 		window_slot = Control.new()
 		window_slot.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		window_slot.set_anchors_preset(Control.PRESET_FULL_RECT)
 		_mask.add_child(window_slot)
 		portrait = CardPortrait.new()
 		portrait.framing = "hub"
@@ -520,6 +541,8 @@ class HubCard extends Control:
 
 	func _hover(on: bool) -> void:
 		hovered = on
+		if not on:
+			_has_pointer = false
 		portrait.set_hover(on)
 		portrait.set_render_mode(CardPortrait.Mode.LIVE if on else CardPortrait.Mode.THROTTLED)
 
@@ -531,6 +554,7 @@ class HubCard extends Control:
 			portrait.set_class(class_id)
 		portrait.set_look(look)
 		_back.texture = CardTokens.window_gradient(class_id, locked)
+		_back_glow.visible = not locked
 		portrait.material = CardTokens.grey_material() if locked else null
 		portrait.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
 		_lock.visible = locked
@@ -553,6 +577,8 @@ class HubCard extends Control:
 		_mask.position = Vector2(win.position.x * w, win.position.y * h)
 		_mask.size = Vector2(win.size.x * w, win.size.y * h)
 		CardTokens.panel(_mask, CardTokens.flat(CardTokens.HUB_WINDOW_BOTTOM, CardTokens.HUB_WINDOW_BOTTOM, 0.0, CardTokens.HUB_CARD_WINDOW_RADIUS * w, 1.0))
+		window_slot.size = _mask.size
+		_place_depth()
 		var pad := CardTokens.HUB_GLOW_PAD * s
 		_glow.position = Vector2(pad, pad) * 0.5
 		_glow.size = size - Vector2(pad, pad)
@@ -591,15 +617,96 @@ class HubCard extends Control:
 		lift = lerpf(lift, target, minf(1.0, delta * 12.0)) if motion else target
 		position = base_position - Vector2(0.0, lift * s)
 		scale = Vector2(pop, pop)
+		_animate_depth(delta, motion)
+
+	## Tilt toward the pointer (or the touch point for a moment after a tap, or a slow sway on keyboard / gamepad
+	## focus), the depth layers and the frame sheen. Reduced motion or a locked card: flat, no material.
+	func _animate_depth(delta: float, motion: bool) -> void:
+		_tap_left = maxf(0.0, _tap_left - delta)
+		var active := motion and not locked and (hovered or has_focus() or _tap_left > 0.0)
+		var target := Vector2.ZERO
+		if active:
+			_sway += delta
+			target = _pointer if (_has_pointer or _tap_left > 0.0) else Vector2(sin(_sway * CardTokens.HUB_TILT_SWAY_SPEED.x) * CardTokens.HUB_TILT_SWAY.x, cos(_sway * CardTokens.HUB_TILT_SWAY_SPEED.y) * CardTokens.HUB_TILT_SWAY.y)
+		_tilt = _tilt.lerp(target, minf(1.0, delta * CardTokens.HUB_TILT_SMOOTH)) if motion else Vector2.ZERO
+		_fx = move_toward(_fx, 1.0 if active else 0.0, delta / CardTokens.HUB_SHEEN_FADE_SECONDS) if motion else 0.0
+		var live := active or _fx > 0.0 or _tilt.length_squared() > 0.00002
+		if not live:
+			_tilt = Vector2.ZERO
+		if live != _warped:
+			_set_warp(live)
+			if not live:
+				_place_depth()
+		if live:
+			_update_warp()
+			_place_depth()
+
+	## Backdrop (and its light) slide against the tilt, the character with it; the frame and plates stay.
+	func _place_depth() -> void:
+		var win := _mask.size
+		var back := -_tilt * CardTokens.HUB_BACK_PARALLAX * win
+		_back.size = win * CardTokens.HUB_BACK_ZOOM
+		_back.position = (win - _back.size) * 0.5 + back
+		_back_glow.size = win * CardTokens.HUB_BACK_GLOW_SIZE
+		_back_glow.position = win * CardTokens.HUB_BACK_GLOW_AT - _back_glow.size * 0.5 + back
+		window_slot.position = _tilt * CardTokens.HUB_FIGURE_PARALLAX * win
+
+	func _set_warp(on: bool) -> void:
+		_warped = on
+		if on and _tilt_mat == null:
+			_tilt_mat = ShaderMaterial.new()
+			_tilt_mat.shader = TILT_SHADER
+			_sheen_mat = ShaderMaterial.new()
+			_sheen_mat.shader = TILT_SHEEN_SHADER
+			_sheen_mat.set_shader_parameter("sheen_color", CardTokens.HUB_SHEEN_COLOR)
+			_sheen_mat.set_shader_parameter("sheen_width", CardTokens.HUB_SHEEN_WIDTH)
+			_clip_mat = ShaderMaterial.new()
+			_clip_mat.shader = TILT_CLIP_SHADER
+		var mat: ShaderMaterial = _tilt_mat if on else null
+		for node in [_glow, _mask, _name, _lock, _squad_label, squad_button, _focus]:
+			node.material = mat
+		# While tilted the mask draws its own flat window (warped) and the content clips itself in the shader.
+		_mask.clip_children = CanvasItem.CLIP_CHILDREN_DISABLED if on else CanvasItem.CLIP_CHILDREN_ONLY
+		var clip: ShaderMaterial = _clip_mat if on else null
+		_back.material = clip
+		_back_glow.material = clip
+		portrait.set_view_material(clip)
+		_frame.material = _sheen_mat if on else null
+
+	func _update_warp() -> void:
+		var g := get_global_transform()
+		for m in [_tilt_mat, _sheen_mat, _clip_mat]:
+			m.set_shader_parameter("card_size", size)
+			m.set_shader_parameter("card_x", g.x)
+			m.set_shader_parameter("card_y", g.y)
+			m.set_shader_parameter("card_o", g.origin)
+			m.set_shader_parameter("tilt", _tilt)
+			m.set_shader_parameter("max_angle", CardTokens.HUB_TILT_ANGLE)
+			m.set_shader_parameter("focal", CardTokens.HUB_TILT_FOCAL * size.x)
+		_sheen_mat.set_shader_parameter("sheen_strength", CardTokens.HUB_SHEEN * _fx)
+		_sheen_mat.set_shader_parameter("edge_strength", CardTokens.HUB_SHEEN_EDGE * _fx)
+		_clip_mat.set_shader_parameter("clip_rect", Vector4(_mask.position.x, _mask.position.y, _mask.size.x, _mask.size.y))
+		_clip_mat.set_shader_parameter("clip_radius", CardTokens.HUB_CARD_WINDOW_RADIUS * size.x)
+
+	func _point_at(at: Vector2) -> void:
+		_pointer = ((at / Vector2(maxf(size.x, 1.0), maxf(size.y, 1.0))) - Vector2(0.5, 0.5)).clamp(Vector2(-0.5, -0.5), Vector2(0.5, 0.5)) * 2.0
 
 	func _gui_input(event: InputEvent) -> void:
+		var touch := event as InputEventScreenTouch
+		if touch != null and touch.pressed:  # touch has no hover: a tap tilts the card toward the touch point
+			_point_at(touch.position)
+			_tap_left = CardTokens.HUB_TILT_TAP_SECONDS
 		var button := event as InputEventMouseButton
 		if button != null and button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
+			_point_at(button.position)
+			_tap_left = CardTokens.HUB_TILT_TAP_SECONDS
 			pressed.emit()
 			accept_event()
 			return
 		var motion := event as InputEventMouseMotion
 		if motion != null:
+			_point_at(motion.position)
+			_has_pointer = true
 			portrait.set_hover(true, Vector2(clampf(motion.position.x / maxf(size.x, 1.0), 0.0, 1.0), 0.5))
 		if event.is_action_pressed("ui_accept"):
 			pressed.emit()

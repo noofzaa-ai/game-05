@@ -2,7 +2,9 @@ extends SceneTree
 ## Windowed full auto-battle run: card screen -> wave journey -> all waves -> summary.
 ## Saves PNGs to build/full_run/ and prints wave progress lines starting with "RUN".
 ##   godot --path . --script res://tools/shots/full_run_review.gd   (SPEED=3 env sets time scale)
-const OUT := "res://build/full_run"
+## Optional: ZORX_SIZE=WxH (default 1280x720), ZORX_OUT=folder (default res://build/full_run), file prefix <W>x<H>_ when set.
+var OUT := "res://build/full_run"
+var _tag := ""
 var _shot := 0
 
 
@@ -13,12 +15,19 @@ func _initialize() -> void:
 func snap(label: String) -> void:
 	await RenderingServer.frame_post_draw
 	_shot += 1
-	root.get_texture().get_image().save_png("%s/%02d_%s.png" % [OUT, _shot, label])
+	root.get_texture().get_image().save_png("%s/%s%02d_%s.png" % [OUT, _tag, _shot, label])
 
 
 func run() -> void:
-	DisplayServer.window_set_size(Vector2i(1280, 720))
-	root.size = Vector2i(1280, 720)
+	var size := Vector2i(1280, 720)
+	var wanted := OS.get_environment("ZORX_SIZE")
+	if wanted.contains("x"):
+		size = Vector2i(int(wanted.split("x")[0]), int(wanted.split("x")[1]))
+		_tag = "%dx%d_" % [size.x, size.y]
+	if not OS.get_environment("ZORX_OUT").is_empty():
+		OUT = OS.get_environment("ZORX_OUT")
+	DisplayServer.window_set_size(size)
+	root.size = size
 	DirAccess.make_dir_recursive_absolute(OUT)
 	var gs = root.get_node("GameState")
 	gs.ensure_profile()

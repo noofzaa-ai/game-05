@@ -4,7 +4,8 @@ signal changed
 
 const ConnectionConfig := preload("res://client/online/connection_config.gd")
 const SessionStore := preload("res://client/online/session_store.gd")
-const InkUi := preload("res://client/ink_ui.gd")
+const CardTokens := preload("res://client/card_tokens.gd")
+const HubLook := preload("res://client/hub_look.gd")
 const HttpAdapter := preload("res://client/online/http_adapter.gd")
 const Status = preload("res://client/online/account_status.gd").Status
 var status := Status.OFFLINE
@@ -22,7 +23,10 @@ var _started := false
 var _google_session := {}
 var _presence_in := 0.0
 var _presence_busy := false
-var _badge: Label
+var _badge: Label  ## the status word inside the pill
+var _pill: Panel  ## a small leather pill, top centre of the hub's top bar (between the title and the gold counter)
+var _dot: Panel  ## red / amber / green (the word says it too)
+var _shown := ""
 
 
 func _ready() -> void:
@@ -40,8 +44,13 @@ func _process(delta: float) -> void:
 	if _badge != null:
 		var scene := get_tree().current_scene
 		# Hidden in the fight and on its summary (Boss 2026-11-11: it covered the wave banner and the boss name).
-		_badge.visible = scene != null and scene.scene_file_path not in ["res://scenes/title.tscn", "res://scenes/boot.tscn", "res://scenes/stage.tscn", "res://scenes/journey.tscn"]
-		_badge.text = status_text()
+		_pill.visible = scene != null and scene.scene_file_path not in ["res://scenes/title.tscn", "res://scenes/boot.tscn", "res://scenes/stage.tscn", "res://scenes/journey.tscn"]
+		if _pill.visible and _hub_overlay_open(scene):
+			_pill.visible = false  # a hub panel / the character screen covers the top bar: the pill would sit on its header
+		var key := "%s|%s" % [status_text(), get_viewport().get_visible_rect().size]
+		if _pill.visible and key != _shown:
+			_shown = key
+			_layout_pill()
 	if status != Status.AUTHENTICATED:
 		return
 	_presence_in -= delta
@@ -58,13 +67,10 @@ func _process(delta: float) -> void:
 func status_text() -> String:
 	match status:
 		Status.CONNECTING:
-			return "กำลังเชื่อมต่อบัญชี…"
+			return HubLook.t("online_connecting")
 		Status.AUTHENTICATED:
-			var game = get_node_or_null("/root/GameState")
-			if game != null and game.remote_session != null:
-				return "ห้องออนไลน์ · เซิร์ฟเวอร์บันทึกเมื่อจบรอบ"
-			return "บัญชีออนไลน์ · ตัวละครและคลังเดียวกันทั้ง solo / co-op"
-	return "ยังไม่เชื่อมต่อ · ต้องต่ออินเทอร์เน็ตเพื่อเล่น"
+			return HubLook.t("online_online")
+	return HubLook.t("online_offline")
 
 
 func begin() -> void:
@@ -215,19 +221,55 @@ func connect_account(config: Dictionary = {}) -> void:
 	changed.emit()
 
 
+## The account status as a small leather pill with a coloured dot and one word (Offline / Connecting... / Online), in
+## the hub look (Boss 2026-11-12). It sits top centre, inside the hub's top bar: left of it is the "MY CARDS" title,
+## right of it the gold counter and the Account / Settings buttons, so it covers neither. Hidden in the fight.
 func _build_badge() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 40
 	add_child(layer)
+	_pill = Panel.new()
+	_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(_pill)
+	_dot = Panel.new()
+	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pill.add_child(_dot)
 	_badge = Label.new()
-	_badge.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_badge.position = Vector2(-210, 6)
-	_badge.size = Vector2(420, 28)
-	_badge.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_badge.theme = InkUi.make_theme()
-	InkUi.style_text(_badge, InkUi.GOLD, InkUi.FONT_BODY, 4)
-	layer.add_child(_badge)
+	_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_pill.add_child(_badge)
+	_layout_pill()
+
+
+## True while the hub shows a service panel or the card character screen over its top bar (read only).
+static func _hub_overlay_open(scene: Node) -> bool:
+	var panels = scene.get("_panels")
+	if panels is Dictionary:
+		for panel in panels.values():
+			if panel is CanvasItem and panel.visible:
+				return true
+	var character = scene.get("_character")
+	return character is CanvasItem and character.is_visible_in_tree()
+
+
+func _layout_pill() -> void:
+	var screen := get_viewport().get_visible_rect().size
+	var s := CardTokens.scale_for(screen)
+	_badge.text = status_text()
+	CardTokens.style_text(_badge, CardTokens.FONT_ONLINE, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE)
+	var h := CardTokens.ONLINE_PILL_H * s
+	var pad := CardTokens.ONLINE_PILL_PAD * s
+	var dot := CardTokens.ONLINE_DOT * s
+	var text_w := _badge.get_minimum_size().x
+	_pill.size = Vector2(pad * 2.5 + dot + text_w, h)
+	_pill.position = Vector2((screen.x - _pill.size.x) * 0.5, (CardTokens.HUB_TITLE_Y * s) - h * 0.5)
+	CardTokens.panel(_pill, HubLook.leather(s, CardTokens.ONLINE_PILL_H * 0.5, 2.0))
+	_dot.size = Vector2(dot, dot)
+	_dot.position = Vector2(pad, (h - dot) * 0.5)
+	var colour: Color = CardTokens.ONLINE_ON if status == Status.AUTHENTICATED else (CardTokens.ONLINE_WAIT if status == Status.CONNECTING else CardTokens.ONLINE_OFF)
+	CardTokens.panel(_dot, CardTokens.flat(colour, CardTokens.HUB_LEATHER_EDGE, 2.0, CardTokens.ONLINE_DOT * 0.5, s))
+	_badge.position = Vector2(pad * 1.5 + dot, 0.0)
+	_badge.size = Vector2(text_w, h)
 
 
 func _presence() -> void:

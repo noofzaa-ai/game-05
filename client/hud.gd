@@ -18,6 +18,8 @@ const CombatData := preload("res://logic/combat_data.gd")
 const Fighter := preload("res://logic/fighter.gd")
 const InkUi := preload("res://client/ink_ui.gd")
 const InputReader := preload("res://client/input_reader.gd")
+const CardTokens := preload("res://client/card_tokens.gd")
+const HubLook := preload("res://client/hub_look.gd")
 
 ## Every word the HUD shows, so it can be translated in one place.
 const TEXT := {
@@ -95,6 +97,11 @@ var auto_battle := false:
 		_layout()
 var _boss: Dictionary = {}  ## the boss bar (a bar dictionary plus "name"), hidden while there is no boss
 var _boss_name: Label
+## Auto-battle look (Boss 2026-11-12, the approved hub look): leather + parchment plates behind the trip line, the
+## wave / skill banner and the boss bar. Built once, shown only while auto_battle is on.
+var _leather_trip: Panel
+var _leather_banner: Panel
+var _leather_boss: Panel
 
 var _warning: Label
 var _skill_banner: Control  ## the brush-stroke banner that names a special skill or ultimate when it is used
@@ -119,6 +126,8 @@ func _ready() -> void:
 	_energy = _bar(Vector2(ENERGY_BAR_WIDTH, 18.0), InkUi.STAMINA, false, "bar")
 	_gauge = _bar(Vector2(GAUGE_BAR_WIDTH, 16.0), InkUi.ULT, false, "bar_small")
 	_boss = _bar(Vector2(BOSS_BAR_WIDTH, 16.0), InkUi.HP, true, "bar_small", 20)
+	_leather_boss = _leather_plate(_root, CardTokens.HUD_TRIP_LEATHER, CardTokens.HUB_RADIUS * 0.4)
+	_root.move_child(_leather_boss, _boss["back"].get_index())  # (behind the boss bar)
 	_boss_name = _text("boss", InkUi.HUD_TEXT, 5)
 	_boss_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_root.add_child(_boss_name)
@@ -257,6 +266,7 @@ func update_from(fighter: Fighter, data: CombatData, enemies_left: int, camera_t
 	_info.text = "%s    %s" % [weapon_name, camera_text]
 	_trip.text = (TEXT["enemies"] % enemies_left) + ("    " + trip_text if not trip_text.is_empty() else "")
 	_place_trip_plate()
+	_place_leather()
 	if _new_skills != null:
 		_new_skills.update_from(fighter)
 		for key in ["back","trail","fill","frame","decor","label","pill"]:
@@ -354,7 +364,10 @@ func show_skill_banner(text: String) -> void:
 ## the skill/wave banner while it shows and the boss bar. In viewport pixels.
 func keep_out_rects() -> Array[Rect2]:
 	var rects: Array[Rect2] = []
-	for item in [_trip_plate if _trip_plate != null else _trip, _skill_banner, _boss_name]:
+	var trip_box: Control = _leather_trip if auto_battle and _leather_trip != null and _leather_trip.visible else (_trip_plate if _trip_plate != null else _trip)
+	if _leather_boss != null and _leather_boss.visible:
+		rects.append(_leather_boss.get_global_rect().grow(6.0))
+	for item in [trip_box, _skill_banner, _boss_name]:
 		if item is Control and (item as Control).is_visible_in_tree():
 			rects.append((item as Control).get_global_rect().grow(6.0))
 	if _boss_name != null and _boss_name.visible and _boss.get("back") is Control:
@@ -522,6 +535,68 @@ func _apply_auto_battle() -> void:
 	_combo_box.visible = false
 	if _new_skills != null:
 		_new_skills.visible = false
+	_apply_leather_look()
+
+
+## The auto-battle HUD in the hub look: ink text on parchment inside leather (trip line, banner), cream text with a
+## ink on the parchment plate (boss name), a red HP fill on a dark leather back (boss bar).
+func _apply_leather_look() -> void:
+	if _leather_trip == null:
+		return
+	CardTokens.style_text(_trip, CardTokens.FONT_HUD_TRIP, CardTokens.HUB_INK, 1.0, 0, "medium")
+	CardTokens.style_text(_skill_label, CardTokens.FONT_HUD_BANNER, CardTokens.HUB_INK, 1.0, 0, "display")
+	CardTokens.style_text(_boss_name, CardTokens.FONT_HUD_BOSS, CardTokens.HUB_INK, 1.0, 0, "display")
+	_leather_banner.visible = true
+	for child in _skill_banner.get_children():
+		if child is Polygon2D or child is Line2D:
+			child.visible = false
+	if _trip_plate != null:
+		_trip_plate.visible = false
+	_boss["fill"].color = CardTokens.HUD_HP
+	_boss["back"].color = CardTokens.HUD_HP_BACK
+	if _boss["decor"] != null:
+		_boss["decor"].visible = false
+	_leather_boss.visible = _boss_name.visible
+	_place_leather()
+
+
+## Sizes the leather plates around the trip line (fits its text) and the boss name + bar.
+func _place_leather() -> void:
+	if not auto_battle or _leather_trip == null:
+		return
+	var pad := CardTokens.HUD_TRIP_PAD
+	var text_w := _trip.get_minimum_size().x
+	# a long line grows to the left, never past the right edge
+	var right := _root.size.x - MARGIN
+	_trip.size.x = maxf(_trip.size.x, text_w)
+	_trip.position.x = right - _trip.size.x
+	_leather_trip.visible = not _trip.text.is_empty()
+	_leather_trip.size = Vector2(text_w + pad.x * 2.0, CardTokens.HUD_TRIP_H)
+	_leather_trip.position = Vector2(_trip.position.x + _trip.size.x - text_w - pad.x, _trip.position.y + (_trip.size.y - CardTokens.HUD_TRIP_H) * 0.5)
+	var bar: Control = _boss["back"]
+	var top := _boss_name.position.y
+	var p := CardTokens.HUD_BOSS_PLATE_PAD
+	_leather_boss.position = Vector2(bar.position.x - p.x, top - p.y)
+	_leather_boss.size = Vector2(bar.size.x + p.x * 2.0, bar.position.y + bar.size.y - top + p.y * 2.0)
+
+
+## A leather plate with a parchment inside (`rim` px of leather), never taking clicks.
+static func _leather_plate(parent: Control, rim: float, radius: float) -> Panel:
+	var plate := Panel.new()
+	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	plate.visible = false
+	CardTokens.panel(plate, HubLook.leather(1.0, radius, 2.0))
+	parent.add_child(plate)
+	var paper := Panel.new()
+	paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	paper.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in [SIDE_LEFT, SIDE_TOP]:
+		paper.set_offset(side, rim)
+	for side in [SIDE_RIGHT, SIDE_BOTTOM]:
+		paper.set_offset(side, -rim)
+	CardTokens.panel(paper, HubLook.parchment(1.0, maxf(radius - rim, 2.0)))
+	plate.add_child(paper)
+	return plate
 
 
 ## The plate fits the trip line's text, right-aligned with it.
@@ -632,7 +707,7 @@ func _set_bar(bar: Dictionary, ratio: float, trail_ratio: float, low: float = 0.
 ## dictionary keeps the default Night Brass HP look. Called before the boss bar is shown so the
 ## Chief's bar matches its floating goblin bar.
 func set_boss_style(style: Dictionary) -> void:
-	if style.is_empty():
+	if style.is_empty() or auto_battle:  # (the auto-battle look keeps its own leather boss bar)
 		return
 	_boss["fill"].color = style.get("fill", InkUi.HP)
 	_boss["trail"].color = style.get("trail", InkUi.HP_TRAIL)
@@ -652,8 +727,10 @@ func set_boss(boss_name: String, ratio: float) -> void:
 	for part in ["back", "trail", "fill", "label"]:
 		_boss[part].visible = on and (part != "trail" or ratio > 0.0)
 	if _boss["decor"] != null:
-		_boss["decor"].visible = on
+		_boss["decor"].visible = on and not auto_battle
 	_boss_name.visible = on
+	if _leather_boss != null:
+		_leather_boss.visible = on and auto_battle
 	if relayout:
 		_layout()  # (the skill banner makes room for the boss bar)
 	if not on:
@@ -789,6 +866,7 @@ func _build_overlays() -> void:
 		_root.add_child(_trip_plate)
 		_trip_art = preload("res://client/mobile_hud_frame.gd").new()
 		_trip_plate.add_child(_trip_art)
+	_leather_trip = _leather_plate(_root, CardTokens.HUD_TRIP_LEATHER, CardTokens.HUD_TRIP_H * 0.3)
 	_trip = _text("trip", InkUi.TRIP_TEXT, 5)
 	_trip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_root.add_child(_trip)
@@ -819,6 +897,9 @@ func _build_overlays() -> void:
 			for point in points:
 				edge.add_point(point + (center - point).normalized() * inset * Vector2(1.6, 1.0))
 			_skill_banner.add_child(edge)
+	_leather_banner = _leather_plate(_skill_banner, CardTokens.HUD_BANNER_LEATHER, CardTokens.HUB_RADIUS * 0.6)
+	_leather_banner.position = Vector2(0.0, BANNER_SIZE.y * 0.12)
+	_leather_banner.size = Vector2(BANNER_SIZE.x, BANNER_SIZE.y * 0.76)
 	_skill_label = _text("skill", InkUi.SKILL_BANNER_TEXT, 8)
 	_skill_label.size = BANNER_SIZE
 	_skill_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

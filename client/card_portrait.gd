@@ -1,7 +1,8 @@
 extends Control
 ## The live 3D window of a class card (docs/ui/class_card_ui_handoff.md §3, §13): the class's own character
 ## (studio05 model, the card's hair / outfit / eyes / skin / makeup) playing the class idle in a small SubViewport.
-## API: set_class(id), set_look(look), set_hover(on, pointer), pulse(), set_render_mode(mode), set_framing(kind).
+## API: set_class(id), set_look(look), set_hover(on, pointer), pulse(), set_render_mode(mode), set_framing(kind),
+## set_view_material(mat).
 ## Performance (the web build has no threads): every portrait has its own tiny world and renders only while
 ## it is visible. Render modes: "live" every frame (the selected / focused card), "throttled" a few times a
 ## second (the other deck cards), "once" one redraw per change (mini cards).
@@ -156,6 +157,13 @@ func shadow_rect() -> TextureRect:
 		if viewport != null:
 			_shadow.texture = viewport.get_texture()
 	return _shadow
+
+
+## A canvas material for the shown render only (the hub card's perspective tilt, client/card_tilt.gdshader);
+## null removes it. The portrait's own material (grey for a locked card) is left alone.
+func set_view_material(mat: Material) -> void:
+	if _texture != null:
+		_texture.material = mat
 
 
 func is_rendering() -> bool:

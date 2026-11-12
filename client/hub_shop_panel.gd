@@ -9,6 +9,7 @@ extends "res://client/hub_service_panel.gd"
 ## Prices shown are the server's own quote functions, so a stale quote is refused as "price_changed".
 
 const Shop := preload("res://logic/shop.gd")
+const HubLook := preload("res://client/hub_look.gd")
 
 var tab := "buy"  ## buy | sell
 var selected := ""  ## item id (sell) or sku (buy)
@@ -139,7 +140,9 @@ func _refresh_buy(p) -> void:
 		b.custom_minimum_size = Vector2(CardTokens.TAILOR_CHIP.x, CardTokens.tap(CardTokens.TAILOR_CHIP.y * 1.4, phone)) * s
 		b.clip_text = true
 		CardTokens.hub_button(b, s, false)
-		CardTokens.hub_text(b, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "display" if str(offer["sku"]) == selected else "medium")
+		# long names: shrink, then two lines, then "…" (the price stays its own line)
+		HubLook.fit(b, str(offer["name"]), CardTokens.FONT_CHAR_LINE, b.custom_minimum_size.x - 16.0 * s, CardTokens.HUB_INK, s, CardTokens.FIT_MAX_LINES,
+			"display" if str(offer["sku"]) == selected else "medium", 0, CardTokens.t("cost_gold") % int(offer["price"]))
 		b.pressed.connect(select_item.bind(str(offer["sku"])))
 		_stock.add_child(b)
 	if chosen.is_empty():

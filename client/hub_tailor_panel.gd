@@ -12,6 +12,7 @@ const CardDeck := preload("res://logic/card_deck.gd")
 const CardPortrait := preload("res://client/card_portrait.gd")
 const Mall := preload("res://logic/mall.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
+const HubLook := preload("res://client/hub_look.gd")
 
 ## Category tab -> the profile part it changes ("look" = card_look parts, "mall" = Mall fashion parts).
 const CATEGORIES: Array[Dictionary] = [
@@ -319,6 +320,14 @@ func _option(text: String, picture: Texture2D, swatch: String, chosen: bool, cal
 	b.toggle_mode = false
 	CardTokens.hub_button(b, s)
 	CardTokens.hub_text(b, CardTokens.FONT_CHAR_SLOT if big else CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "display" if chosen else "medium")
+	# long names: shrink, then two lines, then "…"; a second line of `text` ("Owned 1") stays its own line
+	var name_part := text.get_slice("
+", 0)
+	var extra := text.substr(name_part.length() + 1) if text.contains("
+") else ""
+	var room := w * s - 12.0 * s - (CardTokens.TAILOR_SWATCH * s + CardTokens.CHAR_PAD * s if not swatch.is_empty() else 0.0)
+	HubLook.fit(b, ("✓ " if chosen else "") + name_part, CardTokens.FONT_CHAR_SLOT if big else CardTokens.FONT_CHAR_LINE, room, CardTokens.HUB_INK, s,
+		CardTokens.FIT_MAX_LINES, "display" if chosen else "medium", 0, extra)
 	if big:
 		b.icon = picture
 		b.expand_icon = true
