@@ -15,8 +15,10 @@ var squad: Array = []  ## every member of this squad, this one included (one sha
 var squad_synergy: Dictionary = {}
 
 
-## The members for `cards` (class ids, in fighter order) on the account trip `base`.
-static func make_squad(base, cards: Array) -> Array:
+## The members for `cards` (class ids, in fighter order) on the account trip `base`. `synergy_override` (online
+## squads, design/gdd/online-squads.md 3.2): a 4-player room passes the synergy of the room group (all 4 cards) instead
+## of this squad's own. `group`: the synergy group id; synergy effects aimed at allies reach only the same group.
+static func make_squad(base, cards: Array, synergy_override: Dictionary = {}, group: String = "") -> Array:
 	var members: Array = []
 	for card in cards:
 		var member = load("res://logic/squad_member.gd").new()
@@ -31,7 +33,9 @@ static func make_squad(base, cards: Array) -> Array:
 		members.append(member)
 	var deck: Dictionary = base.profile.card_deck
 	var races: Array = cards.map(func(card): return preload("res://logic/card_deck.gd").race_of(deck, str(card)))
-	var synergy: Dictionary = preload("res://logic/race_data.gd").load_default().synergy_for(races)
+	var synergy: Dictionary = synergy_override.duplicate(true) if not synergy_override.is_empty() else preload("res://logic/race_data.gd").load_default().synergy_for(races)
+	if not group.is_empty():
+		synergy["group"] = group
 	for member in members:
 		member.squad_synergy = synergy.duplicate(true)
 	return members

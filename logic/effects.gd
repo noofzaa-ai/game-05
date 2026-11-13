@@ -22,6 +22,9 @@ static func apply(source_id: int, source: Fighter, target_id: int, target: Fight
 	var definition: Dictionary = data.effects[effect_id]
 	if not target.is_alive():
 		return false
+	if definition["control"] != "" and not target.race_state.is_empty() and load("res://logic/skill_tree_effects.gd").control_immune(target):
+		events.append({"type": "effect_resisted", "target": target_id, "effect": effect_id, "control_immune": true})
+		return false  # skill tree CONTROL_IMMUNE (Immovable, Unstoppable): stuns, roots and sleep never land
 	if definition["control"] != "" and target.control_immune_left > 0:
 		events.append({"type": "effect_resisted", "target": target_id, "effect": effect_id})
 		return false
@@ -155,6 +158,8 @@ static func _end(id: int, fighter: Fighter, effect_id: String, data: CombatData,
 static func _damage_over_time(id: int, fighter: Fighter, damage: float, effect_id: String, source_id: int, data: CombatData, events: Array[Dictionary]) -> bool:
 	var absorbed := fighter.absorb(damage)  # race shield first (GDD races 4.3)
 	fighter.hp = maxf(0.0, fighter.hp - (damage - absorbed))
+	if fighter.hp <= 0.0 and not fighter.race_state.is_empty() and load("res://logic/skill_tree_mechanics.gd").cheat_death(id, fighter, events):
+		fighter.hp = 1.0  # Valhalla's Call
 	events.append({"type": "dot", "target": id, "effect": effect_id, "damage": damage if effect_id=="relic_goblin_poison" else int(damage), "absorbed": absorbed})
 	if fighter.hp <= 0.0:
 		fighter.launched = false

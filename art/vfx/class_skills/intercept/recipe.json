@@ -13,7 +13,7 @@
   },
   "layers": [
     {
-      "id": "65704ff9-6de2-4387-823f-49561992e9ee",
+      "id": "525cf77d-0e50-4758-9dda-869e9c459a6b",
       "type": "flash",
       "name": "แสงปะทะ",
       "enabled": true,
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "id": "691a99a3-19d9-4c61-aa1e-ad262a034a91",
+      "id": "c7c10297-47ba-41b3-a1b2-a142d7f73257",
       "type": "debris",
       "name": "เศษหิน",
       "enabled": true,
@@ -62,7 +62,7 @@
       "energy": 0.1,
       "opacity": 1,
       "scale": 1,
-      "count": 22,
+      "count": 11,
       "position": [
         0,
         0,
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "id": "0f5cde2b-d303-46ef-8f27-254e624644f7",
+      "id": "263e982d-a384-47eb-97f3-e516f5a008a5",
       "type": "debris",
       "name": "เศษหิน",
       "enabled": true,
@@ -93,7 +93,7 @@
       "energy": 0.1,
       "opacity": 1,
       "scale": 1,
-      "count": 32,
+      "count": 16,
       "position": [
         0,
         0,
@@ -106,7 +106,7 @@
       ]
     },
     {
-      "id": "b7030725-bd34-40cf-861d-0446e62746ce",
+      "id": "d4baa1ed-f02c-4b94-ae88-be38a0507203",
       "type": "smoke",
       "name": "ควันฟุ้ง",
       "enabled": true,
@@ -124,7 +124,7 @@
       "energy": 0.1,
       "opacity": 0.5,
       "scale": 1,
-      "count": 30,
+      "count": 15,
       "position": [
         0,
         0,
@@ -137,7 +137,7 @@
       ]
     },
     {
-      "id": "61a51093-9395-4c13-87c7-59c72171ff60",
+      "id": "9c05a2fa-bcaa-442c-94ca-7499501d2dfa",
       "type": "wave",
       "name": "วงแสงบนพื้น",
       "enabled": true,

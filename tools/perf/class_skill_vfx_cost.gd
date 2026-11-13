@@ -2,7 +2,9 @@ extends SceneTree
 ## Per-effect cost of the class skill VFX (art/vfx/class_skills/<id>/effect.tscn) in the project renderer
 ## (gl_compatibility). For each skill: N copies play in loop in front of a camera for SECONDS; reports average and
 ## worst frame time, draw calls and primitives at the busiest moment, against an empty baseline. Needs a window:
-##   godot --path . --script res://tools/perf/class_skill_vfx_cost.gd -- [copies=3] [seconds=3]
+##   godot --path . --script res://tools/perf/class_skill_vfx_cost.gd -- [copies=3] [seconds=3] [slim=1] [ids,comma]
+## slim=1 (default) plays them the way the game does (ClassSkillVfx._slim: phase meshes toggled by visible, no shadows);
+## slim=0 plays the raw imported scene.
 ## Output lines "VFXCOST <id> ..." (vsync is turned off so frame times are real).
 
 const ROOT := "res://art/vfx/class_skills/"
@@ -16,6 +18,10 @@ func run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var copies := int(args[0]) if args.size() > 0 else 3
 	var seconds := float(args[1]) if args.size() > 1 else 3.0
+	var slim := (args[2] != "0") if args.size() > 2 else true
+	var only: PackedStringArray = args[3].split(",") if args.size() > 3 else PackedStringArray()
+	var vfx = load("res://client/skills/class_skill_vfx.gd").new()
+	root.add_child(vfx)
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0
 	DisplayServer.window_set_size(Vector2i(1280, 720))
@@ -35,6 +41,8 @@ func run() -> void:
 	var base := await _measure([], seconds)
 	print("VFXCOST baseline avg=%.2fms worst=%.2fms draws=%d prims=%d" % [base["avg"], base["worst"], base["draws"], base["prims"]])
 	for sid in data["skills"].keys():
+		if not only.is_empty() and not only.has(sid):
+			continue
 		var packed: PackedScene = load(ROOT + sid + "/effect.tscn")
 		var nodes: Array = []
 		for i in copies:
@@ -42,6 +50,11 @@ func run() -> void:
 			inst.set("loop_effect", true)
 			inst.position = Vector3((i - (copies - 1) * 0.5) * 3.0, 0, 0)
 			root.add_child(inst)
+			if slim:
+				vfx._slim(sid, inst)
+				var ap: AnimationPlayer = vfx._player_of(inst)
+				ap.play(vfx._clip_of(ap))
+				ap.seek(0.0, true)
 			nodes.append(inst)
 		var m := await _measure(nodes, seconds)
 		print("VFXCOST %s x%d avg=%.2fms (+%.2f) worst=%.2fms draws=%d (+%d) prims=%d" % [sid, copies, m["avg"], m["avg"] - base["avg"], m["worst"], m["draws"], m["draws"] - base["draws"], m["prims"]])

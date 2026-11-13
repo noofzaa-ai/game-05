@@ -877,9 +877,22 @@ static func _parse_coop(root: Dictionary, data: CombatData) -> void:
 	if clean["max_players"] < 2 or clean["max_players"] > 4 or clean["revive_hp_fraction"] > 1.0 or clean["revive_ticks"] >= clean["downed_ticks"]:
 		data.errors.append("coop count, HP fraction or revive/bleedout timing is invalid")
 		return
+	# Online squads (design/gdd/online-squads.md 3.1, 7): fighters on the field (cards, up to 6) may exceed players.
+	# Optional; old files without it keep one fighter per player. hp_multiplier has one entry per FIGHTER count.
+	clean["max_fighters"] = clean["max_players"]
+	for key in ["max_fighters", "room_card_cap", "auto_continue_seconds"]:
+		if not raw.has(key): continue
+		var value = raw[key]
+		if not typeof(value) in [TYPE_INT, TYPE_FLOAT] or not is_finite(float(value)) or float(value) != floorf(float(value)) or float(value) < 1:
+			data.errors.append("coop.%s must be a positive whole number" % key)
+			return
+		clean[key] = int(value)
+	if clean["max_fighters"] < clean["max_players"] or clean["max_fighters"] > 6 or int(clean.get("room_card_cap", clean["max_fighters"])) > clean["max_fighters"]:
+		data.errors.append("coop.max_fighters / room_card_cap out of range")
+		return
 	var multipliers = raw.get("hp_multiplier")
-	if not multipliers is Array or multipliers.size() != clean["max_players"]:
-		data.errors.append("coop.hp_multiplier must contain one entry per party size")
+	if not multipliers is Array or multipliers.size() != clean["max_fighters"]:
+		data.errors.append("coop.hp_multiplier must contain one entry per fighter count")
 		return
 	var previous := 1.0
 	for value in multipliers:

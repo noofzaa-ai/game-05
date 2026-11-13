@@ -13,7 +13,7 @@
   },
   "layers": [
     {
-      "id": "1d0a9ab1-df1e-4181-a3bc-4ffaae9f6ef7",
+      "id": "7ada595b-fe41-4239-98b2-49178c994261",
       "type": "wave",
       "name": "ริ้วผิวน้ำวน",
       "enabled": true,
@@ -45,7 +45,7 @@
       ]
     },
     {
-      "id": "87cb1ae9-689f-4357-b5f9-c3e947f5b537",
+      "id": "cae418ae-ddca-466a-96f3-c46b13f4c5b8",
       "type": "smoke",
       "name": "ละอองน้ำหมุนดูด",
       "enabled": true,
@@ -63,7 +63,7 @@
       "energy": 0.4,
       "opacity": 0.18,
       "scale": 1,
-      "count": 65,
+      "count": 20,
       "position": [
         0,
         0,
@@ -76,7 +76,7 @@
       ]
     },
     {
-      "id": "5865d72d-e642-46ce-9220-bf098f7e44e1",
+      "id": "76d6b5f6-170c-4e24-813e-ac136beb77bb",
       "type": "sparks",
       "name": "ฟองเล็กวนตามน้ำ",
       "enabled": true,
@@ -94,7 +94,7 @@
       "energy": 0.49,
       "opacity": 1,
       "scale": 1,
-      "count": 140,
+      "count": 40,
       "position": [
         0,
         0,
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "id": "d6ae21a9-6bf3-4dca-938a-0aa3c50f2d61",
+      "id": "a99b083b-2e36-4fe6-8f68-8a91a15fb351",
       "type": "sparks",
       "name": "น้ำสาดปลายสกิล",
       "enabled": false,

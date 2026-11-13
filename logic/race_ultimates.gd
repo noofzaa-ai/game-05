@@ -200,6 +200,8 @@ static func _burst_once(sim, id: int, action: Dictionary, ctx: Dictionary, index
 	for target_id in victims:
 		var target = sim.fighters[target_id]
 		var mul := float(action["atk_mul"])
+		if bool(action.get("cleave", false)):  # tree Shatterglyph: this burst counts as a heavy for Cleave
+			mul *= _passives().cleave_mul(source, victims.size())
 		if action.has("bonus_target_below_hp") and target.hp < target.max_hp() * float(action["bonus_target_below_hp"]):
 			mul *= float(action.get("bonus_mul", 2.0))
 		var killed := hit_enemy(sim, id, target_id, mul, action, ctx)

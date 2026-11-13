@@ -17,7 +17,7 @@ Both need a window. The measure script writes `user://graphics.cfg`: delete it a
 | Player character | <= 60 draw calls with outline (currently ~192, OPEN) |
 | Materials per prop model | 1 (shared kit atlas or vertex colours) |
 | Effect nodes per hit | pooled; prewarmed at load (Effects.prewarm, presenter.warm_build, telegraph quad) |
-| Class skill VFX (art/vfx/class_skills, daiyooo-vfx GLB) | target <= 300 draw calls per effect instance; pooled + prewarmed (client/skills/class_skill_vfx.gd). OVER: crater_leap 2264, hook_sweep 1656, starfall 1328, arcane_orb 568, intercept 688 (2026-11-13, see below) |
+| Class skill VFX (art/vfx/class_skills, daiyooo-vfx GLB) | <= 300 draw calls per effect instance; pooled + prewarmed (client/skills/class_skill_vfx.gd). MET 2026-11-13: worst is arcane_orb ~97 per copy, crater_leap ~77 (was 2264) |
 | Scene entry | no single frame over 1 s after the loading label (currently OPEN, see below) |
 
 ## Measured 2026-11-10 (native M1, GL Compatibility, 1920x912, MSAA 4x, glow, outline, scale 1.0)
@@ -47,3 +47,15 @@ arcane_orb 1704 / +3.2, heartseeker 1296 / +2.4, battle_trance 1176 / +2.3, shie
 Every mesh in these GLBs is its own MeshInstance3D + material (8 "phase" textures per layer), so cost = draw calls.
 Web (Chrome, same PC, 1280x720 and 844x390, real 3-card battle): see the PO report; the A/B switch is `play.html?class_vfx=0`.
 
+
+### Draw-call fix, 2026-11-13 (tech-artist)
+
+Cause: a daiyooo GLB plays each particle as an 8-phase flipbook and hides the off phases by scaling them to
+0.0001, so every phase of every particle was drawn every frame. `ClassSkillVfx._slim` (client only) turns those
+scale keys into discrete `visible` keys at load (once per skill, shared by the pool) and turns off shadow casting.
+Pixel-identical to the raw clip (0 differing pixels over 5 effects x 5 frames, `tools/perf/class_skill_vfx_frames.gd`).
+On top, crater_leap / hook_sweep / starfall / intercept / iron_guard were regenerated with fewer particles
+(same preset, palette, light; recipes in their recipe.json). Native draws x3 copies after: crater_leap 225,
+hook_sweep 186, starfall 195, intercept 138, iron_guard 54, breaker_slam 117, reaping_arc 78, heartseeker 183,
+arcane_orb 291. Web 844x390 real battle (Chrome, RTX 3070 Ti, 2 runs each): 26.8 fps -> 30.7 fps average;
+VFX off 34.2 fps. Frames with crater_leap live 18.6 -> 30.0 fps, hook_sweep 20.1 -> 30.8, iron_guard 23.1 -> 26.8.

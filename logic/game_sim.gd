@@ -635,7 +635,7 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 
 
 func enable_coop(player_ids: Array) -> bool:
-	if combat == null or combat.coop.is_empty() or player_ids.size() < 2 or player_ids.size() > int(combat.coop["max_players"]):
+	if combat == null or combat.coop.is_empty() or player_ids.size() < 2 or player_ids.size() > int(combat.coop.get("max_fighters", combat.coop["max_players"])):
 		return false
 	var ids := player_ids.duplicate()
 	ids.sort()

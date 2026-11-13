@@ -35,6 +35,7 @@ const Effects := preload("res://logic/effects.gd")
 const Fighter := preload("res://logic/fighter.gd")
 const RaceUltimates := preload("res://logic/race_ultimates.gd")
 const TreeEffects := preload("res://logic/skill_tree_effects.gd")  ## card skill tree nodes (design/gdd/skill-tree.md 3.5)
+const Mechanics := preload("res://logic/skill_tree_mechanics.gd")  ## tree mechanic nodes, reflect, death_save
 const RUNNING_ACTIONS: Array[String] = ["apply_status", "heal", "shield", "burst", "pulse_aggro", "zone", "skill_refresh"]
 const PULSE_RADIUS := 5.0  ## pulse_aggro defaults (GDD 3.6: the Bulwark values)
 const PULSE_TICKS := 180
@@ -74,8 +75,9 @@ static func attach(fighter, run) -> void:
 			pseudo[str(effect["stat"])] = mod
 	fighter.race_state = {"race": race, "class": class_id, "passive": str(passive.get("name", "")), "synergy": str(synergy.get("kind", "none")),
 		"effects": effects, "fx": {}, "pseudo": pseudo, "scaling": scaling, "wave": 0, "heal_window": [-1, 0.0],
-		"ultimate": races.ultimate_for(race, class_id).duplicate(true), "full_at": -1}
+		"ultimate": races.ultimate_for(race, class_id).duplicate(true), "full_at": -1, "group": str(synergy.get("group", ""))}
 	TreeEffects.attach(fighter, run)  # learned tree nodes join the effects / cells / signature (skill-tree.md 3.5)
+	Mechanics.attach_rewrites(fighter)  # mechanic nodes that rewrite the card's cells (Spring Rite, Shatterglyph ...)
 
 
 ## stat_mod on real stats, applied to freshly computed base stats (GameSim._refresh_run_stats): (base + add) x (1 + mul).
@@ -209,10 +211,15 @@ static func step(sim) -> void:
 			fighter.race_state["wave"] = wave
 			fire(sim, id, "wave_start", {})
 		for event in seen:
-			for raced in race_events(id, fighter, event, sim.fighters):
+			var names: Array = race_events(id, fighter, event, sim.fighters)
+			if names.has("dodge") and Mechanics.kiting(sim, id):
+				names.append("kite")  # a dodge away from a close enemy (skill-tree.md 3.5)
+			for raced in names:
 				fire(sim, id, raced, event)
 		_check_low_hp(sim, id, fighter)
 		_check_aggro(sim, id, fighter)
+	for id in ids:  # tree mechanic nodes read the whole tick (their own heals/bursts included) and run their timers
+		Mechanics.step(sim, id, sim.fighters[id], sim.events.duplicate())
 	if ultimates_enabled():  # after the triggers: their heals/shields/bursts this tick count too
 		var in_combat: bool = sim.living_enemy_count() > 0
 		for id in ids:
@@ -308,9 +315,12 @@ static func race_events(id: int, fighter, event: Dictionary, fighters: Dictionar
 		"blocked":
 			if int(event.get("target", -1)) == id:
 				out.append("guard_block")
+				out.append("block")  # the node alias of guard_block (skill-tree.md 3.5)
 		"skill_cast":
 			if int(event.get("player", -1)) == id:
 				out.append("skill_cast")
+				if Mechanics.kite_skill(str(event.get("skill", ""))):
+					out.append("kite")  # Vault Shot is the longbow's kite step (class-skills.md 3.6)
 		"skill_heavy":  # a class skill that counts as a heavy hit (Reaping Arc), once per cast (class-skills.md 5.2)
 			if int(event.get("player", -1)) == id:
 				out.append("heavy_hit")
@@ -358,8 +368,9 @@ static func fire(sim, id: int, event_name: String, context: Dictionary) -> void:
 		if effect.has("chance") and sim.rng.randf() >= float(effect["chance"]):
 			continue
 		var done := 0
+		var action_context := _group_context(fighter, effects[index], context)
 		for action in effect["actions"]:
-			if run_action(sim, id, action, context):
+			if run_action(sim, id, action, action_context):
 				done += 1
 		if done == 0:
 			continue  # only inert actions (a later phase): nothing happened, no proc
@@ -383,7 +394,7 @@ static func cleave_mul(fighter, hit_count: int) -> float:
 	for entry in fighter.race_state.get("effects", []):
 		var effect: Dictionary = entry["effect"]
 		if effect["type"] == "cleave":
-			bonus += minf(float(effect["max_bonus"]), float(effect["per_extra"]) * float(maxi(0, hit_count - 1)))
+			bonus += Mechanics.cleave_bonus(fighter, float(effect["per_extra"]) * float(maxi(0, hit_count - 1)), float(effect["max_bonus"]))  # Blood Cyclone
 	return 1.0 + bonus
 
 
@@ -400,7 +411,8 @@ static func _gain_charges(sim, id: int, index: int, event_name: String, context:
 		return
 	var fx: Dictionary = fighter.race_state["fx"].get(str(index), {"last": -1, "n": 0, "wave": 0, "low": false})
 	fighter.race_state["fx"][str(index)] = fx
-	var top := int(effect["max"])
+	var base_top := int(effect["max"])
+	var top := Mechanics.charges_top(fighter, base_top)  # Overcharge: runes may go past max
 	var have := int(fx.get("charges", 0))
 	if str(effect.get("gain", 1)) == "max" or event_name == "ultimate_cast":  # GDD 3.4: an ultimate fills the runes
 		have = top
@@ -417,11 +429,44 @@ static func _gain_charges(sim, id: int, index: int, event_name: String, context:
 	if TreeEffects.discharge_gauge(fighter) > 0.0:  # Stored Power (tree gauge_mod discharge_add)
 		fighter.gauge = minf(float(sim.combat.rules["ultimate_gauge_max"]), fighter.gauge + TreeEffects.discharge_gauge(fighter))
 	var done := 0
-	for action in effect["actions"]:
+	var payload: Array = effect["actions"]
+	if top != base_top:  # Overcharge (skill-tree.md 4.6): the payload scales by runes / max
+		payload = TreeEffects._mod_actions(payload, {"scale": float(top) / float(base_top)})
+	for action in payload:
 		if run_action(sim, id, action, context):
 			done += 1
 	fx["last"] = sim.tick_count
 	sim.events.append({"type": "race_proc", "player": id, "source": entry["src"], "name": fighter.race_state["passive"] if entry["src"] == "passive" else fighter.race_state["synergy"], "on": event_name, "discharge": true, "did": done})
+	Mechanics.on_discharge(sim, id, context)  # Resonance, Glyph Arrows
+	fire(sim, id, "rune_discharge", context)  # skill-tree.md 3.5 event
+
+
+## Gives fighter `id` `n` runes from a tree mechanic (Resonance, Runic Bulwark, Grand Runeweaver), one at a time
+## (a discharge at the top). Returns false for a card without a rune passive.
+static func add_runes(sim, id: int, n: int, why: String) -> bool:
+	var fighter = sim.fighters[id]
+	var effects: Array = fighter.race_state.get("effects", [])
+	for index in effects.size():
+		var effect: Dictionary = effects[index]["effect"]
+		if str(effect["type"]) != "charges":
+			continue
+		var fx: Dictionary = fighter.race_state["fx"].get(str(index), {"last": -1, "n": 0, "wave": 0, "low": false})
+		fighter.race_state["fx"][str(index)] = fx
+		var top: int = Mechanics.charges_top(fighter, int(effect["max"]))
+		for k in maxi(0, n):
+			if int(fx.get("charges", 0)) + 1 >= top:
+				fx["charges"] = top - 1
+				var gains = effect["gain_on"]
+				var event_name := str(gains[0]) if gains is Array else str(gains)
+				var gain_was = effect.get("gain", 1)
+				effect["gain"] = 1
+				_gain_charges(sim, id, index, event_name, {"rune_from": why})
+				effect["gain"] = gain_was
+			else:
+				fx["charges"] = int(fx.get("charges", 0)) + 1
+				sim.events.append({"type": "race_runes", "player": id, "runes": int(fx["charges"]), "max": top})
+		return true
+	return false
 
 
 ## Runs one action; returns true when it did something. Inert (not yet built) actions return false.
@@ -457,7 +502,11 @@ static func run_action(sim, id: int, action: Dictionary, context: Dictionary) ->
 				if target.state == Fighter.State.DOWNED:  # ally_downed: a revive at fraction x max HP (3.10.5)
 					did = RaceUltimates.revive(sim, id, target_id, float(action["fraction"])) or did
 					continue
-				var amount := heal_amount(action, source, target, float(context.get("damage", 0.0)) / (float(chosen.size()) if bool(action.get("split", false)) else 1.0))
+				var healing := action
+				if bool(action.get("per_target", false)):  # x enemies the hit touched, cap_max_hp per trigger (Unstoppable, Red Harvest)
+					healing = action.duplicate()
+					healing["fraction"] = float(action["fraction"]) * float(Mechanics.targets_hit(sim, id, context))
+				var amount := heal_amount(healing, source, target, float(context.get("damage", 0.0)) / (float(chosen.size()) if bool(action.get("split", false)) else 1.0))
 				if not ult:
 					amount = _within_heal_cap(sim, target, amount)  # ultimate heals are exempt from the per-second cap (4.2)
 				var healed := minf(amount, target.max_hp() - target.hp)
@@ -465,14 +514,25 @@ static func run_action(sim, id: int, action: Dictionary, context: Dictionary) ->
 					target.hp += healed
 					sim.events.append({"type": "race_heal", "player": id, "target": target_id, "amount": healed, "ultimate": ult})
 					did = true
+				if amount - maxf(0.0, healed) > 0.0 and not bool(context.get("overheal", false)):
+					_overheal(sim, id, target_id, amount - maxf(0.0, healed))
 			"shield":
 				var cap := float(RaceData.load_default().rules.get("ult_shield_cap_max_hp" if ult else "shield_cap_max_hp", 0.30))
 				var base := float(context.get("damage", 0.0)) / (float(chosen.size()) if bool(action.get("split", false)) else 1.0)
-				var added: float = target.add_shield(shield_amount(action, source, base), int(action.get("duration_ticks", SHIELD_TICKS)), sim.tick_count, cap)
+				var added: float = target.add_shield(shield_amount(action, source, base), int(action.get("duration_ticks", SHIELD_TICKS)) + Mechanics.shield_ticks_add(source), sim.tick_count, cap)
 				if added > 0.0:
 					sim.events.append({"type": "race_shield", "player": id, "target": target_id, "amount": added, "shield": target.shield, "until": target.shield_until, "ultimate": ult})
 					did = true
 	return did
+
+
+## overheal (skill-tree.md 3.5): a race heal of this card went past full HP. Fires once with context damage = the
+## excess (Bloom Cascade bounces it; a heal it causes never fires overheal again). Spring Rite turns it into regen.
+static func _overheal(sim, id: int, target_id: int, excess: float) -> void:
+	var spring = Mechanics.params(sim.fighters[id], "spring_rite")
+	if spring != null:
+		Effects.apply(id, sim.fighters[id], target_id, sim.fighters[target_id], {"id": "regen", "chance": 100.0, "duration": int(spring["regen_ticks"])}, sim.combat, sim.rng, sim.events)
+	fire(sim, id, "overheal", {"damage": excess, "target": target_id, "overheal": true, "points": {}, "picked": {}})
 
 
 ## Formula 4.3: amount = fraction x source max HP (or x the damage dealt). The target's cap is applied by Fighter.add_shield.
@@ -532,10 +592,23 @@ static func targets(sim, id: int, kind: String, context: Dictionary, action: Dic
 	return out
 
 
+## Online squads (design/gdd/online-squads.md 3.2): a synergy effect's ally targets are the fighters of the same
+## synergy group only (race passives and ultimates keep every friendly fighter). Solo: one group, nothing changes.
+static func _group_context(fighter, entry: Dictionary, context: Dictionary) -> Dictionary:
+	if str(entry.get("src", "")) != "synergy" or str(fighter.race_state.get("group", "")).is_empty():
+		return context
+	var scoped := context.duplicate()
+	scoped["synergy_group"] = str(fighter.race_state["group"])
+	return scoped
+
+
 static func _targets(sim, id: int, kind: String, context: Dictionary, action: Dictionary) -> Array:
 	var me = sim.fighters[id]
 	var allies: Array = []
+	var group := str(context.get("synergy_group", ""))
 	for other in sim.fighters:
+		if not group.is_empty() and str(sim.fighters[other].race_state.get("group", "")) != group:
+			continue
 		if sim.fighters[other].team == me.team and sim.fighters[other].is_alive():
 			allies.append(other)
 	allies.sort()
@@ -594,9 +667,16 @@ static func _check_aggro(sim, id: int, fighter) -> void:
 		fighter.race_state["fx"][str(index)] = fx
 		if int(fx["last"]) >= 0 and sim.tick_count - int(fx["last"]) < int(effect["every_ticks"]):
 			continue
-		if pulse_aggro(sim, id, float(effect["radius"]), int(effect["duration_ticks"])):
+		var before: int = sim.events.size()
+		if pulse_aggro(sim, id, float(effect["radius"]) + Mechanics.bulwark_radius_add(fighter), int(effect["duration_ticks"])):
 			fx["last"] = sim.tick_count
+			fighter.race_state["bulwark_until"] = sim.tick_count + int(effect["duration_ticks"])  # Bulwark Guard, Spiked Bastion, Grove Warden
 			sim.events.append({"type": "race_proc", "player": id, "source": "signature", "name": str(effect.get("name", "")), "on": "aggro"})
+			var taunted: int = sim.events[before]["enemies"].size()
+			var runic = Mechanics.params(fighter, "runic_bulwark")
+			if runic != null:
+				add_runes(sim, id, mini(taunted, int(runic["max_runes"])), "runic_bulwark")
+			fire(sim, id, "signature_pulse", {})  # Rallying Wall (skill-tree.md 3.5)
 
 
 ## self_low_hp: fires when HP crosses below `hp_below` (not every tick it stays low); once_per_wave gates it further.

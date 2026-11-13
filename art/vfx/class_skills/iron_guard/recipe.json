@@ -13,7 +13,7 @@
   },
   "layers": [
     {
-      "id": "2d8c421e-0899-4f0a-aba6-305a0a245a59",
+      "id": "3fdd3573-0f18-4f65-8296-630c5c071f1b",
       "type": "beam",
       "name": "ผิวโดมป้องกัน",
       "enabled": true,
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "id": "1cbfe715-e12e-4490-aab4-d85fba39d17d",
+      "id": "831dd9e4-ac3d-46bd-874d-3729f79239f2",
       "type": "wave",
       "name": "ขอบโล่บนพื้น",
       "enabled": true,
@@ -76,7 +76,7 @@
       ]
     },
     {
-      "id": "080bdd0f-6376-4b35-92ef-d6ac7d74013d",
+      "id": "37398767-d854-4cb9-a085-4c55205dec98",
       "type": "sparks",
       "name": "ละอองพลัง",
       "enabled": true,
@@ -94,7 +94,7 @@
       "energy": 2.1,
       "opacity": 1,
       "scale": 1,
-      "count": 32,
+      "count": 16,
       "position": [
         0,
         0,

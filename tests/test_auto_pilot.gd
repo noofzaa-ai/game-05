@@ -146,7 +146,7 @@ func _wave_checks(ctx) -> void:
 	ctx.check("the squad fights through to the Chief's wave (ticks %d)" % tick, boss_seen)
 	var chief_wave: Dictionary = data.stages[-1]
 	ctx.check("the Chief's wave is the strongest wave", data.stages.all(func(st): return float(st["power"]) <= float(chief_wave["power"])))
-	ctx.check("a squad of 3 meets stronger waves than one fighter", data.wave_power_for(3) > data.wave_power_for(1) and is_equal_approx(data.wave_power_for(5), data.wave_power_for(3)))
+	ctx.check("a squad of 3 meets stronger waves than one fighter", data.wave_power_for(3) > data.wave_power_for(1) and is_equal_approx(data.wave_power_for(7), data.wave_power_for(data.wave_power_by_squad.size())))  # past the table: the last entry (online squads: 6 entries)
 	var boss_found := false
 	var probe := Sim.new(world, f.combat, F.rng(31))
 	var trips2 := {1: F.make(31).run, 2: F.make(32).run, 3: F.make(33).run}

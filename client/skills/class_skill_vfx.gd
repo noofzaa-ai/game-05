@@ -80,7 +80,11 @@ func prewarm(skills: Array, hidden: Vector3, copies: Dictionary = {}) -> void:
 			var inst := _make(key)
 			if inst == null:
 				break
-			_start(inst, 0.5, hidden, Vector3.FORWARD, false)
+			_start(inst, 0.5, hidden, Vector3.FORWARD, true)
+			# Every phase mesh drawn once (held frame) so all its materials compile now; the next _start's seek
+			# restores the per-phase visibility from the clip.
+			for mi in inst.find_children("*", "GeometryInstance3D", true, false):
+				(mi as Node3D).visible = true
 			_live.append({"node": inst, "skill": key, "player": -1, "age": 0.0, "length": 0.15, "loop": false, "follow": -1, "buff": "", "orb": false})
 		prewarmed.append(key)
 
@@ -275,7 +279,78 @@ func _make(skill: String) -> Node3D:
 	inst.set("free_on_finish", false)
 	inst.visible = false
 	add_child(inst)
+	_slim(skill, inst)
 	return inst
+
+
+## Draw-call fix (tech-artist 2026-11-13). A daiyooo GLB animates each particle as a flipbook of phase meshes and
+## "hides" the off phases by scaling them to 0.0001, so every phase of every particle is still drawn each frame
+## (crater_leap: 2264 draws per copy). Here the phase scale tracks become discrete `visible` tracks (built once per
+## skill, shared by its pool), so only the live phase of each particle is drawn. Same frames, same timing.
+## The meshes also stop casting shadows (additive/alpha sprites; no shadow pass for them).
+var _slim_clip: Dictionary = {}  ## skill -> converted Animation
+
+func _slim(skill: String, inst: Node3D) -> void:
+	for mi in inst.find_children("*", "GeometryInstance3D", true, false):
+		(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var player := _player_of(inst)
+	if player == null:
+		return
+	var clip := _clip_of(player)
+	if clip == &"":
+		return
+	if not _slim_clip.has(skill):
+		_slim_clip[skill] = slim_animation(player.get_animation(clip), player.get_node(player.root_node))
+	var anim: Animation = _slim_clip[skill]
+	var lib_name := String(clip).get_slice("/", 0) if "/" in String(clip) else ""
+	var anim_name := String(clip).get_slice("/", 1) if "/" in String(clip) else String(clip)
+	var lib := player.get_animation_library(lib_name)
+	lib.remove_animation(anim_name)
+	lib.add_animation(anim_name, anim)
+	# Start hidden: the phase meshes show only when their visible key turns them on.
+	for t in anim.get_track_count():
+		if anim.track_get_type(t) == Animation.TYPE_VALUE and anim.track_get_key_count(t) > 0:
+			var node := player.get_node(player.root_node).get_node_or_null(NodePath(String(anim.track_get_path(t)).get_slice(":", 0)))
+			if node is Node3D:
+				(node as Node3D).visible = bool(anim.track_get_key_value(t, 0))
+
+
+## A copy of `anim` where every scale track on a MeshInstance3D whose keys are only "on" (1) or "off" (< 0.001)
+## becomes a discrete `visible` track (and the mesh keeps scale 1). Other tracks are kept as they are.
+static func slim_animation(anim: Animation, root: Node) -> Animation:
+	var out := anim.duplicate(true) as Animation
+	for t in range(out.get_track_count() - 1, -1, -1):
+		if out.track_get_type(t) != Animation.TYPE_SCALE_3D:
+			continue
+		var path := out.track_get_path(t)
+		var node := root.get_node_or_null(path)
+		if not node is MeshInstance3D:
+			continue
+		var keys := []
+		var flip := true
+		for k in out.track_get_key_count(t):
+			var v: Vector3 = out.track_get_key_value(t, k)
+			if v.x < 0.001 and v.y < 0.001 and v.z < 0.001:
+				keys.append([out.track_get_key_time(t, k), false])
+			elif v.is_equal_approx(Vector3.ONE):
+				keys.append([out.track_get_key_time(t, k), true])
+			else:
+				flip = false
+				break
+		if not flip or keys.is_empty():
+			continue
+		(node as Node3D).scale = Vector3.ONE
+		out.remove_track(t)
+		var vt := out.add_track(Animation.TYPE_VALUE)
+		out.track_set_path(vt, NodePath(String(path) + ":visible"))
+		out.value_track_set_update_mode(vt, Animation.UPDATE_DISCRETE)
+		out.track_set_interpolation_type(vt, Animation.INTERPOLATION_NEAREST)
+		var last = null
+		for kv in keys:
+			if kv[1] != last:
+				out.track_insert_key(vt, kv[0], kv[1])
+				last = kv[1]
+	return out
 
 
 func _take(skill: String) -> Node3D:

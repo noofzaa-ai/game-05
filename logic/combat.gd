@@ -11,6 +11,7 @@ const Effects := preload("res://logic/effects.gd")
 const Fighter := preload("res://logic/fighter.gd")
 const Movement := preload("res://logic/movement.gd")
 const RacePassives := preload("res://logic/race_passives.gd")
+const TreeMechanics := preload("res://logic/skill_tree_mechanics.gd")  ## skill tree mechanic nodes (Titan Swing, Deadeye, Pack Hunt ...)
 const SimBody := preload("res://logic/sim_body.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 
@@ -104,6 +105,7 @@ static func resolve_hits(fighters: Dictionary, bodies: Dictionary, data: CombatD
 		if not is_attack_active(attacker, data) or float(data.moves[attacker.move_id]["power"]) <= 0.0 or not data.moves[attacker.move_id]["melee"]:
 			continue  # (a move with no power is a pure cast; a ranged move hits only with what it fires)
 		var box := hitbox_world(bodies[attacker_id], attacker, data)
+		var titan := TreeMechanics.titan_radius(attacker, attacker.move_id)  # Titan's Swing: a heavy is a full circle
 		for target_id in ids:
 			if target_id == attacker_id or attacker.hit_ids.has(target_id):
 				continue
@@ -111,6 +113,11 @@ static func resolve_hits(fighters: Dictionary, bodies: Dictionary, data: CombatD
 			if target.team == attacker.team or not target.is_alive() or is_invulnerable(target, data):
 				continue
 			var target_box:AABB=historical_boxes.get(attacker_id,{}).get(target_id,bodies[target_id].aabb()) if attacker.team=="player" and target.team=="enemy" else bodies[target_id].aabb()
+			if titan > 0.0:
+				if Vector2(bodies[target_id].position.x - bodies[attacker_id].position.x, bodies[target_id].position.z - bodies[attacker_id].position.z).length() <= titan + SimBody.HALF_WIDTH:
+					landed.append(Vector2i(attacker_id, target_id))
+					moves_used[Vector2i(attacker_id, target_id)] = attacker.move_id
+				continue
 			if target_box.intersects(box) and hits_footprint(bodies[attacker_id], attacker, data,target_box):
 				landed.append(Vector2i(attacker_id, target_id))
 				moves_used[Vector2i(attacker_id, target_id)] = attacker.move_id
@@ -351,9 +358,14 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 
 	var roll := compute_damage(attacker, target, move, data, rng)
 	var damage: float = roll["damage"]
+	var crit: bool = roll["crit"]
+	var deadeye := TreeMechanics.deadeye(attacker, target, source)  # every Nth marked shot: a forced crit that pierces
+	if deadeye and not crit:
+		crit = true
+		damage = roundf(damage * attacker.stat("CRIDMG", 100.0) / 100.0)
+	damage_mul *= TreeMechanics.dealt_mul(fighters, attacker_id, target, false) * TreeMechanics.taken_mul(target, int(target.skill_state.get("now", 0)))
 	if damage_mul != 1.0:
 		damage = roundf(damage * damage_mul)
-	var crit: bool = roll["crit"]
 	if blocked:
 		damage = maxf(float(data.rules["min_damage"]), roundf(damage * (1.0 - float(data.rules["guard_damage_reduction"]))))
 	if not blocked:
@@ -366,6 +378,8 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 		damage = ClassSkills.incoming(target_id, attacker_id, damage, not ranged, fighters, bodies, data, events, int(target.skill_state.get("now", 0)))
 	var absorbed := target.absorb(damage)  # race shield first (GDD races 4.3); the event keeps the full damage
 	target.hp = maxf(0.0, target.hp - (damage - absorbed))
+	if target.hp <= 0.0 and TreeMechanics.cheat_death(target_id, target, events):
+		target.hp = 1.0  # Valhalla's Call: a death save holds the card at 1 HP
 	if attacker.skill_base_hit.is_valid(): attacker.skill_base_hit.call(target_id, damage)
 	Effects.wake(target_id, target, data, events)  # a blow wakes a sleeper
 
@@ -375,6 +389,13 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 
 	if not blocked:preload("res://logic/relic_effects.gd").hit(attacker_id,attacker,target_id,target,move_id,data,events)
 	var killed := target.hp <= 0.0
+	if deadeye and source.has("dir"):
+		var next := TreeMechanics.pierce_next(fighters, bodies, attacker_id, target_id, Vector2(source["dir"]))
+		if next >= 0:
+			var pierce := source.duplicate()
+			pierce["pierce_copy"] = true
+			pierce["pos"] = bodies[next].position
+			apply_hit(attacker_id, next, move_id, fighters, bodies, data, rng, events, pierce)
 	var hit_point: Vector3 = source["pos"] if source.has("pos") else target_body.position + Vector3(-push.x * 0.25, 1.1, -push.y * 0.25)  ## roughly where the blow lands
 	if blocked and not killed:
 		target_body.knockback = push * float(move["knockback"]) * float(data.rules["guard_knockback_factor"])
@@ -397,8 +418,11 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	# Poise is armor against flinching: each hit wears it down and the target keeps doing what it
 	# was doing (a brute keeps swinging) until it is gone, then it staggers and the armor comes back.
 	var armored := false
+	var immune: bool = not killed and TreeMechanics.TreeEffects.control_immune(target)  # CONTROL_IMMUNE: no stagger, knockback or launch
 	# A race ultimate's wind-up is not staggered by hits (unbreakable poise, GDD races 3.10.3); stun/death still end it.
-	if not killed and target.state == Fighter.State.ATTACK and target.move_id == str(target.race_state.get("ult", {}).get("move", "-")):
+	if immune:
+		armored = true
+	elif not killed and target.state == Fighter.State.ATTACK and target.move_id == str(target.race_state.get("ult", {}).get("move", "-")):
 		armored = true
 	elif not killed and ClassSkills.armored(target, int(target.skill_state.get("now", 0))):
 		armored = true  # mid class skill / Iron Guard / Battle Trance: hits do not stagger (class-skills.md 3.2-3.3)
@@ -416,7 +440,9 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 		Effects.apply_move_effects(move["effects"], "hit", attacker_id, attacker, target_id, target, data, rng, events)
 
 	var launching: bool = float(move["launch"]) > 0.0 and not armored
-	if armored:
+	if immune:
+		pass  # no push at all
+	elif armored:
 		target_body.knockback = push * float(move["knockback"]) * ARMORED_KNOCKBACK_FACTOR
 	else:
 		target.direction = -push_dir
@@ -646,7 +672,7 @@ static func _start_dodge(id: int, fighter: Fighter, body: SimBody, input: SimInp
 	direction = direction.normalized()
 	body.knockback = direction * float(data.rules["dodge_speed"]) * float(fighter.stats.get("EQUIPMENT_DODGE_FACTOR",1.0))
 	fighter.dodge_left = int(data.rules["dodge_ticks"])
-	fighter.dodge_cooldown = maxi(1,roundi(float(data.rules["dodge_cooldown"]) * float(fighter.skill_view.get("dodge_cd_mul",1))))
+	fighter.dodge_cooldown = maxi(1,roundi(float(data.rules["dodge_cooldown"]) * float(fighter.skill_view.get("dodge_cd_mul",1)) * TreeMechanics.dodge_cd_mul(fighter)))  # Skirmisher
 	_spend_energy(fighter, float(data.rules["dodge_energy"]), data)
 	fighter.move_id = ""
 	fighter.buffered = ""

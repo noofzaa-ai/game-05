@@ -125,6 +125,8 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	if not class_pick.is_empty() and float(SkillData_priority(str(class_pick["skill"]))) < 1.0:
 		return _skill_input(sim, id, me, class_pick)
 	var kite := float(profile.get("kite_distance", 0.0))
+	if not me.race_state.is_empty():
+		kite = preload("res://logic/skill_tree_mechanics.gd").kite_distance(me, kite)  # tree pilot_mod kite_distance (Skirmisher)
 	if kite > 0.0 and nearest_distance < kite and me.state == Fighter.State.IDLE and me.dodge_cooldown == 0 and me.energy >= float(combat.rules["dodge_energy"]):
 		var away: Vector2 = _flat(at - sim.bodies[nearest].position)
 		input.dodge = true  # kite: slide back from an enemy that got too close (pilot.kite_distance)
@@ -154,6 +156,8 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	if tick % SWING_EVERY == 0:
 		memory["swings"] = int(memory["swings"]) + 1
 		var every := ClassSkills.heavy_every(sim, me)  # Battle Trance: every 2nd swing is a heavy (class-skills.md 3.3 G4)
+		if preload("res://logic/skill_tree_mechanics.gd").take_momentum(me):
+			memory["swings"] = int(memory["swings"]) + 1  # Momentum: the next heavy comes one swing earlier
 		if int(memory["swings"]) % maxi(1, every if every > 0 else int(profile.get("heavy_every", HEAVY_EVERY))) == 0:
 			input.heavy = true
 		else:

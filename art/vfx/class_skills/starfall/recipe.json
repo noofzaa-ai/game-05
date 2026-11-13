@@ -13,7 +13,7 @@
   },
   "layers": [
     {
-      "id": "9699a8b4-49df-4dc4-9542-fc136535a820",
+      "id": "c26ddd4a-bcba-488c-a201-c2fa83ae578b",
       "type": "wave",
       "name": "วงชาร์จหดเข้า",
       "enabled": true,
@@ -45,7 +45,7 @@
       ]
     },
     {
-      "id": "d3ecff60-03c0-4142-b517-f438e70a4c4e",
+      "id": "3aef2426-e188-460f-bf25-37c9746b6561",
       "type": "sparks",
       "name": "ประกายรวมตัวที่ฐาน",
       "enabled": true,
@@ -63,7 +63,7 @@
       "energy": 0.688,
       "opacity": 1,
       "scale": 1,
-      "count": 40,
+      "count": 14,
       "position": [
         0,
         0,
@@ -76,7 +76,7 @@
       ]
     },
     {
-      "id": "85dc821d-d0d4-45cf-9809-52515e8004ad",
+      "id": "b2a76628-205d-446b-a57a-f5c44f1f5438",
       "type": "flash",
       "name": "แสงชาร์จที่ฐาน",
       "enabled": true,
@@ -107,7 +107,7 @@
       ]
     },
     {
-      "id": "49117382-afac-47b3-b06d-9059a27d23ef",
+      "id": "493af31d-4502-4907-a396-a7955bda4058",
       "type": "beam",
       "name": "ลำแสงฟ้ารอบแกน",
       "enabled": true,
@@ -138,7 +138,7 @@
       ]
     },
     {
-      "id": "8115f608-19db-4e59-b280-66877a9f3202",
+      "id": "f516de4a-bd1c-4eb7-bd03-5ed7d5f7b53c",
       "type": "beam",
       "name": "แกนเสาขาวร้อน",
       "enabled": true,
@@ -169,7 +169,7 @@
       ]
     },
     {
-      "id": "2a569374-9ec8-4fbd-b7bc-282bdc2fb7e3",
+      "id": "2bc40493-8244-46d6-896b-d62ffba94a82",
       "type": "beam",
       "name": "สายไฟฟ้าไต่เสา",
       "enabled": false,
@@ -200,7 +200,7 @@
       ]
     },
     {
-      "id": "fadad289-fb30-4313-aeff-c3f02fe6e0ed",
+      "id": "9dd50adf-bf5f-4c56-90c0-88dc1574cbfa",
       "type": "beam",
       "name": "สายฟ้าแตกแขนงข้างเสา",
       "enabled": false,
@@ -231,7 +231,7 @@
       ]
     },
     {
-      "id": "4c1693df-0220-4488-b214-2a662296de0e",
+      "id": "da1f8335-39d0-4507-9906-d1973360d48a",
       "type": "beam",
       "name": "สายฟ้าฟาดซ้ำ",
       "enabled": false,
@@ -262,7 +262,7 @@
       ]
     },
     {
-      "id": "7b366444-1e66-48c1-8105-5dd8b2d636fd",
+      "id": "84559173-669a-4784-b3a1-b2be946b30d3",
       "type": "flash",
       "name": "แฟลชกระแทกพื้น",
       "enabled": true,
@@ -293,7 +293,7 @@
       ]
     },
     {
-      "id": "551c3627-9098-4990-9d2c-c41a08360501",
+      "id": "a5dfeac1-acd3-4375-8b5e-b1e5dc62677d",
       "type": "flash",
       "name": "แสงค้างฐานเสา",
       "enabled": true,
@@ -324,7 +324,7 @@
       ]
     },
     {
-      "id": "e72ea17d-30a8-47dd-84cd-840c8680e05b",
+      "id": "3ccc8349-a8c5-4902-8af9-97001171af58",
       "type": "wave",
       "name": "วงกระแทกฟ้า",
       "enabled": true,
@@ -356,7 +356,7 @@
       ]
     },
     {
-      "id": "a5db6fbe-ed1f-4505-a65a-396baef6a5a2",
+      "id": "ce79b5b3-a18c-47a9-bfeb-9d00831027e7",
       "type": "wave",
       "name": "คลื่นไฟฟ้าฉีกบนพื้น",
       "enabled": true,
@@ -388,7 +388,7 @@
       ]
     },
     {
-      "id": "d1d3894b-a901-46a2-a69d-5f2e0d7b604c",
+      "id": "db408633-12e9-40c5-9104-71871b17fd55",
       "type": "sparks",
       "name": "สะเก็ดไฟฟ้ากระเด็น",
       "enabled": true,
@@ -406,7 +406,7 @@
       "energy": 0.745,
       "opacity": 1,
       "scale": 1,
-      "count": 70,
+      "count": 20,
       "position": [
         0,
         0,
@@ -419,7 +419,7 @@
       ]
     },
     {
-      "id": "980cbf42-f4e4-4dd6-b3d3-41d2134e1a78",
+      "id": "b3493c43-6f11-4ef9-ab9b-f7733b567245",
       "type": "sparks",
       "name": "ประกายไต่ขึ้นตามเสา",
       "enabled": true,
@@ -437,7 +437,7 @@
       "energy": 0.63,
       "opacity": 1,
       "scale": 1,
-      "count": 36,
+      "count": 12,
       "position": [
         0,
         0,
@@ -450,7 +450,7 @@
       ]
     },
     {
-      "id": "4f1b3580-04e7-4936-9891-7e28e35297c0",
+      "id": "c8795309-9c74-4a3b-874a-1f6b205e2386",
       "type": "smoke",
       "name": "ฝุ่นฐานเสา",
       "enabled": true,

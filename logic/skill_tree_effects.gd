@@ -10,7 +10,7 @@ extends RefCounted
 ##    Hunter's Mark trigger: mark duration, extra actions);
 ##  - gauge_mod, skill_upgrade, pilot_mod and mechanic are stored in race_state.tree and read through the hooks below.
 ## Skill ids come only from the node data (skill_upgrade.skill, trigger.skill), so re-pointing a node to another skill is
-## a data change. Mechanic ids are stored and exposed (mechanics()); the engine does not run them yet.
+## a data change. Mechanic ids are stored and exposed (mechanics()); logic/skill_tree_mechanics.gd runs them by id.
 ## Deterministic: no randomness here.
 
 const SkillTree := preload("res://logic/skill_tree.gd")
@@ -18,11 +18,13 @@ const TreeData := preload("res://logic/skill_tree_data.gd")
 const CardProgress := preload("res://logic/card_progress.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const Effects := preload("res://logic/effects.gd")
+const Fighter := preload("res://logic/fighter.gd")
 const RaceSets := preload("res://logic/race_sets.gd")  ## race gear set options (design/gdd/race-gear-sets.md 3.6-3.8, 3.14)
 const EFFECTS_FILE := "res://data/combat/effects.json"
 const RACE_EFFECT_TYPES: Array[String] = ["stat_mod", "low_hp_scaling", "skill_mod", "trigger", "charges", "aggro", "cleave"]
-## Node actions this module runs (race_passives.run_action hands them over). reflect / death_save load but stay inert.
-const ACTIONS: Array[String] = ["pull", "cleanse", "skill_status"]
+## Node actions this module runs (race_passives.run_action hands them over). death_save runs on a lethal blow
+## (logic/skill_tree_mechanics.gd cheat_death), so here it does nothing.
+const ACTIONS: Array[String] = ["pull", "cleanse", "skill_status", "reflect", "death_save"]
 const SCALED_ACTION_KEYS: Array[String] = ["fraction", "atk_mul", "seconds"]
 
 static var _status_durations: Dictionary = {}
@@ -393,7 +395,7 @@ static func filter_ok(sim, id: int, effect: Dictionary, context: Dictionary) -> 
 
 ## True when a min_targets trigger already fired this tick (one swing that hit N enemies fires once, not N times).
 static func once_per_tick(sim, effect: Dictionary, fx: Dictionary) -> bool:
-	if not effect.has("min_targets"):
+	if not effect.has("min_targets") and not effect.get("actions", []).any(func(a): return bool(a.get("per_target", false))):
 		return false
 	if int(fx.get("tick", -1)) == sim.tick_count:
 		return true
@@ -440,7 +442,25 @@ static func run_action(sim, id: int, action: Dictionary, context: Dictionary) ->
 				# class skills v2: the combat status of the same name (bleed ...); skill-system statuses are gone (class-skills.md 3.1.4)
 				return Effects.apply(id, sim.fighters[id], target_id, sim.fighters[target_id], {"id": str(action["status"]), "chance": 100.0, "duration": 0}, sim.combat, sim.rng, sim.events)
 			return false
+		"reflect":
+			return reflect(sim, id, action, context)
 	return false
+
+
+## reflect {fraction, while}: `fraction` of the damage this card just took (context = the hurt event) hits the attacker
+## as fixed damage. while "bulwark_taunt": only while this card's Bulwark taunt is up (Spiked Bastion).
+static func reflect(sim, id: int, action: Dictionary, context: Dictionary) -> bool:
+	var attacker := int(context.get("attacker", -1))
+	if not sim.fighters.has(attacker) or not sim.fighters[attacker].is_alive() or sim.fighters[attacker].team == sim.fighters[id].team:
+		return false
+	if str(action.get("while", "")) == "bulwark_taunt" and not load("res://logic/skill_tree_mechanics.gd").bulwark_up(sim.fighters[id], sim.tick_count):
+		return false
+	var amount := float(action.get("fraction", 0.0)) * float(context.get("damage", 0.0))
+	if amount <= 0.0:
+		return false
+	load("res://logic/class_skills/engine.gd")._flat_damage(sim, id, attacker, amount, "reflect")
+	sim.events.append({"type": "tree_reflect", "player": id, "target": attacker, "amount": amount})
+	return true
 
 
 ## pull {radius, distance}: every living enemy within `radius` m moves `distance` m toward fighter `id` (never past it).
@@ -484,6 +504,11 @@ static func mechanics(fighter) -> Dictionary:
 	return tree_of(fighter).get("mechanics", {})
 
 
-## CONTROL_IMMUNE (Immovable): the card ignores stuns, knockback and stagger.
+## CONTROL_IMMUNE (Immovable): the card ignores stuns, knockback and stagger. Unstoppable: only during its class-skill
+## casts and heavy moves.
 static func control_immune(fighter) -> bool:
-	return float(fighter.race_state.get("pseudo", {}).get("CONTROL_IMMUNE", {}).get("add", 0.0)) > 0.0
+	if float(fighter.race_state.get("pseudo", {}).get("CONTROL_IMMUNE", {}).get("add", 0.0)) > 0.0:
+		return true
+	if not mechanics(fighter).has("unstoppable"):
+		return false
+	return not fighter.skill_state.get("cast", {}).is_empty() or (fighter.state == Fighter.State.ATTACK and fighter.move_id.contains("heavy"))

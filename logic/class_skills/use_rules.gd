@@ -43,6 +43,9 @@ static func pick(sim, id: int, target: int) -> Dictionary:
 ## The skill's use rule now: {} = do not cast, else {"target": id, "point": Vector3 (optional)}.
 static func choose(sim, id: int, skill: String, target: int) -> Dictionary:
 	var use: Dictionary = SkillData.load_default().skill(skill).get("use", {})
+	var remote = load("res://logic/skill_tree_mechanics.gd").remote_choice(sim, id, skill, use)  # tree pilot_mod cast_center: densest
+	if remote != null:
+		return remote
 	for rule in use.get("any_of", []):
 		var choice := matches(sim, id, skill, rule, target)
 		if choice.is_empty():

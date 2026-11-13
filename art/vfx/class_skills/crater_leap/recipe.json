@@ -13,7 +13,7 @@
   },
   "layers": [
     {
-      "id": "d9d02f19-6f91-4f22-9c8e-a9541a862431",
+      "id": "0dbf142d-b64e-4d37-bf68-ffc8149818bd",
       "type": "debris",
       "name": "แกนอุกกาบาต",
       "enabled": false,
@@ -44,7 +44,7 @@
       ]
     },
     {
-      "id": "10748dda-5013-414b-984c-1ad72b2eaf63",
+      "id": "8df61866-3108-4679-8f3a-ca8ef07439f5",
       "type": "flame",
       "name": "หางไฟอุกกาบาต",
       "enabled": false,
@@ -75,7 +75,7 @@
       ]
     },
     {
-      "id": "f33d483c-c897-4634-95fa-da0e287e8d57",
+      "id": "e03e2740-f233-4912-abf2-77f66c2f3c62",
       "type": "flash",
       "name": "แสงปะทะอุกกาบาต",
       "enabled": true,
@@ -106,7 +106,7 @@
       ]
     },
     {
-      "id": "30adc88c-a3ef-4225-86b0-531dfed64522",
+      "id": "71d0e362-2710-4c8a-80e0-ede45156df3b",
       "type": "wave",
       "name": "แนวฝุ่นกระแทก",
       "enabled": true,
@@ -138,7 +138,7 @@
       ]
     },
     {
-      "id": "79ca2074-11d8-4bd2-b425-095774eb7cca",
+      "id": "7c44a0b6-85b3-45da-8009-6aeac61c6192",
       "type": "debris",
       "name": "หินกระจุย",
       "enabled": true,
@@ -156,7 +156,7 @@
       "energy": 0.083,
       "opacity": 1,
       "scale": 1,
-      "count": 65,
+      "count": 20,
       "position": [
         0,
         0,
@@ -169,7 +169,7 @@
       ]
     },
     {
-      "id": "17fcf632-d487-4eaf-b325-df466191eea1",
+      "id": "85d9efc9-225e-4811-9a76-24de32a4c3bf",
       "type": "sparks",
       "name": "สะเก็ดไฟกระจาย",
       "enabled": true,
@@ -187,7 +187,7 @@
       "energy": 0.651,
       "opacity": 1,
       "scale": 1,
-      "count": 180,
+      "count": 40,
       "position": [
         0,
         0,
@@ -200,7 +200,7 @@
       ]
     },
     {
-      "id": "7c0d4484-3b15-48ea-8aaf-219321cfbc4c",
+      "id": "68d06613-b2d7-45e2-9d68-6304d3175eeb",
       "type": "smoke",
       "name": "ฝุ่นหลังปะทะ",
       "enabled": true,
@@ -218,7 +218,7 @@
       "energy": 0.083,
       "opacity": 0.45,
       "scale": 1,
-      "count": 36,
+      "count": 12,
       "position": [
         0,
         0,

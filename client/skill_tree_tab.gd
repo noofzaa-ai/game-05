@@ -62,6 +62,13 @@ var _d_text: Label
 var _d_cost: Label
 var _learn: Button
 var _unlearn: Button
+var _close: Button  ## compact only: closes the detail sheet
+var _d_scroll: ScrollContainer  ## the detail text scrolls when it does not fit (never cut)
+var _d_box: VBoxContainer
+var _d_spacer: Control
+var _compact := false  ## phone landscape: one-row header, full-width tree, detail as a sheet (TREE_COMPACT_BELOW)
+var _side_min := 0.0  ## node size floor / cap in screen px (set by _layout_nodes)
+var _side_cap := INF
 
 
 func _ready() -> void:
@@ -117,28 +124,42 @@ func _build_detail() -> void:
 	_detail = Panel.new()
 	_detail.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(_detail)
+	_d_scroll = ScrollContainer.new()
+	_d_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_detail.add_child(_d_scroll)
+	_d_box = VBoxContainer.new()
+	_d_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_d_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_d_scroll.add_child(_d_box)
 	_d_name = CardTokens.hub_label("", CardTokens.TREE_FONT_NAME, CardTokens.HUB_INK, 1.0, 0, "display")
 	_d_name.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_detail.add_child(_d_name)
+	_d_box.add_child(_d_name)
 	_d_branch = CardTokens.hub_label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_SUBTEXT, 1.0, 0, "medium")
-	_detail.add_child(_d_branch)
+	_d_branch.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_d_box.add_child(_d_branch)
 	_d_state = CardTokens.hub_label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, 1.0, 0, "medium")
-	_detail.add_child(_d_state)
+	_d_state.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_d_box.add_child(_d_state)
 	_d_text = CardTokens.hub_label("", CardTokens.TREE_FONT_BODY, CardTokens.HUB_INK, 1.0, 0, "medium")
 	_d_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_d_text.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	_d_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_detail.add_child(_d_text)
+	_d_text.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_d_box.add_child(_d_text)
+	_d_spacer = Control.new()  # keeps the cost lines at the bottom when the text is short
+	_d_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_d_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_d_box.add_child(_d_spacer)
 	_d_cost = CardTokens.hub_label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, 1.0, 0, "medium")
 	_d_cost.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_d_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_d_cost.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
 	_d_cost.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	_detail.add_child(_d_cost)
+	_d_box.add_child(_d_cost)
+	# Learn / Unlearn / Close are the tab's children (placed in the detail panel, or in the header on a phone)
 	_learn = _button(func() -> void: learn(selected))
-	_learn.reparent(_detail)
 	_unlearn = _button(func() -> void: unlearn(selected))
-	_unlearn.reparent(_detail)
+	_close = _button(func() -> void: select(""))
 
 
 func _button(callback: Callable) -> Button:
@@ -302,7 +323,8 @@ func _build_nodes() -> void:
 			learn(id))
 		add_child(b)
 		_nodes[id] = b
-	move_child(_detail, -1)
+	for c in [_detail, _learn, _unlearn, _close]:
+		move_child(c, -1)
 
 
 ## The state of one node in the current draft (GDD 9.2).
@@ -323,8 +345,34 @@ func node_state(node_id: String) -> int:
 func layout_tab() -> void:
 	if _header == null or card.is_empty():
 		return
+	_compact = size.y / maxf(s, 0.01) < CardTokens.TREE_COMPACT_BELOW
+	var head_h := _layout_header_compact() if _compact else _layout_header()
 	var gap := CardTokens.TREE_GAP * s
-	# header strip
+	var top := head_h + gap
+	var canvas: Rect2
+	if _compact:  # the tree takes the whole width; the details open as a sheet over it (_place_sheet)
+		canvas = Rect2(0.0, top, size.x, size.y - top)
+		_detail.size = Vector2(size.x * CardTokens.TREE_SHEET_W, size.y - top)
+		_detail.position = Vector2(size.x - _detail.size.x, top)
+	else:  # detail panel at the right edge, the canvas fills the rest
+		var dw := maxf(CardTokens.TREE_DETAIL_W * s, size.x * 0.26)
+		_detail.position = Vector2(size.x - dw, top)
+		_detail.size = Vector2(dw, size.y - top)
+		canvas = Rect2(0.0, top, size.x - dw - gap, size.y - top)
+	CardTokens.panel(_detail, CardTokens.hub_paper(s))
+	_map.position = canvas.position
+	_map.size = canvas.size
+	_lines.position = Vector2.ZERO
+	_lines.size = size
+	_layout_nodes(canvas)
+	_layout_detail()
+	refresh()
+
+
+## The big-screen header: level + XP bar, points + branch counters, the four buttons at the right (a row of their own
+## under the counters when they do not fit). Returns the header height.
+func _layout_header() -> float:
+	var gap := CardTokens.TREE_GAP * s
 	var head_h := CardTokens.tap(CardTokens.TREE_HEADER_H, phone) * s
 	_header.position = Vector2.ZERO
 	_header.size = Vector2(size.x, head_h)
@@ -336,11 +384,7 @@ func layout_tab() -> void:
 	CardTokens.hub_text(_level, CardTokens.TREE_FONT_HEAD, CardTokens.HUB_CREAM, s, 0, "display")
 	_xp_back.position = Vector2(x, head_h * 0.58)
 	_xp_back.size = Vector2(170.0 * s, CardTokens.CHAR_BAR_H * s)
-	CardTokens.panel(_xp_back, CardTokens.hub_bar(CardTokens.HUB_BAR_BACK, s))
-	CardTokens.panel(_xp_fill, CardTokens.hub_bar(CardTokens.HUB_BAR_FILL, s))
-	_xp_text.position = _xp_back.position
-	_xp_text.size = _xp_back.size
-	CardTokens.hub_text(_xp_text, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium")
+	_style_xp()
 	x += 170.0 * s + gap
 	_coin.position = Vector2(x, (head_h - bh * 0.7) * 0.5)
 	_coin.size = Vector2(bh * 0.7, bh * 0.7)
@@ -372,20 +416,63 @@ func layout_tab() -> void:
 		b.position = Vector2(right - w, row_y)
 		right -= w + gap * 0.5
 		_skin(b)
-	# detail panel at the right edge, the canvas fills the rest
-	var top := head_h + gap
-	var dw := maxf(CardTokens.TREE_DETAIL_W * s, size.x * 0.26)
-	_detail.position = Vector2(size.x - dw, top)
-	_detail.size = Vector2(dw, size.y - top)
-	CardTokens.panel(_detail, CardTokens.hub_paper(s))
-	_layout_detail()
-	var canvas := Rect2(0.0, top, size.x - dw - gap, size.y - top)
-	_map.position = canvas.position
-	_map.size = canvas.size
-	_lines.position = Vector2.ZERO
-	_lines.size = size
-	_layout_nodes(canvas)
-	refresh()
+		b.visible = true
+	return head_h
+
+
+## The phone header (one row): level + XP, points + branch counters, and two button slots at the right that show the
+## pair that can be used now: Reset Class / Reset Race with no draft, Cancel draft / Confirm while drafting (the other
+## pair is disabled then anyway). Labels wrap to two lines. Returns the header height.
+func _layout_header_compact() -> float:
+	var gap := CardTokens.TREE_GAP * s
+	var line := _px(CardTokens.FONT_CHAR_SLOT) * 1.3
+	var head_h := maxf(CardTokens.tap(CardTokens.TREE_HEADER_H, phone) * s, line * 2.2)
+	_header.position = Vector2.ZERO
+	_header.size = Vector2(size.x, head_h)
+	CardTokens.panel(_header, CardTokens.hub_strip(s))
+	var face := CardTokens.medium_font()
+	var fpx := int(_px(CardTokens.FONT_CHAR_SLOT))
+	var xp_sample := CardTokens.tt("tree_xp") % [99999, 99999]
+	var level_w := CardTokens.display_font().get_string_size(CardTokens.tt("tree_level") % 99, HORIZONTAL_ALIGNMENT_LEFT, -1, int(_px(CardTokens.TREE_FONT_HEAD))).x
+	var left_w := maxf(face.get_string_size(xp_sample, HORIZONTAL_ALIGNMENT_LEFT, -1, fpx).x, level_w) + gap
+	var x := gap
+	_level.position = Vector2(x, head_h * 0.5 - line)
+	_level.size = Vector2(left_w, line)
+	CardTokens.hub_text(_level, CardTokens.TREE_FONT_HEAD, CardTokens.HUB_CREAM, s, 0, "display")
+	_xp_back.position = Vector2(x, head_h * 0.5 + line * 0.05)
+	_xp_back.size = Vector2(left_w, line * 0.9)
+	_style_xp()
+	x += left_w + gap
+	var coin := line * 0.95
+	_coin.position = Vector2(x, head_h * 0.5 - line + (line - coin) * 0.5)
+	_coin.size = Vector2(coin, coin)
+	_points.position = Vector2(x + coin + gap * 0.4, head_h * 0.5 - line)
+	_points.size = Vector2(170.0 * s + coin, line)
+	CardTokens.hub_text(_points, CardTokens.TREE_FONT_HEAD, CardTokens.HUB_CREAM, s, 0, "display")
+	_points.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	# two slots from the right: Confirm / Reset Race, then Cancel / Reset Class
+	var bw := CardTokens.TREE_COMPACT_BUTTON_W * s
+	var bh := head_h - gap * 0.6
+	var right := size.x - gap * 0.5
+	for slot in [[_confirm, _reset_race], [_cancel, _reset_class]]:
+		for b in slot:
+			b.size = Vector2(bw, bh)
+			b.position = Vector2(right - bw, (head_h - bh) * 0.5)
+			_skin(b)
+		right -= bw + gap * 0.5
+	_branches.position = Vector2(x, head_h * 0.5)
+	_branches.size = Vector2(maxf(0.0, right - x - gap * 0.5), line)
+	CardTokens.hub_text(_branches, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_MUTED, s, 0, "medium")
+	_branches.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	return head_h
+
+
+func _style_xp() -> void:
+	CardTokens.panel(_xp_back, CardTokens.hub_bar(CardTokens.HUB_BAR_BACK, s))
+	CardTokens.panel(_xp_fill, CardTokens.hub_bar(CardTokens.HUB_BAR_FILL, s))
+	_xp_text.position = _xp_back.position
+	_xp_text.size = _xp_back.size
+	CardTokens.hub_text(_xp_text, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium")
 
 
 ## The plate art on big screens; the flat parchment button where the plate's fixed margins would not fit.
@@ -396,6 +483,19 @@ func _skin(b: Button) -> void:
 	else:
 		CardTokens.hub_button(b, s)
 	CardTokens.tree_keep_plate_when_disabled(b)
+	b.clip_text = true  # the text never makes the button wider than its slot (it wraps instead, _fit_button)
+
+
+## Fits a button's label into the room inside its skin: the largest size down to FONT_MIN on one line, else two lines.
+func _fit_button(b: Button, font: int, color: Color, face: String) -> void:
+	var box := b.get_theme_stylebox("normal")
+	var room := b.size.x - (box.get_margin(SIDE_LEFT) + box.get_margin(SIDE_RIGHT) if box != null else 0.0) - 4.0 * s
+	b.autowrap_mode = TextServer.AUTOWRAP_OFF
+	CardTokens.hub_fit(b, b.text, font, room, color, s, 0, face)
+	var px := b.get_theme_font_size("font_size")
+	var used: Font = b.get_theme_font("font")
+	if used != null and used.get_string_size(b.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > room:
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 
 
 ## Disabled buttons keep their plate, dimmed (TREE_PLATE_OFF), with readable ink text (TREE_TEXT_OFF).
@@ -429,34 +529,52 @@ func _text_w(label: Label) -> float:
 	return face.get_string_size(label.text if not label.text.is_empty() else "Class 00 · Race 00 · Combo 0", HORIZONTAL_ALIGNMENT_LEFT, -1, int(_px(CardTokens.FONT_CHAR_SLOT))).x
 
 
+## The detail panel: name, branch, state, description and cost lines in a scroll box (long text scrolls, never cut),
+## the Learn / Unlearn row at its bottom (plus Close on a phone, where the panel is a sheet over the tree).
 func _layout_detail() -> void:
-	var pad := CardTokens.CHAR_PAD * s
+	var pad := CardTokens.CHAR_PAD * s * (0.6 if _compact else 1.0)
 	var w := _detail.size.x - pad * 2.0
-	_d_name.position = Vector2(pad, pad)
-	_d_name.size = Vector2(w, _px(CardTokens.TREE_FONT_NAME) * 2.6)
-	CardTokens.hub_text(_d_name, CardTokens.TREE_FONT_NAME, CardTokens.HUB_INK, s, 0, "display")
-	_d_branch.position = Vector2(pad, _d_name.position.y + _d_name.size.y)
-	_d_branch.size = Vector2(w, _px(CardTokens.FONT_CHAR_SLOT) * 1.5)
-	CardTokens.hub_text(_d_branch, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_SUBTEXT, s, 0, "medium")
-	_d_state.position = Vector2(pad, _d_branch.position.y + _d_branch.size.y)
-	_d_state.size = _d_branch.size
-	CardTokens.hub_text(_d_state, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
 	var bh := CardTokens.tap(CardTokens.CHAR_ACTION_H, phone) * s
-	var half := (w - pad * 0.5) * 0.5  # Learn | Unlearn side by side
-	_learn.size = Vector2(half, bh)
-	_learn.position = Vector2(pad, _detail.size.y - pad - bh)
-	_unlearn.size = Vector2(half, bh)
-	_unlearn.position = Vector2(pad + half + pad * 0.5, _detail.size.y - pad - bh)
-	for b in [_learn, _unlearn]:
+	if _compact:
+		bh = minf(bh, _detail.size.y * 0.42)
+	var row: Array = [_learn, _unlearn, _close] if _compact else [_learn, _unlearn]
+	var bw := (w - pad * 0.5 * float(row.size() - 1)) / float(row.size())
+	var x := _detail.position.x + pad
+	for b in row:
+		b.size = Vector2(bw, bh)
+		b.position = Vector2(x, _detail.position.y + _detail.size.y - pad - bh)
+		x += bw + pad * 0.5
 		_skin(b)
-	_d_cost.size = Vector2(w, _px(CardTokens.FONT_CHAR_SLOT) * 5.2)
-	_d_cost.position = Vector2(pad, _learn.position.y - _d_cost.size.y - pad * 0.5)
-	CardTokens.hub_text(_d_cost, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
-	_d_text.position = Vector2(pad, _d_state.position.y + _d_state.size.y + pad * 0.5)
-	_d_text.size = Vector2(w, maxf(0.0, _d_cost.position.y - _d_text.position.y))
+	_close.visible = _compact and not selected.is_empty()
+	_d_scroll.position = Vector2(pad, pad)
+	_d_scroll.size = Vector2(w, maxf(0.0, _detail.size.y - pad * 2.5 - bh))
+	_d_box.custom_minimum_size = Vector2(w - CardTokens.CHAR_PAD * s * 0.5, _d_scroll.size.y)
+	CardTokens.gap(_d_box, 4.0, s)
+	CardTokens.hub_text(_d_name, CardTokens.TREE_FONT_NAME if not _compact else CardTokens.TREE_FONT_HEAD, CardTokens.HUB_INK, s, 0, "display")
+	CardTokens.hub_text(_d_branch, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_SUBTEXT, s, 0, "medium")
+	CardTokens.hub_text(_d_state, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
 	CardTokens.hub_text(_d_text, CardTokens.TREE_FONT_BODY, CardTokens.HUB_INK, s, 0, "medium")
-	_d_text.clip_text = true
-	_d_text.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_d_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	CardTokens.hub_text(_d_cost, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
+	_d_cost.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	for l in [_d_name, _d_branch, _d_state, _d_text, _d_cost]:  # full height in the scroll box (no ellipsis, no clip)
+		l.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+		l.clip_text = false
+		l.custom_minimum_size = Vector2(_d_box.custom_minimum_size.x, 0.0)
+
+
+## Phone: the detail sheet covers the half of the tree away from the selected node, so the node stays in view.
+func _place_sheet() -> void:
+	if not _compact:
+		_detail.visible = true
+		return
+	var open := not selected.is_empty() and _nodes.has(selected)
+	_detail.visible = open
+	if not open:
+		return
+	var at: Vector2 = _positions.get(selected, Vector2.ZERO)
+	_detail.position.x = 0.0 if at.x > size.x * 0.5 else size.x - _detail.size.x
+	_layout_detail()
 
 
 ## Places the nodes on the canvas: class branch on the left ~64%, race branch on the right, tiers from the bottom (T1)
@@ -492,10 +610,12 @@ func _layout_nodes(canvas: Rect2) -> void:
 	var combo: Dictionary = data.combo_node(race, card)
 	var gate_room := CardTokens.TREE_FONT_GATE * 1.4 * s * 4.0
 	var k := minf(1.0, minf((class_w - gutter) / maxf(widest, 1.0), (canvas.size.y - gate_room - gap * 2.0) / maxf(tall, 1.0)))
-	var floor_k := (CardTokens.HUB_TAP_MIN_PHONE * s) / (CardTokens.TREE_NODE["minor"] * s) if phone else 0.0
-	k = maxf(k, floor_k)
-	# rows: equal steps from the bottom
+	# rows: equal steps from the bottom; a node is never taller than its row (rows must not touch)
 	var step := (canvas.size.y - gap * 2.0) / 4.0
+	_side_min = (CardTokens.TREE_NODE_MIN_COMPACT if _compact else CardTokens.HUB_TAP_MIN_PHONE) * s if phone else 0.0
+	_side_cap = step * 0.96 if _compact else INF
+	var floor_k := _side_min / (CardTokens.TREE_NODE["minor"] * s) if phone else 0.0
+	k = maxf(k, floor_k)
 	_positions.clear()
 	_bands.clear()
 	var class_color: Color = CardTokens.palette(card)["shadow"]
@@ -510,7 +630,7 @@ func _layout_nodes(canvas: Rect2) -> void:
 		_bands.append({"y": band_y, "x0": race_x, "x1": race_x + race_w - gap * 0.3, "gate": int(data.tier_rule("race", tier).get("gate", 0)), "color": race_color, "right": true})
 	if not combo.is_empty():  # centred in its own column, at the capstone row
 		var top_y := canvas.end.y - gap - step * 3.5
-		var side := minf(_size_of(combo, k), combo_col - gap)
+		var side := minf(_size_of(combo, k), maxf(combo_col - gap, _side_min))
 		_put(str(combo["id"]), Vector2(combo_x + combo_col * 0.5, top_y), side)
 	_lines.queue_redraw()
 
@@ -528,7 +648,7 @@ func _by_tier(nodes: Array) -> Dictionary:
 func _size_of(n: Dictionary, k: float) -> float:
 	var kind := "combo" if _data().branch_of(str(n["id"])) == "combo" else str(n["type"])
 	var side: float = float(CardTokens.TREE_NODE.get(kind, 96.0)) * s * k
-	return maxf(side, CardTokens.HUB_TAP_MIN_PHONE * s) if phone else side
+	return minf(maxf(side, _side_min), _side_cap)
 
 
 ## One row centred in [x, x + w] at height y; OR pairs sit close together, other nodes evenly spread.
@@ -595,13 +715,19 @@ func refresh() -> void:
 	_cancel.text = CardTokens.tt("tree_cancel")
 	_set_enabled(_cancel, has_changes())
 	for b in [_reset_class, _reset_race, _confirm, _cancel]:
-		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_SLOT, b.size.x * 0.86, CardTokens.HUB_INK if not b.disabled else CardTokens.TREE_TEXT_OFF, s, 0, "medium")
+		_fit_button(b, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK if not b.disabled else CardTokens.TREE_TEXT_OFF, "medium")
 		CardTokens.tree_disabled_text(b)
+	if _compact:  # one pair per slot: the draft buttons while drafting, else the resets
+		_confirm.visible = has_changes()
+		_cancel.visible = has_changes()
+		_reset_class.visible = not has_changes()
+		_reset_race.visible = not has_changes()
 	for id in _nodes:
 		var b = _nodes[id]
 		b.state = node_state(id)
 		b.selected = id == selected
 		b.queue_redraw()
+	_place_sheet()
 	_refresh_detail()
 	_lines.queue_redraw()
 
@@ -612,6 +738,7 @@ func _refresh_detail() -> void:
 	var empty := n.is_empty() or not _nodes.has(selected)
 	_learn.visible = not empty
 	_unlearn.visible = not empty
+	_close.visible = _compact and not empty
 	if empty:
 		_d_name.text = CardTokens.tt("tree_pick")
 		_d_branch.text = ""
@@ -624,6 +751,9 @@ func _refresh_detail() -> void:
 	_d_branch.text = CardTokens.tt("tree_branch_" + branch) + ("  ·  T%d" % int(n["tier"]) if int(n["tier"]) > 0 else "")
 	var state := node_state(selected)
 	_d_state.text = CardTokens.tt(["tree_state_locked", "tree_state_available", "tree_state_no_points", "tree_state_taken", "tree_state_draft"][state])
+	_d_state.visible = not _compact
+	if _compact:  # phone: branch and state share one line (more room for the description)
+		_d_branch.text += "  ·  " + _d_state.text
 	_d_text.text = data.description(selected, CardTokens.language)
 	var lines: Array[String] = [CardTokens.tt("tree_cost") % int(n["cost"])]
 	if branch == "combo":
@@ -637,19 +767,14 @@ func _refresh_detail() -> void:
 			if str(other["excl"]) == str(n["excl"]) and other["id"] != n["id"]:
 				lines.append(CardTokens.tt("tree_or") % str(other["name"]))
 	_d_cost.text = "\n".join(lines)
-	# the cost lines take the height they need above the buttons; the description fills what is left
-	var bottom := _learn.position.y - CardTokens.CHAR_PAD * s * 0.5
-	_d_cost.size.y = _px(CardTokens.FONT_CHAR_SLOT) * 6.0
-	var needed := (_d_cost.get_line_height() + 2.0 * s) * float(maxi(1, _d_cost.get_line_count()))
-	_d_cost.size.y = needed
-	_d_cost.position.y = bottom - needed
-	_d_text.size.y = maxf(0.0, _d_cost.position.y - _d_text.position.y - 4.0 * s)
+	_d_scroll.scroll_vertical = 0
 	_learn.text = CardTokens.tt("tree_learn")
 	_set_enabled(_learn, state == SkillTreeNode.State.AVAILABLE)
 	_unlearn.text = CardTokens.tt("tree_unlearn")
 	_set_enabled(_unlearn, state == SkillTreeNode.State.DRAFT)
-	for b in [_learn, _unlearn]:
-		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_LINE, b.size.x * 0.78, CardTokens.HUB_INK if not b.disabled else CardTokens.TREE_TEXT_OFF, s)
+	_close.text = CardTokens.t("close")
+	for b in [_learn, _unlearn, _close]:
+		_fit_button(b, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK if not b.disabled else CardTokens.TREE_TEXT_OFF, "display")
 		CardTokens.tree_disabled_text(b)
 
 

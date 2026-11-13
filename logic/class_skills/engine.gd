@@ -20,6 +20,7 @@ const RaceData := preload("res://logic/race_data.gd")
 const SimBody := preload("res://logic/sim_body.gd")
 const TREE := "res://logic/skill_tree_effects.gd"
 const RACE := "res://logic/race_passives.gd"
+const MECH := "res://logic/skill_tree_mechanics.gd"  ## skill tree mechanic nodes on casts / skill hits (separate file)
 const ATTACKED_RADIUS := 3.0  ## an enemy this close to an ally counts as attacking it (GDD 3.7 "being attacked")
 
 
@@ -113,12 +114,12 @@ static func cast(sim, id: int, skill: String, choice: Dictionary = {}) -> String
 	if int(fighter.skill_state["cd"].get(skill, 0)) > sim.tick_count:
 		return "cooldown"
 	var data: Dictionary = SkillData.load_default().skill(skill)
-	var cost := float(data.get("stamina", 0.0))
-	if fighter.energy < cost:
-		return "not_enough_stamina"
 	var stats := cast_stats(fighter, skill)
 	if stats.has("error"):
 		return str(stats["error"])
+	var cost := 0.0 if load(MECH).cast_mods(fighter, stats) else float(data.get("stamina", 0.0))  # tree: Weave Rhythm, free casts
+	if fighter.energy < cost:
+		return "not_enough_stamina"
 	var kind := str(data["kind"])
 	var at: Vector3 = sim.bodies[id].position
 	var target := int(choice.get("target", -1))
@@ -165,6 +166,7 @@ static func cast(sim, id: int, skill: String, choice: Dictionary = {}) -> String
 	cast["releases"] = _release_ticks(sim, kind, stats, timing)
 	cast["pull"] = (timing["pull"] as Array).map(func(t): return sim.tick_count + SkillData.ticks(float(t)))
 	fighter.skill_state["cast"] = cast
+	load(MECH).cast_done(sim, id, fighter, cast)  # tree: cast counters, Grand Archmage
 	fighter.skill_state["now"] = sim.tick_count
 	fighter.skill_state["cd"][skill] = sim.tick_count + SkillData.ticks(float(stats["cooldown"]))
 	fighter.energy -= cost
@@ -307,6 +309,8 @@ static func _run_cast(sim, id: int, fighter) -> void:
 		var index := int(cast["done"])
 		cast["done"] = index + 1
 		_release(sim, id, fighter, cast, index)
+		if cast.has("copy_mul"):  # Grand Archmage: the free copy
+			load(MECH).release_copy(sim, id, fighter, cast, index)
 		if fighter.skill_state["cast"].is_empty():
 			return
 	if sim.tick_count >= int(cast["end"]):
@@ -345,7 +349,9 @@ static func _release(sim, id: int, fighter, cast: Dictionary, index: int) -> voi
 	var stats: Dictionary = cast["stats"]
 	var skill := str(cast["skill"])
 	var at: Vector3 = sim.bodies[id].position
-	if index == 0:
+	if index < 0:
+		index = -1 - index  # a Grand Archmage copy: same release, no events
+	elif index == 0:
 		sim.events.append({"type": "skill_cast", "player": id, "skill": skill, "class_skill": true, "pos": at, "aim": cast["aim"]})
 	sim.events.append({"type": "class_skill_release", "player": id, "skill": skill, "index": index, "pos": at, "aim": cast["aim"],
 		"vfx": str(SkillData.load_default().skill(skill).get("vfx", ""))})
@@ -507,7 +513,7 @@ static func _hit(sim, id: int, target_id: int, frac: float, stats: Dictionary, e
 		mul *= float(stats.get("bonus_mul", 1.5))  # E9
 	var chance: float = source.stat("CRIRATE") / 100.0 + float(stats.get("crit_add", 0.0)) / 100.0 + float(stats.get("crit_chance", 0.0))
 	var crit: bool = sim.rng.randf() < chance
-	var damage: float = source.stat("ATK") * mul
+	var damage: float = source.stat("ATK") * mul * load(MECH).skill_damage_mul(sim, id, target_id, str(stats.get("skill_id", "")))  # tree: Pack Hunt, Called Target, Arcane Convergence
 	if crit:
 		damage *= source.stat("CRIDMG", 150.0) / 100.0
 	var defense: float = target.stat("DEF")
@@ -515,6 +521,8 @@ static func _hit(sim, id: int, target_id: int, frac: float, stats: Dictionary, e
 	damage = maxf(float(rules["min_damage"]), roundf(damage))
 	var absorbed: float = target.absorb(damage)
 	target.hp = maxf(0.0, target.hp - (damage - absorbed))
+	if target.hp <= 0.0 and load(MECH).cheat_death(target_id, target, sim.events):
+		target.hp = 1.0  # Valhalla's Call
 	var skill := str(stats.get("skill_id", ""))
 	var tier := int(SkillData.load_default().skill(skill).get("impact_tier", 1))
 	sim.events.append({"type": "skill_hit", "attacker": id, "target": target_id, "damage": damage - absorbed, "absorbed": absorbed, "crit": crit,
@@ -523,6 +531,7 @@ static func _hit(sim, id: int, target_id: int, frac: float, stats: Dictionary, e
 	Effects.wake(target_id, target, sim.combat, sim.events)
 	if target.hp <= 0.0:
 		_kill(sim, target_id, id)
+		load(MECH).skill_kill(sim, id, target_id)  # tree: Arcane Convergence burst
 		return true
 	if extra.has("stun") and stats.has("boss_stun") and is_boss(target):
 		extra = extra.duplicate()
@@ -738,7 +747,7 @@ static func _push(sim, id: int, target_id: int, distance: float) -> void:
 ## Knockback `distance` m straight away from `center` (bosses/elites are not moved; walls stop it, 5.1).
 static func _push_from(sim, target_id: int, center: Vector3, distance: float) -> void:
 	var target = sim.fighters[target_id]
-	if is_elite(target) or not target.is_alive():
+	if is_elite(target) or not target.is_alive() or load(TREE).control_immune(target):  # CONTROL_IMMUNE: no knockback
 		return
 	var body = sim.bodies[target_id]
 	var dir := _flat_dir(body.position - center)

@@ -1462,6 +1462,83 @@
 				]
 			}
 		],
+		"tree_reflect": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_death_save": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_death_save_end": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_archmage": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_blink_nova": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_blink": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_convergence": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_sigil_break": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_trophy_arrow": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_twin_ultimate": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
+		"tree_world_tree": [
+			{
+				"play": [
+					"buff_up"
+				]
+			}
+		],
 		"tree_pull": [
 			{
 				"play": [
