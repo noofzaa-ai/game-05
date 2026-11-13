@@ -27,10 +27,19 @@
       ]
     },
     {
+      "name": "ui",
+      "stage": "boot",
+      "include": [
+        "res://art/ui/skill_tree/",
+        "res://art/ui/class_cards/"
+      ]
+    },
+    {
       "name": "vfx",
       "stage": "battle",
       "include": [
-        "res://art/animations/"
+        "res://art/animations/",
+        "res://art/vfx/class_skills/"
       ]
     },
     {

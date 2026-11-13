@@ -1,0 +1,265 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/breaker_slam",
+  "duration": 2.6,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.15,
+    "exposure": 1.045
+  },
+  "layers": [
+    {
+      "id": "c4712b3e-89fb-4bdc-94fb-af2754e60cfa",
+      "type": "beam",
+      "name": "มวลเขียวจากพื้น",
+      "enabled": false,
+      "seed": 713,
+      "color": "#88857b",
+      "secondary": "#aaa69c",
+      "style": "surge_crest",
+      "motion": "burst",
+      "start": 0.4,
+      "duration": 1.4,
+      "size": 1.9,
+      "spread": 0,
+      "rise": 3.1,
+      "speed": 1,
+      "energy": 0.08,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "f30a6fad-0e00-4bda-8242-04c4552fa417",
+      "type": "beam",
+      "name": "ผิวโค้งเขียวอ่อน",
+      "enabled": false,
+      "seed": 850,
+      "color": "#aeaaa0",
+      "secondary": "#c0bdb6",
+      "style": "foam_cap",
+      "motion": "burst",
+      "start": 0.42,
+      "duration": 1.4,
+      "size": 1.18,
+      "spread": 0,
+      "rise": 2.2,
+      "speed": 1,
+      "energy": 0.08,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.45,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "85a415ff-1817-469d-8f5d-527b6e39583c",
+      "type": "debris",
+      "name": "ก้อนหินรอบแรงปะทุ",
+      "enabled": true,
+      "seed": 987,
+      "color": "#9c8b78",
+      "secondary": "#dadada",
+      "style": "rock",
+      "motion": "eruption",
+      "start": 0.4,
+      "duration": 1.8,
+      "size": 0.25,
+      "spread": 3.3,
+      "rise": 2.1,
+      "speed": 1,
+      "energy": 0.04,
+      "opacity": 1,
+      "scale": 1,
+      "count": 19,
+      "position": [
+        0,
+        0,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c0f32612-190f-4957-aca3-00514035007d",
+      "type": "beam",
+      "name": "หนามแสงจากใต้พื้น",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#f8f8f8",
+      "secondary": "#aaa69c",
+      "style": "impact_crown",
+      "motion": "burst",
+      "start": 0.4,
+      "duration": 0.6,
+      "size": 2.5,
+      "spread": 0,
+      "rise": 2.2,
+      "speed": 1,
+      "energy": 0.28,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c119a118-33dc-4649-8b46-b602014b747c",
+      "type": "debris",
+      "name": "ผลึกเขียวยกต่ำ",
+      "enabled": false,
+      "seed": 1261,
+      "color": "#88857b",
+      "secondary": "#aaa69c",
+      "style": "crystal",
+      "motion": "eruption",
+      "start": 0.35,
+      "duration": 1.5,
+      "size": 0.12,
+      "spread": 1.7,
+      "rise": 0.55,
+      "speed": 1,
+      "energy": 0.25,
+      "opacity": 1,
+      "scale": 1,
+      "count": 11,
+      "position": [
+        0,
+        0,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "f05c7a28-9713-465b-a823-ce07f619b60d",
+      "type": "wave",
+      "name": "วงเขียวกระแทกขอบ",
+      "enabled": true,
+      "seed": 1398,
+      "color": "#88857b",
+      "secondary": "#aaa69c",
+      "style": "ring",
+      "width": 0.025,
+      "motion": "burst",
+      "start": 0.42,
+      "duration": 1.3,
+      "size": 1,
+      "spread": 2.5,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.49,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.02,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "5d363ffd-4165-42df-a5ee-e4a81b122f4a",
+      "type": "smoke",
+      "name": "ฝุ่นดินด้านล่าง",
+      "enabled": true,
+      "seed": 1535,
+      "color": "#62605e",
+      "secondary": "#9f9d99",
+      "style": "cloud",
+      "motion": "burst",
+      "start": 0.7,
+      "duration": 1.7,
+      "size": 0.5,
+      "spread": 2.7,
+      "rise": 0.4,
+      "speed": 1,
+      "energy": 0.08,
+      "opacity": 0.35,
+      "scale": 1,
+      "count": 18,
+      "position": [
+        0,
+        0,
+        1.1
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "234e9e8b-c79b-4738-9d17-3bafa6ccd4cd",
+      "type": "slash",
+      "name": "แนวคมเปิดแรงปะทุ",
+      "enabled": false,
+      "seed": 1672,
+      "color": "#88857b",
+      "secondary": "#aaa69c",
+      "style": "crescent",
+      "motion": "burst",
+      "start": 0.15,
+      "duration": 0.4,
+      "size": 1.8,
+      "spread": 0.03,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.56,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.5,
+        0.7
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    }
+  ]
+}

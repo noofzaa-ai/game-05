@@ -1,0 +1,109 @@
+{
+  "type": "attack",
+  "playback": "once",
+  "anchor": "weapon",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/reaping_arc",
+  "duration": 1.3,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.11,
+    "exposure": 1.045
+  },
+  "layers": [
+    {
+      "id": "6ac22e83-d7b7-4162-ac21-4d3a45abfa64",
+      "type": "slash",
+      "name": "คมฟันหนัก",
+      "enabled": true,
+      "seed": 713,
+      "color": "#cdd0d5",
+      "secondary": "#fbfbfb",
+      "style": "cleave",
+      "motion": "burst",
+      "start": 0.16,
+      "duration": 0.54,
+      "size": 2.4,
+      "spread": 0.04,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.595,
+      "opacity": 0.8,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.8,
+        0.35
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c990e3ee-254b-4ff0-bfd7-57af7dfddfec",
+      "type": "slash",
+      "name": "หางแสงฟัน",
+      "enabled": true,
+      "seed": 850,
+      "color": "#cdd0d5",
+      "secondary": "#fbfbfb",
+      "style": "sweep",
+      "motion": "burst",
+      "start": 0.24,
+      "duration": 0.42,
+      "size": 2.2,
+      "spread": 0.04,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.35,
+      "opacity": 0.4,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.9,
+        0.2
+      ],
+      "rotation": [
+        90,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "7986bef5-79ce-486e-94bf-22a6d4fa0d8f",
+      "type": "sparks",
+      "name": "ประกายปลายคม",
+      "enabled": true,
+      "seed": 987,
+      "color": "#cdd0d5",
+      "secondary": "#fbfbfb",
+      "style": "mote",
+      "motion": "burst",
+      "start": 0.4,
+      "duration": 0.3,
+      "size": 0.035,
+      "spread": 1.05,
+      "rise": 0.35,
+      "speed": 1.2,
+      "energy": 0.525,
+      "opacity": 1,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        1,
+        0.5
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

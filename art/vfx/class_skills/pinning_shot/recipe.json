@@ -1,0 +1,234 @@
+{
+  "type": "attack",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/pinning_shot",
+  "duration": 1.9,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.15,
+    "exposure": 1.045
+  },
+  "layers": [
+    {
+      "id": "b259edd0-b4e6-45ac-8cb9-edf4cc22026f",
+      "type": "beam",
+      "name": "หัวหมัดพลังส้ม",
+      "enabled": false,
+      "seed": 713,
+      "color": "#acb2bc",
+      "secondary": "#d5dae3",
+      "style": "fluid_core",
+      "motion": "shot",
+      "start": 0.08,
+      "duration": 0.65,
+      "size": 0.6,
+      "spread": 2.4,
+      "rise": 0.5,
+      "speed": 1,
+      "energy": 0.08,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.7,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "436a8f4a-383f-4d39-8ba1-edd81eac74c9",
+      "type": "beam",
+      "name": "หางพุ่งสีทอง",
+      "enabled": true,
+      "seed": 850,
+      "color": "#acb2bc",
+      "secondary": "#d5dae3",
+      "style": "arrowhead",
+      "motion": "shot",
+      "start": 0.1,
+      "duration": 0.45,
+      "size": 0.3,
+      "spread": 2.4,
+      "rise": 0.3,
+      "speed": 1,
+      "energy": 0.455,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.7,
+        -0.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b3b4a3da-8984-45b1-a5a6-453fa15d95f8",
+      "type": "beam",
+      "name": "แฉกขาวจากแรงหมัด",
+      "enabled": true,
+      "seed": 987,
+      "color": "#f1f1f1",
+      "secondary": "#d5dae3",
+      "style": "impact_crown",
+      "motion": "burst",
+      "start": 0.45,
+      "duration": 0.55,
+      "size": 2.2,
+      "spread": 0,
+      "rise": 1.8,
+      "speed": 1,
+      "energy": 0.35,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.1,
+        2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "67a0a75a-0176-4163-af46-120eccaa5c37",
+      "type": "flash",
+      "name": "แกนปะทะส้ม",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#bdc3cc",
+      "secondary": "#f2f2f2",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0.46,
+      "duration": 0.24,
+      "size": 1.8,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.84,
+      "opacity": 0.8,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.7,
+        2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "6aa016c9-8a5b-464a-a021-992ab6311514",
+      "type": "wave",
+      "name": "วงแรงปะทะบาง",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#acb2bc",
+      "secondary": "#d5dae3",
+      "style": "ring",
+      "width": 0.025,
+      "motion": "burst",
+      "start": 0.5,
+      "duration": 0.65,
+      "size": 1,
+      "spread": 2.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.49,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.1,
+        2
+      ],
+      "rotation": [
+        70,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "0036cef4-17d7-4995-a4ca-fb32f3c777b3",
+      "type": "debris",
+      "name": "เศษพื้นจากแรงหมัด",
+      "enabled": true,
+      "seed": 1398,
+      "color": "#9c8b78",
+      "secondary": "#dadada",
+      "style": "rock",
+      "motion": "eruption",
+      "start": 0.5,
+      "duration": 1.1,
+      "size": 0.11,
+      "spread": 2,
+      "rise": 1.2,
+      "speed": 1,
+      "energy": 0.04,
+      "opacity": 1,
+      "scale": 1,
+      "count": 11,
+      "position": [
+        0,
+        0,
+        2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "4cd04d00-4ab1-4f73-8be3-6f9176a2824d",
+      "type": "smoke",
+      "name": "ฝุ่นครีมหลังปะทะ",
+      "enabled": true,
+      "seed": 1535,
+      "color": "#afb1b4",
+      "secondary": "#e0e0e0",
+      "style": "cloud",
+      "motion": "burst",
+      "start": 0.54,
+      "duration": 1.2,
+      "size": 0.55,
+      "spread": 2.5,
+      "rise": 0.4,
+      "speed": 1,
+      "energy": 0.08,
+      "opacity": 0.35,
+      "scale": 1,
+      "count": 16,
+      "position": [
+        0,
+        0,
+        2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

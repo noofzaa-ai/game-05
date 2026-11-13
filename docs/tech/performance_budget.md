@@ -17,6 +17,7 @@ Both need a window. The measure script writes `user://graphics.cfg`: delete it a
 | Player character | <= 60 draw calls with outline (currently ~192, OPEN) |
 | Materials per prop model | 1 (shared kit atlas or vertex colours) |
 | Effect nodes per hit | pooled; prewarmed at load (Effects.prewarm, presenter.warm_build, telegraph quad) |
+| Class skill VFX (art/vfx/class_skills, daiyooo-vfx GLB) | target <= 300 draw calls per effect instance; pooled + prewarmed (client/skills/class_skill_vfx.gd). OVER: crater_leap 2264, hook_sweep 1656, starfall 1328, arcane_orb 568, intercept 688 (2026-11-13, see below) |
 | Scene entry | no single frame over 1 s after the loading label (currently OPEN, see below) |
 
 ## Measured 2026-11-10 (native M1, GL Compatibility, 1920x912, MSAA 4x, glow, outline, scale 1.0)
@@ -37,3 +38,12 @@ fill); this needs confirming on the Web build on a PC GPU before changing defaul
 
 Scene entry (quarry, native): before _ready 0.96 s, _ready 0.57 s, first draw 5.75 s (2.5 s again on a second
 entry in the same process). On the Boss's web PC this showed as one 18 s frame. OPEN: needs a GPU/WebGL trace.
+
+## Class skill VFX, measured 2026-11-13 (tech-artist)
+
+Native per effect, 3 copies looping, `tools/perf/class_skill_vfx_cost.gd` (Windows, RTX 3070 Ti, gl_compatibility, vsync off):
+draw calls x3 / extra ms: crater_leap 6792 / +14.4, hook_sweep 4968 / +10.6, starfall 3984 / +8.0, intercept 2064 / +4.0,
+arcane_orb 1704 / +3.2, heartseeker 1296 / +2.4, battle_trance 1176 / +2.3, shield_rush 1128 / +2.3, the rest <= 936 / <= +1.6.
+Every mesh in these GLBs is its own MeshInstance3D + material (8 "phase" textures per layer), so cost = draw calls.
+Web (Chrome, same PC, 1280x720 and 844x390, real 3-card battle): see the PO report; the A/B switch is `play.html?class_vfx=0`.
+

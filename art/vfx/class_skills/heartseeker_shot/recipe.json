@@ -1,0 +1,357 @@
+{
+  "type": "attack",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/heartseeker_shot",
+  "duration": 1.6,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.3,
+    "exposure": 1.1
+  },
+  "layers": [
+    {
+      "id": "5660006b-2bb1-4746-99a0-34bd3e876300",
+      "type": "flash",
+      "name": "แสงชาร์จปากยิง",
+      "enabled": true,
+      "seed": 713,
+      "color": "#e0e5ef",
+      "secondary": "#ffffff",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0,
+      "duration": 0.16,
+      "size": 0.9,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.4,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "f35fe474-5000-4552-a881-62057d675791",
+      "type": "flash",
+      "name": "ประกายปล่อยกระสุน",
+      "enabled": true,
+      "seed": 850,
+      "color": "#c8cdd7",
+      "secondary": "#ffffff",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0.03,
+      "duration": 0.13,
+      "size": 1.2,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.3,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b2f9a256-5773-4ef1-b2d0-941387186796",
+      "type": "beam",
+      "name": "หางม่วงเข้มฉีกขาด",
+      "enabled": true,
+      "seed": 987,
+      "color": "#676d75",
+      "secondary": "#878d96",
+      "style": "tail_tatters",
+      "motion": "shot",
+      "start": 0.05,
+      "duration": 1,
+      "size": 1.25,
+      "spread": 4.6,
+      "rise": 2.8,
+      "speed": 1,
+      "energy": 0.3,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "09013e17-71b0-47c3-aa50-50749a005231",
+      "type": "beam",
+      "name": "ลำพลังม่วง",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#7e848d",
+      "secondary": "#a4a9b3",
+      "style": "bolt_body",
+      "motion": "shot",
+      "start": 0.05,
+      "duration": 1,
+      "size": 1,
+      "spread": 4.6,
+      "rise": 2.2,
+      "speed": 1,
+      "energy": 0.2,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "38059db3-9b2c-4bc3-801c-19bfeed70034",
+      "type": "beam",
+      "name": "หัวกระสุนขาวร้อน",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#efefef",
+      "secondary": "#ffffff",
+      "style": "bolt_spindle",
+      "motion": "shot",
+      "start": 0.05,
+      "duration": 1,
+      "size": 0.5,
+      "spread": 4.6,
+      "rise": 0.85,
+      "speed": 1,
+      "energy": 0.9,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "4eb432bd-1bc3-4f26-b5b0-85b881cf4e74",
+      "type": "sparks",
+      "name": "หยดพลังม่วงร่วง",
+      "enabled": false,
+      "seed": 1398,
+      "color": "#aab0b9",
+      "secondary": "#e1e5ec",
+      "style": "drop",
+      "motion": "trail",
+      "start": 0.05,
+      "duration": 1,
+      "size": 0.08,
+      "spread": 4.6,
+      "rise": 0.4,
+      "speed": 1.2,
+      "energy": 0.8,
+      "opacity": 1,
+      "scale": 1,
+      "count": 18,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "37d5016f-2fe9-458e-b602-e4040fed5e9b",
+      "type": "sparks",
+      "name": "ละอองม่วงเรือง",
+      "enabled": true,
+      "seed": 1535,
+      "color": "#c7cdd6",
+      "secondary": "#ffffff",
+      "style": "glint",
+      "motion": "trail",
+      "start": 0.05,
+      "duration": 1,
+      "size": 0.08,
+      "spread": 4.6,
+      "rise": 0.5,
+      "speed": 1.2,
+      "energy": 1.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 14,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "feda5638-eb0f-4b9d-89e3-bc480bb98d24",
+      "type": "flash",
+      "name": "วาบปะทะม่วง",
+      "enabled": true,
+      "seed": 1672,
+      "color": "#c1c7d1",
+      "secondary": "#ffffff",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0.82,
+      "duration": 0.3,
+      "size": 1.5,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.4,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "97b21071-e460-4391-b2ba-1050e8011869",
+      "type": "flash",
+      "name": "วงแรงปะทะเวท",
+      "enabled": true,
+      "seed": 1809,
+      "color": "#b5bac4",
+      "secondary": "#ffffff",
+      "style": "halo",
+      "motion": "burst",
+      "start": 0.84,
+      "duration": 0.35,
+      "size": 1.8,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.4,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "76237a05-d195-4792-a256-b49747267376",
+      "type": "sparks",
+      "name": "สะเก็ดเวทกระจาย",
+      "enabled": true,
+      "seed": 1946,
+      "color": "#dce1eb",
+      "secondary": "#e3e3e3",
+      "style": "glint",
+      "motion": "burst",
+      "start": 0.82,
+      "duration": 0.6,
+      "size": 0.06,
+      "spread": 1.3,
+      "rise": 1.1,
+      "speed": 1.2,
+      "energy": 1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 26,
+      "position": [
+        0,
+        0.75,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "1782ec61-1d82-462d-970f-4d3698965bf5",
+      "type": "smoke",
+      "name": "ไอม่วงจางหลังปะทะ",
+      "enabled": true,
+      "seed": 2083,
+      "color": "#828790",
+      "secondary": "#cfd4db",
+      "style": "cloud",
+      "motion": "burst",
+      "start": 0.85,
+      "duration": 0.7,
+      "size": 0.4,
+      "spread": 0.7,
+      "rise": 0.5,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 0.22,
+      "scale": 1,
+      "count": 7,
+      "position": [
+        0,
+        0.8,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

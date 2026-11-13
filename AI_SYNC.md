@@ -49,6 +49,8 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | tech-artist | (ยังไม่ push) | VFX สกิลคลาส 16 ตัว (daiyooo-vfx) เข้าเกมแล้ว: `client/skills/class_skill_vfx.gd` (pool+prewarm, เล่นตาม event `class_skill_*`) ต่อจาก `stage_view.gd`; `art/vfx/class_skills/` อยู่ pack `vfx` (battle); UI `art/ui/skill_tree`+`class_cards` ย้ายไป pack `ui` (boot) และ import เป็น Lossy 0.85 → core 38.7→4.2 MiB; ปุ่มทดสอบเว็บ `play.html?class_vfx=0`
+
 - 2026-11-13 | PO | develop | การ์ดในฮับขยับทุกเฟรม (เดิมการ์ดที่ไม่ได้ชี้ redraw 5 ครั้ง/วิ) `card_deck_screen.gd` · วัดบนเดสก์ท็อป 1920x1080 ไม่มีเมาส์ชี้: เฉลี่ย ~1,560 fps, ต่ำสุด 354 fps (`tools/perf/hub_fps.gd`) · ยังไม่ได้วัดบนมือถือ/เว็บ
 
 - 2026-11-13 | gameplay-programmer via PO | develop | ท่าไม้ตาย Human 4 ท่าใช้ได้จริงในการสู้ (Commander's Call, Masterstroke, Called Shot, Grand Recital) + ตรวจข้อมูลท่าไม้ตายเข้มงวดตอนโหลด · GDD 3.6 เพิ่มฟิลด์พิเศษ 5 ตัว · เทสต์ 2622/80

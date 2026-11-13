@@ -78,6 +78,7 @@ var _telegraph_views: Dictionary = {}  ## fighter id -> red ground warning while
 var _rig: Node
 var _effects: Node3D
 var _ranged: ProjectileView
+var _class_vfx  ## client/skills/class_skill_vfx.gd: the 16 class skill effects (class_skill/<id>)
 var _hud: CanvasLayer
 var _event_trigger: Node
 var _party_hud
@@ -231,6 +232,7 @@ func _physics_frame(_delta: float) -> void:
 	_handle_events()
 	work_started=_work_mark("remote_views_events",work_started)
 	_ranged.handle_events(_session.events, _color_of)
+	_class_vfx.handle_events(_session.events)
 	_ranged.show_state(_session)
 	Audio.handle_events(_session.events, _session, _local_player_id)
 	work_started=_work_mark("projectiles_audio",work_started)
@@ -605,6 +607,10 @@ func _build_effects_and_hud() -> void:
 	_ranged = ProjectileView.new()  # arrows, bolts and ground circles (logic/projectiles.gd)
 	_ranged.effects = _effects
 	add_child(_ranged)
+	_class_vfx = preload("res://client/skills/class_skill_vfx.gd").new()
+	_class_vfx.session = _session
+	_class_vfx.views = _views
+	add_child(_class_vfx)
 	_prewarm_effects()
 	_effects.rig = _rig
 	_hud = Hud.new()
@@ -639,6 +645,7 @@ func _prewarm_effects() -> void:
 	var hidden: Vector3 = _session.bodies[_local_player_id].position - Vector3(0.0, 4.0, 0.0)
 	_effects.prewarm(hidden)
 	_ranged.prewarm(hidden)
+	_class_vfx.prewarm(_class_vfx.skills_on_field(_session).keys(), hidden, _class_vfx.skills_on_field(_session))  # GLB effects: built and drawn once now
 	# The weapon swing trail's material compiles on its first draw (a hitch on the web): draw one now.
 	var trail := preload("res://client/vfx/blade_trail.gd").new()
 	add_child(trail)

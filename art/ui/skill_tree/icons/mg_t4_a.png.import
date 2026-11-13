@@ -15,9 +15,9 @@ dest_files=["res://.godot/imported/mg_t4_a.png-035dfeefe241a22973e87987d84a21d4.
 
 [params]
 
-compress/mode=0
+compress/mode=1
 compress/high_quality=false
-compress/lossy_quality=0.7
+compress/lossy_quality=0.85
 compress/uastc_level=0
 compress/rdo_quality_loss=0.0
 compress/hdr_compression=1

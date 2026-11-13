@@ -1,0 +1,234 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/crater_leap",
+  "duration": 3,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.136,
+    "exposure": 0.982
+  },
+  "layers": [
+    {
+      "id": "d9d02f19-6f91-4f22-9c8e-a9541a862431",
+      "type": "debris",
+      "name": "แกนอุกกาบาต",
+      "enabled": false,
+      "seed": 713,
+      "color": "#34322d",
+      "secondary": "#aeaba2",
+      "style": "meteor",
+      "motion": "fall",
+      "start": 0.1,
+      "duration": 1.2,
+      "size": 0.7,
+      "spread": 3,
+      "rise": 5,
+      "speed": 1,
+      "energy": 0.247,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "10748dda-5013-414b-984c-1ad72b2eaf63",
+      "type": "flame",
+      "name": "หางไฟอุกกาบาต",
+      "enabled": false,
+      "seed": 850,
+      "color": "#9c988e",
+      "secondary": "#c7c5bf",
+      "style": "jet",
+      "motion": "fall",
+      "start": 0.1,
+      "duration": 1.2,
+      "size": 0.55,
+      "spread": 3,
+      "rise": 5,
+      "speed": 1,
+      "energy": 0.908,
+      "opacity": 0.88,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "f33d483c-c897-4634-95fa-da0e287e8d57",
+      "type": "flash",
+      "name": "แสงปะทะอุกกาบาต",
+      "enabled": true,
+      "seed": 987,
+      "color": "#9c988e",
+      "secondary": "#c7c5bf",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0.1,
+      "duration": 0.4,
+      "size": 2.8,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.651,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "30adc88c-a3ef-4225-86b0-531dfed64522",
+      "type": "wave",
+      "name": "แนวฝุ่นกระแทก",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#9c988e",
+      "secondary": "#c7c5bf",
+      "style": "splash",
+      "width": 0.045,
+      "motion": "burst",
+      "start": 0.1,
+      "duration": 0.85,
+      "size": 1,
+      "spread": 4,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.38,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "79ca2074-11d8-4bd2-b425-095774eb7cca",
+      "type": "debris",
+      "name": "หินกระจุย",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#494845",
+      "secondary": "#918f88",
+      "style": "rock",
+      "motion": "burst",
+      "start": 0.1,
+      "duration": 2,
+      "size": 0.16,
+      "spread": 5,
+      "rise": 3,
+      "speed": 1,
+      "energy": 0.083,
+      "opacity": 1,
+      "scale": 1,
+      "count": 65,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "17fcf632-d487-4eaf-b325-df466191eea1",
+      "type": "sparks",
+      "name": "สะเก็ดไฟกระจาย",
+      "enabled": true,
+      "seed": 1398,
+      "color": "#9c988e",
+      "secondary": "#c7c5bf",
+      "style": "needle",
+      "motion": "burst",
+      "start": 0.1,
+      "duration": 1.5,
+      "size": 0.04,
+      "spread": 5,
+      "rise": 3,
+      "speed": 1.2,
+      "energy": 0.651,
+      "opacity": 1,
+      "scale": 1,
+      "count": 180,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "7c0d4484-3b15-48ea-8aaf-219321cfbc4c",
+      "type": "smoke",
+      "name": "ฝุ่นหลังปะทะ",
+      "enabled": true,
+      "seed": 1535,
+      "color": "#9c988e",
+      "secondary": "#c7c5bf",
+      "style": "dust",
+      "motion": "burst",
+      "start": 0.15,
+      "duration": 2.7,
+      "size": 1.2,
+      "spread": 4,
+      "rise": 1.3,
+      "speed": 1,
+      "energy": 0.083,
+      "opacity": 0.45,
+      "scale": 1,
+      "count": 36,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

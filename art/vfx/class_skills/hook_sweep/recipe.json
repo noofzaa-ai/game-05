@@ -1,0 +1,141 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/hook_sweep",
+  "duration": 4,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.175,
+    "exposure": 1.045
+  },
+  "layers": [
+    {
+      "id": "1d0a9ab1-df1e-4181-a3bc-4ffaae9f6ef7",
+      "type": "wave",
+      "name": "ริ้วผิวน้ำวน",
+      "enabled": true,
+      "seed": 713,
+      "color": "#8f8b83",
+      "secondary": "#f4f4f4",
+      "style": "eddy",
+      "width": 0.065,
+      "motion": "vortex",
+      "start": 0,
+      "duration": 3,
+      "size": 1,
+      "spread": 2.6,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.21,
+      "opacity": 0.5,
+      "scale": 1,
+      "count": 2,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "87cb1ae9-689f-4357-b5f9-c3e947f5b537",
+      "type": "smoke",
+      "name": "ละอองน้ำหมุนดูด",
+      "enabled": true,
+      "seed": 850,
+      "color": "#8f8b83",
+      "secondary": "#f4f4f4",
+      "style": "cloud",
+      "motion": "vortex",
+      "start": 0,
+      "duration": 3,
+      "size": 0.5,
+      "spread": 2.8,
+      "rise": 0.35,
+      "speed": 1,
+      "energy": 0.4,
+      "opacity": 0.18,
+      "scale": 1,
+      "count": 65,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "5865d72d-e642-46ce-9220-bf098f7e44e1",
+      "type": "sparks",
+      "name": "ฟองเล็กวนตามน้ำ",
+      "enabled": true,
+      "seed": 987,
+      "color": "#8f8b83",
+      "secondary": "#f4f4f4",
+      "style": "mote",
+      "motion": "vortex",
+      "start": 0,
+      "duration": 3,
+      "size": 0.045,
+      "spread": 3,
+      "rise": 0.5,
+      "speed": 1,
+      "energy": 0.49,
+      "opacity": 1,
+      "scale": 1,
+      "count": 140,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "d6ae21a9-6bf3-4dca-938a-0aa3c50f2d61",
+      "type": "sparks",
+      "name": "น้ำสาดปลายสกิล",
+      "enabled": false,
+      "seed": 1124,
+      "color": "#8f8b83",
+      "secondary": "#f4f4f4",
+      "style": "drop",
+      "motion": "burst",
+      "start": 2.5,
+      "duration": 1.3,
+      "size": 0.08,
+      "spread": 4,
+      "rise": 1.7,
+      "speed": 1,
+      "energy": 0.42,
+      "opacity": 1,
+      "scale": 1,
+      "count": 90,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

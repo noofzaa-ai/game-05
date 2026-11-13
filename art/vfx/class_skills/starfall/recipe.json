@@ -1,0 +1,484 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/starfall",
+  "duration": 2.4,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.172,
+    "exposure": 0.975
+  },
+  "layers": [
+    {
+      "id": "9699a8b4-49df-4dc4-9542-fc136535a820",
+      "type": "wave",
+      "name": "วงชาร์จหดเข้า",
+      "enabled": true,
+      "seed": 713,
+      "color": "#3438f4",
+      "secondary": "#d7e2ff",
+      "style": "ring",
+      "width": 0.05,
+      "motion": "implode",
+      "start": 0,
+      "duration": 0.5,
+      "size": 1,
+      "spread": 2.8,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.573,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "d3ecff60-03c0-4142-b517-f438e70a4c4e",
+      "type": "sparks",
+      "name": "ประกายรวมตัวที่ฐาน",
+      "enabled": true,
+      "seed": 850,
+      "color": "#4367eb",
+      "secondary": "#d6e2ff",
+      "style": "glint",
+      "motion": "vortex",
+      "start": 0,
+      "duration": 0.5,
+      "size": 0.08,
+      "spread": 1.8,
+      "rise": 0.6,
+      "speed": 1.2,
+      "energy": 0.688,
+      "opacity": 1,
+      "scale": 1,
+      "count": 40,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "85dc821d-d0d4-45cf-9809-52515e8004ad",
+      "type": "flash",
+      "name": "แสงชาร์จที่ฐาน",
+      "enabled": true,
+      "seed": 987,
+      "color": "#362cf3",
+      "secondary": "#d8e1ff",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0.08,
+      "duration": 0.42,
+      "size": 1.7,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.745,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        -0.1,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "49117382-afac-47b3-b06d-9059a27d23ef",
+      "type": "beam",
+      "name": "ลำแสงฟ้ารอบแกน",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#270093",
+      "secondary": "#362cf3",
+      "style": "lance",
+      "motion": "burst",
+      "start": 0.42,
+      "duration": 1.75,
+      "size": 3.2,
+      "spread": 0,
+      "rise": 6,
+      "speed": 1,
+      "energy": 0.143,
+      "opacity": 0.35,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "8115f608-19db-4e59-b280-66877a9f3202",
+      "type": "beam",
+      "name": "แกนเสาขาวร้อน",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#ceddfb",
+      "secondary": "#f7f9ff",
+      "style": "lance",
+      "motion": "burst",
+      "start": 0.42,
+      "duration": 1.75,
+      "size": 1,
+      "spread": 0,
+      "rise": 6,
+      "speed": 1,
+      "energy": 0.486,
+      "opacity": 0.95,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "2a569374-9ec8-4fbd-b7bc-282bdc2fb7e3",
+      "type": "beam",
+      "name": "สายไฟฟ้าไต่เสา",
+      "enabled": false,
+      "seed": 1398,
+      "color": "#3046f7",
+      "secondary": "#d6e2ff",
+      "style": "arc_crawl",
+      "motion": "burst",
+      "start": 0.45,
+      "duration": 1.6,
+      "size": 2.2,
+      "spread": 0,
+      "rise": 6,
+      "speed": 1,
+      "energy": 0.344,
+      "opacity": 0.95,
+      "scale": 1,
+      "count": 3,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "fadad289-fb30-4313-aeff-c3f02fe6e0ed",
+      "type": "beam",
+      "name": "สายฟ้าแตกแขนงข้างเสา",
+      "enabled": false,
+      "seed": 2711,
+      "color": "#cbdbf9",
+      "secondary": "#ffffff",
+      "style": "bolt",
+      "motion": "burst",
+      "start": 0.45,
+      "duration": 0.5,
+      "size": 0.5,
+      "spread": 0.5,
+      "rise": 5,
+      "speed": 1,
+      "energy": 1.134,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 3,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "4c1693df-0220-4488-b214-2a662296de0e",
+      "type": "beam",
+      "name": "สายฟ้าฟาดซ้ำ",
+      "enabled": false,
+      "seed": 2753,
+      "color": "#dbe7ff",
+      "secondary": "#ffffff",
+      "style": "bolt",
+      "motion": "burst",
+      "start": 0.9,
+      "duration": 0.45,
+      "size": 0.45,
+      "spread": 0.4,
+      "rise": 5.5,
+      "speed": 1,
+      "energy": 1.134,
+      "opacity": 0.8,
+      "scale": 1,
+      "count": 2,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "7b366444-1e66-48c1-8105-5dd8b2d636fd",
+      "type": "flash",
+      "name": "แฟลชกระแทกพื้น",
+      "enabled": true,
+      "seed": 1809,
+      "color": "#cad8f7",
+      "secondary": "#ffffff",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0.42,
+      "duration": 0.3,
+      "size": 3,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.134,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        -0.1,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "551c3627-9098-4990-9d2c-c41a08360501",
+      "type": "flash",
+      "name": "แสงค้างฐานเสา",
+      "enabled": true,
+      "seed": 1946,
+      "color": "#362cf3",
+      "secondary": "#d8e1ff",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0.45,
+      "duration": 1.2,
+      "size": 2,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.573,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        -0.15,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "e72ea17d-30a8-47dd-84cd-840c8680e05b",
+      "type": "wave",
+      "name": "วงกระแทกฟ้า",
+      "enabled": true,
+      "seed": 2083,
+      "color": "#3a63f2",
+      "secondary": "#d6e2ff",
+      "style": "ring",
+      "width": 0.04,
+      "motion": "burst",
+      "start": 0.44,
+      "duration": 0.7,
+      "size": 1,
+      "spread": 2.6,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.688,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "a5db6fbe-ed1f-4505-a65a-396baef6a5a2",
+      "type": "wave",
+      "name": "คลื่นไฟฟ้าฉีกบนพื้น",
+      "enabled": true,
+      "seed": 2220,
+      "color": "#3600e1",
+      "secondary": "#d9e1ff",
+      "style": "splash",
+      "width": 0.06,
+      "motion": "burst",
+      "start": 0.46,
+      "duration": 0.9,
+      "size": 1,
+      "spread": 2,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.573,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "d1d3894b-a901-46a2-a69d-5f2e0d7b604c",
+      "type": "sparks",
+      "name": "สะเก็ดไฟฟ้ากระเด็น",
+      "enabled": true,
+      "seed": 2357,
+      "color": "#5580e6",
+      "secondary": "#d5e2ff",
+      "style": "needle",
+      "motion": "burst",
+      "start": 0.45,
+      "duration": 0.9,
+      "size": 0.03,
+      "spread": 3,
+      "rise": 2,
+      "speed": 1.2,
+      "energy": 0.745,
+      "opacity": 1,
+      "scale": 1,
+      "count": 70,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "980cbf42-f4e4-4dd6-b3d3-41d2134e1a78",
+      "type": "sparks",
+      "name": "ประกายไต่ขึ้นตามเสา",
+      "enabled": true,
+      "seed": 2494,
+      "color": "#426def",
+      "secondary": "#d5e2ff",
+      "style": "glint",
+      "motion": "cyclone",
+      "start": 0.5,
+      "duration": 1.85,
+      "size": 0.06,
+      "spread": 0.5,
+      "rise": 5,
+      "speed": 1.2,
+      "energy": 0.63,
+      "opacity": 1,
+      "scale": 1,
+      "count": 36,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "4f1b3580-04e7-4936-9891-7e28e35297c0",
+      "type": "smoke",
+      "name": "ฝุ่นฐานเสา",
+      "enabled": true,
+      "seed": 2631,
+      "color": "#120f47",
+      "secondary": "#373c71",
+      "style": "dust",
+      "motion": "burst",
+      "start": 0.45,
+      "duration": 1.9,
+      "size": 0.7,
+      "spread": 1.6,
+      "rise": 0.5,
+      "speed": 1,
+      "energy": 0,
+      "opacity": 0.25,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

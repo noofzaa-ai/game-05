@@ -66,7 +66,13 @@ func run(ctx) -> void:
 	for p in ["res://art/maps/goblin_forest/a.glb.import", "res://art/props/goblin_base/meshes/hut.res", "res://art/monsters/goblin/goblin.glb.import",
 			"res://art/animations/goblin.glb.import"]:
 		ctx.check("battle art loads in the background: " + p, PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, p)) == PackLayout.BATTLE)
-	ctx.check("card screen UI art stays in core (with the page)", PackLayout.pack_for_path(layout, "res://art/ui/class_cards/hub_fight_button.png.import") == "core")
+	# 2026-11-13 (PO): card/hub and skill-tree UI art left core for the "ui" boot pack (the boot scene uses none of it).
+	for p in ["res://art/ui/class_cards/hub_fight_button.png.import", "res://art/ui/skill_tree/icons/el_1.png.import"]:
+		ctx.check("card screen UI art loads at boot, not in core: " + p,
+			PackLayout.pack_for_path(layout, p) == "ui" and PackLayout.stage_of(layout, "ui") == PackLayout.BOOT)
+	ctx.check("class skill VFX load with the battle packs",
+		PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/vfx/class_skills/starfall/effect.glb.import")) == PackLayout.BATTLE)
+	ctx.check("class skill VFX scenes stay in core (scenes always do)", PackLayout.pack_for_path(layout, "res://art/vfx/class_skills/starfall/effect.tscn") == "core")
 	ctx.check("a format variant has its base pack's stage", PackLayout.stage_of(layout, "monsters.etc2") == PackLayout.BATTLE and PackLayout.stage_of(layout, "characters.s3tc") == PackLayout.BOOT)
 	var staged := [{"name": "characters", "stage": "boot", "file": "characters.0123456789ab.pck.wasm"},
 		{"name": "stages", "stage": "battle", "file": "stages.0123456789ab.pck.wasm"},

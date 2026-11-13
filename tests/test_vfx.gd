@@ -19,6 +19,7 @@ func run(ctx) -> void:
 	_check_bad_data(ctx)
 	_check_skill_looks(ctx, lib)
 	await _check_player(ctx, lib)
+	await _check_class_skill_vfx(ctx)
 
 
 ## Every move, skill, telegraph, dive, status and event maps to a real entry.
@@ -168,3 +169,47 @@ func _check_skill_looks(ctx, lib) -> void:
 	ctx.check("a pop-up clear of the HUD stays put", Numbers.avoid(Rect2(400, 300, 80, 40), keep, Vector2(1280, 720)) == Vector2.ZERO)
 	var edge: Vector2 = Numbers.avoid(Rect2(1250, 300, 80, 40), [] as Array[Rect2], Vector2(1280, 720))
 	ctx.check("a pop-up at the screen edge stays on screen", 1250.0 + edge.x + 80.0 <= 1280.0)
+
+
+## Class skills v2 (client/skills/class_skill_vfx.gd): every skill's vfx key resolves to its effect scene, the
+## prewarm builds and draws one of each, a release event plays the effect and it goes back to its pool at the end.
+func _check_class_skill_vfx(ctx) -> void:
+	const ClassVfx := preload("res://client/skills/class_skill_vfx.gd")
+	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/class_skills/class_skills.json"))
+	var missing: Array = []
+	for id in data["skills"]:
+		if ClassVfx.scene_path(str(data["skills"][id].get("vfx", ""))) == "" or not ClassVfx.SPEC.has(id):
+			missing.append(id)
+	ctx.check("every class skill vfx key resolves to an effect scene %s" % [missing], missing.is_empty())
+	ctx.check("a non class-skill key resolves to nothing", ClassVfx.scene_path("skill_cast/fireball") == "")
+	var vfx = ClassVfx.new()
+	vfx.session = _FakeSession.new()
+	ctx.root.add_child(vfx)
+	vfx.prewarm(["reaping_arc", "arcane_orb"], Vector3(0.0, -4.0, 0.0))
+	ctx.check("prewarm builds every listed skill (+1 for an orb's burst)", vfx.prewarmed == ["reaping_arc", "arcane_orb"] and vfx.live_count() == 3)
+	await ctx.process_frame
+	for i in 5:
+		vfx._process(0.1)
+	ctx.check("prewarmed effects go back to the pool", vfx.live_count() == 0)
+	var nodes := vfx.get_child_count()
+	vfx.handle_events([{"type": "class_skill_release", "player": 1, "skill": "reaping_arc", "index": 0, "pos": Vector3.ZERO, "aim": Vector3(4, 0, 0)}])
+	ctx.check("a release plays the skill's effect from the pool", vfx.live_count() == 1 and vfx.get_child_count() == nodes)
+	vfx.handle_events([{"type": "class_skill_release", "player": 1, "skill": "arcane_orb", "index": 0, "pos": Vector3.ZERO, "aim": Vector3(4, 0, 0)}])
+	vfx.handle_events([{"type": "class_skill_impact", "player": 1, "skill": "", "pos": Vector3(3, 0, 0), "radius": 2.0}])
+	ctx.check("an orb's impact swaps the flying orb for its burst", vfx.live_count() == 2)
+	for i in 30:
+		vfx._process(0.1)
+	ctx.check("every class skill effect ends and returns to its pool", vfx.live_count() == 0)
+	vfx.queue_free()
+
+
+class _FakeBody:
+	var position := Vector3.ZERO
+	func _init(p: Vector3) -> void:
+		position = p
+
+
+class _FakeSession:
+	var bodies := {1: _FakeBody.new(Vector3.ZERO), 2: _FakeBody.new(Vector3(4, 0, 0))}
+	var fighters := {}
+

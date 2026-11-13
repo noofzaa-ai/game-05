@@ -1,0 +1,172 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "class_skill/repulse_nova",
+  "duration": 3.2,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.143,
+    "exposure": 1.019
+  },
+  "layers": [
+    {
+      "id": "295891da-160a-47d4-9453-1485f0810ab6",
+      "type": "flash",
+      "name": "แสงปะทะ",
+      "enabled": true,
+      "seed": 713,
+      "color": "#3d61ff",
+      "secondary": "#d6e2ff",
+      "style": "halo",
+      "motion": "burst",
+      "start": 0.42,
+      "duration": 0.35,
+      "size": 1.4,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.719,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b6077ad3-0cb4-41c7-a843-620e9aa77f6e",
+      "type": "sparks",
+      "name": "น้ำสาดโค้ง",
+      "enabled": false,
+      "seed": 850,
+      "color": "#3d61ff",
+      "secondary": "#d6e2ff",
+      "style": "drop",
+      "motion": "burst",
+      "start": 0.46,
+      "duration": 1.5,
+      "size": 0.1,
+      "spread": 2.4,
+      "rise": 2,
+      "speed": 1.2,
+      "energy": 0.143,
+      "opacity": 1,
+      "scale": 1,
+      "count": 32,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c908343e-31b1-4645-a990-2786ba03f011",
+      "type": "smoke",
+      "name": "ควันฟุ้ง",
+      "enabled": true,
+      "seed": 987,
+      "color": "#3d61ff",
+      "secondary": "#d6e2ff",
+      "style": "cloud",
+      "motion": "burst",
+      "start": 0.5,
+      "duration": 2.1,
+      "size": 0.55,
+      "spread": 3,
+      "rise": 1.3,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 0.2,
+      "scale": 1,
+      "count": 24,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "599150f4-066b-46b0-a9b7-dbaf2975f4cd",
+      "type": "sparks",
+      "name": "สะเก็ดพลัง",
+      "enabled": false,
+      "seed": 1124,
+      "color": "#3d61ff",
+      "secondary": "#d6e2ff",
+      "style": "drop",
+      "motion": "burst",
+      "start": 0.46,
+      "duration": 1.5,
+      "size": 0.06,
+      "spread": 3.8,
+      "rise": 2.5,
+      "speed": 1.2,
+      "energy": 0.172,
+      "opacity": 1,
+      "scale": 1,
+      "count": 90,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "d3549307-9f9c-4a67-9cf5-25b97e8e72bc",
+      "type": "wave",
+      "name": "วงแสงบนพื้น",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#3d61ff",
+      "secondary": "#d6e2ff",
+      "style": "splash",
+      "width": 0.05,
+      "motion": "burst",
+      "start": 0.46,
+      "duration": 0.9,
+      "size": 1,
+      "spread": 2.8,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.229,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 2,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}
