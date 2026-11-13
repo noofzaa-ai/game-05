@@ -6,7 +6,11 @@ static var revision := 0
 static var _loaded := false
 static var _values := {"ultimate_vfx": true, "combat_vfx": true, "ultimate_camera": true,
 	"outline": true, "shadows": true, "decorative_lights": true, "fog": true, "glow": true,
-	"render_scale": 0.5, "antialiasing": 2}
+	"render_scale": 0.5, "antialiasing": 2, "drawn_style": "on"}
+## Drawn (ink-and-wash) battle look, client/draw_style/draw_style.gd (Boss 2026-11-13 picked ink_c):
+## "on" = materials + screen pass (screen pass only at render scale 0.5 and not on a slow device), "lite" = materials
+## only, "off" = the old look.
+const DRAWN_STYLES := ["off", "lite", "on"]
 
 static func enabled(key: String) -> bool:
 	_load_once()
@@ -37,6 +41,7 @@ static func _valid(key: String, candidate: Variant) -> bool:
 	if not _values.has(key): return false
 	if key == "render_scale": return candidate is float and candidate in SCALES
 	if key == "antialiasing": return candidate is int and candidate in [0, 2, 4]
+	if key == "drawn_style": return candidate is String and candidate in DRAWN_STYLES
 	return candidate is bool
 
 static func _load_once() -> void:

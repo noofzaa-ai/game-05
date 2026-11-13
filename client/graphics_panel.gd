@@ -84,7 +84,7 @@ static func contents(two_columns: bool = false) -> VBoxContainer:
 		# Each column starts with a slider, then four effect switches.
 		for index in [0, 1, 2, 3, 4, 5, 6]: controls[index].reparent(left)
 		for index in [11, 12, 13, 7, 8, 9, 10]: controls[index].reparent(right)
-	return box
+	box.add_child(preload("res://client/draw_style/draw_style.gd").settings_control()); return box  # "Drawn style: On / Lite / Off"
 
 func _ready() -> void:
 	layer = 30

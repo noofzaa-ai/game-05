@@ -152,7 +152,7 @@ func _ready() -> void:
 	if not _build_session(map): return
 	_build_camera(map)
 	_build_effects_and_hud()
-	preload("res://client/draw_style/draw_style.gd").apply(self, _rig.get("_camera"), _views.values())  # prototype, off by default
+	preload("res://client/draw_style/draw_style.gd").apply(self, _rig.get("_camera"), _views.values())  # drawn (ink-and-wash) look, graphics setting drawn_style
 	if _camp_mode:
 		if not (_session.has_method("is_lobby") and _session.is_lobby()): _spawn_portals()
 		_hud.show_skill_banner("Rest camp")

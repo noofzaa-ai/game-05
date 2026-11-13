@@ -1,12 +1,13 @@
 shader_type spatial;
-// Draw-style prototype A/C (tech-artist 2026-11-13): the stage's own surfaces painted like an ink-and-wash
+// Drawn battle look, material part (tech-artist 2026-11-13; default since Boss picked ink_c): the stage's own surfaces painted like an ink-and-wash
 // illustration. Replaces a map StandardMaterial3D (same albedo colour / texture / vertex colour inputs) with:
 // - 2-3 flat light bands instead of a smooth gradient (sun and lamps),
 // - pen hatching on the sides turned away from the sun (world-anchored strokes, so they do not swim). Done in
 //   fragment(), not light(): Compatibility draws a shadowed sun in an additive pass, where darkening is clamped
 //   away, so cast shadows cannot be hatched here (option B/C's screen pass does that),
-// - a watercolour wash (soft blotches) and paper grain over the colour,
-// - colour pulled toward a muted, warm, earthy palette.
+// - a soft, low-contrast watercolour wash (large, lighter and darker pools around the true colour) and subtle paper grain,
+// - colour pulled a little toward a muted, warm palette (greens and browns keep their hue).
+// Target: GL Compatibility (WebGL2, mobile). Cost: ~40 ALU ops of value noise per pixel, one texture read.
 // Compatibility renderer only features (no screen/depth textures). Procedural noise, no textures yet: the
 // final paper/wash would be painted textures (Codex workflow), which is cheaper than this ALU noise.
 render_mode diffuse_lambert, specular_disabled, cull_back;
@@ -31,10 +32,10 @@ uniform vec3 sun_direction = vec3(0.47, 0.53, 0.70);  // towards the sun, world 
 group_uniforms;
 
 group_uniforms paint;
-uniform float saturation = 0.72;
-uniform vec3 warmth = vec3(1.05, 1.0, 0.86);
-uniform float wash_strength = 0.28;
-uniform float grain_strength = 0.16;
+uniform float saturation = 0.9;    // 1 = the art's own colour
+uniform vec3 warmth = vec3(1.03, 1.0, 0.93);
+uniform float wash_strength = 0.10;  // +-10% brightness at most: pools, not stains
+uniform float grain_strength = 0.05;  // +-5%: felt more than seen
 group_uniforms;
 
 varying vec3 world_pos;
@@ -69,12 +70,14 @@ void fragment() {
 	if (use_texture) colour *= texture(albedo_tex, UV).rgb;
 	if (use_vertex_color) colour *= COLOR.rgb;
 	vec2 plane = surface_plane(world_pos, world_normal);
-	// watercolour wash: two octaves of soft blotches, darker where the pigment pooled
-	float wash = value_noise(plane * 0.35) * 0.65 + value_noise(plane * 1.3 + 7.0) * 0.35;
-	colour *= 1.0 - wash_strength * (wash - 0.35);
-	// paper grain: fine speckle, fixed to the surface
-	float grain = value_noise(plane * 38.0) * 0.6 + hash(floor(plane * 90.0)) * 0.4;
-	colour *= 1.0 - grain_strength * grain;
+	// Watercolour wash: big soft pools (about 4-6 m) a little lighter or darker than the true colour, centred on
+	// it, so the average brightness and hue stay the art's. (The prototype used smaller, darker-only blotches,
+	// which read as dirty paint.)
+	float wash = value_noise(plane * 0.18) * 0.7 + value_noise(plane * 0.55 + 7.0) * 0.3;
+	colour *= 1.0 + wash_strength * smoothstep(0.15, 0.85, wash) * 2.0 - wash_strength;
+	// Paper grain: fine speckle fixed to the surface, also centred (no overall darkening).
+	float grain = value_noise(plane * 38.0) * 0.7 + hash(floor(plane * 90.0)) * 0.3;
+	colour *= 1.0 + grain_strength * (grain - 0.5) * 2.0;
 	float luma = dot(colour, vec3(0.299, 0.587, 0.114));
 	colour = mix(vec3(luma), colour, saturation) * warmth;
 	// Hatching on the sides that face away from the sun: diagonal strokes, a crossing set in patches.

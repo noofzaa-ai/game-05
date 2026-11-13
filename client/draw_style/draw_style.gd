@@ -1,99 +1,220 @@
 extends Node
-## Draw-style PROTOTYPE (tech-artist 2026-11-13, Boss: "the fight should feel like watching a cartoon";
-## ink-and-wash illustration look). Off by default: the shipped look is unchanged unless a style is chosen by
-##   - the web page URL `?style=ink_a|ink_b|ink_c`,
-##   - the command line `-- --style=ink_a|ink_b|ink_c` (native, tools/shots/draw_style_shots.gd),
-##   - the project setting `zorx/rendering/draw_style` (not in project.godot = "").
-## Styles:
-##   ink_a  material level: the stage art gets client/draw_style/ink_world.gdshader (2-3 light bands, shadow
-##          hatching, wash + paper grain, muted warm colour) and brush-like ink outlines; monsters get the brush
-##          outline too. Characters (studio05 toon) are unchanged.
-##   ink_b  screen level: the normal frame, then one full-screen pass (ink_screen.gdshader): depth-edge ink lines,
-##          flat value bands, hatching in the dark, paper and warmth.
-##   ink_c  A's stage materials and outlines + B's screen pass at reduced strength (lines, bands, light hatching
-##          inside cast shadows; little extra grain).
-## Presentation only: never touches logic/ or the fight. EXTENDING: a new style is a new entry in apply().
+## Drawn ("ink-and-wash") battle look. Boss 2026-11-13: "the fight should feel like watching a cartoon"; after
+## trying the three prototypes on a phone Boss picked ink_c, which is now the default (docs/tech/draw_style.md).
+## Two parts:
+##   materials  the stage scenery gets client/draw_style/ink_world.gdshader (2-3 light bands, hatching on faces turned
+##              from the sun, a soft watercolour wash, subtle paper grain, muted warm colour) and brush-like ink
+##              outlines (ink_outline_brush.gdshader); the monsters' ink outline becomes the brush line. Cost ~0 ms.
+##   screen     one full-screen pass (ink_screen.gdshader): depth ink lines, softened value bands, light hatching
+##              inside cast shadows. It reads a copy of the screen and depth, which costs 1-3 ms on WebGL2 at render
+##              scale 0.5 but 6-20 ms at 1.0, so it runs only at scale 0.5 and switches itself off for the rest of the
+##              session when the battle runs below SLOW_FPS (a slow device). HP bars, numbers and VFX draw after it.
+## The graphics setting `drawn_style` (client/graphics_options.gd): "on" = materials + screen pass, "lite" = materials
+## only, "off" = the old look. Debug overrides: web URL `?style=` / native `-- --style=` with on|lite|off, or the
+## prototype ids ink_a (= lite), ink_b (screen only), ink_c (= on). Presentation only: never touches logic/.
 
 const InkStyle := preload("res://client/ink_style.gd")
+const Options := preload("res://client/graphics_options.gd")
 const WORLD_SHADER := preload("res://client/draw_style/ink_world.gdshader")
 const BRUSH_SHADER := preload("res://client/draw_style/ink_outline_brush.gdshader")
 const SCREEN_SHADER := preload("res://client/draw_style/ink_screen.gdshader")
-const STYLES := ["ink_a", "ink_b", "ink_c"]
-const SETTING := "zorx/rendering/draw_style"
+const MODES := ["off", "lite", "on", "ink_b"]
+const ALIASES := {"ink_a": "lite", "ink_c": "on"}
+const DRAWN_KEYS := ["drawn_off", "drawn_lite", "drawn_on"]  ## panel words, in the order of Options.DRAWN_STYLES
+const SCREEN_SCALE := 0.5  ## the only render scale the screen pass runs at (the shipped default)
+const SLOW_FPS := 27.0  ## below this for SLOW_WINDOWS windows in a row: the screen pass goes off for the session
+const SLOW_WINDOW := 2.0  ## seconds per measuring window
+const SLOW_WINDOWS := 2
+const SLOW_WARMUP := 3.0  ## seconds after the stage opens before measuring (loading hitches are not "slow")
 const STAGE_OUTLINE_WIDTH := 0.03  ## metres before the pixel limits (props are big: a thick pen)
 const MONSTER_OUTLINE_WIDTH := 0.008
+const ENV_SATURATION := 0.95  ## the stage keeps its greens and warm browns (0.85 read grey on the goblin camp)
 
-static var _chosen := "?"
+static var _override := "?"  ## from the URL / command line, "" = none (read once)
+static var slow_device := false  ## set by the guard; kept until the game restarts
 static var _two_sided_shader: Shader
-static var _world_cache: Dictionary = {}
-static var _sun_direction := Vector3(0.47, 0.53, 0.70)  ## towards the stage's sun, for ink_world.gdshader hatching  ## source material -> ShaderMaterial (shared by all instances)
+static var _world_cache: Dictionary = {}  ## source material -> ShaderMaterial (shared by all instances)
+static var _sun_direction := Vector3(0.47, 0.53, 0.70)  ## towards the stage's sun, for ink_world.gdshader hatching
 
 var _camera: Camera3D
 var _screen: MeshInstance3D
+var _revision := -1
+var _age := 0.0
+var _window_time := 0.0
+var _window_frames := 0
+var _slow_windows := 0
 
 
-## The chosen style id ("" = the normal look).
-static func current() -> String:
-	if _chosen != "?":
-		return _chosen
-	var style := str(ProjectSettings.get_setting(SETTING, ""))
-	for arg in OS.get_cmdline_user_args():
-		if arg.begins_with("--style="):
-			style = arg.substr(8)
-	if OS.has_feature("web"):
-		var from_url = JavaScriptBridge.eval("new URLSearchParams(location.search).get('style') || ''", true)
-		if from_url != null and str(from_url) != "":
-			style = str(from_url)
-	_chosen = style if STYLES.has(style) else ""
-	return _chosen
+## Words of the graphics panel's "Drawn style" control, Thai first and English second (the same layout and language
+## switch as client/card_tokens.gd STRINGS, which is not touched here).
+const STRINGS := {
+	"drawn_style": ["ลายเส้นวาดมือ", "Drawn style"],
+	"drawn_on": ["เต็ม", "On"],
+	"drawn_lite": ["เบา", "Lite"],
+	"drawn_off": ["ปิด", "Off"],
+	"drawn_hint": ["เต็ม: เส้นหมึกทั้งจอที่ 50% เท่านั้น เครื่องช้าจะลดเป็นเบาเอง", "On: full-screen ink at 50% only; slow devices drop to Lite"],
+}
 
 
-## Applies the chosen style to a built stage (art, fighters, environment) and its camera. No-op by default.
-## `fighters` = the fighter_view nodes. Called once at the end of StageView._ready.
+static func t(key: String) -> String:
+	var entry: Array = STRINGS.get(key, [key, key])
+	return str(entry[0 if preload("res://client/card_tokens.gd").language == "th" else 1])
+
+
+## The graphics panel's "Drawn style" control (client/graphics_panel.gd adds it under its other settings): a title,
+## three choice buttons On / Lite / Off in one group, and a one-line hint. Uses the panel's theme (no overrides).
+static func settings_control() -> VBoxContainer:
+	var holder := VBoxContainer.new()
+	var title := Label.new()
+	title.text = t("drawn_style")
+	holder.add_child(title)
+	var row := HBoxContainer.new()
+	var group := ButtonGroup.new()
+	var current := str(Options.value("drawn_style"))
+	for index in [2, 1, 0]:  # On, Lite, Off
+		var choice: String = Options.DRAWN_STYLES[index]
+		var button := Button.new()
+		button.name = "Drawn_" + choice
+		button.text = t(DRAWN_KEYS[index])
+		button.toggle_mode = true
+		button.button_group = group
+		button.button_pressed = choice == current
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(func(): Options.set_value("drawn_style", choice))
+		row.add_child(button)
+	holder.add_child(row)
+	var hint := Label.new()
+	hint.text = t("drawn_hint")
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	hint.custom_minimum_size = Vector2(260, 0)
+	holder.add_child(hint)
+	return holder
+
+
+## The look for this battle: "off", "lite", "on" (or "ink_b", the screen-only prototype).
+static func mode() -> String:
+	if _override == "?":
+		_override = ""
+		var wanted := ""
+		for arg in OS.get_cmdline_user_args():
+			if arg.begins_with("--style="):
+				wanted = arg.substr(8)
+		if OS.has_feature("web"):
+			var from_url = JavaScriptBridge.eval("new URLSearchParams(location.search).get('style') || ''", true)
+			if from_url != null and str(from_url) != "":
+				wanted = str(from_url)
+		wanted = str(ALIASES.get(wanted, wanted))
+		if MODES.has(wanted):
+			_override = wanted
+	if not _override.is_empty():
+		return _override
+	var chosen := str(Options.value("drawn_style"))
+	return chosen if MODES.has(chosen) else "on"
+
+
+## True when the screen pass may run now (mode "on"/"ink_b", render scale 0.5, the device not found slow).
+## A debug override (URL / command line) keeps it on at any scale, for measuring.
+static func screen_allowed() -> bool:
+	var m := mode()
+	if m != "on" and m != "ink_b":
+		return false
+	if not _override.is_empty():
+		return true
+	return is_equal_approx(float(Options.value("render_scale")), SCREEN_SCALE) and not slow_device
+
+
+## Applies the look to a built stage (art, fighters, environment) and its camera. Called once at the end of
+## StageView._ready. The materials stay for the battle; the screen pass follows the settings live.
 static func apply(stage: Node3D, camera: Camera3D, fighters: Array) -> void:
-	var style := current()
-	if style.is_empty() or camera == null:
+	var m := mode()
+	if m == "off" or camera == null:
 		return
-	if style == "ink_a" or style == "ink_c":
-		# The scenery that is actually drawn: the map's art scene (big stages), the arena board/camp built by
-		# client/arena_props.gd (GoblinCampIsland, FloatingIsland) and plain solids; never the fighters or effects.
+	if m == "lite" or m == "on":
 		_sun_direction = Vector3(0.47, 0.53, 0.70)
 		for node in stage.find_children("*", "DirectionalLight3D", true, false):
 			if not str(node.name).begins_with("Character"):  # the stage's sun (or moon), not the character lights
 				_sun_direction = (node as Node3D).global_transform.basis.z.normalized()
 				break
-		for name in ["ArtScene", "GoblinCampIsland", "FloatingIsland"]:
-			var root := stage.find_child(name, false, false) as Node3D
+		# The scenery that is actually drawn: the map's art scene (big stages), the arena board/camp built by
+		# client/arena_props.gd (GoblinCampIsland, FloatingIsland); never the fighters or effects.
+		for root_name in ["ArtScene", "GoblinCampIsland", "FloatingIsland"]:
+			var root := stage.find_child(root_name, false, false) as Node3D
 			if root != null and root.visible:
 				_paint_art(root)
-		for view in fighters:
-			_brush_outlines(view)
-		_tone_environment(stage, 0.85)
-		# Monsters of later waves, and toon_style.gd re-setting outlines on its deferred pass, come after
-		# this: re-brush every InkOutline that enters the tree (after toon_style's own deferred call).
-		var tree := stage.get_tree()
-		var watch := func(node: Node) -> void:
-			if str(node.name) == "InkOutline" and node is MeshInstance3D:
-				_rebrush.call_deferred(weakref(node))
-		tree.node_added.connect(watch)
-		stage.tree_exiting.connect(func() -> void: tree.node_added.disconnect(watch))
-		for view in fighters:
-			for node in view.find_children("InkOutline", "MeshInstance3D", true, false):
-				_rebrush.call_deferred(weakref(node))
-	if style == "ink_b" or style == "ink_c":
+		_tone_environment(stage, ENV_SATURATION)
+	# Monster outlines become the brush line and HP bars move after the screen pass in the draw order (_keep_clean).
+	# Later waves arrive after this: every new node is checked once, deferred past fighter_view's own setup.
+	var tree := stage.get_tree()
+	var watch := func(node: Node) -> void:
+		_check_node.call_deferred(weakref(node), m)
+	tree.node_added.connect(watch)
+	stage.tree_exiting.connect(func() -> void: tree.node_added.disconnect(watch))
+	for view in fighters:
+		if view == null:
+			continue
+		for node in view.find_children("*", "GeometryInstance3D", true, false):
+			_check_node.call_deferred(weakref(node), m)
+	if m == "on" or m == "ink_b":
 		var driver := new()
 		driver.name = "DrawStyleScreen"
 		driver._camera = camera
-		driver._screen = _screen_quad(style)
+		driver._screen = _screen_quad(m)
 		camera.add_child(driver._screen)
 		stage.add_child(driver)
 		driver._fit()
-		if style == "ink_b":
+		driver._screen.visible = screen_allowed()
+		if m == "ink_b":
 			_tone_environment(stage, 1.0)
 
 
-func _process(_delta: float) -> void:
+## A node that entered during the battle: a monster's InkOutline gets the brush, a bar quad joins the clean layer.
+static func _check_node(reference: WeakRef, m: String) -> void:
+	var node := reference.get_ref() as GeometryInstance3D
+	if node == null:
+		return
+	if (m == "lite" or m == "on") and str(node.name) == "InkOutline" and node is MeshInstance3D:
+		_rebrush(reference)
+	if m == "on" or m == "ink_b":
+		_keep_clean(node)
+
+
+## HP bars (fighter_view.gd: unshaded, billboard, no depth test) are opaque, so they would be drawn before the screen
+## pass and get its lines, bands and grain. As alpha-blended materials (alpha stays 1, so they look the same) they
+## are drawn after it, by their own render priority, and stay clean. Numbers, labels and VFX are transparent already.
+static func _keep_clean(node: GeometryInstance3D) -> void:
+	var material := node.material_override as BaseMaterial3D
+	if material == null or material.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+		return
+	if material.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED and material.no_depth_test and material.billboard_mode != BaseMaterial3D.BILLBOARD_DISABLED:
+		material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+
+
+func _process(delta: float) -> void:
 	_fit()
+	if _revision != Options.revision:  # the graphics settings changed (render scale, drawn style)
+		_revision = Options.revision
+		_screen.visible = screen_allowed()
+	_watch_speed(delta)
+
+
+## The slow-device guard: after the warm-up, if SLOW_WINDOWS windows in a row average under SLOW_FPS while the
+## screen pass is drawn, it goes off for the rest of the session (the materials stay).
+func _watch_speed(delta: float) -> void:
+	_age += delta
+	if _age < SLOW_WARMUP or _screen == null or not _screen.visible or not _override.is_empty():
+		return
+	_window_time += delta
+	_window_frames += 1
+	if _window_time < SLOW_WINDOW:
+		return
+	var fps := float(_window_frames) / _window_time
+	_window_time = 0.0
+	_window_frames = 0
+	_slow_windows = _slow_windows + 1 if fps < SLOW_FPS else 0
+	if _slow_windows >= SLOW_WINDOWS:
+		slow_device = true
+		_screen.visible = false
+		print("draw_style: %.1f fps with the screen pass: it is off for this session (materials stay)" % fps)
 
 
 ## Keeps the screen quad just in front of the camera and covering its whole view (fov and aspect change).
@@ -112,16 +233,17 @@ static func _screen_quad(style: String) -> MeshInstance3D:
 	var material := ShaderMaterial.new()
 	material.shader = SCREEN_SHADER
 	material.render_priority = Material.RENDER_PRIORITY_MIN  # first transparent draw: VFX/bars/numbers stay clean
-	if style == "ink_c":
+	if style == "on":
 		# The stage materials already carry wash, grain and hatching on the sides away from the sun; the screen
-		# pass adds what materials cannot: lines where depth jumps or bends, flatter bands, and hatching inside
-		# cast shadows (lighter than in ink_b, so it does not double up).
-		material.set_shader_parameter("band_mix", 0.5)
-		material.set_shader_parameter("hatch_strength", 0.25)
-		material.set_shader_parameter("grain_strength", 0.04)
-		material.set_shader_parameter("wash_strength", 0.03)
-		material.set_shader_parameter("saturation", 0.95)
-		material.set_shader_parameter("warmth", Vector3(1.02, 1.0, 0.96))
+		# pass adds what materials cannot: lines where depth jumps or bends, softened bands, and light hatching
+		# inside cast shadows. Grain and wash stay low so the ground does not look like dirty paint.
+		material.set_shader_parameter("band_mix", 0.35)
+		material.set_shader_parameter("hatch_strength", 0.22)
+		material.set_shader_parameter("grain_strength", 0.025)
+		material.set_shader_parameter("wash_strength", 0.0)
+		material.set_shader_parameter("saturation", 1.0)
+		material.set_shader_parameter("warmth", Vector3(1.02, 1.0, 0.97))
+		material.set_shader_parameter("paper_mix", 0.04)
 	var quad := MeshInstance3D.new()
 	quad.name = "InkScreenPass"
 	quad.mesh = QuadMesh.new()
@@ -223,14 +345,6 @@ static func _brush(width: float) -> ShaderMaterial:
 	material.shader = BRUSH_SHADER
 	material.set_shader_parameter("width", width)
 	return material
-
-
-## The monsters' ink outline (fighter_view.gd InkOutline children) becomes the thicker brush line.
-static func _brush_outlines(view: Node) -> void:
-	if view == null:
-		return
-	for node in view.find_children("InkOutline", "MeshInstance3D", true, false):
-		_rebrush(weakref(node))
 
 
 static var _brush_monster: ShaderMaterial

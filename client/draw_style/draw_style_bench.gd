@@ -43,6 +43,7 @@ func run() -> void:
 	var scale := 1.0
 	var aa := 2
 	var frames := 240
+	var live_seconds := 0.0  ## > 0: a real wave journey with the squad and its class VFX, not frozen, measured this long
 	var audit := false
 	var ids: Array = []
 	for a in OS.get_cmdline_user_args():
@@ -55,6 +56,7 @@ func run() -> void:
 		elif a.begins_with("--aa="): aa = int(a.substr(5))
 		elif a.begins_with("--frames="): frames = int(a.substr(9))
 		elif a == "--audit": audit = true
+		elif a.begins_with("--live="): live_seconds = float(a.substr(7))
 		elif not a.begins_with("--"): ids.append(a)
 	if ids.is_empty(): ids = ["goblin_base_gate", "mummy_arena_a"]
 	var had_config := FileAccess.file_exists(Options.PATH)
@@ -71,6 +73,10 @@ func run() -> void:
 		DirAccess.make_dir_recursive_absolute(out)
 	var game_state = root.get_node("GameState")
 	print("DSBENCH ensure_profile=", game_state.ensure_profile(), " account=", game_state.get("account_session"))
+	if live_seconds > 0.0:
+		await _live(game_state, style, live_seconds)
+		print("DRAWSTYLE done")
+		return
 	for id in ids:
 		game_state.start_stage(game_state.Mode.PVE, id)
 		print("DSBENCH stage ", id, " scene=", get_tree().current_scene)
@@ -175,3 +181,47 @@ func _kind(m: Material) -> String:
 func _frames(n: int) -> void:
 	for i in n:
 		await get_tree().process_frame
+
+
+## A real battle: the default wave journey (auto-battler, the profile's 3-card squad, class skill VFX), fought live.
+## Waits for the first fight to start, then reports frame times over `seconds` and how many class VFX were alive.
+func _live(game_state, style: String, seconds: float) -> void:
+	game_state.start_journey()
+	await _frames(5)
+	var waited := 0
+	while waited < 1200 and (get_tree().current_scene == null or get_tree().current_scene.get("_class_vfx") == null):
+		await get_tree().process_frame
+		waited += 1
+	await _frames(180)  # loading label gone, the squads close in
+	print("SHOT_BEGIN")
+	var times: Array[float] = []
+	var vfx_peak := 0
+	var vfx_frames := 0
+	var last := Time.get_ticks_usec()
+	var start := last
+	while (Time.get_ticks_usec() - start) / 1000000.0 < seconds:
+		await RenderingServer.frame_post_draw
+		var now := Time.get_ticks_usec()
+		times.append((now - last) / 1000.0)
+		last = now
+		var scene = get_tree().current_scene
+		var fx = scene.get("_class_vfx") if scene != null else null
+		var live: int = (fx.get("_live") as Array).size() if fx != null and fx.get("_live") != null else 0
+		vfx_peak = maxi(vfx_peak, live)
+		vfx_frames += 1 if live > 0 else 0
+	var n := times.size()
+	var sorted := times.duplicate()
+	sorted.sort()
+	var total := 0.0
+	var over50 := 0
+	for t in times:
+		total += t
+		over50 += 1 if t > 50.0 else 0
+	var screen := "-"
+	var scene = get_tree().current_scene
+	if scene != null:
+		var driver = scene.find_child("DrawStyleScreen", false, false)
+		screen = "none" if driver == null else str(driver.get("_screen").visible)
+	print("DRAWSTYLE %s live fps=%.1f frame_ms=%.2f p50=%.2f p95=%.2f p99=%.2f over50=%d frames=%d vfx_peak=%d vfx_frames=%d screen_pass=%s" % [
+		style if style != "" else "default", 1000.0 * n / total, total / n, sorted[int(n * 0.5)], sorted[int(n * 0.95)],
+		sorted[int(n * 0.99)], over50, n, vfx_peak, vfx_frames, screen])
