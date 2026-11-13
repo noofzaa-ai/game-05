@@ -667,7 +667,7 @@
    "weapon_type": "greatsword",
    "drop_level": 99,
    "procedural": true,
-   "icon_path": "res://art/items/icons/weapon_blade_01.png"
+   "icon_path": "res://art/items/icons/weapon_starter_greatsword.png"
   },
   "starter_longbow": {
    "asset_id": "procedural_class_longbow",
@@ -677,7 +677,7 @@
    "weapon_type": "longbow",
    "drop_level": 99,
    "procedural": true,
-   "icon_path": "res://art/items/icons/weapon_blade_01.png"
+   "icon_path": "res://art/items/icons/weapon_starter_longbow.png"
   },
   "starter_staff": {
    "asset_id": "procedural_class_staff",
@@ -687,7 +687,7 @@
    "weapon_type": "magic",
    "drop_level": 99,
    "procedural": true,
-   "icon_path": "res://art/items/icons/weapon_blade_01.png"
+   "icon_path": "res://art/items/icons/weapon_starter_staff.png"
   },
   "starter_heavy_hat": {
    "asset_id": "armor_ash_steel_hat",
