@@ -204,3 +204,24 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
+
+## 9. LIVE on staging: release a4744e5d582d-20261113 (rolled out 2026-11-13 ~16:40 UTC)
+
+Built from a clean worktree at a4744e5 (uncommitted legacy-item removal excluded). Before-state: `build/k3s-staging-before-20261113.yaml`
+(coordinator) and `zorx-release-fdf9fbb/build/equipment-tuning-before-20261113.yaml` (ConfigMap).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:80687fa49e505f21b640c6e1b8ad2950ca5664f710f9fd4736bd042665f38d8d` (web build a2bae67f9c20) |
+| headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:cc356e99818cac48fe0beb865b3a9bc7fd6e85bba999a13624a2014f871959ee` |
+| headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:4a004408eeda80609353bf9e4ce90fe92b1a77d38883c149de5c9b5d0908fd34` |
+| ConfigMap zorx-equipment-tuning | regenerated from data (HP-100 increments, no hat slot) |
+
+Nakama, landing, perf-lab and postgres were not changed. `ZORX_SQUAD_ROOMS` is unset. Nakama image not rebuilt (upstream 429).
+
+Rollback:
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web:combat-feel-20261104-1
+kubectl -n zorx-staging set image deployment/headless profiles=wiyazard:30500/zorx-name-validator@sha256:7299e2e43e9449e26d504724cfc734d4ee96093093a390a8c5b4af094f1c06f8 rooms=wiyazard:30500/zorx-room-worker:combat-feel-20261104-1
+kubectl apply -f <equipment-tuning-before-20261113.yaml>   # only together with the old images
+```
