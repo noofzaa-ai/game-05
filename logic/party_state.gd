@@ -24,8 +24,12 @@ func presence(id: int, online: bool) -> void:
 func reset_ready() -> void:
 	for id in members: members[id].ready = false
 
+## The lowest-id CONNECTED member (GDD online-squads 3.6: leader-only commands pass on at once); with nobody
+## connected, the lowest id.
 func leader() -> int:
-	return -1 if members.is_empty() else int(members.keys().min())
+	if members.is_empty(): return -1
+	var online := members.keys().filter(func(id): return members[id].connected)
+	return int(online.min()) if not online.is_empty() else int(members.keys().min())
 
 func set_ready(id: int, value: bool) -> bool:
 	if not members.has(id) or not members[id].connected or departing: return false

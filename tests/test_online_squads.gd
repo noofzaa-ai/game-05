@@ -21,6 +21,10 @@ func run(ctx) -> void:
 	_save_load(ctx)
 	_rejects(ctx)
 	_data(ctx)
+	_rooms(ctx)
+	_tamper(ctx)
+	_auto_pilot_authority(ctx)
+	_disconnect_and_leader(ctx)
 
 
 ## One player's squad on its own profile: `races` per card of `cards`.
@@ -155,6 +159,121 @@ func _rejects(ctx) -> void:
 			seven[next] = member
 			next += 1
 	ctx.check("online squads: more than 6 fighters is rejected", Party.start_party(a.data, seven, a.rules, a.loot, a.combat.weapon_ids, 77) == null)
+
+
+# ---------------------------------------------------------------- chunks 2-3: squad rooms
+
+const Manager := preload("res://server/rooms/manager.gd")
+const SimInput := preload("res://logic/sim_input.gd")
+const Codec := preload("res://logic/state_codec.gd")
+
+
+static func players(count: int) -> Array:
+	var out := []
+	for id in range(1, count + 1): out.append({"id": id, "profile": F.make(id).profile.to_dict()})
+	return out
+
+
+static func squad_manager():
+	var mgr = Manager.new()
+	mgr.squad_rooms = true
+	return mgr
+
+
+func _rooms(ctx) -> void:
+	for pair in [[1, 3], [2, 6], [3, 6], [4, 4]]:
+		var mgr = squad_manager()
+		var room_id := "squad-room-%d" % pair[0]
+		var made: Dictionary = mgr.create(room_id, 77, players(pair[0]))
+		ctx.check("online squads AC2: %d-player room created" % pair[0], made.ok)
+		if not made.ok: continue
+		var room = mgr.rooms[room_id].room
+		var ids: Array = room.fighter_ids()
+		ctx.check("online squads AC2: %d players field %d cards" % pair, ids.size() == pair[1] and ids.all(func(id): return room.sim.fighters.has(id) and room.sim.fighters[id].team == "player"))
+		ctx.check("online squads AC2: each card has its class skills, race and ultimate (%d players)" % pair[0], ids.all(func(id): return str(room.sim.fighters[id].skill_state.get("class", "")) == room.trip_of_fighter(id).card_id and not room.sim.fighters[id].race_state.is_empty()))
+		ctx.check("online squads: room plays the goblin wave journey (%d players)" % pair[0], room.journey.data.id == "goblin_waves" and room.goblin_waves == null and room.sim.pending_wave_count() > 0)
+		ctx.check("online squads: every player slot owns a fighter with its own id (%d players)" % pair[0], range(1, pair[0] + 1).all(func(slot): return room.fighters_of(slot).has(slot)))
+		ctx.check("online squads: no companion bots in squad rooms (%d players)" % pair[0], not room.install_companions([{"id": "arun", "slot": 2}]) and room.companion_slots.is_empty())
+	var legacy = Manager.new()
+	legacy.squad_rooms = false
+	ctx.check("online squads: legacy rooms (squad rooms off) keep ink_road", legacy.create("legacy-room-1", 77, players(2)).ok and legacy.rooms["legacy-room-1"].room.journey.data.id == "ink_road" and not legacy.rooms["legacy-room-1"].room.squads)
+
+
+func _tamper(ctx) -> void:
+	var mgr = squad_manager()
+	var raw := players(1)
+	var card: String = raw[0].profile.card_deck.squad[0]
+	var missing: Dictionary = raw[0].profile.duplicate(true)
+	missing.card_gear.erase(missing.card_deck.squad[1])
+	ctx.check("online squads AC7: a squad card without card_gear is rejected", mgr.create("tamper-room-1", 77, [{"id": 1, "profile": missing}]).get("error", "") == "invalid_payload")
+	var greedy: Dictionary = raw[0].profile.duplicate(true)
+	var tree_data = preload("res://logic/skill_tree_data.gd").load_default()
+	var nodes: Array = tree_data.class_nodes(card).map(func(n): return str(n.get("id", "")) if n is Dictionary else str(n))
+	greedy.card_deck.cards[card]["skill_tree"] = {"class": nodes.slice(0, 4), "race": [], "combo": []}
+	ctx.check("online squads AC7: a tree spending unearned points is rejected", nodes.size() >= 1 and mgr.create("tamper-room-2", 77, [{"id": 1, "profile": greedy}]).get("error", "") == "invalid_payload")
+	var unknown: Dictionary = raw[0].profile.duplicate(true)
+	unknown.card_deck.cards[card]["skill_tree"] = {"class": ["no_such_node"], "race": [], "combo": []}
+	ctx.check("online squads AC7: a tree with an unknown node is rejected", mgr.create("tamper-room-3", 77, [{"id": 1, "profile": unknown}]).get("error", "") == "invalid_payload")
+	var no_squad: Dictionary = raw[0].profile.duplicate(true)
+	no_squad.card_deck.squad = []
+	ctx.check("online squads AC7: an empty squad is rejected", mgr.create("tamper-room-4", 77, [{"id": 1, "profile": no_squad}]).get("error", "") == "invalid_payload")
+	ctx.check("online squads AC7: the untouched profile is accepted", mgr.create("tamper-room-5", 77, raw).ok)
+
+
+static func room_hash(room) -> String:
+	return Codec.digest(room.sim.snapshot()) + ":" + str(room.journey.waves_cleared)
+
+
+func _auto_pilot_authority(ctx) -> void:
+	var a = squad_manager()
+	var b = squad_manager()
+	a.create("auto-room-a", 77, players(2))
+	b.create("auto-room-b", 77, players(2))
+	var ra = a.rooms["auto-room-a"].room
+	var rb = b.rooms["auto-room-b"].room
+	var noise := RandomNumberGenerator.new()
+	noise.seed = 5
+	var accepted := false
+	var enemy_hp_start := _enemy_hp(ra)
+	for tick in 300:
+		for slot in [1, 2]:
+			var bytes := PackedByteArray()
+			for i in SimInput.wire_size(): bytes.append(noise.randi_range(0, 255))
+			accepted = ra.input(slot, ra.clock_tick + 1, bytes) or accepted
+		ra.tick()
+		rb.tick()
+	ctx.check("online squads AC4: client combat input is refused in squad rooms", not accepted)
+	ctx.check("online squads AC4: random client bytes vs none give the same sim state", room_hash(ra) == room_hash(rb))
+	ctx.check("online squads: the server auto-pilot fights (enemy HP drops in 5 s)", _enemy_hp(ra) < enemy_hp_start)
+	ctx.check("online squads: input clock acknowledges every connected player", ra.acknowledged[1] == ra.clock_tick and ra.acknowledged[2] == ra.clock_tick)
+
+
+static func _enemy_hp(room) -> float:
+	var total := 0.0
+	for id in room.sim.fighters:
+		if room.sim.fighters[id].team == "enemy": total += room.sim.fighters[id].hp
+	return total + 100000.0 * room.sim.pending_wave_count()
+
+
+func _disconnect_and_leader(ctx) -> void:
+	var mgr = squad_manager()
+	mgr.create("leader-room-1", 77, players(2))
+	var room = mgr.rooms["leader-room-1"].room
+	ctx.check("online squads: leader is the lowest connected player", room.party.leader() == 1)
+	room.eliminate(1)
+	ctx.check("online squads AC6: leader passes to the next connected player", room.party.leader() == 2)
+	ctx.check("online squads AC6: an offline player's cards are not eliminated", room.fighters_of(1).all(func(id): return not room.sim.fighters[id].eliminated))
+	var acted := false
+	for tick in 600:
+		room.tick()
+		for event in room.sim.events:
+			for key in ["by", "attacker", "player", "source"]:
+				if event.has(key) and room.fighters_of(1).has(int(event[key])) and str(event.get("type", "")) in ["hit", "skill_cast", "class_skill", "killed", "projectile", "attack"]:
+					acted = true
+	ctx.check("online squads AC6: a disconnected player's cards keep being piloted", room.fighters_of(1).all(func(id): return room._auto_memory.has(id)) and acted)
+	ctx.check("online squads AC6: the new leader's leader-only command is not refused as leader_only", room.command(2, 1, {"type": "journey_choose", "index": 0}).get("error", "") != "leader_only")
+	var saved: Dictionary = room.finalize(true)
+	ctx.check("online squads AC6: the offline player's profile is saved at finalize", saved.has("1") and saved.has("2"))
 
 
 func _data(ctx) -> void:

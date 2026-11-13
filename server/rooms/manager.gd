@@ -19,9 +19,14 @@ var cosmetics = preload("res://logic/cosmetic_options.gd").load_default()
 var combat = preload("res://logic/combat_data_loader.gd").load_default()
 var loot = preload("res://logic/loot_data_loader.gd").load_default(camp.materials.keys(), rules.tiers.size())
 var journey_data = preload("res://logic/journey_data.gd").load_by_id("ink_road", combat.enemies.keys())
+## Online squads (design/gdd/online-squads.md 3.4, chunk 2): squad rooms play the solo wave journey (goblin_waves,
+## wave_mode) with every player's cards. OFF until the client half (chunk 5) ships: set ZORX_SQUAD_ROOMS=1 on the
+## worker, or `squad_rooms = true` (tests). ink_road stays for legacy/farm rooms.
+var squad_rooms := OS.get_environment("ZORX_SQUAD_ROOMS") == "1"
+var squad_journey = preload("res://logic/journey_data.gd").load_by_id("goblin_waves", combat.enemies.keys())
 
 func ready() -> bool:
-	return rules.errors.is_empty() and camp.errors.is_empty() and combat.is_valid() and loot.is_valid() and journey_data.errors.is_empty()
+	return rules.errors.is_empty() and camp.errors.is_empty() and combat.is_valid() and loot.is_valid() and journey_data.errors.is_empty() and squad_journey.errors.is_empty()
 
 func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, capacity: int = 4, farm_map: String = "") -> Dictionary:
 	if not ready(): return failure("not_configured")
@@ -29,10 +34,17 @@ func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, c
 		for entry in profiles:
 			if not entry is Dictionary or not entry.get("profile") is Dictionary: return failure("invalid_payload")
 			if preload("res://logic/profile.gd").from_dict(entry.profile,rules,camp) == null: return failure("invalid_payload")
+	if squad_rooms and farm_map.is_empty():  # GDD online-squads 3.8 / AC 7: every fielded card must come from a sound profile
+		var k: int = Room.cards_per_player(profiles.size(), combat)
+		for entry in profiles:
+			if not entry is Dictionary or not entry.get("profile") is Dictionary: return failure("invalid_payload")
+			var p = preload("res://logic/profile.gd").from_dict(entry.profile.duplicate(true), rules, camp)
+			if p == null or not Room.squad_profile_problem(entry.profile, p, k).is_empty(): return failure("invalid_payload")
 	if RegEx.create_from_string("^[a-z0-9-]{8,64}$").search(id) == null: return failure("invalid_payload")
 	if rooms.has(id): return failure("room_exists")
 	if rooms.size() >= MAX_ROOMS: return failure("worker_full")
-	var content = journey_data
+	var squads: bool = squad_rooms and farm_map.is_empty()
+	var content = squad_journey if squads else journey_data
 	var fixed_maps: Array = []
 	if farm_map == "mummy_ascent":
 		if profiles.size() != 1 or capacity != 1 or lobby: return failure("invalid_map")
@@ -63,7 +75,7 @@ func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, c
 			if not combat.enemies.has(spawn.type): return failure("invalid_map")
 			enemies.append({"type": spawn.type, "level": spawn.level, "count": 1})
 		content.stages.assign([{"level": 1, "power": 1.0, "enemies": enemies, "challenge": {}}])
-	var room = Room.create(profiles, seed_value, {"rules": rules, "camp": camp, "combat": combat, "loot": loot, "journey": content, "cosmetics": cosmetics, "fixed_maps": fixed_maps})
+	var room = Room.create(profiles, seed_value, {"rules": rules, "camp": camp, "combat": combat, "loot": loot, "journey": content, "cosmetics": cosmetics, "fixed_maps": fixed_maps, "squads": squads})
 	if room == null or (lobby and not room.enter_lobby(capacity)): return failure("invalid_state")
 	rooms[id] = {"room": room, "backlog": 0.0, "empty_age": 0.0, "inactive_age": 0.0, "loading_age": 0.0}
 	return {"v": 1, "ok": true, "room": id, "state": room.summary()}

@@ -7,6 +7,16 @@ const Profile := preload("res://logic/profile.gd")
 const Run := preload("res://logic/run.gd")
 const Journey := preload("res://logic/journey.gd")
 const Party := preload("res://logic/coop_journey.gd")
+const SquadMember := preload("res://logic/squad_member.gd")
+const CardDeck := preload("res://logic/card_deck.gd")
+const AutoPilot := preload("res://logic/auto_pilot.gd")
+## Online squads (design/gdd/online-squads.md): the room fields each player's cards, the server auto-pilot plays them.
+var squads := false
+var owner_by_fighter := {}  ## squad rooms: fighter id -> player slot (a player's first card has fighter id = its slot)
+var _auto_memory := {}  ## squad rooms: fighter id -> AutoPilot memory (seed fid * 7919 + 1, as LocalSession.auto_input)
+var _idle_since := -1  ## squad rooms: clock tick the room stopped fighting (route/camp/treasure), for the automatic flow
+var _idle_epoch := -1
+const CLEAR_DELAY_TICKS := 150  ## let death events and corpse animations reach peers before a chest or route moves on
 var party = preload("res://logic/party_state.gd").new()
 var companion_slots := {} # Trusted server-authored slot -> input brain; never an account.
 var lobby := false
@@ -99,13 +109,17 @@ static func create(raw_players: Array, seed_value: int, config: Dictionary):
 	room._combat = config.combat
 	room._seed = seed_value
 	if raw_players.size() < 1 or raw_players.size() > 4: return null
+	room.squads = bool(config.get("squads", false))
 	var trips := {}
+	var profiles := {}
 	for raw in raw_players:
 		if not raw is Dictionary or not raw.has_all(["id", "profile"]) or raw.size() != 2 or not (raw.id is int or raw.id is float) or raw.id != floorf(raw.id) or raw.id < 1 or raw.id > 4 or trips.has(int(raw.id)) or not raw.profile is Dictionary:
 			return null
 		if not raw.profile.has_all(["v", "stash", "loadout", "camp_level", "facility_levels", "appearance", "name", "created"]): return null
 		var p = Profile.from_dict(raw.profile.duplicate(true), config.rules, config.camp)
 		if p == null: return null
+		if room.squads and not squad_profile_problem(raw.profile, p, cards_per_player(raw_players.size(), config.combat)).is_empty(): return null
+		profiles[int(raw.id)] = p
 		trips[int(raw.id)] = Run.start(p, config.camp)
 		room.connected[int(raw.id)] = true
 		room.party.join(int(raw.id))
@@ -113,13 +127,91 @@ static func create(raw_players: Array, seed_value: int, config: Dictionary):
 		room.acknowledged[int(raw.id)] = 0
 	var ids := trips.keys()
 	ids.sort()
-	room.journey = Party.start_party(config.journey, trips, config.rules, config.loot, config.combat.weapon_ids, seed_value, ids[0]) if trips.size() > 1 else Journey.start(config.journey, trips[ids[0]], config.rules, config.loot, config.combat.weapon_ids, seed_value)
+	if room.squads:
+		trips = room._squad_trips(profiles, config)
+		if trips.is_empty(): return null
+		room.journey = Party.start_party(config.journey, trips, config.rules, config.loot, config.combat.weapon_ids, seed_value, ids[0], room.owner_by_fighter) if trips.size() > 1 else Journey.start(config.journey, trips[ids[0]], config.rules, config.loot, config.combat.weapon_ids, seed_value)
+	else:
+		room.journey = Party.start_party(config.journey, trips, config.rules, config.loot, config.combat.weapon_ids, seed_value, ids[0]) if trips.size() > 1 else Journey.start(config.journey, trips[ids[0]], config.rules, config.loot, config.combat.weapon_ids, seed_value)
 	if room.journey != null and not config.get("fixed_maps", []).is_empty():
 		room.journey.nodes.clear()
 		for index in config.fixed_maps.size():
 			room.journey.nodes.append([{"stage":index+1,"kind":"combat","map":config.fixed_maps[index]}])
 	if room.journey == null or room.journey.choose(0).is_empty() or not room._start_stage(): return null
 	return room
+
+## GDD online-squads 3.1 / 4.1: cards each player brings, k(n) = min(SQUAD_MAX, floor(room_card_cap / n)).
+static func cards_per_player(players: int, combat) -> int:
+	var cap := int(combat.coop.get("room_card_cap", combat.coop.get("max_fighters", 6))) if combat != null and not combat.coop.is_empty() else 6
+	return mini(CardDeck.SQUAD_MAX, cap / maxi(1, players))
+
+## GDD 3.8: "" when the raw profile (as received) may field its first `k` squad cards, else the reason. Profile.from_dict
+## repairs a deck quietly (bad squad -> starter squad, bad tree -> refunded), so anything the repair changed is a tamper.
+static func squad_profile_problem(raw: Dictionary, p, k: int) -> String:
+	if k < 1: return "too_many_players"
+	var deck = raw.get("card_deck")
+	if not deck is Dictionary or not deck.get("squad") is Array or not deck.get("cards") is Dictionary: return "bad_deck"
+	if (deck.squad as Array).is_empty() or Array(deck.squad).map(func(c): return str(c)) != p.card_deck.squad: return "bad_squad"
+	var gear = raw.get("card_gear")
+	for card in p.card_deck.squad.slice(0, k):
+		if not gear is Dictionary or not gear.has(card) or not p.card_gear.has(card): return "missing_card_gear"
+		var saved_card = deck.cards.get(card)
+		var tree = saved_card.get("skill_tree") if saved_card is Dictionary else null
+		if tree == null: continue
+		var kept: Dictionary = p.card_deck.cards[card].get("skill_tree", {})
+		if not tree is Dictionary: return "bad_tree"
+		for branch in ["class", "race", "combo"]:
+			if not tree.get(branch, []) is Array or Array(tree.get(branch, [])).map(func(id): return str(id)) != Array(kept.get(branch, [])): return "bad_tree"
+	return ""
+
+## Squad rooms: every player's first k cards as SquadMembers of that player's own trip. Fighter ids: a player's first
+## card takes the player's slot id (slot-keyed presence/ping/actor paths keep pointing at a real fighter), the other
+## cards take the lowest free ids in player order (1 player = ids 1..3, as solo). 4 players x 1 card share one room
+## synergy group (GDD 3.2). Fills owner_by_fighter; returns {} when a squad is empty.
+func _squad_trips(profiles: Dictionary, config: Dictionary) -> Dictionary:
+	var slots := profiles.keys()
+	slots.sort()
+	var k := cards_per_player(slots.size(), config.combat)
+	var picked := {}
+	var races: Array = []
+	for slot in slots:
+		var cards: Array = profiles[slot].card_deck.squad.slice(0, k)
+		if cards.is_empty(): return {}
+		picked[slot] = cards
+		for card in cards: races.append(CardDeck.race_of(profiles[slot].card_deck, str(card)))
+	var room_group := k == 1 and slots.size() > 1
+	var override: Dictionary = preload("res://logic/race_data.gd").load_default().synergy_for(races) if room_group else {}
+	var used := {}
+	var ids := {}
+	for slot in slots:
+		ids[slot] = [slot]
+		used[slot] = true
+	var next := 1
+	for slot in slots:
+		for i in range(1, picked[slot].size()):
+			while used.has(next): next += 1
+			ids[slot].append(next)
+			used[next] = true
+	var trips := {}
+	owner_by_fighter.clear()
+	for slot in slots:
+		var members: Array = SquadMember.make_squad(Run.start(profiles[slot], config.camp), picked[slot], override, "room" if room_group else "")
+		for i in members.size():
+			trips[ids[slot][i]] = members[i]
+			owner_by_fighter[ids[slot][i]] = slot
+	return trips
+
+## Every friendly fighter of the journey (squad rooms: all cards; legacy: one per player slot), sorted.
+func fighter_ids() -> Array:
+	var ids: Array = journey.player_ids() if journey is Party else connected.keys()
+	ids = ids.duplicate()
+	ids.sort()
+	return ids
+
+## The fighter ids owned by player slot `player`.
+func fighters_of(player: int) -> Array:
+	if not squads: return [player]
+	return fighter_ids().filter(func(id): return int(owner_by_fighter.get(id, id)) == player)
 
 func _start_stage() -> bool:
 	if _scene_gate: require_scene_ready()
@@ -144,6 +236,7 @@ func _start_stage() -> bool:
 		sim.add_player(ids[0], map.spawn)
 		sim.attach_run(ids[0], journey.run, _rules, _loot)
 	if not lobby or journey is Party: journey.populate(sim, map, ids[0], 100)
+	if squads: _squad_styles()
 	if bool(_config.get("enable_goblin_wave_lab", true)) and not lobby and journey.data.id == "ink_road" and journey.stage_number() == 1 and _config.get("fixed_maps", []).is_empty():
 		_start_goblin_waves(map)
 	if journey.current.get("kind") == "boss":
@@ -151,6 +244,14 @@ func _start_stage() -> bool:
 			if str(sim.fighters[actor].enemy_type).contains("chief"):
 				boss_intro = {"epoch": epoch, "tick": clock_tick, "duration": 90, "boss": actor}
 	return sim.fighters.has(ids[0]) and (ids.size() == 1 or sim.coop_enabled)
+
+## Squad rooms: each card fights in its class style (data/classes/<class>.json weapon), as LocalSession.begin_stage.
+func _squad_styles() -> void:
+	_auto_memory.clear()
+	for id in fighter_ids():
+		var trip = journey.runs_by_player.get(id) if journey is Party else journey.run
+		if sim.fighters.has(id) and trip is SquadMember:
+			sim.set_class_style(id, str(CardDeck.class_data(trip.card_id).get("weapon", "")))
 
 func _start_goblin_waves(map) -> void:
 	goblin_waves = preload("res://logic/goblin_wave_progress.gd").new()
@@ -163,7 +264,7 @@ func _start_goblin_waves(map) -> void:
 func _spawn_goblin_wave(map) -> bool:
 	var roster = preload("res://logic/goblin_wave_roster.gd").build(journey.data, goblin_waves.wave)
 	sim.reward_wave = goblin_waves.wave  # race gear drop shares by wave (logic/race_drops.gd)
-	var scale := float(sim.combat.coop["hp_multiplier"][connected.size() - 1]) if sim.coop_enabled else 1.0
+	var scale := float(sim.combat.coop["hp_multiplier"][fighter_ids().size() - 1]) if sim.coop_enabled else 1.0
 	var ids: Array = preload("res://logic/goblin_wave_roster.gd").spawn(sim, map, roster, _goblin_next_id, scale)
 	if ids.is_empty(): return false
 	_goblin_next_id += ids.size()
@@ -183,9 +284,10 @@ func _tick_goblin_waves() -> void:
 	if not goblin_waves.finish_wave(cleared): return
 	if goblin_waves.phase == "chest":
 		var leader := party.leader()
-		_goblin_chest_position = sim.bodies[leader].position
+		_goblin_chest_position = sim.bodies[leader].position if sim.bodies.has(leader) else Vector3.ZERO
 		journey.treasure_pending = true
 		status = "treasure"
+		if squads: _open_goblin_chest(-1)  # GDD online-squads 3.7: the chest opens itself after the clear delay
 	elif goblin_waves.phase == "rest":
 		journey.completed = 10
 		journey.nodes[10] = [{"stage": 11, "kind": "camp", "map": journey.data.camp_map}]
@@ -200,9 +302,11 @@ func _tick_goblin_waves() -> void:
 		if not _spawn_goblin_wave(map): error = "invalid_wave"; status = "finished"
 
 func _open_goblin_chest(id: int) -> bool:
-	if goblin_waves == null or goblin_waves.phase != "chest" or not sim.bodies.has(id) or not sim.fighters[id].is_alive(): return false
-	var offset: Vector3 = sim.bodies[id].position - _goblin_chest_position
-	if Vector2(offset.x, offset.z).length() > 2.0: return false
+	if goblin_waves == null or goblin_waves.phase != "chest": return false
+	if not squads:  # squad rooms open it from the server (id -1); a player walks to it otherwise
+		if not sim.bodies.has(id) or not sim.fighters[id].is_alive(): return false
+		var offset: Vector3 = sim.bodies[id].position - _goblin_chest_position
+		if Vector2(offset.x, offset.z).length() > 2.0: return false
 	var wave: int = goblin_waves.wave
 	if not goblin_waves.open_chest(): return false
 	for player in connected:
@@ -275,6 +379,7 @@ func trace_snapshot(player:int)->Dictionary:
 
 func input(player: int, tick: int, bytes: PackedByteArray,view_tick:int=-1) -> bool:
 	if companion_slots.has(player) or scene_loading() or status=="finished" or not connected.get(player,false) or SimInput.decode(bytes)==null:return false
+	if squads and not lobby:return false # GDD online-squads 3.3: the server auto-pilot plays every card; client combat input is ignored
 	var trace:Dictionary=trace_input(player,tick)
 	if tick<=clock_tick:
 		if not trace.is_empty() and trace.outcome=="received":trace.outcome="late_rejected"
@@ -316,7 +421,8 @@ func tick() -> void:
 	sim.melee_target_boxes.clear()
 	clock_tick += 1
 	var next_tick: int = clock_tick
-	for id in connected:
+	if squads and not lobby: _auto_inputs()
+	for id in (connected if not (squads and not lobby) else {}):
 		var bytes: PackedByteArray = queued[id].get(next_tick, PackedByteArray())
 		queued[id].erase(next_tick)
 		var frame = SimInput.decode(bytes) if connected[id] and bytes.size() == SimInput.wire_size() else SimInput.new()
@@ -374,17 +480,66 @@ func tick() -> void:
 			journey.died()
 			status = "finished"
 	# The empty practice arena is intentionally open-ended; zero enemies is not a victory.
+	if squads and status != "finished": _auto_flow()
 	if goblin_waves != null and journey.state == Journey.IN_STAGE and status != "finished":
 		_tick_goblin_waves()
 	elif _map_id != "practice_field" and journey.state == Journey.IN_STAGE and status != "finished" and sim.living_enemy_count() == 0 and sim.pending_wave_count() == 0:
 		journey.stage_cleared(journey.hp_fraction)
 		status = "finished" if journey.is_over() else "route"
 
+## Squad rooms (GDD online-squads 3.3, chunk 3): every friendly fighter's input this tick comes from the auto-pilot, with
+## the same per-fighter memory seed as solo (LocalSession.auto_input), whether its owner is connected or not.
+func _auto_inputs() -> void:
+	for id in fighter_ids():
+		if not sim.fighters.has(id): continue
+		if not _auto_memory.has(id): _auto_memory[id] = AutoPilot.new_memory(id * 7919 + 1)
+		sim.set_input(id, AutoPilot.decide(sim, sim.combat, id, _auto_memory[id], sim.tick_count))
+	for id in connected:
+		if connected[id]: acknowledged[id] = clock_tick
+
+## Squad rooms (GDD 3.7): nobody walks to a chest or a portal. A waiting treasure opens after the clear delay; a route or
+## camp choice the leader leaves open for coop.auto_continue_seconds takes choice 0. Counted in room ticks (60/s).
+func _auto_flow() -> void:
+	var waiting: bool = status in ["route", "camp", "treasure"] and journey.state in [Journey.CHOOSING, Journey.AT_NODE]
+	if not waiting:
+		_idle_since = -1
+		return
+	if _idle_since < 0 or _idle_epoch != epoch:
+		_idle_since = clock_tick; _idle_epoch = epoch
+		return
+	var waited := clock_tick - _idle_since
+	if journey.treasure_pending and goblin_waves == null:
+		if waited >= CLEAR_DELAY_TICKS:
+			journey.open_treasure()
+			status = "route"
+			_idle_since = clock_tick
+		return
+	if waited < int(_combat.coop.get("auto_continue_seconds", 20)) * 60: return
+	_idle_since = -1
+	if journey.upcoming_choices().is_empty():
+		if journey.state == Journey.AT_NODE: journey.leave_node(); status = "finished" if journey.is_over() else "route"
+		return
+	var node: Dictionary = journey.choose_next(0)
+	if node.is_empty(): return
+	status = "treasure" if node.kind == "treasure" else ("camp" if node.kind == "camp" else "active")
+	if node.kind == "treasure": return
+	if goblin_waves != null and goblin_waves.phase == "rest":
+		goblin_waves.leave_rest(); goblin_waves = null
+	epoch += 1
+	for slot in queued: queued[slot].clear()
+	if not _start_stage(): error = "invalid_state"; status = "finished"; return
+	if journey.is_at_camp(): status = "camp"
+
 func summary() -> Dictionary:
 	return {"status": status, "tick": clock_tick, "players": connected.keys(), "map": _map_id, "stage": journey.stage_number(), "enemy_count": sim.living_enemy_count(), "acknowledged": acknowledged.duplicate(), "event_sequence": event_sequence}
 
 
+## Player slot `id`'s trip (squad rooms: the player's first card, which shares that player's run, bag and profile).
 func trip_for(id: int):
+	return journey.runs_by_player.get(id) if journey is Party else journey.run
+
+## The trip of fighter `id` (a card in squad rooms).
+func trip_of_fighter(id: int):
 	return journey.runs_by_player.get(id) if journey is Party else journey.run
 
 func command(id: int, request_id: int, request: Dictionary, expected_epoch: int = -1) -> Dictionary:
@@ -482,7 +637,8 @@ func command(id: int, request_id: int, request: Dictionary, expected_epoch: int 
 			if journey.is_at_camp():
 				var trip = trip_for(id)
 				result = preload("res://logic/commands.gd").apply({"now":int(Time.get_unix_time_from_system()),"profile": trip.profile, "rules": _rules, "camp": _camp, "location": "camp" if lobby else "rest", "run": null if lobby else trip, "journey": null, "cosmetics": _config.get("cosmetics", preload("res://logic/cosmetic_options.gd").load_default())}, request, sim.rng)
-				if result.get("ok", false): sim.gear_changed(id)
+				if result.get("ok", false):
+					for fid in fighters_of(id): sim.gear_changed(fid)  # squad rooms: the player's cards share the profile
 	if next_stage:
 		if goblin_waves != null and goblin_waves.phase == "rest":
 			goblin_waves.leave_rest()
@@ -499,6 +655,7 @@ func command(id: int, request_id: int, request: Dictionary, expected_epoch: int 
 func eliminate(id: int) -> void:
 	_scene_waiting.erase(id)
 	presence(id, false)
+	if squads and not lobby: return  # GDD online-squads 3.6: an offline player's cards keep fighting under the auto-pilot
 	if sim.fighters.has(id) and not sim.fighters[id].eliminated:
 		var fighter = sim.fighters[id]
 		fighter.hp = 0
@@ -515,7 +672,7 @@ func public_state(viewer: int, borrowed: bool = false) -> Dictionary:
 		for id in sim.bodies:
 			var body := []; var fighter := []
 			for field in preload("res://logic/net_wire.gd").BODY_FIELDS: body.append(sim.bodies[id].get(field))
-			for field in preload("res://logic/net_wire.gd").FIGHTER_FIELDS: fighter.append(sim.fighters[id].get(field))
+			for field in preload("res://logic/net_wire.gd").FIGHTER_FIELDS: fighter.append(preload("res://logic/net_wire.gd").fighter_value(sim.fighters[id], field))
 			_snapshot_entities[id] = [body, fighter]
 		_snapshot_entities = _snapshot_entities.duplicate(true)
 		for id in connected:
@@ -552,8 +709,8 @@ func _public_run(id: int) -> Dictionary:
 func finalize(aborted: bool = false) -> Dictionary:
 	_snapshot_tick = -1; entity_delta_cache.clear(); entity_wire_cache.clear()
 	if aborted and not lobby and not journey.is_over():
-		for id in connected:
-			if not trip_for(id).died: sim._finalize_player_death(id)
+		for id in (fighter_ids() if squads else connected.keys()):
+			if sim.runs.has(id) and not sim.runs[id].died: sim._finalize_player_death(id)
 		journey.died()
 		status = "finished"
 	if not settled:
@@ -591,7 +748,7 @@ func rebuild_lobby(profiles: Array) -> bool:
 		if connected.has(id): previous_positions[id] = sim.bodies[id].position
 	var fresh = create(profiles, _seed, _config)
 	if fresh == null or not fresh.enter_lobby(party.capacity): return false
-	journey = fresh.journey; sim = fresh.sim; _map_id = fresh._map_id
+	journey = fresh.journey; sim = fresh.sim; _map_id = fresh._map_id; owner_by_fighter = fresh.owner_by_fighter; _auto_memory.clear()
 	goblin_waves = fresh.goblin_waves; _goblin_next_id = fresh._goblin_next_id
 	connected = fresh.connected; queued = fresh.queued; acknowledged = fresh.acknowledged
 	party.departing = false
@@ -616,7 +773,8 @@ func depart() -> bool:
 	if not lobby or not party.departing: return false
 	var fresh = create(owned_profiles(), _seed, _config)
 	if fresh == null: return false
-	journey = fresh.journey; sim = fresh.sim; _map_id = fresh._map_id
+	journey = fresh.journey; sim = fresh.sim; _map_id = fresh._map_id; owner_by_fighter = fresh.owner_by_fighter; _auto_memory.clear()
+	goblin_waves = fresh.goblin_waves; _goblin_next_id = fresh._goblin_next_id
 	lobby = false; status = "active"; epoch += 1
 	if _scene_gate: require_scene_ready()
 	party.departing = false
@@ -625,6 +783,7 @@ func depart() -> bool:
 
 ## Only trusted admission can install these after allocating their real party slots.
 func install_companions(descriptors: Array) -> bool:
+	if squads: return descriptors.is_empty()  # GDD online-squads 3.6: no companion bots in squad rooms
 	var pending := {}
 	for entry in descriptors:
 		if not entry is Dictionary or entry.size() not in [2,3] or not entry.has_all(["id", "slot"]): return false
