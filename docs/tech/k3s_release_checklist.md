@@ -212,12 +212,26 @@ Built from a clean worktree at a4744e5 (uncommitted legacy-item removal excluded
 
 | Deployment/container | Live image |
 |---|---|
-| game-test/game-test | `wiyazard:30500/zorx-web@sha256:80687fa49e505f21b640c6e1b8ad2950ca5664f710f9fd4736bd042665f38d8d` (web build a2bae67f9c20) |
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:d23b08d73de47ee3ab10c755fa380fc5e583b047f897d42999f0e243daf42df2` (web build b29a1f42352a, tag `a4744e5d582d-online-20261114`, rolled out 2026-11-13 ~17:02 UTC) |
 | headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:cc356e99818cac48fe0beb865b3a9bc7fd6e85bba999a13624a2014f871959ee` |
 | headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:4a004408eeda80609353bf9e4ce90fe92b1a77d38883c149de5c9b5d0908fd34` |
 | ConfigMap zorx-equipment-tuning | regenerated from data (HP-100 increments, no hat slot) |
 
 Nakama, landing, perf-lab and postgres were not changed. `ZORX_SQUAD_ROOMS` is unset. Nakama image not rebuilt (upstream 429).
+
+Web re-roll (same commit a4744e5): the first web image (`sha256:80687fa4…`, build a2bae67f9c20) was exported
+without the git-ignored `data/online.local.json`, so the game booted with online disabled ("Offline" title).
+Rebuilt with the file present. `export_presets.cfg` already includes `data/*.json`, so no filter fix was
+needed. The enabled config's bytes were verified inside `core.7eacac1a1ca9.pck.wasm`. Before-state:
+`build/k3s-before-web-online-20261114.txt`. Live `packs.json` reports build b29a1f42352a. Headless was not changed.
+**Precondition for every web build:** `data/online.local.json` must exist in the build tree (it is
+git-ignored, so a fresh `git worktree` does not have it). Otherwise the export silently falls back to
+`data/online.json` (`enabled: false`).
+Sign-in: OPEN. An automated browser is stopped at the landing page's Cloudflare Turnstile ("Verification failed"),
+so the Google/Guest path and the in-game online state must be checked by a person.
+
+Web-only rollback: `kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:80687fa49e505f21b640c6e1b8ad2950ca5664f710f9fd4736bd042665f38d8d`
+(note: that build is the offline one).
 
 Rollback:
 ```sh
