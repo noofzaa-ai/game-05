@@ -282,7 +282,7 @@ func _zone(ctx) -> void:
 	place(s.sim, s.sim.bodies[3].position, {sf[0]: Vector3(4, 0, 0)})
 	arm(s.sim, 3, {"name": "Singularity", "cast_ticks": 1, "actions": [{"action": "zone", "center": "densest", "cast_range": 9.0, "radius": 4.0, "duration_ticks": 60, "every_ticks": 30,
 		"pulse": [{"action": "burst", "center": "zone", "radius": 4.0, "atk_mul": 1.0}],
-		"on_end": [{"action": "shield", "target": "allies_all", "fraction_of": "damage", "fraction": 0.30, "split": true, "cap_max_hp": 0.15, "duration_ticks": 600}]}]})
+		"on_end": [{"action": "shield", "target": "allies_all", "fraction_of": "damage", "fraction": 0.30, "split": true, "cap_max_hp": 0.15, "duration_ticks": 600}]}]}, 10.0)  # ATK 10 = a starter card (HP scale 100)
 	for id in [1, 2, 3]:
 		s.sim.fighters[id].clear_shield()
 	cast_now(s.sim, 3)
@@ -290,9 +290,9 @@ func _zone(ctx) -> void:
 		s.sim.tick_count += 1
 		s.sim.events.clear()
 		RacePassives.step(s.sim)
-	# 2 pulses x 100 = 200 damage; 30% = 60 over 3 allies = 20 each.
-	ctx.check("zone on_end: 30%% of 200 zone damage split over 3 allies = 20 each (%s)" % [[1, 2, 3].map(func(id): return s.sim.fighters[id].shield)],
-		[1, 2, 3].all(func(id): return is_equal_approx(s.sim.fighters[id].shield, 20.0)))
+	# 2 pulses x 10 = 20 damage; 30% = 6 over 3 allies = 2 each (cap 15% of ~100 HP not reached).
+	ctx.check("zone on_end: 30%% of 20 zone damage split over 3 allies = 2 each (%s)" % [[1, 2, 3].map(func(id): return s.sim.fighters[id].shield)],
+		[1, 2, 3].all(func(id): return is_equal_approx(s.sim.fighters[id].shield, 2.0)))
 	# densest center falls back to the caster when nobody is in range (5).
 	var e := RaceTest.squad(["human", "human", "human"])
 	place(e.sim, e.sim.bodies[3].position, {})

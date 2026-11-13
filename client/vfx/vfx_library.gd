@@ -67,7 +67,7 @@ static func parse(text: String):
 				lib.errors.append("vfx: palette '%s' is not a #rrggbb color" % name)
 	if not lib.palette.has("ink"):
 		lib.palette["ink"] = Color(0.06, 0.05, 0.08)
-	lib.hit_rules = {"damage_reference": 120.0, "scale_min": 0.6, "scale_max": 2.4, "heavy_power": 1.8, "knockback_min": 9.0}
+	lib.hit_rules = {"damage_reference": 12.0, "scale_min": 0.6, "scale_max": 2.4, "heavy_power": 1.8, "knockback_min": 9.0}
 	var raw_rules = root.get("hit_rules", {})
 	if typeof(raw_rules) == TYPE_DICTIONARY:
 		for key in raw_rules:

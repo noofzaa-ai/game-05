@@ -163,8 +163,8 @@ func _moonlit_and_bloom(ctx) -> void:
 	RacePassives.step(msim)
 	msim.fighters[3].hp = msim.fighters[3].max_hp() * 0.5
 	var before: float = msim.fighters[3].hp
-	react(msim, {"type": "skill_hit", "attacker": 1, "target": enemy_of(msim), "damage": 100})
-	ctx.check("Bloomcaster: a skill hit heals the most-hurt ally 25% of the damage", is_equal_approx(msim.fighters[3].hp - before, 25.0 * msim.fighters[3].heal_factor()))
+	react(msim, {"type": "skill_hit", "attacker": 1, "target": enemy_of(msim), "damage": 10})  # HP scale 100: a 10 hit on a ~100-HP squad (below the 8% cap)
+	ctx.check("Bloomcaster: a skill hit heals the most-hurt ally 25% of the damage", is_equal_approx(msim.fighters[3].hp - before, 2.5 * msim.fighters[3].heal_factor()))
 	for id in [1, 2, 3]: msim.fighters[id].hp = msim.fighters[id].max_hp()
 	ctx.check("nobody hurt: Bloomcaster does not proc", procs(react(msim, {"type": "skill_hit", "attacker": 1, "target": enemy_of(msim), "damage": 100}), 1).is_empty())
 

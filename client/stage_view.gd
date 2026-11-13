@@ -152,6 +152,7 @@ func _ready() -> void:
 	if not _build_session(map): return
 	_build_camera(map)
 	_build_effects_and_hud()
+	preload("res://client/draw_style/draw_style.gd").apply(self, _rig.get("_camera"), _views.values())  # prototype, off by default
 	if _camp_mode:
 		if not (_session.has_method("is_lobby") and _session.is_lobby()): _spawn_portals()
 		_hud.show_skill_banner("Rest camp")
@@ -1013,7 +1014,7 @@ func _running_dust() -> void:
 
 ## Presentation palette: normal white, critical orange. Damage magnitude never changes colour.
 static func damage_style(damage: int, crit: bool, blocked: bool) -> Dictionary:
-	var size := 0.010 + clampf(float(damage) / 600.0, 0.0, 1.0) * 0.013 + (0.004 if crit else 0.0)
+	var size := 0.010 + clampf(float(damage) / 60.0, 0.0, 1.0) * 0.013 + (0.004 if crit else 0.0)  # HP scale 100 (2026-11-13): 60 = a huge hit
 	var color := InkUi.DAMAGE
 	if blocked:
 		color = InkUi.DAMAGE_BLOCKED

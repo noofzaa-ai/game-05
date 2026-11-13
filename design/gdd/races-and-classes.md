@@ -401,8 +401,8 @@ The skill-build system (`SkillBuild.enabled()`, `data/skill_system/integration.j
 **4.1 Low-HP scaling.** `h` = current HP / max HP (0..1). `bonus = max_mul * clamp((from_hp - h) / (from_hp - full_at_hp), 0, 1)`.
 Berserker (max 0.40, from 1.0, full 0.2): h=1.0 -> 0; h=0.6 -> 0.20; h=0.5 -> 0.25; h<=0.2 -> 0.40. A `below` gate (Viking pair 0.5) makes it a step: 0 above, full value below.
 
-**4.2 Heal from damage.** `heal = min(fraction * damage_dealt, cap_max_hp * target_max_hp) * target.heal_factor()`. Bloomcaster: a 300-damage skill hit, ally max 1000 -> min(75, 80) = 75. `heal_factor` already includes `wound` and the `HEALING` stat. Global safety for passives: total race healing into one target in one second is <= `heal_cap_per_second_max_hp` (6%). **Ultimate heals are exempt** from that per-second cap (they are rare and are the payoff), but still pass through `heal_factor`.
-With `split`: `each = min(fraction * damage_dealt / n_targets, cap_max_hp * target_max_hp)`. Thornbloom: 4 enemies x 250 = 1000 damage, 40% = 400 over 3 allies = 133 each; ally max 1000, cap 120 -> 120.
+**4.2 Heal from damage.** `heal = min(fraction * damage_dealt, cap_max_hp * target_max_hp) * target.heal_factor()`. Bloomcaster: a 30-damage skill hit, ally max 100 -> min(7.5, 8) = 7.5 (HP scale 100 since 2026-11-13: a starter card has 100 HP and 10 ATK). `heal_factor` already includes `wound` and the `HEALING` stat. Global safety for passives: total race healing into one target in one second is <= `heal_cap_per_second_max_hp` (6%). **Ultimate heals are exempt** from that per-second cap (they are rare and are the payoff), but still pass through `heal_factor`.
+With `split`: `each = min(fraction * damage_dealt / n_targets, cap_max_hp * target_max_hp)`. Thornbloom: 4 enemies x 25 = 100 damage, 40% = 40 over 3 allies = 13.3 each; ally max 100, cap 12 -> 12.
 
 **4.3 Shield.** `amount = fraction * source_max_hp`. The target's total shield is <= `shield_cap_max_hp * target_max_hp` (30%), or <= `ult_shield_cap_max_hp` (50%) while any part of it came from an ultimate. Shields absorb before HP, last `duration_ticks` (default 600), and are cleared at wave end. Runeweaver: mage max HP 750 -> 75 per ally per discharge.
 
@@ -423,7 +423,7 @@ With `split`: `each = min(fraction * damage_dealt / n_targets, cap_max_hp * targ
 | Gs | per 100% own ATK healed/shielded to allies | 2.0 | 1-4 |
 | Gk | per kill | 4 | 0-10 |
 | md, mt, ms | class multipliers (3.10.2) | 1.0 | 0.5-1.5 |
-Examples: greatsword ATK 150 dealing 1.3x ATK/s -> 1.5 + 2.6 = 4.1/s + kills -> full in ~22-24 s. Tank taking 1.5% max HP/s, dealing 0.6x ATK/s -> 1.5 + 0.8*2.0*0.6 + 1.4*1.2*1.5 = 1.5 + 0.96 + 2.52 = 5.0/s -> 20 s. Bow dealing 1.6x ATK/s, taking little -> 1.5 + 3.2 = 4.7/s -> 21 s. Mage dealing 1.2x + healing 0.3x ATK/s -> 1.5 + 2.4 + 0.72 = 4.6/s -> 22 s. All inside the 20-28 s target.
+Examples (ATK cancels out: gauge counts damage in units of own ATK): greatsword ATK 15 dealing 1.3x ATK/s -> 1.5 + 2.6 = 4.1/s + kills -> full in ~22-24 s. Tank taking 1.5% max HP/s, dealing 0.6x ATK/s -> 1.5 + 0.8*2.0*0.6 + 1.4*1.2*1.5 = 1.5 + 0.96 + 2.52 = 5.0/s -> 20 s. Bow dealing 1.6x ATK/s, taking little -> 1.5 + 3.2 = 4.7/s -> 21 s. Mage dealing 1.2x + healing 0.3x ATK/s -> 1.5 + 2.4 + 0.72 = 4.6/s -> 22 s. All inside the 20-28 s target.
 
 ## 5. Edge Cases
 
@@ -476,7 +476,7 @@ All in `data/races/*.json`, `data/races/rules.json`, `data/classes/*.json`, `dat
 - **Curve**: every passive cell number (each cell +5..12% card power); every ultimate number (each ultimate worth 3-6 s of that card's output); Pair/Trio/Alliance values (Alliance 5-10%); class stat profiles (HP 0.7-1.4x, DEF 0.7-1.5x); `fury_factor` 1.0-2.0.
 - **Gate**: `shield_cap_max_hp` 0.2-0.4, `ult_shield_cap_max_hp` 0.4-0.6, `heal_cap_per_second_max_hp` 0.04-0.10, `cooldown_mul_floor` 0.5-0.75, aggro cycle (every 6-10 s, up 2-4 s), rune `max`, gauge sources T/Gd/Gt/Gs/Gk (4.7 ranges), class `gauge` multipliers 0.5-1.5, `charge_mul` 0.7-1.2, `max_hold_ticks` 240-600, revive HP 0.25-0.5.
 - **Feel**: pilot `reaction`, `heavy_every`, `shoot_range` 6-8 m, `kite_distance` 2-4 m, ultimate `cast_ticks` 18-72 (longer = more readable, more interruptible), callout length 0.8-1.5 s.
-- Global difficulty: `wave_power_by_squad` (retune once after races and ultimates land).
+- Global difficulty: `wave_power_by_squad` (retune once after races and ultimates land). **Done 2026-11-13** together with the HP scale change (every HP/ATK number ÷10, starter card 100 HP / 10 ATK): squad of 3 1.26 -> **1.97**; class_sim 60 seeds: starter squad 72-75%, magic squad ~97%, a level-10 squad and a level-10 squad in rare gear clearly easier (numbers in `goblin_waves.json` `_tuning_waves_2026_11_13`).
 
 ## 8. Balance plan
 

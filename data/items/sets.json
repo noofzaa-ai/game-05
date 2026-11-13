@@ -13,7 +13,7 @@
         {
           "pieces": 3,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 4,
@@ -34,7 +34,7 @@
         {
           "pieces": 3,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 4,
@@ -55,7 +55,7 @@
         {
           "pieces": 3,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 4,
@@ -71,7 +71,7 @@
         {
           "pieces": 2,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 3,
@@ -97,7 +97,7 @@
         {
           "pieces": 2,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 3,
@@ -123,7 +123,7 @@
         {
           "pieces": 2,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 3,
@@ -154,12 +154,12 @@
         {
           "pieces": 3,
           "stat": "ATK",
-          "value": 12
+          "value": 1.2
         },
         {
           "pieces": 4,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 5,
@@ -180,12 +180,12 @@
         {
           "pieces": 3,
           "stat": "ATK",
-          "value": 12
+          "value": 1.2
         },
         {
           "pieces": 4,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 5,
@@ -206,12 +206,12 @@
         {
           "pieces": 3,
           "stat": "ATK",
-          "value": 12
+          "value": 1.2
         },
         {
           "pieces": 4,
           "stat": "HP",
-          "value": 120
+          "value": 12
         },
         {
           "pieces": 5,

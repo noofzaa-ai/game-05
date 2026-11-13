@@ -37,7 +37,7 @@
 	},
 
 	"hit_rules": {
-		"damage_reference": 100,
+		"damage_reference": 10,
 		"scale_min": 0.8,
 		"scale_max": 2.4,
 		"heavy_power": 1.8,

@@ -80,9 +80,17 @@ func duplicate_item() -> Object:
 	return copy
 
 
+## HP scale 100 (2026-11-13): every HP/ATK number in data was divided by 10. Main and substat values come
+## from the rules, but a substat's upgrade_bonus is a saved amount: an item saved before the change (no
+## "stat_scale" key) has the bonus of these stats divided by OLD_STAT_SCALE once, on load.
+const STAT_SCALE := 2  ## 1 = before the HP scale change (no key in old saves), 2 = HP scale 100
+const OLD_STAT_SCALE := 10.0
+const SCALED_STATS: Array[String] = ["HP", "ATK", "HPREGEN"]
+
+
 ## Versioned owned data only; computed stats always come from current rules.
 func to_dict() -> Dictionary:
-	return {"v": 1, "id": id, "slot": slot, "tier": tier, "level": level,
+	return {"v": 1, "stat_scale": STAT_SCALE, "id": id, "slot": slot, "tier": tier, "level": level,
 		"upgrade_count": upgrade_count, "refine_level": refine_level, "main_stat": main_stat, "weapon_type": weapon_type, "item_id": item_id,
 		"substats": substats.map(func(sub): return {"stat": sub["stat"], "quality": StateCodec.float_text(sub["quality"]), "boosts": sub["boosts"], "upgrade_bonus": StateCodec.float_text(float(sub.get("upgrade_bonus", 0.0)))}), "destroyed": destroyed,
 		"durability": StateCodec.float_text(durability), "max_durability": StateCodec.float_text(max_durability)}
@@ -103,5 +111,9 @@ static func from_dict(d: Dictionary):
 	item.max_durability = StateCodec.float_value(d["max_durability"])
 	for sub in d["substats"]:
 		item.substats.append({"stat": str(sub["stat"]), "quality": StateCodec.float_value(sub["quality"]), "boosts": int(sub["boosts"]), "upgrade_bonus": StateCodec.float_value(sub.get("upgrade_bonus", "0"))})
+	if int(d.get("stat_scale", 1)) < STAT_SCALE:  # saved before HP scale 100: rescale the saved upgrade amounts once
+		for sub in item.substats:
+			if SCALED_STATS.has(str(sub["stat"])):
+				sub["upgrade_bonus"] = float(sub["upgrade_bonus"]) / OLD_STAT_SCALE
 	preload("res://logic/armor_migration.gd").apply(item)
 	return item

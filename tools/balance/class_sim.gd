@@ -33,6 +33,8 @@ var camp
 var loot
 var combat
 var no_skills := false  ## "noskills": detach the skill-build skills (measurement only, to see what they add)
+var gear_tier := -1  ## "gear=N": every card also wears a tier-N piece in each open slot (0 normal .. 3 legendary); measurement only
+var card_level := 1  ## "level=L": every card is level L and spends its points greedily down its class, race and combo nodes
 
 
 func _init() -> void:
@@ -51,6 +53,10 @@ func _init() -> void:
 			first = int(arg.substr(6))
 		elif arg.begins_with("only="):
 			only = arg.substr(5)
+		elif arg.begins_with("gear="):
+			gear_tier = int(arg.substr(5))
+		elif arg.begins_with("level="):
+			card_level = int(arg.substr(6))
 	var scenarios := []
 	for class_id in ["sword_shield", "greatsword", "longbow", "magic"]:
 		scenarios.append({"name": "solo " + class_id, "classes": [class_id], "kind": "solo"})
@@ -60,7 +66,7 @@ func _init() -> void:
 	scenarios.append({"name": "magic squad", "classes": ["sword_shield", "longbow", "magic"], "kind": "squad"})
 	for class_id in ["sword_shield", "greatsword", "longbow"]:
 		scenarios.append({"name": "3x " + class_id, "classes": [class_id, class_id, class_id], "kind": "mono"})
-	print("CLASS SIM  seeds=%d  reaction=class pilot  max=%ds" % [seeds, MAX_TICKS / 60])
+	print("CLASS SIM  seeds=%d  reaction=class pilot  max=%ds  gear=%s  level=%d" % [seeds, MAX_TICKS / 60, "starter" if gear_tier < 0 else "tier %d" % gear_tier, card_level])
 	print("scenario            | win  | waves avg/min | clear s | dmg dealt | dmg taken | deaths | ults | timeouts")
 	var per_class := {}
 	for scenario in scenarios:
@@ -171,7 +177,42 @@ func _trip(seed: int):
 	var r := RandomNumberGenerator.new()
 	r.seed = seed
 	var profile = Profile.new_player(rules, camp, r)
+	if gear_tier >= 0 or card_level > 1:
+		_progress(profile, r)
 	return Run.start(profile, camp)
+
+
+## gear= / level= (measurement only): a progressed account. Gear: one tier-`gear_tier` piece in every slot the
+## card may use (random substats from the seed; the class's own weapon family). Level: `card_level` reached
+## and its points spent greedily: class nodes in data order, then race, then the combo (first legal pick wins).
+func _progress(profile, r: RandomNumberGenerator) -> void:
+	const Items := preload("res://logic/item_system.gd")
+	const Tree := preload("res://logic/skill_tree.gd")
+	const TreeData := preload("res://logic/skill_tree_data.gd")
+	const Progress := preload("res://logic/card_progress.gd")
+	var tree_data = TreeData.load_default()
+	for card in Deck.classes():
+		var worn = profile.loadout_of(card)
+		if gear_tier >= 0 and worn != null:
+			for slot in rules.slots:
+				if not rules.slot_open_for(str(slot["id"]), card):
+					continue
+				for index in int(slot["count"]):
+					var family := str(Profile.weapon_families(card)[0]) if slot["id"] == "weapon" else ""
+					var looks := family + "_01" if slot["id"] == "weapon" else ""
+					var item = Items.create_item(rules, "sim-%s-%s-%d" % [card, slot["id"], index], str(slot["id"]), gear_tier, r, family, looks)
+					if item != null:
+						worn.equip(item, index)
+		if card_level > 1 and profile.card_deck.get("cards", {}).has(card):
+			profile.card_deck["cards"][card][Progress.PROGRESS] = {"level": card_level, "xp": 0}
+			var race := Deck.race_of(profile.card_deck, card)
+			var order: Array = tree_data.class_nodes(card) + tree_data.race_nodes(race)
+			var combo: Dictionary = tree_data.combo_node(race, card)
+			if not combo.is_empty():
+				order.append(combo)
+			for _pass in 3:  # later tiers open once earlier ones are paid for
+				for n in order:
+					Tree.learn(profile.card_deck, card, str(n["id"]), tree_data)
 
 
 ## One fight of the wave journey with these classes (1 = solo). Returns totals and one entry per member.

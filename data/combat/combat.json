@@ -1,7 +1,7 @@
 {
 	"version": 1,
 
-	"_comment": "Combat rules and MONSTER data. Frame counts are simulation ticks (60 per second). Numbers are placeholders to tune by feel. MONSTER STRENGTH is meant to track the player: level-1 monsters are balanced against the starter gear (about ATK 135, DEF 92, HP 1120): a grunt dies in about 3 combos, a charger in about 5, a brute in about 11 heavy hits, and a monster light hit takes about 4-6% of the player's HP, a heavy or slam about 11-16%. enemy_level_scaling = how much a monster grows per level above 1, so a stage for better gear just sets a higher level on its spawns (map enemy_spawns[].level). The player's weapons (fists, sword, dagger, spear, hammer and their moves) are in weapons.json. A move chains into on_light / on_heavy when that button was pressed during the move and the active frames are over. invuln_from/invuln_to (inclusive/exclusive, in move frames) make the fighter untouchable during that part of the move. telegraph = the client warns the player during the wind-up. advance = forward rush speed during the swing.",
+	"_comment": "Combat rules and MONSTER data. Frame counts are simulation ticks (60 per second). Numbers are placeholders to tune by feel. MONSTER STRENGTH is meant to track the player: level-1 monsters are balanced against the starter gear (about ATK 13.5, DEF 92, HP 112; HP SCALE 100 since 2026-11-13: every HP and ATK number in data, players and monsters alike, was divided by 10 so a starter card shows 100 HP; DEF stays because the DEF rule DEF/(DEF+defense_constant) has no HP unit): a grunt dies in about 3 combos, a charger in about 5, a brute in about 11 heavy hits, and a monster light hit takes about 4-6% of the player's HP, a heavy or slam about 11-16%. enemy_level_scaling = how much a monster grows per level above 1, so a stage for better gear just sets a higher level on its spawns (map enemy_spawns[].level). The player's weapons (fists, sword, dagger, spear, hammer and their moves) are in weapons.json. A move chains into on_light / on_heavy when that button was pressed during the move and the active frames are over. invuln_from/invuln_to (inclusive/exclusive, in move frames) make the fighter untouchable during that part of the move. telegraph = the client warns the player during the wind-up. advance = forward rush speed during the swing.",
 
 	"rules": {
 		"defense_constant": 100,
@@ -32,7 +32,7 @@
 		"attack_assist_range": 2.2,
 		"enemy_level_scaling": {"HP": 0.15, "ATK": 0.1, "DEF": 0.08},
 		"default_stats": {
-			"HP": 1000, "ATK": 100, "DEF": 50, "ATKSPD": 0, "MOVESPD": 0,
+			"HP": 100, "ATK": 10, "DEF": 50, "ATKSPD": 0, "MOVESPD": 0,
 			"CRIRATE": 5, "CRIDMG": 150, "EFFECT_ACC": 0, "EFFECT_RES": 0,
 			"HPREGEN": 0, "STAREGEN": 32, "ULTREGEN": 0, "STAMINA": 100
 		}
@@ -220,8 +220,8 @@
 			"model_height": 1.8,
 			"body_height": 1.8,
 			"stats": {
-				"HP": 450,
-				"ATK": 150,
+				"HP": 45,
+				"ATK": 15,
 				"DEF": 45,
 				"MOVESPD": 32,
 				"ATKSPD": 50,
@@ -245,7 +245,7 @@
 			"color": [0.75, 0.3, 0.3],
 			"model": "res://art/monsters/monster_01.glb",
 			"model_height": 1.4,
-			"stats": {"HP": 500, "ATK": 105, "DEF": 50, "MOVESPD": -40, "CRIRATE": 0},
+			"stats": {"HP": 50, "ATK": 10.5, "DEF": 50, "MOVESPD": -40, "CRIRATE": 0},
 			"poise": 0,
 			"ai": {"attack_range": 1.3, "cooldown_min": 50, "cooldown_max": 90, "attack_input": "light", "wait_range": 3.2, "skill_chance": 20}
 		},
@@ -253,7 +253,7 @@
 			"role": "Brute: slow, tough, raises its arms before a huge slam. DODGE the slam.",
 			"style": "brute",
 			"color": [0.45, 0.25, 0.6],
-			"stats": {"HP": 1800, "ATK": 130, "DEF": 90, "MOVESPD": -60, "CRIRATE": 0, "EFFECT_RES": 40},
+			"stats": {"HP": 180, "ATK": 13, "DEF": 90, "MOVESPD": -60, "CRIRATE": 0, "EFFECT_RES": 40},
 			"poise": 100,
 			"ai": {"attack_range": 1.9, "cooldown_min": 110, "cooldown_max": 190, "attack_input": "heavy", "wait_range": 3.6, "skill_chance": 35}
 		},
@@ -261,7 +261,7 @@
 			"role": "Charger: crouches, then rushes in a straight line. GUARD it or step out of the lane.",
 			"style": "charger",
 			"color": [0.8, 0.7, 0.2],
-			"stats": {"HP": 900, "ATK": 135, "DEF": 70, "MOVESPD": 10, "CRIRATE": 0, "EFFECT_RES": 20},
+			"stats": {"HP": 90, "ATK": 13.5, "DEF": 70, "MOVESPD": 10, "CRIRATE": 0, "EFFECT_RES": 20},
 			"poise": 30,
 			"ai": {"attack_range": 7.0, "attack_min_range": 3.4, "cooldown_min": 150, "cooldown_max": 240, "attack_input": "heavy", "wait_range": 5.2, "skill_chance": 30}
 		},
@@ -274,7 +274,7 @@
 			"clips": {"goblin_jab": "attack_1", "goblin_lunge": "attack_2"},
 			"model_height": 0.98,
 			"body_height": 0.98,
-			"stats": {"HP": 300, "ATK": 100, "DEF": 30, "MOVESPD": -12, "CRIRATE": 0},
+			"stats": {"HP": 30, "ATK": 10, "DEF": 30, "MOVESPD": -12, "CRIRATE": 0},
 			"poise": 0,
 			"ai": {"attack_range": 1.7, "cooldown_min": 60, "cooldown_max": 110, "attack_input": "light", "wait_range": 3.6, "skill_chance": 25, "retreat_ticks": 26, "flee_hp": 0.3, "flee_ticks": 75}
 		},
@@ -287,7 +287,7 @@
 			"clips": {"goblin_chief_jab": "attack_1", "goblin_chief_lunge": "attack_2"},
 			"model_height": 1.94,
 			"body_height": 1.69,
-			"stats": {"HP": 1500, "ATK": 125, "DEF": 60, "MOVESPD": -15, "CRIRATE": 0, "EFFECT_RES": 30},
+			"stats": {"HP": 150, "ATK": 12.5, "DEF": 60, "MOVESPD": -15, "CRIRATE": 0, "EFFECT_RES": 30},
 			"poise": 60,
 			"ai": {"attack_range": 2.7, "cooldown_min": 70, "cooldown_max": 120, "attack_input": "light", "wait_range": 4.2, "skill_chance": 35}
 		},
@@ -301,7 +301,7 @@
 			"nock_mesh": "arrow",
 			"model_height": 1.24,
 			"body_height": 1.04,
-			"stats": {"HP": 220, "ATK": 95, "DEF": 20, "MOVESPD": -12, "CRIRATE": 0},
+			"stats": {"HP": 22, "ATK": 9.5, "DEF": 20, "MOVESPD": -12, "CRIRATE": 0},
 			"poise": 0,
 			"ai": {"attack_range": 11.0, "cooldown_min": 100, "cooldown_max": 160, "attack_input": "light", "wait_range": 7.0, "skill_chance": 25, "keep_range": 7.0, "retreat_range": 4.0, "strafe": 0.45, "flee_hp": 0.3, "flee_ticks": 60}
 		},
@@ -314,7 +314,7 @@
 			"clips": {"goblin_mage_bolt": "cast", "goblin_mage_hex": "cast_aoe", "goblin_mage_blink": "blink"},
 			"model_height": 1.48,
 			"body_height": 0.98,
-			"stats": {"HP": 240, "ATK": 110, "DEF": 25, "MOVESPD": -18, "CRIRATE": 0, "EFFECT_RES": 20},
+			"stats": {"HP": 24, "ATK": 11, "DEF": 25, "MOVESPD": -18, "CRIRATE": 0, "EFFECT_RES": 20},
 			"poise": 0,
 			"ai": {"attack_range": 10.0, "cooldown_min": 110, "cooldown_max": 170, "attack_input": "light", "wait_range": 7.5, "skill_chance": 45, "keep_range": 7.5, "retreat_range": 4.5, "strafe": 0.35, "escape_input": "heavy", "escape_range": 2.6, "escape_cooldown": 360, "flee_hp": 0.25, "flee_ticks": 60}
 		},
@@ -329,7 +329,7 @@
 			"model_height": 1.61,
 			"body_height": 1.25,
 			"run_clip_speed": 1.55,
-			"stats": {"HP": 1100, "ATK": 120, "DEF": 80, "MOVESPD": -48, "CRIRATE": 0, "EFFECT_RES": 30},
+			"stats": {"HP": 110, "ATK": 12, "DEF": 80, "MOVESPD": -48, "CRIRATE": 0, "EFFECT_RES": 30},
 			"poise": 140,
 			"ai": {"attack_range": 3.1, "cooldown_min": 90, "cooldown_max": 150, "attack_input": "light", "wait_range": 4.0, "skill_chance": 35}
 		}

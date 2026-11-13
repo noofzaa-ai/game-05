@@ -135,7 +135,7 @@ func _test_data_rules(ctx) -> void:
 	ctx.check("the fists style has its three entry moves", _data.styles["fists"]["ground_light"] == "fists_light_1" and _data.styles["fists"]["air_light"] == "fists_air")
 	ctx.check("light attacks chain into light then heavy", _data.moves["fists_light_1"]["on_light"] == "fists_light_2" and _data.moves["fists_light_2"]["on_light"] == "fists_light_3" and _data.moves["fists_light_1"]["on_heavy"] == "fists_heavy")
 	ctx.check("only the heavy move launches", _data.moves["fists_heavy"]["launch"] > 0.0 and _data.moves["fists_light_1"]["launch"] == 0.0)
-	ctx.check("the grunt enemy fills missing stats from the defaults", _data.enemies["dummy_grunt"]["stats"]["CRIDMG"] == 150.0 and _data.enemies["dummy_grunt"]["stats"]["HP"] == 500.0)
+	ctx.check("the grunt enemy fills missing stats from the defaults", _data.enemies["dummy_grunt"]["stats"]["CRIDMG"] == 150.0 and _data.enemies["dummy_grunt"]["stats"]["HP"] == 50.0)  # HP scale 100 (was 500)
 	ctx.check("a move's length is startup + active + recovery", _data.move_length("fists_light_1") == 17)
 	ctx.check("the grunt uses its own model (monster_01)", _data.enemies["dummy_grunt"]["model"] == "res://art/monsters/monster_01.glb")
 	for enemy_id in _data.enemies:
@@ -148,18 +148,18 @@ func _test_data_rules(ctx) -> void:
 	ctx.check("a monster model must be a res:// .glb path with a height above 0", broken.errors.size() == 2)
 
 
-## Monsters are balanced against the starter gear (ATK 135, DEF 92, HP 1120 in the demo set), and
+## Monsters are balanced against the starter gear (ATK 13.5, DEF 92, HP 112; HP scale 100 since 2026-11-13 in the demo set), and
 ## grow with their level. If these numbers are retuned on purpose, update the ranges here.
 func _test_monster_balance(ctx) -> void:
 	var player := Fighter.new()
-	player.stats = _data.full_stats({"HP": 1120, "ATK": 135, "DEF": 92, "CRIRATE": 0})
+	player.stats = _data.full_stats({"HP": 112, "ATK": 13.5, "DEF": 92, "CRIRATE": 0})
 	var no_crit := _rng()
 	var share := func(enemy_id: String, slot: String) -> float:
 		var enemy := Fighter.new()
 		enemy.stats = _data.enemy_stats(enemy_id)
 		enemy.stats["CRIRATE"] = 0.0
 		var move: Dictionary = _data.moves[_data.styles[_data.enemies[enemy_id]["style"]][slot]]
-		return float(Combat.compute_damage(enemy, player, move, _data, no_crit)["damage"]) / 1120.0
+		return float(Combat.compute_damage(enemy, player, move, _data, no_crit)["damage"]) / 112.0
 	for enemy_id in ["dummy_grunt", "brute", "charger"]:
 		var light: float = share.call(enemy_id, "ground_light")
 		var heavy: float = share.call(enemy_id, "ground_heavy")
@@ -168,7 +168,7 @@ func _test_monster_balance(ctx) -> void:
 		var enemy := Fighter.new()
 		enemy.stats = _data.enemy_stats(enemy_id)
 		var attacker := Fighter.new()
-		attacker.stats = _data.full_stats({"ATK": 135, "CRIRATE": 0})
+		attacker.stats = _data.full_stats({"ATK": 13.5, "CRIRATE": 0})
 		return ceili(float(enemy.stats["HP"]) / float(Combat.compute_damage(attacker, enemy, _data.moves[move_id], _data, no_crit)["damage"]))
 	var grunt_hits: int = hits_to_kill.call("dummy_grunt", "blade_light_1")
 	var charger_hits: int = hits_to_kill.call("charger", "blade_light_1")
@@ -1038,6 +1038,7 @@ func _test_combo_counter_and_events(ctx) -> void:
 	var payload := {}
 	var active_events := 0
 	var best := 0
+	var hit_total := 0.0
 	for i in 70:
 		sim.set_input(1, _press(i % 6 == 0))
 		sim.tick()
@@ -1047,8 +1048,9 @@ func _test_combo_counter_and_events(ctx) -> void:
 			if event["type"] == "hit":
 				payload = event
 				best = maxi(best, event["attacker_combo"])
+				hit_total += float(event["damage"])
 	ctx.check("the attacker's combo counter counts consecutive hits (%d)" % best, best >= 3 and fighter.combo_dealt >= 3)
-	ctx.check("the combo tracks total damage", fighter.combo_damage > 100)
+	ctx.check("the combo tracks total damage (%d of %.0f dealt)" % [fighter.combo_damage, hit_total], fighter.combo_damage > 0 and is_equal_approx(float(fighter.combo_damage), hit_total))
 	ctx.check("each swing announces its damaging frames once", active_events >= 3 and active_events <= 10)
 	ctx.check("a hit event says where, in which direction, and how hard", payload.has("pos") and payload.has("dir") and payload["power"] > 0.0 and payload["move"].begins_with("fists_"))
 	var last_combo: int = fighter.combo_dealt

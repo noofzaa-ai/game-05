@@ -83,20 +83,25 @@ func _test_goblin_data(ctx) -> void:
 			ctx.check("%s has its marks (%.2f / %.2f / %.2f s)" % [clip, windup, strike, clips.length(clip)], windup > 0.0 and strike > windup and clips.length(clip) > strike)
 
 
-## Against the starter gear (ATK 135, DEF 92, HP 1120): a goblin is a light pack enemy, so a jab is
+## Against the starter gear (ATK 13.5, DEF 92, HP 112; HP scale 100 since 2026-11-13): a goblin is a light pack enemy, so a jab is
 ## a nibble and the lunge hurts about as much as a grunt's heavy; it dies to about one combo.
+## HP scale 100 (2026-11-13): damage is rounded to whole points and a starter has ~112 HP, so one point is
+## ~0.9% of HP; the bands below may be off by that one rounding point (the lunge is 10.4 -> 10 = 8.9%).
+const ROUND_STEP := 1.0 / 112.0
+
+
 func _test_goblin_balance(ctx) -> void:
 	var rng := RandomNumberGenerator.new()
 	var player := Fighter.new()
-	player.stats = _data.full_stats({"HP": 1120, "ATK": 135, "DEF": 92, "CRIRATE": 0})
+	player.stats = _data.full_stats({"HP": 112, "ATK": 13.5, "DEF": 92, "CRIRATE": 0})
 	var goblin := Fighter.new()
 	goblin.stats = _data.enemy_stats("goblin")
 	goblin.stats["CRIRATE"] = 0.0
-	var jab := float(Combat.compute_damage(goblin, player, _data.moves["goblin_jab"], _data, rng)["damage"]) / 1120.0
-	var lunge := float(Combat.compute_damage(goblin, player, _data.moves["goblin_lunge"], _data, rng)["damage"]) / 1120.0
-	ctx.check("a goblin jab takes 3-5%% of the starter player's HP (%.1f%%), the lunge 9-14%% (%.1f%%)" % [jab * 100.0, lunge * 100.0], jab >= 0.03 and jab <= 0.05 and lunge >= 0.09 and lunge <= 0.14)
+	var jab := float(Combat.compute_damage(goblin, player, _data.moves["goblin_jab"], _data, rng)["damage"]) / 112.0
+	var lunge := float(Combat.compute_damage(goblin, player, _data.moves["goblin_lunge"], _data, rng)["damage"]) / 112.0
+	ctx.check("a goblin jab takes 3-5%% of the starter player's HP (%.1f%%), the lunge 9-14%% (%.1f%%)" % [jab * 100.0, lunge * 100.0], jab >= 0.03 - ROUND_STEP and jab <= 0.05 + ROUND_STEP and lunge >= 0.09 - ROUND_STEP and lunge <= 0.14 + ROUND_STEP)
 	var attacker := Fighter.new()
-	attacker.stats = _data.full_stats({"ATK": 135, "CRIRATE": 0})
+	attacker.stats = _data.full_stats({"ATK": 13.5, "CRIRATE": 0})
 	var hits := ceili(float(goblin.stats["HP"]) / float(Combat.compute_damage(attacker, goblin, _data.moves["blade_light_1"], _data, rng)["damage"]))
 	var grunt := Fighter.new()
 	grunt.stats = _data.enemy_stats("dummy_grunt")

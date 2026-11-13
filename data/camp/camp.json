@@ -299,7 +299,7 @@
 			"camp_level": 2,
 			"summary": "Start every run with more health.",
 			"stats": {
-				"HP": 60
+				"HP": 6
 			}
 		},
 		{
@@ -308,7 +308,7 @@
 			"camp_level": 3,
 			"summary": "A little more attack power.",
 			"stats": {
-				"ATK": 8
+				"ATK": 0.8
 			}
 		},
 		{
@@ -326,7 +326,7 @@
 			"camp_level": 5,
 			"summary": "More health and armor.",
 			"stats": {
-				"HP": 120,
+				"HP": 12,
 				"DEF": 10
 			}
 		}

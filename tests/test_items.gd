@@ -5,6 +5,7 @@ extends RefCounted
 const GameSim := preload("res://logic/game_sim.gd")
 const ItemRulesLoader := preload("res://logic/item_rules_loader.gd")
 const ItemSystem := preload("res://logic/item_system.gd")
+const Item := preload("res://logic/item.gd")
 const Loadout := preload("res://logic/loadout.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 const SimWorld := preload("res://logic/sim_world.gd")
@@ -31,6 +32,23 @@ func run(ctx) -> void:
 	_test_determinism(ctx, rules)
 	_test_loadout_and_stats(ctx, rules)
 	_test_move_speed_reaches_the_simulation(ctx, rules)
+	_test_old_upgrade_bonus_rescaled(ctx, rules)
+
+
+## HP scale 100 (2026-11-13): an item saved before the change keeps its rolls, but its saved HP/ATK/HPREGEN
+## upgrade amounts are divided by 10 once on load; other stats and already-new saves are untouched.
+func _test_old_upgrade_bonus_rescaled(ctx, rules) -> void:
+	var item = ItemSystem.create_item(rules, "old-save", "hat", 2, _rng(5))
+	item.substats.clear()
+	item.substats.append({"stat": "ATK", "quality": 0.5, "boosts": 0, "upgrade_bonus": 2.0})
+	item.substats.append({"stat": "CRIRATE", "quality": 0.5, "boosts": 0, "upgrade_bonus": 0.4})
+	item.substats.append({"stat": "HP", "quality": 0.5, "boosts": 0, "upgrade_bonus": 20.0})
+	var old_save: Dictionary = item.to_dict()
+	old_save.erase("stat_scale")
+	var loaded = Item.from_dict(old_save)
+	ctx.check("an old save's HP/ATK upgrade amounts are divided by 10, others kept", is_equal_approx(loaded.substats[0]["upgrade_bonus"], 0.2) and is_equal_approx(loaded.substats[1]["upgrade_bonus"], 0.4) and is_equal_approx(loaded.substats[2]["upgrade_bonus"], 2.0))
+	var again = Item.from_dict(loaded.to_dict())
+	ctx.check("a new save is not rescaled again", is_equal_approx(again.substats[0]["upgrade_bonus"], 0.2) and is_equal_approx(again.substats[2]["upgrade_bonus"], 2.0))
 
 
 func _rng(seed_value: int) -> RandomNumberGenerator:
@@ -71,7 +89,7 @@ func _test_rule_validation(ctx) -> void:
 	ctx.check("probabilities that do not add to 1 are reported", not ItemRulesLoader.parse(good.replace("\"success\": 0.7", "\"success\": 0.9")).is_valid())
 	ctx.check("an unknown main stat is reported", not ItemRulesLoader.parse(good.replace("\"main_stat\": \"ATK\"", "\"main_stat\": \"MAGIC\"")).is_valid())
 	ctx.check("a missing enhancement level is reported", not ItemRulesLoader.parse(good.replace("\"levels\": [9, 10]", "\"levels\": [9, 9]")).is_valid())
-	ctx.check("a tier table of the wrong size is reported", not ItemRulesLoader.parse(good.replace("[200, 350, 550, 800]", "[200, 350]")).is_valid())
+	ctx.check("a tier table of the wrong size is reported", not ItemRulesLoader.parse(good.replace("[20, 35, 55, 80]", "[20, 35]")).is_valid())
 
 
 func _test_create(ctx, rules) -> void:
@@ -249,9 +267,9 @@ func _test_loadout_and_stats(ctx, rules) -> void:
 	ctx.check("item_at returns what was worn", loadout.item_at("ring", 1) == ring_b)
 
 	var bare := Stats.totals(rules, Loadout.new(rules).items())
-	ctx.check("a character with no gear has the base stats", bare["HP"] == 1000.0 and bare["ATK"] == 100.0 and bare["CRIDMG"] == 150.0)
+	ctx.check("a character with no gear has the base stats (HP scale 100: 100 HP, 10 ATK)", bare["HP"] == 100.0 and bare["ATK"] == 10.0 and bare["CRIDMG"] == 150.0)
 	var geared := Stats.totals(rules, loadout.items())
-	var expected_atk: float = 100.0 + weapon.main_value(rules)
+	var expected_atk: float = 10.0 + weapon.main_value(rules)
 	for item in [ring_a, ring_b]:
 		for index in item.substats.size():
 			if item.substats[index]["stat"] == "ATK":

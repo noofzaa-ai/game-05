@@ -93,10 +93,10 @@ func run(ctx) -> void:
 		distinct[names["ultimate"]] = true
 	ctx.check("every weapon names its special and its ultimate, all different (%d names)" % distinct.size(), named and distinct.size() == data.weapon_ids.size() * 2)
 
-	# Damage numbers: bigger and more golden for harder hits.
-	var small := StageView.damage_style(40, false, false)
-	var big := StageView.damage_style(500, false, false)
-	var crit := StageView.damage_style(40, true, false)
-	var blocked := StageView.damage_style(20, false, true)
+	# Damage numbers: bigger and more golden for harder hits (HP scale 100: 4 = a light hit, 50 = a huge one).
+	var small := StageView.damage_style(4, false, false)
+	var big := StageView.damage_style(50, false, false)
+	var crit := StageView.damage_style(4, true, false)
+	var blocked := StageView.damage_style(2, false, true)
 	ctx.check("harder hits get bigger numbers", big["pixel_size"] > small["pixel_size"] * 1.5 and crit["pixel_size"] > small["pixel_size"])
 	ctx.check("a small hit is white, a big one gold, a crit orange-red, a block blue", small["color"] == Color.WHITE and big["color"].r > 0.9 and big["color"].g > 0.7 and big["color"].b < 0.4 and crit["color"].g < 0.6 and blocked["color"].b > 0.9)

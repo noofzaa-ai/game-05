@@ -4,8 +4,8 @@
 	"_comment": "Equipment rules. Every number here is a PLACEHOLDER to be tuned by the director; the structure is what matters. Stat names are the director's: HP ATK DEF ATKSPD MOVESPD CRIRATE CRIDMG EFFECT_ACC EFFECT_RES.",
 
 	"stats": {
-		"HP": {"base": 1000, "unit": "flat"},
-		"ATK": {"base": 100, "unit": "flat"},
+		"HP": {"base": 100, "unit": "flat"},
+		"ATK": {"base": 10, "unit": "flat"},
 		"DEF": {"base": 50, "unit": "flat"},
 		"ATKSPD": {"base": 0, "unit": "percent"},
 		"MOVESPD": {"base": 0, "unit": "percent"},
@@ -43,8 +43,8 @@
 	],
 
 	"main_stat_by_tier": {
-		"HP": [200, 350, 550, 800],
-		"ATK": [20, 35, 55, 80],
+		"HP": [20, 35, 55, 80],
+		"ATK": [2, 3.5, 5.5, 8],
 		"DEF": [15, 27, 42, 60],
 		"ATKSPD": [3, 5, 8, 12],
 		"MOVESPD": [3, 5, 8, 12],
@@ -52,7 +52,7 @@
 		"CRIDMG": [6, 10, 16, 24],
 		"EFFECT_ACC": [4, 7, 11, 16],
 		"EFFECT_RES": [4, 7, 11, 16],
-		"HPREGEN": [1, 2, 3.5, 5],
+		"HPREGEN": [0.1, 0.2, 0.35, 0.5],
 		"STAREGEN": [2, 3.5, 5.5, 8],
 		"ULTREGEN": [0.2, 0.35, 0.55, 0.8],
 		"STAMINA": [10, 18, 28, 40]
@@ -60,8 +60,8 @@
 
 	"substat": {
 		"range": {
-			"HP": [40, 80],
-			"ATK": [4, 8],
+			"HP": [4, 8],
+			"ATK": [0.4, 0.8],
 			"DEF": [3, 6],
 			"ATKSPD": [1, 2],
 			"MOVESPD": [1, 2],
@@ -69,7 +69,7 @@
 			"CRIDMG": [2, 4],
 			"EFFECT_ACC": [1, 3],
 			"EFFECT_RES": [1, 3],
-			"HPREGEN": [0.3, 0.6],
+			"HPREGEN": [0.03, 0.06],
 			"STAREGEN": [0.8, 1.6],
 			"ULTREGEN": [0.05, 0.1],
 			"STAMINA": [3, 6]

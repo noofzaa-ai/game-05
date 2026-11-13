@@ -256,9 +256,9 @@ Each skill's AI rule above is data: a `use` block per skill in the new skill dat
 ## 4. Formulas
 
 **4.1 Damage.** `dmg = atk_pct × ATK × status_bonus × crit × (1 − DEF rule)`, using the existing damage rule. `status_bonus` = 1.5 for Heartseeker vs `sunder`, else 1. Cleave on Reaping Arc: `× (1 + min(0.15 × (n − 1), 0.45))`, n = enemies hit.
-Example: ATK 100, Reaping Arc hits 3 enemies: 550 × 1.30 = **715** each before DEF (2145 total). (Was 140% → 182 before the 4.6 tuning.)
+Example: ATK 10 (starter card, HP scale 100 since 2026-11-13), Reaping Arc hits 3 enemies: 55 × 1.30 = **71.5** each before DEF (214.5 total). (Was 140% → 18.2 before the 4.6 tuning.)
 
-**4.2 Intercept link.** For a hit of raw damage D on the linked ally: ally takes `0.6 × D` through its own DEF; caster takes `0.4 × D` through the caster's DEF and modifiers (Iron Guard ×0.5 applies). Example: D = 200, tank DEF rule reduces 30%, tank in Iron Guard: tank takes 0.4 × 200 × 0.7 × 0.5 = **28**; ally takes 0.6 × 200 × its rule.
+**4.2 Intercept link.** For a hit of raw damage D on the linked ally: ally takes `0.6 × D` through its own DEF; caster takes `0.4 × D` through the caster's DEF and modifiers (Iron Guard ×0.5 applies). Example: D = 20, tank DEF rule reduces 30%, tank in Iron Guard: tank takes 0.4 × 20 × 0.7 × 0.5 = **2.8**; ally takes 0.6 × 20 × its rule. (The code test still uses D = 200 on a 1000-HP dummy: the rule is scale-free.)
 
 **4.3 Pull.** Final distance to caster = `max(1.0, d − pull)`. Example: enemy at 4.5 m, pull 2 → 2.5 m (inside the 2.5 m cut).
 
@@ -414,7 +414,7 @@ Functional:
 1. `class_skills` lists exactly the 16 new ids (4 per class); no old id appears in any data file (`data/classes`, `data/races`, `data/skill_tree`, pilot `support_skill`). A data test fails on any old id.
 2. Every new skill loads with: cooldown, stamina, impact tier, numbers, `use` rule, clip id that exists in its class clip file, `start < release < end ≤ clip length`. A wrong clip name or time fails the data test.
 3. Scripted sim per skill: cast count > 0 in its positive scene, 0 in its negative scene (e.g. Repulse Nova with no enemy within 3 m does not cast; Intercept with all allies above 60% does not cast).
-4. Numbers match section 4 within rounding: Reaping Arc on 3 enemies at ATK 100 = 182 each before DEF; Intercept example 4.2 = 28; pull example 4.3 = 2.5 m.
+4. Numbers match section 4 within rounding: Reaping Arc on 3 enemies at ATK 10 = 71.5 each before DEF; Intercept example 4.2 = 2.8; pull example 4.3 = 2.5 m.
 5. Events: Reaping Arc fires 1 `heavy_hit`; Rapid Fire fires 4 `skill_hit` and 0 basic `hit`; redirected damage counts as the S&S's damage taken.
 6. Determinism: same seed = same replay; online prediction matches authority for the movement skills (Rush, Intercept, Leap, Vault).
 7. Every skill-tree node that named an old skill now names its new skill (3.6), and `tests/run_all.gd` passes.

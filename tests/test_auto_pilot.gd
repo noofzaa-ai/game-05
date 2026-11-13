@@ -83,12 +83,23 @@ func _play_first_stage(count: int, seed: int) -> Dictionary:
 	return {"won": sim.living_enemy_count() + sim.pending_wave_count() == 0 and alive > 0, "ticks": tick, "timeout": tick >= max_ticks, "alive": alive, "hp": hp}
 
 
+## Party trips {1.., member} for these class cards on one account trip (logic/squad_member.gd, as the game does).
+static func _squad_trips(base, cards: Array) -> Dictionary:
+	var members: Array = preload("res://logic/squad_member.gd").make_squad(base, cards)
+	var trips := {}
+	for i in members.size():
+		trips[i + 1] = members[i]
+	return trips
+
+
 ## Wave mode (data/journeys/goblin_waves.json): one fight, 12 waves, counts x1.5, the boss last; the squad of 3 wins it.
 func _wave_checks(ctx) -> void:
 	var f := F.make(31)
 	var data = JourneyData.load_by_id("goblin_waves", f.combat.enemies.keys())
 	ctx.check("the wave journey file is valid %s" % [data.errors], data.is_valid() and data.wave_mode and is_equal_approx(data.wave_count_scale, 1.5))
-	var trips := {1: f.run, 2: F.make(32).run, 3: F.make(33).run}
+	# The squad as the game builds it (one account, each card with its own race, gear and skills; SquadMember),
+	# the same squad tools/balance/class_sim.gd measures. Plain runs would have no race passives or ultimates.
+	var trips := _squad_trips(f.run, Array(preload("res://logic/card_deck.gd").STARTER_SQUAD))
 	var journey = Party.start_party(data, trips, f.rules, f.loot, f.combat.weapon_ids, 31)
 	ctx.check("a wave journey is one stage with one map", journey.total_stages() == 1 and journey.nodes.size() == 1 and journey.wave_total() == 12)
 	while journey.state != journey.IN_STAGE and not journey.is_over():
@@ -129,7 +140,7 @@ func _wave_checks(ctx) -> void:
 		for id in journey.player_ids():
 			if sim.fighters[id].is_alive(): alive += 1
 		if alive == 0: break
-	# Wave mode is tuned to be lost sometimes (starter squad ~72% over 40 seeds, tools/balance/class_sim.gd),
+	# Wave mode is tuned to be lost sometimes (starter squad ~75% over 60 seeds at squad power 1.97, 2026-11-13, tools/balance/class_sim.gd),
 	# so one fixed seed only has to reach the Chief's wave; the win rate is measured by the sim tool.
 	print("    (starter squad, seed 31: reached wave %d, ticks %d, won %s)" % [waves_reached, tick, sim.living_enemy_count() + sim.pending_wave_count() == 0])
 	ctx.check("the squad fights through to the Chief's wave (ticks %d)" % tick, boss_seen)
@@ -163,7 +174,7 @@ func _class_checks(ctx) -> void:
 	ctx.check("a shooter stops at range, a melee class at reach", is_equal_approx(Pilot._engage_range(combat, _fighter("longbow")), Pilot.SHOOT_RANGE) and is_equal_approx(Pilot._engage_range(combat, _fighter("blade")), Pilot.REACH) and Pilot._engage_range(combat, _fighter("greatsword")) > Pilot.REACH)
 	for seed in [31, 32]:
 		var data = JourneyData.load_by_id("goblin_waves", combat.enemies.keys())
-		var trips := {1: F.make(seed).run, 2: F.make(seed + 1).run, 3: F.make(seed + 2).run}
+		var trips := _squad_trips(F.make(seed).run, ["greatsword", "longbow", "magic"])
 		var journey = Party.start_party(data, trips, f.rules, f.loot, combat.weapon_ids, seed)
 		while journey.state != journey.IN_STAGE and not journey.is_over():
 			if journey.state == journey.CHOOSING:
