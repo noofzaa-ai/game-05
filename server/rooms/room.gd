@@ -162,6 +162,7 @@ func _start_goblin_waves(map) -> void:
 
 func _spawn_goblin_wave(map) -> bool:
 	var roster = preload("res://logic/goblin_wave_roster.gd").build(journey.data, goblin_waves.wave)
+	sim.reward_wave = goblin_waves.wave  # race gear drop shares by wave (logic/race_drops.gd)
 	var scale := float(sim.combat.coop["hp_multiplier"][connected.size() - 1]) if sim.coop_enabled else 1.0
 	var ids: Array = preload("res://logic/goblin_wave_roster.gd").spawn(sim, map, roster, _goblin_next_id, scale)
 	if ids.is_empty(): return false
@@ -210,6 +211,8 @@ func _open_goblin_chest(id: int) -> bool:
 			var reward_rng = journey._rng_for("goblin-chest-%d" % player, wave)
 			var item = journey.treasure_item(reward_rng)
 			item.id = "wave-chest-%d-%d-%d" % [_seed, wave, player]
+			var RaceDrops = load("res://logic/race_drops.gd")  # race gear share of the chest (design/gdd/race-gear-sets.md 3.12)
+			item = RaceDrops.convert_piece(journey.item_rules, item, RaceDrops.picks_for(trip), RaceDrops.CHEST, wave)
 			trip.loot_into_bag({"gold": 0, "materials": {}, "items": [item]})
 	journey.treasure_pending = false
 	status = "active"

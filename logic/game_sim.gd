@@ -46,6 +46,9 @@ var skill_system = null  ## Old skill-build runtime: deleted (class-skills.md, B
 
 var item_rules: ItemRules  ## with loot_data: monsters drop loot and gear wears (see attach_run)
 var loot_data: LootData
+## The wave a kill's race-gear drop counts as (logic/race_drops.gd): -1 = the local wave counter (_waves_released + 1);
+## the online room sets it, because it spawns each goblin wave itself.
+var reward_wave := -1
 var loot_factor := 1.0  ## loot by squad size (Boss 2026-11-12): set by Journey.populate from JourneyData.loot_for
 var runs: Dictionary = {}  ## player id (int) -> Run: the bag and gear of a player on a trip (only when attached)
 
@@ -431,6 +434,11 @@ func _give_drop(target_id: int, killer_id: int) -> void:
 	var dead: Fighter = fighters[target_id]
 	var drop := Loot.roll(item_rules, loot_data, dead.enemy_type, dead.level, combat.weapon_ids, rng, loot_factor)
 	drop["relics"]=load("res://logic/relics.gd").roll(dead.enemy_type,rng,loot_factor)
+	# Race gear (design/gdd/race-gear-sets.md 3.12): a share of the dropped pieces become race pieces of a squad card;
+	# the boss's own drops use the boss shares (the only gold race source). Own RNG: the sim stream is unchanged.
+	var RaceDrops = load("res://logic/race_drops.gd")
+	var source: String = RaceDrops.BOSS if RaceDrops.is_boss_type(dead.enemy_type) else RaceDrops.WAVE
+	drop["items"] = RaceDrops.apply(item_rules, drop["items"], RaceDrops.picks_for(runs[killer_id]), source, reward_wave if reward_wave > 0 else _waves_released + 1)
 	var stored: Dictionary = runs[killer_id].loot_into_bag(drop)
 	var item_summaries: Array[Dictionary] = []
 	for item in stored["items"]:
@@ -538,7 +546,7 @@ func _checkpoint() -> Array:
 		"rng_seed": rng.seed, "rng_state": rng.state, "tick": tick_count,
 		"ranged": _ranged, "events": events, "waves": _waves, "waves_released": _waves_released,
 		"coop": _coop, "had_enemies": _had_enemies, "clear_reported": _clear_reported,
-		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor})
+		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor, "reward_wave": reward_wave})
 
 
 ## Restore into a sim constructed with the same combat/rules. Supply camp data if runs exist.
@@ -618,6 +626,7 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 	_clear_reported = d["clear_reported"]
 	wave_heal_fraction = float(d.get("wave_heal_fraction", 0.0))
 	loot_factor = float(d.get("loot_factor", 1.0))
+	reward_wave = int(d.get("reward_wave", -1))
 	class_styles = d.get("class_styles", {}).duplicate()
 	# (an old checkpoint's "skill_system" block belongs to the deleted skill-build runtime: ignored)
 	for id in fighters:  # race ultimate moves are built at attach; a restored sim may have fresh combat data

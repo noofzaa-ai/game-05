@@ -35,6 +35,7 @@ const TEST_FILES := [
 	"res://tests/test_card_gear.gd",
 	"res://tests/test_starter_kit.gd",
 	"res://tests/test_race_sets.gd",
+	"res://tests/test_race_drops.gd",
 	"res://tests/test_squad_gear.gd",
 	"res://tests/test_loot_by_squad.gd",
 	"res://tests/test_offhand_slot.gd",

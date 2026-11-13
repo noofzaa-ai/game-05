@@ -1477,6 +1477,12 @@ const STRINGS_RACE := {
 	"race_name_viking": ["ไวกิ้ง", "Viking"],
 	"race_name_elf": ["เอลฟ์", "Elf"],
 	"race_name_runeborn": ["รูนบอร์น", "Runeborn"],
+	# Race gear set line in the item details (design/gdd/race-gear-sets.md 3.15; client/item_text.gd race_set_lines)
+	"set_race_line": ["%s %d/%d", "%s %d/%d"],
+	"set_race_step": ["%d ชิ้น %s [%s, %s]: %s", "%d pcs %s [%s, %s]: %s"],
+	"set_step_on": ["ทำงาน", "on"],
+	"set_step_off": ["ไม่ทำงาน", "off"],
+	"set_needs_race": ["ออปชันชุดไม่ทำงาน: ต้องเป็นเผ่า%s", "Set option inactive: needs %s"],
 	"race_change": ["เปลี่ยนเผ่า", "Change race"],
 	"race_title": ["เลือกเผ่าของ %s", "Choose a race for %s"],
 	"race_sub": ["เปลี่ยนได้ฟรีทุกเมื่อในฮับ · ซินเนอร์จีของทัพมาจากเผ่าของการ์ดในทัพ", "Free to change any time in the hub  ·  The squad's synergy comes from its cards' races"],

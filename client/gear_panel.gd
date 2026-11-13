@@ -857,7 +857,11 @@ func _detail_item(item, worn: bool) -> void:
 	_detail.add_child(_line("Upgrade %d/%d" % [item.upgrade_count, max_upgrades], InkUi.MUTED, InkUi.FONT_SMALL))
 	_detail.add_child(_line(ItemText.durability_text(item, rules), ItemText.durability_color(item, rules), InkUi.FONT_SMALL))
 	var worn_ids: Array = profile.loadout.items().map(func(piece): return piece.item_id)
-	var set_line := ItemText.set_text(item, rules, worn_ids)
+	var card := str(profile.lead_card())
+	var race_lines: Array = ItemText.race_set_lines(item, rules, profile.loadout.items(), preload("res://logic/card_deck.gd").race_of(profile.card_deck, card), card)
+	for entry in race_lines:  # race gear set (design/gdd/race-gear-sets.md 3.15): active steps bright, the rest grey
+		_detail.add_child(_wrapped(str(entry["text"]), InkUi.GOLD if entry["on"] else InkUi.MUTED, InkUi.FONT_SMALL))
+	var set_line := ItemText.set_text(item, rules, worn_ids) if race_lines.is_empty() else ""
 	if not set_line.is_empty():
 		_detail.add_child(_wrapped(set_line, InkUi.GOLD, InkUi.FONT_SMALL))
 

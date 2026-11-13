@@ -1,7 +1,7 @@
 # Drops and Rewards (end-of-run loot)
 
 **Status**: Draft (standard rigor: Overview, Detailed Rules, Formulas, Edge Cases, Dependencies, Acceptance Criteria; Tuning Knobs kept short) · **Date**: 2026-11-11 · **Author**: economy-designer, for the PO/Boss
-**Scope**: what a 12-wave goblin run (`data/journeys/goblin_waves.json`) pays out, where it lands, what the summary screen shows. Quests, the magic-class unlock and new stages are out of scope.
+**Race gear (2026-11-13)**: a share of the dropped pieces become race set pieces; see 3.8 and `design/gdd/race-gear-sets.md` 3.12. · **Scope**: what a 12-wave goblin run (`data/journeys/goblin_waves.json`) pays out, where it lands, what the summary screen shows. Quests, the magic-class unlock and new stages are out of scope.
 **Every number below is a PLACEHOLDER** until the Boss plays a run (project rule). Anything marked `OPEN` needs a Boss call; the doc states the default used meanwhile.
 
 ## 1. Overview
@@ -76,6 +76,27 @@ Profile counter `boss_legendary_misses`: the boss piece is forced to legendary w
 - **Fashion**: `profile.mall_owned`; selectable in the card's look editor (the part lists in `cosmetic_options` already filter by ownership where the mall exists; if not, card UI must filter by `Mall.owns`).
 - The card screen shows a **NEW** badge on pieces from the last run until first viewed (client-only flag, `profile.new_item_ids`, optional).
 
+### 3.8 Race gear pieces (as built 2026-11-13; rules owned by `design/gdd/race-gear-sets.md` 3.12)
+Race pieces are not an extra source. After a gear piece has rolled its tier and slot it may **become** a race set piece: the same slot and tier, the race × class piece of one card of the squad that played (uniform pick). Data: `data/loot/race_drops.json`; rule: `logic/race_drops.gd`. It hooks in at three places:
+- per-kill drops: `GameSim._give_drop`;
+- the road treasure and wave chest: `Journey.treasure_drop`;
+- the online wave chest: `server/rooms/room.gd`.
+
+| Source (wave mode as built) | Race share by rolled tier |
+|---|---|
+| Kill drops, waves 1-4 | none |
+| Kill drops, waves 5-8 | rare 0.30 |
+| Kill drops, waves 9-11 | rare 0.40, epic 0.40 |
+| Wave chest after wave 3 | rare 0.30 |
+| Wave chests after waves 6, 9 | rare 0.50, epic 0.50 |
+| Boss (`boss_types` kills: Goblin Chief) | rare 0.50, epic 0.50, **legendary 1.0** |
+
+- **Gold race pieces come only from the boss**, and every boss legendary in a race slot (weapon, shirt, pants, armband, shoes) is a race piece. Wave and chest legendaries stay generic.
+- White pieces never convert; the white race outfit is starter-only.
+- The faucet size and the tier mix are unchanged; only the identity of some pieces changes.
+- Determinism: own seeded generator per item id, so the same seed gives the same haul.
+- Note: the build pays gear through per-kill drops (loot.json) and chests after waves 3/6/9, not yet through the wave/milestone/boss table of 3.1-3.4. When that table lands, the same shares apply to its sources (milestone = chest rows, boss piece = boss row).
+
 ## 4. Formulas
 
 Let waves 1..11 have per-wave chance `p_w`; milestones `M = {4, 8}`; one boss piece.
@@ -128,6 +149,7 @@ UI rules: strings through the localization path, keyboard/gamepad focus, colorbl
 - `logic/mall.gd` (ownership key format only), `logic/cosmetic_options.gd` (fashion ids)
 - `client/journey_screen.gd` (summary), class card screen (`client/card_deck_screen.gd`, gear panel + wardrobe filter)
 - Pending: camp removal (stash capacity currently comes from `CampData`); `game_sim._give_drop` wave-mode skip
+- `design/gdd/race-gear-sets.md` (3.12, 4.5): race piece shares per source, race from the squad, boss-only gold; `data/loot/race_drops.json`, `logic/race_drops.gd`
 - Related GDD still to write: class card screen (gear panel), wave mode
 
 ## 8. Tuning Knobs (all in `data/loot/wave_rewards.json`)
@@ -188,6 +210,7 @@ Rule-file check: ids in `fashion_pool` / `signature_items` must exist (loader va
 8. Fashion drops never include an owned id or `fashion_hat`; with a fully owned pool the roll yields a gear piece.
 9. Summary screen shows boss, chest, wave and fashion tiles with tier text + color, a better-than-worn marker, "Back to the cards" and "Equip now"; works with keyboard/gamepad; animation is skippable.
 10. Loot appears afterwards in the card screen's gear panel and can be equipped; fashion appears in the look editor.
+12. Race gear (3.8): over many seeds the race shares per source/tier match `data/loot/race_drops.json`; no wave/chest legendary is a race piece; every boss legendary in a race slot is one; races come only from the squad (tests/test_race_drops.gd).
 11. Existing tests are unaffected (old-road mode and `loot.json` tables unchanged); full suite shows no new failures vs the baseline.
 
 ## 11. OPEN QUESTIONS (for the Boss, via PO)

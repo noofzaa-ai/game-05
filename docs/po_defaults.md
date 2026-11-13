@@ -76,3 +76,7 @@ Format: date | topic | choice | why | how to change.
 - 2026-11-13 | Movement weight of the removed hat slot | its share (0.1) moves to the shirt; weights still sum to 1 | heavy armour keeps the same total penalty | data/items/equipment_tuning.json mobility.slot_weights
 - 2026-11-13 | Old saves' hat items (Boss: refund) | every hat (worn, stash or vault) pays its shop sell price by tier in gold, once on load, then is dropped | uses the existing sell table, no new number | logic/profile.gd refund_removed_slots
 - 2026-11-13 | White starter race set option | x0.75 of blue (tier_mul normal 0.75) | one rule for all race gear | data/items/sets.json race_<race>.tier_mul
+- 2026-11-13 | How race pieces drop | a share of already-rolled kill/chest pieces in race slots become race pieces (same tier/slot), race x class of one squad card picked uniformly | no new rolls, faucet unchanged; the piece always fits a squad card | data/loot/race_drops.json, logic/race_drops.gd
+- 2026-11-13 | Gold race pieces | only boss-kill drops have a legendary share (1.0); wave/chest gold stays generic | Boss rule "gold only from bosses" | data/loot/race_drops.json boss_shares
+- 2026-11-13 | Gold race rate is tiny with today's Chief table (~0.4% of wins) | keep; raise later with the planned guaranteed boss piece (Boss call, race-gear-sets.md 9.9) | rule is in place, rate is a tuning knob | design/gdd/race-gear-sets.md 4.5
+- 2026-11-13 | Gold slot protection | not built (deferred) | gold too rare to repeat yet | design/gdd/race-gear-sets.md 3.12

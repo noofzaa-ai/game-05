@@ -175,6 +175,9 @@ func loot_factor() -> float:
 ## at 1.0). The pay roll has its own generator, so the piece rolled is the same at any factor.
 func treasure_drop(what: String) -> Dictionary:
 	var item = treasure_item(_rng_for(what, completed + 1))
+	# Race gear (design/gdd/race-gear-sets.md 3.12): a chest piece may become a race piece of a squad card.
+	var RaceDrops = load("res://logic/race_drops.gd")
+	item = RaceDrops.convert_piece(item_rules, item, RaceDrops.picks_for(run), RaceDrops.CHEST, waves_cleared if data.wave_mode else completed + 1)
 	var pays := _rng_for(what + "-pays", completed + 1).randf() < loot_factor()
 	return {"gold": 0, "materials": {}, "items": [item] if pays else []}
 

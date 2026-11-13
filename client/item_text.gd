@@ -61,6 +61,37 @@ static func set_text(item: Item, rules: ItemRules, worn_ids: Array) -> String:
 	return text
 
 
+## The race gear set block (design/gdd/race-gear-sets.md 3.15) for `item` worn by a card of `race` x `class_id` wearing
+## `worn_items` (Item objects): [{"text", "on"}], first the header "Viking War Gear 3/5", then one line per step
+## ("2 pcs Kindled [on, rare]: ..."), then "Set option inactive: needs Viking" when the race does not match.
+## [] for an item that is not a race piece. The on/off state and tier are written as words (not colour only).
+## The numbers come from logic/race_sets.gd; strings from client/card_tokens.gd.
+static func race_set_lines(item: Item, rules: ItemRules, worn_items: Array, race: String, class_id: String) -> Array:
+	var Tokens = load("res://client/card_tokens.gd")
+	var set_id: String = rules.catalog.entry(item.item_id).get("set", "")
+	var info: Dictionary = rules.catalog.sets.get(set_id, {})
+	if str(info.get("kind", "")) != "race":
+		return []
+	var items: Array = worn_items.filter(func(worn): return worn != null and rules.catalog.entry(worn.item_id).get("set", "") == set_id)
+	if not items.any(func(worn): return worn.id == item.id):
+		items.append(item)  # a piece in the stash: show the set as if it were worn
+	var entry: Dictionary = {}
+	for status in preload("res://logic/race_sets.gd").status(rules, items, race, class_id):
+		if status["set_id"] == set_id:
+			entry = status
+	if entry.is_empty():
+		return []
+	var thai: bool = Tokens.language == "th"
+	var name := str(info.get("name_th", info.get("name", set_id))) if thai else str(info.get("name", set_id))
+	var lines: Array = [{"text": Tokens.t("set_race_line") % [name, int(entry["count"]), int(entry["total"])], "on": bool(entry["matched"])}]
+	for step in entry["steps"]:
+		var state: String = Tokens.t("set_step_on") if step["active"] else Tokens.t("set_step_off")
+		lines.append({"text": Tokens.t("set_race_step") % [int(step["pieces"]), str(step["name"]), state, str(step["tier"]), str(step["text"])], "on": bool(step["active"])})
+	if not bool(entry["matched"]):
+		lines.append({"text": Tokens.t("set_needs_race") % Tokens.race_name(str(entry["race"])), "on": false})
+	return lines
+
+
 ## "ATK 55 | HP +60, DEF +5": the main stat first, then the sub stats.
 static func stats_line(item: Item, rules: ItemRules) -> String:
 	var totals := item.stat_totals(rules)
