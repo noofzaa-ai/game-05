@@ -206,11 +206,16 @@ func _dress() -> void:
 		"appearance": ItemAssets.card_appearance(look, ItemAssets.appearance({})),
 		"weapon": {"path": "", "family": _weapon, "style": _weapon},
 	}
-	# The card's equipped off-hand shield and its refine aura (display only: read from the card's loadout).
+	# The card's worn gear, the same entries battle (stage_view _player_looks) and the paper doll pass: the race
+	# weapon, the four armour slots (shirt, pants, armband, shoes), the off-hand shield and the refine auras.
+	# Display only: read from the card's loadout. No profile -> the class weapon and the bare Studio body.
 	var gear := _card_looks()
-	if gear.has("offhand"):
-		looks["offhand"] = gear["offhand"]
-		looks["refine"] = {"offhand": int(gear.get("refine", {}).get("offhand", 0)), "weapon": int(gear.get("refine", {}).get("weapon", 0))}
+	for key in ["weapon", "offhand", "refine", "armor_styles", "hide_hair"]:
+		if gear.has(key):
+			looks[key] = gear[key]
+	for slot_id in ItemAssets.BODY_SLOTS:
+		if gear.has(slot_id):
+			looks[slot_id] = gear[slot_id]
 	model.equipment_rest = true
 	model.dress(looks)
 	if _variant_class != class_id:
