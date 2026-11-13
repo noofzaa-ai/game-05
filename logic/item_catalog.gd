@@ -113,6 +113,12 @@ func race_piece(race: String, class_id: String, slot_id: String) -> String:
 	return id if items.has(id) else ""
 
 
+## The race off-hand shield id for `race` ("" when the catalog has none).
+func race_shield(race: String) -> String:
+	var id := "race_%s_shield" % race
+	return id if items.has(id) else ""
+
+
 ## The stats the worn sets add: stat -> value. Every step a set has reached counts.
 func set_bonus(item_ids: Array) -> Dictionary:
 	var totals := {}

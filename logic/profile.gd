@@ -19,8 +19,6 @@ const LEGACY_FASHION_PARTS: Array[String] = ["face", "hair_style", "hair_color",
 const NAME_MIN := 2
 const NAME_MAX := 16
 
-## The catalog items the pre-2026-11-13 starter gear was (old saves still wear them; tests read them).
-const STARTER_LOOKS := {"weapon": "blade_01", "shirt": "scout_vest", "shoes": "scout_boots"}
 
 var vault: Inventory = Inventory.new(0)  ## Storage NPC bank; old profiles start empty
 var stash: Inventory
@@ -48,6 +46,9 @@ var facility_levels: Dictionary = {}  ## facility id -> built level (0 = not bui
 var relics: Dictionary = preload("res://logic/relics.gd").initial()
 var appearance: Dictionary = {}
 var armor_migration_version := 0
+## 1 = the old game's items (blade_*, Ash/Obsidian/Royal armour, starter_*, round_shield) were turned into race pieces of the
+## same slot and tier, once (logic/legacy_items.gd, Boss 2026-11-13).
+var legacy_item_version := 0
 var starter_armor_kit_version := 0
 var starter_weapon_kit_version := 0
 var starter_shield_kit_version := 0  ## 1 = the offhand starter shield was granted (ensure_starter_shields)
@@ -87,6 +88,7 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	profile.ensure_starter_kit_v2(item_rules)
 	profile.ensure_starter_shields(item_rules)
 	profile.armor_migration_version = 2
+	profile.legacy_item_version = preload("res://logic/legacy_items.gd").VERSION  # a new player owns no legacy item
 	profile.tree_migration_version = 2  # a new player has no old tree to convert
 	# Boss 2026-11-13: each new card gets its own eyes and makeup. A child RNG seeded from the creation RNG's
 	# state keeps it deterministic per seed without consuming draws the rest of the game relies on.
@@ -167,8 +169,11 @@ static func slot_problem(card: String, item: Item, item_rules: ItemRules = null)
 	return ""
 
 
-## The catalog item every class card that can use the offhand slot starts with (Boss 2026-11-11).
-const STARTER_SHIELD := "round_shield"
+## The catalog item every class card that can use the offhand slot starts with: its race's shield (Boss 2026-11-13;
+## data/items/starter_kits.json "offhand", {race} = the card's race). "" when the kit or the catalog has none.
+static func starter_shield(item_rules: ItemRules, race: String) -> String:
+	var id := str(starter_kits().get("offhand", "")).format({"race": race})
+	return id if not id.is_empty() and not item_rules.catalog.entry(id).is_empty() else ""
 
 
 ## One-time starter shield (starter_shield_kit_version 1) for every class card whose offhand slot is open and
@@ -183,8 +188,11 @@ func ensure_starter_shields(item_rules: ItemRules) -> void:
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash("starter-offhand-v1-" + card)
-		var shield = ItemSystem.create_item(item_rules, "starter-offhand-v1-" + card, "offhand", 0, rng, "", STARTER_SHIELD)
-		if shield != null:
+		var shield_id := starter_shield(item_rules, CardDeck.race_of(card_deck, card))
+		if shield_id.is_empty():
+			continue
+		var shield = ItemSystem.create_item(item_rules, "starter-offhand-v1-" + card, "offhand", 0, rng, "", shield_id)
+		if shield != null and shield.item_id == shield_id:
 			worn.equip(shield)
 	starter_shield_kit_version = 1
 
@@ -206,7 +214,8 @@ func ensure_starter_cards(item_rules: ItemRules) -> void:
 const STARTER_KITS_PATH := "res://data/items/starter_kits.json"
 
 
-## data/items/starter_kits.json: {"tier": tier id, "kits": {class: {slot: catalog item id}}}; {} if missing.
+## data/items/starter_kits.json: {"tier": tier id, "kits": {class: {slot: catalog item id with {race}}}, "offhand": id
+## with {race}}; {} if missing.
 static func starter_kits() -> Dictionary:
 	if not FileAccess.file_exists(STARTER_KITS_PATH):
 		return {}
@@ -233,7 +242,7 @@ func ensure_starter_kit_v2(item_rules: ItemRules) -> void:
 
 
 ## Puts the starter pieces into the empty slots of `card`: the white race starter outfit of the card's race
-## (catalog race_<race>_<class>_<slot>, Boss 2026-11-13) where the catalog has it, else the class kit piece.
+## (catalog race_<race>_<class>_<slot>, Boss 2026-11-13).
 ## Ids "starter-kit-v3-<class>-<slot>"; each piece is rolled with a fixed seed per class and slot, so every
 ## authority makes the same items. A piece whose id the account already holds anywhere is skipped.
 func _fill_starter_kit(item_rules: ItemRules, card: String) -> void:
@@ -269,17 +278,12 @@ func _fill_starter_kit(item_rules: ItemRules, card: String) -> void:
 			worn.equip(item)
 
 
-## The catalog item a new `card` of `race` starts with in `slot_id`: the race starter piece if the catalog has
-## it (starter_kits.json race_kit), else the class kit piece; "" for none.
+## The catalog item a new `card` of `race` starts with in `slot_id` (starter_kits.json kits, {race} filled in);
+## "" for none or an id the catalog does not have.
 static func starter_piece(item_rules: ItemRules, card: String, slot_id: String, race: String) -> String:
-	var data := starter_kits()
-	var kit: Dictionary = data.get("kits", {}).get(card, {})
-	var race_kit: Dictionary = data.get("race_kit", {})
-	if (race_kit.get("slots", []) as Array).has(slot_id):
-		var id := str(race_kit.get("item", "")).format({"race": race, "class": card, "slot": slot_id})
-		if not item_rules.catalog.entry(id).is_empty():
-			return id
-	return str(kit.get(slot_id, ""))
+	var kit: Dictionary = starter_kits().get("kits", {}).get(card, {})
+	var id := str(kit.get(slot_id, "")).format({"race": race, "class": card, "slot": slot_id})
+	return id if not id.is_empty() and not item_rules.catalog.entry(id).is_empty() else ""
 
 
 ## Boss 2026-11-13: the head armour slot (hat) is gone. Every hat item of an old save, worn by any card or in the
@@ -307,21 +311,10 @@ func refund_removed_slots(item_rules: ItemRules) -> int:
 	return gold
 
 
-## One starter per missing weapon family, once per account. Earned gear is never removed.
-func ensure_starter_weapons(item_rules: ItemRules, rng: RandomNumberGenerator) -> void:
-	if starter_weapon_kit_version >= 1:
-		return
-	var owned := {}
-	for item in worn_items():
-		if item.slot == "weapon":
-			owned[item.weapon_type] = true
-	for item in stash.items + vault.items:
-		if item.slot == "weapon" and not item.destroyed:
-			owned[item.weapon_type] = true
-	for family in ["blade"]:
-		if not owned.has(family):
-			stash.items.append(ItemSystem.create_item(item_rules, "starter-kit-v1-" + family, "weapon", 1, rng, family, family + "_01"))
-	starter_weapon_kit_version = 1
+## The old one-time spare blade (blade_01) is gone with the legacy items (Boss 2026-11-13): every class card gets its
+## race weapon from the starter kit instead. Only the flag is set, so an old save never receives the retired grant.
+func ensure_starter_weapons(_item_rules: ItemRules, _rng: RandomNumberGenerator) -> void:
+	starter_weapon_kit_version = maxi(starter_weapon_kit_version, 1)
 
 
 ## Bounded server-owned wardrobe grant, once per account; count worn pieces too.
@@ -410,7 +403,7 @@ func to_dict() -> Dictionary:
 		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
-		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
+		"armor_migration_version": armor_migration_version, "legacy_item_version": legacy_item_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
 		"relics": relics.duplicate(true), "card_deck": card_deck.duplicate(true)}
 
 
@@ -478,6 +471,10 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 		p.card_gear["sword_shield"] = {"loadout": worn}
 		old_builds["sword_shield"] = d.get("skill_build")
 	p.refund_removed_slots(item_rules)  # Boss 2026-11-13: hat items (slot removed) -> gold at sell price, once
+	# Boss 2026-11-13: legacy items -> race pieces of the same slot and tier, upgrades and substats kept (once; idempotent).
+	# Before the starter kit below, so a converted worn piece still counts as worn and the kit fills only empty slots.
+	p.legacy_item_version = maxi(0, int(d.get("legacy_item_version", 0)))
+	preload("res://logic/legacy_items.gd").convert_profile(p, item_rules)
 	p.ensure_starter_cards(item_rules)  # a card with no gear yet (or a class added later) gets the class kit
 	p.starter_kit_version = maxi(0, int(d.get("starter_kit_version", 0)))
 	p.ensure_starter_kit_v2(item_rules)  # old saves: the white class kit fills empty slots once (race-gear-sets.md 3.3)

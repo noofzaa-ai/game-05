@@ -2,8 +2,10 @@ extends RefCounted
 ## Race gear drops (design/gdd/race-gear-sets.md 3.12; design/gdd/drops-and-rewards.md 3.8; Boss 2026-11-13). Pure rules.
 ## Race pieces add no rolls: a piece that already dropped (per-kill item, wave chest) keeps its tier and slot, and with
 ## the share in data/loot/race_drops.json for (source, wave, tier) it BECOMES the race piece of one squad card's race and
-## class (uniform pick among the squad that played). Gold (legendary) shares exist only for the boss, so a gold race piece
-## comes only from the boss, and the boss share for legendary is 1.0 (every boss gold is a race piece).
+## class (uniform pick among the squad that played; an offhand becomes that card's race shield). Boss 2026-11-13 (old item
+## system removed): every share is 1.0, so every armour/weapon drop is the piece of a squad card. Gold (legendary) shares
+## exist only for the boss; a tier the source has no share for, listed in the file's `downgrade`, drops one tier lower
+## (a wave or chest gold becomes purple, PO default 2026-11-13).
 ## The draw uses its own generator seeded from the item id, so the combat/loot stream is the same with or without it.
 
 const ItemSystem := preload("res://logic/item_system.gd")
@@ -60,12 +62,19 @@ static func picks_for(run) -> Array:
 
 
 ## `item` turned into a race piece with the share for (source, wave, its tier), else `item` unchanged.
-## The new piece keeps the id, slot and tier; its stats are rolled again for the race catalog item.
+## The new piece keeps the id, slot and tier (unless downgraded); its stats are rolled again for the race catalog item.
 static func convert_piece(rules, item, picks: Array, source: String, wave: int):
 	if item == null or picks.is_empty() or not data().get("slots", []).has(item.slot):
 		return item
-	var tier_id := str(rules.tiers[clampi(int(item.tier), 0, rules.tiers.size() - 1)]["id"])
+	var tier := clampi(int(item.tier), 0, rules.tiers.size() - 1)
+	var tier_id := str(rules.tiers[tier]["id"])
 	var chance := share(source, wave, tier_id)
+	var lower := str(data().get("downgrade", {}).get(tier_id, ""))
+	if chance <= 0.0 and not lower.is_empty():  # e.g. a gold piece outside the boss: one tier down, then that tier's share
+		for index in rules.tiers.size():
+			if str(rules.tiers[index]["id"]) == lower:
+				tier = index
+		chance = share(source, wave, str(rules.tiers[tier]["id"]))
 	if chance <= 0.0:
 		return item
 	var rng := RandomNumberGenerator.new()
@@ -74,9 +83,11 @@ static func convert_piece(rules, item, picks: Array, source: String, wave: int):
 		return item
 	var pick: Dictionary = picks[rng.randi_range(0, picks.size() - 1)]
 	var piece_id: String = rules.catalog.race_piece(str(pick["race"]), str(pick["class"]), item.slot)
+	if item.slot == "offhand":
+		piece_id = rules.catalog.race_shield(str(pick["race"]))
 	if piece_id.is_empty():
 		return item
-	var piece = ItemSystem.create_item(rules, item.id, item.slot, int(item.tier), rng, "", piece_id)
+	var piece = ItemSystem.create_item(rules, item.id, item.slot, tier, rng, "", piece_id)
 	return piece if piece != null else item
 
 

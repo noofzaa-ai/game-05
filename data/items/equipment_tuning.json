@@ -142,17 +142,7 @@
       "light": 0.15,
       "cloth": 0.05
     },
-    "set_classes": {
-      "armor_obsidian_gold": "heavy",
-      "armor_obsidian_leather": "light",
-      "armor_obsidian_cloth": "cloth",
-      "armor_royal_gold": "heavy",
-      "armor_royal_leather": "light",
-      "armor_royal_cloth": "cloth",
-      "armor_ash_steel": "heavy",
-      "armor_ash_leather": "light",
-      "armor_ash_cloth": "cloth"
-    },
+    "set_classes": {},
     "item_classes": {},
     "weapon_penalties": {
       "fists": 0.0,

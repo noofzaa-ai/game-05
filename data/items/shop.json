@@ -14,14 +14,25 @@
     "material_per_unit": 1
   },
   "catalog_items": [
-    "blade_01",
-    "blade_03",
-    "round_shield",
-    "armor_ash_steel_shirt",
-    "armor_ash_leather_pants",
-    "armor_ash_leather_shoes",
-    "armor_ash_cloth_armband",
-    "armor_obsidian_leather_shirt",
-    "armor_obsidian_cloth_shoes"
+    "race_human_sword_shield_shirt",
+    "race_human_sword_shield_pants",
+    "race_human_sword_shield_armband",
+    "race_human_sword_shield_shoes",
+    "race_viking_sword_shield_shirt",
+    "race_viking_sword_shield_pants",
+    "race_viking_sword_shield_armband",
+    "race_viking_sword_shield_shoes",
+    "race_elf_sword_shield_shirt",
+    "race_elf_sword_shield_pants",
+    "race_elf_sword_shield_armband",
+    "race_elf_sword_shield_shoes",
+    "race_runeborn_sword_shield_shirt",
+    "race_runeborn_sword_shield_pants",
+    "race_runeborn_sword_shield_armband",
+    "race_runeborn_sword_shield_shoes",
+    "race_human_shield",
+    "race_viking_shield",
+    "race_elf_shield",
+    "race_runeborn_shield"
   ]
 }

@@ -4,12 +4,14 @@ Writes into data/items/catalog.json, data/items/sets.json and data/items/starter
 - 80 race pieces `race_<race>_<class>_<slot>` (slot: weapon, shirt, pants, armband, shoes). The weapon is in the class's
   weapon family; armour has the class's armour weight. Any card can wear any piece; the set option needs the card's race.
 - 4 race sets `race_<race>` (kind "race"): steps 2 / 4 / 5 pieces that boost the race passive (cell_mod vocabulary).
+- Removes the old game's items (Boss 2026-11-13): blade_01..07, the Ash/Obsidian/Royal armour and their sets, the neutral
+  starter pieces and round_shield. Race pieces drop (drop_level 1) and make the starter kits and the shop stock.
 - Asset hook: asset_path / icon_path point at the Studio files (art/armor/race_<race>/<class>/<slot>.glb,
   icon-<slot>.png; art/weapons/race_<race>/<class>.glb, icon-<class>.png). Every tier of a piece is the same item id,
   so one file serves white, blue, purple and gold. Until a file exists the client walks the fallback chain
   (client/item_assets.gd chain(): "a|b|c", first existing file wins, no code change when files land):
-  armour = the race x class file -> the race's SHARED interim file (OUTFIT_SCOPE below) -> the class starter look;
-  weapon = the race x class file -> the class weapon (procedural / asset_id).
+  armour = the race x class file -> the race's SHARED interim file (OUTFIT_SCOPE below);
+  weapon = the race x class file -> the class weapon stand-in (procedural / asset_id).
 Also removes the retired hat slot's items (Boss 2026-11-13: armour is shirt, pants, armband, shoes) and moves generic
 set bonuses that needed 5 armour pieces to 4.
 Keeps each file's line endings (CRLF / LF) and its JSON indent.
@@ -17,6 +19,7 @@ Usage: python -X utf8 tools/items/build_race_gear.py
 """
 import json
 import pathlib
+import re
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 RACES = {
@@ -26,11 +29,31 @@ RACES = {
     "runeborn": ("Runeborn", "รูนบอร์น", "Rune Gear", "ชุดอักขระ"),
 }
 CLASSES = {
-    "sword_shield": ("Sword & Shield", "ดาบโล่", "heavy", "starter_blade", "Sword", "ดาบ"),
-    "greatsword": ("Greatsword", "ดาบใหญ่", "heavy", "starter_greatsword", "Greatsword", "ดาบใหญ่"),
-    "longbow": ("Longbow", "ธนู", "light", "starter_longbow", "Longbow", "ธนูยาว"),
-    "magic": ("Magic", "เวท", "cloth", "starter_staff", "Staff", "คทา"),
+    "sword_shield": ("Sword & Shield", "ดาบโล่", "heavy", "blade", "Sword", "ดาบ"),
+    "greatsword": ("Greatsword", "ดาบใหญ่", "heavy", "greatsword", "Greatsword", "ดาบใหญ่"),
+    "longbow": ("Longbow", "ธนู", "light", "longbow", "Longbow", "ธนูยาว"),
+    "magic": ("Magic", "เวท", "cloth", "magic", "Staff", "คทา"),
 }
+# Weapon stand-in look per class weapon type (shown when the Studio file does not load). Boss 2026-11-13: the legacy items
+# (blade_01..07, Ash/Obsidian/Royal armour, neutral starter pieces, round_shield) are gone, so the race pieces carry these
+# fields themselves instead of copying them from the starter items.
+WEAPON_LOOK = {
+    "blade": {"asset_id": "weapon_blade_01"},
+    "greatsword": {"asset_id": "procedural_class_greatsword", "procedural": True},
+    "longbow": {"asset_id": "procedural_class_longbow", "procedural": True},
+    "magic": {"asset_id": "procedural_class_staff", "procedural": True},
+}
+ARMOR_MAIN_STAT = {"shirt": "DEF", "pants": "HP", "armband": "DEF", "shoes": "DEF"}
+# Every race piece can drop: logic/loot.gd draws a catalog piece of the rolled slot, then logic/race_drops.gd makes it the
+# piece of a squad card's race and class.
+DROP_LEVEL = 1
+LEGACY_SET = r"armor_(ash|obsidian|royal)_"
+
+
+def is_legacy(item_id):
+    """The old game's items (Boss 2026-11-13: remove everything from the old item system)."""
+    return (re.fullmatch(r"blade_\d+", item_id) is not None or re.match(LEGACY_SET, item_id) is not None
+            or item_id.startswith("starter_") or item_id == "round_shield")
 ARMOR = {"shirt": ("Tunic", "เสื้อ"), "pants": ("Trousers", "กางเกง"), "armband": ("Armband", "ปลอกแขน"), "shoes": ("Boots", "รองเท้า")}
 SLOTS = ["weapon", "shirt", "pants", "armband", "shoes"]
 # Which delivered looks exist besides the final race x class files (Boss 2026-11-13: 16 armour looks + 16 weapons are
@@ -115,54 +138,50 @@ def save(rel, data, crlf, indent):
 def main():
     catalog, cat_crlf = load("data/items/catalog.json")
     items = catalog["items"]
-    for key in [k for k, v in items.items() if v.get("slot") == "hat" or k.startswith("race_")]:
+    for key in [k for k, v in items.items() if v.get("slot") == "hat" or k.startswith("race_") or is_legacy(k)]:
         del items[key]
     for race, (rname, rname_th, _, _) in RACES.items():
-        for cls, (cname, cname_th, weight, starter_weapon, wname, wname_th) in CLASSES.items():
+        for cls, (cname, cname_th, weight, wtype, wname, wname_th) in CLASSES.items():
             for slot in SLOTS:
                 item_id = "race_%s_%s_%s" % (race, cls, slot)
                 if slot == "weapon":
-                    base = items[starter_weapon]
                     entry = {
-                        "asset_id": base["asset_id"], "name": "%s %s" % (rname, wname), "name_th": "%s%s" % (wname_th, rname_th),
-                        "slot": "weapon", "weapon_type": base["weapon_type"], "set": "race_" + race, "race": race, "class": cls, "drop_level": 99,
+                        "asset_id": WEAPON_LOOK[wtype]["asset_id"], "name": "%s %s" % (rname, wname), "name_th": "%s%s" % (wname_th, rname_th),
+                        "slot": "weapon", "weapon_type": wtype, "set": "race_" + race, "race": race, "class": cls, "drop_level": DROP_LEVEL,
                         "asset_path": "res://art/weapons/race_%s/%s.glb" % (race, cls),
                         "icon_path": "res://art/weapons/race_%s/icon-%s.png" % (race, cls),
-                        "fallback_icon_path": base.get("icon_path", ""),
                     }
-                    if base.get("procedural"):
+                    if WEAPON_LOOK[wtype].get("procedural"):
                         entry["procedural"] = True
                 else:
-                    base = items["starter_%s_%s" % (weight, slot)]
                     sname, sname_th = ARMOR[slot]
                     entry = {
-                        "asset_id": base["asset_id"], "name": "%s %s (%s)" % (rname, sname, cname), "name_th": "%s%s · %s" % (sname_th, rname_th, cname_th),
-                        "slot": slot, "set": "race_" + race, "race": race, "class": cls, "drop_level": 99, "armor_class": weight, "main_stat": base["main_stat"],
+                        "asset_id": item_id, "name": "%s %s (%s)" % (rname, sname, cname), "name_th": "%s%s · %s" % (sname_th, rname_th, cname_th),
+                        "slot": slot, "set": "race_" + race, "race": race, "class": cls, "drop_level": DROP_LEVEL, "armor_class": weight,
+                        "main_stat": ARMOR_MAIN_STAT[slot],
                         "asset_path": "res://art/armor/race_%s/%s/%s.glb" % (race, cls, slot),
                         "icon_path": "res://art/armor/race_%s/%s/icon-%s.png" % (race, cls, slot),
-                        "fallback_asset_path": base["asset_path"], "fallback_icon_path": base["icon_path"], "source_style": base["source_style"],
                     }
                     if OUTFIT_SCOPE == "race":
-                        entry["fallback_asset_path"] = "|".join([SHARED_ARMOR % (race, slot), base["asset_path"]])
-                        entry["fallback_icon_path"] = "|".join([SHARED_ICON % (race, slot), base["icon_path"]])
+                        entry["fallback_asset_path"] = SHARED_ARMOR % (race, slot)
+                        entry["fallback_icon_path"] = SHARED_ICON % (race, slot)
                 items[item_id] = entry
-    # Race off-hand shields (Boss 2026-11-13: the Studio's sword & shield delivery has a shield per race). Like round_shield:
-    # slot offhand (Sword & Shield only), no set (the race set is weapon + 4 armour), one item for every tier. Until the
-    # file exists the procedural round shield shows (asset_id + procedural); stats come from the rule book like any offhand.
-    base_shield = items["round_shield"]
+    # Race off-hand shields (Boss 2026-11-13: the Studio's sword & shield delivery has a shield per race): slot offhand
+    # (Sword & Shield only), no set (the race set is weapon + 4 armour), one item for every tier. The procedural round
+    # shield (asset_id + procedural) shows if the file fails to load; stats come from the rule book like any offhand.
     for race, (rname, rname_th, _, _) in RACES.items():
         items["race_%s_shield" % race] = {
-            "asset_id": base_shield["asset_id"], "name": "%s Shield" % rname, "name_th": "โล่%s" % rname_th,
-            "slot": "offhand", "race": race, "class": "sword_shield", "drop_level": 99, "procedural": True,
+            "asset_id": "procedural_round_shield", "name": "%s Shield" % rname, "name_th": "โล่%s" % rname_th,
+            "slot": "offhand", "race": race, "class": "sword_shield", "drop_level": DROP_LEVEL, "procedural": True,
             "asset_path": "res://art/weapons/race_%s/shield.glb" % race,
             "icon_path": "res://art/weapons/race_%s/icon-shield.png" % race,
-            "fallback_icon_path": base_shield.get("icon_path", ""),
         }
     save("data/items/catalog.json", catalog, cat_crlf, 1)
 
     sets, sets_crlf = load("data/items/sets.json")
-    for set_id in [k for k in sets["sets"] if k.startswith("race_")]:
+    for set_id in [k for k in sets["sets"] if k.startswith("race_") or re.match(LEGACY_SET, k)]:
         del sets["sets"][set_id]
+    sets["starter_armor_sets"] = []  # the old wardrobe grant (Profile.ensure_starter_armor) listed only legacy sets
     for info in sets["sets"].values():  # 4 armour slots now: a 5-piece bonus moves to 4 (PO default 2026-11-13)
         for bonus in info.get("bonuses", []):
             bonus["pieces"] = min(int(bonus["pieces"]), 4)
@@ -190,18 +209,24 @@ def main():
     save("data/items/sets.json", sets, sets_crlf, 2)
 
     kits, kits_crlf = load("data/items/starter_kits.json")
-    for kit in kits["kits"].values():
-        kit.pop("hat", None)
-    kits["version"] = 3
-    kits["race_kit"] = {"item": "race_{race}_{class}_{slot}", "slots": SLOTS}
-    kits["_race_kit"] = ("Boss 2026-11-13: a card starts in its OWN race's starter outfit for its class (white race set pieces: weapon + 4 armour). "
-                         "logic/profile.gd uses race_kit.item when the catalog has it, else the kit's class piece. Old saves: empty slots only, once "
-                         "(starter_kit_version 3); nothing is taken away.")
+    kits.pop("race_kit", None)
+    kits.pop("_race_kit", None)
+    kits["version"] = 4
+    kits["kits"] = {cls: {slot: "race_{race}_%s_%s" % (cls, slot) for slot in SLOTS} for cls in CLASSES}
+    kits["offhand"] = "race_{race}_shield"
+    kits["_comment"] = ("Class starter kits (design/gdd/race-gear-sets.md 3.2-3.3, Boss 2026-11-13; built by tools/items/build_race_gear.py). "
+                        "Every class card starts wearing its OWN race's starter outfit at tier `tier` (white): `kits` maps class -> slot -> "
+                        "a catalog id, {race} = the card's race. `offhand`: the starter shield of a card whose offhand slot is open (Sword & "
+                        "Shield), {race} likewise. logic/profile.gd: new players get the kit; old saves get it once (starter_kit_version) in "
+                        "EMPTY slots only. Accessories start empty. The neutral starter pieces and round_shield are gone (Boss 2026-11-13).")
     text = json.dumps(kits, indent=1, ensure_ascii=False) + "\n"
     (ROOT / "data/items/starter_kits.json").write_bytes((text.replace("\n", "\r\n") if kits_crlf else text).encode("utf-8"))
 
     shop, shop_crlf = load("data/items/shop.json")
-    shop["catalog_items"] = [i for i in shop["catalog_items"] if not i.endswith("_hat")]
+    # Boss 2026-11-13 (PO default): the merchant sells the race armour of the Sword & Shield look (any card may wear any
+    # armour) plus each race's shield; legacy stock is gone. White like every shop piece (equipment_tier).
+    shop["catalog_items"] = (["race_%s_sword_shield_%s" % (race, slot) for race in RACES for slot in ARMOR]
+                             + ["race_%s_shield" % race for race in RACES])
     save("data/items/shop.json", shop, shop_crlf, 2)
 
     tuning, tun_crlf = load("data/items/equipment_tuning.json")
@@ -212,17 +237,19 @@ def main():
                 weights = value["slot_weights"]
     if weights is not None and "hat" in weights:
         weights["shirt"] = round(weights["shirt"] + weights.pop("hat"), 4)  # the hat's weight share moves to the shirt
+    for value in tuning.values():  # race armour carries armor_class itself; the legacy set ids are gone
+        if isinstance(value, dict) and "set_classes" in value:
+            value["set_classes"] = {k: v for k, v in value["set_classes"].items() if not re.match(LEGACY_SET, k)}
     save("data/items/equipment_tuning.json", tuning, tun_crlf, 2)
 
     mig, mig_crlf = load("data/items/armor_migration.json")
-    mig["aliases"] = {k: v for k, v in mig["aliases"].items() if not str(v).endswith("_hat")}
-    mig["plain_slots"].pop("hat", None)
-    mig["allowed_armor"] = {k: v for k, v in mig["allowed_armor"].items() if v != "hat" and not k.startswith("race_")}
-    for item_id, entry in items.items():  # race armour is a known identity (else armor_migration maps it to plain Ash)
-        if item_id.startswith("race_") and entry["slot"] in ARMOR:
-            mig["allowed_armor"][item_id] = entry["slot"]
+    # The old identity remap (scout_vest -> Ash Knight, unknown armour -> plain Ash) pointed at legacy items, which are gone.
+    # A save's legacy piece becomes a race piece once (logic/legacy_items.gd); armor_migration.gd now keeps every identity.
+    mig["version"] = 3
+    mig["aliases"] = {}
+    mig["plain_slots"] = {}
+    mig["allowed_armor"] = {}
     save("data/items/armor_migration.json", mig, mig_crlf, 2)
-
 
 if __name__ == "__main__":
     main()

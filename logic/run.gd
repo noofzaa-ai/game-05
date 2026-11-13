@@ -180,6 +180,10 @@ static func from_dict(d: Dictionary, rules: ItemRules, camp_data: CampData, play
 	trip.bag = Inventory.from_dict(d["bag"], trip.bag._stack_sizes)
 	if trip.bag == null:
 		return null
+	# A run bag saved before the legacy items were removed (Boss 2026-11-13): its pieces become race pieces of the first
+	# squad card's race (logic/legacy_items.gd; no flag needed, a converted piece is never converted again).
+	var LegacyItems = preload("res://logic/legacy_items.gd")
+	LegacyItems.convert_items(trip.bag.items, rules, LegacyItems.first_race(player.card_deck))
 	var pending = load("res://logic/relics.gd").decode({"v":1,"owned":d.get("relic_loot",[]),"equipped":["","",""]})
 	if pending.is_empty() or pending.owned.size()+player.relics.owned.size()>512:return null
 	trip.relic_loot=pending.owned

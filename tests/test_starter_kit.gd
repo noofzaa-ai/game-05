@@ -40,7 +40,7 @@ func run(ctx) -> void:
 		ctx.check("starter kit %s: accessories start empty" % card, ACCESSORY_SLOTS.all(func(s): return worn.item_at(s, 0) == null))
 		var expected := 5 + (1 if rules.slot_open_for("offhand", card) else 0)
 		ctx.check("starter kit %s: %d pieces worn (%d)" % [card, expected, worn.items().size()], worn.items().size() == expected)
-	ctx.check("starter kit: Sword & Shield keeps its round shield", p.loadout_of("sword_shield").item_at("offhand", 0) != null and p.loadout_of("sword_shield").item_at("offhand", 0).item_id == "round_shield")
+	ctx.check("starter kit: Sword & Shield starts with its race shield", p.loadout_of("sword_shield").item_at("offhand", 0) != null and p.loadout_of("sword_shield").item_at("offhand", 0).item_id == "race_%s_shield" % CardDeck.race_of(p.card_deck, "sword_shield"))
 	ctx.check("starter kit: a new player has no gear in the stash (no blue armour gift)", p.stash.items.is_empty())
 	ctx.check("starter kit: new player is at kit version 3", p.starter_kit_version == 3)
 	# Every class x race has its white starter outfit in the catalog (5 pieces), and a card of that race gets it.
@@ -64,10 +64,8 @@ func run(ctx) -> void:
 	for card in CardDeck.classes():
 		same = same and _gear(p, card) == _gear(r, card)
 	ctx.check("starter kit: the same items on every authority (fixed seed per class and slot)", same)
-	for id in rules.catalog.items:
-		if str(id).begins_with("starter_") or str(id).begins_with("race_"):
-			if rules.catalog.candidates(rules.catalog.entry(id)["slot"], rules.catalog.entry(id)["weapon_type"], 98).has(id):
-				ctx.check("starter kit: %s never drops from monsters (drop_level 99)" % id, false)
+	# Boss 2026-11-13: the old items are gone; every catalog item is a race piece and every one can drop.
+	ctx.check("starter kit: the catalog holds only race pieces, and they all drop", rules.catalog.items.keys().all(func(id): return str(id).begins_with("race_") and rules.catalog.candidates(rules.catalog.entry(id)["slot"], rules.catalog.entry(id)["weapon_type"], 1).has(id)))
 
 	# Old save (pre-kit): S&S wears a rare blade + epic shirt, greatsword holds a blade and lost its pants, magic is bare.
 	var old: Dictionary = p.to_dict()

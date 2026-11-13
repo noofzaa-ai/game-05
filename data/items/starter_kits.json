@@ -1,46 +1,36 @@
 {
- "version": 3,
- "_comment": "Class starter kits (design/gdd/race-gear-sets.md Part A 3.2-3.3, Boss 2026-11-13). Every class card starts wearing these catalog items at tier 'tier' (white). logic/profile.gd: new players get the kit; old saves get it once (starter_kit_version 2) in EMPTY slots only, and a worn weapon the class can no longer hold goes to the stash. The offhand round_shield stays with ensure_starter_shields. Accessories start empty. A class missing here gets no kit (data test warns).",
+ "version": 4,
+ "_comment": "Class starter kits (design/gdd/race-gear-sets.md 3.2-3.3, Boss 2026-11-13; built by tools/items/build_race_gear.py). Every class card starts wearing its OWN race's starter outfit at tier `tier` (white): `kits` maps class -> slot -> a catalog id, {race} = the card's race. `offhand`: the starter shield of a card whose offhand slot is open (Sword & Shield), {race} likewise. logic/profile.gd: new players get the kit; old saves get it once (starter_kit_version) in EMPTY slots only. Accessories start empty. The neutral starter pieces and round_shield are gone (Boss 2026-11-13).",
  "tier": "normal",
  "kits": {
   "sword_shield": {
-   "weapon": "starter_blade",
-   "shirt": "starter_heavy_shirt",
-   "pants": "starter_heavy_pants",
-   "armband": "starter_heavy_armband",
-   "shoes": "starter_heavy_shoes"
+   "weapon": "race_{race}_sword_shield_weapon",
+   "shirt": "race_{race}_sword_shield_shirt",
+   "pants": "race_{race}_sword_shield_pants",
+   "armband": "race_{race}_sword_shield_armband",
+   "shoes": "race_{race}_sword_shield_shoes"
   },
   "greatsword": {
-   "weapon": "starter_greatsword",
-   "shirt": "starter_heavy_shirt",
-   "pants": "starter_heavy_pants",
-   "armband": "starter_heavy_armband",
-   "shoes": "starter_heavy_shoes"
+   "weapon": "race_{race}_greatsword_weapon",
+   "shirt": "race_{race}_greatsword_shirt",
+   "pants": "race_{race}_greatsword_pants",
+   "armband": "race_{race}_greatsword_armband",
+   "shoes": "race_{race}_greatsword_shoes"
   },
   "longbow": {
-   "weapon": "starter_longbow",
-   "shirt": "starter_light_shirt",
-   "pants": "starter_light_pants",
-   "armband": "starter_light_armband",
-   "shoes": "starter_light_shoes"
+   "weapon": "race_{race}_longbow_weapon",
+   "shirt": "race_{race}_longbow_shirt",
+   "pants": "race_{race}_longbow_pants",
+   "armband": "race_{race}_longbow_armband",
+   "shoes": "race_{race}_longbow_shoes"
   },
   "magic": {
-   "weapon": "starter_staff",
-   "shirt": "starter_cloth_shirt",
-   "pants": "starter_cloth_pants",
-   "armband": "starter_cloth_armband",
-   "shoes": "starter_cloth_shoes"
+   "weapon": "race_{race}_magic_weapon",
+   "shirt": "race_{race}_magic_shirt",
+   "pants": "race_{race}_magic_pants",
+   "armband": "race_{race}_magic_armband",
+   "shoes": "race_{race}_magic_shoes"
   }
  },
- "race_kit": {
-  "item": "race_{race}_{class}_{slot}",
-  "slots": [
-   "weapon",
-   "shirt",
-   "pants",
-   "armband",
-   "shoes"
-  ]
- },
- "_race_kit": "Boss 2026-11-13: a card starts in its OWN race's starter outfit for its class (white race set pieces: weapon + 4 armour). logic/profile.gd uses race_kit.item when the catalog has it, else the kit's class piece. Old saves: empty slots only, once (starter_kit_version 3); nothing is taken away."
+ "offhand": "race_{race}_shield"
 }

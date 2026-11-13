@@ -1,7 +1,8 @@
 extends RefCounted
 ## Race gear drops (design/gdd/race-gear-sets.md 3.12, design/gdd/drops-and-rewards.md 3.8; logic/race_drops.gd):
 ## gold race pieces only from the boss, every boss gold is a race piece, the race comes from the squad that played,
-## and the per-source shares match data/loot/race_drops.json over many seeds.
+## and the per-source shares match data/loot/race_drops.json over many seeds. Boss 2026-11-13 (legacy items removed):
+## every share is 100%, and a wave/chest gold drops as a purple race piece (PO default).
 const RP := preload("res://tests/test_race_passives.gd")
 const RaceDrops := preload("res://logic/race_drops.gd")
 const Loot := preload("res://logic/loot.gd")
@@ -35,8 +36,8 @@ static func piece(rules, i: int, tier: int, slot: String = ""):
 	return item
 
 
-static func is_race(rules, item) -> bool:
-	return not rules.catalog.race_set_of(item.item_id).is_empty()
+static func is_race(rules, item) -> bool:  ## a race set piece or a race shield
+	return not str(rules.catalog.entry(item.item_id).get("race", "")).is_empty()
 
 
 ## Fraction of N shirt pieces of `tier` that become race pieces from (source, wave).
@@ -51,10 +52,10 @@ static func rate(rules, picks: Array, tier: int, source: String, wave: int) -> f
 
 func _shares(ctx, rules, picks: Array) -> void:
 	var cases := [
-		[RARE, RaceDrops.WAVE, 2, 0.0], [RARE, RaceDrops.WAVE, 6, 0.30], [EPIC, RaceDrops.WAVE, 6, 0.0],
-		[RARE, RaceDrops.WAVE, 10, 0.40], [EPIC, RaceDrops.WAVE, 10, 0.40],
-		[RARE, RaceDrops.CHEST, 3, 0.30], [EPIC, RaceDrops.CHEST, 3, 0.0], [RARE, RaceDrops.CHEST, 9, 0.50], [EPIC, RaceDrops.CHEST, 9, 0.50],
-		[EPIC, RaceDrops.BOSS, 12, 0.50], [LEGENDARY, RaceDrops.BOSS, 12, 1.0]]
+		[0, RaceDrops.WAVE, 2, 1.0], [RARE, RaceDrops.WAVE, 2, 1.0], [RARE, RaceDrops.WAVE, 6, 1.0], [EPIC, RaceDrops.WAVE, 6, 1.0],
+		[RARE, RaceDrops.WAVE, 10, 1.0], [EPIC, RaceDrops.WAVE, 10, 1.0],
+		[0, RaceDrops.CHEST, 3, 1.0], [RARE, RaceDrops.CHEST, 3, 1.0], [EPIC, RaceDrops.CHEST, 9, 1.0],
+		[0, RaceDrops.BOSS, 12, 1.0], [EPIC, RaceDrops.BOSS, 12, 1.0], [LEGENDARY, RaceDrops.BOSS, 12, 1.0]]
 	var ok := true
 	var report: Array = []
 	for c in cases:
@@ -62,18 +63,29 @@ func _shares(ctx, rules, picks: Array) -> void:
 		ok = ok and absf(r - float(c[3])) <= 0.03
 		report.append("%s w%d t%d %.3f/%.2f" % [c[1], c[2], c[0], r, c[3]])
 	ctx.check("race drops: shares by source/wave/tier match data over %d seeds (%s)" % [N, ", ".join(report)], ok)
-	ctx.check("race drops: a normal (white) piece never converts", rate(rules, picks, 0, RaceDrops.BOSS, 12) == 0.0 and rate(rules, picks, 0, RaceDrops.WAVE, 10) == 0.0)
+	var off_ok := true
+	for i in 200:
+		var shield = RaceDrops.convert_piece(rules, piece(rules, 70000 + i, RARE, "offhand"), picks, RaceDrops.WAVE, 5)
+		off_ok = off_ok and shield.item_id in ["race_viking_shield", "race_elf_shield"] and shield.slot == "offhand" and shield.tier == RARE
+	ctx.check("race drops: a dropped offhand becomes the race shield of a squad card's race", off_ok)
 
 
 func _gold_only_boss(ctx, rules, picks: Array) -> void:
 	var leaked := 0
+	var not_purple := 0
 	for wave in range(1, 12):
 		for i in 300:
 			for source in [RaceDrops.WAVE, RaceDrops.CHEST]:
-				var item = RaceDrops.convert_piece(rules, piece(rules, wave * 1000 + i, LEGENDARY), picks, source, wave)
-				if is_race(rules, item):
+				var raw = piece(rules, wave * 1000 + i, LEGENDARY)
+				var item = RaceDrops.convert_piece(rules, raw, picks, source, wave)
+				if not RaceDrops.data()["slots"].has(raw.slot):
+					continue
+				if int(item.tier) == LEGENDARY:
 					leaked += 1
-	ctx.check("race drops: no wave or chest legendary ever becomes a race piece", leaked == 0)
+				if int(item.tier) != EPIC or not item.item_id.begins_with("race_"):
+					not_purple += 1
+	ctx.check("race drops: no wave or chest drop is ever gold", leaked == 0)
+	ctx.check("race drops: a wave or chest gold roll drops as a purple race piece", not_purple == 0)
 	var generic := 0
 	var race_slots := {}
 	for i in 600:
@@ -91,7 +103,7 @@ func _race_from_squad(ctx, rules, picks: Array) -> void:
 	var ok := true
 	for i in 1500:
 		var item = RaceDrops.convert_piece(rules, piece(rules, 90000 + i, EPIC), picks, RaceDrops.BOSS, 12)
-		if not is_race(rules, item):
+		if not is_race(rules, item) or item.slot == "offhand":
 			continue
 		var entry: Dictionary = rules.catalog.entry(item.item_id)
 		var key := "%s:%s" % [entry["race"], entry["class"]]
@@ -103,7 +115,7 @@ func _race_from_squad(ctx, rules, picks: Array) -> void:
 	var even := seen.size() == 3 and seen.values().all(func(n): return absf(float(n) / float(total) - 1.0 / 3.0) < 0.05)
 	ctx.check("race drops: race and class come only from the squad, about evenly per card (%s)" % str(seen), ok and even)
 	ctx.check("race drops: a run with no squad card converts nothing", RaceDrops.picks_for(null).is_empty()
-		and RaceDrops.convert_piece(rules, piece(rules, 7, LEGENDARY, "shirt"), [], RaceDrops.BOSS, 12).item_id.begins_with("race_") == false)
+		and RaceDrops.convert_piece(rules, piece(rules, 7, LEGENDARY, "shirt"), [], RaceDrops.BOSS, 12).to_dict() == piece(rules, 7, LEGENDARY, "shirt").to_dict())
 	var again = RaceDrops.convert_piece(rules, piece(rules, 12345, LEGENDARY, "shirt"), picks, RaceDrops.BOSS, 12)
 	var twice = RaceDrops.convert_piece(rules, piece(rules, 12345, LEGENDARY, "shirt"), picks, RaceDrops.BOSS, 12)
 	ctx.check("race drops: same item id gives the same race piece and stats", again.item_id == twice.item_id and again.to_dict() == twice.to_dict())
@@ -130,5 +142,6 @@ func _sim_boss_kill(ctx, f: Dictionary) -> void:
 	var gold_generic := boss_items.filter(func(it): return int(it.tier) == LEGENDARY and RaceDrops.data()["slots"].has(it.slot) and not is_race(f.rules, it)).size()
 	var boss_race := boss_items.filter(func(it): return is_race(f.rules, it)).size()
 	var goblin_race := goblin_items.filter(func(it): return is_race(f.rules, it)).size()
-	ctx.check("race drops (sim): Chief kills use boss shares (%d race of %d items), early goblins none (%d of %d), no generic gold in a race slot from the boss"
-		% [boss_race, boss_items.size(), goblin_race, goblin_items.size()], boss_race > 0 and goblin_race == 0 and gold_generic == 0)
+	var goblin_gold := goblin_items.filter(func(it): return int(it.tier) == LEGENDARY).size()
+	ctx.check("race drops (sim): every Chief and goblin piece is a race piece (%d of %d, %d of %d), no goblin gold, no generic gold from the boss"
+		% [boss_race, boss_items.size(), goblin_race, goblin_items.size()], boss_race == boss_items.size() and goblin_race == goblin_items.size() and goblin_gold == 0 and gold_generic == 0)

@@ -27,7 +27,7 @@ func run(ctx) -> void:
 	var rules := ItemRulesLoader.load_default()
 	ctx.check("the rule book with the catalog is valid %s" % [rules.errors], rules.is_valid())
 	var catalog = rules.catalog
-	ctx.check("the catalog has the model team's weapons and clothing (%d items, %d sets)" % [catalog.items.size(), catalog.sets.size()], catalog.items.size() >= 100 and catalog.sets.size() >= 19)
+	ctx.check("the catalog has the model team's weapons and clothing (%d items, %d sets)" % [catalog.items.size(), catalog.sets.size()], catalog.items.size() >= 84 and catalog.sets.size() >= 4)
 	var not_english: Array[String] = []
 	for item_id in catalog.items:
 		var name: String = catalog.items[item_id]["name"]
@@ -40,12 +40,10 @@ func run(ctx) -> void:
 			not_english.append(set_id)
 	ctx.check("every item and set has an English name the web font can show (bad: %s)" % [not_english], not_english.is_empty())
 	var rng := RandomNumberGenerator.new()
-	var katana = ItemSystem.create_item(rules, "k", "weapon", 1, rng, "", "blade_05")
-	ctx.check("a catalog item is titled by its own name (%s)" % ItemText.title(katana, rules), ItemText.title(katana, rules) == "Rare Golden Blossom Katana")
-	var cuirass = ItemSystem.create_item(rules, "h", "shirt", 0, rng, "", "armor_ash_steel_shirt")
-	var line := ItemText.set_text(cuirass, rules, ["armor_ash_steel_shirt", "armor_ash_steel_pants"])
-	ctx.check("the set line names the set, pieces worn and the next bonus (%s)" % line, line.begins_with("Ash Knight (Heavy) 2/4: ") and line.contains("(3: "))
-	ctx.check("a piece with no set has no set line", ItemText.set_text(katana, rules, []) == "")
+	var katana = ItemSystem.create_item(rules, "k", "weapon", 1, rng, "", "race_human_sword_shield_weapon")
+	ctx.check("a catalog item is titled by its own name (%s)" % ItemText.title(katana, rules), ItemText.title(katana, rules) == "Rare Human Sword")
+	var shield = ItemSystem.create_item(rules, "s", "offhand", 0, rng, "", "race_human_shield")
+	ctx.check("a piece with no set has no set line", ItemText.set_text(shield, rules, []) == "")
 	var no_icon: Array[String] = []
 	for item_id in catalog.items:
 		if catalog.items[item_id].get("procedural", false):

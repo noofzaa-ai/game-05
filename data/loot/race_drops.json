@@ -1,15 +1,41 @@
 {
-	"version": 1,
-	"_comment": "Race gear drops (design/gdd/race-gear-sets.md 3.12, design/gdd/drops-and-rewards.md 3.8; Boss 2026-11-13). Race pieces are not extra rolls: after a normal drop (a per-kill item of data/loot/loot.json, or a wave chest) has rolled its tier and slot, with the share for that tier the piece BECOMES a race piece of the same slot and tier (slots in `slots` only). Its race and class are those of one squad card picked uniformly (so the race always comes from the squad that played, and the piece fits that card). `wave_shares`: by the wave the monster belongs to (the first bracket whose to_wave covers it). `chest_shares`: by the chest's wave. `boss_shares`: a drop of a boss_types monster (data/races/rules.json). Gold (legendary) race pieces come ONLY from the boss, and every boss legendary is a race piece (share 1.0). Every number is a PLACEHOLDER.",
-	"slots": ["weapon", "shirt", "pants", "armband", "shoes"],
+	"version": 2,
+	"_comment": "Race gear drops (design/gdd/race-gear-sets.md 3.12, design/gdd/drops-and-rewards.md 3.8; Boss 2026-11-13 'remove everything from the old item system'). Every catalog item is a race piece now, so every dropped piece in `slots` (a per-kill item of data/loot/loot.json, a wave chest) keeps its rolled tier and slot and BECOMES the piece of one squad card picked uniformly: that card's race and class (offhand: the card's race shield). Shares stay per (source, wave, tier) but are 1.0 (100%). Gold (legendary) race pieces come ONLY from the boss: a source with no share for a tier listed in `downgrade` gives the piece one tier lower instead (a wave/chest gold becomes purple, PO default 2026-11-13).",
+	"slots": [
+		"weapon",
+		"shirt",
+		"pants",
+		"armband",
+		"shoes",
+		"offhand"
+	],
 	"wave_shares": [
-		{"to_wave": 4, "shares": {}},
-		{"to_wave": 8, "shares": {"rare": 0.30}},
-		{"to_wave": 99, "shares": {"rare": 0.40, "epic": 0.40}}
+		{
+			"to_wave": 99,
+			"shares": {
+				"normal": 1.0,
+				"rare": 1.0,
+				"epic": 1.0
+			}
+		}
 	],
 	"chest_shares": [
-		{"to_wave": 4, "shares": {"rare": 0.30}},
-		{"to_wave": 99, "shares": {"rare": 0.50, "epic": 0.50}}
+		{
+			"to_wave": 99,
+			"shares": {
+				"normal": 1.0,
+				"rare": 1.0,
+				"epic": 1.0
+			}
+		}
 	],
-	"boss_shares": {"rare": 0.50, "epic": 0.50, "legendary": 1.0}
+	"boss_shares": {
+		"normal": 1.0,
+		"rare": 1.0,
+		"epic": 1.0,
+		"legendary": 1.0
+	},
+	"downgrade": {
+		"legendary": "epic"
+	}
 }

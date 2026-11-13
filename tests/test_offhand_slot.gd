@@ -18,12 +18,13 @@ func run(ctx) -> void:
 	ctx.check("offhand: the rules load without errors", rules.errors.is_empty() and not rules.slot("offhand").is_empty())
 	ctx.check("offhand: open to Sword & Shield only", rules.slot_open_for("offhand", "sword_shield") and not rules.slot_open_for("offhand", "greatsword") and not rules.slot_open_for("offhand", "longbow") and not rules.slot_open_for("offhand", "magic"))
 	ctx.check("offhand: other slots stay open to every class", rules.slot_open_for("ring", "magic") and rules.slot_open_for("weapon", "longbow"))
-	ctx.check("offhand: the catalog has a shield item", rules.catalog.entry(Profile.STARTER_SHIELD).get("slot") == "offhand")
+	ctx.check("offhand: the catalog has a shield item per race", ["human", "viking", "elf", "runeborn"].all(func(r): return rules.catalog.entry(Profile.starter_shield(rules, r)).get("slot") == "offhand"))
 
 	# New player: the Sword & Shield card wears a starter shield; the other cards do not.
 	var p = Profile.new_player(rules, camp, rng)
+	var STARTER_SHIELD := Profile.starter_shield(rules, preload("res://logic/card_deck.gd").race_of(p.card_deck, "sword_shield"))
 	var shield = p.loadout_of("sword_shield").item_at("offhand", 0)
-	ctx.check("offhand: a new Sword & Shield card wears the starter shield", shield != null and shield.id == "starter-offhand-v1-sword_shield" and shield.item_id == Profile.STARTER_SHIELD)
+	ctx.check("offhand: a new Sword & Shield card wears the starter shield", shield != null and shield.id == "starter-offhand-v1-sword_shield" and shield.item_id == STARTER_SHIELD and STARTER_SHIELD.ends_with("_shield"))
 	ctx.check("offhand: other cards get no shield", ["greatsword", "longbow", "magic"].all(func(c): return p.loadout_of(c).item_at("offhand", 0) == null))
 	ctx.check("offhand: the shield adds stats", Stats.totals(rules, p.loadout_of("sword_shield").items()).get("DEF", 0.0) > Stats.totals(rules, p.loadout_of("sword_shield").items().filter(func(i): return i.slot != "offhand")).get("DEF", 0.0))
 
@@ -42,7 +43,7 @@ func run(ctx) -> void:
 
 	# Commands: equip on Sword & Shield works; other classes get slot_closed.
 	var state := {"profile": p, "rules": rules, "camp": camp, "location": "camp", "cosmetics": preload("res://logic/cosmetic_options.gd").load_default()}
-	var spare = ItemSystem.create_item(rules, "test-shield", "offhand", 2, rng, "", Profile.STARTER_SHIELD)
+	var spare = ItemSystem.create_item(rules, "test-shield", "offhand", 2, rng, "", STARTER_SHIELD)
 	p.stash.add_item(spare)
 	for card in ["greatsword", "longbow", "magic"]:
 		var refused: Dictionary = Commands.apply(state, {"type": "equip", "item": "test-shield", "source": "stash", "card": card}, rng)
@@ -61,6 +62,6 @@ func run(ctx) -> void:
 	for i in 400:
 		var piece = Loot.roll_piece(rules, "drop-%d" % i, 0, 5, ["blade"], drop_rng)
 		if piece != null and piece.slot == "offhand":
-			dropped = piece.item_id == Profile.STARTER_SHIELD
+			dropped = piece.item_id.begins_with("race_") and piece.item_id.ends_with("_shield")
 			break
 	ctx.check("offhand: shields can drop", dropped)

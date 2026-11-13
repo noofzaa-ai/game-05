@@ -35,6 +35,7 @@ func execute(request: Variant) -> Dictionary:
 		if profile == null: return failure("invalid_state")
 		rng.state = int(request.state.rng_state)
 	profile.armor_migration_version = 2
+	preload("res://logic/legacy_items.gd").convert_profile(profile, rules)  # no-op after Profile.from_dict converted it (Boss 2026-11-13)
 	_repair_wave_chest_ids(profile)
 	if profile.appearance.is_empty(): profile.appearance = cosmetics.starter()
 	# Retire the v1 staging catalog grant. Preserve equipped gear and earned loot.

@@ -76,8 +76,6 @@ func _data(ctx) -> void:
 	ctx.check("race sets: 4 sets of 5 pieces (race weapon + 4 armour) per class, steps 2/4/5, no flat bonus", ok)
 	var ids: Array = ["race_viking_greatsword_weapon", "race_viking_greatsword_shirt", "race_viking_greatsword_pants", "race_viking_greatsword_armband", "race_viking_greatsword_shoes"]
 	ctx.check("race sets: race pieces never feed the flat set bonus", rules.catalog.set_bonus(ids).is_empty())
-	var mixed: Dictionary = rules.catalog.set_bonus(["armor_ash_steel_shirt", "armor_ash_steel_pants", "race_viking_greatsword_armband"])
-	ctx.check("race sets: a generic set still counts beside a race piece (2 + 1)", not mixed.is_empty())
 
 
 ## 3.7 / 4.1: gold, gold, purple, blue, blue -> step 2 gold (1.5), step 4 blue (1.0), step 5 blue (1.0).
