@@ -28,6 +28,8 @@ const CampScreen := preload("res://client/camp_screen.gd")
 const GraphicsPanel := preload("res://client/graphics_panel.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const PackFetcher := preload("res://client/pack_fetcher.gd")  ## web: the battle packs FIGHT waits for
+const RaceBadge := preload("res://client/race_badge.gd")  ## race mockup badge (races-and-classes.md 3.8)
+const RaceData := preload("res://logic/race_data.gd")
 const TITLE_SCENE := "res://scenes/title.tscn"
 
 signal card_selected(class_id: String)
@@ -83,6 +85,10 @@ var _hint: Label
 var _bar: Control  ## the squad tray
 var _bar_art: TextureRect
 var _slots: Array = []  ## TraySlot
+var _synergy: Panel  ## the squad's race synergy under the tray (Pair / Trio / Alliance + race badges + bonus)
+var _synergy_kind: Label
+var _synergy_text: Label
+var _synergy_badges: Array = []  ## RaceBadge, one per squad card
 var _slot_numbers: Array = []
 var _fight: Button
 var _fight_art: TextureRect
@@ -469,6 +475,8 @@ class HubCard extends Control:
 	var number := 0
 	var s := 1.0
 	var phone := false
+	var race := ""
+	var _race_badge: RaceBadge
 	var _glow: Panel
 	var _mask: Panel
 	var _back: TextureRect
@@ -540,6 +548,8 @@ class HubCard extends Control:
 		add_child(_frame)
 		_name = CardTokens.hub_label("", CardTokens.FONT_HUB_CARD_NAME, CardTokens.HUB_INK, 1.0)
 		add_child(_name)
+		_race_badge = RaceBadge.new()
+		add_child(_race_badge)
 		_lock = CardTokens.hub_label(CardTokens.t("locked"), CardTokens.FONT_HUB_LOCKED, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
 		_lock.visible = false
 		add_child(_lock)
@@ -565,7 +575,8 @@ class HubCard extends Control:
 		portrait.set_hover(on)
 		portrait.set_render_mode(CardPortrait.Mode.LIVE)  # hub cards always live (Boss 2026-11-13)
 
-	func apply(look: Dictionary, p_in_squad: bool, p_number: int, p_locked: bool) -> void:
+	func apply(look: Dictionary, p_in_squad: bool, p_number: int, p_locked: bool, p_race: String = "") -> void:
+		race = p_race
 		in_squad = p_in_squad
 		number = p_number
 		locked = p_locked
@@ -610,6 +621,9 @@ class HubCard extends Control:
 		_name.position = Vector2(nr.position.x * w, nr.position.y * h)
 		_name.size = Vector2(nr.size.x * w, nr.size.y * h)
 		CardTokens.hub_fit(_name, _name.text, CardTokens.FONT_HUB_CARD_NAME, _name.size.x, CardTokens.HUB_SLOT_TEXT if locked else CardTokens.HUB_INK, unit)
+		_race_badge.position = Vector2(CardTokens.RACE_BADGE_CARD_AT.x * w, CardTokens.RACE_BADGE_CARD_AT.y * h)
+		_race_badge.show_race(race, CardTokens.RACE_BADGE_CARD * w)
+		_race_badge.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
 		var sr := CardTokens.HUB_CARD_SQUAD
 		_squad_label.position = Vector2(sr.position.x * w, sr.position.y * h)
 		_squad_label.size = Vector2(sr.size.x * w, sr.size.y * h)
@@ -688,7 +702,7 @@ class HubCard extends Control:
 			_clip_mat = ShaderMaterial.new()
 			_clip_mat.shader = TILT_CLIP_SHADER
 		var mat: ShaderMaterial = _tilt_mat if on else null
-		for node in [_glow, _mask, _name, _lock, _squad_label, squad_button, _focus]:
+		for node in [_glow, _mask, _name, _race_badge, _lock, _squad_label, squad_button, _focus]:
 			node.material = mat
 		# While tilted the mask draws its own flat window (warped) and the content clips itself in the shader.
 		_mask.clip_children = CanvasItem.CLIP_CHILDREN_DISABLED if on else CanvasItem.CLIP_CHILDREN_ONLY
@@ -885,6 +899,7 @@ class TraySlot extends Button:
 	var card_drop_callback: Callable  ## (class_id: String, to_slot: int)
 	var portrait: Control
 	var _plus: Label
+	var _badge: RaceBadge
 
 	func build() -> void:
 		focus_mode = Control.FOCUS_ALL
@@ -901,9 +916,13 @@ class TraySlot extends Button:
 		_plus = CardTokens.hub_label("+", CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, 1.0)
 		_plus.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(_plus)
+		_badge = RaceBadge.new()
+		add_child(_badge)
 
-	func show_card(id: String, look: Dictionary, s: float) -> void:
+	func show_card(id: String, look: Dictionary, s: float, race: String = "") -> void:
 		class_id = id
+		_badge.position = size * CardTokens.RACE_BADGE_TRAY_AT
+		_badge.show_race(race if not id.is_empty() else "", size.x * CardTokens.RACE_BADGE_TRAY)
 		CardTokens.bare_button(self, s, 10.0)
 		portrait.visible = not id.is_empty()
 		_plus.visible = id.is_empty()
@@ -1036,6 +1055,19 @@ func _build_deck_layer() -> void:
 		var number := CardTokens.hub_label(str(i + 1), CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
 		_bar.add_child(number)
 		_slot_numbers.append(number)
+	_synergy = Panel.new()  # the synergy line under the tray (races-and-classes.md 3.5, 3.8)
+	_synergy.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_deck_layer.add_child(_synergy)
+	_synergy_kind = CardTokens.hub_label("", CardTokens.FONT_HUB_SYNERGY_KIND, CardTokens.HUB_SYNERGY_KIND, 1.0, 0)
+	_synergy_kind.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_synergy.add_child(_synergy_kind)
+	for i in CardDeck.SQUAD_MAX:
+		var badge := RaceBadge.new()
+		_synergy.add_child(badge)
+		_synergy_badges.append(badge)
+	_synergy_text = CardTokens.hub_label("", CardTokens.FONT_HUB_SYNERGY, CardTokens.HUB_CREAM, 1.0, 0, "medium")
+	_synergy_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_synergy.add_child(_synergy_text)
 	_fight_glow = Panel.new()
 	_fight_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_deck_layer.add_child(_fight_glow)
@@ -1100,7 +1132,9 @@ func _build_character_screen() -> void:
 	_character.blacksmith_requested.connect(open_blacksmith_on)
 	_character.changed.connect(func() -> void:
 		if GameState.profile != null:
-			set_gold(GameState.profile.stash.gold))
+			set_gold(GameState.profile.stash.gold)
+			_deck = GameState.profile.card_deck.duplicate(true)  # a race change shows on the hub badges and synergy line
+			_refresh_all())
 
 
 ## A status line of the character screen: the toast, at the foot of the screen (its top bar holds the switcher).
@@ -1230,7 +1264,13 @@ func _layout() -> void:
 	_stage_label.position = Vector2(fight_x, _fight.position.y - _stage_label.size.y)
 	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.FONT_HUB_STAGE, fight_w, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium")
 	var tray_h := tray_w * CardTokens.art_aspect(CardTokens.HUB_TRAY, 0.27)
-	_bar.position = Vector2(tray_x, size.y - CardTokens.HUB_TRAY_BOTTOM * s - tray_h)
+	# the synergy line takes the strip under the tray: the tray moves up by its height
+	var syn_h := CardTokens.HUB_SYNERGY_H * s
+	_synergy.size = Vector2(tray_w, syn_h)
+	_synergy.position = Vector2(tray_x, size.y - CardTokens.HUB_SYNERGY_GAP * s - syn_h)
+	tray_h = minf(tray_h, _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s - (_hint.position.y + _hint.size.y))
+	tray_w = minf(tray_w, tray_h / CardTokens.art_aspect(CardTokens.HUB_TRAY, 0.27))
+	_bar.position = Vector2(tray_x, _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s - tray_h)
 	_bar.size = Vector2(tray_w, tray_h)
 	_bar_art.size = _bar.size
 	for i in _slots.size():
@@ -1242,6 +1282,7 @@ func _layout() -> void:
 		number.size = Vector2(r.size.x * tray_w, CardTokens.FONT_HUB_TRAY_NUM * 1.4 * s)
 		number.position = Vector2(r.position.x * tray_w, CardTokens.HUB_TRAY_NUM_Y * tray_h - number.size.y * 0.5)
 		CardTokens.hub_text(number, CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
+	CardTokens.panel(_synergy, CardTokens.hub_synergy_box(s))
 	_refresh_squad_bar()
 	_layout_editor()
 	_layout_toast()
@@ -1307,7 +1348,7 @@ func _refresh_all() -> void:
 		if card == null:
 			continue
 		var at := squad.find(id)
-		card.apply(CardDeck.look_of(_deck, id), at >= 0, at + 1, locked_classes.has(id))
+		card.apply(CardDeck.look_of(_deck, id), at >= 0, at + 1, locked_classes.has(id), CardDeck.race_of(_deck, id))
 		if at >= 0 and squad.size() <= 1:
 			card.squad_button.tooltip_text = CardTokens.t("squad_need_one")
 	_refresh_squad_bar()
@@ -1326,7 +1367,46 @@ func _refresh_squad_bar() -> void:
 	for i in _slots.size():
 		var slot: TraySlot = _slots[i]
 		var id := str(squad[i]) if i < squad.size() else ""
-		slot.show_card(id, CardDeck.look_of(_deck, id) if not id.is_empty() else {}, _s)
+		slot.show_card(id, CardDeck.look_of(_deck, id) if not id.is_empty() else {}, _s, CardDeck.race_of(_deck, id) if not id.is_empty() else "")
+	_refresh_synergy(squad)
+
+
+## The synergy line: Pair / Trio / Alliance (or none), the squad's race badges, the one-line bonus (data/races via
+## logic/race_data.gd synergy_for, the same rule the run start uses). Redrawn with the squad and after a race change.
+func _refresh_synergy(squad: Array) -> void:
+	if _synergy == null:
+		return
+	var s := _s
+	var races: Array = squad.map(func(id): return CardDeck.race_of(_deck, str(id)))
+	var synergy: Dictionary = RaceData.load_default().synergy_for(races)
+	var kind := str(synergy.get("kind", "none"))
+	var h := _synergy.size.y
+	var pad := CardTokens.HUB_SYNERGY_PAD * s
+	_synergy_kind.text = CardTokens.synergy_name(kind)
+	_synergy_kind.position = Vector2(pad, 0.0)
+	_synergy_kind.size = Vector2(_synergy.size.x * 0.22, h)
+	CardTokens.hub_fit(_synergy_kind, _synergy_kind.text, CardTokens.FONT_HUB_SYNERGY_KIND, _synergy_kind.size.x, CardTokens.HUB_SYNERGY_KIND if kind != "none" else CardTokens.HUB_MUTED, s)
+	var font := CardTokens.display_font()
+	var kind_w := minf(_synergy_kind.size.x, font.get_string_size(_synergy_kind.text, HORIZONTAL_ALIGNMENT_LEFT, -1, _synergy_kind.get_theme_font_size("font_size")).x if font != null else _synergy_kind.size.x)
+	var x := pad + kind_w + pad * 0.8
+	var edge := minf(CardTokens.HUB_SYNERGY_BADGE * s, h * 0.8)
+	for i in _synergy_badges.size():
+		var badge: RaceBadge = _synergy_badges[i]
+		var race := str(races[i]) if i < races.size() else ""
+		badge.position = Vector2(x, (h - edge) * 0.5)
+		badge.show_race(race, edge)
+		# a Pair / Trio dims the badges that do not count
+		var counts := kind == "alliance" or race == str(synergy.get("race", ""))
+		badge.modulate = CardTokens.HUB_WHITE if counts or kind == "none" else CardTokens.HUB_LOCKED
+		if not race.is_empty():
+			x += edge + pad * 0.35
+	x += pad * 0.5
+	var text := str(synergy.get("text", "")) if kind != "none" else CardTokens.t("synergy_none_hint")
+	_synergy_text.text = text
+	_synergy_text.position = Vector2(x, 0.0)
+	_synergy_text.size = Vector2(maxf(_synergy.size.x - x - pad, 1.0), h)
+	CardTokens.hub_fit(_synergy_text, text, CardTokens.FONT_HUB_SYNERGY, _synergy_text.size.x, CardTokens.HUB_CREAM if kind != "none" else CardTokens.HUB_MUTED, s, 0, "medium")
+	_synergy.tooltip_text = "%s: %s" % [_synergy_kind.text, text]
 
 
 # ================================================================== squad

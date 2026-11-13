@@ -26,6 +26,8 @@ const Camp := preload("res://logic/camp.gd")
 const SlotCell := preload("res://client/hub_item_cell.gd")
 const HubItemDetails := preload("res://client/hub_item_details.gd")
 const SkillTreeTab := preload("res://client/skill_tree_tab.gd")  ## the Skills tab (design/gdd/skill-tree.md 9.1)
+const RaceBadge := preload("res://client/race_badge.gd")
+const RacePicker := preload("res://client/race_picker.gd")  ## races-and-classes.md 3.9: free race choice in the hub
 
 signal closed()
 signal settings_pressed()
@@ -91,6 +93,10 @@ var _store_grid: GridContainer
 var _store_cells: Array = []
 var _hint: Label
 var _skills: SkillTreeTab
+var _race_button: Button  ## next to the card name: the card's race badge + name; opens the race picker
+var _race_badge: RaceBadge
+var _race_name: Label
+var _race_picker: RacePicker
 
 
 # ================================================================== build
@@ -106,6 +112,13 @@ func _ready() -> void:
 	_build_panel()
 	_hint = CardTokens.hub_label(CardTokens.t("char_hint_touch"), CardTokens.FONT_HUB_HINT, CardTokens.HUB_MUTED, 1.0, CardTokens.OUTLINE_HUB, "medium")
 	add_child(_hint)
+	_race_picker = RacePicker.new()
+	_race_picker.reduced_motion = reduced_motion
+	_race_picker.race_chosen.connect(_change_race)
+	_race_picker.closed.connect(func() -> void:
+		if visible and _race_button != null:
+			_race_button.grab_focus())
+	add_child(_race_picker)  # last: over the whole screen
 	resized.connect(_layout)
 	visibility_changed.connect(func() -> void:
 		if _portrait != null:
@@ -117,6 +130,16 @@ func _build_top() -> void:
 	_back = _round_button("back", func() -> void: close())
 	_title = CardTokens.label("", CardTokens.FONT_CHAR_TITLE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
 	add_child(_title)
+	_race_button = Button.new()
+	_race_button.focus_mode = Control.FOCUS_ALL
+	_race_button.tooltip_text = CardTokens.t("race_change")
+	_race_button.pressed.connect(open_race_picker)
+	add_child(_race_button)
+	_race_badge = RaceBadge.new()
+	_race_button.add_child(_race_badge)
+	_race_name = CardTokens.hub_label("", CardTokens.FONT_RACE_BUTTON_NAME, CardTokens.HUB_INK, 1.0)
+	_race_name.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_race_button.add_child(_race_name)
 	_prev = Button.new()
 	_prev.focus_mode = Control.FOCUS_ALL
 	_prev.pressed.connect(func() -> void: switch_card(-1))
@@ -277,6 +300,7 @@ func open(class_id: String, ids: Array, deck: Dictionary) -> void:
 func close() -> void:
 	if not visible:
 		return
+	_race_picker.close()
 	visible = false
 	closed.emit()
 
@@ -289,7 +313,7 @@ func set_deck(deck: Dictionary) -> void:
 
 ## -1 previous card, +1 next card (wraps).
 func switch_card(step: int) -> void:
-	if _ids.is_empty():
+	if _ids.is_empty() or _race_picker.visible:
 		return
 	var at := _ids.find(card)
 	_show_card(str(_ids[posmod(at + step, _ids.size())]))
@@ -385,9 +409,14 @@ func _layout() -> void:
 	var sw_w := CardTokens.CHAR_SWITCH_W * s
 	var sw_y := CardTokens.CHAR_SWITCH_Y * s - sw_h * 0.5
 	var sw_x := _title.position.x
+	# the race button: right of the card name, centred on its line (races-and-classes.md 3.9)
+	var title_w := CardTokens.display_font().get_string_size(_title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(int(round(CardTokens.FONT_CHAR_TITLE * s)), CardTokens.FONT_MIN)).x
+	var race_h := CardTokens.tap(CardTokens.RACE_BUTTON.y, _phone) * s
+	_race_button.size = Vector2(CardTokens.RACE_BUTTON.x * s, race_h)
+	_race_button.position = Vector2(_title.position.x + title_w + CardTokens.RACE_BUTTON_GAP * s, _title.position.y + (title_h - race_h) * 0.5)
+	_layout_race_button(s)
 	if _panel.position.y - sw_h < _title.position.y + title_h * 0.8:  # no room under the title: the switcher goes right of it
-		var title_w := CardTokens.display_font().get_string_size(_title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(int(round(CardTokens.FONT_CHAR_TITLE * s)), CardTokens.FONT_MIN)).x
-		sw_x = _title.position.x + title_w + CardTokens.CHAR_GAP * s * 2.0
+		sw_x = _race_button.position.x + _race_button.size.x + CardTokens.CHAR_GAP * s * 2.0
 		sw_y = _title.position.y + (title_h - sw_h) * 0.5
 	_prev.position = Vector2(sw_x, sw_y)
 	_prev.size = Vector2(sw_w, sw_h)
@@ -418,6 +447,7 @@ func _layout() -> void:
 	_hint.size = Vector2(size.x - side * 2.0, CardTokens.FONT_HUB_HINT * 1.6 * s)
 	_hint.position.y = minf(_hint.position.y, size.y - _hint.size.y)
 	CardTokens.hub_fit(_hint, _hint.text, CardTokens.FONT_HUB_HINT, size.x - side * 2.0, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
+	_race_picker.size = size
 	_layout_equipment(pw, ph)
 	_layout_other(pw, ph)
 	_layout_skills(pw, ph)
@@ -493,6 +523,23 @@ func _layout_equipment(pw: float, ph: float) -> void:
 	_store_grid.columns = maxi(1, int((rw + store_gap) / (store_cell + store_gap)))
 	CardTokens.flow_gap(_store_grid, CardTokens.CHAR_STORE_GAP, s)
 	refresh()
+
+
+## The race button's look: parchment plate, the race badge, the race name.
+func _layout_race_button(s: float) -> void:
+	var p = _profile()
+	var race := CardDeck.race_of(p.card_deck, card) if p != null and not card.is_empty() else ""
+	CardTokens.hub_button(_race_button, s)
+	var h := _race_button.size.y
+	var edge := CardTokens.RACE_BUTTON.y * s * CardTokens.RACE_BUTTON_BADGE
+	var inset := (CardTokens.RACE_BUTTON.y * s - edge) * 0.5
+	_race_badge.position = Vector2(inset, (h - edge) * 0.5)
+	_race_badge.show_race(race, edge)
+	_race_name.text = CardTokens.race_name(race) if not race.is_empty() else ""
+	_race_name.position = Vector2(inset * 2.0 + edge, 0.0)
+	_race_name.size = Vector2(_race_button.size.x - _race_name.position.x - inset, h)
+	CardTokens.hub_fit(_race_name, _race_name.text, CardTokens.FONT_RACE_BUTTON_NAME, _race_name.size.x, CardTokens.HUB_INK, s)
+	_race_button.tooltip_text = "%s: %s" % [CardTokens.t("race_change"), _race_name.text]
 
 
 func _layout_other(pw: float, ph: float) -> void:
@@ -581,6 +628,8 @@ func refresh() -> void:
 	_next.text = CardTokens.t("next_card") % CardTokens.class_name_of(str(_ids[posmod(at + 1, count)])) if not _ids.is_empty() else ""
 	_count.text = CardTokens.t("card_of") % [at + 1, count]
 	_gold_label.text = str(p.stash.gold)
+	if _race_badge.race != CardDeck.race_of(p.card_deck, card):
+		_layout_race_button(_s)
 	var worn = p.loadout_of(card)
 	if worn == null:
 		return
@@ -783,7 +832,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var key := event as InputEventKey
 	if key != null and key.pressed and not key.echo:
-		if key.keycode == KEY_Q:
+		if key.keycode == KEY_R:
+			open_race_picker()
+		elif key.keycode == KEY_Q:
 			switch_card(-1)
 		elif key.keycode == KEY_E:
 			switch_card(1)
@@ -795,7 +846,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var pad := event as InputEventJoypadButton
 	if pad != null and pad.pressed:
-		if pad.button_index == JOY_BUTTON_LEFT_SHOULDER:
+		if pad.button_index == JOY_BUTTON_Y:
+			open_race_picker()
+		elif pad.button_index == JOY_BUTTON_LEFT_SHOULDER:
 			switch_card(-1)
 		elif pad.button_index == JOY_BUTTON_RIGHT_SHOULDER:
 			switch_card(1)
@@ -846,6 +899,28 @@ func _repair(item_id: String) -> void:
 	if result.get("ok", false):
 		_say(CardTokens.t("repaired_ok"))
 	refresh()
+
+
+## Opens the race picker of this card (also R / gamepad Y).
+func open_race_picker() -> void:
+	var p = _profile()
+	if p == null or card.is_empty() or not visible:
+		return
+	_race_picker.size = size
+	_race_picker.open(card, p.card_deck)
+
+
+## The picker chose a race: send `card_race` (free; logic/commands.gd refunds the race + combo branches) and redraw.
+func _change_race(race: String) -> void:
+	var result := await _run({"type": "card_race", "class": card, "race": race})
+	var p = _profile()
+	if result.get("ok", false) and p != null:
+		var refunded := int(result.get("result", {}).get("tree_refunded", 0))
+		_say(CardTokens.t("race_changed_refund") % [CardTokens.race_name(race), refunded] if refunded > 0 else CardTokens.t("race_changed") % CardTokens.race_name(race))
+		_race_picker.show_card(card, p.card_deck)
+		_layout_race_button(_s)
+		_refresh_skills()
+	_race_picker.finish(result.get("ok", false))
 
 
 ## Sends one command; a refusal shows its reason. Returns the result.

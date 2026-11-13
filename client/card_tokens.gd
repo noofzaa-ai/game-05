@@ -741,7 +741,7 @@ const STRINGS := {
 
 
 static func t(key: String) -> String:
-	var entry: Array = STRINGS.get(key, [key, key])
+	var entry: Array = STRINGS.get(key, STRINGS_RACE.get(key, [key, key]))
 	return str(entry[0 if language == "th" else 1])
 
 
@@ -1046,7 +1046,7 @@ static func hub_box(fill: Color, edge: Color, line: float, radius: float, s: flo
 
 ## The words of an error reason from logic/commands.gd ("err_<reason>"), or the generic line.
 static func error_text(reason: String) -> String:
-	return t("err_" + reason) if STRINGS.has("err_" + reason) else t("err_unknown")
+	return t("err_" + reason) if STRINGS.has("err_" + reason) or STRINGS_RACE.has("err_" + reason) else t("err_unknown")
 
 
 static func slot_name(slot_id: String) -> String:
@@ -1410,3 +1410,178 @@ static func tree_keep_plate_when_disabled(button: Button) -> void:
 ## A round ring (selected node) from tokens.
 static func tree_ring(color: Color, s: float, radius: float) -> StyleBoxFlat:
 	return ring(color, 4.0, radius, s)
+
+
+# ------------------------------------------------------------------ races (design/gdd/races-and-classes.md 3.5, 3.7-3.9)
+## Mockup look of a race (3.8): every colour and letter comes from the race file's `mockup` block (data/races/).
+const RaceData := preload("res://logic/race_data.gd")
+const RACE_BADGE_CARD := 0.15  ## hub card: badge edge, of the card width
+const RACE_BADGE_CARD_AT := Vector2(0.085, 0.118)  ## its top-left, fractions of the card (inside the window corner)
+const RACE_BADGE_TRAY := 0.34  ## tray slot badge edge, of the slot width
+const RACE_BADGE_TRAY_AT := Vector2(0.06, 0.62)  ## its top-left, fractions of the slot (lower-left, clear of the face)
+const RACE_BADGE_LETTER := 0.62  ## letter size / badge edge
+const RACE_BADGE_LINE := 0.08  ## rim width / badge edge
+const RACE_BADGE_RADIUS := 0.3  ## corner radius / badge edge
+const RACE_INK_LUMA := 0.5  ## plate lighter than this: dark letter, else cream letter
+## Character screen race button (next to the card name).
+const RACE_BUTTON := Vector2(230.0, 60.0)
+const RACE_BUTTON_BADGE := 0.72  ## badge edge / button height
+const RACE_BUTTON_GAP := 20.0
+const FONT_RACE_BUTTON_NAME := 24
+## Race picker panel (client/race_picker.gd).
+const RACE_PANEL := Vector2(1640.0, 860.0)
+const RACE_PANEL_PAD := 30.0
+const RACE_TILE_GAP := 18.0
+const RACE_TILE_PAD := 18.0
+const RACE_TILE_LINE := 3.0
+const RACE_TILE_LINE_ON := 7.0  ## the current race's tile: a thick ring in its colour
+const RACE_TILE_RADIUS := 18.0
+const RACE_BADGE_PICKER := 64.0
+const RACE_HEADER_H := 112.0
+const RACE_FOOT_H := 96.0
+const RACE_CLOSE := Vector2(200.0, 64.0)
+const RACE_CONFIRM_BUTTON := Vector2(360.0, 64.0)
+const FONT_RACE_TITLE := 40
+const FONT_RACE_SUB := 20
+const FONT_RACE_NAME := 34
+const FONT_RACE_TAG := 18
+const FONT_RACE_HEAD := 21
+const FONT_RACE_BODY := 19
+const FONT_RACE_BUTTON := 24
+const FONT_RACE_WARN := 24
+const RACE_HEAD_INK := Color("7A2E1C")  ## "Passive · name" / "Ultimate · name" headings on parchment
+const RACE_PICK_RING := Color("E8A93A")  ## the race waiting for the refund confirmation
+const RACE_WARN_INK := Color("B3261E")  ## the refund warning line
+## Hub synergy line under the squad tray (3.5, 3.8).
+const HUB_SYNERGY_H := 44.0
+const HUB_SYNERGY_GAP := 6.0
+const HUB_SYNERGY_PAD := 14.0
+const HUB_SYNERGY_BADGE := 30.0
+const FONT_HUB_SYNERGY := 20
+const FONT_HUB_SYNERGY_KIND := 22
+const HUB_SYNERGY_KIND := Color("FFD35C")  ## the Pair / Trio / Alliance word
+## Battle ground marker (3.8): a thin race-coloured ring at a squad card's feet (client/fighter_view.gd), drawn with the
+## existing ground layer shader (client/vfx/vfx_ground.gdshader): mode 0 ring held at a late progress (thin stroke),
+## mode 3 glyph for Runeborn.
+const RACE_RING_SIZE := 1.2  ## metres across
+const RACE_RING_PROGRESS := 0.7  ## ring mode: where its stroke is thin and near the outer edge
+const RACE_RING_OPACITY := 2.6  ## the ring mode fades with progress; this brings it back to a clear line
+const RACE_GLYPH_PROGRESS := 0.4  ## glyph mode: fully shown
+const RACE_GLYPH_OPACITY := 0.9
+const RACE_GLYPH_SPIN := 0.35  ## radians per second (0 with reduced motion)
+const RACE_RING_GLYPH := ["runeborn"]  ## races whose marker is the glyph ring
+const RACE_RING_LIFT := 0.03  ## metres above the feet (under the class skill ground marks)
+
+const STRINGS_RACE := {
+	"race_name_human": ["มนุษย์", "Human"],
+	"race_name_viking": ["ไวกิ้ง", "Viking"],
+	"race_name_elf": ["เอลฟ์", "Elf"],
+	"race_name_runeborn": ["รูนบอร์น", "Runeborn"],
+	"race_change": ["เปลี่ยนเผ่า", "Change race"],
+	"race_title": ["เลือกเผ่าของ %s", "Choose a race for %s"],
+	"race_sub": ["เปลี่ยนได้ฟรีทุกเมื่อในฮับ · ซินเนอร์จีของทัพมาจากเผ่าของการ์ดในทัพ", "Free to change any time in the hub  ·  The squad's synergy comes from its cards' races"],
+	"race_passive": ["พาสซีฟ · %s", "Passive · %s"],
+	"race_ultimate": ["ท่าไม้ตาย · %s", "Ultimate · %s"],
+	"race_current": ["เผ่าปัจจุบัน", "CURRENT"],
+	"race_refund_warn": ["แต้มเผ่าและคอมโบ (%d) จะถูกคืน", "Race and Combo points (%d) will be returned"],
+	"race_confirm": ["เปลี่ยนเป็น %s", "Change to %s"],
+	"race_cancel": ["ยกเลิก", "Cancel"],
+	"race_close": ["ปิด", "Close"],
+	"race_changed": ["เปลี่ยนเผ่าเป็น %s แล้ว", "Race changed to %s"],
+	"race_changed_refund": ["เปลี่ยนเผ่าเป็น %s แล้ว · คืน %d แต้ม", "Race changed to %s  ·  %d points returned"],
+	"race_hint": ["แตะเผ่าเพื่อเลือก · Esc / B = ปิด", "Tap a race to choose it  ·  Esc / B = close"],
+	"synergy_pair": ["คู่", "Pair"],
+	"synergy_trio": ["ทรีโอ", "Trio"],
+	"synergy_alliance": ["พันธมิตร", "Alliance"],
+	"synergy_none": ["ไม่มีซินเนอร์จี", "No synergy"],
+	"synergy_none_hint": ["เผ่าเดียวกัน 2 = คู่ · 3 = ทรีโอ · ต่างกันทั้ง 3 = พันธมิตร", "2 of a race = Pair  ·  3 = Trio  ·  3 different = Alliance"],
+	"err_invalid_race": ["ไม่มีเผ่านี้", "Unknown race"],
+}
+
+
+## The race's mockup block (plate_color, rim_color, badge_text); {} for an unknown race.
+static func race_mockup(race_id: String) -> Dictionary:
+	var race = RaceData.load_default().races.get(race_id, {})
+	var mockup = race.get("mockup", {}) if race is Dictionary else {}
+	return mockup if mockup is Dictionary else {}
+
+
+static func _hex(text: String, fallback: Color) -> Color:
+	return Color.html(text) if Color.html_is_valid(text) else fallback
+
+
+## The race plate colour (mockup.plate_color, else the race colour).
+static func race_plate(race_id: String) -> Color:
+	return _hex(str(race_mockup(race_id).get("plate_color", "")), race_color(race_id))
+
+
+## The rim (mockup.rim_color): Runeborn's violet edge on its cyan plate. A rim equal to the plate = the leather edge.
+static func race_rim(race_id: String) -> Color:
+	var plate := race_plate(race_id)
+	var rim := _hex(str(race_mockup(race_id).get("rim_color", "")), plate)
+	return HUB_LEATHER_EDGE if rim.is_equal_approx(plate) else rim
+
+
+## The battle ground ring colour (3.8: gold / red / green / cyan = the plate colour).
+static func race_ring(race_id: String) -> Color:
+	return race_plate(race_id)
+
+
+static func race_letter(race_id: String) -> String:
+	var text := str(race_mockup(race_id).get("badge_text", ""))
+	return text if not text.is_empty() else race_id.left(1).to_upper()
+
+
+## Dark letter on a light plate, cream on a dark one.
+static func race_ink(race_id: String) -> Color:
+	return HUB_OUTLINE if race_plate(race_id).get_luminance() > RACE_INK_LUMA else HUB_CREAM
+
+
+static func race_name(race_id: String) -> String:
+	var key := "race_name_" + race_id
+	if STRINGS_RACE.has(key):
+		return t(key)
+	var race = RaceData.load_default().races.get(race_id, {})
+	return str(race.get("name", race_id.capitalize())) if race is Dictionary else race_id.capitalize()
+
+
+## Pair / Trio / Alliance / No synergy.
+static func synergy_name(kind: String) -> String:
+	return t("synergy_" + kind) if STRINGS_RACE.has("synergy_" + kind) else t("synergy_none")
+
+
+## The badge plate: race colour, rim, rounded square. `edge` in screen px.
+static func race_badge_box(race_id: String, edge: float) -> StyleBoxFlat:
+	return flat(race_plate(race_id), race_rim(race_id), maxf(1.0, edge * RACE_BADGE_LINE), edge * RACE_BADGE_RADIUS, 1.0, true)
+
+
+## The badge letter, sized to the badge (may go under FONT_MIN: it is a single glyph inside a coloured plate).
+static func race_badge_text(control: Control, race_id: String, edge: float) -> void:
+	style_text(control, 1, race_ink(race_id), 1.0, 0, "display")
+	control.add_theme_font_size_override("font_size", maxi(int(round(edge * RACE_BADGE_LETTER)), 8))
+
+
+## A race tile of the picker: parchment; the current race's rim in its colour, the pending choice in amber.
+static func race_tile(race_id: String, current: bool, pending: bool, s: float) -> StyleBoxFlat:
+	var edge: Color = race_plate(race_id) if current else (RACE_PICK_RING if pending else HUB_PAPER_EDGE)
+	return flat(HUB_PAPER, edge, RACE_TILE_LINE_ON if current or pending else RACE_TILE_LINE, RACE_TILE_RADIUS, s, true)
+
+
+## Skins a race tile button (normal, lighter hover, darker pressed, the hub focus ring).
+static func race_tile_button(button: Button, race_id: String, current: bool, pending: bool, s: float) -> void:
+	var normal := race_tile(race_id, current, pending, s)
+	var hover := normal.duplicate() as StyleBoxFlat
+	hover.bg_color = FRAME_LIGHT
+	var pressed := normal.duplicate() as StyleBoxFlat
+	pressed.bg_color = PAPER_SHADOW
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("hover_pressed", pressed)
+	button.add_theme_stylebox_override("disabled", normal)
+	button.add_theme_stylebox_override("focus", hub_focus(s, RACE_TILE_RADIUS))
+
+
+## The synergy line's dark pill under the squad tray.
+static func hub_synergy_box(s: float) -> StyleBoxFlat:
+	return flat(HUB_PILL, HUB_GOLD_EDGE, 2.0, HUB_SYNERGY_H * 0.5, s)

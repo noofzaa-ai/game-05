@@ -171,6 +171,7 @@ func set_looks(new_looks: Dictionary) -> void:
 func show_state(body: SimBody, fighter: Fighter, data: CombatData = null) -> void:
 	if _model!=null:_model.set_relics(fighter.relic_state.get("ids",[]))
 	position = body.position
+	_show_race_ring(fighter)
 	if not is_equal_approx(_height, body.height):
 		_height = body.height
 		if _bar_root != null:
@@ -846,3 +847,23 @@ func _show_class_skill(fighter: Fighter) -> bool:
 	_class_skill_shown = true
 	return true
 
+
+
+## The race ground marker (design/gdd/races-and-classes.md 3.8): a squad card's thin race-coloured ring at its feet
+## (client/race_ground_ring.gd), hidden while the fighter is down.
+var _race_ring = null  ## client/race_ground_ring.gd
+
+func _show_race_ring(fighter: Fighter) -> void:
+	var race := str(fighter.race_state.get("race", "")) if fighter.team == "player" else ""
+	if race.is_empty():
+		if _race_ring != null:
+			_race_ring.visible = false
+		return
+	if _race_ring == null or _race_ring.race != race:
+		if _race_ring != null:
+			_race_ring.queue_free()
+		_race_ring = preload("res://client/race_ground_ring.gd").new()
+		_race_ring.name = "RaceRing"
+		_race_ring.setup(race)
+		add_child(_race_ring)
+	_race_ring.visible = fighter.is_alive()
