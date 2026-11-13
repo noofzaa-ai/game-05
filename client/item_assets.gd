@@ -5,8 +5,6 @@ extends RefCounted
 ## An asset that is missing or not "ready" gives "" (the caller shows its stand-in instead).
 
 const MANIFEST_PATH := "res://art/items/item_manifest.json"
-## Inventory icons made from the model team's previews (tools/items/build_icons.py).
-const ICON_FOLDER := "res://art/items/icons/"
 ## Shown on an empty shirt / pants slot (Boss 2026-10-06: the basic clothes are not items).
 const EMPTY_LOOKS := {} # The Studio body supplies the base; old garments use an incompatible rig.
 ## The equipment slots that show a model on the body.
@@ -77,8 +75,7 @@ static func icon_for_id(item_id: String, catalog) -> Texture2D:
 	if not native_icon.is_empty() and ResourceLoader.exists(native_icon): return load(native_icon) as Texture2D
 	for fallback_icon in chain(str(info.get("fallback_icon_path", ""))):  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
 		if ResourceLoader.exists(fallback_icon): return load(fallback_icon) as Texture2D
-	var file := ICON_FOLDER + str(info.get("asset_id", "")) + ".png"
-	return load(file) as Texture2D if ResourceLoader.exists(file) else null
+	return null  # the old art/items/icons folder is gone with the legacy items (Boss 2026-11-13)
 
 
 ## The choices of looks the game offers (data/cosmetics), read once.

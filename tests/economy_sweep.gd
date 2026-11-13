@@ -19,7 +19,7 @@ const Run := preload("res://logic/run.gd")
 const SimWorld := preload("res://logic/sim_world.gd")
 
 const SEEDS := 12
-const FULL_SET := ["aegis_helmet", "aegis_cuirass", "aegis_bracers", "aegis_tassets", "aegis_sabatons"]
+const FULL_SET := ["race_human_sword_shield_shirt", "race_human_sword_shield_pants", "race_human_sword_shield_armband", "race_human_sword_shield_shoes"]
 
 
 func _initialize() -> void:
@@ -48,7 +48,7 @@ func _trip(map_id: String, kit: String, skill: float, seed: int, rules, camp, lo
 	rng.seed = seed
 	var profile = Profile.new_player(rules, camp, rng)
 	if kit == "full_rare":
-		profile.loadout.equip(ItemSystem.create_item(rules, "w", "weapon", 1, rng, "", "blade_05"))
+		profile.loadout.equip(ItemSystem.create_item(rules, "w", "weapon", 1, rng, "", "race_human_sword_shield_weapon"))
 		for item_id in FULL_SET:
 			profile.loadout.equip(ItemSystem.create_item(rules, item_id, rules.catalog.entry(item_id)["slot"], 1, rng, "", item_id))
 	var start_gold: int = profile.stash.gold

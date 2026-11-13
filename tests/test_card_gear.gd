@@ -52,7 +52,7 @@ func run(ctx) -> void:
 	ctx.check("card gear: missing card = the lead card", Commands.apply(state, {"type": "unequip", "slot": "shoes", "destination": "stash"}, rng).get("ok", false) and p.loadout_of("sword_shield").item_at("shoes", 0) == null)
 	var sell: Dictionary = Commands.apply(state, {"type": "shop_sell", "item": "test-ring", "expected_price": 1}, rng)
 	ctx.check("card gear: an item worn by any card cannot be sold", not sell.get("ok", true))
-	var dup = ItemSystem.create_item(rules, "starter-kit-v3-magic-weapon", "weapon", 0, rng, "magic", "starter_staff")
+	var dup = ItemSystem.create_item(rules, "starter-kit-v3-magic-weapon", "weapon", 0, rng, "magic", "race_elf_magic_weapon")
 	p.stash.add_item(dup)
 	ctx.check("card gear: an id worn by one card and in the stash is refused", Commands.apply(state, {"type": "repair_all"}, rng).get("error") == "duplicate_item_id")
 	p.stash.items.erase(dup)

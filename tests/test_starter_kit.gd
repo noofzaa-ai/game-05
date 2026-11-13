@@ -70,9 +70,9 @@ func run(ctx) -> void:
 	# Old save (pre-kit): S&S wears a rare blade + epic shirt, greatsword holds a blade and lost its pants, magic is bare.
 	var old: Dictionary = p.to_dict()
 	old.erase("starter_kit_version")
-	var gs_blade = ItemSystem.create_item(rules, "old-gs-blade", "weapon", 1, rng, "blade", "blade_02")
-	var ss_shirt = ItemSystem.create_item(rules, "old-shirt", "shirt", 2, rng, "", "armor_ash_steel_shirt")
-	var ss_weapon = ItemSystem.create_item(rules, "old-weapon", "weapon", 1, rng, "blade", "blade_01")
+	var gs_blade = ItemSystem.create_item(rules, "old-gs-blade", "weapon", 1, rng, "blade", "race_human_sword_shield_weapon")
+	var ss_shirt = ItemSystem.create_item(rules, "old-shirt", "shirt", 2, rng, "", "race_human_sword_shield_shirt")
+	var ss_weapon = ItemSystem.create_item(rules, "old-weapon", "weapon", 1, rng, "blade", "race_human_sword_shield_weapon")
 	var ss = old["card_gear"]["sword_shield"]["loadout"]["equipped"]
 	var gs = old["card_gear"]["greatsword"]["loadout"]["equipped"]
 	for key in ss.keys():
@@ -121,7 +121,7 @@ func run(ctx) -> void:
 	# A v2 save (white class kit already given) keeps its class kit pieces; only empty slots get the race outfit.
 	var v2: Dictionary = p.to_dict()
 	v2["starter_kit_version"] = 2
-	v2["card_gear"]["longbow"]["loadout"]["equipped"]["shirt:0"] = ItemSystem.create_item(rules, "starter-kit-v2-longbow-shirt", "shirt", 0, rng, "", "starter_light_shirt").to_dict()
+	v2["card_gear"]["longbow"]["loadout"]["equipped"]["shirt:0"] = ItemSystem.create_item(rules, "starter-kit-v2-longbow-shirt", "shirt", 0, rng, "", "race_elf_longbow_shirt").to_dict()
 	v2["card_gear"]["longbow"]["loadout"]["equipped"].erase("shoes:0")
 	var v2p = Profile.from_dict(JSON.parse_string(JSON.stringify(v2)), rules, camp)
 	ctx.check("starter kit v2 save: worn class kit piece kept, empty slot gets the race piece", v2p.loadout_of("longbow").item_at("shirt", 0).id == "starter-kit-v2-longbow-shirt" and v2p.loadout_of("longbow").item_at("shoes", 0).item_id == "race_elf_longbow_shoes")
