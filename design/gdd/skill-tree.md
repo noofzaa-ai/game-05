@@ -126,6 +126,8 @@ Paid when the journey commits its haul (drops-and-rewards.md 3.6), once only, to
 
 Notation: **cost** in brackets. Mod numbers on T2 modifiers are the old gem values (`data/skill_system/gems/*.tres`) unless marked *new*. "Pilot:" = what the auto-pilot does differently.
 
+> **Superseded for class nodes (2026-11-13):** the skill ids and fields below (storm_blades, `parry_window`, `counter_mul`, `root_time`, `trail_width`, `shocked_mul`, Kiting Snare's `kite_drop_skill` …) are the pre-v2 skills. The live node list is `design/gdd/class-skills.md` 3.6 and `data/classes/*.json`; every mod stat used there has runtime code. Node ids, tiers and costs below still match.
+
 #### 3.8.1 sword_shield (tank · Bulwark) · skills: storm_blades, riposte, blood_shield, flame_dash
 
 | Id | Tier | Name | Effect |
