@@ -205,7 +205,42 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release a4744e5d582d-20261113 (rolled out 2026-11-13 ~16:40 UTC)
+## 9. LIVE on staging: release e202ae64b407-20261114 (rolled out 2026-11-13 ~18:01 UTC)
+
+Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at e202ae6 = origin/develop, with
+`data/online.local.json` copied in (enabled=true, verified inside the core pack). `--import`, then
+`pipeline/build_web.py --skip-tests --max-file-mb 0` -> web build **99bfc6a3db38**. Contents: squad-room fixes,
+boot straight to the hub plus the hub-style loading page (`loading.<hash>.webp` = `tools/web/static/loading_ruins.webp`,
+Sarabun/Taviraj woff2), legacy item removal plus old-save conversion, hair I, solo/duo balance, 16 race weapons.
+Before-state: `build/k3s-staging-before-e202ae6.yaml` and `build/k3s-before-e202ae6.txt` (main tree).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:dd22a508e7c449402bb9b59ff02daabd4048119a5cc37f59de55c2df91db3f8d` (build 99bfc6a3db38) |
+| headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:73c06c3ffbf823a4e14749d68f0a8ed641cf03d934773bb0cc3b58c4b232ac44` |
+| headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:4c75507955e73d07c6907699940e01d309368642faf41695f8f82a7bb4a5f314` (`ZORX_SQUAD_ROOMS=1` kept) |
+
+Unchanged: nakama (image not rebuilt, upstream heroiclabs registry still 429), landing, perf-lab, postgres, equipment-tuning ConfigMap.
+Local checks before push: room image smoke `--squad-rooms` all PASS, stderr empty; name worker process smoke 11 PASS;
+web image paths 200 with correct types, missing pack 404. Name-validator image label says `-dirty` only because of
+untracked Godot `.uid` files the import created in `logic/` (no tracked change).
+Smoke after rollout: pods Ready, 0 restarts; live `packs.json` build 99bfc6a3db38; `play.html` has the ruins/leather/parchment
+markers and the ruins webp + fonts serve 200; `.pck.wasm` is `application/wasm` + `immutable`; Nakama healthcheck 200;
+`wss://zorxapi.daiyooo.com/room-v2` upgrade gives 101 (`/room-v2` lives on zorxapi, not zorxplay, which gives 404).
+At 18:10 UTC (9 min after rollout): 0 restarts, 0 `SCRIPT ERROR` in rooms/profiles logs (whole pod life), 0 web 5xx.
+**Precondition for every web build:** `data/online.local.json` must exist in the build tree (git-ignored, absent in a
+fresh `git worktree`); otherwise the export silently falls back to `data/online.json` (`enabled: false`).
+Sign-in: OPEN for a person (an automated browser stops at the landing page's Cloudflare Turnstile).
+
+Rollback (to the previous live release a4744e5d582d, exact digests from the before-file):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:d23b08d73de47ee3ab10c755fa380fc5e583b047f897d42999f0e243daf42df2
+kubectl -n zorx-staging set image deployment/headless profiles=wiyazard:30500/zorx-name-validator@sha256:cc356e99818cac48fe0beb865b3a9bc7fd6e85bba999a13624a2014f871959ee rooms=wiyazard:30500/zorx-room-worker@sha256:4a004408eeda80609353bf9e4ce90fe92b1a77d38883c149de5c9b5d0908fd34
+```
+Saves: e202ae6 converts legacy gear in old saves to race pieces once (`logic/legacy_items.gd`). After a rollback, the a4744e5
+build already knows race pieces, so converted saves should load (not verified); check `logic/profile.gd` from_dict before rolling back.
+
+### Previous: release a4744e5d582d-20261113 (rolled out 2026-11-13 ~16:40 UTC, superseded)
 
 Built from a clean worktree at a4744e5 (uncommitted legacy-item removal excluded). Before-state: `build/k3s-staging-before-20261113.yaml`
 (coordinator) and `zorx-release-fdf9fbb/build/equipment-tuning-before-20261113.yaml` (ConfigMap).
