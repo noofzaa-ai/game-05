@@ -17,7 +17,7 @@ func run(ctx) -> void:
 	check(ctx, f, {"type": "unequip", "slot": "hat", "destination": "stash"}, false, "nothing_worn")
 	check(ctx, f, {"type": "enhance", "item": "spare", "protect": true}, false, "not_configured")
 	check(ctx, f, {"type": "upgrade_tier", "item": "spare"}, false, "not_configured")
-	check(ctx, f, {"type": "discard", "item": "starter-weapon", "source": "stash"}, false, "item_not_in_container")
+	check(ctx, f, {"type": "discard", "item": "starter-kit-v2-sword_shield-weapon", "source": "stash"}, false, "item_not_in_container")
 	check(ctx, f, {"type": "discard", "item": "spare", "source": "stash"}, true)
 	check(ctx, f, {"type": "discard_material", "material": "ore", "count": -1, "source": "stash"}, false, "invalid_count")
 	p.stash.add_material("ore", 5)

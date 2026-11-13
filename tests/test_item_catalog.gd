@@ -158,7 +158,7 @@ func _test_drops(ctx, rules) -> void:
 	ctx.check("a dropped catalog weapon has the catalog's weapon type", weapons_ok)
 	var profile = Profile.new_player(rules, CampDataLoader.load_default(), rng)
 	var weapon = profile.loadout.item_at("weapon")
-	ctx.check("the starter gear is catalog items (%s, %s, %s)" % [weapon.item_id, profile.loadout.item_at("shirt").item_id, profile.loadout.item_at("shoes").item_id], weapon.item_id == Profile.STARTER_LOOKS["weapon"] and profile.loadout.item_at("shirt").item_id == Profile.STARTER_LOOKS["shirt"] and profile.loadout.item_at("shoes").item_id == Profile.STARTER_LOOKS["shoes"])
+	ctx.check("the starter gear is catalog items (%s, %s, %s)" % [weapon.item_id, profile.loadout.item_at("shirt").item_id, profile.loadout.item_at("shoes").item_id], weapon.item_id == "starter_blade" and profile.loadout.item_at("shirt").item_id == "starter_heavy_shirt" and profile.loadout.item_at("shoes").item_id == "starter_heavy_shoes")
 
 
 ## The Boss test kit: one of every catalog item not worn, all of it fits in the stash.
@@ -173,7 +173,7 @@ func _test_kit(ctx, rules) -> void:
 	for item in profile.stash.items:
 		ids[item.item_id] = true
 	var worn := 0
-	for slot_id in ["weapon", "shirt", "shoes", "offhand"]:
+	for slot_id in ["weapon", "hat", "shirt", "pants", "armband", "shoes", "offhand"]:
 		worn += 1 if profile.loadout.item_at(slot_id) != null and rules.catalog.items.has(profile.loadout.item_at(slot_id).item_id) else 0
 	ctx.check("the test kit puts every catalog item that is not worn in the stash (%d + %d worn of %d)" % [added, worn, rules.catalog.items.size()], added == rules.catalog.items.size() - worn and ids.size() == added)
 	ctx.check("the stash grows to fit the kit and keeps its normal free room (%d free of %d)" % [profile.stash.free_slots(), profile.stash.capacity], profile.stash.free_slots() >= base_slots - profile.stash.materials.size())

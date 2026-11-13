@@ -3,9 +3,9 @@
  "id": "longbow",
  "weapon": "longbow",
  "weapon_families": [
-  "blade"
+  "longbow"
  ],
- "_weapon_families": "Weapon items (catalog weapon_type) this class card may wear in its weapon slot, logic/profile.gd card_can_wear (Boss 2026-11-11) (placeholder: the catalog has only blade weapons; list the class weapon family here once its items exist).",
+ "_weapon_families": "Weapon items (catalog weapon_type) this class card may wear in its weapon slot, logic/profile.gd card_can_wear (Boss 2026-11-11). Starter weapon: catalog starter_longbow (design/gdd/race-gear-sets.md 3.2).",
  "animations": "res://art/characters/studio05/split/body_longbow.glb",
  "clip_marks": "res://art/characters/studio05/classes/longbow_clips.json",
  "moves": {

@@ -72,6 +72,21 @@
     "armor_ash_cloth_shirt": "shirt",
     "armor_ash_cloth_pants": "pants",
     "armor_ash_cloth_armband": "armband",
-    "armor_ash_cloth_shoes": "shoes"
+    "armor_ash_cloth_shoes": "shoes",
+    "starter_heavy_hat": "hat",
+    "starter_heavy_shirt": "shirt",
+    "starter_heavy_pants": "pants",
+    "starter_heavy_armband": "armband",
+    "starter_heavy_shoes": "shoes",
+    "starter_light_hat": "hat",
+    "starter_light_shirt": "shirt",
+    "starter_light_pants": "pants",
+    "starter_light_armband": "armband",
+    "starter_light_shoes": "shoes",
+    "starter_cloth_hat": "hat",
+    "starter_cloth_shirt": "shirt",
+    "starter_cloth_pants": "pants",
+    "starter_cloth_armband": "armband",
+    "starter_cloth_shoes": "shoes"
   }
 }

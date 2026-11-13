@@ -9,7 +9,7 @@ func run(ctx) -> void:
 	preload("res://logic/test_kit.gd").fill(profile, runner.rules, test_camp, rng)
 	for item in profile.stash.items: item.id = "beta-v1-" + item.item_id
 	profile.bonus_stash_slots = profile.stash.items.size(); profile.beta_kit_version = 1
-	var kept = profile.stash.items.pop_front()
+	var kept = profile.stash.items.pop_at(profile.stash.items.find_custom(func(i): return i.slot != "weapon"))  # a card always holds a weapon: keep a piece that can come off
 	profile.loadout.equip(kept)
 	var earned = kept.duplicate_item(); earned.id = "earned-drop-1"; profile.stash.items.append(earned)
 	var previous: Dictionary = profile.to_dict()

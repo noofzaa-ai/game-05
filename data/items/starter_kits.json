@@ -1,0 +1,11 @@
+{
+ "version": 2,
+ "_comment": "Class starter kits (design/gdd/race-gear-sets.md Part A 3.2-3.3, Boss 2026-11-13). Every class card starts wearing these catalog items at tier 'tier' (white). logic/profile.gd: new players get the kit; old saves get it once (starter_kit_version 2) in EMPTY slots only, and a worn weapon the class can no longer hold goes to the stash. The offhand round_shield stays with ensure_starter_shields. Accessories start empty. A class missing here gets no kit (data test warns).",
+ "tier": "normal",
+ "kits": {
+  "sword_shield": {"weapon": "starter_blade", "hat": "starter_heavy_hat", "shirt": "starter_heavy_shirt", "pants": "starter_heavy_pants", "armband": "starter_heavy_armband", "shoes": "starter_heavy_shoes"},
+  "greatsword": {"weapon": "starter_greatsword", "hat": "starter_heavy_hat", "shirt": "starter_heavy_shirt", "pants": "starter_heavy_pants", "armband": "starter_heavy_armband", "shoes": "starter_heavy_shoes"},
+  "longbow": {"weapon": "starter_longbow", "hat": "starter_light_hat", "shirt": "starter_light_shirt", "pants": "starter_light_pants", "armband": "starter_light_armband", "shoes": "starter_light_shoes"},
+  "magic": {"weapon": "starter_staff", "hat": "starter_cloth_hat", "shirt": "starter_cloth_shirt", "pants": "starter_cloth_pants", "armband": "starter_cloth_armband", "shoes": "starter_cloth_shoes"}
+ }
+}

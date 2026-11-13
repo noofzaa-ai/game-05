@@ -19,7 +19,7 @@ const LEGACY_FASHION_PARTS: Array[String] = ["face", "hair_style", "hair_color",
 const NAME_MIN := 2
 const NAME_MAX := 16
 
-## The catalog items the starter gear is (data/items/catalog.json); a missing one is a plain piece.
+## The catalog items the pre-2026-11-13 starter gear was (old saves still wear them; tests read them).
 const STARTER_LOOKS := {"weapon": "blade_01", "shirt": "scout_vest", "shoes": "scout_boots"}
 
 var vault: Inventory = Inventory.new(0)  ## Storage NPC bank; old profiles start empty
@@ -51,6 +51,8 @@ var armor_migration_version := 0
 var starter_armor_kit_version := 0
 var starter_weapon_kit_version := 0
 var starter_shield_kit_version := 0  ## 1 = the offhand starter shield was granted (ensure_starter_shields)
+## 2 = the white class starter kit was granted into empty slots (ensure_starter_kit_v2, race-gear-sets.md 3.3).
+var starter_kit_version := 0
 var beta_kit_version := 0
 ## 2 = the old per-run skill tree was turned into card levels (logic/skill_tree.gd migrate_old_builds, skill-tree.md 5).
 var tree_migration_version := 0
@@ -75,14 +77,12 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	profile.stash.gold = int(camp.starter.get("gold", 0))
 	for id in camp.starter.get("materials", {}):
 		profile.stash.add_material(str(id), int(camp.starter["materials"][id]))
-	# The Sword & Shield card wears the original starter set (same ids and rolls as before cards had gear).
-	var first: Loadout = profile.card_gear["sword_shield"]["loadout"]
-	first.equip(ItemSystem.create_item(item_rules, "starter-weapon", "weapon", 1, rng, "blade", STARTER_LOOKS["weapon"]))
-	first.equip(ItemSystem.create_item(item_rules, "starter-shirt", "shirt", 2, rng, "", STARTER_LOOKS["shirt"]))
-	first.equip(ItemSystem.create_item(item_rules, "starter-shoes", "shoes", 0, rng, "", STARTER_LOOKS["shoes"]))
-	profile.ensure_starter_weapons(item_rules, rng)
-	profile.ensure_starter_armor(item_rules, rng)
+	# Every class card wears its full white class kit (design/gdd/race-gear-sets.md 3.2, Boss 2026-11-13). The old
+	# stash gifts (a spare rare blade, the 15 rare armour pieces) are not given to new players (GDD 9 OQ1).
+	profile.starter_weapon_kit_version = 1
+	profile.starter_armor_kit_version = 1
 	profile.ensure_starter_cards(item_rules)
+	profile.ensure_starter_kit_v2(item_rules)
 	profile.ensure_starter_shields(item_rules)
 	profile.armor_migration_version = 2
 	profile.tree_migration_version = 2  # a new player has no old tree to convert
@@ -191,29 +191,78 @@ static func item_rules_of(worn: Loadout) -> ItemRules:
 	return worn.rules if worn != null else null
 
 
-## One-time starter set for every class card that has no gear yet (new players, migrated saves, a class
-## added later): a weapon of the class's first family + the starter shirt and shoes, and the class's initial
-## skill build. Ids are "starter-card-v1-<class>-<slot>" (unique across all containers). Rolls use a fixed
-## seed per class so every authority that migrates the same save makes the same items.
+## Every class card that has no gear yet (new players, migrated saves, a class added later) gets its own
+## loadout wearing the white class starter kit (data/items/starter_kits.json, race-gear-sets.md 3.2).
 func ensure_starter_cards(item_rules: ItemRules) -> void:
 	for card in CardDeck.classes():
 		if card_gear.has(card):
 			continue
+		card_gear[card] = {"loadout": Loadout.new(item_rules)}
+		_fill_starter_kit(item_rules, card)
+
+
+const STARTER_KITS_PATH := "res://data/items/starter_kits.json"
+
+
+## data/items/starter_kits.json: {"tier": tier id, "kits": {class: {slot: catalog item id}}}; {} if missing.
+static func starter_kits() -> Dictionary:
+	if not FileAccess.file_exists(STARTER_KITS_PATH):
+		return {}
+	var data = JSON.parse_string(FileAccess.get_file_as_string(STARTER_KITS_PATH))
+	return data if data is Dictionary else {}
+
+
+## One-time white class kit for old saves (starter_kit_version 2, race-gear-sets.md 3.3): each class card gets
+## the kit's pieces in its EMPTY slots only (worn gear is never replaced or downgraded). A worn weapon the
+## class can no longer hold (an old blade on a greatsword/longbow/magic card) goes to the stash first, so the
+## class weapon takes its place. Runs once; a slot emptied later stays empty.
+func ensure_starter_kit_v2(item_rules: ItemRules) -> void:
+	if starter_kit_version >= 2:
+		return
+	for card in CardDeck.classes():
+		var worn := loadout_of(card)
+		if worn == null:
+			continue
+		var weapon := worn.item_at("weapon", 0)
+		if weapon != null and slot_problem(card, weapon) == "wrong_weapon_family":
+			stash.items.append(worn.unequip("weapon", 0))  # may pass capacity: earned gear is never dropped
+		_fill_starter_kit(item_rules, card)
+	starter_kit_version = 2
+
+
+## Puts the class kit's pieces into the empty slots of `card`. Ids "starter-kit-v2-<class>-<slot>"; each piece
+## is rolled with a fixed seed per class and slot, so every authority makes the same items. A piece whose id
+## the account already holds anywhere is skipped (never two items with one id).
+func _fill_starter_kit(item_rules: ItemRules, card: String) -> void:
+	var data := starter_kits()
+	var kit: Dictionary = data.get("kits", {}).get(card, {})
+	var worn := loadout_of(card)
+	if kit.is_empty() or worn == null:
+		return
+	var tier := -1
+	for index in item_rules.tiers.size():
+		if str(item_rules.tiers[index]["id"]) == str(data.get("tier", "normal")):
+			tier = index
+	if tier < 0:
+		return
+	var owned := {}
+	for list in worn_lists():
+		for item in list:
+			owned[item.id] = true
+	for item in stash.items + vault.items:
+		owned[item.id] = true
+	for slot in item_rules.slots:
+		var slot_id := str(slot["id"])
+		if not kit.has(slot_id) or worn.item_at(slot_id, 0) != null or not item_rules.slot_open_for(slot_id, card):
+			continue
+		var id := "starter-kit-v2-%s-%s" % [card, slot_id]
+		if owned.has(id):
+			continue
 		var rng := RandomNumberGenerator.new()
-		rng.seed = hash("starter-card-v1-" + card)
-		var worn := Loadout.new(item_rules)
-		var families := weapon_families(card)
-		var family := str(families[0]) if not families.is_empty() else ""
-		var looks := {"weapon": family + "_01", "shirt": STARTER_LOOKS["shirt"], "shoes": STARTER_LOOKS["shoes"]}
-		var tiers := {"weapon": 1, "shirt": 2, "shoes": 0}
-		for slot in ["weapon", "shirt", "shoes"]:
-			if slot == "weapon" and family.is_empty():
-				continue
-			var item = ItemSystem.create_item(item_rules, "starter-card-v1-%s-%s" % [card, slot], slot, tiers[slot], rng, family if slot == "weapon" else "", looks[slot])
-			if item != null:
-				worn.equip(item)
-		var style := str(CardDeck.class_data(card).get("weapon", family))
-		card_gear[card] = {"loadout": worn}
+		rng.seed = hash(id)
+		var item = ItemSystem.create_item(item_rules, id, slot_id, tier, rng, "", str(kit[slot_id]))
+		if item != null and item.item_id == str(kit[slot_id]) and slot_problem(card, item, item_rules).is_empty():
+			worn.equip(item)
 
 
 ## One starter per missing weapon family, once per account. Earned gear is never removed.
@@ -319,7 +368,7 @@ func to_dict() -> Dictionary:
 		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
-		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
+		"armor_migration_version": armor_migration_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
 		"relics": relics.duplicate(true), "card_deck": card_deck.duplicate(true)}
 
 
@@ -386,7 +435,9 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 		if d.has("skill_build") and not d["skill_build"] is Dictionary and d["skill_build"] != null: return null
 		p.card_gear["sword_shield"] = {"loadout": worn}
 		old_builds["sword_shield"] = d.get("skill_build")
-	p.ensure_starter_cards(item_rules)  # the other cards (or a class added later) get a starter set once
+	p.ensure_starter_cards(item_rules)  # a card with no gear yet (or a class added later) gets the class kit
+	p.starter_kit_version = maxi(0, int(d.get("starter_kit_version", 0)))
+	p.ensure_starter_kit_v2(item_rules)  # old saves: the white class kit fills empty slots once (race-gear-sets.md 3.3)
 	p.starter_shield_kit_version = maxi(0, int(d.get("starter_shield_kit_version", 0)))
 	p.ensure_starter_shields(item_rules)  # old saves: the Sword & Shield card gets its starter shield once
 	p.tree_migration_version = maxi(0, int(d.get("tree_migration_version", 0)))
