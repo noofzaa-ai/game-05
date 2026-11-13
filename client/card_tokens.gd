@@ -513,8 +513,13 @@ const PORTRAIT_STAGE_BOTTOM := 0.84
 const PORTRAIT_BUST_TOP := 0.03
 const PORTRAIT_BUST_BOTTOM := 1.48
 ## The tray slot's parchment window inside its frame art (fractions of the slot: left, top, right, bottom):
-## the bust is drawn only inside it.
+## the race plate with the class emblem fills it (Boss 2026-11-13: emblem only, no portrait in the tray).
 const HUB_TRAY_WINDOW_INSET := Vector4(0.085, 0.13, 0.085, 0.075)
+const HUB_TRAY_EMBLEM := 0.78  ## class emblem edge, of the plate width
+const HUB_TRAY_EMBLEM_Y := 0.06  ## emblem top, of the plate height
+const HUB_TRAY_NAME_H := 0.26  ## class name strip at the plate foot, of the plate height
+const HUB_TRAY_PLATE_RADIUS := 12.0
+const HUB_TRAY_PLATE_LINE := 3.0
 const PORTRAIT_KEY_ENERGY := 0.25
 const PORTRAIT_RIM_ENERGY := 1.6  ## rim light from behind: lifts the character off the backdrop
 const PORTRAIT_AMBIENT := Color(0.82, 0.8, 0.78)
@@ -1624,6 +1629,11 @@ static func race_tile_button(button: Button, race_id: String, current: bool, pen
 	button.add_theme_stylebox_override("hover_pressed", pressed)
 	button.add_theme_stylebox_override("disabled", normal)
 	button.add_theme_stylebox_override("focus", hub_focus(s, RACE_TILE_RADIUS))
+
+
+## A filled tray slot's plate: the race colour with its rim (the class emblem sits on it).
+static func hub_tray_plate(race_id: String, s: float) -> StyleBoxFlat:
+	return flat(race_plate(race_id), race_rim(race_id), HUB_TRAY_PLATE_LINE, HUB_TRAY_PLATE_RADIUS, s, true)
 
 
 ## The synergy line's dark pill under the squad tray.

@@ -30,6 +30,7 @@ const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const PackFetcher := preload("res://client/pack_fetcher.gd")  ## web: the battle packs FIGHT waits for
 const RaceBadge := preload("res://client/race_badge.gd")  ## race mockup badge (races-and-classes.md 3.8)
 const RaceData := preload("res://logic/race_data.gd")
+const HubLook := preload("res://client/hub_look.gd")  ## the class emblem cut from the card frame (tray)
 const TITLE_SCENE := "res://scenes/title.tscn"
 
 signal card_selected(class_id: String)
@@ -897,41 +898,62 @@ class TraySlot extends Button:
 	var class_id := ""
 	var drop_callback: Callable  ## (from_slot: int, to_slot: int)
 	var card_drop_callback: Callable  ## (class_id: String, to_slot: int)
-	var portrait: Control
+	## Boss 2026-11-13: emblem only. The full cards are right above, so a filled slot is the race-coloured plate
+	## with the class emblem (cut from the class card frame) and the class name; no 3D portrait (nothing to render).
+	var _plate: Panel
+	var _emblem: TextureRect
+	var _name: Label
 	var _plus: Label
 	var _badge: RaceBadge
 
 	func build() -> void:
 		focus_mode = Control.FOCUS_ALL
-		portrait = CardPortrait.new()
-		portrait.framing = "bust"
 		# Inside the slot's parchment window only (not over its frame border).
-		var inset := CardTokens.HUB_TRAY_WINDOW_INSET
-		portrait.anchor_left = inset.x
-		portrait.anchor_top = inset.y
-		portrait.anchor_right = 1.0 - inset.z
-		portrait.anchor_bottom = 1.0 - inset.w
-		portrait.visible = false
-		add_child(portrait)
+		_plate = Panel.new()
+		_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_plate.visible = false
+		add_child(_plate)
+		_emblem = TextureRect.new()
+		_emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		_emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		_emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_plate.add_child(_emblem)
+		_name = CardTokens.hub_label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
+		_plate.add_child(_name)
 		_plus = CardTokens.hub_label("+", CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, 1.0)
 		_plus.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(_plus)
 		_badge = RaceBadge.new()
 		add_child(_badge)
 
-	func show_card(id: String, look: Dictionary, s: float, race: String = "") -> void:
+	func show_card(id: String, _look: Dictionary, s: float, race: String = "") -> void:
 		class_id = id
-		_badge.position = size * CardTokens.RACE_BADGE_TRAY_AT
-		_badge.show_race(race if not id.is_empty() else "", size.x * CardTokens.RACE_BADGE_TRAY)
 		CardTokens.bare_button(self, s, 10.0)
-		portrait.visible = not id.is_empty()
+		var inset := CardTokens.HUB_TRAY_WINDOW_INSET
+		_plate.position = Vector2(inset.x * size.x, inset.y * size.y)
+		_plate.size = Vector2((1.0 - inset.x - inset.z) * size.x, (1.0 - inset.y - inset.w) * size.y)
+		_plate.visible = not id.is_empty()
 		_plus.visible = id.is_empty()
 		CardTokens.hub_text(_plus, CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, s)
 		tooltip_text = CardTokens.t("tray_add") if id.is_empty() else CardTokens.t("remove_from_squad")
-		if not id.is_empty():
-			portrait.set_render_mode(CardPortrait.Mode.ONCE)
-			portrait.set_class(id)
-			portrait.set_look(look)
+		# race badge: top-left corner of the plate (the plate colour is the race too; the letter says it in shape)
+		var edge := size.x * CardTokens.RACE_BADGE_TRAY * 0.8
+		_badge.position = _plate.position + Vector2(-edge * 0.25, -edge * 0.25)
+		_badge.show_race(race if not id.is_empty() else "", edge)
+		if id.is_empty():
+			return
+		CardTokens.panel(_plate, CardTokens.hub_tray_plate(race, s))
+		var w := _plate.size.x
+		var e := w * CardTokens.HUB_TRAY_EMBLEM
+		var name_h := _plate.size.y * CardTokens.HUB_TRAY_NAME_H
+		e = minf(e, _plate.size.y - name_h - _plate.size.y * CardTokens.HUB_TRAY_EMBLEM_Y)
+		_emblem.texture = HubLook.class_emblem(id)
+		_emblem.size = Vector2(e, e)
+		_emblem.position = Vector2((w - e) * 0.5, _plate.size.y * CardTokens.HUB_TRAY_EMBLEM_Y)
+		_name.text = CardTokens.class_name_of(id)
+		_name.size = Vector2(w, name_h)
+		_name.position = Vector2(0.0, _plate.size.y - name_h)
+		CardTokens.hub_fit(_name, _name.text, CardTokens.FONT_CHAR_SLOT, w - 8.0 * s, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
 
 	func _get_drag_data(_at: Vector2) -> Variant:
 		if class_id.is_empty():
