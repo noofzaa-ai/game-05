@@ -252,6 +252,7 @@ func _physics_frame(_delta: float) -> void:
 					_squad_panel.owner_names[_session.owner_of(squad_id)] = _session.player_name(squad_id)
 		_squad_panel.update_from(_session.fighters, _local_player_id, _combat_data)
 	for id in _views:
+		if _session.has_method("known_move"): _session.known_move(_combat_data, _session.fighters[id])  # online: race ultimates (online_session.gd)
 		_views[id].show_state(_session.bodies[id], _session.fighters[id], _combat_data)
 		if _session.has_method("presentation_position"):
 			_views[id].position=_session.presentation_position(id)
@@ -417,6 +418,14 @@ func _build_session(map) -> bool:
 
 ## Builds the view of one fighter (player or monster) and starts showing it.
 func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
+	if _views.has(id):
+		# Online, the snapshot (_update_remote_views) usually builds a new enemy's view before its wave_arrived event
+		# is handled. Building it again orphaned the first view: frozen in place, with its own HP bar stacked over the
+		# live one, one more ghost per wave (Boss squad-room playtest 2026-11-14). Only the boss mark may be missing.
+		if is_boss and _boss_id != id:
+			_add_boss_label(_views[id])
+			_boss_id = id
+		return
 	var view := Node3D.new()
 	view.set_script(load("res://client/fighter_view.gd"))
 	var is_player: bool = _session.fighters[id].team == "player"
@@ -541,7 +550,8 @@ func _bag_text() -> String:
 		return ""
 	var bag := "Bag %d/%d" % [_run.bag.slots_used(), _run.bag.capacity]
 	if _journey != null and _journey.data.wave_mode:
-		bag = "Wave %d/%d    %s" % [mini(_wave_now, _journey.wave_total()), _journey.wave_total(), bag]
+		var wave_now: int = int(_journey.wave) if _session.has_method("is_remote") else _wave_now  # online: the server says (meta.wave)
+		bag = "Wave %d/%d    %s" % [mini(wave_now, _journey.wave_total()), _journey.wave_total(), bag]
 	elif _journey != null:
 		bag = "%s    %s" % [_journey.progress_text() if _result.is_empty() else "Stage %d/%d" % [_journey.completed, _journey.data.stage_count], bag]
 	if _run.bag.free_slots() <= 0:
@@ -825,8 +835,9 @@ func _handle_events() -> void:
 			"wave_arrived":
 				var boss_wave := false
 				for new_id in event["enemies"]:
+					if not _session.fighters.has(int(new_id)): continue  # online: gone already, or the snapshot builds it
 					var arrived_type: String = _session.fighters[int(new_id)].enemy_type
-					var boss_here: bool = _journey != null and _journey.data.wave_mode and _journey.data.stages[-1]["enemies"].any(func(e): return bool(e.get("boss", false)) and str(e["type"]) == arrived_type)
+					var boss_here: bool = _journey != null and _journey.data.wave_mode and not _journey.data.stages.is_empty() and _journey.data.stages[-1]["enemies"].any(func(e): return bool(e.get("boss", false)) and str(e["type"]) == arrived_type)
 					boss_wave = boss_wave or boss_here
 					_add_fighter_view(int(new_id), arrived_type, boss_here)
 				if _journey != null and _journey.data.wave_mode:

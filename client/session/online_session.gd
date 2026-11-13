@@ -140,9 +140,21 @@ func apply_entities(target, state: Dictionary) -> void:
 			var old = target.fighters[id].get(field)
 			if old is Array: old.assign(row[1][index])
 			else: target.fighters[id].set(field, row[1][index].duplicate() if field == "skill_view" and row[1][index] is Dictionary else row[1][index])
+		known_move(target.combat, target.fighters[id])
 	target.projectiles = state.projectiles.duplicate(true); target.areas = state.areas.duplicate(true)
 	target._ranged.projectiles = target.projectiles; target._ranged.areas = target.areas
 	target.tick_count = int(state.tick)
+
+## A race ultimate's move (<race>_<class>_ultimate) is made at attach on the server (logic/race_ultimates.gd
+## register_move) and is not in the client's combat data. Unknown, every view that reads the fighter's move (fighter_view
+## telegraph / invulnerable checks) failed each frame and froze that card mid-pose (squad room playtest 2026-11-14).
+## The client never simulates a remote ultimate, so a presentation stub with the ultimate's timing is enough (also into
+## stage_view's own combat data, which fighter_view reads).
+static func known_move(combat, fighter) -> void:
+	var move := str(fighter.move_id)
+	if move.is_empty() or combat == null or combat.moves.has(move): return
+	var loader := preload("res://logic/combat_data_loader.gd")
+	combat.moves[move] = loader._normalize_move({"startup": 30, "active": 1, "recovery": 20, "power": 0.0, "hit_offset": [0.0, 0.0, 0.0], "hit_size": [1.0, 1.0, 1.0], "melee": false}, "net move " + move, combat)
 
 static func copy_fields(source, target, fields: Array) -> void:
 	for field in fields:

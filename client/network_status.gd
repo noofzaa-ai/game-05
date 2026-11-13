@@ -49,7 +49,14 @@ func _fit() -> void:
 	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_label.position = hud.network_readout_position(260.0) if hud != null else Vector2(maxf(8, area.x - 276), 52)
 
+## Squad rooms (design/gdd/online-squads.md 3.3: spectate + social) keep only the ping/FPS readout; the old
+## online "Lag report" and "กราฟิก" buttons are for the legacy rooms (Boss squad-room playtest 2026-11-14).
+static func shows_old_buttons(online_session) -> bool:
+	return online_session == null or not online_session.has_method("is_squad_room") or not online_session.is_squad_room()
+
 func _process(delta: float) -> void:
+	var old_buttons := shows_old_buttons(session)
+	_lag_button.visible = old_buttons; _graphics_button.visible = old_buttons
 	if session != null: _lag.sample(session)
 	if not _lag_busy and Time.get_ticks_msec() < _lag_next_at:
 		_lag_button.disabled = true

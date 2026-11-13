@@ -11,10 +11,11 @@ const JourneyData := preload("res://logic/journey_data.gd")
 const Map := preload("res://logic/map_loader.gd")
 const World := preload("res://logic/sim_world.gd")
 const Sim := preload("res://logic/game_sim.gd")
+const FighterState := preload("res://logic/fighter.gd").State
 const CARDS := ["sword_shield", "greatsword", "longbow"]
 
 
-func run(ctx) -> void:
+func run(ctx):
 	_party_of_squads(ctx)
 	_synergy_groups(ctx)
 	_four_player_group(ctx)
@@ -29,6 +30,7 @@ func run(ctx) -> void:
 	_personal_loot(ctx)
 	_two_clients(ctx)
 	_leader_route_and_auto_continue(ctx)
+	await _ghost_enemies(ctx)
 
 
 ## One player's squad on its own profile: `races` per card of `cards`.
@@ -306,6 +308,10 @@ func _solo_parity(ctx) -> void:
 			session.set_input(id, session.auto_input(id))
 		session.tick()
 		room.tick()
+		# The room drops a monster's corpse after the clear delay (snapshot size); solo keeps it. Drop the same ones here:
+		# the rest of the fight must stay bit for bit the same.
+		for id in session._sim.fighters.keys():
+			if not room.sim.fighters.has(id) and session._sim.fighters[id].team == "enemy" and not session._sim.fighters[id].is_alive(): session._sim.remove_player(id)
 		if tick % 30 == 29 and Codec.digest(session._sim.snapshot()) != Codec.digest(room.sim.snapshot()):
 			diverged = tick
 			break
@@ -474,3 +480,113 @@ static func _clear_stage(room) -> void:
 				room.sim._on_killed(id, room.fighter_ids()[0])
 		room.sim._waves.clear()
 		room.tick()
+
+
+# ---------------------------------------------------------------- squad room live bugs (Boss playtest 2026-11-14)
+## Ghost enemies + stacked HP bars: online the snapshot builds a new wave's views BEFORE its wave_arrived event is
+## handled, and the event built them again (orphaned, frozen, bar over bar). Dead monsters also stayed in the
+## snapshot for the whole 12-wave run. Drives the real stage_view remote path from a room, wave after wave.
+func _ghost_enemies(ctx):
+	var mgr = squad_manager()
+	mgr.create("ghost-room", 77, players(2))
+	var room = mgr.rooms["ghost-room"].room
+	var c = client_for(mgr, room, 1)
+	c.connected = true
+	c.profile = preload("res://logic/profile.gd").from_dict(c.server_state.meta.profiles[1], mgr.rules, mgr.camp)  # (netfox_session sets it from the first snapshot)
+	var game_state: Node = ctx.root.get_node("GameState")
+	game_state.ensure_profile()  # (item rules for the card looks)
+	var map = Map.load_by_id(str(room._map_id))
+	c._sim = c.make_sim(c.server_state, map)
+	ctx.check("squad room bugs: the room is a wave-mode journey and says so", bool(c.server_state.meta.get("wave_mode", false)) and c.journey.data.wave_mode)
+	ctx.check("squad room bugs: the trip line reads Wave 1/12, not Stage (%s)" % c.journey.progress_text(), c.journey.progress_text() == "Wave 1/%d" % room.journey.wave_total())
+	var stage := Node3D.new()
+	ctx.root.add_child(stage)
+	stage.set_script(preload("res://client/stage_view.gd"))  # (in the tree first: _ready, the full stage build, does not run)
+	stage.set("_session", c); stage.set("_journey", c.journey); stage.set("_local_player_id", 1)
+	stage.set("_combat_data", c._snapshot_combat); stage.set("_vfx", preload("res://client/vfx/vfx_library.gd").load_default())
+	stage.set("_enemy_bars", preload("res://client/enemy_bars.gd").new().load_default()); stage.set("_map_id", str(room._map_id))
+	var hud := CanvasLayer.new(); hud.set_script(preload("res://client/hud.gd")); stage.add_child(hud); stage.set("_hud", hud)
+	var run_loot = game_state.run_loot.duplicate(true)
+	var seen := 0
+	var views_ok := true
+	var bars_ok := true
+	var worst := ""
+	var dead_seen := false
+	for tick in 1500:
+		if tick < 1200 and tick % 300 == 10:  # four times: the whole field falls, the next wave comes
+			_kill_field(room)
+		room.tick()
+		view_into(c, room)
+		c.apply_entities(c._sim, c.server_state)
+		var fresh: Array[Dictionary] = []
+		for record in room.events:
+			if int(record.sequence) > seen:
+				seen = int(record.sequence)
+				if record.event.type == "wave_arrived": fresh.append(record.event)
+		c._sim.events.clear(); c._sim.events.append_array(fresh)
+		stage.call("_update_remote_views")
+		stage.call("_handle_events")
+		dead_seen = dead_seen or room.sim.fighters.values().any(func(f): return f.team == "enemy" and not f.is_alive())
+		var live: Array = stage.get_children().filter(func(n): return n.get_script() == preload("res://client/fighter_view.gd") and not n.is_queued_for_deletion())
+		if live.size() != c._sim.fighters.size() or stage.get("_views").size() != c._sim.fighters.size():
+			views_ok = false; worst = "tick %d: %d views for %d fighters" % [tick, live.size(), c._sim.fighters.size()]
+		var shown_bars := 0
+		for view in live:
+			var id := _id_of(stage, view)
+			if id < 0: continue
+			view.show_state(c._sim.bodies[id], c._sim.fighters[id], c._snapshot_combat)
+			if view.get("_bar_root") != null and view.get("_bar_root").visible: shown_bars += 1
+		var living_enemies: int = c._sim.fighters.values().filter(func(f): return f.team == "enemy" and f.is_alive()).size()
+		if shown_bars != living_enemies: bars_ok = false; worst = "tick %d: %d bars for %d living enemies" % [tick, shown_bars, living_enemies]
+	game_state.run_loot = run_loot
+	ctx.check("squad room bugs: waves came and went (%d waves released)" % room.sim._waves_released, room.sim._waves_released >= 4 and dead_seen)
+	ctx.check("squad room bugs: one fighter view per fighter, no ghost after each wave %s" % worst, views_ok)
+	ctx.check("squad room bugs: one visible HP bar per living enemy %s" % worst, bars_ok)
+	ctx.check("squad room bugs: the trip line follows the wave (%s)" % c.journey.progress_text(), c.journey.progress_text() == "Wave %d/%d" % [mini(room.sim._waves_released + 1, room.journey.wave_total()), room.journey.wave_total()] and c.journey.wave >= 5)
+	# (fresh kills by the auto-pilot may still lie there; nothing older than the corpse delay may)
+	var stale: Array = room.sim.fighters.keys().filter(func(id): return room.sim.fighters[id].team == "enemy" and not room.sim.fighters[id].is_alive() and room.clock_tick - int(room._dead_since.get(id, -100000)) > room.CLEAR_DELAY_TICKS)
+	ctx.check("squad room bugs: the server dropped the corpses of past waves (%d stale)" % stale.size(), stale.is_empty())
+	# A monster killed on the server leaves the snapshot after the corpse delay, and the client view goes with it.
+	var victim := -1
+	for id in room.sim.fighters:
+		if room.sim.fighters[id].team == "enemy" and room.sim.fighters[id].is_alive(): victim = id; break
+	if victim >= 0:
+		room.sim.fighters[victim].hp = 0; room.sim.fighters[victim].state = FighterState.DEAD
+		var gone_after := -1
+		for tick in room.CLEAR_DELAY_TICKS + 10:
+			room.tick(); view_into(c, room); c.apply_entities(c._sim, c.server_state); c._sim.events.clear(); stage.call("_update_remote_views")
+			if not stage.get("_views").has(victim): gone_after = tick; break
+		ctx.check("squad room bugs: a killed monster's view goes within the corpse delay + 2 ticks (%d)" % gone_after, gone_after >= 0 and gone_after <= room.CLEAR_DELAY_TICKS + 2)
+	ctx.check("squad room bugs: the old Lag report / Graphics buttons hide in squad rooms", not preload("res://client/network_status.gd").shows_old_buttons(c) and preload("res://client/network_status.gd").shows_old_buttons(null))
+	ctx.check("squad room bugs: the old party roster / communicate row hide in a squad fight", preload("res://client/party_hud.gd").squad_fight(c))
+	stage.queue_free()
+	await ctx.process_frame
+	# Snapshot size, prune off vs on, after four cleared waves (6 cards).
+	var sizes := []
+	for prune in [false, true]:
+		var m = squad_manager()
+		m.create("size-room", 77, players(2))
+		var r = m.rooms["size-room"].room
+		r.prune_corpses = prune
+		for tick in 1300:
+			if tick % 300 == 10: _kill_field(r)
+			r.tick()
+		var state: Dictionary = r.public_state(1)
+		sizes.append([state.entities.size(), var_to_bytes(state.entities).size(), preload("res://logic/net/compressed_blob.gd").pack(var_to_bytes(state)).size()])
+	print("  squad snapshot after 4 waves: no prune %s, prune %s  [entities, entity bytes raw, full state packed]" % [sizes[0], sizes[1]])
+	ctx.check("squad room bugs: pruned snapshot is smaller (%s -> %s)" % [sizes[0], sizes[1]], sizes[1][0] < sizes[0][0] and sizes[1][1] < sizes[0][1])
+
+
+static func _kill_field(room) -> void:
+	for id in room.sim.fighters.keys():
+		var f = room.sim.fighters[id]
+		if f.team == "enemy" and f.is_alive():
+			f.hp = 0; f.state = FighterState.DEAD
+			room.sim.events.append({"type": "killed", "target": id, "by": room.fighter_ids()[0]})
+
+
+static func _id_of(stage, view) -> int:
+	var views: Dictionary = stage.get("_views")
+	for id in views:
+		if views[id] == view: return id
+	return -1

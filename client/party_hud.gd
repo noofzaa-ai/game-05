@@ -56,6 +56,10 @@ func _fit() -> void:
 	_revive.position = Vector2((_root.size.x - 180) / 2, _root.size.y - 120)
 	_note.position = Vector2((_root.size.x - 440) / 2, _root.size.y - 150)
 
+## A squad room past the lobby (design/gdd/online-squads.md 3.3): spectate, no legacy party controls.
+static func squad_fight(online_session) -> bool:
+	return online_session != null and online_session.has_method("spectating") and online_session.spectating()
+
 func _toggle_ready() -> void:
 	for member in session.party_view().get("members", []):
 		if int(member.id) == session.player_id(): request.emit({"type": "party_ready", "ready": not member.ready})
@@ -71,6 +75,12 @@ func _process(delta: float) -> void:
 	if not session.connected: _note.text = Words.message(session.error)
 	var party: Dictionary = session.party_view()
 	_actions.visible = session.is_lobby()
+	# Squad rooms in a fight: the squad panel shows every card, the server pilots them (no revive), and the old
+	# "สื่อสาร" ping row is hidden (Boss squad-room playtest 2026-11-14). The slot roster also read fighter id = slot,
+	# which in a squad room is a card, not a player.
+	var squad_fight := squad_fight(session)
+	_ping_toggle.visible = not squad_fight; _roster.visible = not squad_fight
+	if squad_fight: _root.get_node("Pings").visible = false
 	var next_presence := {}
 	for member in party.get("members", []):
 		next_presence[int(member.id)] = {"name": member.name, "connected": member.connected}
@@ -100,5 +110,5 @@ func _process(delta: float) -> void:
 		for line in signature.strip_edges().split("\n"):
 			var label := Ink.label(line, Ink.PAPER, 16); _roster.add_child(label)
 	_depart.disabled = not all_ready or session.player_id() != int(party.get("leader", -1)) or party.get("departing", false)
-	_revive.visible = nearby and not session.is_lobby()
+	_revive.visible = nearby and not session.is_lobby() and not squad_fight
 	if not _revive.visible: revive_held = false

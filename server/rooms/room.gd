@@ -467,6 +467,7 @@ func tick() -> void:
 		events.append({"sequence": event_sequence, "tick": clock_tick, "event": event.duplicate(true)})
 	if events.size() > 256: events = events.slice(-256)
 	journey.note_waves(sim)  # card XP counts the waves cleared (design/gdd/skill-tree.md 3.7)
+	if squads and journey.data.wave_mode and prune_corpses: _prune_corpses()
 	if journey is Party:
 		journey.capture_party(sim)
 		if sim._coop.wiped:
@@ -486,6 +487,21 @@ func tick() -> void:
 	elif _map_id != "practice_field" and journey.state == Journey.IN_STAGE and status != "finished" and sim.living_enemy_count() == 0 and sim.pending_wave_count() == 0:
 		journey.stage_cleared(journey.hp_fraction)
 		status = "finished" if journey.is_over() else "route"
+
+## Wave-mode squad rooms: a dead monster leaves the sim (and so the snapshot) CLEAR_DELAY_TICKS after it fell, once
+## no shot or area of its own is still out. Without this every goblin of every wave stayed in the snapshot for the
+## whole run (a 12-wave fight sent dozens of corpses each tick, and a client rebuilt from a snapshot showed them).
+var _dead_since := {}
+var prune_corpses := true  ## (tests/measurements switch it off to compare snapshot sizes)
+func _prune_corpses() -> void:
+	for id in _dead_since.keys():
+		if not sim.fighters.has(id): _dead_since.erase(id)
+	for id in sim.fighters.keys():
+		if sim.fighters[id].team != "enemy" or sim.fighters[id].is_alive(): continue
+		if not _dead_since.has(id): _dead_since[id] = clock_tick; continue
+		if clock_tick - int(_dead_since[id]) < CLEAR_DELAY_TICKS: continue
+		if sim.projectiles.any(func(shot): return int(shot.get("owner", -1)) == id) or sim.areas.any(func(area): return int(area.get("owner", -1)) == id): continue
+		sim.remove_player(id); _dead_since.erase(id)
 
 ## Squad rooms (GDD online-squads 3.3, chunk 3): every friendly fighter's input this tick comes from the auto-pilot, with
 ## the same per-fighter memory seed as solo (LocalSession.auto_input), whether its owner is connected or not.
@@ -697,6 +713,8 @@ func public_state(viewer: int, borrowed: bool = false) -> Dictionary:
 	if goblin_waves != null and journey.state == Journey.IN_STAGE and goblin_waves.phase in ["fighting", "chest"]:
 		state.meta["goblin_wave"] = {"wave": goblin_waves.wave, "phase": goblin_waves.phase, "chest_position": [_goblin_chest_position.x, _goblin_chest_position.y, _goblin_chest_position.z]}
 		state.meta.stage = goblin_waves.wave
+	if journey.data.wave_mode and goblin_waves == null:  # wave-mode journey (goblin_waves): the client shows "Wave N/12"
+		state.meta["wave_mode"] = true; state.meta["wave"] = mini(int(sim._waves_released) + 1, journey.wave_total())
 	if squads: _squad_meta(state.meta)
 	if borrowed: return preload("res://server/rooms/snapshot_cache.gd").freeze(state)
 	return state.duplicate(true)
