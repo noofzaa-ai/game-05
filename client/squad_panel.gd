@@ -50,6 +50,28 @@ func _process(delta: float) -> void:
 
 ## `classes`: fighter id -> class id (data/classes), for the card titles and emblems.
 var classes: Dictionary = {}
+## Online squad rooms (design/gdd/online-squads.md chunk 5): fighter id -> owner player slot, slot -> name, my slot.
+## Empty `owners` = solo (every card is mine). My cards come first at full size; friends' cards follow smaller,
+## tinted, with the owner's name on the card.
+var owners: Dictionary = {}
+var owner_names: Dictionary = {}
+var local_slot := -1
+const FRIEND_SCALE := 0.72  ## a friend's card size against mine
+const FRIEND_TINT := CardTokens.SKY_TOP * 0.25 + CardTokens.HUB_WHITE * 0.75  ## a cool tint on friends' cards (shape + name also tell them apart)
+
+
+func is_mine(id: int) -> bool:
+	return owners.is_empty() or int(owners.get(id, local_slot)) == local_slot
+
+
+## Mine first (card order), then friends by owner slot.
+func ordered(ids: Array) -> Array:
+	var out := ids.duplicate()
+	out.sort_custom(func(a, b):
+		var ka := [0 if is_mine(a) else 1, int(owners.get(a, 0)), a]
+		var kb := [0 if is_mine(b) else 1, int(owners.get(b, 0)), b]
+		return ka < kb)
+	return out
 
 
 func update_from(fighters: Dictionary, local_id: int, combat_data) -> void:
@@ -60,7 +82,7 @@ func update_from(fighters: Dictionary, local_id: int, combat_data) -> void:
 	for id in fighters:
 		if str(fighters[id].team) == team:
 			ids.append(id)
-	ids.sort()
+	ids = ordered(ids)
 	if ids != _order:
 		_order = ids
 		_rebuild()
@@ -269,7 +291,11 @@ func _rebuild() -> void:
 		panel.add_child(emblem)
 		var paper := _plain(panel)
 		CardTokens.panel(paper, HubLook.parchment(1.0, CardTokens.SQUAD_HUD_RADIUS * 0.6))
-		var name_label := CardTokens.label("%d  %s" % [index, CardTokens.class_name_of(class_id)], CardTokens.FONT_SQUAD_HUD_NAME, CardTokens.HUB_INK, 1.0)
+		var title := "%d  %s" % [index, CardTokens.class_name_of(class_id)]
+		if not is_mine(id):
+			title = "%s · %s" % [str(owner_names.get(int(owners.get(id, 0)), "P%d" % int(owners.get(id, 0)))), CardTokens.class_name_of(class_id)]
+			panel.self_modulate = FRIEND_TINT
+		var name_label := CardTokens.label(title, CardTokens.FONT_SQUAD_HUD_NAME, CardTokens.HUB_INK, 1.0)
 		paper.add_child(name_label)
 		var hp_back := _plain(paper)
 		CardTokens.panel(hp_back, CardTokens.flat(CardTokens.HUD_HP_BACK, CardTokens.HUB_LEATHER_EDGE, 1.0, 5.0, 1.0))
@@ -321,17 +347,23 @@ func _place() -> void:
 	var count := _order.size()
 	var gap := CardTokens.SQUAD_HUD_GAP
 	var margin := CardTokens.SQUAD_HUD_MARGIN
-	var width := minf(CardTokens.SQUAD_HUD_CARD.x, (area.x - margin * 2.0 - gap * float(count - 1)) / float(count))
-	var height := CardTokens.SQUAD_HUD_CARD.y
-	var left := (area.x - width * float(count) - gap * float(count - 1)) * 0.5
+	var units := 0.0  # my cards count 1, a friend's FRIEND_SCALE
+	for id in _order: units += 1.0 if is_mine(id) else FRIEND_SCALE
+	var full_width := minf(CardTokens.SQUAD_HUD_CARD.x, (area.x - margin * 2.0 - gap * float(count - 1)) / units)
+	var left := (area.x - full_width * units - gap * float(count - 1)) * 0.5
 	var rim := CardTokens.SQUAD_HUD_LEATHER
-	var medal := minf(CardTokens.SQUAD_HUD_EMBLEM, height - rim * 2.0)
 	var index := 0
+	var x := left
 	for id in _order:
+		var factor := 1.0 if is_mine(id) else FRIEND_SCALE
+		var width := full_width * factor
+		var height := CardTokens.SQUAD_HUD_CARD.y * factor
+		var medal := minf(CardTokens.SQUAD_HUD_EMBLEM * factor, height - rim * 2.0)
 		var card: Dictionary = _cards[id]
 		var panel: Panel = card["panel"]
 		panel.size = Vector2(width, height)
-		panel.position = Vector2(left + float(index) * (width + gap), area.y - margin - height)
+		panel.position = Vector2(x, area.y - margin - height)
+		x += width + gap
 		card["emblem"].position = Vector2(rim, (height - medal) * 0.5)
 		card["emblem"].size = Vector2(medal, medal)
 		var paper: Panel = card["paper"]

@@ -107,7 +107,8 @@ func _accept_metadata(state:Dictionary)->void:
  if changed or _sim==null:_sim=make_sim(state,map)
  else:
   # Presentation owns separate values; metadata must never mutate rollback state by alias.
-  if own_actor!=null:
+  # Squad rooms (online-squads chunk 5): the server auto-pilots every card, the client only interpolates.
+  if own_actor!=null and not spectating():
    _sim.bodies.erase(_player_id);_sim.fighters.erase(_player_id)
   apply_entities(_sim,state)
  var profiles:Dictionary=state.meta.profiles
@@ -138,7 +139,7 @@ func _accept_metadata(state:Dictionary)->void:
   if not net_entities.has(id):
    var entity=preload("res://runtime/netfox/entity.gd").new();entity.name="Entity"+str(id);group.add_child(entity);entity.configure(_sim.bodies[id].position,[]);net_entities[id]=entity
  preload("res://runtime/netfox/entity_prune.gd").prune(net_entities,state.entities)
- own_actor.base_tick=state.netfox.base_tick;own_actor.paused=bool(state.meta.get("scene_loading",false)) or state.meta.get("status")=="finished"
+ own_actor.base_tick=state.netfox.base_tick;own_actor.paused=bool(state.meta.get("scene_loading",false)) or state.meta.get("status")=="finished" or spectating()
  _project_owner()
  if ownership:ownership_changed.emit()
  if previous_meta.get("state")!=state.meta.state or previous_meta.get("cloud_saved",false)!=saved:route_changed.emit()
@@ -152,13 +153,14 @@ func _ready_replica(epoch:int)->void:
  await Engine.get_main_loop().process_frame
  if generation==_netfox_generation and connected and epoch==_epoch:net_bus.replica_ready.rpc_id(1,epoch)
 func _project_owner()->void:
+ if spectating():return
  if own_actor==null or own_actor.simulation==null or _sim==null:return
  _sim.bodies[_player_id]=own_actor.simulation.bodies[_player_id]
  _sim.fighters[_player_id]=own_actor.simulation.fighters[_player_id]
  _sim.tick_count=own_actor.simulation.tick_count
 func advance_controls(input:SimInput,_elapsed:float)->void:
  input_trace.controls(Time.get_ticks_msec())
- if own_actor!=null and connected:own_actor.get_node("Input").push(input,_epoch,_viewed_world_tick())
+ if own_actor!=null and connected and not spectating():own_actor.get_node("Input").push(input,_epoch,_viewed_world_tick())
  if _sim!=null:_sim.events.clear();_sim.events.append_array(_pending_events);_pending_events.clear()
  _project_owner()
 func poll(delta:float)->void:
@@ -189,7 +191,7 @@ func _send(kind:int,value:Dictionary)->void:
  if connected and kind==Wire.CONTROL:net_bus.control.rpc_id(1,value)
 func _queue_packet(_bytes:PackedByteArray,_now:int)->void:pass
 func presentation_position(id:int)->Vector3:
- if own_actor!=null and id==_player_id:return own_actor.position
+ if own_actor!=null and id==_player_id and not spectating():return own_actor.position
  if net_entities.has(id):return _remote_cast_position(id,net_entities[id])
  return _sim.bodies[id].position if _sim!=null and _sim.bodies.has(id) else Vector3.ZERO
 func enter_camp()->void:

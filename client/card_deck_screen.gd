@@ -1043,6 +1043,7 @@ func _build_deck_layer() -> void:
 	_gold_pill.add_child(_gold_label)
 	_settings_button = _sys_button("settings", func() -> void: settings_pressed.emit())
 	_account_button = _sys_button("account", func() -> void: service_pressed.emit("account"))
+	_build_online_button()
 	for service in CardTokens.HUB_SERVICES:
 		var entry := MenuEntry.new()
 		entry.build(str(service["id"]), str(service["icon"]))
@@ -1111,6 +1112,33 @@ func _build_deck_layer() -> void:
 	_fight.add_child(_fight_progress)
 	_stage_label = CardTokens.hub_label(CardTokens.stage_name(), CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium")
 	_deck_layer.add_child(_stage_label)
+
+
+## Online squad rooms entry (design/gdd/online-squads.md chunk 5): opens the existing online room panel (create a
+## room / join by code, then the lobby takes everyone's squads). Shown when online play is configured
+## (data/online*.json enabled) or ZORX_SQUAD_ROOMS=1 (local test).
+var _online_button: Button
+const ONLINE_TEXT := ["ออนไลน์กับเพื่อน", "Play online"]
+static func online_entry_shown() -> bool:
+	return OS.get_environment("ZORX_SQUAD_ROOMS") == "1" or preload("res://client/online/connection_config.gd").valid(preload("res://client/online/connection_config.gd").load_default())
+
+
+func _build_online_button() -> void:
+	if not online_entry_shown():
+		return
+	_online_button = Button.new()
+	_online_button.name = "OnlineButton"
+	_online_button.focus_mode = Control.FOCUS_ALL
+	_online_button.text = ONLINE_TEXT[0 if CardTokens.language == "th" else 1]
+	_online_button.pressed.connect(open_online)
+	_deck_layer.add_child(_online_button)
+
+
+func open_online() -> void:
+	if get_node_or_null("/root/Online") == null:
+		toast(ONLINE_TEXT[0 if CardTokens.language == "th" else 1] + ": offline")
+		return
+	add_child(preload("res://client/online/room_panel.gd").new())
 
 
 ## A round system button (settings / account / back) drawn from the hub art.
@@ -1211,6 +1239,9 @@ func _layout() -> void:
 	x -= CardTokens.HUB_GOLD_GAP * s - CardTokens.HUB_SYS_GAP * s + pill.x
 	_gold_pill.position = Vector2(x, CardTokens.HUB_SYS_Y * s + (sys - pill.y) * 0.5)
 	_gold_pill.size = pill
+	if _online_button != null:
+		_online_button.size = Vector2(pill.x * 0.9, sys)
+		_online_button.position = Vector2(x - _online_button.size.x - CardTokens.HUB_GOLD_GAP * s, CardTokens.HUB_SYS_Y * s)
 	CardTokens.panel(_gold_pill, CardTokens.hub_pill(s))
 	var coin := pill.y * 1.15
 	_gold_icon.size = Vector2(coin, coin)

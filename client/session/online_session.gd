@@ -171,9 +171,12 @@ func begin_stage(_map_data, _combat_data, _trip = null, _player = 1, _enemy = 10
 func is_remote() -> bool: return true
 func player_id() -> int: return _player_id
 func is_coop() -> bool: return server_state.get("meta", {}).get("players", []).size() > 1
-func profile_for(id: int): return Profile.from_dict(server_state.meta.profiles[id], rules, camp) if server_state.get("meta", {}).get("profiles", {}).has(id) else profile
+func profile_for(id: int):
+	id = owner_of(id)  # squad rooms: a card's looks/gear come from its owner's profile
+	if id == _player_id: return profile
+	return Profile.from_dict(server_state.meta.profiles[id], rules, camp) if server_state.get("meta", {}).get("profiles", {}).has(id) else profile
 func run_for(id: int): return run if id == _player_id else Run.start(profile_for(id), camp)
-func local_defeated() -> bool: return ready and (journey.state == "lost" or fighters[_player_id].eliminated)
+func local_defeated() -> bool: return ready and (journey.state == "lost" or (not is_squad_room() and fighters[_player_id].eliminated))
 func capture_gauge() -> void: pass
 func mark_camp_rest(_point: String) -> void: pass
 func open_rest(_point: String) -> bool: return ready and journey.is_at_camp()
@@ -183,7 +186,43 @@ func open_route_camp(_point: String) -> bool: return ready and journey.is_at_cam
 func party_view() -> Dictionary: return server_state.get("meta", {}).get("party", {})
 func is_lobby() -> bool: return bool(party_view().get("lobby", false))
 func player_name(id: int) -> String:
+	id = owner_of(id)  # squad rooms: a card shows its owner's name
 	return str(server_state.get("meta", {}).get("profiles", {}).get(id, {}).get("name", "P%d" % id))
+
+# ---------------------------------------------------------------- squad rooms (design/gdd/online-squads.md chunk 5)
+## The server fields every player's cards and auto-pilots them; meta.squads says who owns which fighter.
+func is_squad_room() -> bool: return server_state.get("meta", {}).get("squads") is Dictionary
+## Spectating: a squad room outside the lobby takes no combat input from this client (the server ignores it anyway).
+func spectating() -> bool: return is_squad_room() and not is_lobby()
+## Player slot owning fighter `id` (a legacy room: the fighter is the slot).
+func owner_of(id: int) -> int:
+	var squads = server_state.get("meta", {}).get("squads", {})
+	if squads is Dictionary:
+		for slot in squads:
+			for row in squads[slot]:
+				if row is Dictionary and int(row.get("fighter", -1)) == id: return int(slot)
+	return id
+## The card (class id) fighter `id` plays, "" outside squad rooms.
+func card_of(id: int) -> String:
+	var squads = server_state.get("meta", {}).get("squads", {})
+	if squads is Dictionary:
+		for slot in squads:
+			for row in squads[slot]:
+				if row is Dictionary and int(row.get("fighter", -1)) == id: return str(row.get("card", ""))
+	return ""
+## Fighter ids of player `slot` in card order (default: me).
+func fighters_of(slot: int = -1) -> Array:
+	if slot < 0: slot = _player_id
+	var rows = server_state.get("meta", {}).get("squads", {}).get(slot, []) if is_squad_room() else []
+	if rows.is_empty(): return [slot]
+	return rows.map(func(row): return int(row.get("fighter", -1)))
+## Synergy groups [{group, players, kind, race, name}].
+func synergy_groups() -> Array: return server_state.get("meta", {}).get("synergy", []) if is_squad_room() else []
+## Seconds until the server takes choice 0 (-1 = no choice waiting).
+func auto_continue_left() -> float:
+	var row = server_state.get("meta", {}).get("auto_continue", {})
+	return float(row.get("left", 0)) / 60.0 if row is Dictionary and not row.is_empty() else -1.0
+func is_leader() -> bool: return int(party_view().get("leader", -1)) == _player_id
 func boss_presentation() -> Dictionary: return server_state.get("meta", {}).get("boss_intro", {})
 func _receive(bytes: PackedByteArray, _now: int) -> void:
 	var message := Wire.parse(bytes)

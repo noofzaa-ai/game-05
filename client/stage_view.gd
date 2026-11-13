@@ -217,6 +217,7 @@ func _physics_frame(_delta: float) -> void:
 		secondary.move = _rig.movement_from_screen(secondary.move)
 		_session.set_input(2, secondary)
 	var frame = _session.auto_input(_local_player_id) if auto_fight else InputReader.read(get_viewport())
+	if _spectating(): frame = preload("res://logic/sim_input.gd").new()  # squad rooms: the server pilots every card
 	if auto_fight:
 		frame = _auto_journey_input(frame)
 	if _party_hud != null and _party_hud.revive_held: frame = preload("res://logic/sim_input.gd").new()
@@ -224,7 +225,7 @@ func _physics_frame(_delta: float) -> void:
 		var walking = preload("res://logic/sim_input.gd").new(); walking.move = frame.move; walking.run = frame.run; frame = walking
 	if not auto_fight:
 		frame.move = _rig.movement_from_screen(frame.move)
-	if not auto_fight and (frame.skill_slot >= 0 or (_session.fighters.get(_local_player_id)!=null and _session.fighters[_local_player_id].style=="bow" and (frame.light or frame.heavy))): _aim_skill(frame)
+	if not auto_fight and not _spectating() and (frame.skill_slot >= 0 or (_session.fighters.get(_local_player_id)!=null and _session.fighters[_local_player_id].style=="bow" and (frame.light or frame.heavy))): _aim_skill(frame)
 	work_started=_work_mark("input_read_aim_reconcile",work_started)
 	if _session.has_method("advance_controls"):_session.advance_controls(frame,_delta)
 	else:_session.step(frame)
@@ -243,6 +244,12 @@ func _physics_frame(_delta: float) -> void:
 		for squad_id in _views:
 			if _views[squad_id].looks.has("class"):
 				_squad_panel.classes[squad_id] = _views[squad_id].looks["class"]
+		if _squad_room():
+			_squad_panel.local_slot = _local_player_id
+			for squad_id in _session.fighters:
+				if _session.fighters[squad_id].team == "player":
+					_squad_panel.owners[squad_id] = _session.owner_of(squad_id)
+					_squad_panel.owner_names[_session.owner_of(squad_id)] = _session.player_name(squad_id)
 		_squad_panel.update_from(_session.fighters, _local_player_id, _combat_data)
 	for id in _views:
 		_views[id].show_state(_session.bodies[id], _session.fighters[id], _combat_data)
@@ -252,6 +259,7 @@ func _physics_frame(_delta: float) -> void:
 			var f = _session.fighters[id]
 			var status: Label3D = _views[id].get_node("PartyStatus")
 			status.text = "%s  %.0f / %.0f" % [_session.player_name(id) if _session.has_method("player_name") else "P%d" % id, f.hp, f.max_hp()]
+			if _squad_room(): status.modulate = Color.WHITE if _session.owner_of(id) == _local_player_id else FRIEND_PLATE
 			if f.state == Fighter.State.DOWNED: status.text = "P%d DOWN %.1fs\nRevive %d%%" % [id, f.bleedout_left / 60.0, 100 * f.revive_progress / int(_combat_data.coop.revive_ticks)]
 			elif f.eliminated: status.text = "P%d OUT" % id
 	work_started=_work_mark("fighter_visuals",work_started)
@@ -268,6 +276,11 @@ func _physics_frame(_delta: float) -> void:
 		var follow_id := _local_player_id
 		if _focus_id >= 0 and _views.has(_focus_id) and _session.fighters[_focus_id].is_alive():
 			follow_id = _focus_id  # the squad card the player picked (squad_panel.gd): the camera closes on that fighter
+		elif _squad_room() and not player.is_alive():
+			for id in _session.fighters_of():
+				if _session.fighters.has(id) and _session.fighters[id].is_alive():
+					follow_id = id
+					break
 		elif player.eliminated:
 			for id in _journey.player_ids():
 				if _session.fighters[id].is_alive():
@@ -490,6 +503,13 @@ func _player_looks(id: int = -1) -> Dictionary:
 		var loadout = trip.loadout()
 		looks = ItemAssets.looks(loadout, GameState.item_rules.catalog, loadout.weapon_style(_combat_data.styles.keys()))
 		looks["appearance"] = ItemAssets.appearance(own)
+	if _squad_room() and not _session.card_of(id).is_empty() and owner != null:
+		var card: String = _session.card_of(id)
+		var card_loadout = owner.loadout_of(card)
+		looks = ItemAssets.looks(card_loadout, GameState.item_rules.catalog, card_loadout.weapon_style(_combat_data.styles.keys()))
+		looks["class"] = card
+		looks["appearance"] = ItemAssets.card_appearance(preload("res://logic/card_deck.gd").look_of(owner.card_deck, card), ItemAssets.appearance(own))
+		return looks
 	if GameState.auto_battle and not _session.has_method("is_remote"):
 		var slots: Array = GameState.squad_looks()
 		var env := OS.get_environment("ZORX_SQUAD")
@@ -617,7 +637,7 @@ func _build_effects_and_hud() -> void:
 	_effects.rig = _rig
 	_hud = Hud.new()
 	add_child(_hud)
-	if GameState.auto_battle and not _session.has_method("is_remote"):
+	if (GameState.auto_battle and not _session.has_method("is_remote")) or _squad_room():
 		_hud.auto_battle = true
 		_squad_panel = preload("res://client/squad_panel.gd").new()
 		add_child(_squad_panel)
@@ -631,6 +651,10 @@ func _build_effects_and_hud() -> void:
 		_party_hud.request.connect(func(command): _session.command(command))
 		_party_hud.invite_requested.connect(_party_invite)
 		_party_camera = preload("res://client/party_camera.gd").new(); _party_camera.rig = _rig; add_child(_party_camera)
+		if _squad_room():
+			_squad_hud = preload("res://client/online/squad_room_hud.gd").new(); _squad_hud.session = _session; add_child(_squad_hud)
+			_squad_hud.cycle_camera.connect(cycle_my_card)
+			_squad_hud.choose.connect(func(index: int) -> void: GameState.enter_journey_choice(index))
 	if GameState.remote_session != null:
 		var network_status = preload("res://client/network_status.gd").new()
 		network_status.session = _session
@@ -1274,6 +1298,7 @@ func _spawn_portals() -> void:
 	for portal in _portals:
 		portal.queue_free()
 	_portals.clear()
+	if _spectating(): return  # squad rooms: the leader picks on the squad room HUD, the server auto-continues
 	if _journey == null or _journey.is_over() or _journey.treasure_pending:
 		return
 	var options: Array = _journey.upcoming_choices()
@@ -1517,7 +1542,10 @@ func _update_remote_views() -> void:
 		if not _session.fighters.has(id): _views[id].queue_free(); _views.erase(id)
 	if _journey.state == Journey.CHOOSING and _result.is_empty():
 		_result = "cleared"; _portal_delay = PORTAL_DELAY; _clear_banner_left = PORTAL_DELAY
-	if _journey.treasure_pending:
+	if _spectating():
+		if _journey.treasure_pending and not _treasure_shown: _hud.show_skill_banner("Treasure!")  # the server opens it
+		_treasure_shown = _journey.treasure_pending
+	elif _journey.treasure_pending:
 		if _chest == null: _spawn_chest()
 		elif not _portals.is_empty(): _spawn_portals()
 	elif str(_journey.current.get("kind", "")) == "treasure" and _journey.state == Journey.AT_NODE and _portals.is_empty() and _portal_delay < 0.0:
@@ -1563,6 +1591,25 @@ func _aim_skill(frame) -> void:
 		if delta.length()<nearest:
 			nearest=delta.length();direction=Vector2(delta.x,delta.z)
 	if direction!=Vector2.ZERO:frame.aim=direction.normalized();frame.aim_distance=nearest
+
+
+## Online squad rooms (design/gdd/online-squads.md chunk 5): the server auto-pilots every card of every player.
+const FRIEND_PLATE := Color(0.7, 0.85, 1.0)  ## a friend's card name plate (my cards stay white)
+var _squad_hud: CanvasLayer
+var _treasure_shown := false
+func _squad_room() -> bool:
+	return _session != null and _session.has_method("is_squad_room") and _session.is_squad_room()
+func _spectating() -> bool:
+	return _session != null and _session.has_method("spectating") and _session.spectating()
+
+## The camera's "next card": steps through MY living cards (the follow target is _focus_id).
+func cycle_my_card() -> void:
+	if not _squad_room(): return
+	var mine: Array = _session.fighters_of().filter(func(id): return _session.fighters.has(id) and _session.fighters[id].is_alive())
+	if mine.is_empty(): return
+	var at := mine.find(_focus_id if _focus_id >= 0 else _local_player_id)
+	_focus_id = mine[(at + 1) % mine.size()]
+	if _squad_panel != null: _squad_panel.select(_focus_id)
 
 
 ## Auto-battle camera framing: the living enemies and the squad members fighting near them (a shooter far

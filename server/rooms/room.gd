@@ -697,9 +697,34 @@ func public_state(viewer: int, borrowed: bool = false) -> Dictionary:
 	if goblin_waves != null and journey.state == Journey.IN_STAGE and goblin_waves.phase in ["fighting", "chest"]:
 		state.meta["goblin_wave"] = {"wave": goblin_waves.wave, "phase": goblin_waves.phase, "chest_position": [_goblin_chest_position.x, _goblin_chest_position.y, _goblin_chest_position.z]}
 		state.meta.stage = goblin_waves.wave
+	if squads: _squad_meta(state.meta)
 	if borrowed: return preload("res://server/rooms/snapshot_cache.gd").freeze(state)
 	return state.duplicate(true)
 
+
+## Squad rooms (GDD online-squads chunk 5): who owns which card, each synergy group, and the auto-continue clock.
+## meta.squads = {slot: [{fighter, card, race}]} (slot order = fighter order); meta.synergy = [{group, players, kind,
+## race, name}]; meta.auto_continue = {left, total} in room ticks while a route/camp choice waits (else absent).
+## About 60 B per card + 40 B per group before compression; the values only change on depart/stage change.
+func _squad_meta(meta: Dictionary) -> void:
+	var cards := {}
+	var groups := {}
+	for fid in fighter_ids():
+		var trip = trip_of_fighter(fid)
+		var slot := int(owner_by_fighter.get(fid, fid))
+		if not cards.has(slot): cards[slot] = []
+		var card := str(trip.card_id) if trip is SquadMember else ""
+		cards[slot].append({"fighter": fid, "card": card, "race": CardDeck.race_of(trip.profile.card_deck, card) if not card.is_empty() else ""})
+		var synergy: Dictionary = trip.squad_synergy if trip is SquadMember else {}
+		var group := str(synergy.get("group", "p%d" % slot))
+		if group.is_empty(): group = "p%d" % slot
+		if not groups.has(group): groups[group] = {"group": group, "players": [], "kind": str(synergy.get("kind", "none")), "race": str(synergy.get("race", "")), "name": str(synergy.get("name", ""))}
+		if not groups[group].players.has(slot): groups[group].players.append(slot)
+	meta["squads"] = cards
+	meta["synergy"] = groups.values()
+	var total := int(_combat.coop.get("auto_continue_seconds", 20)) * 60
+	if _idle_since >= 0 and _idle_epoch == epoch and status in ["route", "camp"] and not journey.upcoming_choices().is_empty():
+		meta["auto_continue"] = {"left": maxi(0, total - (clock_tick - _idle_since)), "total": total}
 
 func _public_run(id: int) -> Dictionary:
 	var trip = trip_for(id)

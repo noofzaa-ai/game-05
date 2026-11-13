@@ -33,6 +33,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--godot', default=os.environ.get('GODOT_BIN', '/Applications/Godot.app/Contents/MacOS/Godot'))
     parser.add_argument('--image', help='Existing local linux/amd64 room worker image; no push')
+    parser.add_argument('--squad-rooms', action='store_true', help='Run the worker with ZORX_SQUAD_ROOMS=1 (online squads, card squads per player)')
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='zorx-room-smoke-') as folder:
         root = Path(folder); prepare(root)
@@ -40,11 +41,12 @@ def main():
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0)); port = sock.getsockname()[1]
         env = dict(os.environ, ZORX_WORKER_TOKEN=token, ZORX_WORKER_PORT=str(port), ZORX_WORKER_BIND='127.0.0.1')
+        if args.squad_rooms: env['ZORX_SQUAD_ROOMS'] = '1'
         container = None
         with (root / 'stdout').open('w') as out, (root / 'stderr').open('w') as err:
             if args.image:
                 container = 'zorx-room-smoke-' + secrets.token_hex(4)
-                secret = root / 'worker.env'; secret.write_text('ZORX_WORKER_TOKEN=' + token + '\n'); secret.chmod(0o600)
+                secret = root / 'worker.env'; secret.write_text('ZORX_WORKER_TOKEN=' + token + '\n' + ('ZORX_SQUAD_ROOMS=1\n' if args.squad_rooms else '')); secret.chmod(0o600)
                 cmd = ['docker', 'run', '--rm', '--name', container, '--platform', 'linux/amd64', '-p', '127.0.0.1::8051', '--env-file', str(secret), '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--tmpfs', '/tmp:uid=10001,gid=10001', args.image]
             else:
                 cmd = [args.godot, '--headless', '--path', str(root), '--script', 'res://server/rooms/worker.gd']
@@ -93,7 +95,7 @@ def main():
                 def create(room): return call({'v': 1, 'op': 'create', 'room': room, 'seed': '0123456789abcde', 'players': [{'id': 1, 'profile': profile}, {'id': 2, 'profile': profile}]})[1]
                 check('real worker allocates two-player room', create('room-one').get('ok'))
                 check('real worker allocates independent second room', create('room-two').get('ok'))
-                check('duplicate control cannot replace room', create('room-one').get('error') == 'room_exists')
+                dup = create('room-one'); check('duplicate control cannot replace room', dup.get('error') == 'room_exists')
                 time.sleep(.2)
                 first = call({'v': 1, 'op': 'status', 'room': 'room-one'})[1]
                 second = call({'v': 1, 'op': 'status', 'room': 'room-two'})[1]

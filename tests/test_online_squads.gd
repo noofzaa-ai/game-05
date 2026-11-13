@@ -27,6 +27,8 @@ func run(ctx) -> void:
 	_disconnect_and_leader(ctx)
 	_solo_parity(ctx)
 	_personal_loot(ctx)
+	_two_clients(ctx)
+	_leader_route_and_auto_continue(ctx)
 
 
 ## One player's squad on its own profile: `races` per card of `cards`.
@@ -374,3 +376,101 @@ func _data(ctx) -> void:
 	ctx.check("online squads: combat coop allows 6 fighters", int(f.combat.coop.max_fighters) == 6 and int(f.combat.coop.room_card_cap) == 6 and int(f.combat.coop.auto_continue_seconds) == 20 and f.combat.coop.hp_multiplier.size() == 6)
 	var waves = JourneyData.load_by_id("goblin_waves", f.combat.enemies.keys())
 	ctx.check("online squads: wave_power_by_squad has 6 entries", waves.wave_power_by_squad.size() == 6 and is_equal_approx(waves.wave_power_for(6), 2.9) and is_equal_approx(waves.wave_power_for(3), 2.01))
+
+
+# ---------------------------------------------------------------- chunk 5: wire and client (two clients, one room)
+
+## A client view of the room as player `slot` sees it (the same OnlineSession read helpers stage_view uses).
+static func client_for(mgr, room, slot: int):
+	var c = preload("res://client/session/online_session.gd").new(null, mgr.rules, mgr.camp, mgr.loot)
+	c._player_id = slot
+	view_into(c, room)
+	return c
+
+
+static func view_into(c, room) -> void:
+	c.server_state = room.public_state(c._player_id)
+	c.ready = true
+	c.journey.update(c.server_state.meta, null)
+
+
+func _two_clients(ctx) -> void:
+	var mgr = squad_manager()
+	mgr.create("two-client-room", 77, players(2))
+	var room = mgr.rooms["two-client-room"].room
+	var one = client_for(mgr, room, 1)
+	var two = client_for(mgr, room, 2)
+	for c in [one, two]:
+		var all: Array = c.fighters_of(1) + c.fighters_of(2)
+		all.sort()
+		ctx.check("online squads chunk 5: client %d sees all 6 cards" % c._player_id, c.is_squad_room() and all == room.fighter_ids())
+		ctx.check("online squads chunk 5: client %d sees the right owner of every card" % c._player_id, room.fighter_ids().all(func(id): return c.owner_of(id) == int(room.owner_by_fighter[id])))
+		ctx.check("online squads chunk 5: client %d sees each card's class" % c._player_id, room.fighter_ids().all(func(id): return c.card_of(id) == room.trip_of_fighter(id).card_id))
+		ctx.check("online squads chunk 5: client %d spectates (no combat input)" % c._player_id, c.spectating())
+	ctx.check("online squads chunk 5: my cards come first and are mine", one.fighters_of() == room.fighters_of(1) and two.fighters_of() == room.fighters_of(2))
+	var groups: Array = one.synergy_groups()
+	ctx.check("online squads chunk 5: one synergy group per player", groups.size() == 2 and groups.any(func(g): return g.players == [1]) and groups.any(func(g): return g.players == [2]))
+	ctx.check("online squads chunk 5: a card's name plate is its owner's name", one.player_name(room.fighters_of(2)[1]) == str(room.trip_for(2).profile.name))
+	var line: String = preload("res://client/online/squad_room_hud.gd").synergy_line(groups, {1: "A", 2: "B"}, 1)
+	ctx.check("online squads chunk 5: synergy banner names both groups", line.contains(":") and line.contains("B"))
+	var panel = preload("res://client/squad_panel.gd").new()
+	panel.local_slot = 1
+	for id in room.fighter_ids(): panel.owners[id] = room.owner_by_fighter[id]
+	ctx.check("online squads chunk 5: squad panel puts my cards first", panel.ordered(room.fighter_ids()).slice(0, 3) == room.fighters_of(1))
+	panel.free()
+	# Client input does nothing: a client's netfox input never reaches the sim, and the room refuses raw frames.
+	var noise := RandomNumberGenerator.new(); noise.seed = 9
+	var refused := true
+	var waves_seen := 0
+	for tick in 1800:
+		var bytes := PackedByteArray()
+		for i in SimInput.wire_size(): bytes.append(noise.randi_range(0, 255))
+		refused = refused and not room.input(1 + tick % 2, room.clock_tick + 1, bytes)
+		room.tick()
+		waves_seen = maxi(waves_seen, room.journey.waves_cleared)
+	ctx.check("online squads chunk 5: client input does nothing in a squad room", refused)
+	ctx.check("online squads chunk 5: the room plays waves (cleared %d in 30 s)" % waves_seen, waves_seen >= 1)
+	view_into(one, room)
+	ctx.check("online squads chunk 5: snapshot still carries the owners after waves", one.fighters_of(2) == room.fighters_of(2))
+	var meta_bytes := var_to_bytes({"squads": room.public_state(1).meta.squads, "synergy": room.public_state(1).meta.synergy}).size()
+	ctx.check("online squads chunk 5: squad meta stays small (%d B < 1200 B uncompressed)" % meta_bytes, meta_bytes < 1200)
+
+
+## Leader route choice and the auto-continue, on a multi-stage journey (goblin_waves is one stage of 12 waves, so
+## the route/camp flow is checked on ink_road through the same squad room code).
+func _leader_route_and_auto_continue(ctx) -> void:
+	var mgr = squad_manager()
+	mgr.squad_journey = mgr.journey_data
+	mgr.create("route-room", 77, players(2))
+	var room = mgr.rooms["route-room"].room
+	room.goblin_waves = null  # ink_road stage 1 runs the wave lab; plain stage flow here
+	_clear_stage(room)
+	ctx.check("online squads chunk 5: the stage clears into a route choice (%s)" % room.status, room.status == "route" and not room.journey.upcoming_choices().is_empty())
+	room.tick(); room.tick()
+	var one = client_for(mgr, room, 1)
+	var two = client_for(mgr, room, 2)
+	ctx.check("online squads chunk 5: both clients see the auto-continue countdown", one.auto_continue_left() > 0.0 and two.auto_continue_left() > 0.0 and absf(one.auto_continue_left() - 20.0) < 0.2)
+	ctx.check("online squads chunk 5: player 1 is the leader, player 2 is not", one.is_leader() and not two.is_leader())
+	ctx.check("online squads chunk 5: a friend's route choice is refused", room.command(2, 1, {"type": "journey_choose", "index": 0}).get("error", "") == "leader_only")
+	var stage: int = room.epoch
+	var chosen: Dictionary = room.command(1, 1, {"type": "journey_choose", "index": 0})
+	ctx.check("online squads chunk 5: the leader's route choice works (%s, epoch %d -> %d)" % [chosen, stage, room.epoch], chosen.get("ok", false) and room.epoch > stage and room.journey.state == room.journey.IN_STAGE)
+	if room.status == "treasure":
+		for i in 200: room.tick()
+	_clear_stage(room)
+	var waited := 0
+	var before: int = room.journey.stage_number()
+	while room.journey.stage_number() == before and waited < 20 * 60 + 400:
+		room.tick(); waited += 1
+	ctx.check("online squads chunk 5: with no choice the server auto-continues after ~20 s (%d ticks)" % waited, room.journey.stage_number() == before + 1 and waited >= 20 * 60)
+
+
+static func _clear_stage(room) -> void:
+	for guard in 4000:
+		if room.status != "active": return
+		for id in room.sim.fighters:
+			if room.sim.fighters[id].team == "enemy" and room.sim.fighters[id].is_alive():
+				room.sim.fighters[id].hp = 0
+				room.sim._on_killed(id, room.fighter_ids()[0])
+		room.sim._waves.clear()
+		room.tick()
