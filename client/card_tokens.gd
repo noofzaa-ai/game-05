@@ -352,6 +352,8 @@ const HUB_TILT_ANGLE := Vector2(0.17, 0.12)  ## radians at full tilt: yaw (x), p
 const HUB_TILT_FOCAL := 1.7  ## perspective distance, in card widths (smaller = stronger perspective)
 const HUB_TILT_SMOOTH := 9.0  ## how fast the tilt follows the pointer and eases back (per second)
 const HUB_TILT_TAP_SECONDS := 0.7  ## touch: a tap tilts the card toward the touch point this long
+const HUB_TAP_OPEN_SECONDS := 0.3  ## touch: a press shorter than this that barely moved opens the card; longer = just look
+const HUB_TAP_SLOP := 12.0  ## touch: px (unscaled) a finger may move and still count as a tap
 const HUB_TILT_SWAY := Vector2(0.45, 0.25)  ## keyboard / gamepad focus without a pointer: slow sway (-1..1)
 const HUB_TILT_SWAY_SPEED := Vector2(0.9, 0.7)
 const HUB_BACK_PARALLAX := 0.05  ## backdrop shift AGAINST the tilt, fraction of the window size

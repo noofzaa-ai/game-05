@@ -490,6 +490,11 @@ class HubCard extends Control:
 	var _pointer := Vector2.ZERO  ## pointer from the card centre, -1..1
 	var _has_pointer := false
 	var _tap_left := 0.0  ## touch: seconds the tap tilt still holds
+	var _touch_down := false  ## a finger is on the card: the card tilts toward it (Boss 2026-11-13: touch = look, quick tap = open)
+	var _touch_moved := false
+	var _touch_start := Vector2.ZERO
+	var _touch_time := 0.0
+	var _last_was_touch := false
 	var _sway := 0.0
 	var _fx := 0.0  ## sheen fade 0..1
 	var _warped := false
@@ -639,11 +644,13 @@ class HubCard extends Control:
 	## focus), the depth layers and the frame sheen. Reduced motion or a locked card: flat, no material.
 	func _animate_depth(delta: float, motion: bool) -> void:
 		_tap_left = maxf(0.0, _tap_left - delta)
-		var active := motion and not locked and (hovered or has_focus() or _tap_left > 0.0)
+		if _touch_down:
+			_touch_time += delta
+		var active := motion and not locked and (hovered or has_focus() or _tap_left > 0.0 or _touch_down)
 		var target := Vector2.ZERO
 		if active:
 			_sway += delta
-			target = _pointer if (_has_pointer or _tap_left > 0.0) else Vector2(sin(_sway * CardTokens.HUB_TILT_SWAY_SPEED.x) * CardTokens.HUB_TILT_SWAY.x, cos(_sway * CardTokens.HUB_TILT_SWAY_SPEED.y) * CardTokens.HUB_TILT_SWAY.y)
+			target = _pointer if (_has_pointer or _tap_left > 0.0 or _touch_down) else Vector2(sin(_sway * CardTokens.HUB_TILT_SWAY_SPEED.x) * CardTokens.HUB_TILT_SWAY.x, cos(_sway * CardTokens.HUB_TILT_SWAY_SPEED.y) * CardTokens.HUB_TILT_SWAY.y)
 		_tilt = _tilt.lerp(target, minf(1.0, delta * CardTokens.HUB_TILT_SMOOTH)) if motion else Vector2.ZERO
 		_fx = move_toward(_fx, 1.0 if active else 0.0, delta / CardTokens.HUB_SHEEN_FADE_SECONDS) if motion else 0.0
 		var live := active or _fx > 0.0 or _tilt.length_squared() > 0.00002
@@ -712,12 +719,37 @@ class HubCard extends Control:
 		_pointer = ((at / Vector2(maxf(size.x, 1.0), maxf(size.y, 1.0))) - Vector2(0.5, 0.5)).clamp(Vector2(-0.5, -0.5), Vector2(0.5, 0.5)) * 2.0
 
 	func _gui_input(event: InputEvent) -> void:
+		# Touch (Boss 2026-11-13): a finger on the card tilts it toward the finger and follows a drag, so the
+		# player can look at the card; only a quick tap that barely moved opens it.
 		var touch := event as InputEventScreenTouch
-		if touch != null and touch.pressed:  # touch has no hover: a tap tilts the card toward the touch point
-			_point_at(touch.position)
-			_tap_left = CardTokens.HUB_TILT_TAP_SECONDS
+		if touch != null:
+			_last_was_touch = true
+			if touch.pressed:
+				_touch_down = true
+				_touch_moved = false
+				_touch_start = touch.position
+				_touch_time = 0.0
+				_point_at(touch.position)
+			elif _touch_down:
+				_touch_down = false
+				_tap_left = CardTokens.HUB_TILT_TAP_SECONDS  # ease back from where the finger left
+				if not _touch_moved and _touch_time <= CardTokens.HUB_TAP_OPEN_SECONDS:
+					pressed.emit()
+			accept_event()
+			return
+		var drag := event as InputEventScreenDrag
+		if drag != null:
+			_last_was_touch = true
+			_point_at(drag.position)
+			if drag.position.distance_to(_touch_start) > CardTokens.HUB_TAP_SLOP * s:
+				_touch_moved = true
+			accept_event()
+			return
+		if (event is InputEventMouse) and event.device == InputEvent.DEVICE_ID_EMULATION:
+			return  # the mouse copy of a touch: already handled above
 		var button := event as InputEventMouseButton
 		if button != null and button.button_index == MOUSE_BUTTON_LEFT and button.pressed:
+			_last_was_touch = false
 			_point_at(button.position)
 			_tap_left = CardTokens.HUB_TILT_TAP_SECONDS
 			pressed.emit()
@@ -733,7 +765,7 @@ class HubCard extends Control:
 			accept_event()
 
 	func _get_drag_data(_at: Vector2) -> Variant:
-		if locked:
+		if locked or _last_was_touch or _touch_down:  # touch drags tilt the card; squad changes use the plate
 			return null
 		var preview := CardTokens.hub_label(CardTokens.class_name_of(class_id), CardTokens.FONT_HUB_CARD_NAME, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
 		set_drag_preview(preview)

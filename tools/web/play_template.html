@@ -344,7 +344,9 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
     if (loading) return;
     // Dev machine (Boss 2026-11-13: this Windows PC is dev): on localhost skip the online account and
     // play offline; the production site (zorx.daiyooo.com) still requires the account.
-    if (!authenticated && ['localhost', '127.0.0.1'].includes(location.hostname)) authenticated = true;
+    // Also the dev machine over Tailscale (*.ts.net / 100.x tailnet addresses, private to the tailnet) for phone tests.
+    const devHost = ['localhost', '127.0.0.1'].includes(location.hostname) || location.hostname.endsWith('.ts.net') || /^100\.\d+\.\d+\.\d+$/.test(location.hostname);
+    if (!authenticated && devHost) authenticated = true;
     if (!authenticated) {
       loading = true;
       try { if (!await authenticate()) return; }
