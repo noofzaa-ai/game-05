@@ -18,6 +18,7 @@ const TreeData := preload("res://logic/skill_tree_data.gd")
 const CardProgress := preload("res://logic/card_progress.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const Effects := preload("res://logic/effects.gd")
+const RaceSets := preload("res://logic/race_sets.gd")  ## race gear set options (design/gdd/race-gear-sets.md 3.6-3.8, 3.14)
 const EFFECTS_FILE := "res://data/combat/effects.json"
 const RACE_EFFECT_TYPES: Array[String] = ["stat_mod", "low_hp_scaling", "skill_mod", "trigger", "charges", "aggro", "cleave"]
 ## Node actions this module runs (race_passives.run_action hands them over). reflect / death_save load but stay inert.
@@ -27,27 +28,91 @@ const SCALED_ACTION_KEYS: Array[String] = ["fraction", "atk_mul", "seconds"]
 static var _status_durations: Dictionary = {}
 
 
-## Folds the card's learned tree into `fighter.race_state` (call after RacePassives.attach built it).
+## Folds the card's learned tree and its worn race gear set option into `fighter.race_state` (call after
+## RacePassives.attach built it). Every passive cell_mod (tree nodes + active set steps) is combined ONCE by
+## combine_passive_mods (race-gear-sets.md 4.3: scales add, caps shared), so set and tree never double-dip.
 static func attach(fighter, run) -> void:
 	if fighter.race_state.is_empty() or run == null or not "card_id" in run:
-		return
-	var data = TreeData.load_default()
-	if not data.errors.is_empty():
 		return
 	var deck: Dictionary = run.profile.card_deck
 	var class_id := str(run.card_id)
 	var race := str(fighter.race_state.get("race", ""))
-	var tree := SkillTree.repaired(SkillTree.owned(deck, class_id), class_id, race, CardProgress.points_of(deck, class_id), data)
-	var state := {"nodes": [], "gauge": {}, "sig": {}, "skills": {}, "pilot": {}, "mechanics": {}, "start_pending": false}
+	var state := {"nodes": [], "gauge": {}, "sig": {}, "skills": {}, "pilot": {}, "mechanics": {}, "start_pending": false, "passive_mods": []}
 	var effects: Array = fighter.race_state["effects"]
-	for branch in SkillTree.BRANCHES:
-		for id in tree[branch]:
-			state["nodes"].append(id)
-			for effect in data.node(id).get("effects", []):
-				_take(fighter, state, effects, (effect as Dictionary).duplicate(true))
+	var data = TreeData.load_default()
+	if data.errors.is_empty():
+		var tree := SkillTree.repaired(SkillTree.owned(deck, class_id), class_id, race, CardProgress.points_of(deck, class_id), data)
+		for branch in SkillTree.BRANCHES:
+			for id in tree[branch]:
+				state["nodes"].append(id)
+				for effect in data.node(id).get("effects", []):
+					_take(fighter, state, effects, (effect as Dictionary).duplicate(true))
+	var worn = run.loadout() if run.has_method("loadout") else null
+	var set_mods: Array = [] if worn == null or worn.rules == null else RaceSets.active_mods(worn.rules, worn.items(), race, class_id)
+	fighter.race_state["race_set"] = set_mods.size()  # how many set step mods joined (measurement / UI)
+	_apply_passive_mods(effects, state["passive_mods"] + set_mods)
+	state.erase("passive_mods")
 	fighter.race_state["tree"] = state
 	state["start_pending"] = float(state["gauge"].get("start", 0.0)) > 0.0
 	_rebuild_derived(fighter)
+
+
+static func _apply_passive_mods(effects: Array, mods: Array) -> void:
+	if mods.is_empty():
+		return
+	var merged := combine_passive_mods(mods)
+	for entry in effects:
+		if str(entry["src"]) == "passive":
+			entry["effect"] = cell_mod_effect(entry["effect"], merged)
+	for extra in merged.get("extra_effects", []):
+		effects.append({"src": "passive", "effect": (extra as Dictionary).duplicate(true)})
+
+
+## One passive cell_mod from many (tree nodes + race set steps; race-gear-sets.md 4.3, skill-tree.md 4.6):
+##   scale = min(1 + sum(scale_add, a node's `scale` s counts as s - 1), passive_scale_cap)
+##   hp_threshold_add = min(sum, hp_threshold_add_cap); *_mul fields multiply (icd_mul floored at cooldown_mul_floor);
+##   charges_max_add / every_n_add add (floors in cell_mod_effect); charges_reset_to = the largest; extra_* append.
+## Caps live in data/races/rules.json.
+static func combine_passive_mods(mods: Array) -> Dictionary:
+	var rules: Dictionary = RaceData.load_default().rules
+	var out := {"cell": "passive"}
+	out["type"] = "cell_mod"
+	var scale_add := 0.0
+	var extra_actions: Array = []
+	var extra_effects: Array = []
+	for mod in mods:
+		for key in mod:
+			var value = mod[key]
+			match str(key):
+				"type", "cell":
+					pass
+				"scale":
+					scale_add += float(value) - 1.0
+				"scale_add":
+					scale_add += float(value)
+				"extra_actions":
+					extra_actions.append_array((value as Array).duplicate(true))
+				"extra_effects":
+					extra_effects.append_array((value as Array).duplicate(true))
+				"charges_reset_to":
+					out[key] = maxi(int(out.get(key, 0)), int(value))
+				"hp_threshold_add", "charges_max_add", "every_n_add", "fury_add", "refresh_add":
+					out[key] = float(out.get(key, 0.0)) + float(value)
+				_:
+					if str(key).ends_with("_mul"):
+						out[key] = float(out.get(key, 1.0)) * float(value)
+					else:
+						out[key] = value
+	out["scale"] = minf(1.0 + scale_add, float(rules.get("passive_scale_cap", 1.5)))
+	if out.has("hp_threshold_add"):
+		out["hp_threshold_add"] = minf(float(out["hp_threshold_add"]), float(rules.get("hp_threshold_add_cap", 0.15)))
+	if out.has("icd_mul"):
+		out["icd_mul"] = maxf(float(out["icd_mul"]), float(rules.get("cooldown_mul_floor", 0.6)))
+	if not extra_actions.is_empty():
+		out["extra_actions"] = extra_actions
+	if not extra_effects.is_empty():
+		out["extra_effects"] = extra_effects
+	return out
 
 
 static func _take(fighter, state: Dictionary, effects: Array, effect: Dictionary) -> void:
@@ -62,9 +127,7 @@ static func _take(fighter, state: Dictionary, effects: Array, effect: Dictionary
 				if not ult.is_empty():
 					fighter.race_state["ultimate"] = cell_mod_ultimate(ult, effect)
 			else:
-				for entry in effects:
-					if str(entry["src"]) == "passive":
-						entry["effect"] = cell_mod_effect(entry["effect"], effect)
+				state["passive_mods"].append(effect)  # combined with the race set option in attach (shared caps)
 		"gauge_mod":
 			var g: Dictionary = state["gauge"]
 			for key in effect:
@@ -145,13 +208,17 @@ static func cell_mod_effect(effect: Dictionary, mod: Dictionary) -> Dictionary:
 			if out.has("cooldown_ticks") and mod.has("icd_mul"):
 				out["cooldown_ticks"] = int(round(float(out["cooldown_ticks"]) * float(mod["icd_mul"])))
 			if out.has("every_n") and mod.has("every_n_add"):
-				out["every_n"] = maxi(1, int(out["every_n"]) + int(mod["every_n_add"]))
+				out["every_n"] = maxi(int(RaceData.load_default().rules.get("every_n_floor", 2)), int(out["every_n"]) + int(mod["every_n_add"]))
 			if str(out["type"]) == "charges":
 				if mod.has("charges_max_add"):
-					out["max"] = maxf(1.0, float(out["max"]) + float(mod["charges_max_add"]))
+					out["max"] = maxf(float(RaceData.load_default().rules.get("charges_max_floor", 2)), float(out["max"]) + float(mod["charges_max_add"]))
 				if mod.has("charges_reset_to"):
 					out["reset_to"] = int(mod["charges_reset_to"])
 			out["actions"] = _mod_actions(out.get("actions", []), mod)
+			if mod.has("duration_mul"):  # a passive's statuses last longer (Headhunter, Living Bark; race-gear-sets.md 3.8)
+				for action in out["actions"]:
+					if str(action.get("action", "")) == "apply_status":
+						action["duration"] = int(round(float(action.get("duration", status_duration(str(action["status"])))) * float(mod["duration_mul"])))
 			if mod.has("extra_actions"):
 				out["actions"] = out["actions"] + (mod["extra_actions"] as Array).duplicate(true)
 	return out

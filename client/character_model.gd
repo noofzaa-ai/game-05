@@ -66,7 +66,7 @@ const LOCOMOTION_CLIPS := {"idle": "idle", "run": "run", "walk": "run"}
 ## ... and these, in the air too, timed by `amount`: guard = seconds on guard, slide (dodge) = 0..1 through it.
 const STATE_CLIPS := {"guard": "guard", "slide": "dodge"}
 ## The equipment slots that put clothing on the body (see ItemAssets.looks()).
-const BODY_SLOTS: Array[String] = ["hat", "shirt", "armband", "pants", "shoes"]
+const BODY_SLOTS: Array[String] = ["shirt", "armband", "pants", "shoes"]  ## no hat slot (Boss 2026-11-13)
 ## The body's own surfaces that the player's choices recolor (by material name in the model file).
 const SKIN_MATERIAL := "Neutral clay"
 ## The body's own face features: hidden while a face item (art/items/faces) is worn over them.

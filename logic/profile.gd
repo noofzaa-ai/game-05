@@ -52,7 +52,9 @@ var starter_armor_kit_version := 0
 var starter_weapon_kit_version := 0
 var starter_shield_kit_version := 0  ## 1 = the offhand starter shield was granted (ensure_starter_shields)
 ## 2 = the white class starter kit was granted into empty slots (ensure_starter_kit_v2, race-gear-sets.md 3.3).
+## 3 = the white RACE starter outfit (race weapon + 4 armour of the card's race, Boss 2026-11-13) filled empty slots.
 var starter_kit_version := 0
+const STARTER_KIT_VERSION := 3
 var beta_kit_version := 0
 ## 2 = the old per-run skill tree was turned into card levels (logic/skill_tree.gd migrate_old_builds, skill-tree.md 5).
 var tree_migration_version := 0
@@ -212,12 +214,12 @@ static func starter_kits() -> Dictionary:
 	return data if data is Dictionary else {}
 
 
-## One-time white class kit for old saves (starter_kit_version 2, race-gear-sets.md 3.3): each class card gets
-## the kit's pieces in its EMPTY slots only (worn gear is never replaced or downgraded). A worn weapon the
-## class can no longer hold (an old blade on a greatsword/longbow/magic card) goes to the stash first, so the
-## class weapon takes its place. Runs once; a slot emptied later stays empty.
+## One-time white starter outfit for old saves (starter_kit_version 3, race-gear-sets.md 3.3; Boss 2026-11-13):
+## each class card gets its race's starter outfit (else the class kit piece) in its EMPTY slots only (worn gear is
+## never replaced or downgraded). A worn weapon the class can no longer hold (an old blade on a greatsword/longbow/
+## magic card) goes to the stash first, so the class weapon takes its place. Runs once; a slot emptied later stays empty.
 func ensure_starter_kit_v2(item_rules: ItemRules) -> void:
-	if starter_kit_version >= 2:
+	if starter_kit_version >= STARTER_KIT_VERSION:
 		return
 	for card in CardDeck.classes():
 		var worn := loadout_of(card)
@@ -227,12 +229,13 @@ func ensure_starter_kit_v2(item_rules: ItemRules) -> void:
 		if weapon != null and slot_problem(card, weapon) == "wrong_weapon_family":
 			stash.items.append(worn.unequip("weapon", 0))  # may pass capacity: earned gear is never dropped
 		_fill_starter_kit(item_rules, card)
-	starter_kit_version = 2
+	starter_kit_version = STARTER_KIT_VERSION
 
 
-## Puts the class kit's pieces into the empty slots of `card`. Ids "starter-kit-v2-<class>-<slot>"; each piece
-## is rolled with a fixed seed per class and slot, so every authority makes the same items. A piece whose id
-## the account already holds anywhere is skipped (never two items with one id).
+## Puts the starter pieces into the empty slots of `card`: the white race starter outfit of the card's race
+## (catalog race_<race>_<class>_<slot>, Boss 2026-11-13) where the catalog has it, else the class kit piece.
+## Ids "starter-kit-v3-<class>-<slot>"; each piece is rolled with a fixed seed per class and slot, so every
+## authority makes the same items. A piece whose id the account already holds anywhere is skipped.
 func _fill_starter_kit(item_rules: ItemRules, card: String) -> void:
 	var data := starter_kits()
 	var kit: Dictionary = data.get("kits", {}).get(card, {})
@@ -255,14 +258,53 @@ func _fill_starter_kit(item_rules: ItemRules, card: String) -> void:
 		var slot_id := str(slot["id"])
 		if not kit.has(slot_id) or worn.item_at(slot_id, 0) != null or not item_rules.slot_open_for(slot_id, card):
 			continue
-		var id := "starter-kit-v2-%s-%s" % [card, slot_id]
+		var id := "starter-kit-v3-%s-%s" % [card, slot_id]
 		if owned.has(id):
 			continue
+		var piece := starter_piece(item_rules, card, slot_id, CardDeck.race_of(card_deck, card))
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(id)
-		var item = ItemSystem.create_item(item_rules, id, slot_id, tier, rng, "", str(kit[slot_id]))
-		if item != null and item.item_id == str(kit[slot_id]) and slot_problem(card, item, item_rules).is_empty():
+		var item = ItemSystem.create_item(item_rules, id, slot_id, tier, rng, "", piece)
+		if item != null and item.item_id == piece and slot_problem(card, item, item_rules).is_empty():
 			worn.equip(item)
+
+
+## The catalog item a new `card` of `race` starts with in `slot_id`: the race starter piece if the catalog has
+## it (starter_kits.json race_kit), else the class kit piece; "" for none.
+static func starter_piece(item_rules: ItemRules, card: String, slot_id: String, race: String) -> String:
+	var data := starter_kits()
+	var kit: Dictionary = data.get("kits", {}).get(card, {})
+	var race_kit: Dictionary = data.get("race_kit", {})
+	if (race_kit.get("slots", []) as Array).has(slot_id):
+		var id := str(race_kit.get("item", "")).format({"race": race, "class": card, "slot": slot_id})
+		if not item_rules.catalog.entry(id).is_empty():
+			return id
+	return str(kit.get(slot_id, ""))
+
+
+## Boss 2026-11-13: the head armour slot (hat) is gone. Every hat item of an old save, worn by any card or in the
+## stash/vault, is refunded once at its sell price (logic/shop.gd) in gold, then dropped. Returns the gold paid.
+func refund_removed_slots(item_rules: ItemRules) -> int:
+	var gold := 0
+	for card in card_gear:
+		var worn: Loadout = card_gear[card]["loadout"]
+		if worn == null:
+			continue
+		for key in worn.to_dict()["equipped"].keys():
+			var slot_id := str(key).get_slice(":", 0)
+			if item_rules.slot(slot_id).is_empty():
+				var gone = worn.unequip(slot_id, int(str(key).get_slice(":", 1)))
+				gold += preload("res://logic/shop.gd").item_sell_price(gone, item_rules)
+	for bag in [stash, vault]:
+		var kept: Array[Item] = []
+		for item in bag.items:
+			if item_rules.slot(item.slot).is_empty():
+				gold += preload("res://logic/shop.gd").item_sell_price(item, item_rules)
+			else:
+				kept.append(item)
+		bag.items.assign(kept)
+	stash.gold += gold
+	return gold
 
 
 ## One starter per missing weapon family, once per account. Earned gear is never removed.
@@ -435,6 +477,7 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 		if d.has("skill_build") and not d["skill_build"] is Dictionary and d["skill_build"] != null: return null
 		p.card_gear["sword_shield"] = {"loadout": worn}
 		old_builds["sword_shield"] = d.get("skill_build")
+	p.refund_removed_slots(item_rules)  # Boss 2026-11-13: hat items (slot removed) -> gold at sell price, once
 	p.ensure_starter_cards(item_rules)  # a card with no gear yet (or a class added later) gets the class kit
 	p.starter_kit_version = maxi(0, int(d.get("starter_kit_version", 0)))
 	p.ensure_starter_kit_v2(item_rules)  # old saves: the white class kit fills empty slots once (race-gear-sets.md 3.3)

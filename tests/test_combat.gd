@@ -945,7 +945,7 @@ func _test_weapon_styles(ctx) -> void:
 	sword.weapon_type = "blade"
 	sword.destroyed = true
 	ctx.check("a destroyed weapon gives fists", loadout.weapon_style(_data.styles.keys()) == "fists")
-	var hat = ItemSystem.create_item(rules, "hat", "hat", 0, rng, "blade")
+	var hat = ItemSystem.create_item(rules, "hat", "shirt", 0, rng, "blade")  # the hat slot is gone (2026-11-13): any armour
 	ctx.check("only weapons carry a weapon type", hat.weapon_type == "")
 
 

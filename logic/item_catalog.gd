@@ -35,6 +35,11 @@ func parse(item_data: Dictionary, set_data: Dictionary, known_slots: Array, know
 			bonuses.append({"pieces": int(bonus.get("pieces", 0)), "stat": str(bonus["stat"]), "value": float(bonus.get("value", 0.0))})
 		bonuses.sort_custom(func(a, b): return a["pieces"] < b["pieces"])
 		sets[set_id] = {"name": str(set_data[set_id].get("name", set_id)), "bonuses": bonuses}
+		if str(set_data[set_id].get("kind", "")) == "race":  # a race gear set (design/gdd/race-gear-sets.md 3.10): logic/race_sets.gd reads it
+			sets[set_id]["kind"] = "race"
+			sets[set_id]["race"] = str(set_data[set_id].get("race", ""))
+			sets[set_id]["tier_mul"] = (set_data[set_id].get("tier_mul", {}) as Dictionary).duplicate(true)
+			sets[set_id]["steps"] = (set_data[set_id].get("steps", []) as Array).duplicate(true)
 	for item_id in item_data:
 		var entry: Dictionary = item_data[item_id]
 		var slot := str(entry.get("slot", ""))
@@ -49,6 +54,8 @@ func parse(item_data: Dictionary, set_data: Dictionary, known_slots: Array, know
 			"armor_class": str(entry.get("armor_class", "")), "main_stat": str(entry.get("main_stat", "")), "asset_path": str(entry.get("asset_path", "")), "icon_path": str(entry.get("icon_path", "")), "source_style": str(entry.get("source_style", "")),
 			"weapon_type": str(entry.get("weapon_type", "")), "set": set_id, "drop_level": int(entry.get("drop_level", 1)),
 			"procedural": bool(entry.get("procedural", false)),  ## the client builds the look in code (no model file)
+			"race": str(entry.get("race", "")), "class": str(entry.get("class", "")),  ## race gear: the set's race, the class whose look it is
+			"fallback_asset_path": str(entry.get("fallback_asset_path", "")), "fallback_icon_path": str(entry.get("fallback_icon_path", "")),  ## shown until the Studio file exists
 		}
 
 
@@ -92,6 +99,18 @@ func set_counts(item_ids: Array) -> Dictionary:
 		if not set_id.is_empty():
 			counts[set_id] = int(counts.get(set_id, 0)) + 1
 	return counts
+
+
+## The race gear set of `item_id` ({} for a generic set or none).
+func race_set_of(item_id: String) -> Dictionary:
+	var set_id: String = items.get(item_id, {}).get("set", "")
+	return sets.get(set_id, {}) if str(sets.get(set_id, {}).get("kind", "")) == "race" else {}
+
+
+## The race gear piece id for `race` x `class_id` x `slot_id` ("" when the catalog has none).
+func race_piece(race: String, class_id: String, slot_id: String) -> String:
+	var id := "race_%s_%s_%s" % [race, class_id, slot_id]
+	return id if items.has(id) else ""
 
 
 ## The stats the worn sets add: stat -> value. Every step a set has reached counts.

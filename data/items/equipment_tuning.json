@@ -132,10 +132,9 @@
     "base_move_multiplier": 1.0,
     "base_dodge_multiplier": 1.0,
     "slot_weights": {
-      "shirt": 0.4,
+      "shirt": 0.5,
       "pants": 0.25,
       "shoes": 0.15,
-      "hat": 0.1,
       "armband": 0.1
     },
     "armor_penalties": {

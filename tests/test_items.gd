@@ -38,7 +38,7 @@ func run(ctx) -> void:
 ## HP scale 100 (2026-11-13): an item saved before the change keeps its rolls, but its saved HP/ATK/HPREGEN
 ## upgrade amounts are divided by 10 once on load; other stats and already-new saves are untouched.
 func _test_old_upgrade_bonus_rescaled(ctx, rules) -> void:
-	var item = ItemSystem.create_item(rules, "old-save", "hat", 2, _rng(5))
+	var item = ItemSystem.create_item(rules, "old-save", "pants", 2, _rng(5))
 	item.substats.clear()
 	item.substats.append({"stat": "ATK", "quality": 0.5, "boosts": 0, "upgrade_bonus": 2.0})
 	item.substats.append({"stat": "CRIRATE", "quality": 0.5, "boosts": 0, "upgrade_bonus": 0.4})
@@ -64,7 +64,7 @@ func _item_at_level(rules, slot: String, tier: int, level: int, rng: RandomNumbe
 
 
 func _test_rule_book(ctx, rules) -> void:
-	ctx.check("15 equipment slots in total (offhand added, Boss 2026-11-11)", rules.total_slot_count() == 15)
+	ctx.check("14 equipment slots in total (offhand added 2026-11-11, hat removed 2026-11-13)", rules.total_slot_count() == 14 and rules.slot("hat").is_empty())
 	ctx.check("two earrings, two bracelets, two rings, one armband piece for both arms", rules.slot("earring")["count"] == 2 and rules.slot("bracelet")["count"] == 2 and rules.slot("ring")["count"] == 2 and rules.slot("armband")["count"] == 1)
 	ctx.check("weapon and shoes are separate single slots", rules.slot("weapon")["count"] == 1 and rules.slot("shoes")["count"] == 1)
 	ctx.check("the necklace gives STAMINA as its main stat", rules.slot("necklace")["main_stat"] == "STAMINA")
@@ -134,7 +134,7 @@ func _test_create(ctx, rules) -> void:
 
 func _test_tier_up(ctx, rules) -> void:
 	var rng := _rng(2)
-	var item = ItemSystem.create_item(rules, "x", "hat", NORMAL, rng)
+	var item = ItemSystem.create_item(rules, "x", "pants", NORMAL, rng)
 	var first_sub: Dictionary = item.substats[0].duplicate()
 	var main_before: float = item.main_value(rules)
 	var value_before: float = item.substat_value(0, rules)
@@ -151,7 +151,7 @@ func _test_tier_up(ctx, rules) -> void:
 	ctx.check("there is no tier above legendary", not ItemSystem.upgrade_tier(rules, item, rng))
 	ctx.check("tier is unchanged after a refused upgrade", item.tier == LEGENDARY and item.substats.size() == 4)
 
-	var gone = ItemSystem.create_item(rules, "y", "hat", NORMAL, rng)
+	var gone = ItemSystem.create_item(rules, "y", "pants", NORMAL, rng)
 	gone.destroyed = true
 	ctx.check("a destroyed item cannot be upgraded", not ItemSystem.upgrade_tier(rules, gone, rng))
 

@@ -1,0 +1,204 @@
+"""Race gear sets data (design/gdd/race-gear-sets.md, Boss 2026-11-13). Idempotent: run again after editing the tables.
+
+Writes into data/items/catalog.json, data/items/sets.json and data/items/starter_kits.json:
+- 80 race pieces `race_<race>_<class>_<slot>` (slot: weapon, shirt, pants, armband, shoes). The weapon is in the class's
+  weapon family; armour has the class's armour weight. Any card can wear any piece; the set option needs the card's race.
+- 4 race sets `race_<race>` (kind "race"): steps 2 / 4 / 5 pieces that boost the race passive (cell_mod vocabulary).
+- Asset hook: asset_path / icon_path point at the Studio files (art/armor/race_<race>/<class>/<slot>.glb,
+  icon-<slot>.png; art/weapons/race_<race>/<class>.glb, icon-<class>.png). Until a file exists the client falls back to
+  fallback_asset_path / fallback_icon_path / asset_id = the class starter piece's look (no code change when they land).
+Also removes the retired hat slot's items (Boss 2026-11-13: armour is shirt, pants, armband, shoes) and moves generic
+set bonuses that needed 5 armour pieces to 4.
+Keeps each file's line endings (CRLF / LF) and its JSON indent.
+Usage: python -X utf8 tools/items/build_race_gear.py
+"""
+import json
+import pathlib
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+RACES = {
+    "human": ("Human", "มนุษย์", "Banner Gear", "ชุดธงศึก"),
+    "viking": ("Viking", "ไวกิ้ง", "War Gear", "ชุดศึก"),
+    "elf": ("Elf", "เอลฟ์", "Grove Gear", "ชุดพนาลัย"),
+    "runeborn": ("Runeborn", "รูนบอร์น", "Rune Gear", "ชุดอักขระ"),
+}
+CLASSES = {
+    "sword_shield": ("Sword & Shield", "ดาบโล่", "heavy", "starter_blade", "Sword", "ดาบ"),
+    "greatsword": ("Greatsword", "ดาบใหญ่", "heavy", "starter_greatsword", "Greatsword", "ดาบใหญ่"),
+    "longbow": ("Longbow", "ธนู", "light", "starter_longbow", "Longbow", "ธนูยาว"),
+    "magic": ("Magic", "เวท", "cloth", "starter_staff", "Staff", "คทา"),
+}
+ARMOR = {"shirt": ("Tunic", "เสื้อ"), "pants": ("Trousers", "กางเกง"), "armband": ("Armband", "ปลอกแขน"), "shoes": ("Boots", "รองเท้า")}
+SLOTS = ["weapon", "shirt", "pants", "armband", "shoes"]
+
+
+def T(on, actions, **extra):
+    d = {"type": "trigger", "on": on}
+    d.update(extra)
+    d["actions"] = actions
+    return d
+
+
+def mod(**fields):
+    d = {"type": "cell_mod", "cell": "passive"}
+    d.update(fields)
+    return d
+
+
+# GDD 3.8 (numbers at blue, m = 1.0). Step 4 "Attuned" and step 5 "Awakened" per race x class: (text, [effects]).
+STEPS = {
+    "human": {
+        "sword_shield": (("Rallying Drill cooldown x0.85.", [mod(icd_mul=0.85)]),
+                         ("The drill also trims every ally's skill cooldowns by 0.5 s.", [mod(extra_actions=[{"action": "skill_refresh", "target": "allies_all", "seconds": 0.5}])])),
+        "greatsword": (("Skill radius +10%.", [mod(extra_effects=[{"type": "skill_mod", "radius_mul": 1.10}])]),
+                       ("A skill that hits 3+ enemies cuts its cooldowns by 0.5 s (2 s cooldown).", [mod(extra_effects=[T("skill_hit", [{"action": "skill_refresh", "target": "self", "seconds": 0.5}], min_targets=3, cooldown_ticks=120)])])),
+        "longbow": (("Skill crit rate +10.", [mod(extra_effects=[{"type": "skill_mod", "crit_add": 10.0}])]),
+                    ("A kill cuts this card's skill cooldowns by 1 s.", [mod(extra_effects=[T("kill", [{"action": "skill_refresh", "target": "self", "seconds": 1.0}])])])),
+        "magic": (("Skill cooldowns x0.95.", [mod(extra_effects=[{"type": "skill_mod", "cooldown_mul": 0.95}])]),
+                  ("Every 4th skill cast refreshes 25% of this card's cooldowns.", [mod(extra_effects=[T("skill_cast", [{"action": "skill_refresh", "target": "self", "fraction": 0.25}], every_n=4)])])),
+    },
+    "viking": {
+        "sword_shield": (("Unbroken triggers 5% HP higher.", [mod(hp_threshold_add=0.05)]),
+                         ("Unbroken also gives Fortify for 4 s.", [mod(extra_actions=[{"action": "apply_status", "status": "fortify", "target": "self", "duration": 240}])])),
+        "greatsword": (("Berserker reaches its full bonus 5% HP higher.", [mod(hp_threshold_add=0.05)]),
+                       ("Blood Up: the first time each wave HP drops below 50%, Rage for 6 s.", [mod(extra_effects=[T("self_low_hp", [{"action": "apply_status", "status": "rage", "target": "self", "duration": 360}], hp_below=0.5, once_per_wave=True)])])),
+        "longbow": (("Headhunter's Rage and Haste last 25% longer.", [mod(duration_mul=1.25)]),
+                    ("A kill also heals 3% max HP.", [mod(extra_actions=[{"action": "heal", "target": "self", "fraction_of": "max_hp", "fraction": 0.03}])])),
+        "magic": (("A kill heals 3% max HP.", [mod(extra_effects=[T("kill", [{"action": "heal", "target": "self", "fraction_of": "max_hp", "fraction": 0.03}])])]),
+                  ("Skill damage +15% below 50% HP.", [mod(extra_effects=[{"type": "low_hp_scaling", "stat": "SKILL_DMG", "max_mul": 0.15, "below": 0.5}])])),
+    },
+    "elf": {
+        "sword_shield": (("Warden's Grove cooldown x0.75.", [mod(icd_mul=0.75)]),
+                         ("Each block also heals this card 1% max HP.", [mod(extra_actions=[{"action": "heal", "target": "self", "fraction_of": "max_hp", "fraction": 0.01}])])),
+        "greatsword": (("Living Bark regen lasts 25% longer.", [mod(duration_mul=1.25)]),
+                       ("A kill heals the most-hurt ally 3% max HP.", [mod(extra_effects=[T("kill", [{"action": "heal", "target": "ally_most_hurt", "fraction_of": "max_hp", "fraction": 0.03}])])])),
+        "longbow": (("Moonlit Arrow every 4th shot instead of every 5th.", [mod(every_n_add=-1)]),
+                    ("Moonlit Arrow also gives the ally Regen for 3 s.", [mod(extra_actions=[{"action": "apply_status", "status": "regen", "target": "ally_most_hurt", "duration": 180}])])),
+        "magic": (("Bloomcaster heals x1.15.", [mod(heal_mul=1.15)]),
+                  ("Bloomcaster also shields the ally for 10% of the damage (cap 5% max HP).", [mod(extra_actions=[{"action": "shield", "target": "ally_most_hurt", "fraction_of": "damage", "fraction": 0.10, "cap_max_hp": 0.05}])])),
+    },
+    "runeborn": {
+        "sword_shield": (("Rune Aegis needs 1 rune less.", [mod(charges_max_add=-1)]),
+                         ("A discharge also shields the most-hurt ally 8% of this card's max HP.", [mod(extra_actions=[{"action": "shield", "target": "ally_most_hurt", "fraction_of": "source_max_hp", "fraction": 0.08}])])),
+        "greatsword": (("Runic Edge needs 1 rune less.", [mod(charges_max_add=-1)]),
+                       ("A discharge also gives Haste for 3 s.", [mod(extra_actions=[{"action": "apply_status", "status": "haste", "target": "self", "duration": 180}])])),
+        "longbow": (("Glyph Shot needs 1 rune less.", [mod(charges_max_add=-1)]),
+                    ("A discharge also bursts 60% ATK in 1.5 m around the target.", [mod(extra_actions=[{"action": "burst", "center": "target", "radius": 1.5, "atk_mul": 0.6}])])),
+        "magic": (("Runeweaver keeps 1 rune after a discharge.", [mod(charges_reset_to=1)]),
+                  ("A discharge also gives every ally Focus for 3 s.", [mod(extra_actions=[{"action": "apply_status", "status": "focus", "target": "allies_all", "duration": 180}])])),
+    },
+}
+
+
+def load(rel):
+    raw = (ROOT / rel).read_bytes()
+    crlf = b"\r\n" in raw
+    return json.loads(raw.decode("utf-8")), crlf
+
+
+def save(rel, data, crlf, indent):
+    text = json.dumps(data, indent=indent, ensure_ascii=False) + "\n"
+    if crlf:
+        text = text.replace("\n", "\r\n")
+    (ROOT / rel).write_bytes(text.encode("utf-8"))
+
+
+def main():
+    catalog, cat_crlf = load("data/items/catalog.json")
+    items = catalog["items"]
+    for key in [k for k, v in items.items() if v.get("slot") == "hat" or k.startswith("race_")]:
+        del items[key]
+    for race, (rname, rname_th, _, _) in RACES.items():
+        for cls, (cname, cname_th, weight, starter_weapon, wname, wname_th) in CLASSES.items():
+            for slot in SLOTS:
+                item_id = "race_%s_%s_%s" % (race, cls, slot)
+                if slot == "weapon":
+                    base = items[starter_weapon]
+                    entry = {
+                        "asset_id": base["asset_id"], "name": "%s %s" % (rname, wname), "name_th": "%s%s" % (wname_th, rname_th),
+                        "slot": "weapon", "weapon_type": base["weapon_type"], "set": "race_" + race, "race": race, "class": cls, "drop_level": 99,
+                        "asset_path": "res://art/weapons/race_%s/%s.glb" % (race, cls),
+                        "icon_path": "res://art/weapons/race_%s/icon-%s.png" % (race, cls),
+                        "fallback_icon_path": base.get("icon_path", ""),
+                    }
+                    if base.get("procedural"):
+                        entry["procedural"] = True
+                else:
+                    base = items["starter_%s_%s" % (weight, slot)]
+                    sname, sname_th = ARMOR[slot]
+                    entry = {
+                        "asset_id": base["asset_id"], "name": "%s %s (%s)" % (rname, sname, cname), "name_th": "%s%s · %s" % (sname_th, rname_th, cname_th),
+                        "slot": slot, "set": "race_" + race, "race": race, "class": cls, "drop_level": 99, "armor_class": weight, "main_stat": base["main_stat"],
+                        "asset_path": "res://art/armor/race_%s/%s/%s.glb" % (race, cls, slot),
+                        "icon_path": "res://art/armor/race_%s/%s/icon-%s.png" % (race, cls, slot),
+                        "fallback_asset_path": base["asset_path"], "fallback_icon_path": base["icon_path"], "source_style": base["source_style"],
+                    }
+                items[item_id] = entry
+    save("data/items/catalog.json", catalog, cat_crlf, 1)
+
+    sets, sets_crlf = load("data/items/sets.json")
+    for set_id in [k for k in sets["sets"] if k.startswith("race_")]:
+        del sets["sets"][set_id]
+    for info in sets["sets"].values():  # 4 armour slots now: a 5-piece bonus moves to 4 (PO default 2026-11-13)
+        for bonus in info.get("bonuses", []):
+            bonus["pieces"] = min(int(bonus["pieces"]), 4)
+    for race, (rname, rname_th, gear, gear_th) in RACES.items():
+        attuned, awakened = {}, {}
+        for cls in CLASSES:
+            (t4, e4), (t5, e5) = STEPS[race][cls]
+            attuned[cls] = {"text": t4, "effects": e4}
+            awakened[cls] = {"text": t5, "effects": e5}
+        attuned["default_class"] = {"text": "The passive's numbers +5% more.", "effects": [mod(scale_add=0.05)]}
+        sets["sets"]["race_" + race] = {
+            "name": "%s %s" % (rname, gear), "name_th": "%s%s" % (gear_th, rname_th), "kind": "race", "race": race,
+            "tier_mul": {"normal": 0.75, "rare": 1.0, "epic": 1.25, "legendary": 1.5},
+            "steps": [
+                {"pieces": 2, "name": "Kindled", "all": {"text": "The race passive's numbers +10%.", "effects": [mod(scale_add=0.10)]}},
+                {"pieces": 4, "name": "Attuned", "by_class": attuned},
+                {"pieces": 5, "name": "Awakened", "by_class": awakened},
+            ],
+            "bonuses": [],
+        }
+    sets["_race_sets"] = ("Race gear sets (design/gdd/race-gear-sets.md 3.5-3.10, Boss 2026-11-13; built by tools/items/build_race_gear.py). "
+                          "kind race: 5 pieces (the race weapon of the class + shirt, pants, armband, shoes). The set option works only when the card's race "
+                          "equals `race`; steps boost the race passive with cell_mod words (logic/race_sets.gd). A step's numbers x tier_mul of the LOWEST "
+                          "tier among the N best pieces it counts (white starter 0.75, PO default). bonuses stays empty: ItemCatalog.set_bonus ignores race sets.")
+    save("data/items/sets.json", sets, sets_crlf, 2)
+
+    kits, kits_crlf = load("data/items/starter_kits.json")
+    for kit in kits["kits"].values():
+        kit.pop("hat", None)
+    kits["version"] = 3
+    kits["race_kit"] = {"item": "race_{race}_{class}_{slot}", "slots": SLOTS}
+    kits["_race_kit"] = ("Boss 2026-11-13: a card starts in its OWN race's starter outfit for its class (white race set pieces: weapon + 4 armour). "
+                         "logic/profile.gd uses race_kit.item when the catalog has it, else the kit's class piece. Old saves: empty slots only, once "
+                         "(starter_kit_version 3); nothing is taken away.")
+    text = json.dumps(kits, indent=1, ensure_ascii=False) + "\n"
+    (ROOT / "data/items/starter_kits.json").write_bytes((text.replace("\n", "\r\n") if kits_crlf else text).encode("utf-8"))
+
+    shop, shop_crlf = load("data/items/shop.json")
+    shop["catalog_items"] = [i for i in shop["catalog_items"] if not i.endswith("_hat")]
+    save("data/items/shop.json", shop, shop_crlf, 2)
+
+    tuning, tun_crlf = load("data/items/equipment_tuning.json")
+    weights = tuning["mobility"]["slot_weights"] if "mobility" in tuning else None
+    if weights is None:
+        for value in tuning.values():
+            if isinstance(value, dict) and "slot_weights" in value:
+                weights = value["slot_weights"]
+    if weights is not None and "hat" in weights:
+        weights["shirt"] = round(weights["shirt"] + weights.pop("hat"), 4)  # the hat's weight share moves to the shirt
+    save("data/items/equipment_tuning.json", tuning, tun_crlf, 2)
+
+    mig, mig_crlf = load("data/items/armor_migration.json")
+    mig["aliases"] = {k: v for k, v in mig["aliases"].items() if not str(v).endswith("_hat")}
+    mig["plain_slots"].pop("hat", None)
+    mig["allowed_armor"] = {k: v for k, v in mig["allowed_armor"].items() if v != "hat" and not k.startswith("race_")}
+    for item_id, entry in items.items():  # race armour is a known identity (else armor_migration maps it to plain Ash)
+        if item_id.startswith("race_") and entry["slot"] != "weapon":
+            mig["allowed_armor"][item_id] = entry["slot"]
+    save("data/items/armor_migration.json", mig, mig_crlf, 2)
+
+
+if __name__ == "__main__":
+    main()

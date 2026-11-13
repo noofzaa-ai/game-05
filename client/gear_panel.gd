@@ -81,7 +81,7 @@ const TEXT := {
 ## Equipment slot -> filter category.
 const CATEGORIES := {
 	"weapon": "weapon",
-	"hat": "armor", "shirt": "armor", "pants": "armor", "shoes": "armor", "armband": "armor", "back": "armor",
+	"shirt": "armor", "pants": "armor", "shoes": "armor", "armband": "armor", "back": "armor",
 	"necklace": "trinket", "earring": "trinket", "bracelet": "trinket", "ring": "trinket",
 }
 const CATEGORY_ORDER := ["all", "weapon", "armor", "trinket", "material"]
@@ -89,7 +89,7 @@ const CATEGORY_ORDER := ["all", "weapon", "armor", "trinket", "material"]
 ## "slot:index" -> [column, row] on the 5 x 6 board; the doll fills columns 1-3 of rows 1-4.
 const SLOT_PLACES := {
 	"earring:0": [0, 0], "earring:1": [1, 0], "necklace:0": [2, 0], "ring:0": [3, 0], "ring:1": [4, 0],
-	"hat:0": [0, 1], "shirt:0": [0, 2], "pants:0": [0, 3], "shoes:0": [0, 4],
+	"shirt:0": [0, 1], "pants:0": [0, 2], "shoes:0": [0, 3],
 	"armband:0": [4, 1], "bracelet:0": [4, 2], "bracelet:1": [4, 3],
 	"weapon:0": [1, 5], "back:0": [3, 5],
 }

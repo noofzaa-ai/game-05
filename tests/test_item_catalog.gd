@@ -42,9 +42,9 @@ func run(ctx) -> void:
 	var rng := RandomNumberGenerator.new()
 	var katana = ItemSystem.create_item(rules, "k", "weapon", 1, rng, "", "blade_05")
 	ctx.check("a catalog item is titled by its own name (%s)" % ItemText.title(katana, rules), ItemText.title(katana, rules) == "Rare Golden Blossom Katana")
-	var helm = ItemSystem.create_item(rules, "h", "hat", 0, rng, "", "aegis_helmet")
-	var line := ItemText.set_text(helm, rules, ["aegis_helmet", "aegis_cuirass"])
-	ctx.check("the set line names the set, pieces worn and the next bonus (%s)" % line, line.begins_with("Aegis Armor 2/5: ") and line.contains("(3: "))
+	var cuirass = ItemSystem.create_item(rules, "h", "shirt", 0, rng, "", "armor_ash_steel_shirt")
+	var line := ItemText.set_text(cuirass, rules, ["armor_ash_steel_shirt", "armor_ash_steel_pants"])
+	ctx.check("the set line names the set, pieces worn and the next bonus (%s)" % line, line.begins_with("Ash Knight (Heavy) 2/4: ") and line.contains("(3: "))
 	ctx.check("a piece with no set has no set line", ItemText.set_text(katana, rules, []) == "")
 	var no_icon: Array[String] = []
 	for item_id in catalog.items:
@@ -83,8 +83,8 @@ func _test_assets(ctx, catalog) -> void:
 	var budget := {}
 	for item_id in catalog.items:
 		var item: Dictionary = catalog.items[item_id]
-		if item["set"].is_empty():
-			continue
+		if item["set"].is_empty() or str(catalog.sets[item["set"]].get("kind", "")) == "race":
+			continue  # race sets reuse the class starter meshes until the Studio files land (docs/art/race_gear_handoff.md)
 		var asset := ItemAssets.entry(item["asset_id"])
 		per_set[item["set"]] = int(per_set.get(item["set"], 0)) + int(asset.get("triangle_count", 0))
 		budget[item["set"]] = int(asset.get("set_triangle_budget", 1500))
@@ -153,12 +153,12 @@ func _test_drops(ctx, rules) -> void:
 			else:
 				body_ok = false  # Boss 2026-10-15: a piece with no model (accessory, back, fists) never drops
 	ctx.check("every dropped piece is a catalog item: only pieces with a model drop (%d of %d named)" % [named, total], total > 0 and named == total and body_ok)
-	var allowed: Dictionary = rules.catalog.droppable(["weapon", "hat", "ring", "back"], ["fists", "blade"], 1)
-	ctx.check("slots and weapon types with no catalog item cannot drop (%s)" % [allowed], allowed["slots"] == ["weapon", "hat"] and allowed["weapon_types"] == ["blade"])
+	var allowed: Dictionary = rules.catalog.droppable(["weapon", "shirt", "ring", "back"], ["fists", "blade"], 1)
+	ctx.check("slots and weapon types with no catalog item cannot drop (%s)" % [allowed], allowed["slots"] == ["weapon", "shirt"] and allowed["weapon_types"] == ["blade"])
 	ctx.check("a dropped catalog weapon has the catalog's weapon type", weapons_ok)
 	var profile = Profile.new_player(rules, CampDataLoader.load_default(), rng)
 	var weapon = profile.loadout.item_at("weapon")
-	ctx.check("the starter gear is catalog items (%s, %s, %s)" % [weapon.item_id, profile.loadout.item_at("shirt").item_id, profile.loadout.item_at("shoes").item_id], weapon.item_id == "starter_blade" and profile.loadout.item_at("shirt").item_id == "starter_heavy_shirt" and profile.loadout.item_at("shoes").item_id == "starter_heavy_shoes")
+	ctx.check("the starter gear is catalog items (%s, %s, %s)" % [weapon.item_id, profile.loadout.item_at("shirt").item_id, profile.loadout.item_at("shoes").item_id], weapon.item_id == "race_human_sword_shield_weapon" and profile.loadout.item_at("shirt").item_id == "race_human_sword_shield_shirt" and profile.loadout.item_at("shoes").item_id == "race_human_sword_shield_shoes")
 
 
 ## The Boss test kit: one of every catalog item not worn, all of it fits in the stash.
@@ -173,7 +173,7 @@ func _test_kit(ctx, rules) -> void:
 	for item in profile.stash.items:
 		ids[item.item_id] = true
 	var worn := 0
-	for slot_id in ["weapon", "hat", "shirt", "pants", "armband", "shoes", "offhand"]:
+	for slot_id in ["weapon", "shirt", "pants", "armband", "shoes", "offhand"]:
 		worn += 1 if profile.loadout.item_at(slot_id) != null and rules.catalog.items.has(profile.loadout.item_at(slot_id).item_id) else 0
 	ctx.check("the test kit puts every catalog item that is not worn in the stash (%d + %d worn of %d)" % [added, worn, rules.catalog.items.size()], added == rules.catalog.items.size() - worn and ids.size() == added)
 	ctx.check("the stash grows to fit the kit and keeps its normal free room (%d free of %d)" % [profile.stash.free_slots(), profile.stash.capacity], profile.stash.free_slots() >= base_slots - profile.stash.materials.size())

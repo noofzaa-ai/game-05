@@ -28,7 +28,7 @@
   "trigger_filters": ["skill", "min_targets", "target_has", "self_below_hp"],
   "skill_statuses": ["burn", "bleed", "chill", "shock", "stun", "freeze"],
   "skill_behaviors": ["echo", "remote", "leech"],
-  "cell_mod_fields": ["cell", "scale", "radius_mul", "duration_mul", "heal_mul", "shield_mul", "atk_mul", "icd_mul", "charges_max_add", "charges_reset_to", "hp_threshold_add", "every_n_add", "fury_add", "refresh_add", "extra_actions"],
+  "cell_mod_fields": ["cell", "scale", "scale_add", "extra_effects", "radius_mul", "duration_mul", "heal_mul", "shield_mul", "atk_mul", "icd_mul", "charges_max_add", "charges_reset_to", "hp_threshold_add", "every_n_add", "fury_add", "refresh_add", "extra_actions"],
   "gauge_mod_fields": ["start", "charge_mul", "kill_add", "support_mul", "skill_mul", "low_hp_mul", "below", "fire_at", "fire_below_hp", "after_cast", "discharge_add"],
   "signature_mod_fields": ["every_mul", "radius_add", "duration_add", "per_target_add", "max_add", "mark_duration_add", "extra_actions"],
   "pilot_mod_fields": ["cast_center", "kite_distance", "hold_min_targets_add"],

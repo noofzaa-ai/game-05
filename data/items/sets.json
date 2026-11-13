@@ -84,7 +84,7 @@
           "value": 8
         },
         {
-          "pieces": 5,
+          "pieces": 4,
           "stat": "STAMINA",
           "value": 15
         }
@@ -110,7 +110,7 @@
           "value": 8
         },
         {
-          "pieces": 5,
+          "pieces": 4,
           "stat": "STAMINA",
           "value": 15
         }
@@ -136,7 +136,7 @@
           "value": 8
         },
         {
-          "pieces": 5,
+          "pieces": 4,
           "stat": "STAMINA",
           "value": 15
         }
@@ -162,7 +162,7 @@
           "value": 12
         },
         {
-          "pieces": 5,
+          "pieces": 4,
           "stat": "EFFECT_RES",
           "value": 6
         }
@@ -188,7 +188,7 @@
           "value": 12
         },
         {
-          "pieces": 5,
+          "pieces": 4,
           "stat": "EFFECT_RES",
           "value": 6
         }
@@ -214,11 +214,707 @@
           "value": 12
         },
         {
-          "pieces": 5,
+          "pieces": 4,
           "stat": "EFFECT_RES",
           "value": 6
         }
       ]
+    },
+    "race_human": {
+      "name": "Human Banner Gear",
+      "name_th": "ชุดธงศึกมนุษย์",
+      "kind": "race",
+      "race": "human",
+      "tier_mul": {
+        "normal": 0.75,
+        "rare": 1.0,
+        "epic": 1.25,
+        "legendary": 1.5
+      },
+      "steps": [
+        {
+          "pieces": 2,
+          "name": "Kindled",
+          "all": {
+            "text": "The race passive's numbers +10%.",
+            "effects": [
+              {
+                "type": "cell_mod",
+                "cell": "passive",
+                "scale_add": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "pieces": 4,
+          "name": "Attuned",
+          "by_class": {
+            "sword_shield": {
+              "text": "Rallying Drill cooldown x0.85.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "icd_mul": 0.85
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "Skill radius +10%.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "skill_mod",
+                      "radius_mul": 1.1
+                    }
+                  ]
+                }
+              ]
+            },
+            "longbow": {
+              "text": "Skill crit rate +10.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "skill_mod",
+                      "crit_add": 10.0
+                    }
+                  ]
+                }
+              ]
+            },
+            "magic": {
+              "text": "Skill cooldowns x0.95.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "skill_mod",
+                      "cooldown_mul": 0.95
+                    }
+                  ]
+                }
+              ]
+            },
+            "default_class": {
+              "text": "The passive's numbers +5% more.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "scale_add": 0.05
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pieces": 5,
+          "name": "Awakened",
+          "by_class": {
+            "sword_shield": {
+              "text": "The drill also trims every ally's skill cooldowns by 0.5 s.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "skill_refresh",
+                      "target": "allies_all",
+                      "seconds": 0.5
+                    }
+                  ]
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "A skill that hits 3+ enemies cuts its cooldowns by 0.5 s (2 s cooldown).",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "trigger",
+                      "on": "skill_hit",
+                      "min_targets": 3,
+                      "cooldown_ticks": 120,
+                      "actions": [
+                        {
+                          "action": "skill_refresh",
+                          "target": "self",
+                          "seconds": 0.5
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "longbow": {
+              "text": "A kill cuts this card's skill cooldowns by 1 s.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "trigger",
+                      "on": "kill",
+                      "actions": [
+                        {
+                          "action": "skill_refresh",
+                          "target": "self",
+                          "seconds": 1.0
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "magic": {
+              "text": "Every 4th skill cast refreshes 25% of this card's cooldowns.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "trigger",
+                      "on": "skill_cast",
+                      "every_n": 4,
+                      "actions": [
+                        {
+                          "action": "skill_refresh",
+                          "target": "self",
+                          "fraction": 0.25
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bonuses": []
+    },
+    "race_viking": {
+      "name": "Viking War Gear",
+      "name_th": "ชุดศึกไวกิ้ง",
+      "kind": "race",
+      "race": "viking",
+      "tier_mul": {
+        "normal": 0.75,
+        "rare": 1.0,
+        "epic": 1.25,
+        "legendary": 1.5
+      },
+      "steps": [
+        {
+          "pieces": 2,
+          "name": "Kindled",
+          "all": {
+            "text": "The race passive's numbers +10%.",
+            "effects": [
+              {
+                "type": "cell_mod",
+                "cell": "passive",
+                "scale_add": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "pieces": 4,
+          "name": "Attuned",
+          "by_class": {
+            "sword_shield": {
+              "text": "Unbroken triggers 5% HP higher.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "hp_threshold_add": 0.05
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "Berserker reaches its full bonus 5% HP higher.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "hp_threshold_add": 0.05
+                }
+              ]
+            },
+            "longbow": {
+              "text": "Headhunter's Rage and Haste last 25% longer.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "duration_mul": 1.25
+                }
+              ]
+            },
+            "magic": {
+              "text": "A kill heals 3% max HP.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "trigger",
+                      "on": "kill",
+                      "actions": [
+                        {
+                          "action": "heal",
+                          "target": "self",
+                          "fraction_of": "max_hp",
+                          "fraction": 0.03
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "default_class": {
+              "text": "The passive's numbers +5% more.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "scale_add": 0.05
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pieces": 5,
+          "name": "Awakened",
+          "by_class": {
+            "sword_shield": {
+              "text": "Unbroken also gives Fortify for 4 s.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "apply_status",
+                      "status": "fortify",
+                      "target": "self",
+                      "duration": 240
+                    }
+                  ]
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "Blood Up: the first time each wave HP drops below 50%, Rage for 6 s.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "trigger",
+                      "on": "self_low_hp",
+                      "hp_below": 0.5,
+                      "once_per_wave": true,
+                      "actions": [
+                        {
+                          "action": "apply_status",
+                          "status": "rage",
+                          "target": "self",
+                          "duration": 360
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "longbow": {
+              "text": "A kill also heals 3% max HP.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "heal",
+                      "target": "self",
+                      "fraction_of": "max_hp",
+                      "fraction": 0.03
+                    }
+                  ]
+                }
+              ]
+            },
+            "magic": {
+              "text": "Skill damage +15% below 50% HP.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "low_hp_scaling",
+                      "stat": "SKILL_DMG",
+                      "max_mul": 0.15,
+                      "below": 0.5
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bonuses": []
+    },
+    "race_elf": {
+      "name": "Elf Grove Gear",
+      "name_th": "ชุดพนาลัยเอลฟ์",
+      "kind": "race",
+      "race": "elf",
+      "tier_mul": {
+        "normal": 0.75,
+        "rare": 1.0,
+        "epic": 1.25,
+        "legendary": 1.5
+      },
+      "steps": [
+        {
+          "pieces": 2,
+          "name": "Kindled",
+          "all": {
+            "text": "The race passive's numbers +10%.",
+            "effects": [
+              {
+                "type": "cell_mod",
+                "cell": "passive",
+                "scale_add": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "pieces": 4,
+          "name": "Attuned",
+          "by_class": {
+            "sword_shield": {
+              "text": "Warden's Grove cooldown x0.75.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "icd_mul": 0.75
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "Living Bark regen lasts 25% longer.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "duration_mul": 1.25
+                }
+              ]
+            },
+            "longbow": {
+              "text": "Moonlit Arrow every 4th shot instead of every 5th.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "every_n_add": -1
+                }
+              ]
+            },
+            "magic": {
+              "text": "Bloomcaster heals x1.15.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "heal_mul": 1.15
+                }
+              ]
+            },
+            "default_class": {
+              "text": "The passive's numbers +5% more.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "scale_add": 0.05
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pieces": 5,
+          "name": "Awakened",
+          "by_class": {
+            "sword_shield": {
+              "text": "Each block also heals this card 1% max HP.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "heal",
+                      "target": "self",
+                      "fraction_of": "max_hp",
+                      "fraction": 0.01
+                    }
+                  ]
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "A kill heals the most-hurt ally 3% max HP.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_effects": [
+                    {
+                      "type": "trigger",
+                      "on": "kill",
+                      "actions": [
+                        {
+                          "action": "heal",
+                          "target": "ally_most_hurt",
+                          "fraction_of": "max_hp",
+                          "fraction": 0.03
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            "longbow": {
+              "text": "Moonlit Arrow also gives the ally Regen for 3 s.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "apply_status",
+                      "status": "regen",
+                      "target": "ally_most_hurt",
+                      "duration": 180
+                    }
+                  ]
+                }
+              ]
+            },
+            "magic": {
+              "text": "Bloomcaster also shields the ally for 10% of the damage (cap 5% max HP).",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "shield",
+                      "target": "ally_most_hurt",
+                      "fraction_of": "damage",
+                      "fraction": 0.1,
+                      "cap_max_hp": 0.05
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bonuses": []
+    },
+    "race_runeborn": {
+      "name": "Runeborn Rune Gear",
+      "name_th": "ชุดอักขระรูนบอร์น",
+      "kind": "race",
+      "race": "runeborn",
+      "tier_mul": {
+        "normal": 0.75,
+        "rare": 1.0,
+        "epic": 1.25,
+        "legendary": 1.5
+      },
+      "steps": [
+        {
+          "pieces": 2,
+          "name": "Kindled",
+          "all": {
+            "text": "The race passive's numbers +10%.",
+            "effects": [
+              {
+                "type": "cell_mod",
+                "cell": "passive",
+                "scale_add": 0.1
+              }
+            ]
+          }
+        },
+        {
+          "pieces": 4,
+          "name": "Attuned",
+          "by_class": {
+            "sword_shield": {
+              "text": "Rune Aegis needs 1 rune less.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "charges_max_add": -1
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "Runic Edge needs 1 rune less.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "charges_max_add": -1
+                }
+              ]
+            },
+            "longbow": {
+              "text": "Glyph Shot needs 1 rune less.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "charges_max_add": -1
+                }
+              ]
+            },
+            "magic": {
+              "text": "Runeweaver keeps 1 rune after a discharge.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "charges_reset_to": 1
+                }
+              ]
+            },
+            "default_class": {
+              "text": "The passive's numbers +5% more.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "scale_add": 0.05
+                }
+              ]
+            }
+          }
+        },
+        {
+          "pieces": 5,
+          "name": "Awakened",
+          "by_class": {
+            "sword_shield": {
+              "text": "A discharge also shields the most-hurt ally 8% of this card's max HP.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "shield",
+                      "target": "ally_most_hurt",
+                      "fraction_of": "source_max_hp",
+                      "fraction": 0.08
+                    }
+                  ]
+                }
+              ]
+            },
+            "greatsword": {
+              "text": "A discharge also gives Haste for 3 s.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "apply_status",
+                      "status": "haste",
+                      "target": "self",
+                      "duration": 180
+                    }
+                  ]
+                }
+              ]
+            },
+            "longbow": {
+              "text": "A discharge also bursts 60% ATK in 1.5 m around the target.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "burst",
+                      "center": "target",
+                      "radius": 1.5,
+                      "atk_mul": 0.6
+                    }
+                  ]
+                }
+              ]
+            },
+            "magic": {
+              "text": "A discharge also gives every ally Focus for 3 s.",
+              "effects": [
+                {
+                  "type": "cell_mod",
+                  "cell": "passive",
+                  "extra_actions": [
+                    {
+                      "action": "apply_status",
+                      "status": "focus",
+                      "target": "allies_all",
+                      "duration": 180
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "bonuses": []
     }
   },
   "_comment": "Set bonuses. Wearing `pieces` or more items of the same set adds `value` to `stat` (each step adds on top of the ones before). All numbers are PLACEHOLDERS to tune by feel.",
@@ -226,5 +922,6 @@
     "armor_obsidian_gold",
     "armor_royal_gold",
     "armor_ash_steel"
-  ]
+  ],
+  "_race_sets": "Race gear sets (design/gdd/race-gear-sets.md 3.5-3.10, Boss 2026-11-13; built by tools/items/build_race_gear.py). kind race: 5 pieces (the race weapon of the class + shirt, pants, armband, shoes). The set option works only when the card's race equals `race`; steps boost the race passive with cell_mod words (logic/race_sets.gd). A step's numbers x tier_mul of the LOWEST tier among the N best pieces it counts (white starter 0.75, PO default). bonuses stays empty: ItemCatalog.set_bonus ignores race sets."
 }

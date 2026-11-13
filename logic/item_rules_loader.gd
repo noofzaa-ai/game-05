@@ -312,7 +312,7 @@ static func _valid_mobility(value: Variant) -> bool:
 		if not value.get(key) is Dictionary: return false
 	var total := 0.0
 	for slot in value.slot_weights:
-		if slot not in ["shirt","pants","shoes","hat","armband"]: return false
+		if slot not in ["shirt","pants","shoes","armband"]: return false  # the hat slot is gone (Boss 2026-11-13)
 		var amount = value.slot_weights[slot]
 		if not (amount is int or amount is float) or not is_finite(float(amount)) or float(amount)<0 or float(amount)>1: return false
 		total+=float(amount)

@@ -18,10 +18,12 @@ const CARDS := ["sword_shield", "greatsword", "longbow"]
 
 
 ## A squad fight of the goblin wave journey with these races (one per card of CARDS).
-static func squad(races: Array, cards: Array = CARDS) -> Dictionary:
+static func squad(races: Array, cards: Array = CARDS, keep_race_gear: bool = false) -> Dictionary:
 	var f := F.make()
 	for i in cards.size():
 		Deck.set_race(f.profile.card_deck, cards[i], races[i])
+	if not keep_race_gear:
+		plain_gear(f, cards)
 	f.data = preload("res://logic/journey_data.gd").load_by_id("goblin_waves", f.combat.enemies.keys())
 	var members: Array = SquadMember.make_squad(f.run, cards)
 	var trips := {}
@@ -44,6 +46,21 @@ static func squad(races: Array, cards: Array = CARDS) -> Dictionary:
 	f.journey.populate(sim, map, 1, 100)
 	f.sim = sim
 	return f
+
+
+## Swaps every worn race set piece (the starter race outfit, race-gear-sets.md) for the set-free class kit piece of the
+## same slot and tier, so the passives here are the base ones (tests/test_race_sets.gd covers the set option).
+static func plain_gear(f: Dictionary, cards: Array) -> void:
+	var kits: Dictionary = preload("res://logic/profile.gd").starter_kits().get("kits", {})
+	for card in cards:
+		var worn = f.profile.loadout_of(card)
+		for item in worn.items():
+			if f.rules.catalog.race_set_of(item.item_id).is_empty():
+				continue
+			var rng := RandomNumberGenerator.new()
+			rng.seed = hash(item.id)
+			worn.unequip(item.slot, 0)
+			worn.equip(preload("res://logic/item_system.gd").create_item(f.rules, item.id, item.slot, item.tier, rng, "", str(kits[card][item.slot])))
 
 
 static func enemy_of(sim) -> int:

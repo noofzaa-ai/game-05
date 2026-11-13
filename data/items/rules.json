@@ -29,7 +29,6 @@
 	"_slots_comment": "main_stat per slot is a placeholder guess, awaiting the director. classes (optional) = the only class cards that may wear the slot; offhand = shields, Sword & Shield only (Boss 2026-11-11).",
 	"slots": [
 		{"id": "weapon", "count": 1, "main_stat": "ATK"},
-		{"id": "hat", "count": 1, "main_stat": "HP"},
 		{"id": "shirt", "count": 1, "main_stat": "DEF"},
 		{"id": "pants", "count": 1, "main_stat": "HP"},
 		{"id": "armband", "count": 1, "main_stat": "DEF"},

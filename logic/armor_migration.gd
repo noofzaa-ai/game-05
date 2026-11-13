@@ -16,5 +16,5 @@ static func apply(item) -> void:
 	if replacement==item.item_id: return
 	item.item_id=replacement
 	# New shoe armor uses DEF instead of the retired main MOVESPD. Keep every rolled substat.
-	if item.slot in ["hat","pants"]: item.main_stat="HP"
+	if item.slot == "pants": item.main_stat="HP"
 	elif item.slot in ["shirt","armband","shoes"]: item.main_stat="DEF"

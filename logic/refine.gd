@@ -1,6 +1,6 @@
 extends RefCounted
 ## Authority-owned refinement with server RNG and protected failure brackets for the existing main stat.
-const SLOTS := ["weapon", "hat", "shirt", "armband", "pants", "shoes", "offhand"]  ## offhand: shields refine (Boss 2026-11-11)
+const SLOTS := ["weapon", "shirt", "armband", "pants", "shoes", "offhand"]  ## offhand: shields refine (Boss 2026-11-11)
 static func quote(item, rules, camp) -> Dictionary:
 	if item == null or item.destroyed or not item.slot in SLOTS: return {"ok": false, "reason": "invalid_item"}
 	var config: Dictionary = rules.refine

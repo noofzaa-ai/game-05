@@ -10,7 +10,7 @@ const ICON_FOLDER := "res://art/items/icons/"
 ## Shown on an empty shirt / pants slot (Boss 2026-10-06: the basic clothes are not items).
 const EMPTY_LOOKS := {} # The Studio body supplies the base; old garments use an incompatible rig.
 ## The equipment slots that show a model on the body.
-const BODY_SLOTS: Array[String] = ["hat", "shirt", "armband", "pants", "shoes"]
+const BODY_SLOTS: Array[String] = ["shirt", "armband", "pants", "shoes"]  ## no hat slot (Boss 2026-11-13)
 
 const CosmeticOptions := preload("res://logic/cosmetic_options.gd")
 
@@ -54,6 +54,8 @@ static func icon_for_id(item_id: String, catalog) -> Texture2D:
 	var info: Dictionary = catalog.entry(item_id)
 	var native_icon := str(info.get("icon_path",""))
 	if not native_icon.is_empty() and ResourceLoader.exists(native_icon): return load(native_icon) as Texture2D
+	var fallback_icon := str(info.get("fallback_icon_path", ""))  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
+	if not fallback_icon.is_empty() and ResourceLoader.exists(fallback_icon): return load(fallback_icon) as Texture2D
 	var file := ICON_FOLDER + str(info.get("asset_id", "")) + ".png"
 	return load(file) as Texture2D if ResourceLoader.exists(file) else null
 
@@ -131,7 +133,8 @@ static func looks(loadout, catalog, style: String) -> Dictionary:
 	var weapon = loadout.item_at("weapon", 0)
 	if weapon != null and not weapon.destroyed and weapon.weapon_type == style:
 		var asset_id: String = catalog.entry(weapon.item_id).get("asset_id", "")
-		result["weapon"]["path"] = path(asset_id)
+		var own := str(catalog.entry(weapon.item_id).get("asset_path", ""))  # a race weapon's Studio file, when it exists
+		result["weapon"]["path"] = own if own.begins_with("res://art/weapons/") and ResourceLoader.exists(own) else path(asset_id)
 		result["refine"]["weapon"] = weapon.refine_level
 	for slot_id in BODY_SLOTS:
 		var item = loadout.item_at(slot_id, 0)
@@ -140,6 +143,7 @@ static func looks(loadout, catalog, style: String) -> Dictionary:
 		var asset_id: String = catalog.entry(item.item_id).get("asset_id", "")
 		result["refine"][slot_id] = item.refine_level
 		var file := str(catalog.entry(item.item_id).get("asset_path",""))
+		if not file.is_empty() and not ResourceLoader.exists(file): file=str(catalog.entry(item.item_id).get("fallback_asset_path",""))  # race gear: class look until the Studio file lands
 		if file.is_empty(): file=path(asset_id)
 		if not file.is_empty() and not ResourceLoader.exists(file): file=""
 		if file.is_empty():

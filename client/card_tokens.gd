@@ -454,7 +454,7 @@ const TAILOR_SWATCH := 36.0  ## colour disc on eye / skin chips  ## details box 
 ## between Weapon and Back (Boss 2026-11-11: Sword & Shield only).
 const CHAR_SLOT_PLACES := {
 	"earring:0": [0, 0], "earring:1": [1, 0], "necklace:0": [2, 0], "ring:0": [3, 0], "ring:1": [4, 0],
-	"hat:0": [0, 1], "shirt:0": [0, 2], "pants:0": [0, 3], "shoes:0": [0, 4],
+	"shirt:0": [0, 1], "pants:0": [0, 2], "shoes:0": [0, 3],
 	"armband:0": [4, 1], "bracelet:0": [4, 2], "bracelet:1": [4, 3],
 	"weapon:0": [1, 5], "offhand:0": [2, 5], "back:0": [3, 5],
 }
@@ -462,7 +462,7 @@ const CHAR_SLOT_PLACES := {
 const CHAR_FILTERS: Array[Dictionary] = [
 	{"id": "all", "slots": []},
 	{"id": "weapon", "slots": ["weapon", "offhand"]},
-	{"id": "armor", "slots": ["hat", "shirt", "pants", "shoes", "armband", "back"]},
+	{"id": "armor", "slots": ["shirt", "pants", "shoes", "armband", "back"]},
 	{"id": "trinket", "slots": ["necklace", "earring", "bracelet", "ring"]},
 ]
 const CHAR_STATS: Array[String] = ["HP", "ATK", "DEF", "CRIRATE"]
