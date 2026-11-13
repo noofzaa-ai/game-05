@@ -124,6 +124,29 @@ var _idle_from := ""  ## clip faded out ("" = nothing to fade)
 var _idle_from_start := 0.0
 var _idle_blend := 0.0  ## seconds of the crossfade
 var _retired: Array = []  ## the previous look's meshes and materials, kept one switch longer (_load_variant)
+## Equipped armour on the Studio rig (race gear, docs/art/race_gear_handoff.md): slot -> file wanted by dress().
+## Worn like class-gear.js 'weapons' mode: the base body shows, the class suit hides, its weapons stay.
+var _armor_wanted: Dictionary = {}
+var _race_weapon_wanted := ""  ## a race weapon file on the Studio rig ("" = the class gear's weapon)
+var _race_weapon_meshes: Array[MeshInstance3D] = []
+var _class_weapons: Array[MeshInstance3D] = []  ## the class gear's own weapon / shield pieces (hidden under a race weapon)
+var _class_shield: Array[MeshInstance3D] = []
+var _race_shield_wanted := ""  ## an equipped race shield on the Studio rig (off-hand item file), "" = none
+var _race_shield_meshes: Array[MeshInstance3D] = []
+var _weapon_file_shield: Array[MeshInstance3D] = []  ## "| Shield" pieces inside a race weapon file
+var _body_full: Mesh  ## Base_Body as loaded (the masked copies below are made from it)
+## The body skin a worn race piece covers, by the bone that moves a triangle most (all three corners): those
+## triangles are left out, so skin cannot poke through the cloth (the Studio hides the whole Base_Body under an
+## outfit; the race shirts carry their own skin forearms). A forearm needs shirt and armband (a short sleeve with
+## no glove shows the arm). Neck and head always stay. Engine-side fitting: OPEN until accepted (parity doc).
+const BODY_COVER := {
+	"shirt": ["Spine", "Spine1", "Spine2", "LeftShoulder", "RightShoulder", "LeftArm", "RightArm"],
+	"shirt+armband": ["LeftForeArm", "RightForeArm"],
+	"armband": ["LeftHand", "RightHand", "HandIndex", "HandMiddle", "HandPinky", "HandRing", "HandThumb"],
+	"pants": ["Hips", "LeftUpLeg", "RightUpLeg", "LeftLeg", "RightLeg"],
+	"shoes": ["LeftFoot", "RightFoot", "LeftToeBase", "RightToeBase", "LeftToe_End", "RightToe_End"],
+}
+static var _masked_bodies: Dictionary = {}  ## covered-slot key -> ArrayMesh
 
 
 static func _split_files() -> Dictionary:
@@ -215,6 +238,12 @@ func _load_variant(cls: String, hair: String, silver: bool) -> bool:
 	_gear_meshes.clear()
 	_gear_weapons.clear()
 	_gear_shield.clear()
+	_worn.clear()
+	_race_weapon_meshes.clear()
+	_race_shield_meshes.clear()
+	_weapon_file_shield.clear()
+	_class_weapons.clear()
+	_class_shield.clear()
 	_cape_mesh = null
 	_bone_index.clear()
 	_rest.clear()
@@ -263,7 +292,16 @@ func _load_variant(cls: String, hair: String, silver: bool) -> bool:
 	_model_root.scale = Vector3.ONE * factor
 	_model_root.position.y = -bounds.position.y * factor
 	_body_meshes = _meshes.duplicate()
+	_body_full = null
+	for mesh in _body_meshes:
+		if str(mesh.name) == "Base_Body":
+			_body_full = mesh.mesh
 	_dress_class_gear(cls, silver)
+	_class_weapons = _gear_weapons.duplicate()
+	_class_shield = _gear_shield.duplicate()
+	_wear_studio_armor()
+	_wear_race_weapon()
+	_wear_race_shield()
 	var spec := class_data(cls)
 	# The class clips live in the body file: they are the same for every hair (the hair chains' secondary
 	# motion included), so one library per class.
@@ -295,11 +333,9 @@ func _dress_class_gear(cls: String, silver: bool) -> void:
 		_meshes.append_array(silk)
 		_gear_meshes.append_array(silk)
 	else:
-		for mesh in _meshes.duplicate():
+		for mesh in _meshes:
 			if str(mesh.name) == "Base_Body":
-				_meshes.erase(mesh)
-				_body_meshes.erase(mesh)
-				mesh.queue_free()
+				mesh.visible = false  # (kept hidden, not freed: worn Studio armour shows it again)
 	var pieces := _merge(gear, func(n: String) -> bool: return not silver or is_weapon_piece(n))
 	for mesh in pieces:
 		var label := str(mesh.name)
@@ -421,7 +457,8 @@ func shield_kind() -> String:
 	if spec_off == "none":
 		return ""
 	if not _offhand.is_empty():
-		if not str(_offhand.get("path", "")).is_empty():
+		var file := str(_offhand.get("path", ""))
+		if not file.is_empty() and not is_studio_rig_file(file):
 			return "file"
 		# Boss 2026-11-12: the class armor's own Studio shield beats the flat procedural round_shield
 		# (the starter shield has no model file); the refine aura still follows the off-hand item.
@@ -678,6 +715,213 @@ static func makeup_style(id: String) -> int:
 	return 0
 
 
+## Files skinned to this 102-joint Studio rig (same joints, order and bind pose: tools/items/split_race_outfits.py
+## checks the delivery): the race gear folders. Other armour files are on the old 93-joint rig.
+static func is_studio_rig_file(file: String) -> bool:
+	return file.begins_with("res://art/armor/race_") or file.begins_with("res://art/weapons/race_")
+
+
+## The worn Studio armour pieces: slot -> file ({} = the class suit).
+func worn_studio_armor() -> Dictionary:
+	var result := {}
+	for slot_id in _worn:
+		result[slot_id] = _worn[slot_id]["path"]
+	return result
+
+
+## Puts _armor_wanted on the skeleton. Any worn piece switches the look to the base body + worn pieces + the
+## class weapons (class-gear.js 'weapons' mode, like Silver Silk); none = the class suit as the Studio shows it.
+func _wear_studio_armor() -> void:
+	if _skeleton == null:
+		return
+	for slot_id in _worn.keys():
+		if _armor_wanted.get(slot_id, "") == _worn[slot_id]["path"]:
+			continue
+		for mesh in _worn[slot_id]["meshes"]:
+			_meshes.erase(mesh)
+			_retired.append(mesh.mesh)
+			mesh.queue_free()
+		_worn.erase(slot_id)
+	var added := false
+	for slot_id in _armor_wanted:
+		if _worn.has(slot_id):
+			continue
+		var pieces := _merge(str(_armor_wanted[slot_id]), func(_n: String) -> bool: return true)
+		if pieces.is_empty():
+			continue
+		_meshes.append_array(pieces)
+		_worn[slot_id] = {"path": str(_armor_wanted[slot_id]), "meshes": pieces}
+		added = true
+	var dressed := not _worn.is_empty()
+	_mask_body()
+	for mesh in _gear_meshes:
+		if not (mesh in _class_weapons or mesh in _class_shield or mesh in _race_weapon_meshes):
+			mesh.visible = not dressed  # the class suit (and its cape / neck fitting) steps aside
+	for mesh in _body_meshes:
+		if str(mesh.name) == "Base_Body":
+			mesh.visible = dressed or _silver
+	if added and not _toon.is_empty():
+		_prepare_meshes()
+		_apply_colors()
+
+
+## Base_Body without the triangles the worn pieces cover (BODY_COVER); the whole body when nothing is worn.
+func _mask_body() -> void:
+	var body: MeshInstance3D = null
+	for mesh in _body_meshes:
+		if is_instance_valid(mesh) and str(mesh.name) == "Base_Body":
+			body = mesh
+	if body == null or _body_full == null:
+		return
+	var covered: Array[String] = []
+	for slot_id in ["shirt", "armband", "pants", "shoes"]:
+		if _worn.has(slot_id):
+			covered.append(slot_id)
+	if _worn.has("shirt") and _worn.has("armband"):
+		covered.append("shirt+armband")
+	var key := ",".join(covered)
+	var wanted: Mesh = _body_full
+	if not covered.is_empty():
+		if not _masked_bodies.has(key):
+			_masked_bodies[key] = masked_body(_body_full, body.skin, covered)
+		wanted = _masked_bodies[key]
+	if body.mesh == wanted:
+		return
+	var materials := []
+	for surface in body.get_surface_override_material_count():
+		materials.append(body.get_surface_override_material(surface))
+	body.mesh = wanted
+	for surface in mini(materials.size(), body.get_surface_override_material_count()):
+		body.set_surface_override_material(surface, materials[surface])
+
+
+## A copy of `source` (skinned by `skin`) without the triangles whose three corners are each moved most by a bone
+## of the `covered` BODY_COVER groups. Vertex data is copied as it is (only the index list shrinks).
+static func masked_body(source: Mesh, skin: Skin, covered: Array) -> ArrayMesh:
+	var hidden_bind := {}
+	for bind in skin.get_bind_count():
+		var bone := str(skin.get_bind_name(bind)).replace("mixamorig_", "").replace("mixamorig:", "")
+		for group in covered:
+			for name in BODY_COVER.get(group, []):
+				if bone == name or (name.begins_with("Hand") and bone.contains(name)):
+					hidden_bind[bind] = true
+	var mesh := ArrayMesh.new()
+	for surface in source.get_surface_count():
+		var arrays := source.surface_get_arrays(surface)
+		var bones = arrays[Mesh.ARRAY_BONES]
+		var weights = arrays[Mesh.ARRAY_WEIGHTS]
+		var count: int = (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()
+		var per := 8 if bones != null and bones.size() == count * 8 else 4
+		var hide := PackedByteArray()
+		hide.resize(count)
+		for v in count:
+			var best := 0
+			for k in range(1, per):
+				if weights[v * per + k] > weights[v * per + best]:
+					best = k
+			hide[v] = 1 if hidden_bind.has(int(bones[v * per + best])) else 0
+		var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+		var kept := PackedInt32Array()
+		for t in range(0, indices.size(), 3):
+			if hide[indices[t]] == 1 and hide[indices[t + 1]] == 1 and hide[indices[t + 2]] == 1:
+				continue
+			kept.append(indices[t])
+			kept.append(indices[t + 1])
+			kept.append(indices[t + 2])
+		arrays[Mesh.ARRAY_INDEX] = kept
+		mesh.add_surface_from_arrays(source.surface_get_primitive_type(surface), arrays, [], {}, Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS if per == 8 else 0)
+		mesh.surface_set_material(surface, source.surface_get_material(surface))
+	return mesh
+
+
+## Puts the equipped race shield (an off-hand item whose file is on the Studio rig, skinned to LeftForeArm like the
+## class gear's "| Shield") on the body. It then counts as the shown gear shield (shield_kind() "class").
+func _wear_race_shield() -> void:
+	if _skeleton == null:
+		return
+	var current := str(_race_shield_meshes[0].get_meta("race_shield_file", "")) if not _race_shield_meshes.is_empty() else ""
+	if current != _race_shield_wanted:
+		for mesh in _race_shield_meshes:
+			_meshes.erase(mesh)
+			_gear_meshes.erase(mesh)
+			_retired.append(mesh.mesh)
+			mesh.queue_free()
+		_race_shield_meshes.clear()
+		if not _race_shield_wanted.is_empty():
+			_race_shield_meshes = _merge(_race_shield_wanted, func(_n: String) -> bool: return true)
+		for mesh in _race_shield_meshes:
+			mesh.set_meta("race_shield_file", _race_shield_wanted)
+		_meshes.append_array(_race_shield_meshes)
+		_gear_meshes.append_array(_race_shield_meshes)
+		if not _race_shield_meshes.is_empty() and not _toon.is_empty():
+			_prepare_meshes()
+			_apply_colors()
+	_pick_gear_shield()
+
+
+## The gear shield on show: an equipped race shield, else a "| Shield" in the race weapon file, else the class
+## gear's own. The others are hidden.
+func _pick_gear_shield() -> void:
+	var chosen: Array[MeshInstance3D] = _class_shield
+	if not _race_shield_meshes.is_empty():
+		chosen = _race_shield_meshes
+	elif not _weapon_file_shield.is_empty():
+		chosen = _weapon_file_shield
+	for list in [_class_shield, _weapon_file_shield, _race_shield_meshes]:
+		if list != chosen:
+			for mesh in list:
+				if is_instance_valid(mesh):
+					mesh.visible = false
+	_gear_shield = chosen.duplicate()
+	_update_shield()
+
+
+## Puts _race_weapon_wanted in the hands: its skinned "| Sword/Shield/Bow/Quiver/Staff/Spellbook" pieces take the
+## class gear weapon's place (a "| Shield" piece also replaces the class shield); "" = the class gear's own.
+func _wear_race_weapon() -> void:
+	if _skeleton == null:
+		return
+	var current := str(_race_weapon_meshes[0].get_meta("race_weapon_file", "")) if not _race_weapon_meshes.is_empty() else ""
+	if current == _race_weapon_wanted:
+		return
+	for mesh in _race_weapon_meshes:
+		_meshes.erase(mesh)
+		_gear_meshes.erase(mesh)
+		_retired.append(mesh.mesh)
+		mesh.queue_free()
+	_race_weapon_meshes.clear()
+	var pieces: Array[MeshInstance3D] = []
+	if not _race_weapon_wanted.is_empty():
+		pieces = _merge(_race_weapon_wanted, func(_n: String) -> bool: return true)
+	var weapons: Array[MeshInstance3D] = []
+	var shields: Array[MeshInstance3D] = []
+	for mesh in pieces:
+		mesh.set_meta("race_weapon_file", _race_weapon_wanted)
+		if str(mesh.name).contains("| Shield"):
+			shields.append(mesh)
+		else:
+			weapons.append(mesh)
+	_race_weapon_meshes = pieces
+	_meshes.append_array(pieces)
+	_gear_meshes.append_array(pieces)
+	# A file without skinned meshes is a hand-held prop: it goes in the right-hand socket (attach_weapon.R) like the
+	# model team's weapons, and the class gear weapon steps aside.
+	var socket_prop := pieces.is_empty() and not _race_weapon_wanted.is_empty() and ResourceLoader.exists(_race_weapon_wanted)
+	if socket_prop:
+		_show_weapon(_race_weapon_wanted, "race")
+	for mesh in _class_weapons:
+		mesh.visible = weapons.is_empty() and not socket_prop and _weapon_shown
+	for mesh in _class_shield:
+		mesh.visible = false
+	_gear_weapons = weapons if not weapons.is_empty() else ([] as Array[MeshInstance3D] if socket_prop else _class_weapons.duplicate())
+	_weapon_file_shield = shields
+	_pick_gear_shield()
+	if not pieces.is_empty() and not _toon.is_empty():
+		_prepare_meshes()
+		_apply_colors()
+	_fit_weapon()
+
+
 func dress(looks: Dictionary) -> void:
 	if looks.has("relics"):
 		set_relics(looks.relics)
@@ -689,12 +933,34 @@ func dress(looks: Dictionary) -> void:
 		set_appearance(looks["appearance"])
 	if looks.has("offhand"):
 		_offhand = looks["offhand"] if looks["offhand"] is Dictionary else {}
+		var shield_file := str(_offhand.get("path", ""))
+		_race_shield_wanted = shield_file if is_studio_rig_file(shield_file) else ""
+		_wear_race_shield()
 	if looks.has("weapon"):
 		var weapon: Dictionary = looks["weapon"]
-		if not str(weapon.get("path", "")).is_empty():
-			_show_weapon(weapon["path"], str(weapon.get("family", "")))
-		else:
+		var file := str(weapon.get("path", ""))
+		if is_studio_rig_file(file):  # a race weapon on the Studio rig replaces the class gear's weapon pieces
+			_race_weapon_wanted = file
 			set_weapon(str(weapon.get("style", "")))
+		else:
+			_race_weapon_wanted = ""
+			if not file.is_empty():
+				_show_weapon(file, str(weapon.get("family", "")))
+			else:
+				set_weapon(str(weapon.get("style", "")))
+		_wear_race_weapon()
+	var armor_given := false
+	for slot_id in BODY_SLOTS:
+		armor_given = armor_given or looks.has(slot_id)
+	if armor_given:  # ItemAssets.looks() always lists every body slot; a look without them leaves the armour alone
+		var wanted := {}
+		for slot_id in BODY_SLOTS:
+			var file := str(looks.get(slot_id, ""))
+			if is_studio_rig_file(file):  # older armour files (the 93-joint rig) cannot go on this body
+				wanted[slot_id] = file
+		if wanted != _armor_wanted:
+			_armor_wanted = wanted
+			_wear_studio_armor()
 	_update_shield()
 	_apply_equipment_refine(looks.get("refine", {}))
 

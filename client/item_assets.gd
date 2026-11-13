@@ -42,6 +42,27 @@ static func path(asset_id: String, archived_ok: bool = false) -> String:
 	return file
 
 
+## A catalog fallback field as an ordered list of paths: race gear writes "first|second|..." (tools/items/build_race_gear.py:
+## the race x class file, then the race's shared interim file, then the class armour); the first file that exists wins.
+static func chain(field: String) -> PackedStringArray:
+	var result := PackedStringArray()
+	for part in field.split("|", false):
+		if not part.strip_edges().is_empty():
+			result.append(part.strip_edges())
+	return result
+
+
+## The model file a catalog armour piece shows: its own asset_path, else the first existing fallback, else "".
+static func armor_file(info: Dictionary) -> String:
+	var file := str(info.get("asset_path", ""))
+	if not file.is_empty() and ResourceLoader.exists(file):
+		return file
+	for fallback in chain(str(info.get("fallback_asset_path", ""))):
+		if ResourceLoader.exists(fallback):
+			return fallback
+	return path(str(info.get("asset_id", "")))
+
+
 ## The inventory icon of a catalog item (`catalog`: ItemCatalog), or null (draw the slot's shape).
 static func icon(item, catalog) -> Texture2D:
 	return null if item == null else icon_for_id(item.item_id, catalog)
@@ -54,8 +75,8 @@ static func icon_for_id(item_id: String, catalog) -> Texture2D:
 	var info: Dictionary = catalog.entry(item_id)
 	var native_icon := str(info.get("icon_path",""))
 	if not native_icon.is_empty() and ResourceLoader.exists(native_icon): return load(native_icon) as Texture2D
-	var fallback_icon := str(info.get("fallback_icon_path", ""))  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
-	if not fallback_icon.is_empty() and ResourceLoader.exists(fallback_icon): return load(fallback_icon) as Texture2D
+	for fallback_icon in chain(str(info.get("fallback_icon_path", ""))):  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
+		if ResourceLoader.exists(fallback_icon): return load(fallback_icon) as Texture2D
 	var file := ICON_FOLDER + str(info.get("asset_id", "")) + ".png"
 	return load(file) as Texture2D if ResourceLoader.exists(file) else null
 
@@ -142,10 +163,7 @@ static func looks(loadout, catalog, style: String) -> Dictionary:
 			continue
 		var asset_id: String = catalog.entry(item.item_id).get("asset_id", "")
 		result["refine"][slot_id] = item.refine_level
-		var file := str(catalog.entry(item.item_id).get("asset_path",""))
-		if not file.is_empty() and not ResourceLoader.exists(file): file=str(catalog.entry(item.item_id).get("fallback_asset_path",""))  # race gear: class look until the Studio file lands
-		if file.is_empty(): file=path(asset_id)
-		if not file.is_empty() and not ResourceLoader.exists(file): file=""
+		var file := armor_file(catalog.entry(item.item_id))  # race gear: race x class file, else the race's shared file, else the class look
 		if file.is_empty():
 			continue  # a plain piece (no catalog look) keeps the empty-slot look
 		result["armor_styles"][slot_id] = str(catalog.entry(item.item_id).get("source_style",""))

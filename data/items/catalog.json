@@ -755,8 +755,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/sword_shield/shirt.glb",
    "icon_path": "res://art/armor/race_human/sword_shield/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_human_sword_shield_pants": {
@@ -772,8 +772,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_human/sword_shield/pants.glb",
    "icon_path": "res://art/armor/race_human/sword_shield/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_human_sword_shield_armband": {
@@ -789,8 +789,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/sword_shield/armband.glb",
    "icon_path": "res://art/armor/race_human/sword_shield/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_human_sword_shield_shoes": {
@@ -806,8 +806,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/sword_shield/shoes.glb",
    "icon_path": "res://art/armor/race_human/sword_shield/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_human_greatsword_weapon": {
@@ -838,8 +838,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/greatsword/shirt.glb",
    "icon_path": "res://art/armor/race_human/greatsword/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_human_greatsword_pants": {
@@ -855,8 +855,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_human/greatsword/pants.glb",
    "icon_path": "res://art/armor/race_human/greatsword/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_human_greatsword_armband": {
@@ -872,8 +872,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/greatsword/armband.glb",
    "icon_path": "res://art/armor/race_human/greatsword/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_human_greatsword_shoes": {
@@ -889,8 +889,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/greatsword/shoes.glb",
    "icon_path": "res://art/armor/race_human/greatsword/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_human_longbow_weapon": {
@@ -921,8 +921,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/longbow/shirt.glb",
    "icon_path": "res://art/armor/race_human/longbow/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shirt.glb|res://art/armor/ash_leather/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shirt.png|res://art/armor/ash_leather/icon-shirt.png",
    "source_style": "ash_leather"
   },
   "race_human_longbow_pants": {
@@ -938,8 +938,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_human/longbow/pants.glb",
    "icon_path": "res://art/armor/race_human/longbow/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_pants.glb|res://art/armor/ash_leather/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_pants.png|res://art/armor/ash_leather/icon-pants.png",
    "source_style": "ash_leather"
   },
   "race_human_longbow_armband": {
@@ -955,8 +955,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/longbow/armband.glb",
    "icon_path": "res://art/armor/race_human/longbow/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_armband.glb|res://art/armor/ash_leather/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_armband.png|res://art/armor/ash_leather/icon-arms.png",
    "source_style": "ash_leather"
   },
   "race_human_longbow_shoes": {
@@ -972,8 +972,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/longbow/shoes.glb",
    "icon_path": "res://art/armor/race_human/longbow/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shoes.glb|res://art/armor/ash_leather/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shoes.png|res://art/armor/ash_leather/icon-shoes.png",
    "source_style": "ash_leather"
   },
   "race_human_magic_weapon": {
@@ -1004,8 +1004,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/magic/shirt.glb",
    "icon_path": "res://art/armor/race_human/magic/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shirt.glb|res://art/armor/ash_cloth/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shirt.png|res://art/armor/ash_cloth/icon-shirt.png",
    "source_style": "ash_cloth"
   },
   "race_human_magic_pants": {
@@ -1021,8 +1021,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_human/magic/pants.glb",
    "icon_path": "res://art/armor/race_human/magic/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_pants.glb|res://art/armor/ash_cloth/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_pants.png|res://art/armor/ash_cloth/icon-pants.png",
    "source_style": "ash_cloth"
   },
   "race_human_magic_armband": {
@@ -1038,8 +1038,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/magic/armband.glb",
    "icon_path": "res://art/armor/race_human/magic/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_armband.glb|res://art/armor/ash_cloth/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_armband.png|res://art/armor/ash_cloth/icon-arms.png",
    "source_style": "ash_cloth"
   },
   "race_human_magic_shoes": {
@@ -1055,8 +1055,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_human/magic/shoes.glb",
    "icon_path": "res://art/armor/race_human/magic/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/human_shoes.glb|res://art/armor/ash_cloth/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-human_shoes.png|res://art/armor/ash_cloth/icon-shoes.png",
    "source_style": "ash_cloth"
   },
   "race_viking_sword_shield_weapon": {
@@ -1086,8 +1086,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/sword_shield/shirt.glb",
    "icon_path": "res://art/armor/race_viking/sword_shield/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_viking_sword_shield_pants": {
@@ -1103,8 +1103,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_viking/sword_shield/pants.glb",
    "icon_path": "res://art/armor/race_viking/sword_shield/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_viking_sword_shield_armband": {
@@ -1120,8 +1120,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/sword_shield/armband.glb",
    "icon_path": "res://art/armor/race_viking/sword_shield/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_viking_sword_shield_shoes": {
@@ -1137,8 +1137,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/sword_shield/shoes.glb",
    "icon_path": "res://art/armor/race_viking/sword_shield/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_viking_greatsword_weapon": {
@@ -1169,8 +1169,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/greatsword/shirt.glb",
    "icon_path": "res://art/armor/race_viking/greatsword/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_viking_greatsword_pants": {
@@ -1186,8 +1186,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_viking/greatsword/pants.glb",
    "icon_path": "res://art/armor/race_viking/greatsword/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_viking_greatsword_armband": {
@@ -1203,8 +1203,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/greatsword/armband.glb",
    "icon_path": "res://art/armor/race_viking/greatsword/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_viking_greatsword_shoes": {
@@ -1220,8 +1220,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/greatsword/shoes.glb",
    "icon_path": "res://art/armor/race_viking/greatsword/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_viking_longbow_weapon": {
@@ -1252,8 +1252,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/longbow/shirt.glb",
    "icon_path": "res://art/armor/race_viking/longbow/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shirt.glb|res://art/armor/ash_leather/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shirt.png|res://art/armor/ash_leather/icon-shirt.png",
    "source_style": "ash_leather"
   },
   "race_viking_longbow_pants": {
@@ -1269,8 +1269,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_viking/longbow/pants.glb",
    "icon_path": "res://art/armor/race_viking/longbow/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_pants.glb|res://art/armor/ash_leather/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_pants.png|res://art/armor/ash_leather/icon-pants.png",
    "source_style": "ash_leather"
   },
   "race_viking_longbow_armband": {
@@ -1286,8 +1286,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/longbow/armband.glb",
    "icon_path": "res://art/armor/race_viking/longbow/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_armband.glb|res://art/armor/ash_leather/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_armband.png|res://art/armor/ash_leather/icon-arms.png",
    "source_style": "ash_leather"
   },
   "race_viking_longbow_shoes": {
@@ -1303,8 +1303,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/longbow/shoes.glb",
    "icon_path": "res://art/armor/race_viking/longbow/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shoes.glb|res://art/armor/ash_leather/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shoes.png|res://art/armor/ash_leather/icon-shoes.png",
    "source_style": "ash_leather"
   },
   "race_viking_magic_weapon": {
@@ -1335,8 +1335,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/magic/shirt.glb",
    "icon_path": "res://art/armor/race_viking/magic/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shirt.glb|res://art/armor/ash_cloth/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shirt.png|res://art/armor/ash_cloth/icon-shirt.png",
    "source_style": "ash_cloth"
   },
   "race_viking_magic_pants": {
@@ -1352,8 +1352,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_viking/magic/pants.glb",
    "icon_path": "res://art/armor/race_viking/magic/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_pants.glb|res://art/armor/ash_cloth/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_pants.png|res://art/armor/ash_cloth/icon-pants.png",
    "source_style": "ash_cloth"
   },
   "race_viking_magic_armband": {
@@ -1369,8 +1369,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/magic/armband.glb",
    "icon_path": "res://art/armor/race_viking/magic/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_armband.glb|res://art/armor/ash_cloth/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_armband.png|res://art/armor/ash_cloth/icon-arms.png",
    "source_style": "ash_cloth"
   },
   "race_viking_magic_shoes": {
@@ -1386,8 +1386,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_viking/magic/shoes.glb",
    "icon_path": "res://art/armor/race_viking/magic/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/viking_shoes.glb|res://art/armor/ash_cloth/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-viking_shoes.png|res://art/armor/ash_cloth/icon-shoes.png",
    "source_style": "ash_cloth"
   },
   "race_elf_sword_shield_weapon": {
@@ -1417,8 +1417,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/sword_shield/shirt.glb",
    "icon_path": "res://art/armor/race_elf/sword_shield/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_elf_sword_shield_pants": {
@@ -1434,8 +1434,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_elf/sword_shield/pants.glb",
    "icon_path": "res://art/armor/race_elf/sword_shield/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_elf_sword_shield_armband": {
@@ -1451,8 +1451,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/sword_shield/armband.glb",
    "icon_path": "res://art/armor/race_elf/sword_shield/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_elf_sword_shield_shoes": {
@@ -1468,8 +1468,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/sword_shield/shoes.glb",
    "icon_path": "res://art/armor/race_elf/sword_shield/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_elf_greatsword_weapon": {
@@ -1500,8 +1500,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/greatsword/shirt.glb",
    "icon_path": "res://art/armor/race_elf/greatsword/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_elf_greatsword_pants": {
@@ -1517,8 +1517,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_elf/greatsword/pants.glb",
    "icon_path": "res://art/armor/race_elf/greatsword/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_elf_greatsword_armband": {
@@ -1534,8 +1534,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/greatsword/armband.glb",
    "icon_path": "res://art/armor/race_elf/greatsword/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_elf_greatsword_shoes": {
@@ -1551,8 +1551,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/greatsword/shoes.glb",
    "icon_path": "res://art/armor/race_elf/greatsword/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_elf_longbow_weapon": {
@@ -1583,8 +1583,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/longbow/shirt.glb",
    "icon_path": "res://art/armor/race_elf/longbow/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shirt.glb|res://art/armor/ash_leather/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shirt.png|res://art/armor/ash_leather/icon-shirt.png",
    "source_style": "ash_leather"
   },
   "race_elf_longbow_pants": {
@@ -1600,8 +1600,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_elf/longbow/pants.glb",
    "icon_path": "res://art/armor/race_elf/longbow/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_pants.glb|res://art/armor/ash_leather/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_pants.png|res://art/armor/ash_leather/icon-pants.png",
    "source_style": "ash_leather"
   },
   "race_elf_longbow_armband": {
@@ -1617,8 +1617,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/longbow/armband.glb",
    "icon_path": "res://art/armor/race_elf/longbow/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_armband.glb|res://art/armor/ash_leather/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_armband.png|res://art/armor/ash_leather/icon-arms.png",
    "source_style": "ash_leather"
   },
   "race_elf_longbow_shoes": {
@@ -1634,8 +1634,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/longbow/shoes.glb",
    "icon_path": "res://art/armor/race_elf/longbow/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shoes.glb|res://art/armor/ash_leather/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shoes.png|res://art/armor/ash_leather/icon-shoes.png",
    "source_style": "ash_leather"
   },
   "race_elf_magic_weapon": {
@@ -1666,8 +1666,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/magic/shirt.glb",
    "icon_path": "res://art/armor/race_elf/magic/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shirt.glb|res://art/armor/ash_cloth/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shirt.png|res://art/armor/ash_cloth/icon-shirt.png",
    "source_style": "ash_cloth"
   },
   "race_elf_magic_pants": {
@@ -1683,8 +1683,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_elf/magic/pants.glb",
    "icon_path": "res://art/armor/race_elf/magic/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_pants.glb|res://art/armor/ash_cloth/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_pants.png|res://art/armor/ash_cloth/icon-pants.png",
    "source_style": "ash_cloth"
   },
   "race_elf_magic_armband": {
@@ -1700,8 +1700,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/magic/armband.glb",
    "icon_path": "res://art/armor/race_elf/magic/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_armband.glb|res://art/armor/ash_cloth/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_armband.png|res://art/armor/ash_cloth/icon-arms.png",
    "source_style": "ash_cloth"
   },
   "race_elf_magic_shoes": {
@@ -1717,8 +1717,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_elf/magic/shoes.glb",
    "icon_path": "res://art/armor/race_elf/magic/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/elf_shoes.glb|res://art/armor/ash_cloth/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-elf_shoes.png|res://art/armor/ash_cloth/icon-shoes.png",
    "source_style": "ash_cloth"
   },
   "race_runeborn_sword_shield_weapon": {
@@ -1748,8 +1748,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/sword_shield/shirt.glb",
    "icon_path": "res://art/armor/race_runeborn/sword_shield/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_sword_shield_pants": {
@@ -1765,8 +1765,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_runeborn/sword_shield/pants.glb",
    "icon_path": "res://art/armor/race_runeborn/sword_shield/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_sword_shield_armband": {
@@ -1782,8 +1782,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/sword_shield/armband.glb",
    "icon_path": "res://art/armor/race_runeborn/sword_shield/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_sword_shield_shoes": {
@@ -1799,8 +1799,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/sword_shield/shoes.glb",
    "icon_path": "res://art/armor/race_runeborn/sword_shield/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_greatsword_weapon": {
@@ -1831,8 +1831,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/greatsword/shirt.glb",
    "icon_path": "res://art/armor/race_runeborn/greatsword/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shirt.glb|res://art/armor/ash_steel/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shirt.png|res://art/armor/ash_steel/icon-shirt.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_greatsword_pants": {
@@ -1848,8 +1848,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_runeborn/greatsword/pants.glb",
    "icon_path": "res://art/armor/race_runeborn/greatsword/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_pants.glb|res://art/armor/ash_steel/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_pants.png|res://art/armor/ash_steel/icon-pants.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_greatsword_armband": {
@@ -1865,8 +1865,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/greatsword/armband.glb",
    "icon_path": "res://art/armor/race_runeborn/greatsword/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_armband.glb|res://art/armor/ash_steel/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_armband.png|res://art/armor/ash_steel/icon-arms.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_greatsword_shoes": {
@@ -1882,8 +1882,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/greatsword/shoes.glb",
    "icon_path": "res://art/armor/race_runeborn/greatsword/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_steel/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_steel/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shoes.glb|res://art/armor/ash_steel/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shoes.png|res://art/armor/ash_steel/icon-shoes.png",
    "source_style": "ash_steel"
   },
   "race_runeborn_longbow_weapon": {
@@ -1914,8 +1914,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/longbow/shirt.glb",
    "icon_path": "res://art/armor/race_runeborn/longbow/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shirt.glb|res://art/armor/ash_leather/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shirt.png|res://art/armor/ash_leather/icon-shirt.png",
    "source_style": "ash_leather"
   },
   "race_runeborn_longbow_pants": {
@@ -1931,8 +1931,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_runeborn/longbow/pants.glb",
    "icon_path": "res://art/armor/race_runeborn/longbow/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_pants.glb|res://art/armor/ash_leather/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_pants.png|res://art/armor/ash_leather/icon-pants.png",
    "source_style": "ash_leather"
   },
   "race_runeborn_longbow_armband": {
@@ -1948,8 +1948,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/longbow/armband.glb",
    "icon_path": "res://art/armor/race_runeborn/longbow/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_armband.glb|res://art/armor/ash_leather/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_armband.png|res://art/armor/ash_leather/icon-arms.png",
    "source_style": "ash_leather"
   },
   "race_runeborn_longbow_shoes": {
@@ -1965,8 +1965,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/longbow/shoes.glb",
    "icon_path": "res://art/armor/race_runeborn/longbow/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_leather/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_leather/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shoes.glb|res://art/armor/ash_leather/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shoes.png|res://art/armor/ash_leather/icon-shoes.png",
    "source_style": "ash_leather"
   },
   "race_runeborn_magic_weapon": {
@@ -1997,8 +1997,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/magic/shirt.glb",
    "icon_path": "res://art/armor/race_runeborn/magic/icon-shirt.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shirt.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shirt.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shirt.glb|res://art/armor/ash_cloth/shirt.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shirt.png|res://art/armor/ash_cloth/icon-shirt.png",
    "source_style": "ash_cloth"
   },
   "race_runeborn_magic_pants": {
@@ -2014,8 +2014,8 @@
    "main_stat": "HP",
    "asset_path": "res://art/armor/race_runeborn/magic/pants.glb",
    "icon_path": "res://art/armor/race_runeborn/magic/icon-pants.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/pants.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-pants.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_pants.glb|res://art/armor/ash_cloth/pants.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_pants.png|res://art/armor/ash_cloth/icon-pants.png",
    "source_style": "ash_cloth"
   },
   "race_runeborn_magic_armband": {
@@ -2031,8 +2031,8 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/magic/armband.glb",
    "icon_path": "res://art/armor/race_runeborn/magic/icon-armband.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/arms.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-arms.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_armband.glb|res://art/armor/ash_cloth/arms.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_armband.png|res://art/armor/ash_cloth/icon-arms.png",
    "source_style": "ash_cloth"
   },
   "race_runeborn_magic_shoes": {
@@ -2048,9 +2048,61 @@
    "main_stat": "DEF",
    "asset_path": "res://art/armor/race_runeborn/magic/shoes.glb",
    "icon_path": "res://art/armor/race_runeborn/magic/icon-shoes.png",
-   "fallback_asset_path": "res://art/armor/ash_cloth/shoes.glb",
-   "fallback_icon_path": "res://art/armor/ash_cloth/icon-shoes.png",
+   "fallback_asset_path": "res://art/armor/race_shared/runeborn_shoes.glb|res://art/armor/ash_cloth/shoes.glb",
+   "fallback_icon_path": "res://art/armor/race_shared/icon-runeborn_shoes.png|res://art/armor/ash_cloth/icon-shoes.png",
    "source_style": "ash_cloth"
+  },
+  "race_human_shield": {
+   "asset_id": "procedural_round_shield",
+   "name": "Human Shield",
+   "name_th": "โล่มนุษย์",
+   "slot": "offhand",
+   "race": "human",
+   "class": "sword_shield",
+   "drop_level": 99,
+   "procedural": true,
+   "asset_path": "res://art/weapons/race_human/shield.glb",
+   "icon_path": "res://art/weapons/race_human/icon-shield.png",
+   "fallback_icon_path": "res://art/items/icons/offhand_round_shield.png"
+  },
+  "race_viking_shield": {
+   "asset_id": "procedural_round_shield",
+   "name": "Viking Shield",
+   "name_th": "โล่ไวกิ้ง",
+   "slot": "offhand",
+   "race": "viking",
+   "class": "sword_shield",
+   "drop_level": 99,
+   "procedural": true,
+   "asset_path": "res://art/weapons/race_viking/shield.glb",
+   "icon_path": "res://art/weapons/race_viking/icon-shield.png",
+   "fallback_icon_path": "res://art/items/icons/offhand_round_shield.png"
+  },
+  "race_elf_shield": {
+   "asset_id": "procedural_round_shield",
+   "name": "Elf Shield",
+   "name_th": "โล่เอลฟ์",
+   "slot": "offhand",
+   "race": "elf",
+   "class": "sword_shield",
+   "drop_level": 99,
+   "procedural": true,
+   "asset_path": "res://art/weapons/race_elf/shield.glb",
+   "icon_path": "res://art/weapons/race_elf/icon-shield.png",
+   "fallback_icon_path": "res://art/items/icons/offhand_round_shield.png"
+  },
+  "race_runeborn_shield": {
+   "asset_id": "procedural_round_shield",
+   "name": "Runeborn Shield",
+   "name_th": "โล่รูนบอร์น",
+   "slot": "offhand",
+   "race": "runeborn",
+   "class": "sword_shield",
+   "drop_level": 99,
+   "procedural": true,
+   "asset_path": "res://art/weapons/race_runeborn/shield.glb",
+   "icon_path": "res://art/weapons/race_runeborn/icon-shield.png",
+   "fallback_icon_path": "res://art/items/icons/offhand_round_shield.png"
   }
  },
  "_comment": "Game items made from the model team's assets (art/items/item_manifest.json). The key is the item_id the game and saves use; asset_id finds the model. slot is the game's slot, weapon_type the combat style, set a set id in sets.json, drop_level the lowest monster level that drops it. tools/items/build_catalog.py adds new assets and never changes entries already here."

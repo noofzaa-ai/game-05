@@ -94,3 +94,11 @@ Native evidence: build/tailor-hats-844.png shows purchased cat ears with red out
 ## Approved Anime look / game outline exception — 2026-11-01
 
 Boss approved original Studio `?style=anime` lowpolyhead2400/threeband material look for game, explicitly keeping existing GAME outline sizes. Production rig/animation/skin data retained, no donor rig replacement. Live627bb7d3b49f; numeric and exactshipped native invariants pluspublicbytes verified. Materials use gameenvironment lighting; exhaustive armor/hat/skill visual acceptance remains OPEN, no pixelparity claim. Details docs/releases/anime-player-20261101.md.
+
+## 2026-11-13 — Race starter outfits and race sword & shield on the Studio body (character-artist, OPEN)
+
+- Sources: Boss deliveries `race_outfits.glb` (one look per race, 16 meshes) and `sword_shield_weapons.glb` (MID tier, 8 meshes), copied to `art_source/race_gear/`. Both use the same 102 joints, in the same order, with byte-identical inverse binds and rest transforms as `split/body_<class>.glb`. They are split per piece by `tools/items/split_race_outfits.py` (accessor bytes copied as they are, checked by hash) into `art/armor/race_shared/` and `art/weapons/race_<race>/`. No joint is added, removed or renamed.
+- Engine-side behaviour (no Studio JS counterpart exists for these drops): any worn race piece switches the body to "base body + worn pieces + class weapon", like the Studio's 'weapons' mode. The base-body skin under a worn piece is cut by bone group (`BODY_COVER` in `client/characters/studio05_character_model.gd`), so it cannot poke through. The Studio instead hides the whole Base_Body under an outfit. The race sword replaces the class gear's `| Sword`, and the race shield replaces the class `| Shield`. Both are skinned to RightHand and LeftForeArm, exactly like the class gear.
+- Evidence: `build/race_outfits/` (`sheet_card_front/back.png`, `sheet_battle_idle/run.png`, `sheet_poke_idle/run.png`, `compare_blender_vs_game.png`, `weapons/sheet_sword_shield.png`, `icons_review.png`).
+- OPEN: the visual acceptance of the outfits on all 4 class bodies; the body-cover rule (a bare neck shows above the collars, by design); the class suit's cape and pauldrons are hidden under any race piece; one race look serves all classes (interim); the grip of an unskinned weapon prop (no such file yet).
+

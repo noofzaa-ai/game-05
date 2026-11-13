@@ -5,8 +5,11 @@ Writes into data/items/catalog.json, data/items/sets.json and data/items/starter
   weapon family; armour has the class's armour weight. Any card can wear any piece; the set option needs the card's race.
 - 4 race sets `race_<race>` (kind "race"): steps 2 / 4 / 5 pieces that boost the race passive (cell_mod vocabulary).
 - Asset hook: asset_path / icon_path point at the Studio files (art/armor/race_<race>/<class>/<slot>.glb,
-  icon-<slot>.png; art/weapons/race_<race>/<class>.glb, icon-<class>.png). Until a file exists the client falls back to
-  fallback_asset_path / fallback_icon_path / asset_id = the class starter piece's look (no code change when they land).
+  icon-<slot>.png; art/weapons/race_<race>/<class>.glb, icon-<class>.png). Every tier of a piece is the same item id,
+  so one file serves white, blue, purple and gold. Until a file exists the client walks the fallback chain
+  (client/item_assets.gd chain(): "a|b|c", first existing file wins, no code change when files land):
+  armour = the race x class file -> the race's SHARED interim file (OUTFIT_SCOPE below) -> the class starter look;
+  weapon = the race x class file -> the class weapon (procedural / asset_id).
 Also removes the retired hat slot's items (Boss 2026-11-13: armour is shirt, pants, armband, shoes) and moves generic
 set bonuses that needed 5 armour pieces to 4.
 Keeps each file's line endings (CRLF / LF) and its JSON indent.
@@ -30,6 +33,12 @@ CLASSES = {
 }
 ARMOR = {"shirt": ("Tunic", "เสื้อ"), "pants": ("Trousers", "กางเกง"), "armband": ("Armband", "ปลอกแขน"), "shoes": ("Boots", "รองเท้า")}
 SLOTS = ["weapon", "shirt", "pants", "armband", "shoes"]
+# Which delivered looks exist besides the final race x class files (Boss 2026-11-13: 16 armour looks + 16 weapons are
+# the target; the Studio's race_outfits.glb, one look per race, is the interim look of every class at every tier).
+# "class": only the race x class file.  "race": the race's shared file comes next in the chain.
+OUTFIT_SCOPE = "race"
+SHARED_ARMOR = "res://art/armor/race_shared/%s_%s.glb"  # tools/items/split_race_outfits.py
+SHARED_ICON = "res://art/armor/race_shared/icon-%s_%s.png"  # rendered from the mesh (tools/shots/race_outfit_shots.gd)
 
 
 def T(on, actions, **extra):
@@ -133,7 +142,22 @@ def main():
                         "icon_path": "res://art/armor/race_%s/%s/icon-%s.png" % (race, cls, slot),
                         "fallback_asset_path": base["asset_path"], "fallback_icon_path": base["icon_path"], "source_style": base["source_style"],
                     }
+                    if OUTFIT_SCOPE == "race":
+                        entry["fallback_asset_path"] = "|".join([SHARED_ARMOR % (race, slot), base["asset_path"]])
+                        entry["fallback_icon_path"] = "|".join([SHARED_ICON % (race, slot), base["icon_path"]])
                 items[item_id] = entry
+    # Race off-hand shields (Boss 2026-11-13: the Studio's sword & shield delivery has a shield per race). Like round_shield:
+    # slot offhand (Sword & Shield only), no set (the race set is weapon + 4 armour), one item for every tier. Until the
+    # file exists the procedural round shield shows (asset_id + procedural); stats come from the rule book like any offhand.
+    base_shield = items["round_shield"]
+    for race, (rname, rname_th, _, _) in RACES.items():
+        items["race_%s_shield" % race] = {
+            "asset_id": base_shield["asset_id"], "name": "%s Shield" % rname, "name_th": "โล่%s" % rname_th,
+            "slot": "offhand", "race": race, "class": "sword_shield", "drop_level": 99, "procedural": True,
+            "asset_path": "res://art/weapons/race_%s/shield.glb" % race,
+            "icon_path": "res://art/weapons/race_%s/icon-shield.png" % race,
+            "fallback_icon_path": base_shield.get("icon_path", ""),
+        }
     save("data/items/catalog.json", catalog, cat_crlf, 1)
 
     sets, sets_crlf = load("data/items/sets.json")
@@ -195,7 +219,7 @@ def main():
     mig["plain_slots"].pop("hat", None)
     mig["allowed_armor"] = {k: v for k, v in mig["allowed_armor"].items() if v != "hat" and not k.startswith("race_")}
     for item_id, entry in items.items():  # race armour is a known identity (else armor_migration maps it to plain Ash)
-        if item_id.startswith("race_") and entry["slot"] != "weapon":
+        if item_id.startswith("race_") and entry["slot"] in ARMOR:
             mig["allowed_armor"][item_id] = entry["slot"]
     save("data/items/armor_migration.json", mig, mig_crlf, 2)
 

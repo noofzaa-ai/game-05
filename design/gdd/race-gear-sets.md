@@ -153,7 +153,8 @@ Exact paths and the rig rule are in **`docs/art/race_gear_handoff.md`** (the Stu
   - **16 weapon icons**: `art/weapons/race_<race>/icon-<class>.png`
   - Icons are 80 in total, 192 × 192, made with the Codex 2D workflow and reviewed by the Boss before import.
 - Tiers share the mesh. The tier shows through the item frame colour and the existing refine aura; there is no per-tier mesh.
-- Fallback until a file exists: the class starter look (Ash heavy/light/cloth meshes and icons, procedural class weapon). The set works before the art lands.
+- **Interim look (2026-11-13):** the Studio delivered one starter look per race (`race_outfits.glb`, split into `art/armor/race_shared/<race>_<slot>.glb`). Every class's race piece shows it at every tier until the class's own file lands. The 16 race × class looks and 16 race weapons stay the target. Race weapons arrive in batches (greatsword first).
+- Fallback chain until a file exists: armour = race × class file → the race's shared interim file → the class starter look (Ash); weapon = race × class file → the class weapon (procedural). The set works before the art lands. Details: `docs/art/race_gear_handoff.md` 4.
 - Set emblem (optional): reuse the 4 race emblems asked in races-and-classes.md 3.8.
 - Fashion still overlays equipment (Boss rule). Visual acceptance stays OPEN per the parity rule until compared.
 
