@@ -1362,6 +1362,12 @@ const TREE_DETAIL_W := 430.0
 const TREE_GAP := 14.0
 const TREE_COMBO_COLUMN := 1.25  ## the combo's own column between the branches, x the combo node size
 const TREE_PLATE_MIN_SCALE := 0.8  ## below this layout scale the Skills tab buttons use the flat parchment skin
+## Compact (phone) Skills tab (ux-ui 2026-11-13): below this tab height in reference px (height / scale) the header is one
+## row, the tree takes the full width and the node details open as a sheet on the side away from the selected node.
+const TREE_COMPACT_BELOW := 560.0
+const TREE_NODE_MIN_COMPACT := 80.0  ## smallest node in the compact layout (PO default: 80-100 px keeps the tree whole)
+const TREE_SHEET_W := 0.5  ## compact detail sheet width, share of the tab width
+const TREE_COMPACT_BUTTON_W := 230.0  ## compact header button width (the label wraps to two lines)
 const TREE_BADGE := 0.34  ## OR / lock / tick badge size, of the node size
 const TREE_PATH_W := 5.0
 const TREE_FONT_COST := 18

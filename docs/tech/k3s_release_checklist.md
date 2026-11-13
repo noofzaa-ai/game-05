@@ -13,10 +13,10 @@ console certification (web game on our own host), so that part of the generic `/
 - [x] Install Docker Desktop (done 2026-11-13, 29.9.2, per-user install). The CLI is at
       `%LOCALAPPDATA%\Programs\DockerDesktop\resources\bin` and is **not on PATH** in Git Bash. Add it:
       `export PATH="/c/Users/wanwi/AppData/Local/Programs/DockerDesktop/resources/bin:$PATH"`.
-- [ ] **Registry access**: `wiyazard:30500` is a plain-HTTP registry. In Docker Desktop -> Settings ->
+- [x] **Registry access** (done 2026-11-13: `192.168.1.99:30500` and `wiyazard:30500` in insecure-registries; push verified. Use the IP if the name does not resolve). `wiyazard:30500` is a plain-HTTP registry. In Docker Desktop -> Settings ->
       Docker Engine, add `"insecure-registries": ["wiyazard:30500"]`, then Apply & restart. This machine
       must resolve and reach `wiyazard` (Tailscale/LAN): `curl http://wiyazard:30500/v2/` should return `{}`.
-- [ ] **kubectl + kubeconfig** on this machine (`winget install Kubernetes.kubectl`, plus a kubeconfig
+- [ ] **kubeconfig** (kubectl installed 2026-11-13 at `%LOCALAPPDATA%/Microsoft/WinGet/Packages/Kubernetes.kubectl_Microsoft.Winget.Source_8wekyb3d8bbwe/kubectl.exe`; API `https://192.168.1.99:6443` answers 401, so only the kubeconfig is missing). kubectl + kubeconfig on this machine (`winget install Kubernetes.kubectl`, plus a kubeconfig
       for the k3s API, limited to namespace `zorx-staging` if possible). Without this, step 5 cannot run
       from here, and the only other route is someone running the commands on the node (which Boss
       ruled out).
@@ -152,13 +152,55 @@ digest is authoritative. Data: Postgres is not touched by an image rollout. Prof
 new build may carry new fields. Old builds ignore unknown keys, but check `logic/profile.gd` from_dict
 before rolling back across a save-format change.
 
-## 8. Known state on 2026-11-13 (prep run; nothing pushed, nothing applied)
+## 8. Release fdf9fbb84e7d-20261113 (built from a clean `git worktree` at fdf9fbb; uncommitted work excluded)
 
-| Item | Status |
-|---|---|
-| Web build (`build_web.py --skip-tests --max-file-mb 0`) | **FAILS at import**: `logic/skill_tree_mechanics.gd` (untracked, in progress by another agent) has parse errors at 446/555/706. `build/web/` is the older build `4ec5df6a06cf` (db31050 + local changes). |
-| Web image from existing `build/web` | Built `zorx-web:k3s-prep-local`; served on :8070, all headers in section 3 correct, healthcheck healthy |
-| Rooms image | Built `zorx-room-worker:k3s-prep-local`, but **the worker fails to start**: it copies the same broken script. Rebuild after that file compiles. |
-| Name/profile worker image | Built `zorx-name-validator:k3s-prep-local` (with `--skip-tests`). Process smoke 10/10 PASS. |
-| Nakama runtime image | Not built: `registry.heroiclabs.com` answered 429 (rate limit), so retry later. `npm test` fails: `initializer.registerMatch is not a function` (test stub lacks `registerMatch`; pre-existing, runtime unchanged since ffa3a51). |
-| kubectl / kubeconform | Not installed, so manifests are not schema-linted on this machine |
+Pushed to `192.168.1.99:30500` (the same registry as `wiyazard:30500`), logged in `build/pushed-images.log`:
+
+| Image | Status | Digest |
+|---|---|---|
+| zorx-room-worker | pushed. Linux image smoke all PASS (room alloc, clock, close) | `192.168.1.99:30500/zorx-room-worker@sha256:1db3c1622679f3e78a2a43815890bc7160b7a0d173e7495fc8abd3b5a992eccd` |
+| zorx-name-validator | pushed. Process smoke 10/10; Linux image: healthz ok, new player has 4 cards, 0 SCRIPT ERROR | `192.168.1.99:30500/zorx-name-validator@sha256:891dfce5d80901f2d66e54b401dabbab5ac66ecf3339a22bfd5c3d0ef8ebf84f` |
+| zorx-web | **NOT built**: Web export fails at fdf9fbb. Committed `client/skill_tree_tab.gd` uses `CardTokens.TREE_SHEET_W`, `TREE_COMPACT_BELOW`, `TREE_COMPACT_BUTTON_W` and `TREE_NODE_MIN_COMPACT`, which exist only in the uncommitted `client/card_tokens.gd` | none |
+| zorx-nakama | **NOT built**: upstream `registry.heroiclabs.com` still returns 429. Runtime `npm test` stub also lacks `registerMatch` | none |
+
+Tests at fdf9fbb (clean worktree): passed=3143 failed=39. 38 of the 39 also fail in the dirty main tree, so they
+are not caused by local edits. Examples: catalog armour/race items missing from `art/items/item_manifest.json`,
+57-bone rig check, M1-2/M3-4 command tests. Owners must clear these before prod.
+
+Do **not** roll out the room or name/profile images until the web image from the same commit exists. Online
+rooms check protocol and wire versions against the client (`7a09410` raised netfox protocol to 4), so a new
+room worker behind the old web client breaks online play.
+
+### Rollback targets (newest tag per repo in the registry, 2026-11-13; confirm with step 5a, which is authoritative)
+
+| Repo | Tag | Digest |
+|---|---|---|
+| zorx-web | combat-feel-20261104-1 | `sha256:d2993d8a8c38493db57951c1eb430928510c3a0deb72ff4adb377703a8ff44e4` |
+| zorx-room-worker | combat-feel-20261104-1 | `sha256:0bbf6b8ac534e7d3e13a74854a10273db46672764c17e7780342262fb2db9504` |
+| zorx-name-validator | combat-lockout-fix-20261102-1 | `sha256:7299e2e43e9449e26d504724cfc734d4ee96093093a390a8c5b4af094f1c06f8` |
+| zorx-nakama | chest-id-fix-20261101-2 | `sha256:64ed2fe98550902cbfe1f13cbac1567f01b0a0322b7f8b4890eb380895e9c998` |
+
+### Commands for Boss (run on the k3s node, or here once a kubeconfig exists; once the web image is pushed)
+
+```sh
+NS=zorx-staging
+# 1. Record the live images (rollback point)
+kubectl -n $NS get deploy -o jsonpath='{range .items[*]}{.metadata.name}{"	"}{range .spec.template.spec.containers[*]}{.name}={.image}{" "}{end}{"
+"}{end}' | tee before-fdf9fbb.txt
+# 2. Name/profile worker (container "validator")
+kubectl -n $NS set image deployment/name-validator validator=wiyazard:30500/zorx-name-validator@sha256:891dfce5d80901f2d66e54b401dabbab5ac66ecf3339a22bfd5c3d0ef8ebf84f
+kubectl -n $NS rollout status deployment/name-validator --timeout=180s
+# 3. Room workers: one Deployment per pool worker (room-worker-1..N, container "rooms"); ZORX_SQUAD_ROOMS stays unset
+for d in $(kubectl -n $NS get deploy -o name | grep room-worker); do
+  kubectl -n $NS set image $d rooms=wiyazard:30500/zorx-room-worker@sha256:1db3c1622679f3e78a2a43815890bc7160b7a0d173e7495fc8abd3b5a992eccd
+  kubectl -n $NS rollout status $d --timeout=180s
+done
+kubectl -n $NS get deploy -o yaml | grep -c ZORX_SQUAD_ROOMS   # expect 0
+# 4. Web (names from step 1; digest from the web push)
+kubectl -n $NS set image deployment/<web-deploy> <web-container>=wiyazard:30500/zorx-web@sha256:<web digest>
+# 5. Equipment tuning ConfigMap (regenerated: no hat slot, current upgrade numbers)
+kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/equipment-tuning.yaml
+```
+
+Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
+or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
