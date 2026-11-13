@@ -31,10 +31,12 @@ def main():
         revision += '-dirty'
     labels = ['--label', 'org.opencontainers.image.revision=' + revision, '--label', 'org.opencontainers.image.source=https://github.com/grislyhub/zorx']
     runtime = HERE / 'runtime'
-    subprocess.run(['npm', 'ci', '--ignore-scripts', '--no-audit', '--no-fund'], cwd=runtime, check=True, timeout=180)
-    subprocess.run(['npm', 'run', 'build'], cwd=runtime, check=True, timeout=120)
+    # Windows ships npm as npm.cmd, which subprocess cannot start by bare name.
+    npm = shutil.which('npm') or 'npm'
+    subprocess.run([npm, 'ci', '--ignore-scripts', '--no-audit', '--no-fund'], cwd=runtime, check=True, timeout=180)
+    subprocess.run([npm, 'run', 'build'], cwd=runtime, check=True, timeout=120)
     if not args.skip_tests:
-        subprocess.run(['npm', 'test'], cwd=runtime, check=True, timeout=60)
+        subprocess.run([npm, 'test'], cwd=runtime, check=True, timeout=60)
     arch, checksum = GODOT[args.platform]
     cache = ROOT / 'build/names-binaries'
     cache.mkdir(parents=True, exist_ok=True)

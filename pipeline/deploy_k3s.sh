@@ -26,7 +26,9 @@ Examples:
   ./pipeline/deploy_k3s.sh --platform linux/arm64
 
 Uses the current working tree, including local changes; does not pull Git.
-Requires Python, Git, Docker, Godot 4.7.2 + Web templates and registry access.
+Requires Python 3.9+, Git, Docker, Godot 4.7.2 + Web templates and registry access.
+Windows: run from Git Bash with Docker Desktop running and GODOT_BIN set
+(see docs/tech/k3s_release_checklist.md).
 Configure Docker registry authentication/HTTP registry access separately if needed.
 HELP
 }
@@ -56,11 +58,29 @@ fi
 if [[ "$target_platform" != linux/amd64 && "$target_platform" != linux/arm64 ]]; then
   echo "ERROR: Supported platforms: linux/amd64, linux/arm64." >&2; exit 2
 fi
-for dependency in git docker python3; do
+# Windows Git Bash: `python3` may be the Microsoft Store stub, which exists but cannot run.
+# Use $PYTHON if set, else the first of python3/python that really executes.
+pick_python() {
+  local candidate
+  for candidate in "${PYTHON:-}" python3 python; do
+    [[ -n "$candidate" ]] || continue
+    if "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; then
+      printf '%s' "$candidate"; return 0
+    fi
+  done
+  return 1
+}
+for dependency in git docker; do
   if ! command -v "$dependency" >/dev/null 2>&1; then
     echo "ERROR: $dependency is required." >&2; exit 1
   fi
 done
+if ! pick_python >/dev/null; then
+  echo "ERROR: Python 3.9+ is required (python3 or python; set PYTHON to override)." >&2; exit 1
+fi
+if ! docker info >/dev/null 2>&1; then
+  echo "ERROR: Cannot reach Docker. Start Docker Desktop (or the daemon) first." >&2; exit 1
+fi
 source_commit="$(git -C "$project_root" rev-parse --short=12 HEAD)"
 source_state="$(git -C "$project_root" status --porcelain)"
 if [[ -z "$release_tag" ]]; then
@@ -87,7 +107,16 @@ fi
 "$pipeline_dir/build_web_container.sh" --build-web --image "$image_ref" --platform "$target_platform"
 printf '\nPushing %s\n' "$image_ref"
 docker push "$image_ref"
-# Only record success after Docker confirms push. Its output also reports the digest.
+# Only record success after Docker confirms push. Also record the immutable digest so
+# rollout and rollback use repo@sha256, never a tag that could be overwritten.
 printf '%s\n' "$image_ref" > "$project_root/build/pushed-image.txt"
+digest_ref="$(docker image inspect --format '{{range .RepoDigests}}{{println .}}{{end}}' "$image_ref" | grep -F "${registry}/${image_name}@" | head -n 1 || true)"
+if [[ -n "$digest_ref" ]]; then
+  printf '%s\n' "$digest_ref" >> "$project_root/build/pushed-image.txt"
+  printf '%s\t%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$source_commit" "$image_ref" "$digest_ref" >> "$project_root/build/pushed-images.log"
+  printf 'Digest: %s\n' "$digest_ref"
+else
+  echo "WARNING: Docker reported no RepoDigest; copy the digest from the push output above." >&2
+fi
 printf '\nPush completed. Use this image in your k3s deployment:\n%s\n' "$image_ref"
 printf 'Saved: %s/build/pushed-image.txt\n' "$project_root"

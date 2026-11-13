@@ -53,14 +53,26 @@ for required in play.html packs.json index.js; do
   fi
 done
 # The manifest is authoritative: reject a partial/missing export before Docker.
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "ERROR: Python 3 is needed to read packs.json while packaging (not in the runtime image)." >&2; exit 1
+# Windows Git Bash: `python3` may be the Microsoft Store stub, which exists but cannot run.
+# Use $PYTHON if set, else the first of python3/python that really executes.
+pick_python() {
+  local candidate
+  for candidate in "${PYTHON:-}" python3 python; do
+    [[ -n "$candidate" ]] || continue
+    if "$candidate" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' >/dev/null 2>&1; then
+      printf '%s' "$candidate"; return 0
+    fi
+  done
+  return 1
+}
+if ! PY="$(pick_python)"; then
+  echo "ERROR: Python 3.9+ is needed to read packs.json while packaging (not in the runtime image). Set PYTHON if needed." >&2; exit 1
 fi
-python3 - "$web_output" <<'PY'
+"$PY" - "$web_output" <<'PY'
 import json, sys
 from pathlib import Path
 folder = Path(sys.argv[1]).resolve()
-manifest = json.loads((folder / 'packs.json').read_text())
+manifest = json.loads((folder / 'packs.json').read_text(encoding='utf-8'))
 names = [manifest['engine'], manifest['core']] + [p['file'] for p in manifest['packs']]
 for name in names:
     if not isinstance(name, str) or Path(name).name != name or name in ('.', '..'):
@@ -69,7 +81,7 @@ for name in names:
     if not path.is_file() or path.stat().st_size == 0:
         raise SystemExit(f'ERROR: Missing or empty pack: {path}')
 # A previous external CDN base would ignore the assets packaged in this image.
-page = (folder / 'play.html').read_text()
+page = (folder / 'play.html').read_text(encoding='utf-8')  # explicit: Windows defaults to cp1252
 if "window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '';" not in page:
     raise SystemExit('ERROR: This container expects same-origin packs. Rebuild Web without --pack-base.')
 print('Packaging Web build:', manifest['build'])

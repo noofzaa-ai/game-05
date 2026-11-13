@@ -55,16 +55,16 @@ data:
         },
         "increments": {
           "HP": [
-            10,
-            15,
-            20,
-            25
-          ],
-          "ATK": [
             1,
             1.5,
             2,
             2.5
+          ],
+          "ATK": [
+            0.1,
+            0.15,
+            0.2,
+            0.25
           ],
           "DEF": [
             0.8,
@@ -109,10 +109,10 @@ data:
             0.75
           ],
           "HPREGEN": [
-            0.05,
-            0.075,
-            0.1,
-            0.125
+            0.005,
+            0.0075,
+            0.01,
+            0.0125
           ],
           "STAREGEN": [
             0.025,
@@ -139,10 +139,9 @@ data:
         "base_move_multiplier": 1.0,
         "base_dodge_multiplier": 1.0,
         "slot_weights": {
-          "shirt": 0.4,
+          "shirt": 0.5,
           "pants": 0.25,
           "shoes": 0.15,
-          "hat": 0.1,
           "armband": 0.1
         },
         "armor_penalties": {

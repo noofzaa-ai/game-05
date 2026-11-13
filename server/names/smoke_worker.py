@@ -23,8 +23,8 @@ def prepare(destination):
     folder.mkdir(parents=True)
     shutil.copytree(ROOT / 'server/profile', destination / 'server/profile')
     shutil.copytree(ROOT / 'server/shared', destination / 'server/shared')
-    for sub in ('items', 'camp', 'cosmetics'):
-        shutil.copytree(ROOT / 'data' / sub, destination / 'data' / sub, ignore=shutil.ignore_patterns('*.import', '*.uid'))
+    # Every data/ folder logic/ or server/ loads (the profile runner needs classes/races/skill_tree/...).
+    runpy.run_path(str(ROOT / 'server/shared/image_data.py'))['copy'](ROOT, destination)
     for name in ('name_rules.gd', 'worker.gd'):
         shutil.copy2(ROOT / 'server/names' / name, folder / name)
     runpy.run_path(str(ROOT / 'server/shared/godot_class_cache.py'))['prepare'](destination)
@@ -69,6 +69,8 @@ def main():
                     ('invalid JSON rejected', request(raw=b'{broken')[0] == 400),
                     ('oversize payload rejected', request(raw=b'x' * 524289)[0] == 413),
                     ('unknown route rejected', request(path='/other')[0] == 404),
+                    # The profile route loads cards/races/skill tree data; an image missing a data folder fails here.
+                    ('new player profile built', request({'v': 1, 'state': None, 'seed': '0123456789abcde', 'name': '', 'command': None}, path='/profile')[1].get('ok') is True),
                 ]
                 with socket.create_connection(('127.0.0.1', port), timeout=5) as s:
                     s.sendall(('POST /validate-name HTTP/1.1\r\nContent-Length: 2\r\nContent-Length: 2\r\nAuthorization: Bearer ' + token + '\r\n\r\n{}').encode())
@@ -81,7 +83,7 @@ def main():
                 except subprocess.TimeoutExpired: process.kill(); process.wait()
         assert not (root / 'stderr').read_text(), 'Godot stderr must be empty'
         assert token not in (root / 'stdout').read_text(), 'credentials must never be logged'
-        print('PASS standalone worker: 9 HTTP checks; stderr empty; credentials withheld')
+        print('PASS standalone worker: 10 HTTP checks; stderr empty; credentials withheld')
 
 
 if __name__ == '__main__':
