@@ -18,6 +18,11 @@ meshes Weapon_<Race>_<Sword|Shield> weighted 100% to RightHand / LeftForeArm exa
 "| Sword" / "| Shield"): art/weapons/race_<race>/sword_shield.glb (the sword) and art/weapons/race_<race>/shield.glb
 (the race off-hand shield), node renamed "Weapon_<Race> | Sword" / "| Shield" (the class-gear label the client reads;
 mesh bytes unchanged), textures once in art/weapons/race_shared/.
+The other race weapons (Boss deliveries 2026-11-13, MID tier, same rig, one mesh per race, 3 PNG images each) go the
+same way (WEAPON_DELIVERIES): greatsword_weapons.glb (Weapon_<Race>_Greatsword, RightHand -> "| Sword", the label of the
+class greatsword's blade/guard/grip/pommel pieces), longbow_weapons.glb (Weapon_<Race>_Bow, LeftHand -> "| Bow") and
+magic_weapons.glb (Weapon_<Race>_Staff, RightHand -> "| Staff") -> art/weapons/race_<race>/<class>.glb, textures
+<delivery>_<n>.png in art/weapons/race_shared/ (imported lossy + mipmaps, like the S&S textures).
 Run: python -I tools/items/split_race_outfits.py   (from the repo root; re-run after a new Studio drop)
 """
 import json
@@ -39,32 +44,46 @@ def source_mesh_name(race, slot):
     return "Outfit_%s_%s.001" % (RACES[race], SLOTS[slot])
 
 
-WEAPONS_SOURCE = os.path.join(ROOT, "art_source", "race_gear", "sword_shield_weapons.glb")
 WEAPON_TEXTURES = os.path.join(ROOT, "art", "weapons", "race_shared")
-WEAPON_PIECES = {"Sword": "sword_shield.glb", "Shield": "shield.glb"}  # mesh kind -> file in art/weapons/race_<race>/
+# source file -> (texture file prefix, {source mesh kind: (class-gear label kind, file in art/weapons/race_<race>/)})
+WEAPON_DELIVERIES = {
+    "sword_shield_weapons.glb": ("ss_weapons", {"Sword": ("Sword", "sword_shield.glb"), "Shield": ("Shield", "shield.glb")}),
+    "greatsword_weapons.glb": ("greatsword_weapons", {"Greatsword": ("Sword", "greatsword.glb")}),
+    "longbow_weapons.glb": ("longbow_weapons", {"Bow": ("Bow", "longbow.glb")}),
+    "magic_weapons.glb": ("magic_weapons", {"Staff": ("Staff", "magic.glb")}),
+}
 
 
 def split_weapons(rig):
-    if not os.path.exists(WEAPONS_SOURCE):
+    total = 0
+    for source_name, (prefix, pieces) in WEAPON_DELIVERIES.items():
+        total += split_weapon_file(rig, os.path.join(ROOT, "art_source", "race_gear", source_name), prefix, pieces)
+    return total
+
+
+def split_weapon_file(rig, source, prefix, pieces):
+    if not os.path.exists(source):
         return 0
-    js, binary = glb.read_glb(WEAPONS_SOURCE)
-    assert glb.rig_hash(js, binary) == rig, "weapon delivery rig differs from the Studio body rig: stop"
+    source_name = os.path.basename(source)
+    js, binary = glb.read_glb(source)
+    assert glb.rig_hash(js, binary) == rig, "%s: rig differs from the Studio body rig: stop" % source_name
     os.makedirs(WEAPON_TEXTURES, exist_ok=True)
     uris = []
     for index, image in enumerate(js["images"]):
         view = js["bufferViews"][image["bufferView"]]
         start = view.get("byteOffset", 0)
-        name = "ss_weapons_%d.jpg" % index
+        mime = image.get("mimeType", "image/jpeg")
+        name = "%s_%d.%s" % (prefix, index, "png" if mime == "image/png" else "jpg")
         with open(os.path.join(WEAPON_TEXTURES, name), "wb") as f:
             f.write(binary[start: start + view["byteLength"]])
-        uris.append({"name": image.get("name", name), "uri": "../race_shared/" + name, "mimeType": image.get("mimeType", "image/jpeg")})
-        print("  %-22s %8d bytes" % (name, view["byteLength"]))
+        uris.append({"name": image.get("name", name), "uri": "../race_shared/" + name, "mimeType": mime})
+        print("  %-26s %8d bytes" % (name, view["byteLength"]))
     bare = json.loads(json.dumps(js))
     textures, samplers = bare.pop("textures"), bare.pop("samplers", None)
     bare.pop("images")
     total = 0
     for race in RACES:
-        for kind, file in WEAPON_PIECES.items():
+        for kind, (label_kind, file) in pieces.items():
             keep = "Weapon_%s_%s" % (RACES[race], kind)
             assert keep in glb.meshed(js), keep
             part, part_bin = glb.subset(bare, binary, lambda n, keep=keep: "mesh" in n and n["name"] != keep, False)
@@ -75,17 +94,17 @@ def split_weapons(rig):
             part["textures"] = textures
             if samplers is not None:
                 part["samplers"] = samplers
+            label = "Weapon_%s | %s" % (RACES[race], label_kind)
             for node in part["nodes"]:
                 if node.get("name") == keep:
-                    node["name"] = "Weapon_%s | %s" % (RACES[race], kind)
-            part.setdefault("extras", {})["zorx_source"] = "sword_shield_weapons.glb " + keep
+                    node["name"] = label
+            part.setdefault("extras", {})["zorx_source"] = "%s %s" % (source_name, keep)
             folder = os.path.join(ROOT, "art", "weapons", "race_" + race)
             os.makedirs(folder, exist_ok=True)
             out = os.path.join(folder, file)
             glb.write_glb(out, part, part_bin)
             nj, nb = glb.read_glb(out)
             assert glb.rig_hash(nj, nb) == rig
-            label = "Weapon_%s | %s" % (RACES[race], kind)
             assert list(glb.meshed(nj)) == [label]
             assert glb.mesh_hash(nj, nb, glb.meshed(nj)[label]) == glb.mesh_hash(js, binary, glb.meshed(js)[keep])
             total += os.path.getsize(out)

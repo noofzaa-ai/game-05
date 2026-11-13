@@ -39,7 +39,7 @@ const CLASS_FILES := {
 	"magic": {"model": "magic", "gear": "armor_magic"},
 }
 ## class-gear.js 'weapons' mode: the gear pieces kept over the Silver Silk outfit.
-const WEAPON_PIECE := "\\| (?:Sword|Shield|Bow|Quiver|Staff|Spellbook)\\b"
+const WEAPON_PIECE := "\\| (Sword|Shield|Bow|Quiver|Staff|Spellbook)\\b"
 ## index.html iris menu: value -> default colour (data-color); 0 Classic uses the eye colour input.
 const IRIS_STYLES := {0: "", 1: "a352df", 3: "ff562c", 6: "a577db", 7: "f75c3e", 9: "b960db", 10: "9b69e7"}
 ## eyes/blink.js timings (seconds).
@@ -195,6 +195,14 @@ static func is_weapon_piece(mesh_name: String) -> bool:
 	if _weapon_regex == null:
 		_weapon_regex = RegEx.create_from_string(WEAPON_PIECE)
 	return _weapon_regex.search(mesh_name) != null
+
+
+## The weapon kind of a gear piece's label ("L 17 | Bow string" -> "Bow", "Weapon_Elf | Staff" -> "Staff"), "" if none.
+static func weapon_kind(mesh_name: String) -> String:
+	if _weapon_regex == null:
+		_weapon_regex = RegEx.create_from_string(WEAPON_PIECE)
+	var found := _weapon_regex.search(mesh_name)
+	return found.get_string(1) if found != null else ""
 
 
 ## `path` is ignored: every caller asks for "the player" (class, hair and outfit come from dress()).
@@ -909,11 +917,25 @@ func _wear_race_weapon() -> void:
 	var socket_prop := pieces.is_empty() and not _race_weapon_wanted.is_empty() and ResourceLoader.exists(_race_weapon_wanted)
 	if socket_prop:
 		_show_weapon(_race_weapon_wanted, "race")
+	# A race file replaces the class pieces of the kinds it brings ("| Bow" also takes the class "| Bow string",
+	# "| Sword" the greatsword's blade/guard/grip/pommel); the class's other kit stays: the archer's "| Quiver" /
+	# "| Quiver arrows" and the mage's "| Spellbook" (worn on the hips, no race version delivered; PO default 2026-11-13).
+	var replaced := {}
+	for mesh in weapons:
+		replaced[weapon_kind(str(mesh.name))] = true
+	var kept: Array[MeshInstance3D] = []
 	for mesh in _class_weapons:
-		mesh.visible = weapons.is_empty() and not socket_prop and _weapon_shown
+		var keep := not socket_prop and not replaced.has(weapon_kind(str(mesh.name)))
+		mesh.visible = keep and _weapon_shown
+		if keep:
+			kept.append(mesh)
 	for mesh in _class_shield:
 		mesh.visible = false
-	_gear_weapons = weapons if not weapons.is_empty() else ([] as Array[MeshInstance3D] if socket_prop else _class_weapons.duplicate())
+	if weapons.is_empty():
+		_gear_weapons = kept
+	else:
+		_gear_weapons = weapons.duplicate()
+		_gear_weapons.append_array(kept)
 	_weapon_file_shield = shields
 	_pick_gear_shield()
 	if not pieces.is_empty() and not _toon.is_empty():

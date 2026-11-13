@@ -6,6 +6,7 @@ extends SceneTree
 ##   godot --path . --script res://tools/shots/race_outfit_shots.gd
 ## Output: build/race_outfits/ (PNG per shot; contact sheets are put together by tools/shots/race_outfit_sheet.py).
 ## ZORX_ICONS=1 also writes the icons to art/armor/race_shared/icon-<race>_<slot>.png.
+## ZORX_ONLY=weapons: only the race weapon shots (all four classes) and the icons; ZORX_ONLY=icons: only the icons.
 
 const Portrait := preload("res://client/card_portrait.gd")
 const CharacterModel := preload("res://client/characters/studio05_character_model.gd")
@@ -51,6 +52,8 @@ func run() -> void:
 		await _poke()
 	elif OS.get_environment("ZORX_ONLY") == "weapons":
 		await _weapon_shots()
+		await _icons()
+	elif OS.get_environment("ZORX_ONLY") == "icons":
 		await _icons()
 	else:
 		await _weapon_shots()
@@ -171,7 +174,12 @@ const ICON_VIEWS := {  # skeleton space (+Z = the body's front, +X = its left): 
 	"armour": [Vector3(-0.42, 0.21, 0.88), Vector3.UP],
 	"sword": [Vector3(0.0, 1.0, 0.25), Vector3(0.0, 0.0, -1.0)],
 	"shield": [Vector3(0.92, 0.18, 0.36), Vector3.UP],
+	"greatsword": [Vector3(0.0, 1.0, 0.25), Vector3(0.0, 0.0, -1.0)],  # the long blades: from above like the sword
+	"longbow": [Vector3(0.9, 0.36, -0.26), Vector3(-0.34, 0.19, -0.92)],  # square to the bow plane (PCA of the 4 race bows), limbs up
+	"magic": [Vector3(0.19, 0.32, 0.93), Vector3(-0.48, -0.79, 0.38)],  # square to the staff's long axis (PCA), seen from the front
 }
+## The other race weapons (one file per race x class, art/weapons/race_<race>/<class>.glb), class body + family for dress().
+const RACE_WEAPONS := {"greatsword": "greatsword", "longbow": "longbow", "magic": "magic"}
 
 
 func _icons() -> void:
@@ -192,6 +200,8 @@ func _icons() -> void:
 			jobs.append([race, slot, "armour", "res://art/armor/race_shared/%s_%s.glb" % [race, slot]])
 		jobs.append([race, "sword", "sword", "res://art/weapons/race_%s/sword_shield.glb" % race])
 		jobs.append([race, "shield", "shield", "res://art/weapons/race_%s/shield.glb" % race])
+		for cls in RACE_WEAPONS:
+			jobs.append([race, cls, cls, "res://art/weapons/race_%s/%s.glb" % [race, cls]])
 	for job in jobs:
 		var looks := {"offhand": {}, "weapon": {"path": "", "family": "", "style": ""}}
 		for s in SLOTS:
@@ -201,6 +211,8 @@ func _icons() -> void:
 				looks[job[1]] = job[3]
 			"sword":
 				looks["weapon"] = {"path": job[3], "family": "blade", "style": "blade"}
+			"greatsword", "longbow", "magic":
+				looks["weapon"] = {"path": job[3], "family": RACE_WEAPONS[job[2]], "style": RACE_WEAPONS[job[2]]}
 			"shield":
 				looks["offhand"] = {"item_id": "icon", "asset_id": "", "procedural": false, "path": job[3], "refine_level": 0}
 		model.dress(looks)
@@ -209,7 +221,7 @@ func _icons() -> void:
 		match job[2]:
 			"armour":
 				piece_meshes = model._worn.get(job[1], {}).get("meshes", [])
-			"sword":
+			"sword", "greatsword", "longbow", "magic":
 				piece_meshes = model._race_weapon_meshes
 			"shield":
 				piece_meshes = model._race_shield_meshes
@@ -308,5 +320,58 @@ func _weapon_shots() -> void:
 				cam.position = Vector3(0.0, 1.2, 2.6)
 				cam.look_at(Vector3(0.0, 0.66, 0.0))
 				await _save(vp, "weapons/ss_%s_%s_%s.png" % [race, frame[0], side[0]])
+		model.clear_class_skill_frame()
+	vp.queue_free()
+	await _frames(2)
+	await _race_weapon_shots()
+
+
+## Each class's race weapon (greatsword / longbow / staff) with the race outfit on that class's body: idle, two skill
+## frames on the class skill clips (data/class_skills/class_skills.json motion segs) and the class suit's own weapon
+## as a reference row, front 3/4 and back. build/race_outfits/weapons/<class>_<race>_<frame>_<side>.png.
+const SKILL_FRAMES := {
+	"greatsword": [["idle", "", 0.0], ["reaping", "gs_slash_3", 0.82], ["crater", "gs_jump_attack", 1.0], ["power_up", "gs_power_up", 2.05]],
+	"longbow": [["idle", "", 0.0], ["draw", "lb_draw_arrow", 0.9], ["loose", "lb_aim_recoil", 0.18], ["overdraw", "lb_aim_overdraw", 1.6]],
+	"magic": [["idle", "", 0.0], ["orb", "mg_spell_1h_cast_spell_01", 0.58], ["starfall", "mg_spell_2h_cast_spell_01", 1.25], ["nova", "mg_spell_2h_magic_area_attack_01", 1.32]],
+}
+
+
+func _race_weapon_shots() -> void:
+	var stage := _stage(Vector2i(450, 600))
+	var vp: SubViewport = stage["vp"]
+	var cam: Camera3D = stage["cam"]
+	cam.fov = 40.0
+	var model = CharacterModel.new()
+	model.ink_outline = true
+	vp.add_child(model)
+	model.load_model()
+	for cls in RACE_WEAPONS:
+		var family: String = RACE_WEAPONS[cls]
+		model.dress({"class": cls})
+		for race in ["suit"] + RACES:
+			var looks := {}
+			if race == "suit":
+				for slot in SLOTS:
+					looks[slot] = ""
+				looks["weapon"] = {"path": "", "family": family, "style": family}
+			else:
+				looks = _outfit({"shirt": race, "pants": race, "armband": race, "shoes": race})
+				looks["weapon"] = {"path": "res://art/weapons/race_%s/%s.glb" % [race, cls], "family": family, "style": family}
+			model.dress(looks)
+			var lib = model._library
+			for frame in SKILL_FRAMES[cls]:
+				var clip: String = frame[1]
+				model.clear_class_skill_frame()
+				model.set_pose("idle", 0.0, 0.0, true, Vector2(0.0, 1.0), false, "", "", family)
+				if not clip.is_empty():
+					if not model.show_class_skill_frame({"clip": clip, "time": minf(float(frame[2]), lib.length(clip))}):
+						push_warning("no clip %s on %s" % [clip, cls])
+				for i in 30:
+					model.apply_pose(0.1)
+				for side in [["front", 30.0], ["back", 210.0]]:
+					model.rotation.y = deg_to_rad(side[1])
+					cam.position = Vector3(0.0, 1.2, 2.9)
+					cam.look_at(Vector3(0.0, 0.7, 0.0))
+					await _save(vp, "weapons/%s_%s_%s_%s.png" % [cls, race, frame[0], side[0]])
 		model.clear_class_skill_frame()
 	vp.queue_free()

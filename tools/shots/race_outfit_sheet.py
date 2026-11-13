@@ -12,7 +12,8 @@ OUT = os.path.join(ROOT, "build", "race_outfits")
 CLASSES = ["sword_shield", "greatsword", "longbow", "magic"]
 RACES = ["human", "viking", "elf", "runeborn"]
 SLOTS = ["shirt", "pants", "armband", "shoes"]
-PIECES = SLOTS + ["sword", "shield"]
+RACE_WEAPONS = ["greatsword", "longbow", "magic"]  # one file per race x class (art/weapons/race_<race>/<class>.glb)
+PIECES = SLOTS + ["sword", "shield"] + RACE_WEAPONS
 ICON = 96  # the item icon size (art/items/icons)
 SUPER = 4  # work at 4x, then scale down (soft edges)
 # piece -> catalog icon path under art/ (armour is shared per race: every class reaches it through the icon fallback chain)
@@ -22,6 +23,8 @@ for _r in RACES:
         TARGETS[(_r, _s)] = "armor/race_shared/icon-%s_%s.png" % (_r, _s)
     TARGETS[(_r, "sword")] = "weapons/race_%s/icon-sword_shield.png" % _r
     TARGETS[(_r, "shield")] = "weapons/race_%s/icon-shield.png" % _r
+    for _c in RACE_WEAPONS:
+        TARGETS[(_r, _c)] = "weapons/race_%s/icon-%s.png" % (_r, _c)
 
 
 def grid(rows, cols, cell, names, title, label_w=120, scale=1.0):
@@ -55,7 +58,7 @@ def _rim(img):
     return out
 
 
-def _icon(raw, diagonal):
+def _icon(raw, diagonal, flip=False):
     im = Image.open(raw).convert("RGBA")
     box = im.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()
     if box is None:
@@ -69,6 +72,8 @@ def _icon(raw, diagonal):
         angle = np.degrees(np.arctan2(-major[1], major[0]))
         im = im.rotate(45.0 - angle, resample=Image.BICUBIC, expand=True)
         im = im.crop(im.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox())
+        if flip:  # the axis direction is sign-free: turn the piece end for end (staff gem to the top right)
+            im = im.rotate(180)
     inner = ICON * SUPER * 0.84
     scale = inner / max(im.size)
     im = im.resize((max(1, round(im.size[0] * scale)), max(1, round(im.size[1] * scale))), Image.LANCZOS)
@@ -83,7 +88,7 @@ def make_icons():
         raw = os.path.join(OUT, "iconraw-%s_%s.png" % (race, piece))
         if not os.path.exists(raw):
             continue
-        icon = _icon(raw, piece == "sword")
+        icon = _icon(raw, piece in ("sword", "greatsword", "magic"), piece == "magic")
         if icon is None:
             continue
         icon.save(os.path.join(OUT, "icon-%s_%s.png" % (race, piece)))
@@ -96,7 +101,8 @@ def make_icons():
 def review_sheet():
     """icons_review.png: race x piece at 1x and 3x on a dark and a light panel; the top row is the current icons."""
     current = ["armor/ash_steel/icon-shirt.png", "armor/ash_steel/icon-pants.png", "armor/ash_steel/icon-arms.png",
-               "armor/ash_steel/icon-shoes.png", "items/icons/weapon_blade_01.png", "items/icons/offhand_round_shield.png"]
+               "armor/ash_steel/icon-shoes.png", "items/icons/weapon_blade_01.png", "items/icons/offhand_round_shield.png",
+               "items/icons/weapon_blade_01.png", "items/icons/weapon_blade_01.png", "items/icons/weapon_blade_01.png"]
     cell1, cell3 = ICON + 12, ICON * 3 + 12
     width = 110 + len(PIECES) * (cell1 + cell3)
     rows = [("current", [os.path.join(ROOT, "art", *c.split("/")) for c in current])] + \
@@ -153,6 +159,24 @@ def main():
                 if os.path.exists(p):
                     sheet.paste(Image.open(p).convert("RGB").resize((w, h)), (x, y + 14))
         sheet.save(os.path.join(weapons, "sheet_sword_shield.png"))
+        frames_by_class = {"greatsword": ["idle", "reaping", "crater", "power_up"], "longbow": ["idle", "draw", "loose", "overdraw"],
+                           "magic": ["idle", "orb", "starfall", "nova"]}
+        w, h = 225, 300
+        for cls, frames in frames_by_class.items():
+            looks = ["suit"] + RACES
+            sheet = Image.new("RGB", (110 + len(frames) * 2 * w, 24 + len(looks) * (h + 16)), (40, 40, 44))
+            d = ImageDraw.Draw(sheet)
+            d.text((6, 4), "Race %s weapon (MID-tier delivery) + race outfit on the %s body; suit row = class weapon reference" % (cls, cls), fill=(255, 255, 255))
+            for r, look in enumerate(looks):
+                y = 24 + r * (h + 16)
+                d.text((6, y + h // 2), look, fill=(230, 230, 230))
+                for c, (frame, side) in enumerate([(f, sd) for f in frames for sd in ["front", "back"]]):
+                    x = 110 + c * w
+                    d.text((x + 4, y), "%s %s" % (frame, side), fill=(200, 200, 160))
+                    p = os.path.join(weapons, "%s_%s_%s_%s.png" % (cls, look, frame, side))
+                    if os.path.exists(p):
+                        sheet.paste(Image.open(p).convert("RGB").resize((w, h)), (x, y + 14))
+            sheet.save(os.path.join(weapons, "sheet_%s.png" % cls))
     print("sheets in", OUT)
 
 
