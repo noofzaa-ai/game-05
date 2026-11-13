@@ -25,6 +25,7 @@ const MapData := preload("res://logic/map_data.gd")
 const InkStyle := preload("res://client/ink_style.gd")
 const StageProps := preload("res://client/stage_props.gd")
 const VfxLibrary := preload("res://client/vfx/vfx_library.gd")
+const CardTokens := preload("res://client/card_tokens.gd")
 
 var _local_player_id := 1
 const FIRST_ENEMY_ID := 100
@@ -723,6 +724,8 @@ func _handle_events() -> void:
 				if _session.bodies.has(event.target):
 					_spawn_damage_number(_session.bodies[event.target].position, int(ceilf(event.damage)), false, false, int(event.target)==_local_player_id)
 					_play_skill_hit(event, skill_impact)
+			"ultimate_cast":
+				_announce_ultimate(event)
 			"attack_started":
 				_announce_skill(int(event["player"]), str(event["move"]))
 				_play_move(_vfx.windup_key(str(event["move"])), int(event["player"]))
@@ -931,9 +934,23 @@ static func is_class_skill(skill: String) -> bool:
 	return not ClassSkillData.load_default().skill(skill).is_empty()
 
 
-## A special skill or ultimate of the local player: its name appears in a brush-stroke banner.
+## A race ultimate fired (logic/race_ultimates.gd ultimate_cast: name, race, class, vfx): our squad's caster card shows
+## the ultimate banner (race badge + name, client/squad_panel.gd); a lone fighter gets the HUD banner.
+func _announce_ultimate(event: Dictionary) -> void:
+	var id := int(event.get("player", -1))
+	if not _session.fighters.has(id) or not _is_our_team(id):
+		return
+	var name := CardTokens.ultimate_name(str(event.get("vfx", "")), str(event.get("name", "")))
+	if _squad_panel != null:
+		_squad_panel.ultimate_callout(id, name, str(event.get("race", "")))
+	elif id == _local_player_id:
+		_hud.show_skill_banner(name)
+
+
+## A special skill or ultimate of the local player: its name appears in a brush-stroke banner. (A race ultimate's
+## synthetic move is announced by _announce_ultimate instead.)
 func _announce_skill(id: int, move_id: String) -> void:
-	if id != _local_player_id:
+	if id != _local_player_id or str(_session.fighters[id].race_state.get("ult", {}).get("move", "")) == move_id:
 		return
 	for kind in ["special", "ultimate"]:
 		if move_id.ends_with("_" + kind):

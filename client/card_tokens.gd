@@ -1286,6 +1286,24 @@ const FONT_SQUAD_HUD_NAME := 17
 const FONT_SQUAD_HUD_HP := 14
 const FONT_SQUAD_HUD_CALLOUT := 22
 const SQUAD_HUD_DEAD := Color(0.55, 0.52, 0.5, 0.75)  ## a fallen card: dimmed (plus the grey shader and "DOWN")
+## Race ultimate on the squad card (ui-programmer 2026-11-13): a gauge strip in the race colour between the name and
+## the HP bar, a race-coloured ring that pulses round the card while the gauge is full, and the ultimate's name banner
+## (race badge + name) above the card for ULT_CALLOUT_SECONDS when it fires.
+const SQUAD_HUD_ULT_H := 8.0  ## gauge strip height
+const SQUAD_HUD_ULT_BACK := Color("2A140C")  ## empty gauge (the leather edge)
+const SQUAD_HUD_ULT_FULL_LIFT := 0.35  ## a full gauge's fill is lifted this far toward cream
+const SQUAD_HUD_ULT_NAME_LIFT := 0.6  ## the banner name: race colour lifted toward cream (readable on leather)
+const SQUAD_HUD_ULT_RING := 4.0  ## the full-gauge ring width round the card
+const SQUAD_HUD_ULT_PULSE := 0.9  ## seconds per ring pulse (steady ring with reduced motion)
+const SQUAD_HUD_ULT_PULSE_LOW := 0.35  ## ring alpha at the low point of the pulse
+const SQUAD_HUD_ULT_CALLOUT := Vector2(360.0, 54.0)  ## the name banner (wider than the card; kept on screen)
+const SQUAD_HUD_ULT_CALLOUT_GAP := 6.0  ## between the banner and the skill pill below it
+const SQUAD_HUD_ULT_CALLOUT_LINE := 4.0  ## the banner's race-colour rim
+const SQUAD_HUD_ULT_BADGE := 38.0  ## race badge edge on the banner
+const SQUAD_HUD_ULT_CALLOUT_SECONDS := 1.2
+const SQUAD_HUD_ULT_POP := 1.25  ## the banner pops in from this scale (none with reduced motion)
+const FONT_SQUAD_HUD_ULT_CALLOUT := 30
+const FONT_SQUAD_HUD_ULT_TAG := 16  ## the small "ULTIMATE" word over the name
 ## The class emblem medallion on each card frame (card_frame_<class>.png, 640x960): its region in art px.
 const CARD_FRAME_EMBLEM := Rect2(496.0, 14.0, 118.0, 118.0)
 ## Battle HUD trip panel and banners (client/hud.gd, auto-battle look).
@@ -1545,7 +1563,37 @@ const STRINGS_RACE := {
 	"synergy_none": ["ไม่มีซินเนอร์จี", "No synergy"],
 	"synergy_none_hint": ["เผ่าเดียวกัน 2 = คู่ · 3 = ทรีโอ · ต่างกันทั้ง 3 = พันธมิตร", "2 of a race = Pair  ·  3 = Trio  ·  3 different = Alliance"],
 	"err_invalid_race": ["ไม่มีเผ่านี้", "Unknown race"],
+	# Race ultimates in battle (client/squad_panel.gd): the tag over the name and each ultimate's name by its vfx key
+	# (race_ult/<race>_<class|default>, data/races/*.json). A key missing here falls back to the data name.
+	"ult_tag": ["ท่าไม้ตาย", "ULTIMATE"],
+	"ult_name_human_sword_shield": ["เสียงสั่งแม่ทัพ", "Commander's Call"],
+	"ult_name_human_greatsword": ["ฟันปรมาจารย์", "Masterstroke"],
+	"ult_name_human_longbow": ["ศรหมายตา", "Called Shot"],
+	"ult_name_human_magic": ["บทเพลงมหาเวท", "Grand Recital"],
+	"ult_name_human_default": ["รวมพล", "Rally"],
+	"ult_name_viking_sword_shield": ["คำรามไม่ก้มหัว", "Unbowed Roar"],
+	"ult_name_viking_greatsword": ["วังวนแร็กนาร็อก", "Ragnarok Whirl"],
+	"ult_name_viking_longbow": ["ห่าศรเพชฌฆาต", "Executioner's Volley"],
+	"ult_name_viking_magic": ["จันทร์โลหิต", "Blood Moon"],
+	"ult_name_viking_default": ["โทสะสงคราม", "Battle Fury"],
+	"ult_name_elf_sword_shield": ["ป้อมแก่นพฤกษา", "Heartwood Bastion"],
+	"ult_name_elf_greatsword": ["ฟันบุปผาหนาม", "Thornbloom Cleave"],
+	"ult_name_elf_longbow": ["ศรเมล็ดพิทักษ์", "Guardian Seedshot"],
+	"ult_name_elf_magic": ["บุปผาคืนชีพ", "Rebirth Bloom"],
+	"ult_name_elf_default": ["คลื่นบุปผาชีวา", "Lifebloom Surge"],
+	"ult_name_runeborn_sword_shield": ["อักขระป้อมปราการ", "Bastion Glyph"],
+	"ult_name_runeborn_greatsword": ["ผู้ทำลายรูน", "Runebreaker"],
+	"ult_name_runeborn_longbow": ["ห่าอักขระ", "Glyph Barrage"],
+	"ult_name_runeborn_magic": ["เอกภาวะอาคม", "Arcane Singularity"],
+	"ult_name_runeborn_default": ["รูนพิทักษ์", "Rune Ward"],
 }
+
+
+## A race ultimate's player-facing name from its vfx key ("race_ult/elf_magic"); `fallback` (the data name) when the
+## key has no entry.
+static func ultimate_name(vfx_key: String, fallback: String) -> String:
+	var key := "ult_name_" + vfx_key.trim_prefix("race_ult/")
+	return t(key) if STRINGS_RACE.has(key) else fallback
 
 
 ## The race's mockup block (plate_color, rim_color, badge_text); {} for an unknown race.

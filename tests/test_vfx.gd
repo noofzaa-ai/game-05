@@ -20,6 +20,7 @@ func run(ctx) -> void:
 	_check_skill_looks(ctx, lib)
 	await _check_player(ctx, lib)
 	await _check_class_skill_vfx(ctx)
+	await _check_ultimate_hud(ctx)
 
 
 ## Every move, skill, telegraph, dive, status and event maps to a real entry.
@@ -200,6 +201,20 @@ func _check_class_skill_vfx(ctx) -> void:
 	for i in 30:
 		vfx._process(0.1)
 	ctx.check("every class skill effect ends and returns to its pool", vfx.live_count() == 0)
+	# Draw-call fix: a daiyooo flipbook hides off phases by scale 0.0001 (still drawn); _slim turns those into
+	# visible keys, so only live phases draw. After the all-visible prewarm frame a play must restore them.
+	var leap: Node3D = vfx._take("crater_leap")
+	var meshes: Array = leap.find_children("*", "MeshInstance3D", true, false)
+	vfx._start(leap, 0.9, Vector3.ZERO, Vector3.FORWARD, false)
+	var shown := meshes.filter(func(m) -> bool: return m.is_visible_in_tree()).size()
+	var fresh: Node3D = load("res://art/vfx/class_skills/crater_leap/effect.tscn").instantiate()
+	ctx.root.add_child(fresh)
+	var fap: AnimationPlayer = vfx._player_of(fresh)
+	fap.play(vfx._clip_of(fap))
+	fap.seek(0.9, true)
+	var live := fresh.find_children("*", "MeshInstance3D", true, false).filter(func(m) -> bool: return m.scale.x > 0.001).size()
+	ctx.check("crater_leap draws only its live phases (%d of %d meshes shown, %d live in the raw clip)" % [shown, meshes.size(), live], shown > 0 and absi(shown - live) <= 2 and shown * 4 < meshes.size())
+	fresh.queue_free()
 	vfx.queue_free()
 
 
@@ -213,3 +228,37 @@ class _FakeSession:
 	var bodies := {1: _FakeBody.new(Vector3.ZERO), 2: _FakeBody.new(Vector3(4, 0, 0))}
 	var fighters := {}
 
+
+## Race ultimates on the squad cards (client/squad_panel.gd): the gauge strip follows Fighter.gauge in the race colour,
+## a full gauge lights the ring, and ultimate_callout shows the race banner with the localized name, kept on screen.
+func _check_ultimate_hud(ctx) -> void:
+	var Fighter = load("res://logic/fighter.gd")
+	var CardTokens = load("res://client/card_tokens.gd")
+	var panel = load("res://client/squad_panel.gd").new()
+	ctx.root.add_child(panel)
+	var fighters := {}
+	for id in [0, 1]:
+		var f = Fighter.new()
+		f.team = "player"
+		f.stats = {"HP": 100.0}
+		f.hp = 100.0
+		f.race_state = {"race": "elf" if id == 0 else "viking", "class": "magic", "ultimate": {"name": "X", "vfx": "race_ult/elf_magic"}}
+		fighters[id] = f
+	fighters[0].gauge = 50.0
+	fighters[1].gauge = 100.0
+	var data := {"rules": {"ultimate_gauge_max": 100.0}}
+	panel.update_from(fighters, 0, data)
+	ctx.check("ultimate gauge strip shows half a gauge (%.2f)" % panel.gauge_shown(0), absf(panel.gauge_shown(0) - 0.5) < 0.01)
+	ctx.check("a full gauge lights the race ring, a half one does not", panel._cards[1]["ult_ring"].visible and not panel._cards[0]["ult_ring"].visible)
+	fighters[1].race_state.erase("ultimate")
+	panel.update_from(fighters, 0, data)
+	ctx.check("a card without a race ultimate has no gauge strip", panel.gauge_shown(1) < 0.0 and not panel._cards[1]["ult_ring"].visible)
+	var name: String = CardTokens.ultimate_name("race_ult/elf_magic", "fallback")
+	ctx.check("ultimate names come from the string table (%s)" % name, name == "Rebirth Bloom" and CardTokens.ultimate_name("race_ult/nope", "Data Name") == "Data Name")
+	panel.ultimate_callout(0, name, "elf")
+	ctx.check("ultimate_callout shows the race banner with the name", panel.ultimate_banner_shown(0) and panel._cards[0]["ult_name"].text == name and panel._cards[0]["ult_badge"].race == "elf")
+	var rect: Rect2 = panel._cards[0]["ult_banner"].get_global_rect()
+	var area: Vector2 = panel.get_viewport().get_visible_rect().size
+	ctx.check("the ultimate banner stays on screen %s" % rect, rect.position.x >= 0.0 and rect.end.x <= area.x + 0.5)
+	panel.queue_free()
+	await ctx.process_frame
