@@ -52,6 +52,7 @@ const TEST_FILES := [
 	"res://tests/test_goblin_stages.gd",
 	"res://tests/test_goblin_base_render_budget.gd",
 	"res://tests/test_draw_style.gd",
+	"res://tests/test_settings_panel.gd",
 	"res://tests/test_items.gd",
 	"res://tests/test_item_catalog.gd",
 	"res://tests/test_combat.gd",

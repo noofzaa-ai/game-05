@@ -430,9 +430,18 @@ func show_version(index: int) -> void:
 func _settings_body() -> Control:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	var settings := preload("res://client/graphics_panel.gd").contents(true)
+	# the hub settings rows (dark ink) on their parchment, inside the title's own window
+	var tokens := preload("res://client/card_tokens.gd")
+	var paper := PanelContainer.new()
+	paper.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	tokens.panel(paper, tokens.hub_paper(1.0))
+	var pad := MarginContainer.new()
+	tokens.margin(pad, tokens.CHAR_PAD, 1.0)
+	paper.add_child(pad)
+	var settings := preload("res://client/graphics_panel.gd").contents(true, 0.6, false)
 	settings.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(settings)
+	pad.add_child(settings)
+	scroll.add_child(paper)
 	return scroll
 
 

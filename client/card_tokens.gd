@@ -445,6 +445,15 @@ const SVC_SPLIT := 0.52  ## left column (grid) share of the panel width
 const SVC_DETAIL_H := 0.5
 const SHOP_DETAIL_H := 0.62  ## Shop: details box share of the content height (materials under it)
 const SVC_GOLD_W := 0.14  ## header money line width, share of the panel (Tailor: wider, it adds diamonds)
+## Settings panel (client/graphics_panel.gd): the service panel frame, two columns of sections, one row per setting
+## (its name, then choice plates; the chosen plate gets the Tailor ring and a check mark).
+const SET_LABEL_W := 230.0  ## a setting's name column (wraps inside it)
+const SET_CHIP_W := 150.0  ## one choice plate (height: SVC_ROW_H, 96 on phones)
+const SET_CHIP_GAP := 8.0
+const SET_ROW_GAP := 10.0
+const SET_COLUMN_GAP := 44.0
+const SET_SECTION_GAP := 18.0  ## above every section header but the first of a column
+const SET_HEADER_LINE := 2.0
 const TAILOR_SPLIT := 0.36  ## the character window's share of the Tailor width
 const TAILOR_TILE := Vector2(170.0, 200.0)  ## a picture tile (icon + name)
 const TAILOR_CHIP := Vector2(250.0, 64.0)  ## a look choice (hair / colour / makeup)
@@ -737,6 +746,35 @@ const STRINGS := {
 	"err_invalid_product": ["ไม่มีสินค้านี้", "That isn't for sale"],
 	"err_invalid_count": ["จำนวนไม่ถูกต้อง", "Wrong amount"],
 	"err_invalid_material": ["ไม่มีวัสดุนี้", "Unknown material"],
+	# settings panel (client/graphics_panel.gd); "settings" and "close" are above
+	"svc_settings": ["ตั้งค่า", "Settings"],
+	"gfx_sec_quality": ["ความละเอียด", "Quality"],
+	"gfx_sec_drawn": ["ลายเส้น", "Drawn look"],
+	"gfx_sec_scene": ["ฉาก", "Scene"],
+	"gfx_sec_effects": ["เอฟเฟกต์", "Effects"],
+	"gfx_render_scale": ["ความละเอียด 3D", "3D resolution"],
+	"gfx_scale_normal": ["ปกติ 50%", "Normal 50%"],
+	"gfx_scale_high": ["สูง 75%", "High 75%"],
+	"gfx_scale_ultra": ["สุด 100%", "Ultra 100%"],
+	"gfx_scale_hint": ["ลดความละเอียดเฉพาะฉาก 3D · UI เท่าเดิม", "Only the 3D scene changes; menus stay sharp"],
+	"gfx_aa": ["ลบรอยหยัก", "Anti-aliasing"],
+	"gfx_aa_2": ["2×", "2×"],
+	"gfx_aa_4": ["4×", "4×"],
+	"gfx_on": ["เปิด", "On"],
+	"gfx_off": ["ปิด", "Off"],
+	"gfx_drawn_style": ["ลายเส้นวาดมือ", "Drawn style"],
+	"gfx_drawn_on": ["เต็ม", "On"],
+	"gfx_drawn_lite": ["เบา", "Lite"],
+	"gfx_drawn_hint": ["เต็ม: เส้นหมึกทั้งจอที่ 50% เท่านั้น เครื่องช้าจะลดเป็นเบาเอง", "On: full-screen ink at 50% only; slow devices drop to Lite"],
+	"gfx_outline": ["เส้นขอบโมเดล", "Model outline"],
+	"gfx_shadows": ["เงาฉาก", "Shadows"],
+	"gfx_lights": ["แสงตกแต่ง", "Decorative lights"],
+	"gfx_fog": ["หมอก", "Fog"],
+	"gfx_glow": ["แสงฟุ้ง", "Glow"],
+	"gfx_ult_vfx": ["เอฟเฟกต์อัลติ", "Ultimate effects"],
+	"gfx_combat_vfx": ["เอฟเฟกต์ต่อสู้ / ริ้วอาวุธ", "Combat effects / trails"],
+	"gfx_ult_camera": ["กล้องอัลติ", "Ultimate camera"],
+	"gfx_note": ["จำค่าบนอุปกรณ์นี้ · เกมยังดำเนินต่อ", "Saved on this device · the game keeps running"],
 }
 
 
