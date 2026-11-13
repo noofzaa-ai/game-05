@@ -1,0 +1,11 @@
+{
+	"_comment": "Painted (watercolour) look per stage, read by client/draw_style/draw_style.gd when the drawn style is on or lite. A map matches the first entry whose prefix starts its id. ground_a/ground_b: tileable textures laid over upward faces in world XZ (ground_b where the art is green, i.e. grass). tint 1 = the painting's hue at the art's brightness, 0 = only its light/dark strokes over the art colour. average = the texture's mean brightness as sampled (measured). offset/metres line the painting up with the modelled slabs (mummy: 2 m slabs centred on odd x, even z). grout: colour of the stage's collider floor box seen through the gaps between modelled slabs (else its grey-green ink wash reads as green grout). atlas: kit texture -> its palette-recoloured copy (Blender, tools/blender/recolour_atlas_from_palette.py). Textures: Codex watercolour set, PO-approved 2026-11-13 (docs/tech/draw_style.md).",
+	"paper": {"texture": "res://art/environment/draw_style/paper_grain.png", "metres": 1.5, "average": 0.961, "strength": 3.0},
+	"sky": "res://art/environment/draw_style/sky_backdrop.png",
+	"stages": [
+		{"prefix": "goblin_", "ground_a": "res://art/maps/goblin_base/painted/dirt.png", "ground_b": "res://art/maps/goblin_base/painted/grass.png",
+			"a_metres": 5.0, "b_metres": 4.0, "b_by_green": true, "tint": 0.15, "strokes": 0.75, "saturation": 0.4, "average": 0.59,
+			"atlas": {"res://art/props/goblin_base/shared/relic_colour.png": "res://art/maps/goblin_base/painted/relic_colour_ink.png"}},
+		{"prefix": "mummy_", "grout": [0.13, 0.085, 0.055], "_note": "the painted floor tile is baked into the floor UVs (tools/blender/bake_mummy_floor_tile.py, art/maps/mummy_tomb/*_painted.glb), so no ground overlay here"}
+	]
+}

@@ -65,6 +65,28 @@ func run(ctx) -> void:
 		var shader := load(path) as Shader
 		ctx.check("%s loads with its uniforms" % path.get_file(), shader != null and not shader.get_shader_uniform_list().is_empty())
 
+	# The painted watercolour set (data/ui/draw_style.json): every texture it names exists and is VRAM-compressed
+	# (web size), and every mummy map points at its painted floor GLB.
+	var paint: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(DrawStyle.PAINT_DATA))
+	var paths: Array = [paint["paper"]["texture"], paint["sky"]]
+	for entry in paint["stages"]:
+		for key in ["ground_a", "ground_b"]:
+			if entry.has(key): paths.append(entry[key])
+		for target in entry.get("atlas", {}).values(): paths.append(target)
+	# (the mummy floor and sand are baked into the *_painted.glb floors, tools/blender/bake_mummy_floor_tile.py)
+	paths.append("res://art/maps/mummy_tomb/painted/floor_tile.png")
+	paths.append("res://art/maps/mummy_tomb/painted/sand.png")
+	var textures_ok := true
+	for path in paths:
+		var import_text := FileAccess.get_file_as_string(str(path) + ".import")
+		textures_ok = textures_ok and ResourceLoader.exists(str(path)) and import_text.contains("\"vram_texture\": true")
+	ctx.check("the painted textures exist and are VRAM-compressed (%d)" % paths.size(), textures_ok and paths.size() >= 7)
+	var maps_ok := true
+	for id in ["mummy_arena_a", "mummy_arena_b", "mummy_arena_c"]:
+		var map_text := FileAccess.get_file_as_string("res://data/maps/%s.json" % id)
+		maps_ok = maps_ok and map_text.contains("%s_painted.glb" % id) and ResourceLoader.exists("res://art/maps/mummy_tomb/%s_painted.glb" % id)
+	ctx.check("the mummy maps use their painted floor GLBs", maps_ok)
+
 	DrawStyle._override = "?"
 	# Restore the in-memory values, then the file exactly as it was (set_value saves the file each time).
 	Options._values["drawn_style"] = saved_style

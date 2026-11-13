@@ -10,7 +10,7 @@
   "camera_style": "top_down",
   "atmosphere": "ink",
   "art_mood": "camp",
-  "art_scene": "res://art/maps/mummy_tomb/mummy_arena_c.glb",
+  "art_scene": "res://art/maps/mummy_tomb/mummy_arena_c_painted.glb",
   "bounds": {
     "half_width": 14,
     "half_depth": 11

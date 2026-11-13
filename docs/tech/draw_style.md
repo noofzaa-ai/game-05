@@ -59,3 +59,20 @@ Same PC and Chrome, window 860x470 (canvas ~844x390), render scale 0.5, MSAA 2x,
 
 At this size the battle is bound by something other than the drawn style (all three within run noise). No phone
 was measured: the slow guard is the safety net there.
+
+## Watercolour repaint (2026-11-13, Codex set, PO-approved for Boss)
+
+Raw images: `art_source/codex_review/repaint/` (review only, gitignored). Shipped at 512 px (sky 1024x512), VRAM
+compressed (s3tc + etc2), all in the `stages` battle pack:
+
+| Texture | Use | How |
+|---|---|---|
+| `art/maps/goblin_base/painted/dirt.png`, `grass.png` | goblin camp ground | `ink_world` overlay in world XZ (grass where the art is green); tint 0.15, saturation 0.4: muted warm grey-brown |
+| `art/maps/goblin_base/painted/relic_colour_ink.png` | goblin kit atlas | recoloured from the palette sheet in Blender (`tools/blender/recolour_atlas_from_palette.py`); swapped in only under the drawn style |
+| `art/maps/mummy_tomb/painted/floor_tile.png`, `sand.png` | mummy floors | warm greyscale, baked into the floor/sand UVs of new `*_painted.glb` copies (`tools/blender/bake_mummy_floor_tile.py`, originals untouched); 1 painted slab per modelled 2 m slab |
+| `art/environment/draw_style/paper_grain.png` | every stage material | replaces the procedural grain in `ink_world` |
+| `art/environment/draw_style/sky_backdrop.png` | panorama sky | replaces the procedural sky (not under a night mood) |
+
+Settings per stage: `data/ui/draw_style.json`. Under the drawn style the mummy maps' collider floor box (seen
+through the slab gaps; its grey-green ink wash read as green grout) is drawn dark warm brown. Debug A/B: web
+`?painted=0` / native `-- --painted=0` skips the painted set.

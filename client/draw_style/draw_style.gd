@@ -28,6 +28,7 @@ const SLOW_WINDOWS := 2
 const SLOW_WARMUP := 3.0  ## seconds after the stage opens before measuring (loading hitches are not "slow")
 const STAGE_OUTLINE_WIDTH := 0.03  ## metres before the pixel limits (props are big: a thick pen)
 const MONSTER_OUTLINE_WIDTH := 0.008
+const PAINT_DATA := "res://data/ui/draw_style.json"  ## per-stage painted ground, paper tile, sky
 const ENV_SATURATION := 0.95  ## the stage keeps its greens and warm browns (0.85 read grey on the goblin camp)
 
 static var _override := "?"  ## from the URL / command line, "" = none (read once)
@@ -130,6 +131,7 @@ static func apply(stage: Node3D, camera: Camera3D, fighters: Array) -> void:
 	if m == "off" or camera == null:
 		return
 	if m == "lite" or m == "on":
+		_world_cache.clear()  # (one stage's materials at a time: the painting below is per stage)
 		_sun_direction = Vector3(0.47, 0.53, 0.70)
 		for node in stage.find_children("*", "DirectionalLight3D", true, false):
 			if not str(node.name).begins_with("Character"):  # the stage's sun (or moon), not the character lights
@@ -142,6 +144,7 @@ static func apply(stage: Node3D, camera: Camera3D, fighters: Array) -> void:
 			if root != null and root.visible:
 				_paint_art(root)
 		_tone_environment(stage, ENV_SATURATION)
+		_apply_painting(stage, str(stage.get("_map_id")))
 	# Monster outlines become the brush line and HP bars move after the screen pass in the draw order (_keep_clean).
 	# Later waves arrive after this: every new node is checked once, deferred past fighter_view's own setup.
 	var tree := stage.get_tree()
@@ -301,6 +304,94 @@ static func _paint_art(art: Node3D) -> void:
 		outline.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		outline.set_meta("toon_prepared", true)
 		geometry.add_child(outline)
+
+
+static var _paint: Dictionary = {}  ## data/ui/draw_style.json, read once
+
+
+## The painted watercolour set for this stage (data/ui/draw_style.json): the paper tile on every stage material,
+## the painted ground on the map's floor, and the painted sky. A missing file or texture leaves the procedural look.
+static func _apply_painting(stage: Node, map_id: String) -> void:
+	if _no_painting():
+		return
+	if _paint.is_empty():
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(PAINT_DATA)) if FileAccess.file_exists(PAINT_DATA) else null
+		_paint = parsed if parsed is Dictionary else {"stages": []}
+	var paper: Dictionary = _paint.get("paper", {})
+	var paper_tex := _texture(str(paper.get("texture", "")))
+	var ground: Dictionary = {}
+	for entry in _paint.get("stages", []):
+		if map_id.begins_with(str(entry.get("prefix", "?"))):
+			ground = entry
+			break
+	var atlas: Dictionary = ground.get("atlas", {})
+	var ground_a := _texture(str(ground.get("ground_a", "")))
+	var ground_b := _texture(str(ground.get("ground_b", "")))
+	for material in _world_cache.values():
+		var m := material as ShaderMaterial
+		var albedo = m.get_shader_parameter("albedo_tex")
+		if albedo is Texture2D and atlas.has(str(albedo.resource_path)):
+			var recoloured := _texture(str(atlas[albedo.resource_path]))
+			if recoloured != null:
+				m.set_shader_parameter("albedo_tex", recoloured)  # the kit's palette-recoloured atlas
+		if paper_tex != null:
+			m.set_shader_parameter("use_paper", true)
+			m.set_shader_parameter("paper_tex", paper_tex)
+			m.set_shader_parameter("paper_metres", float(paper.get("metres", 1.5)))
+			m.set_shader_parameter("paper_average", float(paper.get("average", 0.961)))
+			m.set_shader_parameter("paper_strength", float(paper.get("strength", 3.0)))
+		m.set_shader_parameter("use_ground", ground_a != null)
+		if ground_a == null:
+			continue
+		m.set_shader_parameter("ground_a", ground_a)
+		m.set_shader_parameter("ground_b", ground_b if ground_b != null else ground_a)
+		m.set_shader_parameter("ground_a_metres", float(ground.get("a_metres", 4.0)))
+		m.set_shader_parameter("ground_b_metres", float(ground.get("b_metres", 4.0)))
+		m.set_shader_parameter("ground_b_by_green", bool(ground.get("b_by_green", false)))
+		m.set_shader_parameter("ground_tint", float(ground.get("tint", 0.5)))
+		m.set_shader_parameter("ground_strokes", float(ground.get("strokes", 0.8)))
+		m.set_shader_parameter("ground_saturation", float(ground.get("saturation", 1.0)))
+		m.set_shader_parameter("ground_average", float(ground.get("average", 0.6)))
+		var offset: Array = ground.get("offset", [0.0, 0.0])
+		m.set_shader_parameter("ground_offset", Vector2(float(offset[0]), float(offset[1])))
+		m.set_shader_parameter("ground_max_y", float(ground.get("max_y", 1000.0)))
+	if ground.has("grout"):
+		# The stage's collider floor box (stage_view.gd, InkStyle.ground_material: a grey-green wash) shows through
+		# the gaps between the modelled slabs: under the drawn style it is the dark ink of the grout instead.
+		var g: Array = ground["grout"]
+		var grout := StandardMaterial3D.new()
+		grout.albedo_color = Color(float(g[0]), float(g[1]), float(g[2]))
+		grout.roughness = 1.0
+		for child in stage.get_children():
+			if child is MeshInstance3D and (child as MeshInstance3D).mesh is BoxMesh:
+				var box := (child as MeshInstance3D).mesh as BoxMesh
+				var current := box.material as StandardMaterial3D
+				if current != null and current.albedo_texture is NoiseTexture2D:  # the ink wash: only the floor boxes
+					(child as MeshInstance3D).material_override = grout
+	var sky := _texture(str(_paint.get("sky", "")))
+	if sky != null:
+		for node in stage.find_children("*", "WorldEnvironment", true, false):
+			var env: Environment = (node as WorldEnvironment).environment
+			if env == null or env.background_mode != Environment.BG_SKY:
+				continue  # (a night mood paints a flat dark background: leave it)
+			var material := PanoramaSkyMaterial.new()
+			material.panorama = sky
+			var new_sky := Sky.new()
+			new_sky.sky_material = material
+			env.sky = new_sky
+
+
+## Debug A/B for performance: web `?painted=0` or native `-- --painted=0` keeps the procedural look.
+static func _no_painting() -> bool:
+	if OS.get_cmdline_user_args().has("--painted=0"):
+		return true
+	if OS.has_feature("web"):
+		return str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('painted') || ''", true)) == "0"
+	return false
+
+
+static func _texture(path: String) -> Texture2D:
+	return load(path) as Texture2D if not path.is_empty() and ResourceLoader.exists(path) else null
 
 
 static func _world_material(source: BaseMaterial3D) -> ShaderMaterial:

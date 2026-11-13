@@ -31,6 +31,32 @@ uniform float hatch_density = 6.0;    // strokes per metre
 uniform vec3 sun_direction = vec3(0.47, 0.53, 0.70);  // towards the sun, world space (set from the stage's sun)
 group_uniforms;
 
+group_uniforms painted_ground;
+// A painted watercolour ground (art/maps/<stage>/...): sampled in world XZ on upward faces and multiplied over the
+// art's own colour (vertex colour picks dirt vs grass). Off when no texture is set (use_ground = false).
+uniform bool use_ground = false;
+uniform sampler2D ground_a : source_color, filter_linear_mipmap, repeat_enable;  // e.g. dirt / floor tile
+uniform sampler2D ground_b : source_color, filter_linear_mipmap, repeat_enable;  // e.g. grass / sand
+uniform float ground_a_metres = 4.0;  // one texture repeat, in metres
+uniform float ground_b_metres = 4.0;
+uniform bool ground_b_by_green = true;  // true: green art (grass) takes ground_b, the rest ground_a; false: all ground_a
+uniform float ground_average = 0.6;  // the textures' mean brightness as sampled (Compatibility returns raw sRGB): strokes are centred on it
+uniform float ground_tint = 0.75;
+uniform float ground_strokes = 0.8;  // how strongly the painting's light/dark strokes show (when ground_tint < 1)
+uniform float ground_saturation = 1.0;  // saturation of the painting before it is used (muted, earthy: < 1)
+uniform vec2 ground_offset = vec2(0.0);  // metres: lines the painting's slab seams up with the modelled ones
+uniform float ground_max_y = 1000.0;  // only faces lower than this (world y) are the ground (not wall tops)  // 1 = the painting's hue at the art's brightness, 0 = the art colour unchanged
+group_uniforms;
+
+group_uniforms paper;
+// A painted paper tile replaces the procedural grain when set (multiplied, centred on its own average).
+uniform bool use_paper = false;
+uniform sampler2D paper_tex : filter_linear_mipmap, repeat_enable;
+uniform float paper_metres = 1.5;
+uniform float paper_average = 0.961;  // the tile's mean brightness as sampled, so it neither lightens nor darkens overall
+uniform float paper_strength = 3.0;  // the tile is very flat (std ~1.5%): this scales its tooth up
+group_uniforms;
+
 group_uniforms paint;
 uniform float saturation = 0.9;    // 1 = the art's own colour
 uniform vec3 warmth = vec3(1.03, 1.0, 0.93);
@@ -70,14 +96,34 @@ void fragment() {
 	if (use_texture) colour *= texture(albedo_tex, UV).rgb;
 	if (use_vertex_color) colour *= COLOR.rgb;
 	vec2 plane = surface_plane(world_pos, world_normal);
+	if (use_ground && world_normal.y > 0.7 && world_pos.y < ground_max_y) {
+		// How much this pixel is "grass" (ground_b): green stronger than red in the art colour.
+		float b_amount = ground_b_by_green ? smoothstep(-0.02, 0.06, colour.g - colour.r) : 0.0;
+		vec3 a = texture(ground_a, (world_pos.xz + ground_offset) / ground_a_metres).rgb;
+		vec3 b = texture(ground_b, (world_pos.xz + ground_offset) / ground_b_metres).rgb;
+		vec3 painted = mix(a, b, b_amount);
+		painted = mix(vec3(dot(painted, vec3(0.299, 0.587, 0.114))), painted, ground_saturation);
+		float art_luma = max(dot(colour, vec3(0.299, 0.587, 0.114)), 0.001);
+		float paint_luma = max(dot(painted, vec3(0.299, 0.587, 0.114)), 0.001);
+		// keep the art's brightness (lighting of the scene, dark patches) and take the painting's hue and strokes
+		// ground_tint 1: the painting's hue at the art's brightness; 0: the art colour, with only the painting's
+		// light/dark strokes (pools, pebbles, seams) laid over it.
+		vec3 strokes = colour * (paint_luma / ground_average);
+		colour = mix(mix(colour, strokes, ground_strokes), painted * (art_luma / paint_luma), ground_tint);
+	}
 	// Watercolour wash: big soft pools (about 4-6 m) a little lighter or darker than the true colour, centred on
 	// it, so the average brightness and hue stay the art's. (The prototype used smaller, darker-only blotches,
 	// which read as dirty paint.)
 	float wash = value_noise(plane * 0.18) * 0.7 + value_noise(plane * 0.55 + 7.0) * 0.3;
 	colour *= 1.0 + wash_strength * smoothstep(0.15, 0.85, wash) * 2.0 - wash_strength;
-	// Paper grain: fine speckle fixed to the surface, also centred (no overall darkening).
-	float grain = value_noise(plane * 38.0) * 0.7 + hash(floor(plane * 90.0)) * 0.3;
-	colour *= 1.0 + grain_strength * (grain - 0.5) * 2.0;
+	// Paper grain: the painted paper tile when set, else fine procedural speckle; both centred (no overall darkening).
+	if (use_paper) {
+		float tooth = texture(paper_tex, plane / paper_metres).r;
+		colour *= 1.0 + (tooth - paper_average) * paper_strength;
+	} else {
+		float grain = value_noise(plane * 38.0) * 0.7 + hash(floor(plane * 90.0)) * 0.3;
+		colour *= 1.0 + grain_strength * (grain - 0.5) * 2.0;
+	}
 	float luma = dot(colour, vec3(0.299, 0.587, 0.114));
 	colour = mix(vec3(luma), colour, saturation) * warmth;
 	// Hatching on the sides that face away from the sun: diagonal strokes, a crossing set in patches.
