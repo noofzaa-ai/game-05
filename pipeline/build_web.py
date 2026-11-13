@@ -139,13 +139,21 @@ def package(stage, args):
     download = engine['bytes'] + core['bytes'] + (stage / 'index.js').stat().st_size
     battle = sum(p['bytes'] for p in device if p['stage'] == 'battle')
     download += sum(p['bytes'] for p in device if p['stage'] == 'boot')
-    background = ROOT / 'assets/ui/camp_menu/farm-v1.png'
-    background_name = 'loading.' + hashlib.sha256(background.read_bytes()).hexdigest()[:12] + '.png'
-    shutil.copyfile(background, stage / background_name)
+    # Loading page look (Boss 2026-11-13): the card hub's night ruins (a 1600px WebP of
+    # art/ui/class_cards/hub_bg_ruins.png, <= 300 KB) and the hub fonts, each under a content-hash name.
+    page_files = {}
+    for key, source in (('__LOADING_BACKGROUND__', ROOT / 'tools/web/static/loading_ruins.webp'),
+                        ('__FONT_DISPLAY__', ROOT / 'art/fonts/Taviraj-SemiBold.woff2'),
+                        ('__FONT_MEDIUM__', ROOT / 'art/fonts/Sarabun-SemiBold.woff2'),
+                        ('__FONT_BODY__', ROOT / 'art/fonts/Sarabun-Regular.woff2')):
+        stem = 'loading' if key == '__LOADING_BACKGROUND__' else source.stem.lower()
+        name = f'{stem}.{hashlib.sha256(source.read_bytes()).hexdigest()[:12]}{source.suffix}'
+        shutil.copyfile(source, stage / name)
+        page_files[key] = name
     page = (ROOT / 'tools/web/play_template.html').read_text(encoding='utf-8-sig')
     # The existing template embeds PACK_BASE inside a single-quoted JS literal.
     safe_base = json.dumps(args.pack_base, ensure_ascii=True)[1:-1].replace("'", '\\u0027').replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
-    substitutions = {'__LOADING_BACKGROUND__': background_name, '__GODOT_CONFIG__': json.dumps(config, separators=(',', ':')),
+    substitutions = {**page_files, '__GODOT_CONFIG__': json.dumps(config, separators=(',', ':')),
                      '__SIZE_MB__': str(math.ceil(download / MIB)), '__BUILD_DATE__': built,
                      '__BUILD_ID__': build_id, '__PACK_BASE__': safe_base,
                      '__SOURCE_DATE__': metadata['source_date'],

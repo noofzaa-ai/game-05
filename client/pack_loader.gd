@@ -15,7 +15,9 @@ extends Control
 
 const PackLayout := preload("res://client/pack_layout.gd")
 const PackFetcher := preload("res://client/pack_fetcher.gd")
-const NEXT_SCENE := "res://scenes/title.tscn"  ## the title screen (its Start opens the campfire hub)
+## Where loading ends: the card hub ("MY CARDS"). Boss 2026-11-13: never the title screen, not even when the
+## online sign-in fails (the old title scene is unreferenced now; docs/po_defaults.md).
+const NEXT_SCENE := "res://scenes/card_deck_screen.tscn"
 
 var _label: Label
 var _bar: ProgressBar
@@ -123,12 +125,14 @@ func _finish() -> void:
 	_open_game()
 
 
-## Boss 2026-11-13: no title screen in between; go straight to the class card screen. With an account
-## session from the web page (production) it signs in first; otherwise (dev machine, desktop) it plays offline.
-## The title screen stays only as a fallback when the online sign-in fails.
+## Boss 2026-11-13: always straight into the card hub, never the title screen. With an account session from the
+## web page (production) it signs in first and opens the hub on the account profile. If that sign-in fails, the hub
+## opens offline on a local profile and the Online pill turns into an "Offline · Reconnect" button that retries the
+## sign-in in place (client/online/online_account.gd offer_reconnect / reconnect). Otherwise (dev machine, desktop,
+## headless tests) it plays offline.
 func _open_game() -> void:
 	var game_state = get_node_or_null("/root/GameState")
-	if game_state == null or DisplayServer.get_name() == "headless":
+	if game_state == null:
 		get_tree().change_scene_to_file(NEXT_SCENE)
 		return
 	var online = get_node_or_null("/root/Online")
@@ -139,14 +143,17 @@ func _open_game() -> void:
 		while online.status == online.Status.CONNECTING:
 			await online.changed
 		if await game_state.connect_account_profile():
-			get_tree().change_scene_to_file(game_state.CARD_DECK_SCENE)
+			get_tree().change_scene_to_file(NEXT_SCENE)
 			return
-		get_tree().change_scene_to_file(NEXT_SCENE)  # sign-in failed: the title screen shows why and can retry
+		push_warning("pack loader: sign-in failed (%s): opening the hub offline" % online.reason)
+		online.offer_reconnect(online.reason)
+		game_state.ensure_profile()
+		get_tree().change_scene_to_file(NEXT_SCENE)
 		return
 	if online != null:
 		online.use_offline()
 	game_state.ensure_profile()
-	get_tree().change_scene_to_file(game_state.CARD_DECK_SCENE)
+	get_tree().change_scene_to_file(NEXT_SCENE)
 
 
 func _fail(message: String) -> void:

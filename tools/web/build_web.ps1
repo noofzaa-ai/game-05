@@ -123,12 +123,17 @@ $download = $engine.bytes + $core.bytes + (Get-Item "$out\index.js").Length
 # (only the boot packs: the battle packs load in the background on the card screen, client/pack_fetcher.gd)
 foreach ($p in $packs) { if ($p.stage -eq "battle") { continue }; if (-not $p.format) { $download += $p.bytes } elseif ($p.format -eq $formats[0]) { $download += $p.bytes } }
 $download /= 1MB
-$loadingSource = "$root\assets\ui\camp_menu\farm-v1.png"
-$loadingHash = (Get-FileHash $loadingSource -Algorithm SHA256).Hash.ToLower().Substring(0,12)
-$loadingName = "loading.$loadingHash.png"
-Copy-Item $loadingSource "$out\$loadingName"
 $page = Get-Content "$root\tools\web\play_template.html" -Raw -Encoding UTF8
-$page = $page.Replace("__LOADING_BACKGROUND__", $loadingName)
+# Loading page look (Boss 2026-11-13, same as pipeline/build_web.py): hub ruins WebP + hub fonts, content-hash names.
+$pageFiles = [ordered]@{ "__LOADING_BACKGROUND__" = "$root\tools\web\static\loading_ruins.webp"; "__FONT_DISPLAY__" = "$root\art\fonts\Taviraj-SemiBold.woff2"; "__FONT_MEDIUM__" = "$root\art\fonts\Sarabun-SemiBold.woff2"; "__FONT_BODY__" = "$root\art\fonts\Sarabun-Regular.woff2" }
+foreach ($key in $pageFiles.Keys) {
+  $source = Get-Item $pageFiles[$key]
+  $hash = (Get-FileHash $source.FullName -Algorithm SHA256).Hash.ToLower().Substring(0,12)
+  $stem = if ($key -eq "__LOADING_BACKGROUND__") { "loading" } else { $source.BaseName.ToLower() }
+  $name = "$stem.$hash$($source.Extension)"
+  Copy-Item $source.FullName "$out\$name"
+  $page = $page.Replace($key, $name)
+}
 # (no cross-origin-isolation service worker: the build has no threads, and the artifact page cannot install one)
 $config = $match.Groups[1].Value.Replace('"ensureCrossOriginIsolationHeaders":true', '"ensureCrossOriginIsolationHeaders":false')
 $config = [regex]::Replace($config, '"index\.pck":\d+', '"index.pck":' + $core.raw_bytes)

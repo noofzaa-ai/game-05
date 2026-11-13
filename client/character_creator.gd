@@ -83,7 +83,7 @@ func setup(player_profile, item_rules, combat_data, command_session = null) -> v
 	header.add_child(title)
 	InkUi.add_close(header, func():
 		if _name_pending: return
-		get_tree().change_scene_to_file("res://scenes/title.tscn")
+		get_tree().change_scene_to_file("res://scenes/card_deck_screen.tscn")  # the hub (no title screen, Boss 2026-11-13)
 		queue_free())
 	column.add_child(header)
 

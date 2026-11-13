@@ -1,10 +1,13 @@
 extends RefCounted
 ## The title screen (client/title_screen.gd, scenes/title.tscn) and its data: the version log
 ## (data/ui/version_info.json) loads, is newest first and every version has notes; the menu has its
-## items, Start goes on to the campfire hub, the panels open and close; the boot scene goes to the title.
+## items, Start goes on to the campfire hub, the panels open and close. The title scene is unreferenced since
+## Boss 2026-11-13 (the boot scene always opens the card hub; a failed sign-in shows "Offline · Reconnect" there).
 
 const VersionInfo := preload("res://client/version_info.gd")
 const PackLoader := preload("res://client/pack_loader.gd")
+const OnlineAccount := preload("res://client/online/online_account.gd")
+const CardTokens := preload("res://client/card_tokens.gd")
 
 
 func _frames(ctx, count: int) -> void:
@@ -15,9 +18,35 @@ func _frames(ctx, count: int) -> void:
 func run(ctx) -> void:
 	_check_versions(ctx)
 	_check_credits(ctx)
-	ctx.check("the boot scene opens the title screen", PackLoader.NEXT_SCENE == "res://scenes/title.tscn" and ResourceLoader.exists(PackLoader.NEXT_SCENE))
+	ctx.check("the boot scene opens the card hub, never the title screen", PackLoader.NEXT_SCENE == "res://scenes/card_deck_screen.tscn" and ResourceLoader.exists(PackLoader.NEXT_SCENE))
+	_check_no_title_paths(ctx)
+	_check_reconnect(ctx)
 	ctx.check("the game still starts at the boot scene", str(ProjectSettings.get_setting("application/run/main_scene")) == "res://scenes/boot.tscn")
 	await _check_screen(ctx)
+
+
+## No game script sends the player to the title scene any more (boot, hub back button, character creator, online).
+func _check_no_title_paths(ctx) -> void:
+	var found: Array = []
+	for path in ["res://client/pack_loader.gd", "res://client/card_deck_screen.gd", "res://client/character_creator.gd",
+			"res://client/game_state.gd", "res://client/online/online_account.gd"]:
+		if "scenes/title.tscn" in FileAccess.get_file_as_string(path):
+			found.append(path)
+	ctx.check("no game path leads to the title scene %s" % [found], found.is_empty())
+
+
+## A failed boot sign-in: the account goes offline with a Reconnect offer (EN/TH words from the hub strings).
+func _check_reconnect(ctx) -> void:
+	var account = OnlineAccount.new()
+	var language := CardTokens.language
+	CardTokens.language = "en"
+	ctx.check("no Reconnect offer before a failure", not account.reconnect_offered and account.pill_text() == "Offline")
+	account.offer_reconnect("authentication_unavailable")
+	ctx.check("a failed sign-in offers Reconnect on the hub pill", account.reconnect_offered and account.pill_text() == "Offline · Reconnect" and account.reason == "authentication_unavailable")
+	CardTokens.language = "th"
+	ctx.check("the Reconnect words have Thai", account.pill_text() == "ออฟไลน์ · เชื่อมต่อใหม่")
+	CardTokens.language = language
+	account.free()
 
 
 func _check_versions(ctx) -> void:

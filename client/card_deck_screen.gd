@@ -31,7 +31,6 @@ const PackFetcher := preload("res://client/pack_fetcher.gd")  ## web: the battle
 const RaceBadge := preload("res://client/race_badge.gd")  ## race mockup badge (races-and-classes.md 3.8)
 const RaceData := preload("res://logic/race_data.gd")
 const HubLook := preload("res://client/hub_look.gd")  ## the class emblem cut from the card frame (tray)
-const TITLE_SCENE := "res://scenes/title.tscn"
 
 signal card_selected(class_id: String)
 signal look_changed(class_id: String, part: String, choice: String)  ## part: hair|outfit|eye_color|skin|makeup
@@ -2370,7 +2369,7 @@ func _wire_game() -> void:
 	fight_pressed.connect(_start_fight)
 	service_pressed.connect(open_service)
 	settings_pressed.connect(func() -> void: add_child(GraphicsPanel.new()))
-	back_pressed.connect(func() -> void: get_tree().change_scene_to_file(TITLE_SCENE))
+	# (back_pressed has no target: the hub is the home screen, there is no title screen behind it; Boss 2026-11-13)
 	if GameState.ensure_profile():
 		show_deck(GameState.profile.card_deck, ItemAssets.cosmetics())
 		set_gold(GameState.profile.stash.gold)

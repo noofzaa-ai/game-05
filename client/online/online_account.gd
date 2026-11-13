@@ -27,6 +27,11 @@ var _badge: Label  ## the status word inside the pill
 var _pill: Panel  ## a small leather pill, top centre of the hub's top bar (between the title and the gold counter)
 var _dot: Panel  ## red / amber / green (the word says it too)
 var _shown := ""
+## Boss 2026-11-13: when the sign-in at boot fails the game opens the hub offline and the pill becomes a small
+## "Offline · Reconnect" button that retries the sign-in in place (no title screen). Set by offer_reconnect().
+var reconnect_offered := false
+var _reconnecting := false
+var _reconnect: Button  ## invisible tap area over the pill (>= the phone tap minimum), only while reconnect_offered
 
 
 func _ready() -> void:
@@ -44,10 +49,12 @@ func _process(delta: float) -> void:
 	if _badge != null:
 		var scene := get_tree().current_scene
 		# Hidden in the fight and on its summary (Boss 2026-11-11: it covered the wave banner and the boss name).
-		_pill.visible = scene != null and scene.scene_file_path not in ["res://scenes/title.tscn", "res://scenes/boot.tscn", "res://scenes/stage.tscn", "res://scenes/journey.tscn"]
+		_pill.visible = scene != null and scene.scene_file_path not in ["res://scenes/boot.tscn", "res://scenes/stage.tscn", "res://scenes/journey.tscn"]
 		if _pill.visible and _hub_overlay_open(scene):
 			_pill.visible = false  # a hub panel / the character screen covers the top bar: the pill would sit on its header
-		var key := "%s|%s" % [status_text(), get_viewport().get_visible_rect().size]
+		_reconnect.visible = _pill.visible and reconnect_offered
+		_pill.self_modulate = CardTokens.HUB_HOVER if _reconnect.visible and not _reconnect.disabled and (_reconnect.is_hovered() or _reconnect.has_focus()) else Color.WHITE
+		var key := "%s|%s|%s" % [pill_text(), get_viewport().get_visible_rect().size, _reconnect.disabled]
 		if _pill.visible and key != _shown:
 			_shown = key
 			_layout_pill()
@@ -71,6 +78,60 @@ func status_text() -> String:
 		Status.AUTHENTICATED:
 			return HubLook.t("online_online")
 	return HubLook.t("online_offline")
+
+
+## The pill's words: the status, or "Offline · Reconnect" / "Offline · Sign in" while a retry is offered.
+func pill_text() -> String:
+	if reconnect_offered and status != Status.AUTHENTICATED:
+		if _reconnecting or status == Status.CONNECTING:
+			return HubLook.t("online_connecting")
+		return HubLook.t("online_sign_in" if needs_website_sign_in() else "online_reconnect")
+	return status_text()
+
+
+## True when only the website can give a new session (the page's sign-in token is gone or refused).
+func needs_website_sign_in() -> bool:
+	return OS.has_feature("web") and reason == "google_login_required"
+
+
+## The boot sign-in failed: play offline on the hub and offer a retry (pack_loader.gd). `why` is kept for the log.
+func offer_reconnect(why: String) -> void:
+	if status == Status.AUTHENTICATED:
+		use_offline()  # signed in, but the account profile did not load: the hub runs on the local profile
+		if why == "":
+			why = "account_profile_unavailable"
+	if why != "":
+		reason = why
+	reconnect_offered = true
+	print("online account: offline on the hub, reconnect offered (", reason, ")")
+	changed.emit()
+
+
+## The Reconnect button: sign in again and load the account profile; on success the hub reopens with it.
+## Stays on the hub either way (Boss 2026-11-13). With no page session left, it goes to the website sign-in.
+func reconnect() -> void:
+	if _reconnecting or status == Status.CONNECTING:
+		return
+	if needs_website_sign_in():
+		JavaScriptBridge.eval("window.zorxAutoEnter = false; location.replace('https://zorx.daiyooo.com/?play=1');", true)
+		return
+	var game_state = get_node_or_null("/root/GameState")
+	if game_state == null:
+		return
+	_reconnecting = true
+	_shown = ""
+	changed.emit()
+	var ok: bool = await game_state.connect_account_profile()
+	_reconnecting = false
+	if not ok:
+		offer_reconnect("")
+		return
+	reconnect_offered = false
+	_shown = ""
+	changed.emit()
+	var scene := get_tree().current_scene
+	if scene != null and scene.scene_file_path == game_state.CARD_DECK_SCENE:
+		get_tree().change_scene_to_file(game_state.CARD_DECK_SCENE)  # rebuild the hub on the account profile
 
 
 func begin() -> void:
@@ -238,6 +299,13 @@ func _build_badge() -> void:
 	_badge.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_badge.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	_pill.add_child(_badge)
+	_reconnect = Button.new()
+	_reconnect.name = "Reconnect"
+	_reconnect.flat = true
+	_reconnect.visible = false
+	_reconnect.focus_mode = Control.FOCUS_ALL
+	_reconnect.pressed.connect(reconnect)
+	layer.add_child(_reconnect)
 	_layout_pill()
 
 
@@ -255,7 +323,7 @@ static func _hub_overlay_open(scene: Node) -> bool:
 func _layout_pill() -> void:
 	var screen := get_viewport().get_visible_rect().size
 	var s := CardTokens.scale_for(screen)
-	_badge.text = status_text()
+	_badge.text = pill_text()
 	CardTokens.style_text(_badge, CardTokens.FONT_ONLINE, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE)
 	var h := CardTokens.ONLINE_PILL_H * s
 	var pad := CardTokens.ONLINE_PILL_PAD * s
@@ -266,10 +334,19 @@ func _layout_pill() -> void:
 	CardTokens.panel(_pill, HubLook.leather(s, CardTokens.ONLINE_PILL_H * 0.5, 2.0))
 	_dot.size = Vector2(dot, dot)
 	_dot.position = Vector2(pad, (h - dot) * 0.5)
-	var colour: Color = CardTokens.ONLINE_ON if status == Status.AUTHENTICATED else (CardTokens.ONLINE_WAIT if status == Status.CONNECTING else CardTokens.ONLINE_OFF)
+	var connecting := status == Status.CONNECTING or _reconnecting
+	var colour: Color = CardTokens.ONLINE_ON if status == Status.AUTHENTICATED else (CardTokens.ONLINE_WAIT if connecting else CardTokens.ONLINE_OFF)
 	CardTokens.panel(_dot, CardTokens.flat(colour, CardTokens.HUB_LEATHER_EDGE, 2.0, CardTokens.ONLINE_DOT * 0.5, s))
 	_badge.position = Vector2(pad * 1.5 + dot, 0.0)
 	_badge.size = Vector2(text_w, h)
+	# The Reconnect tap area: the pill, grown to the phone tap minimum (it stays a small pill to look at).
+	var phone := CardTokens.is_phone(screen)
+	var tap := Vector2(maxf(_pill.size.x, CardTokens.tap(0.0, phone) * s), maxf(h, CardTokens.tap(CardTokens.ONLINE_PILL_H, phone) * s))
+	_reconnect.size = tap
+	_reconnect.position = _pill.position + (_pill.size - tap) * 0.5
+	_reconnect.disabled = connecting
+	_reconnect.tooltip_text = HubLook.t("online_reconnect_hint")
+	CardTokens.bare_button(_reconnect, s, CardTokens.ONLINE_PILL_H * 0.5)
 
 
 func _presence() -> void:

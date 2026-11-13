@@ -1348,6 +1348,9 @@ const STRINGS_HUB_LOOK := {
 	"online_offline": ["ออฟไลน์", "Offline"],
 	"online_connecting": ["กำลังเชื่อมต่อ…", "Connecting..."],
 	"online_online": ["ออนไลน์", "Online"],
+	"online_reconnect": ["ออฟไลน์ · เชื่อมต่อใหม่", "Offline · Reconnect"],  ## boot sign-in failed (Boss 2026-11-13)
+	"online_sign_in": ["ออฟไลน์ · เข้าสู่ระบบ", "Offline · Sign in"],  ## the page's sign-in is gone: back to the website
+	"online_reconnect_hint": ["เล่นแบบออฟไลน์อยู่ กดเพื่อเชื่อมต่อบัญชีอีกครั้ง", "Playing offline. Tap to sign in to your account again."],
 	"squad_down": ["ล้ม", "DOWN"],
 }
 
