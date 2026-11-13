@@ -8,6 +8,7 @@ signal stage_changed
 signal command_completed(id: int, result: Dictionary)
 signal connection_changed
 const Wire := preload("res://logic/net_wire.gd")
+const SkillNet := preload("res://logic/net/skill_net.gd")
 var admission := {}
 var account
 var room_client = preload("res://client/online/room_client.gd").new()
@@ -129,12 +130,16 @@ func apply_entities(target, state: Dictionary) -> void:
 	for id in state.entities:
 		var row: Array = state.entities[id]
 		if not target.bodies.has(id): target.add_player(id, Vector3.ZERO)
+		var shown_cast: Dictionary = target.fighters[id].skill_view.get("class_cast", {})
 		for index in range(Wire.BODY_FIELDS.size()): target.bodies[id].set(Wire.BODY_FIELDS[index], row[0][index])
 		for index in range(Wire.FIGHTER_FIELDS.size()):
 			var field: String = Wire.FIGHTER_FIELDS[index]
+			# skill_net/race_net are validated wire views, unpacked into skill_view.class_cast / race_state (after skill_view).
+			if field == "skill_net": SkillNet.apply_skill(target.fighters[id], row[1][index], int(state.tick), shown_cast); continue
+			if field == "race_net": SkillNet.apply_race(target.fighters[id], row[1][index]); continue
 			var old = target.fighters[id].get(field)
 			if old is Array: old.assign(row[1][index])
-			else: target.fighters[id].set(field, row[1][index])
+			else: target.fighters[id].set(field, row[1][index].duplicate() if field == "skill_view" and row[1][index] is Dictionary else row[1][index])
 	target.projectiles = state.projectiles.duplicate(true); target.areas = state.areas.duplicate(true)
 	target._ranged.projectiles = target.projectiles; target._ranged.areas = target.areas
 	target.tick_count = int(state.tick)

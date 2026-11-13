@@ -837,7 +837,9 @@ func _show_class_skill(fighter: Fighter) -> bool:
 		_class_skill_clock = float(cast.get("now", _class_skill_start))
 	# the sim tick plus the time since it was published (render frames run between ticks)
 	var now := float(cast.get("now", 0))
-	if now > _class_skill_clock:
+	if cast.has("view_tick"):
+		_class_skill_clock = float(cast["view_tick"])  # online remote: the tick its body is drawn at (logic/net/skill_net.gd)
+	elif now > _class_skill_clock:
 		_class_skill_clock = now
 	else:
 		_class_skill_clock = minf(_class_skill_clock + get_process_delta_time() * 60.0, now + 1.0)

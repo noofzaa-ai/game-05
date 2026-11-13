@@ -253,6 +253,7 @@ func tick(prediction_player: int = -1) -> void:
 		Movement.step(id, body, input, world, events)
 	if prediction_player>=0 and combat!=null and fighters.has(prediction_player):
 		Combat.predict_attacker_hitstop(prediction_player,fighters,bodies,combat,melee_target_boxes)
+		_predict_class_travel(prediction_player)
 	if combat != null and prediction_player < 0:
 		for fighter in fighters.values():preload("res://logic/relic_effects.gd").tick(fighter)
 		Projectiles.step(_ranged, fighters, bodies, world, combat, rng, events)
@@ -267,6 +268,20 @@ func tick(prediction_player: int = -1) -> void:
 		_process_economy()
 		Coop.step(self)
 	tick_count += 1
+
+
+## Owner prediction of a class-skill cast the authority already started (it arrives in skill_state via the actor
+## continuation): the body follows the cast's travel frames and the cast ends on its end tick, exactly as
+## ClassSkills.step does on the authority, so the caster's own client does not stand still and get corrected.
+## Releases, hits, pulls and events stay authority-only (logic/net/skill_net.gd, network-programmer 2026-11-13).
+func _predict_class_travel(id: int) -> void:
+	var fighter: Fighter = fighters[id]
+	var cast: Dictionary = fighter.skill_state.get("cast", {})
+	if cast.is_empty() or not fighter.is_alive() or fighter.incapacitated:
+		return
+	ClassSkills._travel(self, id, cast)
+	if tick_count >= int(cast.get("end", 0)):
+		fighter.skill_state["cast"] = {}
 
 
 ## A squad card pressed skill slot 0..3 (the auto-pilot, logic/class_skills/use_rules.gd): the authority re-reads the

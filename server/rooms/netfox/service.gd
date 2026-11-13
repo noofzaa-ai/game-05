@@ -141,11 +141,12 @@ func _snapshot(peer:int,room)->void:
  if state.meta.has("input_clock"):
   state.meta.input_clock["event_batches"]=int(lease.peers[peer].get("event_batches",0))
   state.meta.input_clock["event_records"]=int(lease.peers[peer].get("event_records",0))
+ # protocol 4: entity rows carry skill_net/race_net (logic/net/skill_net.gd, wire v3).
  # protocol 3: meta.profiles[own slot] may be {"v":0} meaning "unchanged, reuse your last
  # copy" instead of a full profile. Bumped so a stale cached client (old build) cleanly
  # ignores snapshots via the existing protocol check instead of silently failing to decode
  # a sentinel it doesn't understand.
- state["netfox"]={"protocol":3,"peer":peer,"base_tick":group.base_tick,"group":str(group.node.name),"worker_release":OS.get_environment("ZORX_WORKER_RELEASE"),"network_tick":get_node("/root/NetworkTime").tick,"reference_tick":get_node("/root/NetworkTime").seconds_to_ticks(get_node("/root/NetworkTimeSynchronizer").get_time())}
+ state["netfox"]={"protocol":4,"peer":peer,"base_tick":group.base_tick,"group":str(group.node.name),"worker_release":OS.get_environment("ZORX_WORKER_RELEASE"),"network_tick":get_node("/root/NetworkTime").tick,"reference_tick":get_node("/root/NetworkTime").seconds_to_ticks(get_node("/root/NetworkTimeSynchronizer").get_time())}
  if accepted.get(peer,0)!=room.epoch:
   state.netfox["continuation"]=preload("res://logic/net/actor_continuation.gd").capture(room.sim,slot)
  var packed:=preload("res://logic/net/compressed_blob.gd").pack(var_to_bytes(state))

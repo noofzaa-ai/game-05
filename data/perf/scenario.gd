@@ -46,7 +46,7 @@ func state() -> Dictionary:
  for id in sim.bodies:
   var body: Array=[];var fighter: Array=[]
   for field in Wire.BODY_FIELDS:body.append(sim.bodies[id].get(field))
-  for field in Wire.FIGHTER_FIELDS:fighter.append(sim.fighters[id].get(field))
+  for field in Wire.FIGHTER_FIELDS:fighter.append(Wire.fighter_value(sim.fighters[id],field))
   entities[id]=[body,fighter]
  meta.profiles={1:profile.to_dict()};meta.run=run.to_dict(false)
  return {"tick":sim.tick_count,"epoch":1,"entities":entities,"projectiles":sim.projectiles.duplicate(true),"areas":sim.areas.duplicate(true),"meta":meta}

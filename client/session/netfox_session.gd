@@ -79,7 +79,7 @@ func _state_bytes(bytes:PackedByteArray)->void:
  if state is Dictionary and state.has("diagnostic_capture"):
   diagnostics.accept_worker(state.diagnostic_capture);return
  if not state is Dictionary or not state.has_all(["tick","epoch","entities","meta","netfox"]):return
- if state.netfox.get("protocol")!=3 or state.epoch<_epoch:return
+ if state.netfox.get("protocol")!=4 or state.epoch<_epoch:return
  if state.epoch==_epoch and state.tick<_last_metadata_tick:return
  _metadata_bytes+=bytes.size();_last_metadata_tick=state.tick;lag_states+=1
  var apply_started:=Time.get_ticks_usec()
@@ -190,12 +190,12 @@ func _send(kind:int,value:Dictionary)->void:
 func _queue_packet(_bytes:PackedByteArray,_now:int)->void:pass
 func presentation_position(id:int)->Vector3:
  if own_actor!=null and id==_player_id:return own_actor.position
- if net_entities.has(id):return net_entities[id].position
+ if net_entities.has(id):return _remote_cast_position(id,net_entities[id])
  return _sim.bodies[id].position if _sim!=null and _sim.bodies.has(id) else Vector3.ZERO
 func enter_camp()->void:
  _deliberate_close=true;_dispose_net();connected=false
 func netfox_metrics()->Dictionary:
- return {"correction_n":own_actor.correction_count if own_actor!=null else 0,"correction_max_m":snappedf(own_actor.correction_max_m,.001) if own_actor!=null else 0,"correction_last_m":snappedf(own_actor.correction_last_m,.001) if own_actor!=null else 0,"correction_tick":own_actor.correction_tick if own_actor!=null else -1,"correction_state":own_actor.correction_state if own_actor!=null else "","snapshot_age_ms":maxi(0,Time.get_ticks_msec()-_received_at),"protocol":3,"runtime":"netfox-1.35.3","worker_release":server_state.get("netfox",{}).get("worker_release",""),"server_network_tick":server_state.get("netfox",{}).get("network_tick",0),"server_reference_tick":server_state.get("netfox",{}).get("reference_tick",0),"network_tick":net_root.get_node("/root/NetworkTime").tick if net_root!=null else 0,"last_prediction_tick":own_actor.last_prediction_tick if own_actor!=null else 0,"reference_tick":net_root.get_node("/root/NetworkTime").seconds_to_ticks(net_root.get_node("/root/NetworkTimeSynchronizer").get_time()) if net_root!=null else 0,"input_authority":own_actor.get_node("Input").get_multiplayer_authority() if own_actor!=null else 0,"peer_id":net_api.get_unique_id() if net_api!=null and connected else 0,"base_tick":own_actor.base_tick if own_actor!=null else 0,"authoritative_tick":own_actor.sync.get_last_known_state() if own_actor!=null else 0,"prediction_ticks":own_actor.prediction_ticks if own_actor!=null else 0,"prediction_us":own_actor.prediction_us if own_actor!=null else 0,"redundant_replay_ticks_avoided":own_actor.sync.redundant_replay_ticks_avoided if own_actor!=null else 0,"restore_count":own_actor.restore_count if own_actor!=null else 0,"restore_us":own_actor.restore_us if own_actor!=null else 0,"metadata_payload_bytes":_metadata_bytes}
+ return {"correction_n":own_actor.correction_count if own_actor!=null else 0,"correction_max_m":snappedf(own_actor.correction_max_m,.001) if own_actor!=null else 0,"correction_last_m":snappedf(own_actor.correction_last_m,.001) if own_actor!=null else 0,"correction_tick":own_actor.correction_tick if own_actor!=null else -1,"correction_state":own_actor.correction_state if own_actor!=null else "","snapshot_age_ms":maxi(0,Time.get_ticks_msec()-_received_at),"protocol":4,"runtime":"netfox-1.35.3","worker_release":server_state.get("netfox",{}).get("worker_release",""),"server_network_tick":server_state.get("netfox",{}).get("network_tick",0),"server_reference_tick":server_state.get("netfox",{}).get("reference_tick",0),"network_tick":net_root.get_node("/root/NetworkTime").tick if net_root!=null else 0,"last_prediction_tick":own_actor.last_prediction_tick if own_actor!=null else 0,"reference_tick":net_root.get_node("/root/NetworkTime").seconds_to_ticks(net_root.get_node("/root/NetworkTimeSynchronizer").get_time()) if net_root!=null else 0,"input_authority":own_actor.get_node("Input").get_multiplayer_authority() if own_actor!=null else 0,"peer_id":net_api.get_unique_id() if net_api!=null and connected else 0,"base_tick":own_actor.base_tick if own_actor!=null else 0,"authoritative_tick":own_actor.sync.get_last_known_state() if own_actor!=null else 0,"prediction_ticks":own_actor.prediction_ticks if own_actor!=null else 0,"prediction_us":own_actor.prediction_us if own_actor!=null else 0,"redundant_replay_ticks_avoided":own_actor.sync.redundant_replay_ticks_avoided if own_actor!=null else 0,"restore_count":own_actor.restore_count if own_actor!=null else 0,"restore_us":own_actor.restore_us if own_actor!=null else 0,"metadata_payload_bytes":_metadata_bytes}
 func debug_metrics()->Dictionary:
  return {"netfox":netfox_metrics(),"mode":"netfox_authoritative_room","rewards_saved":saved,"connected":connected,"epoch":_epoch,"server_tick":server_state.get("tick",0),"ping_ms":rtt_ms,"ping_age_ms":Time.get_ticks_msec()-_last_pong if _last_pong>=0 else -1,"error":error}
 
@@ -225,3 +225,14 @@ func _bus_reply(bytes:PackedByteArray)->void:
  _receive(bytes,Time.get_ticks_msec())
 func diagnostic_report()->Dictionary:
  return await diagnostics.report()
+
+## Remote class-skill casts (logic/net/skill_net.gd): the clip clock and the travel follow the SAME world tick the
+## remote body is drawn at (RemoteState.rendered_tick - base_tick), so a Shield Rush/Intercept/Crater Leap/Vault Shot
+## clip lands where the body lands. Inside the travel frames the body follows the authority's travel line, but never
+## more than TRAVEL_SNAP_M from the sampled position (a wall stop or a late snapshot falls back to the samples).
+const TRAVEL_SNAP_M:=0.75
+func _remote_cast_position(id:int,entity)->Vector3:
+ var sampled:Vector3=entity.position
+ if _sim==null or not _sim.fighters.has(id) or own_actor==null or entity.synchronizer==null:return sampled
+ var clock:float=float(entity.synchronizer.rendered_tick)-float(own_actor.base_tick) if float(entity.synchronizer.rendered_tick)>=0 else -1.0
+ return preload("res://logic/net/skill_net.gd").remote_position(_sim.fighters[id].skill_view,sampled,clock,_sim.world.half_width,_sim.world.half_depth,TRAVEL_SNAP_M)

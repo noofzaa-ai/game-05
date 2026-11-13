@@ -2,8 +2,9 @@ extends RefCounted
 ## Strict, bounded binary data codec. Never decodes executable Objects/Variants.
 static var last_encode_error: Dictionary = {}
 const MAGIC := 0x585a
-const VERSION := 2
+const VERSION := 3  ## 3: FIGHTER_FIELDS gained skill_net/race_net (logic/net/skill_net.gd); skill_view on the wire drops class_cast
 const MAX_FRAME := 65536
+const SkillNet := preload("res://logic/net/skill_net.gd")
 const INPUT := 1
 const STATE := 2
 const EVENTS := 3
@@ -11,7 +12,29 @@ const CONTROL := 4
 const PING := 5
 const PONG := 6
 const BODY_FIELDS := ["position", "velocity", "grounded", "move_speed_multiplier", "height", "knockback"]
-const FIGHTER_FIELDS := ["team", "style", "stats", "hp", "enemy_type", "level", "state", "state_ticks", "direction", "move_id", "move_frame", "hit_ids", "spawns_done", "buffered", "hitstun_left", "launched", "down_left", "invulnerable_left", "hitstop", "combo_hits", "dodge_left", "dodge_cooldown", "cooldowns", "gauge", "energy", "energy_wait", "exhausted", "running", "run_ticks", "run_grace", "air_run", "poise", "max_poise", "poise_wait", "combo_dealt", "combo_damage", "combo_timer", "active_started", "effects", "stat_mods", "incapacitated", "rooted", "control_immune_left", "downed_at", "bleedout_left", "revive_progress", "reviver", "eliminated", "skill_view", "relic_state"]
+const FIGHTER_FIELDS := ["team", "style", "stats", "hp", "enemy_type", "level", "state", "state_ticks", "direction", "move_id", "move_frame", "hit_ids", "spawns_done", "buffered", "hitstun_left", "launched", "down_left", "invulnerable_left", "hitstop", "combo_hits", "dodge_left", "dodge_cooldown", "cooldowns", "gauge", "energy", "energy_wait", "exhausted", "running", "run_ticks", "run_grace", "air_run", "poise", "max_poise", "poise_wait", "combo_dealt", "combo_damage", "combo_timer", "active_started", "effects", "stat_mods", "incapacitated", "rooted", "control_immune_left", "downed_at", "bleedout_left", "revive_progress", "reviver", "eliminated", "skill_view", "skill_net", "race_net", "relic_state"]
+
+## The wire value of one FIGHTER_FIELDS entry. Use this (never fighter.get(field)) when building entity rows:
+## skill_net/race_net are computed views, and skill_view is sent without class_cast (skill_net carries it) and with
+## slot cooldowns rounded to 0.1 s so the row does not change every tick (bandwidth; PO default 2026-11-13).
+static func fighter_value(fighter, field: String):
+	match field:
+		"skill_net": return SkillNet.pack_skill(fighter)
+		"race_net": return SkillNet.pack_race(fighter)
+		"skill_view":
+			var view: Dictionary = fighter.skill_view
+			if not view.has("class_cast") and not view.has("slots"): return view
+			var out := view.duplicate()
+			out.erase("class_cast")
+			if view.has("slots"):
+				var slots: Array = []
+				for slot in view["slots"]:
+					var row: Dictionary = slot.duplicate()
+					row["left"] = snappedf(float(row.get("left", 0.0)), 0.1)
+					slots.append(row)
+				out["slots"] = slots
+			return out
+	return fighter.get(field)
 
 static func frame(kind: int, sequence: int, payload: PackedByteArray) -> PackedByteArray:
 	if kind < 1 or kind > 6 or sequence < 1 or sequence > 0xffffffff or payload.size() > MAX_FRAME - 12: return PackedByteArray()
