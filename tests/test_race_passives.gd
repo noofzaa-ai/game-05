@@ -573,8 +573,17 @@ func _synergy(ctx) -> void:
 	ctx.check("run synergy: ABC -> Alliance", alliance.journey.synergy()["kind"] == "alliance")
 	ctx.check("run synergy: solo -> none", squad(["elf"], ["longbow"]).journey.synergy()["kind"] == "none")
 	ctx.check("run synergy: duo AA -> Pair", squad(["elf", "elf"], ["sword_shield", "greatsword"]).journey.synergy()["kind"] == "pair")
-	# Alliance stat_mod: +8% max HP and ATK on every member, on top of the same card without a synergy.
-	var plain := squad(["elf"], ["sword_shield"])
+	# Alliance stat_mod: +8% max HP and ATK on every member, on top of the same card without a synergy (a mixed duo:
+	# no synergy, and not a lone card, which would get its class's solo block, data/classes/<id>.json "solo").
+	var plain := squad(["elf", "human"], ["sword_shield", "greatsword"])
+	ctx.check("a mixed duo has no synergy and its cards do not fight alone", plain.journey.synergy()["kind"] == "none" and not plain.sim.fighters[1].race_state["effects"].any(func(e): return e["src"] == "solo"))
+	# Class solo block (data/classes/sword_shield.json "solo", PO Option A 2026-11-13): only a card with no allies gets it.
+	var lone := squad(["elf"], ["sword_shield"])
+	var solo_block: Array = preload("res://logic/card_deck.gd").class_data("sword_shield").get("solo", [])
+	ctx.check("solo block: a lone sword_shield card gets its class's solo effects", not solo_block.is_empty() and lone.sim.fighters[1].race_state["effects"].filter(func(e): return e["src"] == "solo").size() == solo_block.size())
+	ctx.check("solo block: no member of a squad of 3 gets it", [1, 2, 3].all(func(id): return not alliance.sim.fighters[id].race_state["effects"].any(func(e): return e["src"] == "solo")))
+	var grouped: Array = SquadMember.make_squad(lone.run, ["sword_shield"], {}, "p1")
+	ctx.check("solo block: a squad of one inside a party (synergy group) is not alone", not RacePassives.fights_alone(grouped[0]) and RacePassives.fights_alone(SquadMember.make_squad(lone.run, ["sword_shield"])[0]))
 	var a1 = alliance.sim.fighters[1]
 	var p1 = plain.sim.fighters[1]
 	ctx.check("Alliance: max HP +8%% (%.1f vs %.1f)" % [a1.max_hp(), p1.max_hp()], is_equal_approx(a1.max_hp(), p1.max_hp() * 1.08))

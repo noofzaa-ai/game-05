@@ -35,6 +35,7 @@ var combat
 var no_skills := false  ## "noskills": detach the skill-build skills (measurement only, to see what they add)
 var gear_tier := -1  ## "gear=N": every card also wears a tier-N piece in each open slot (0 normal .. 3 legendary); measurement only
 var card_level := 1  ## "level=L": every card is level L and spends its points greedily down its class, race and combo nodes
+var power_override := {}  ## "power1=X" / "power2=X" ...: wave_power_by_squad[N-1] for this measurement only (sweeps without editing data)
 
 
 func _init() -> void:
@@ -57,6 +58,8 @@ func _init() -> void:
 			gear_tier = int(arg.substr(5))
 		elif arg.begins_with("level="):
 			card_level = int(arg.substr(6))
+		elif arg.begins_with("power") and arg.contains("="):
+			power_override[int(arg.substr(5, arg.find("=") - 5))] = float(arg.substr(arg.find("=") + 1))
 	var scenarios := []
 	for class_id in ["sword_shield", "greatsword", "longbow", "magic"]:
 		scenarios.append({"name": "solo " + class_id, "classes": [class_id], "kind": "solo"})
@@ -168,7 +171,7 @@ func _init() -> void:
 ## only=solo,squad picks by kind; only=greatsword picks every scenario whose name contains it.
 func _picked(only: String, scenario: Dictionary) -> bool:
 	for part in only.split(","):
-		if part == str(scenario["kind"]) or str(scenario["name"]).contains(part):
+		if part == str(scenario["kind"]) or str(scenario["name"]).contains(part.replace(":", " ")):  # "solo:magic" = only "solo magic"
 			return true
 	return false
 
@@ -218,6 +221,9 @@ func _progress(profile, r: RandomNumberGenerator) -> void:
 ## One fight of the wave journey with these classes (1 = solo). Returns totals and one entry per member.
 func play(classes: Array, seed: int) -> Dictionary:
 	var data = JourneyData.load_by_id("goblin_waves", combat.enemies.keys())
+	for size in power_override:
+		if size >= 1 and size <= data.wave_power_by_squad.size():
+			data.wave_power_by_squad[size - 1] = float(power_override[size])
 	var trips := {}
 	var distinct := {}
 	for class_id in classes:

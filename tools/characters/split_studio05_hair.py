@@ -14,8 +14,8 @@ Outputs (art/characters/studio05/split/):
   body_<class>.glb       Base_Body + Head_Anime + rig + the class clips (from the class's hair C file)
   hair_<x>[_<class>].glb one hair mesh + the rig, no clips; hair meshes identical across classes share a file
   outfit_silver_silk.glb Outfit_SilverSilk + the rig (byte-identical in all silver files)
-  manifest.json          class -> body file, class -> hair letter -> hair file, silver file; hair G stays
-                         at v1111/hair/hair_g.glb (already a hair-only file from the Studio)
+  manifest.json          class -> body file, class -> hair letter -> hair file, silver file; hair G
+                         and hair I stay at v1111/hair/hair_{g,i}.glb (already hair-only files)
 
 Clip check (printed): the clips of hair A/B/C/E (and Magic F) are byte-identical; the Great Sword and Longbow
 hair F files hold the same keys on a timeline stretched x2.5 (an export frame-rate slip: 1/24 s steps instead
@@ -36,6 +36,7 @@ OUT = os.path.join(SRC, "split")
 RES = "res://art/characters/studio05/split/"
 CLASSES = {"sword_shield": "lowpoly_toon", "greatsword": "greatsword", "longbow": "longbow", "magic": "magic"}
 LETTERS = ["a", "b", "c", "e", "f"]
+STUDIO_HAIR_ONLY = ["g", "i"]  # already hair-only files at v1111/hair/hair_<x>.glb (no split needed)
 BODY_FROM = "c"  # every class's hair C file (clips identical to A/B/E; head without the unused all-white COLOR_0)
 COMP_SIZE = {5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4}
 TYPE_COUNT = {"SCALAR": 1, "VEC2": 2, "VEC3": 3, "VEC4": 4, "MAT2": 4, "MAT3": 9, "MAT4": 16}
@@ -242,7 +243,7 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     manifest = {"_comment": "Written by tools/characters/split_studio05_hair.py. The game loads body_<class> once and "
                 "merges one hair file (and the Silver Silk outfit) onto its skeleton, like class-gear.js "
-                "replaceCharacterHair(). Hair G is the Studio's own hair-only file.",
+                "replaceCharacterHair(). Hairs G and I are hair-only files as delivered.",
                 "bodies": {}, "hair": {}, "silver": RES + "outfit_silver_silk.glb",
                 "hair_g": "res://art/characters/studio05/v1111/hair/hair_g.glb"}
     rig = None
@@ -314,11 +315,13 @@ def main():
     nj, nb = read_glb(out)
     assert rig_hash(nj, nb) == rig and list(meshed(nj)) == ["Outfit_SilverSilk"]
     assert mesh_hash(nj, nb, meshed(nj)["Outfit_SilverSilk"]) in silk_hashes
-    # hair G: the Studio file, same rig
-    gj, gb = read_glb(os.path.join(SRC, "v1111", "hair", "hair_g.glb"))
-    assert rig_hash(gj, gb) == rig
-    for cls in CLASSES:
-        manifest["hair"][cls]["g"] = manifest["hair_g"]
+    # hairs G and I: hair-only files from the Studio / Boss (I = art_source/hair/hair_i.glb, 2026-11-13), same rig
+    for letter in STUDIO_HAIR_ONLY:
+        gj, gb = read_glb(os.path.join(SRC, "v1111", "hair", "hair_%s.glb" % letter))
+        assert rig_hash(gj, gb) == rig, letter
+        manifest["hair_" + letter] = "res://art/characters/studio05/v1111/hair/hair_%s.glb" % letter
+        for cls in CLASSES:
+            manifest["hair"][cls][letter] = manifest["hair_" + letter]
     with open(os.path.join(OUT, "manifest.json"), "w", newline="\n") as f:
         json.dump(manifest, f, indent=1)
         f.write("\n")

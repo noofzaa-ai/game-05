@@ -48,9 +48,10 @@
   "c",
   "e",
   "f",
-  "g"
+  "g",
+  "i"
  ],
- "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class); G = hair/hair_g.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body.",
+ "_hair_options": "Studio 2026-11-11 index.html hair buttons A, B, C, E, F, G (offered for every class) + hair I (Boss 2026-11-13); G = hair/hair_g.glb, I = hair/hair_i.glb. Each is a hair-only file (art/characters/studio05/split/manifest.json) merged onto the class body.",
  "_pilot": "GDD races-and-classes 3.2 pilot profile, read by logic/auto_pilot.gd for squad cards (a class without it keeps the old constants). target: nearest|peel|densest|lowest_hp|marked_first. engage_range 0 = from the weapon; shoot_range 0 = the default 6 m. prefer_marked: attack a target carrying mark_status inside the engage range first (Hunter's Mark focus fire). line is not used yet.",
  "pilot": {
   "line": "back",

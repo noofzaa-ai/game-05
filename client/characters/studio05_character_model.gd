@@ -2,7 +2,7 @@ extends "res://client/character_model.gd"
 ## Production player (Boss goal 2026-11-10): the studio05 toon character on its own Mixamo rig (102 joints,
 ## 6x3 hair chain). Source of truth: the Studio drop of 2026-11-11 (docs/tech/studio_v20261111_inventory.md).
 ## Per class one base body file is loaded once (split/body_<class>.glb: body, face, rig, the class clips, no hair)
-## and the chosen hair (split/hair_<x>.glb, or the Studio's hair/hair_g.glb) is merged onto its skeleton like
+## and the chosen hair (split/hair_<x>.glb, or the hair-only hair/hair_g.glb / hair_i.glb) is merged onto its skeleton like
 ## class-gear.js replaceCharacterHair() (Boss 2026-11-13; files made by tools/characters/split_studio05_hair.py
 ## from the Studio's whole-character files, bytes unchanged). The class gear
 ## (outfits/armor_<class>.glb, same 102 joints and rest) is merged onto that skeleton like class-gear.js:
@@ -22,11 +22,11 @@ const FOLDER := "res://art/characters/studio05/"
 const V1111 := "res://art/characters/studio05/v1111/"
 ## Written by tools/characters/split_studio05_hair.py: class -> body file, class -> hair letter -> hair file, silver.
 const SPLIT_MANIFEST := "res://art/characters/studio05/split/manifest.json"
-const HAIR_STYLES: Array[String] = ["a", "b", "c", "e", "f", "g"]  ## Studio hair buttons (hair D was retired; G is new)
+const HAIR_STYLES: Array[String] = ["a", "b", "c", "e", "f", "g", "i"]  ## Studio hair buttons (hair D was retired) + Boss hair I
 const HEIGHT := 1.35  ## Boss: characters at most 135cm
 const HIPS := "mixamorig_Hips"
 const DEFAULT_HAIR := Color("6f657f")  ## index.html #hair-color default (hairs A, B)
-const LIGHT_HAIR := Color("ffffff")  ## index.html: hairs C-G default to white (their colour is in the file)
+const LIGHT_HAIR := Color("ffffff")  ## index.html: hairs C-G (and textured I) default to white (their colour is in the file)
 const DEFAULT_IRIS := Color("c98634")
 const SKIN_LINEAR := Color(0.72, 0.56, 0.48)
 const CLASS_FOLDER := "res://data/classes/"
@@ -167,7 +167,7 @@ static func body_path(class_name_id: String, _hair: String = "") -> String:
 	return str(_split_files().get("bodies", {}).get(_known_class(class_name_id), ""))
 
 
-## The hair-only file merged onto the body (index.html hair buttons A, B, C, E, F, G; G = hair/hair_g.glb).
+## The hair-only file merged onto the body (index.html hair buttons A, B, C, E, F, G + Boss hair I; G, I = hair/hair_<x>.glb).
 static func hair_path(class_name_id: String, hair: String) -> String:
 	var table: Dictionary = _split_files().get("hair", {}).get(_known_class(class_name_id), {})
 	return str(table.get(hair, table.get("a", "")))
@@ -591,7 +591,7 @@ func _prepare_meshes() -> void:
 				has_color = true
 			if part == 2:
 				material.set_shader_parameter("hair_part", 0.009 if label.begins_with("Hair_A") else -0.003)
-				material.set_shader_parameter("painted_bangs", 0.0 if label.substr(5, 1) in ["C", "D", "E", "F", "G"] else 1.0)
+				material.set_shader_parameter("painted_bangs", 0.0 if label.substr(5, 1) in ["C", "D", "E", "F", "G", "I"] else 1.0)
 			mesh.set_surface_override_material(surface, material)
 			_toon.append(material)
 		if part != 0:
@@ -619,9 +619,9 @@ func _prepare_meshes() -> void:
 ## Hair colour (index.html updateColors: material.color.set(#hair-color) on Hair_* meshes, multiplied in the
 ## shader by the hair's vertex colours / Hair G texture, as three.js does): the chosen colour (a card's
 ## hair_color via ItemAssets.card_appearance), else #6F657F for hairs A/B and white for
-## C-G (their colour lives in the file: vertex colours, or Hair G's texture).
+## C-G and I (their colour lives in the file: vertex colours, or Hair G / I texture).
 func _hair_linear() -> Color:
-	var chosen := _hair_color if _custom_hair else (LIGHT_HAIR if _hair_letter in ["c", "e", "f", "g"] else DEFAULT_HAIR)
+	var chosen := _hair_color if _custom_hair else (LIGHT_HAIR if _hair_letter in ["c", "e", "f", "g", "i"] else DEFAULT_HAIR)
 	return chosen.srgb_to_linear()
 
 

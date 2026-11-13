@@ -248,10 +248,10 @@ func _fill_hair_color(p, current: String) -> void:
 		column.add_child(b)
 
 
-## index.html: #6f657f for hairs A/B, white for C-G (their colour is in the file).
+## index.html: #6f657f for hairs A/B, white for C-G and I (their colour is in the file).
 func _studio_default_hair(p) -> Color:
 	var hair := str(p.card_deck.get("cards", {}).get(card, {}).get("hair", "a"))
-	return Color("ffffff") if hair in ["c", "e", "f", "g"] else Color("6f657f")
+	return Color("ffffff") if hair in ["c", "e", "f", "g", "i"] else Color("6f657f")
 
 
 func _preview_hair(color: Color) -> void:

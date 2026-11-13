@@ -79,6 +79,8 @@ static func load_from(folder: String, status_ids: Array = [], class_ids: Array =
 		var class_file = _read(CLASS_FOLDER + str(class_id) + ".json")
 		if class_file is Dictionary and class_file.has("signature"):
 			data._check_effects("class %s.signature" % class_id, class_file["signature"])
+		if class_file is Dictionary and class_file.has("solo"):  # solo-only effects (logic/race_passives.gd fights_alone)
+			data._check_effects("class %s.solo" % class_id, class_file["solo"])
 	return data
 
 

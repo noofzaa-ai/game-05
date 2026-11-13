@@ -62,6 +62,9 @@ static func attach(fighter, run) -> void:
 		effects.append({"src": "synergy", "effect": effect.duplicate(true)})
 	for effect in CardDeck.class_data(class_id).get("signature", []):  # the class signature (3.2), any race
 		effects.append({"src": "signature", "effect": effect.duplicate(true)})
+	if fights_alone(run):  # the class's solo block (data/classes/<id>.json "solo"): only a card with no allies at all
+		for effect in CardDeck.class_data(class_id).get("solo", []):
+			effects.append({"src": "solo", "effect": effect.duplicate(true)})
 	var pseudo := {}
 	var scaling: Array = []
 	for entry in effects:
@@ -379,11 +382,19 @@ static func fire(sim, id: int, event_name: String, context: Dictionary) -> void:
 		sim.events.append({"type": "race_proc", "player": id, "source": effects[index]["src"], "name": _source_name(fighter, effects[index]), "on": event_name})
 
 
-## The name a race_proc shows: the passive name, the synergy kind, or the class signature's own `name`.
+## True when this squad card has no allies in the run: a squad of one that is not part of a bigger party or room
+## (a party gives every member a synergy `group`, logic/coop_journey.gd / server rooms).
+static func fights_alone(run) -> bool:
+	if not "squad" in run or run.squad.size() != 1:
+		return false
+	return str(run.synergy().get("group", "")).is_empty() if run.has_method("synergy") else true
+
+
+## The name a race_proc shows: the passive name, the synergy kind, or the class signature's (or solo block's) `name`.
 static func _source_name(fighter, entry: Dictionary) -> String:
 	match str(entry["src"]):
 		"passive": return str(fighter.race_state["passive"])
-		"signature": return str(entry["effect"].get("name", ""))
+		"signature", "solo": return str(entry["effect"].get("name", ""))
 	return str(fighter.race_state["synergy"])
 
 
