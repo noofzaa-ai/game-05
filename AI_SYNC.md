@@ -35,20 +35,20 @@
 
 | ใคร | งาน | ไฟล์ที่จอง | สถานะ |
 |---|---|---|---|
-| ui-programmer | หน้า Class Card แทนฮับ + `card_portrait` ตาม `docs/ui/class_card_ui_handoff.md` | `client/card_deck_screen.gd`, `client/card_portrait.gd`, `client/card_tokens.gd`, `scenes/card_deck_screen.tscn`, `client/game_state.gd` (ทางเข้าหน้าใหม่), `tests/test_ui_tokens.gd` | กำลังทำ (ยังไม่ commit) |
-| ux-ui-designer (แทน art-director ที่ไม่มี Bash) | อาร์ตการ์ดรอบ 1 ผ่าน Codex | `art_source/codex_review/`, `art_source/ui/class_cards/` (ยังไม่เข้า `art/`) | กำลังทำ |
-| PO | คลาสมีผลต่อกติกา, กล้องตามการ์ดที่เลือก, ทัพเริ่มต้นดาบโล่/ดาบใหญ่/ธนู, ติดตั้งเฟรมเวิร์ก | `logic/game_sim.gd`, `logic/auto_pilot.gd`, `logic/combat_data_loader.gd`, `logic/card_deck.gd`, `data/combat/weapons.json`, `data/classes/*.json`, `data/audio/audio.json`, `client/squad_panel.gd`, `client/stage_view.gd`, `client/session/local_session.gd`, `.claude/`, `project.yaml`, `design/`, `production/` | เสร็จ ยังไม่ commit |
+| PO + ทีม | เกจ/ชื่อท่าอัลติบนจอ, VFX อัลติ, กลไก skill tree 37 ช่อง, ลด VFX หนัก 5 ท่า, ทำนายสกิลเคลื่อนที่ออนไลน์, Skills tab บนมือถือ, วัด solo/duo | (จองตอนมอบงาน) | เริ่ม 2026-11-13 |
 
 ## 5. สถานะปัจจุบัน (สรุปสั้น)
 
-- เกมเป็น auto-battler: จัดทัพ 3 การ์ด แล้วสู้เอง 12 เวฟ (บอสท้าย) บนเกาะลอยฟ้า 16×9 ม.
-- 4 คลาส: ดาบโล่ ดาบใหญ่ ธนู เวท (เวทปลดล็อกหลังเควส ยังไม่สร้างระบบเควส) แต่ละคลาสมีสไตล์การสู้ของตัวเอง
-- เทสต์: **2397 ผ่าน / 162 พัง** (162 เป็น baseline เดิม เทียบรายชื่อ ไม่ใช่จำนวน) รันด้วย `godot --headless --path . --script res://tests/run_all.gd`
-- ตัดสินใจแล้ว (Boss 2026-11-11): ตัดฟาร์ม/แคมป์/ร้านค้า/ฮับ NPC ทั้งหมด (ยังไม่ได้ลบ ซ่อนไว้จนกว่าหน้าการ์ดมาแทน) · co-op ยังไม่ทำ แต่ซิมต้องรันบน Godot headless · เป้าหมาย: hobby/portfolio · ได้ของแบบ RPG (ไอเท็ม อุปกรณ์ แฟชั่น ของบอส)
-- เฟรมเวิร์ก Claude Code Game Studios (flow standard) ติดตั้งแล้ว: เอกสารแนวคิดอยู่ `design/concepts/auto-battler-concept.md` รายงานสถานะ `production/project-stage-report.md`
+- Auto-battler: จัดทัพ 3 การ์ด สู้เอง 12 เวฟ การ์ด = คลาส (ดาบโล่/ดาบใหญ่/ธนู/เวท) × เผ่า (Human/Viking/Elf/Runeborn) เลือกเผ่าฟรีในหน้าตัวละคร
+- ระบบ: พาสซีฟ+อัลติเผ่า 16+16, synergy ทัพ, สกิลคลาสใหม่ 16 ท่า + VFX (daiyooo-vfx MCP), skill tree การ์ด 25 ช่อง (37 กลไกพิเศษยังไม่ต่อ), เลเวลการ์ด, ชุดเผ่า (อาวุธ+เสื้อ/กางเกง/ปลอกแขน/รองเท้า, ออปชัน 2/4/5 เมื่อเผ่าตรง), ไม่มีช่องหัวแล้ว
+- ระบบสกิลเก่า, แฟชั่น, หน้า/ผม/ตาโมเดลเก่า ลบแล้ว · HP สเกล 100 · ทัพเริ่มต้นชนะ ~75% (wave power 2.01)
+- ภาพ: drawn style ink_c เป็นค่าเริ่มต้น + พื้นสีน้ำ · ชุดเผ่าเริ่มต้นจาก Studio (`race_outfits.glb`) ใช้ทุกคลาสชั่วคราว รอ 16 ชุด + อาวุธเผ่า 16 ชิ้น (`docs/art/race_gear_handoff.md`)
+- เทสต์: **3024 ผ่าน / 38 พัง** (baseline เทียบรายชื่อ), SCRIPT ERROR 3 ตัวเดิม · ค่าที่ PO เลือกแทน Boss: `docs/po_defaults.md`
+- เว็บ dev: `pipeline/build_web.py` บน Windows, เล่นผ่าน Tailscale Serve `https://wp.taild7b145.ts.net/play.html` (tailnet เท่านั้น)
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-13 | PO | develop (push) | รวมงานวันที่ 13 พ.ย. 26 commit: ลบสกิลเก่า/แฟชั่น, สกิลคลาสใหม่+VFX MCP, อัลติเผ่าครบ, skill tree+Skills tab, UI เผ่า, HP 100+จูน 75%, ชุดเริ่มต้น+ชุดเผ่า+ดรอป (ไม่มีช่องหัว), drawn style+พื้นสีน้ำ, หน้าตั้งค่าใหม่, ถาดทัพแบบสัญลักษณ์, touch การ์ด · เทสต์ 3024/38
 - 2026-11-13 | character-artist via PO | fix/autopilot-checkpoint (not committed) | race starter outfits + race S&S weapons on the Studio body: `art/armor/race_shared/` (16 GLB + atlas + 16 icons), `art/weapons/race_<race>/` (sword_shield.glb, shield.glb, 2 icons each) + `art/weapons/race_shared/` textures, `tools/items/split_race_outfits.py`, fallback chain in `client/item_assets.gd`, per-slot Studio-rig armour/weapon/shield + body cover in `client/characters/studio05_character_model.gd`, `build_race_gear.py` (OUTFIT_SCOPE, race shields `race_<race>_shield`), shots `tools/shots/race_outfit_shots.gd` / `race_outfit_sheet.py`; handoff + GDD 3.11 + parity doc updated
 - 2026-11-13 | gameplay-programmer via PO | fix/autopilot-checkpoint | race gear drops: `data/loot/race_drops.json` + `logic/race_drops.gd` (kill drops in game_sim, chest in journey + room; gold race only from boss, race from the squad) · item detail race set line (`ItemText.race_set_lines`, card_tokens `set_race_*`) · docs: race-gear-sets.md fixed (no hat, weapon in set, 80 pieces), drops-and-rewards.md 3.8, `docs/art/race_gear_handoff.md` · tests 3005/39 (same failure names)
 - 2026-11-13 | tech-artist | (ยังไม่ push) | VFX สกิลคลาส 16 ตัว (daiyooo-vfx) เข้าเกมแล้ว: `client/skills/class_skill_vfx.gd` (pool+prewarm, เล่นตาม event `class_skill_*`) ต่อจาก `stage_view.gd`; `art/vfx/class_skills/` อยู่ pack `vfx` (battle); UI `art/ui/skill_tree`+`class_cards` ย้ายไป pack `ui` (boot) และ import เป็น Lossy 0.85 → core 38.7→4.2 MiB; ปุ่มทดสอบเว็บ `play.html?class_vfx=0`
