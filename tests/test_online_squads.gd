@@ -25,6 +25,8 @@ func run(ctx) -> void:
 	_tamper(ctx)
 	_auto_pilot_authority(ctx)
 	_disconnect_and_leader(ctx)
+	_solo_parity(ctx)
+	_personal_loot(ctx)
 
 
 ## One player's squad on its own profile: `races` per card of `cards`.
@@ -52,7 +54,7 @@ static func party(squads: Array) -> Dictionary:
 	return f
 
 
-static func sim_for(f: Dictionary):
+static func sim_for(f: Dictionary, sim_seed: int = 12345):
 	var journey = f.journey
 	while journey.state != journey.IN_STAGE:
 		if journey.state == journey.CHOOSING: journey.choose(0)
@@ -63,7 +65,7 @@ static func sim_for(f: Dictionary):
 	world.half_depth = map.half_depth
 	for solid in map.solids:
 		world.add_solid(solid["box"])
-	var sim := Sim.new(world, f.combat, F.rng(12345))
+	var sim := Sim.new(world, f.combat, F.rng(sim_seed))
 	journey.populate(sim, map, 1, 100)
 	return sim
 
@@ -274,6 +276,97 @@ func _disconnect_and_leader(ctx) -> void:
 	ctx.check("online squads AC6: the new leader's leader-only command is not refused as leader_only", room.command(2, 1, {"type": "journey_choose", "index": 0}).get("error", "") != "leader_only")
 	var saved: Dictionary = room.finalize(true)
 	ctx.check("online squads AC6: the offline player's profile is saved at finalize", saved.has("1") and saved.has("2"))
+
+
+# ---------------------------------------------------------------- AC 1 parity, chunk 4 personal loot
+
+## AC 1: a 1-player squad room and solo LocalSession (same profile, seed, cards, sim RNG) play the same fight.
+func _solo_parity(ctx) -> void:
+	var mgr = squad_manager()
+	var raw := players(1)
+	mgr.create("parity-room-1", 77, raw)
+	var room = mgr.rooms["parity-room-1"].room
+	var profile = preload("res://logic/profile.gd").from_dict(raw[0].profile.duplicate(true), mgr.rules, mgr.camp)
+	var session = preload("res://client/session/local_session.gd").new(profile, mgr.rules, mgr.camp, mgr.loot)
+	var cards: Array = profile.card_deck.squad.slice(0, 3)
+	session.squad_classes = cards
+	session.start_journey(mgr.squad_journey, mgr.combat.weapon_ids, 77, {}, cards)
+	session.journey.choose(0)
+	var map = Map.load_by_id(str(session.journey.current["map"]))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77 + session.journey.stage_number() * 997
+	session.begin_stage(map, mgr.combat, session.journey, 1, 100, rng)
+	var same_start: bool = Codec.digest(session._sim.snapshot()) == Codec.digest(room.sim.snapshot())
+	ctx.check("online squads AC1: a 1-player room starts the same fight as solo", same_start)
+	var diverged := -1
+	for tick in 1800:
+		for id in [2, 3, 1]:  # solo order: the other squad fighters first, then the local player (stage_view)
+			session.set_input(id, session.auto_input(id))
+		session.tick()
+		room.tick()
+		if tick % 30 == 29 and Codec.digest(session._sim.snapshot()) != Codec.digest(room.sim.snapshot()):
+			diverged = tick
+			break
+	ctx.check("online squads AC1: 30 s of room play match solo tick for tick (diverged at %d)" % diverged, diverged < 0)
+	ctx.check("online squads AC1: same waves cleared and haul as solo", session.journey.waves_cleared == room.journey.waves_cleared and session.journey.run.bag.gold == room.journey.run.bag.gold and session.journey.run.bag.items.size() == room.journey.run.bag.items.size())
+
+
+## Kills `count` level-1 goblins in `sim` through the real kill path; returns the sim.
+static func _kill_many(sim, count: int, first_id: int = 50000):
+	for i in count:
+		var id := first_id + i
+		sim.add_enemy(id, Vector3(30, 0, 30), "goblin", 1)
+		sim.fighters[id].hp = 0
+		sim._on_killed(id, 1)
+	return sim
+
+
+static func _haul(trip) -> float:
+	return float(trip.bag.gold) + 25.0 * float(trip.bag.items.size()) + float(trip.bag.materials.values().reduce(func(a, b): return a + int(b), 0))
+
+
+## AC 5 (unit form): per-player rolls with own stream and factor. Over 30 seeds, a 2-player room's per-player haul is
+## within 10% of a solo 3-card squad's on the same kills; race pieces only fit the owner's cards.
+func _personal_loot(ctx) -> void:
+	var room_total := [0.0, 0.0]
+	var solo_total := 0.0
+	var race_ok := true
+	var independent := true
+	for seed_value in 30:
+		var f := party([squad_of(100 + seed_value, ["elf", "elf", "human"]), squad_of(200 + seed_value, ["viking", "viking", "viking"])])
+		var sim = sim_for(f, 9000 + seed_value)
+		_strip_enemies(sim)
+		ctx.check("online squads: personal loot set for both players (seed %d)" % seed_value, sim.loot_players.size() == 6 and int(sim.loot_players[4][0]) == 2) if seed_value == 0 else null
+		var rng_before: int = sim.rng.state
+		_kill_many(sim, 40)
+		independent = independent and sim.rng.state == rng_before
+		room_total[0] += _haul(f.journey.runs_by_player[1])
+		room_total[1] += _haul(f.journey.runs_by_player[4])
+		for trip in [f.journey.runs_by_player[1], f.journey.runs_by_player[4]]:
+			var mine: Array = trip.squad.map(func(m): return m.card_id)
+			for item in trip.bag.items:
+				var race_set: Dictionary = f.rules.catalog.race_set_of(item.item_id)
+				if not race_set.is_empty() and not mine.has(str(race_set.get("class", ""))): race_ok = false
+		var solo := squad_of(300 + seed_value, ["human", "human", "human"])
+		var solo_party := party([solo])
+		var solo_sim = sim_for(solo_party, 9000 + seed_value)
+		_strip_enemies(solo_sim)
+		_kill_many(solo_sim, 40)
+		solo_total += _haul(solo_party.journey.run)
+	var ratio_1: float = room_total[0] / maxf(1.0, solo_total)
+	var ratio_2: float = room_total[1] / maxf(1.0, solo_total)
+	ctx.check("online squads AC5: player 1 haul within 10%% of solo (x%.2f)" % ratio_1, absf(ratio_1 - 1.0) <= 0.10)
+	ctx.check("online squads AC5: player 2 haul within 10%% of solo (x%.2f)" % ratio_2, absf(ratio_2 - 1.0) <= 0.10)
+	ctx.check("online squads AC5: personal rolls never touch the sim RNG stream", independent)
+	ctx.check("online squads AC5: race pieces only fit the owner's cards", race_ok)
+	var three := party([squad_of(400, ["elf", "elf"], CARDS.slice(0, 2)), squad_of(401, ["human", "human"], CARDS.slice(0, 2)), squad_of(402, ["viking", "viking"], CARDS.slice(0, 2))])
+	ctx.check("online squads 4.3: a 2-card player rolls with loot_by_squad[1]", three.journey != null and is_equal_approx(three.journey.loot_factor_for(2), three.data.loot_for(2)))
+
+
+static func _strip_enemies(sim) -> void:
+	for id in sim.fighters.keys():
+		if sim.fighters[id].team == "enemy": sim.remove_player(id)
+	sim._waves.clear()
 
 
 func _data(ctx) -> void:

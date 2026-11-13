@@ -493,7 +493,8 @@ func _auto_inputs() -> void:
 	for id in fighter_ids():
 		if not sim.fighters.has(id): continue
 		if not _auto_memory.has(id): _auto_memory[id] = AutoPilot.new_memory(id * 7919 + 1)
-		sim.set_input(id, AutoPilot.decide(sim, sim.combat, id, _auto_memory[id], sim.tick_count))
+		# Exactly the wire values, as LocalSession.set_input (solo parity, AC 1).
+		sim.set_input(id, SimInput.decode(AutoPilot.decide(sim, sim.combat, id, _auto_memory[id], sim.tick_count).encode()))
 	for id in connected:
 		if connected[id]: acknowledged[id] = clock_tick
 

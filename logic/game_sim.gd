@@ -50,6 +50,9 @@ var loot_data: LootData
 ## the online room sets it, because it spawns each goblin wave itself.
 var reward_wave := -1
 var loot_factor := 1.0  ## loot by squad size (Boss 2026-11-12): set by Journey.populate from JourneyData.loot_for
+## Personal loot (design/gdd/online-squads.md 3.5, chunk 4): fighter id -> [player slot, that player's loot factor].
+## Empty = the shared path above. Filled by PartyJourney.populate for a party of several squads.
+var loot_players: Dictionary = {}
 var runs: Dictionary = {}  ## player id (int) -> Run: the bag and gear of a player on a trip (only when attached)
 
 var _inputs: Dictionary = {}  ## id (int) -> SimInput
@@ -447,8 +450,13 @@ func _finalize_player_death(target_id: int) -> void:
 
 func _give_drop(target_id: int, killer_id: int) -> void:
 	var dead: Fighter = fighters[target_id]
-	var drop := Loot.roll(item_rules, loot_data, dead.enemy_type, dead.level, combat.weapon_ids, rng, loot_factor)
-	drop["relics"]=load("res://logic/relics.gd").roll(dead.enemy_type,rng,loot_factor)
+	var roll_rng := rng
+	var factor := loot_factor
+	if loot_players.has(killer_id):
+		roll_rng = _personal_loot_rng(target_id, killer_id)
+		factor = float(loot_players[killer_id][1])
+	var drop := Loot.roll(item_rules, loot_data, dead.enemy_type, dead.level, combat.weapon_ids, roll_rng, factor)
+	drop["relics"]=load("res://logic/relics.gd").roll(dead.enemy_type,roll_rng,factor)
 	# Race gear (design/gdd/race-gear-sets.md 3.12): a share of the dropped pieces become race pieces of a squad card;
 	# the boss's own drops use the boss shares (the only gold race source). Own RNG: the sim stream is unchanged.
 	var RaceDrops = load("res://logic/race_drops.gd")
@@ -462,6 +470,14 @@ func _give_drop(target_id: int, killer_id: int) -> void:
 		"type": "loot", "player": killer_id, "enemy": target_id, "gold": stored["gold"], "materials": stored["materials"],
 		"relics": stored.relics, "items": item_summaries, "lost_items": stored["lost_items"].size(), "lost_materials": stored["lost_materials"],
 	})
+
+
+## Personal loot (online-squads 3.5): the player's own stream per kill, seeded from (sim seed, enemy, player slot), so
+## neither the sim stream nor another player's roll depends on how many players the room has.
+func _personal_loot_rng(target_id: int, fighter_id: int) -> RandomNumberGenerator:
+	var personal := RandomNumberGenerator.new()
+	personal.seed = hash([rng.seed, "kill-%d-%d" % [target_id, int(loot_players[fighter_id][0])]])
+	return personal
 
 
 ## Recomputes a trip-player's stats from the gear (which wears) and camp skills. Health never goes above the new maximum.
@@ -561,7 +577,7 @@ func _checkpoint() -> Array:
 		"rng_seed": rng.seed, "rng_state": rng.state, "tick": tick_count,
 		"ranged": _ranged, "events": events, "waves": _waves, "waves_released": _waves_released,
 		"coop": _coop, "had_enemies": _had_enemies, "clear_reported": _clear_reported,
-		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor, "reward_wave": reward_wave})
+		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor, "reward_wave": reward_wave, "loot_players": loot_players})
 
 
 ## Restore into a sim constructed with the same combat/rules. Supply camp data if runs exist.
@@ -641,6 +657,9 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 	_clear_reported = d["clear_reported"]
 	wave_heal_fraction = float(d.get("wave_heal_fraction", 0.0))
 	loot_factor = float(d.get("loot_factor", 1.0))
+	loot_players = {}
+	for fid in d.get("loot_players", {}):
+		loot_players[int(fid)] = [int(d["loot_players"][fid][0]), float(d["loot_players"][fid][1])]
 	reward_wave = int(d.get("reward_wave", -1))
 	class_styles = d.get("class_styles", {}).duplicate()
 	# (an old checkpoint's "skill_system" block belongs to the deleted skill-build runtime: ignored)

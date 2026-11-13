@@ -173,12 +173,13 @@ func loot_factor() -> float:
 
 ## A treasure's contents for the reward key `what`: its piece, given with a chance of loot_factor() (always
 ## at 1.0). The pay roll has its own generator, so the piece rolled is the same at any factor.
-func treasure_drop(what: String) -> Dictionary:
+## `trip` / `factor` (online squads, personal loot): the receiving player's run and loot factor (default: the journey's).
+func treasure_drop(what: String, trip = null, factor: float = -1.0) -> Dictionary:
 	var item = treasure_item(_rng_for(what, completed + 1))
 	# Race gear (design/gdd/race-gear-sets.md 3.12): a chest piece may become a race piece of a squad card.
 	var RaceDrops = load("res://logic/race_drops.gd")
-	item = RaceDrops.convert_piece(item_rules, item, RaceDrops.picks_for(run), RaceDrops.CHEST, waves_cleared if data.wave_mode else completed + 1)
-	var pays := _rng_for(what + "-pays", completed + 1).randf() < loot_factor()
+	item = RaceDrops.convert_piece(item_rules, item, RaceDrops.picks_for(run if trip == null else trip), RaceDrops.CHEST, waves_cleared if data.wave_mode else completed + 1)
+	var pays := _rng_for(what + "-pays", completed + 1).randf() < (loot_factor() if factor < 0.0 else factor)
 	return {"gold": 0, "materials": {}, "items": [item] if pays else []}
 
 

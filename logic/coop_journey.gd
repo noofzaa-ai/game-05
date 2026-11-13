@@ -125,6 +125,11 @@ func xp_cards() -> Array:
 func fighter_count() -> int:
 	return runs_by_player.size()
 
+## Personal loot (online-squads 3.5, 4.3): player `slot`'s factor = loot_by_squad[k - 1], k = that player's card count.
+## A party of one squad (solo) or of separate players keeps the party factor.
+func loot_factor_for(slot: int) -> float:
+	return data.loot_for(fighters_of(slot).size()) if owners().size() > 1 else loot_factor()
+
 func choose(index: int) -> Dictionary:
 	hp_fraction = float(health_by_player[primary_id])
 	var node := super.choose(index)
@@ -173,6 +178,10 @@ func populate(sim: GameSim, map, _player_id: int, first_enemy_id: int) -> Array[
 		for entry in wave["enemies"]:
 			entry["hp_scale"] = float(entry.get("hp_scale", 1.0)) * scale
 	sim.enable_coop(ids)
+	sim.loot_players.clear()
+	if owners().size() > 1:  # personal loot (online-squads 3.5): each player rolls with their own factor and stream
+		for id in ids:
+			sim.loot_players[id] = [owner_of(id), loot_factor_for(owner_of(id))]
 	return bosses
 
 func capture_party(sim) -> void:
@@ -207,7 +216,7 @@ func open_treasure() -> Dictionary:
 	treasure_pending = false
 	last_rewards.clear()
 	for id in _paying_players():
-		last_rewards[id] = runs_by_player[id].loot_into_bag(treasure_drop("treasure-player-%d" % id))
+		last_rewards[id] = runs_by_player[id].loot_into_bag(treasure_drop("treasure-player-%d" % id, runs_by_player[id], loot_factor_for(owner_of(id))))
 	last_reward = last_rewards.get(primary_id, {})
 	return last_reward
 
