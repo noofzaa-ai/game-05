@@ -140,7 +140,7 @@ func _wave_checks(ctx) -> void:
 		for id in journey.player_ids():
 			if sim.fighters[id].is_alive(): alive += 1
 		if alive == 0: break
-	# Wave mode is tuned to be lost sometimes (starter squad ~75% over 60 seeds at squad power 1.97, 2026-11-13, tools/balance/class_sim.gd),
+	# Wave mode is tuned to be lost sometimes (starter squad ~73% over 60 seeds at squad power 2.01, 2026-11-13, tools/balance/class_sim.gd),
 	# so one fixed seed only has to reach the Chief's wave; the win rate is measured by the sim tool.
 	print("    (starter squad, seed 31: reached wave %d, ticks %d, won %s)" % [waves_reached, tick, sim.living_enemy_count() + sim.pending_wave_count() == 0])
 	ctx.check("the squad fights through to the Chief's wave (ticks %d)" % tick, boss_seen)

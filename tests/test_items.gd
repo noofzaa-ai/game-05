@@ -89,7 +89,7 @@ func _test_rule_validation(ctx) -> void:
 	ctx.check("probabilities that do not add to 1 are reported", not ItemRulesLoader.parse(good.replace("\"success\": 0.7", "\"success\": 0.9")).is_valid())
 	ctx.check("an unknown main stat is reported", not ItemRulesLoader.parse(good.replace("\"main_stat\": \"ATK\"", "\"main_stat\": \"MAGIC\"")).is_valid())
 	ctx.check("a missing enhancement level is reported", not ItemRulesLoader.parse(good.replace("\"levels\": [9, 10]", "\"levels\": [9, 9]")).is_valid())
-	ctx.check("a tier table of the wrong size is reported", not ItemRulesLoader.parse(good.replace("[20, 35, 55, 80]", "[20, 35]")).is_valid())
+	ctx.check("a tier table of the wrong size is reported", not ItemRulesLoader.parse(good.replace("[40, 70, 110, 160]", "[40, 70]")).is_valid())
 
 
 func _test_create(ctx, rules) -> void:
