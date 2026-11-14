@@ -5,7 +5,7 @@ Status: Approved plan (Boss 2026-11-15), spec v1. Owner: game-designer.
 ## 1. Overview
 A new account starts with three raceless class cards. A spotlight guide makes the player give each card a race, explains the Alliance bonus, sends them into the first fight, then tours the hub menu. Magic and Runeborn unlock at the first wave-12 clear of the goblin journey, with a short ceremony and one guided step. Steps live in `data/tutorial/steps.json`; progress lives on the server profile.
 
-## 2. Starting state and unlock rules
+## 2. Detailed Rules (starting state and unlock rules)
 
 **New account** (`logic/card_deck.gd` `initial()`):
 - Cards: `STARTER_SQUAD` = sword_shield, greatsword, longbow. Race = `""` (empty). `starter_races` in `data/races/rules.json` is no longer applied to new cards. Old saves keep using it (see migration).
@@ -99,7 +99,18 @@ The Magic card shows in the card row in its normal slot, greyscaled to 40% satur
 10. Visual check (Godot window screenshots) at 1920×1080 and 390×844: each step shows the cut-out on the right control and the text is not clipped.
 11. Playtest: a fresh player reaches the first FIGHT in under 90 s, finishes race selection with no help, and can explain the Alliance bonus afterwards.
 
-## 8. Open risks
+## 8. Dependencies
+- `logic/card_deck.gd`: raceless new cards (`race ""`), empty new squad, `has_race`, `gear_race`, squad rules.
+- `logic/race_data.gd`: race ids, starter races (gear of raceless cards, old saves), synergy (raceless cards skipped).
+- `logic/profile.gd`: `tutorial` and `unlocks` fields, old-save migration.
+- `logic/commands.gd`: `card_race` / `card_squad` guards, `fight_problem`, `tutorial_step`, `tutorial_replay`.
+- `logic/unlocks.gd`, `logic/tutorial.gd`, `data/tutorial/unlocks.json`, `data/tutorial/steps.json`.
+- `server/profile/runner.gd`: the ALLOWED command list.
+- `server/rooms/manager.gd` (fight-start and shared-room guards) and the Nakama room join (`server/names/runtime/src/rooms.ts`).
+- Battle results: `logic/journey.gd` `pay_card_xp` calls `Unlocks.on_battle_result` with `cleared_wave()`.
+- Client: `client/card_deck_screen.gd` (hub targets, squad tray, FIGHT), `client/race_picker.gd` (race options).
+
+## 9. Open risks
 - **R1:** the first fight must be winnable with Human/Viking/Elf at base stats. This is not measured yet; run class_sim on goblin wave 1–3 before release.
 - **R2:** moving the Runeborn and Magic gate to wave 12 delays the 4th card. Check that waves 1–12 with 3 cards are not a grind (playtest time-to-wave-12).
 - **R3:** the hub nodes need stable names. This is a small client change in `card_deck_screen.gd`, so coordinate it with whoever holds that file (AI_SYNC).

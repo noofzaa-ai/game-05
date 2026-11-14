@@ -180,6 +180,9 @@ func _trip(seed: int):
 	var r := RandomNumberGenerator.new()
 	r.seed = seed
 	var profile = Profile.new_player(rules, camp, r)
+	for card in Deck.classes():  # tutorial.md 2: new cards are raceless; the tutorial gives S&S/GS/Bow Human/Viking/Elf
+		Deck.set_race(profile.card_deck, card, Deck.starter_race(card))
+	profile.unlocks["magic_runeborn"] = true
 	if gear_tier >= 0 or card_level > 1:
 		_progress(profile, r)
 	return Run.start(profile, camp)
