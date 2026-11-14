@@ -153,6 +153,18 @@ const BODY_COVER := {
 	"shoes": ["LeftFoot", "RightFoot", "LeftToeBase", "RightToeBase", "LeftToe_End", "RightToe_End"],
 }
 static var _masked_bodies: Dictionary = {}  ## covered-slot key -> ArrayMesh
+## Race look (Boss 2026-11-14): data/races/<id>.json "look" names the Studio race head that replaces Head_Anime
+## ("head") and an optional face overlay ("overlay") in "head_file" (art/characters/studio05/v1111/race/
+## race_heads.glb: the same 102 joints, order and inverse binds as the bodies). No "head" = the default Studio head.
+const RACE_FOLDER := "res://data/races/"
+## The rune overlay's cyan emission, kept subtle: how far its colour moves toward the emissive colour (the toon
+## shader is unshaded; there is no bloom on the character).
+const RUNE_GLOW := 0.35
+static var _race_looks: Dictionary = {}
+static var _paint_grounds: Dictionary = {}  ## paint texture path -> its bare-skin colour (linear)
+var _race_wanted := ""  ## the card's race id ("" = default head)
+var _race_key := ""  ## "file|head,overlay" now on the skeleton ("" = none)
+var _race_meshes: Array[MeshInstance3D] = []
 
 
 static func _split_files() -> Dictionary:
@@ -256,6 +268,8 @@ func _load_variant(cls: String, hair: String, silver: bool) -> bool:
 	_race_weapon_meshes.clear()
 	_race_shield_meshes.clear()
 	_weapon_file_shield.clear()
+	_race_meshes.clear()
+	_race_key = ""
 	_class_weapons.clear()
 	_class_shield.clear()
 	_cape_mesh = null
@@ -316,6 +330,7 @@ func _load_variant(cls: String, hair: String, silver: bool) -> bool:
 	_wear_studio_armor()
 	_wear_race_weapon()
 	_wear_race_shield()
+	_wear_race_look()
 	var spec := class_data(cls)
 	# The class clips live in the body file: they are the same for every hair (the hair chains' secondary
 	# motion included), so one library per class.
@@ -562,6 +577,43 @@ static func _with_rest_coordinates(source: Mesh) -> ArrayMesh:
 	return mesh
 
 
+## Bind-pose position in CUSTOM0 (RGBA float), for a head that keeps its UV for a texture (Viking war paint).
+static func _with_rest_custom(source: Mesh) -> ArrayMesh:
+	var mesh := ArrayMesh.new()
+	for surface in source.get_surface_count():
+		var arrays := source.surface_get_arrays(surface)
+		var positions: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+		var custom := PackedFloat32Array()
+		custom.resize(positions.size() * 4)
+		for i in positions.size():
+			custom[i * 4] = positions[i].x
+			custom[i * 4 + 1] = positions[i].y
+			custom[i * 4 + 2] = positions[i].z
+		arrays[Mesh.ARRAY_CUSTOM0] = custom
+		var flags := Mesh.ARRAY_CUSTOM_RGBA_FLOAT << Mesh.ARRAY_FORMAT_CUSTOM0_SHIFT
+		var bones = arrays[Mesh.ARRAY_BONES]
+		if bones != null and positions.size() > 0 and bones.size() == positions.size() * 8:
+			flags |= Mesh.ARRAY_FLAG_USE_8_BONE_WEIGHTS
+		mesh.add_surface_from_arrays(source.surface_get_primitive_type(surface), arrays, [], {}, flags)
+		mesh.surface_set_material(surface, source.surface_get_material(surface))
+	return mesh
+
+
+## The bare-skin colour of a race paint texture (a corner texel, linear): where the texture shows it, the
+## card's skin colour is drawn instead (studio05_toon.gdshader albedo_is_paint).
+static func _paint_ground(texture: Texture2D) -> Color:
+	var key := texture.resource_path if not texture.resource_path.is_empty() else str(texture.get_instance_id())
+	if not _paint_grounds.has(key):
+		var image := texture.get_image()
+		var ground := Color(0.72, 0.56, 0.48)
+		if image != null:
+			if image.is_compressed():
+				image.decompress()
+			ground = image.get_pixel(2, 2).srgb_to_linear()
+		_paint_grounds[key] = ground
+	return _paint_grounds[key]
+
+
 func _prepare_meshes() -> void:
 	for mesh in _meshes.duplicate():
 		if not is_instance_valid(mesh) or mesh.has_meta("studio05"):
@@ -571,8 +623,13 @@ func _prepare_meshes() -> void:
 		var part: int = 1 if label.begins_with("Head_Anime") else (2 if label.begins_with("Hair_") else 0)
 		var has_uv: bool = (mesh.mesh.surface_get_format(0) & Mesh.ARRAY_FORMAT_TEX_UV) != 0
 		var rest: bool = part != 0 and not has_uv
+		# A textured head (the Viking race head: its UV holds the war paint) keeps its UV; its bind-pose
+		# positions go in CUSTOM0 so the face (eyes, blink, mouth) is still drawn in head coordinates.
+		var rest_custom: bool = part == 1 and has_uv
 		if rest:
 			mesh.mesh = _with_rest_coordinates(mesh.mesh)
+		elif rest_custom:
+			mesh.mesh = _with_rest_custom(mesh.mesh)
 		var first_texture: Texture2D = null
 		var has_color := false
 		for surface in mesh.mesh.get_surface_count():
@@ -581,15 +638,23 @@ func _prepare_meshes() -> void:
 			material.shader = ToonShader
 			material.resource_name = original.resource_name if original != null else label
 			material.set_shader_parameter("part", part)
-			material.set_shader_parameter("has_rest", rest)
+			material.set_shader_parameter("has_rest", rest or rest_custom)
+			material.set_shader_parameter("rest_in_custom", rest_custom)
 			# The importer gives albedo_color in sRGB; the Studio multiplies in linear (three.js material.color).
 			var color := (original.albedo_color if original != null else Color.WHITE).srgb_to_linear()
+			if original != null and original.emission_enabled:  # the Runeborn runes' cyan layer (subtle)
+				color = color.lerp(original.emission.srgb_to_linear(), RUNE_GLOW)
 			material.set_meta("file_color", color)
 			material.set_shader_parameter("base_color_linear", Vector3(color.r, color.g, color.b))
 			if original != null and original.albedo_texture != null:
 				material.set_shader_parameter("use_albedo_tex", true)
 				material.set_shader_parameter("albedo_tex", original.albedo_texture)
 				first_texture = original.albedo_texture
+				if part == 1:  # a painted race head: the texture is bare skin + paint; the skin follows the card
+					var ground := _paint_ground(original.albedo_texture)
+					material.set_shader_parameter("albedo_is_paint", true)
+					material.set_shader_parameter("paint_ground", Vector3(ground.r, ground.g, ground.b))
+					material.set_meta("skin_paint", true)
 			var format: int = mesh.mesh.surface_get_format(surface)
 			if original != null and original.normal_enabled and original.normal_texture != null and (format & Mesh.ARRAY_FORMAT_TANGENT):
 				material.set_shader_parameter("use_normal_tex", true)
@@ -604,8 +669,10 @@ func _prepare_meshes() -> void:
 				material.set_shader_parameter("card_ink", true)
 			mesh.set_surface_override_material(surface, material)
 			_toon.append(material)
-		if card_ink:
-			_add_card_hull(mesh, part, rest, has_color)
+		if mesh.has_meta("no_ink_hull"):
+			pass  # a face overlay (Runeborn runes) lies on the head: an outline would ring every rune
+		elif card_ink:
+			_add_card_hull(mesh, part, rest or rest_custom, has_color, rest_custom)
 		elif part != 0:
 			var hull := MeshInstance3D.new()
 			hull.name = label + "_StudioInk"
@@ -617,9 +684,10 @@ func _prepare_meshes() -> void:
 			ink.shader = InkShader
 			ink.set_shader_parameter("grow", 0.0019 if part == 2 else 0.0014)
 			ink.set_shader_parameter("is_hair", part == 2)
-			ink.set_shader_parameter("has_rest", rest)
+			ink.set_shader_parameter("has_rest", rest or rest_custom)
+			ink.set_shader_parameter("rest_in_custom", rest_custom)
 			ink.set_shader_parameter("use_vertex_color", has_color)
-			if first_texture != null:
+			if first_texture != null and part == 2:
 				ink.set_shader_parameter("use_albedo_tex", true)
 				ink.set_shader_parameter("albedo_tex", first_texture)
 			hull.material_override = ink
@@ -630,7 +698,7 @@ func _prepare_meshes() -> void:
 
 ## Card ink line (card_ink): a child drawing `mesh` again, pushed out by a card-relative width, back faces in
 ## brown ink. Moved by the same bones and blend shapes (the cape hull copies the cape's weights, _apply_cape).
-func _add_card_hull(mesh: MeshInstance3D, part: int, rest: bool, has_color: bool) -> void:
+func _add_card_hull(mesh: MeshInstance3D, part: int, rest: bool, has_color: bool, rest_custom: bool = false) -> void:
 	var hull := MeshInstance3D.new()
 	hull.name = str(mesh.name) + "_StudioInk"  # (the suffix keeps it out of the bounds, _union_bounds)
 	hull.mesh = mesh.mesh
@@ -643,6 +711,7 @@ func _add_card_hull(mesh: MeshInstance3D, part: int, rest: bool, has_color: bool
 	ink.set_shader_parameter("is_hair", part == 2)
 	ink.set_shader_parameter("eye_cut", part == 1)
 	ink.set_shader_parameter("has_rest", rest)
+	ink.set_shader_parameter("rest_in_custom", rest_custom)
 	ink.set_shader_parameter("use_vertex_color", has_color)
 	hull.material_override = ink
 	hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -667,7 +736,7 @@ func _apply_colors() -> void:
 		var part := int(material.get_shader_parameter("part"))
 		if part == 2:
 			material.set_shader_parameter("base_color_linear", Vector3(hair.r, hair.g, hair.b))
-		elif label.contains("skin"):
+		elif label.contains("skin") or material.get_meta("skin_paint", false):
 			material.set_shader_parameter("base_color_linear", Vector3(_skin.r, _skin.g, _skin.b))
 		if part == 1:
 			material.set_shader_parameter("iris_tint", Vector3(iris.r, iris.g, iris.b))
@@ -741,7 +810,9 @@ func set_appearance(appearance: Dictionary) -> void:
 	_makeup = makeup_style(str(choices.get("makeup", "")))
 	if appearance.has("blink_mode"):
 		set_blink_mode(str(appearance["blink_mode"]))
+	_race_wanted = str(appearance.get("race", ""))  # the card's race (ItemAssets.card_appearance); none = default head
 	_load_variant(class_id, hair, silver)
+	_wear_race_look()
 	_apply_colors()
 
 
@@ -755,6 +826,83 @@ static func makeup_style(id: String) -> int:
 		"natural", "none":
 			return 2
 	return 0
+
+
+## data/races/<id>.json "look" ({} for an unknown id or none).
+static func race_look(race_id: String) -> Dictionary:
+	if race_id.is_empty() or not race_id.is_valid_identifier():
+		return {}
+	if not _race_looks.has(race_id):
+		var path := RACE_FOLDER + race_id + ".json"
+		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path)) if FileAccess.file_exists(path) else null
+		_race_looks[race_id] = parsed["look"] if parsed is Dictionary and parsed.get("look") is Dictionary else {}
+	return _race_looks[race_id]
+
+
+## Shows the race's head (and face overlay) in place of the Studio head: "elf" = the long-eared head.
+## "" or a race without a "head" (human) = the default Head_Anime. Face, eyes, blink and mouth are drawn by the
+## toon shader on whichever head shows; the skin colour follows the card (_apply_colors).
+func set_race_look(race_id: String) -> void:
+	_race_wanted = race_id
+	_wear_race_look()
+
+
+func race_look_id() -> String:
+	return _race_wanted
+
+
+## The head mesh on show (the race head, else Head_Anime), null before load.
+func shown_head() -> MeshInstance3D:
+	for mesh in _race_meshes + _body_meshes:
+		if is_instance_valid(mesh) and str(mesh.name).begins_with("Head_Anime") and mesh.visible:
+			return mesh
+	return null
+
+
+## The race pieces on the skeleton now (head + overlay).
+func race_meshes() -> Array[MeshInstance3D]:
+	return _race_meshes.duplicate()
+
+
+func _wear_race_look() -> void:
+	if _skeleton == null:
+		return
+	var look := race_look(_race_wanted)
+	var file := str(look.get("head_file", ""))
+	var names: Array[String] = []
+	for part in ["head", "overlay"]:
+		if not str(look.get(part, "")).is_empty():
+			names.append(str(look[part]))
+	var key := ""
+	if not file.is_empty() and not names.is_empty() and ResourceLoader.exists(file):
+		key = file + "|" + ",".join(names)
+	if key != _race_key:
+		for mesh in _race_meshes:
+			_meshes.erase(mesh)
+			for surface in mesh.get_surface_override_material_count():
+				var material := mesh.get_surface_override_material(surface)
+				_toon.erase(material)
+				_retired.append(material)
+			_retired.append(mesh.mesh)
+			mesh.get_parent().remove_child(mesh)
+			mesh.queue_free()
+		_race_meshes.clear()
+		_race_key = key
+		if not key.is_empty():
+			_race_meshes = _merge(file, func(n: String) -> bool: return n in names)
+			for mesh in _race_meshes:
+				if not str(mesh.name).begins_with("Head_Anime"):
+					mesh.set_meta("no_ink_hull", true)
+			_meshes.append_array(_race_meshes)
+			if not _toon.is_empty():
+				_prepare_meshes()
+				_apply_colors()
+	var replaced := false
+	for mesh in _race_meshes:
+		replaced = replaced or str(mesh.name).begins_with("Head_Anime")
+	for mesh in _body_meshes:
+		if is_instance_valid(mesh) and str(mesh.name) == "Head_Anime":
+			mesh.visible = not replaced
 
 
 ## Files skinned to this 102-joint Studio rig (same joints, order and bind pose: tools/items/split_race_outfits.py

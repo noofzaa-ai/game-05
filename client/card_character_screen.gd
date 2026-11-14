@@ -954,6 +954,8 @@ func _change_race(race: String) -> void:
 		var refunded := int(result.get("result", {}).get("tree_refunded", 0))
 		_say(CardTokens.t("race_changed_refund") % [CardTokens.race_name(race), refunded] if refunded > 0 else CardTokens.t("race_changed") % CardTokens.race_name(race))
 		_race_picker.show_card(card, p.card_deck)
+		_deck = p.card_deck
+		_portrait.set_look(CardDeck.look_of(p.card_deck, card))  # the race head shows at once (Boss 2026-11-14)
 		_layout_race_button(_s)
 		_refresh_skills()
 	_race_picker.finish(result.get("ok", false))

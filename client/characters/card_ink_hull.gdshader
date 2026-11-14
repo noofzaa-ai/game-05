@@ -14,6 +14,7 @@ uniform vec3 ink_linear = vec3(0.010, 0.0045, 0.0025); // near-black brown (#1c1
 uniform bool is_hair = false; // hair: the ink takes a little of the hair colour
 uniform bool eye_cut = false; // head: no line inside the eye sockets (recessed eye geometry)
 uniform bool has_rest = false; // head/hair A-F: bind-pose positions baked into UV/UV2 (see the model)
+uniform bool rest_in_custom = false; // a textured head: bind-pose position in CUSTOM0 (see the model)
 uniform vec3 base_color_linear = vec3(0.43, 0.39, 0.52); // hair colour (set by _apply_colors)
 uniform bool use_vertex_color = false;
 
@@ -21,7 +22,7 @@ varying vec3 rest_pos;
 varying vec4 vertex_color;
 
 void vertex() {
-	rest_pos = has_rest ? vec3(UV.x, UV.y, UV2.x) : VERTEX;
+	rest_pos = rest_in_custom ? CUSTOM0.xyz : (has_rest ? vec3(UV.x, UV.y, UV2.x) : VERTEX);
 	vertex_color = COLOR;
 	vec3 direction = normalize(NORMAL);
 	float units_to_view = max(length(mat3(MODELVIEW_MATRIX) * direction), 0.000001);

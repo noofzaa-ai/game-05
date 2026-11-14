@@ -2,7 +2,7 @@
  "id": "human", "name": "Human", "order": 1, "theme": "mastery",
  "summary": "Trained, disciplined: their skills hit harder and come back sooner.",
  "color": "#ffc23a", "color_2": "",
- "look": {"ears": "", "hair_extra": "", "beard": "", "face_paint": "", "skin_decal": "", "emblem": ""},
+ "look": {"head_file": "", "head": "", "overlay": "", "emblem": ""},
  "mockup": {"plate_color": "#ffc23a", "rim_color": "#ffc23a", "aura_vfx": "race_aura/human", "badge_text": "H"},
  "classes": {
   "sword_shield": {"passive": {"name": "Rallying Drill", "text": "Every skill cast gives Fortify to all allies for 3 s (10 s cooldown).",

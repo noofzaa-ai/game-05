@@ -2,7 +2,7 @@
  "id": "elf", "name": "Elf", "order": 3, "theme": "lifebloom",
  "summary": "Healing that flows to allies.",
  "color": "#4fe07a", "color_2": "",
- "look": {"ears": "elf_long", "hair_extra": "", "beard": "", "face_paint": "", "skin_decal": "", "emblem": ""},
+ "look": {"head_file": "res://art/characters/studio05/v1111/race/race_heads.glb", "head": "Head_Anime_Elf", "overlay": "", "emblem": ""},
  "mockup": {"plate_color": "#4fe07a", "rim_color": "#4fe07a", "aura_vfx": "race_aura/elf", "badge_text": "E"},
  "classes": {
   "sword_shield": {"passive": {"name": "Warden's Grove", "text": "Blocking heals the most-hurt ally 2% max HP (1 s).",

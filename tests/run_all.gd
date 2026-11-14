@@ -67,6 +67,7 @@ const TEST_FILES := [
 	"res://tests/test_camera.gd",
 	"res://tests/test_character_model.gd",
 	"res://tests/test_animation.gd",
+	"res://tests/test_race_look.gd",
 	"res://tests/test_ink_style.gd",
 	"res://tests/test_cosmetics.gd",
 	"res://tests/test_hud.gd",
