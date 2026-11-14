@@ -147,6 +147,7 @@ func _build_top() -> void:
 	CarvedLook.dark_pill(_switch_pill, 1.0)
 	add_child(_switch_pill)
 	_race_button = Button.new()
+	_race_button.name = "RaceButton"  # tutorial target (design/gdd/tutorial.md 4)
 	_race_button.focus_mode = Control.FOCUS_ALL
 	_race_button.tooltip_text = CardTokens.t("race_change")
 	_race_button.pressed.connect(open_race_picker)
@@ -201,6 +202,7 @@ func _build_panel() -> void:
 		_panel.add_child(tint)
 		_tab_tints[tab] = tint
 		var b := Button.new()
+		b.name = tab.capitalize() + "Tab"  # tutorial targets EquipmentTab / OutfitTab / SkillsTab
 		b.focus_mode = Control.FOCUS_ALL
 		b.text = CardTokens.t("tab_" + tab)
 		b.pressed.connect(select_tab.bind(tab))

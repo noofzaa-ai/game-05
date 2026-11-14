@@ -1054,11 +1054,13 @@ func _build_deck_layer() -> void:
 	_gold_label = CardTokens.hub_label("0", CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, 1.0, 0, "medium")
 	_gold_pill.add_child(_gold_label)
 	_settings_button = _sys_button("settings", func() -> void: settings_pressed.emit())
+	_settings_button.name = "SettingsButton"  # tutorial target (design/gdd/tutorial.md 4)
 	_account_button = _sys_button("account", func() -> void: service_pressed.emit("account"))
 	_build_online_button()
 	for service in CardTokens.HUB_SERVICES:
 		var entry := MenuEntry.new()
 		entry.build(str(service["id"]), str(service["icon"]))
+		entry.name = "Menu_" + str(service["id"])  # tutorial target
 		entry.pressed.connect(_on_menu.bind(entry))
 		_deck_layer.add_child(entry)
 		_menu.append(entry)
@@ -1076,6 +1078,7 @@ func _build_deck_layer() -> void:
 	_hint = CardTokens.hub_label(CardTokens.t("hub_hint"), CardTokens.FONT_HUB_HINT, CardTokens.HUB_INK, 1.0, 0, "medium")
 	_deck_layer.add_child(_hint)
 	_bar = Control.new()  # the squad tray
+	_bar.name = "SquadTray"  # tutorial target
 	_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 	_deck_layer.add_child(_bar)
 	for i in CardDeck.SQUAD_MAX:
@@ -1107,6 +1110,7 @@ func _build_deck_layer() -> void:
 	_fight_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_deck_layer.add_child(_fight_glow)
 	_fight = Button.new()
+	_fight.name = "FightButton"  # tutorial target
 	_fight.focus_mode = Control.FOCUS_ALL
 	_fight.tooltip_text = CardTokens.t("fight")
 	_fight.pressed.connect(func() -> void: fight_pressed.emit())
@@ -1429,6 +1433,7 @@ func _rebuild_cards() -> void:
 	_cards.clear()
 	for id in _class_ids:
 		var card := HubCard.new()
+		card.name = "Card_" + str(id)  # tutorial target
 		_row.add_child(card)
 		card.build(id)
 		card.portrait.set_idle_variants(not reduced_motion)  # idle variants (Boss 2026-11-12), off for reduced motion
