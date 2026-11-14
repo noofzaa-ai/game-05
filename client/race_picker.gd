@@ -17,8 +17,10 @@ const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const SkillTree := preload("res://logic/skill_tree.gd")
 const RaceBadge := preload("res://client/race_badge.gd")
+const TutorialMarks := preload("res://client/tutorial_marks.gd")
 
 signal race_chosen(race_id: String)
+signal locked_tapped(race_id: String)  ## tutorial.md 5: a locked race (Runeborn before wave 12): the screen shows a toast
 signal closed()
 
 var reduced_motion := false
@@ -26,6 +28,7 @@ var card := ""
 var current := ""
 var pending := ""  ## the race waiting for the refund confirmation ("" none)
 var busy := false
+var locked_races: Array = []  ## tutorial.md 5: race ids shown greyed with a padlock; a tap only emits locked_tapped
 var refund_points := 0  ## the card's Race + Combo skill-tree points (SkillTree.state spent race + combo)
 
 var _s := 1.0
@@ -165,6 +168,9 @@ func finish(_ok: bool) -> void:
 func _on_tile(race: String) -> void:
 	if busy:
 		return
+	if locked_races.has(race):
+		locked_tapped.emit(race)
+		return
 	if race == current:
 		pending = ""
 		_refresh_state()
@@ -290,6 +296,23 @@ func _layout() -> void:
 	_refresh_state()
 
 
+## tutorial.md 5: 40% saturation + a padlock medallion on a locked race tile.
+func _mark_locked(b: Button, locked: bool) -> void:
+	b.material = TutorialMarks.locked_material() if locked else null
+	b.use_parent_material = false
+	for child in b.get_children():
+		if child is CanvasItem and child.name != "LockMark":
+			(child as CanvasItem).use_parent_material = locked
+	var mark := b.get_node_or_null("LockMark")
+	if locked and mark == null:
+		mark = TutorialMarks.new(TutorialMarks.Kind.LOCK)
+		b.add_child(mark)
+	if mark != null:
+		mark.visible = locked
+		var edge := CardTokens.RACE_BADGE_PICKER * _s
+		mark.place(Vector2(b.size.x - edge - CardTokens.RACE_TILE_PAD * _s, CardTokens.RACE_TILE_PAD * _s), edge)
+
+
 ## Tiles' rings, the foot (warning / buttons) for the current state.
 func _refresh_state() -> void:
 	if _panel == null:
@@ -299,6 +322,7 @@ func _refresh_state() -> void:
 		var b: Button = _tiles[race]["button"]
 		CarvedLook.race_tile(b, race, race == current, race == pending, s)
 		b.disabled = busy
+		_mark_locked(b, locked_races.has(race))
 	var confirming := not pending.is_empty() and refund_points > 0
 	_confirm.visible = confirming
 	_cancel.visible = confirming

@@ -35,6 +35,10 @@ const RaceData := preload("res://logic/race_data.gd")
 const HubLook := preload("res://client/hub_look.gd")  ## the class emblem cut from the card frame (tray)
 const CarvedStrip := preload("res://client/carved_strip.gd")  ## carved hub pills / ribbons (3-slice)
 const CarvedLook := preload("res://client/carved_look.gd")  ## the carved look of the other screens (Coming soon panel)
+const TutorialMarks := preload("res://client/tutorial_marks.gd")  ## tutorial.md 5: padlock / "?" medallions, 40% saturation
+const TutorialOverlay := preload("res://client/tutorial_overlay.gd")
+const Unlocks := preload("res://logic/unlocks.gd")
+const Tutorial := preload("res://logic/tutorial.gd")
 
 signal card_selected(class_id: String)
 signal look_changed(class_id: String, part: String, choice: String)  ## part: hair|outfit|eye_color|skin|makeup
@@ -44,6 +48,7 @@ signal fight_pressed()
 signal service_pressed(service: String)  ## a side-menu entry (blacksmith, shop, tailor, storage, quests) or "account"
 signal settings_pressed()
 signal back_pressed()
+signal tutorial_event(event: Dictionary)  ## design/gdd/tutorial.md done_on events (client/tutorial_driver.gd listens)
 
 ## true: the screen sends the commands itself (the game). Tests and shot scripts can set false.
 var auto_wire := true
@@ -487,6 +492,7 @@ class HubCard extends Control:
 	var _name: Label
 	var _squad_label: Label
 	var _lock: Label
+	var _mark: Control  ## tutorial.md 5: padlock (locked) or "?" (no race) medallion over the race badge
 	var _focus: Panel
 	var _back_glow: TextureRect  ## soft class light on the backdrop (slides with the backdrop: the depth cue)
 	var _scene_back: CardSceneLayers  ## painted far + mid + contact shadow (replaces _back / _back_glow when the art exists)
@@ -597,14 +603,22 @@ class HubCard extends Control:
 		portrait.set_look(look)
 		var window_art := CardTokens.carved(CardTokens.CARVED_WINDOW_PREFIX + class_id)
 		_back.texture = window_art if window_art != null else CardTokens.window_gradient(class_id, locked)
-		_back.material = CardTokens.grey_material() if locked and window_art != null else null
+		_back.material = TutorialMarks.locked_material() if locked and window_art != null else null
 		_back_glow.visible = not locked and not _scene_back.visible and CardTokens.carved(CardTokens.CARVED_WINDOW_PREFIX + class_id) == null
 		_scene_back.set_locked(locked)
 		_scene_front.set_locked(locked)
-		portrait.material = CardTokens.grey_material() if locked else null
-		portrait.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
-		_lock.visible = locked
-		_name.text = CardTokens.class_name_of(class_id)
+		portrait.material = TutorialMarks.locked_material() if locked else null
+		portrait.modulate = CardTokens.HUB_WHITE
+		_frame.material = TutorialMarks.locked_material() if locked else null
+		_lock.visible = false  # tutorial.md 5: the padlock medallion + the wave-12 label replace the LOCKED word
+		_name.text = TutorialOverlay.word("locked_wave") if locked else CardTokens.class_name_of(class_id)
+		var want := TutorialMarks.Kind.LOCK if locked else TutorialMarks.Kind.UNKNOWN
+		if _mark != null and (_mark.kind != want or not (locked or race.is_empty())):
+			_mark.queue_free()
+			_mark = null
+		if _mark == null and (locked or race.is_empty()):
+			_mark = TutorialMarks.new(want)
+			add_child(_mark)
 		_squad_label.text = "" if locked else (CardTokens.t("squad_n") % number if in_squad else CardTokens.t("squad_add"))
 		squad_button.tooltip_text = CardTokens.t("remove_from_squad" if in_squad else "add_to_squad")
 		squad_button.visible = not locked
@@ -639,6 +653,9 @@ class HubCard extends Control:
 		_race_badge.position = Vector2(CardTokens.CARVED_BADGE_CARD_AT.x * w, CardTokens.CARVED_BADGE_CARD_AT.y * h)
 		_race_badge.show_race(race, CardTokens.CARVED_BADGE_CARD * w)
 		_race_badge.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
+		if _mark != null:
+			var mark_edge := CardTokens.CARVED_BADGE_CARD * w * (1.25 if locked else 1.0)
+			_mark.place(Vector2(CardTokens.CARVED_BADGE_CARD_AT.x * w, CardTokens.CARVED_BADGE_CARD_AT.y * h), mark_edge)
 		var sr := CardTokens.HUB_CARD_SQUAD
 		_squad_label.position = Vector2(sr.position.x * w, sr.position.y * h)
 		_squad_label.size = Vector2(sr.size.x * w, sr.size.y * h)
@@ -1215,6 +1232,7 @@ func _build_character_screen() -> void:
 	_character.account_pressed.connect(func() -> void: service_pressed.emit("account"))
 	_character.outfit_requested.connect(open_tailor)
 	_character.blacksmith_requested.connect(open_blacksmith_on)
+	_character.tutorial_event.connect(func(event: Dictionary) -> void: tutorial_event.emit(event))
 	_character.changed.connect(func() -> void:
 		if GameState.profile != null:
 			set_gold(GameState.profile.stash.gold)
@@ -1235,6 +1253,7 @@ func open_character(class_id: String) -> void:
 	_mode = "character"
 	_deck_layer.visible = false
 	_character.open(class_id, _class_ids, _deck)
+	tutorial_event.emit({"event": "character_open", "class": class_id})
 
 
 func _on_character_closed() -> void:
@@ -1410,6 +1429,7 @@ func _device_safe_x() -> float:
 ## Draws everything from `deck` (Profile.card_deck). Called again after each change.
 func show_deck(deck: Dictionary, cosmetics) -> void:
 	_deck = deck.duplicate(true)
+	_read_gates()
 	_cosmetics = cosmetics
 	var ids: Array = []
 	for id in CardDeck.classes():
@@ -1458,10 +1478,13 @@ func _refresh_all() -> void:
 		if at >= 0 and squad.size() <= 1:
 			card.squad_button.tooltip_text = CardTokens.t("squad_need_one")
 	_refresh_squad_bar()
-	_fight.disabled = squad.is_empty()
+	var no_fight := squad.is_empty() or not fight_ready()
+	_fight.disabled = no_fight
 	_fight_glow.visible = false  # carved target: no glow
-	_fight_art.material = CardTokens.grey_material() if squad.is_empty() else null
-	_stage_label.text = CardTokens.t("fight_need") if squad.is_empty() else CardTokens.stage_name()
+	_fight_art.material = CardTokens.grey_material() if no_fight else null
+	_stage_label.text = CardTokens.t("fight_need") if no_fight else CardTokens.stage_name()
+	if _online_button != null:
+		_online_button.visible = online_open()
 	if _mode == "editor":
 		_refresh_editor()
 
@@ -1518,7 +1541,10 @@ func _refresh_synergy(squad: Array) -> void:
 # ================================================================== squad
 func _toggle_squad(class_id: String) -> void:
 	if locked_classes.has(class_id):
-		toast(CardTokens.t("locked_toast") % CardTokens.class_name_of(class_id))
+		toast(TutorialOverlay.word("locked_full"))
+		return
+	if not CardDeck.has_race(_deck, class_id) and not _squad().has(class_id):
+		_blocked_text(TutorialOverlay.word("no_race"))  # tutorial.md 2: a raceless card cannot join the squad
 		return
 	var squad := _squad()
 	var at := squad.find(class_id)
@@ -1555,7 +1581,10 @@ func _on_slot_drop(from: int, to: int) -> void:
 ## A deck card dropped on tray slot `to`: it goes there (moving if already in, replacing when the tray is full).
 func _on_card_drop(class_id: String, to: int) -> void:
 	if locked_classes.has(class_id):
-		toast(CardTokens.t("locked_toast") % CardTokens.class_name_of(class_id))
+		toast(TutorialOverlay.word("locked_full"))
+		return
+	if not CardDeck.has_race(_deck, class_id):
+		_blocked_text(TutorialOverlay.word("no_race"))
 		return
 	var squad := _squad()
 	var at := squad.find(class_id)
@@ -1576,7 +1605,11 @@ func _set_squad(squad: Array) -> void:
 
 ## A change the rules do not allow: shake the squad tray and say why (§9).
 func _blocked(message_key: String) -> void:
-	toast(CardTokens.t(message_key))
+	_blocked_text(CardTokens.t(message_key))
+
+
+func _blocked_text(text: String) -> void:
+	toast(text)
 	if reduced_motion:
 		return
 	var home := _bar.position
@@ -1598,6 +1631,7 @@ func _on_menu(entry: MenuEntry) -> void:
 ## Opens what a service shows. Tailor = the look editor of the first squad card; Storage = the backpack
 ## window the old Bag button opened; the rest are "Coming soon" for now.
 func open_service(service: String) -> void:
+	tutorial_event.emit({"event": "panel_open", "panel": service})
 	match service:
 		"blacksmith", "storage", "shop":
 			_service_panel(service).open()
@@ -1875,6 +1909,9 @@ func refuse(message_key: String) -> void:
 
 # ================================================================== state A to B: the editor
 func _on_card_pressed(class_id: String) -> void:
+	if locked_classes.has(class_id):  # tutorial.md 5: a locked card only says why
+		toast(TutorialOverlay.word("locked_full"))
+		return
 	card_selected.emit(class_id)
 	var card: HubCard = _cards.get(class_id)
 	if card != null and not reduced_motion:
@@ -2308,12 +2345,14 @@ func _wire_game() -> void:
 	reset_card.connect(_send_reset)
 	fight_pressed.connect(_start_fight)
 	service_pressed.connect(open_service)
-	settings_pressed.connect(func() -> void: add_child(GraphicsPanel.new()))
+	settings_pressed.connect(open_settings)
 	# (back_pressed has no target: the hub is the home screen, there is no title screen behind it; Boss 2026-11-13)
 	if GameState.ensure_profile():
 		show_deck(GameState.profile.card_deck, ItemAssets.cosmetics())
 		set_gold(GameState.profile.stash.gold)
 		_intro()
+		if "tutorial" in GameState.profile:
+			tutorial = preload("res://client/tutorial_driver.gd").attach_hub(self)
 
 
 ## Coming back from a fight: the cards bob in, no other intro (§15).
@@ -2408,6 +2447,9 @@ func _fit_fight_progress() -> void:
 func _start_fight() -> void:
 	if _busy or FightLoading.is_open(get_tree()):
 		return
+	if tutorial != null:  # tutorial.md 4 `fight`: confirmed while still in camp (commands are camp-only)
+		tutorial_event.emit({"event": "fight_pressed"})
+		await tutorial.idle()
 	_busy = true
 	var overlay = FightLoading.open(get_tree(), reduced_motion)
 	overlay.failed.connect(func(message: String) -> void:
@@ -2428,3 +2470,95 @@ func _open_bag() -> void:
 	_camp.closed.connect(func() -> void:
 		_camp = null
 		_sync_from_profile())
+
+
+# ================================================================== new-player tutorial (design/gdd/tutorial.md)
+var tutorial: Node  ## client/tutorial_driver.gd (null when the profile has no tutorial block)
+
+
+## tutorial.md 5: locked classes (Magic before wave 12) from the profile's unlocks (display; the server enforces).
+func _read_gates() -> void:
+	var p = GameState.profile if auto_wire else null
+	if p == null or not "unlocks" in p:
+		return
+	locked_classes = Unlocks.locked_classes().filter(func(id): return not Unlocks.is_class_unlocked(p, str(id)))
+
+
+## tutorial.md 2: FIGHT stays disabled until 3 cards have a race (only while the deck has that many cards).
+func fight_ready() -> bool:
+	var with_race := 0
+	for id in _class_ids:
+		if CardDeck.has_race(_deck, str(id)) and not locked_classes.has(id):
+			with_race += 1
+	return with_race >= mini(CardDeck.SQUAD_MAX, _class_ids.size() - locked_classes.size())
+
+
+## tutorial.md 6: the Online button only after battle_tip.
+func online_open() -> bool:
+	var p = GameState.profile if auto_wire else null
+	return p == null or not "tutorial" in p or Tutorial.past(p, "battle_tip")
+
+
+## Settings, with "Replay tour" (tutorial.md 6) under the graphics rows once the tour has been reached.
+func open_settings() -> void:
+	var panel := GraphicsPanel.new()
+	add_child(panel)
+	if tutorial != null:
+		var replay := Button.new()
+		replay.name = "ReplayTourButton"
+		replay.text = TutorialOverlay.word("replay_tour")
+		replay.focus_mode = Control.FOCUS_ALL
+		replay.pressed.connect(func() -> void:
+			panel.queue_free()
+			tutorial.replay_tour())
+		panel.panel.body.add_child(replay)
+		replay.position = Vector2(0.0, -replay.get_combined_minimum_size().y)
+		replay.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
+		CarvedLook.plate_button(replay, _s)
+	tutorial_event.emit({"event": "panel_open", "panel": "settings"})
+
+
+func toast_index() -> int:
+	return _toast.get_index()
+
+
+func tutorial_first_card() -> String:
+	var squad := _squad()
+	return str(squad[0]) if not squad.is_empty() else (str(_class_ids[0]) if not _class_ids.is_empty() else "")
+
+
+## The hub with nothing over it (closes the character screen and the panels).
+func tutorial_show_hub() -> void:
+	tutorial_close_panels()
+	tutorial_close_character()
+
+
+func tutorial_close_character() -> void:
+	if _mode == "character":
+		_character.close()
+
+
+func tutorial_close_panels() -> void:
+	for panel in _panels.values():
+		if panel.visible:
+			panel.close()
+	for child in get_children():
+		if child is GraphicsPanel:
+			child.queue_free()
+	if _service_layer.visible:
+		_close_service()
+
+
+## Resume (tutorial.md 6): the character screen of `class_id`, and its race picker when `picker`.
+func tutorial_open_character(class_id: String, picker: bool) -> void:
+	tutorial_close_panels()
+	if _mode == "character" and _character.card != class_id:
+		_character.close()
+	if _mode != "character":
+		open_character(class_id)
+	if picker and not _character._race_picker.visible:
+		_character.open_race_picker()
+
+
+func tutorial_after_step() -> void:
+	_sync_from_profile_if_wired()
