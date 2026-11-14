@@ -368,9 +368,6 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 		damage = roundf(damage * damage_mul)
 	if blocked:
 		damage = maxf(float(data.rules["min_damage"]), roundf(damage * (1.0 - float(data.rules["guard_damage_reduction"]))))
-	if not blocked:
-		var relic_multiplier:float=preload("res://logic/relic_effects.gd").multiplier(attacker,move_id)
-		if relic_multiplier>1:damage=roundf(damage*relic_multiplier)
 	if target.skill_hit_filter.is_valid():
 		damage = target.skill_hit_filter.call(damage, attacker_id, not ranged)
 		if damage <= 0.0: return "blocked"
@@ -387,7 +384,6 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 		attacker.hitstop = int(move["hitstop"])
 	target.hitstop = int(move["hitstop"])
 
-	if not blocked:preload("res://logic/relic_effects.gd").hit(attacker_id,attacker,target_id,target,move_id,data,events)
 	var killed := target.hp <= 0.0
 	if deadeye and source.has("dir"):
 		var next := TreeMechanics.pierce_next(fighters, bodies, attacker_id, target_id, Vector2(source["dir"]))

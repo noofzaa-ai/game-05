@@ -173,7 +173,6 @@ static func cast(sim, id: int, skill: String, choice: Dictionary = {}) -> String
 	fighter.energy_wait = int(sim.combat.rules.get("energy_regen_delay_ticks", 0))
 	if load(RACE).pay_skill_hp(sim, id, fighter) > 0.0:
 		pass  # Blood Rite (races 3.4)
-	preload("res://logic/relic_effects.gd").skill_cast(fighter)
 	sim.events.append({"type": "class_skill_start", "player": id, "skill": skill, "start": sim.tick_count, "end": cast["end"], "target": target,
 		"aim": cast["aim"], "vfx": str(data.get("vfx", ""))})
 	return ""

@@ -181,7 +181,6 @@ func set_looks(new_looks: Dictionary) -> void:
 
 
 func show_state(body: SimBody, fighter: Fighter, data: CombatData = null) -> void:
-	if _model!=null:_model.set_relics(fighter.relic_state.get("ids",[]))
 	position = body.position
 	_show_race_ring(fighter)
 	if not is_equal_approx(_height, body.height):

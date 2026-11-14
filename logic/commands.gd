@@ -32,7 +32,6 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"tree_reset_class": {"card": TYPE_STRING}, "tree_reset_race": {"card": TYPE_STRING},
 		"farm_seed": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_plant": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_harvest": {"plot":TYPE_INT},
 		"shop_buy": {"sku": TYPE_STRING},
-		"relic_equip": {"relic":TYPE_STRING,"slot":TYPE_INT},
 		"shop_sell": {"item": TYPE_STRING, "expected_price": TYPE_INT},
 		"shop_sell_batch": {"entries": TYPE_ARRAY, "expected_price": TYPE_INT},
 		"shop_sell_material": {"material": TYPE_STRING, "count": TYPE_INT, "expected_price": TYPE_INT},
@@ -79,9 +78,6 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		return _error("trip_over")
 	if kind.begins_with("journey_") or kind in ["bank_bag", "return_to_camp"]:
 		return _journey_command(state, command)
-	if kind == "relic_equip":
-		if location != "camp": return _error("camp_only")
-		return preload("res://logic/relics.gd").equip(p,command.relic,int(command.slot))
 	if kind.begins_with("farm_"):
 		if location != "camp": return _error("camp_only")
 		return preload("res://logic/farm.gd").apply(p,command,int(state.get("now",0)))

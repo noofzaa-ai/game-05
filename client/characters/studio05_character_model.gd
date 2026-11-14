@@ -93,7 +93,6 @@ var _skin := SKIN_LINEAR
 var _makeup := 0
 var _toon: Array[ShaderMaterial] = []
 var _flash := Color(0, 0, 0, 0)
-var _relic_orbit: Node3D
 var _weapon_args := ["", ""]
 var _shield: Node3D
 var _hair_letter := "a"
@@ -1131,8 +1130,6 @@ func _wear_race_weapon() -> void:
 
 
 func dress(looks: Dictionary) -> void:
-	if looks.has("relics"):
-		set_relics(looks.relics)
 	if _skeleton == null:
 		return
 	if looks.has("class"):
@@ -1192,15 +1189,6 @@ func _apply_equipment_refine(levels: Dictionary) -> void:
 		for mesh in meshes:
 			if mesh.name != "RefineAura":
 				RefineEffect.apply(mesh, offhand_level if shown else 0, _skeleton)
-
-
-func set_relics(ids: Array) -> void:
-	if _relic_orbit == null:
-		if ids.is_empty():
-			return
-		_relic_orbit = preload("res://client/relic_orbit.gd").new()
-		add_child(_relic_orbit)
-	_relic_orbit.configure(ids)
 
 
 ## eyes/blink.js: "auto" blinks (the Studio's only behaviour), "open" / "closed" hold the lids.

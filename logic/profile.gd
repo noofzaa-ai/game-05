@@ -43,7 +43,6 @@ var mall_owned: Array = []
 var farm: Dictionary = {}
 var facility_levels: Dictionary = {}  ## facility id -> built level (0 = not built)
 ## The character's own looks: part -> chosen id (logic/cosmetic_options.gd); a missing part = its default.
-var relics: Dictionary = preload("res://logic/relics.gd").initial()
 var appearance: Dictionary = {}
 var armor_migration_version := 0
 ## 1 = the old game's items (blade_*, Ash/Obsidian/Royal armour, starter_*, round_shield) were turned into race pieces of the
@@ -404,7 +403,7 @@ func to_dict() -> Dictionary:
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
 		"armor_migration_version": armor_migration_version, "legacy_item_version": legacy_item_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
-		"relics": relics.duplicate(true), "card_deck": card_deck.duplicate(true)}
+		"card_deck": card_deck.duplicate(true)}
 
 
 static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
@@ -441,8 +440,7 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	p.diamonds += int(refund["diamonds"])
 	for part in LEGACY_FASHION_PARTS:
 		p.appearance.erase(part)
-	p.relics = preload("res://logic/relics.gd").decode(d.get("relics",preload("res://logic/relics.gd").initial()))
-	if p.relics.is_empty(): return null
+	# Relics were removed (Boss 2026-11-14): an older save may still hold a "relics" field; it is ignored (and dropped on the next save).
 	p.name = str(d["name"])
 	p.created = bool(d["created"])
 	p.armor_migration_version = maxi(0,int(d.get("armor_migration_version",0)))

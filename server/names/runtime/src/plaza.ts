@@ -36,7 +36,7 @@ var plazaJoin: nkruntime.MatchJoinFunction<PlazaState> = function(_ctx,_logger,n
             if(Object.keys(state.players).length>=24||state.players[p.userId]){_dispatcher.matchKick([p]);return;}
             var player=roomProfile(nk,p.userId);if(!player){return;}
             // Project only visible gear/appearance; never expose stash/vault/currency/receipts.
-            state.players[p.userId]={presence:p,id:p.userId,name:player.name,loadout:player.state.profile.loadout,appearance:player.state.profile.appearance,relics:(function(){var r=player.state.profile.relics;return r&&r.owned&&r.equipped?r.owned.filter(function(e:any){return r.equipped.indexOf(e.id)>=0;}).map(function(e:any){return e.relic;}):[];})(),x:0,z:-13,fx:0,fz:-1,speed:0,tick:tick,visible:false,chatTokens:3,chatTick:tick};
+            state.players[p.userId]={presence:p,id:p.userId,name:player.name,loadout:player.state.profile.loadout,appearance:player.state.profile.appearance,x:0,z:-13,fx:0,fz:-1,speed:0,tick:tick,visible:false,chatTokens:3,chatTick:tick};
         });return {state:state};
     };
 
@@ -80,7 +80,7 @@ var plazaLoop: nkruntime.MatchLoopFunction<PlazaState> = function(_ctx,_logger,n
             var a=state.players[id];return {id:a.id,name:a.name,x:a.x,z:a.z,fx:a.fx,fz:a.fz,speed:a.speed};
         });
         // Full appearance only once per second; 5Hz movement snapshots stay compact.
-        if(tick%5===0){actors.forEach(function(a:any){a.loadout=state.players[a.id].loadout;a.appearance=state.players[a.id].appearance;a.relics=state.players[a.id].relics;});}
+        if(tick%5===0){actors.forEach(function(a:any){a.loadout=state.players[a.id].loadout;a.appearance=state.players[a.id].appearance;});}
         if(ids.length){dispatcher.broadcastMessage(2,JSON.stringify({v:1,actors:actors}),null,null,false);}
         return {state:state};
     };

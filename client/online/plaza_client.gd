@@ -160,7 +160,6 @@ func _snapshot(message) -> void:
 			var style: String = loadout.weapon_style(hub._combat.styles.keys())
 			var looks := ItemAssets.looks(loadout, GameState.item_rules.catalog, style)
 			looks["appearance"] = ItemAssets.appearance(description.get("appearance", {}))
-			looks["relics"]=description.get("relics",[])
 			model.dress(looks)
 			var label := preload("res://client/character_foot_name.gd").new()
 			label.text = str(description.get("name", "Player"))
@@ -169,14 +168,13 @@ func _snapshot(message) -> void:
 			actors[uid] = {"model":model,"target":model.position,"style":style}
 		var actor: Dictionary = actors[uid]
 		if entry.has("loadout"):
-			var signature := JSON.stringify([entry.get("appearance", {}), entry.loadout,entry.get("relics",[])])
+			var signature := JSON.stringify([entry.get("appearance", {}), entry.loadout])
 			if actor.get("look_signature", "") != signature:
 				var worn = Loadout.from_dict(entry.loadout, GameState.item_rules)
 				if worn != null:
 					actor.style = worn.weapon_style(hub._combat.styles.keys())
 					var looks := ItemAssets.looks(worn, GameState.item_rules.catalog, actor.style)
 					looks["appearance"] = ItemAssets.appearance(entry.get("appearance", {}))
-					looks["relics"]=entry.get("relics",[])
 					actor.model.dress(looks)
 					actor["look_signature"] = signature
 		actor.target = Vector3(float(entry.x), 0, float(entry.z))

@@ -13,7 +13,7 @@ const ROOT := "res://art/vfx/status/"
 ## Effect id (data/combat/effects.json) -> status look. An id not listed falls back by its kind (buff / debuff).
 const LOOK_OF := {
 	"stun": "stun", "sleep": "sleep", "shock": "shock",
-	"burn": "burn", "poison": "poison", "relic_goblin_poison": "poison", "bleed": "bleed", "wound": "bleed",
+	"burn": "burn", "poison": "poison", "bleed": "bleed", "wound": "bleed",
 	"slow": "slow", "exhaust": "slow", "sunder": "sunder", "weaken": "sunder",
 	"regen": "regen",
 }

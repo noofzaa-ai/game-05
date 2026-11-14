@@ -65,7 +65,7 @@ func loadout(value) -> Dictionary:
 func profile(value) -> Dictionary:
 	var key: int = value.get_instance_id(); _used[key] = true
 	var stash := inventory(value.stash); var vault := inventory(value.vault); var worn := loadout(value.loadout)
-	var fields := {"v": 1, "diamonds":value.diamonds, "mall_owned":value.mall_owned, "farm":value.farm, "camp_level": value.camp_level, "facility_levels": value.facility_levels, "appearance": value.appearance, "name": value.name, "created": value.created, "beta_kit_version": value.beta_kit_version, "armor_migration_version": value.armor_migration_version, "legacy_item_version": value.legacy_item_version, "bonus_stash_slots": value.bonus_stash_slots, "relics": value.relics}
+	var fields := {"v": 1, "diamonds":value.diamonds, "mall_owned":value.mall_owned, "farm":value.farm, "camp_level": value.camp_level, "facility_levels": value.facility_levels, "appearance": value.appearance, "name": value.name, "created": value.created, "beta_kit_version": value.beta_kit_version, "armor_migration_version": value.armor_migration_version, "legacy_item_version": value.legacy_item_version, "bonus_stash_slots": value.bonus_stash_slots}
 	var old: Dictionary = _profiles.get(key, {})
 	if not old.is_empty() and is_same(old.data.stash, stash) and is_same(old.data.vault, vault) and is_same(old.data.loadout, worn) and old.fields == fields: return old.data
 	fields = fields.duplicate(true)

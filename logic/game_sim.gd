@@ -119,7 +119,6 @@ func attach_run(id: int, run: Run, rules: ItemRules, loot: LootData) -> void:
 	item_rules = rules
 	loot_data = loot
 	runs[id] = run
-	preload("res://logic/relic_effects.gd").attach(fighters[id],run.profile)
 	RacePassives.attach(fighters[id], run)  # a squad card: its race x class passive + the squad synergy (GDD races 3.4-3.5)
 	RacePassives.RaceUltimates.register_move(combat, fighters[id])  # its synthetic <race>_<class>_ultimate move (3.10.3)
 	fighters[id].style = run.loadout().weapon_style(combat.styles.keys())  # the weapon decides the fighting style
@@ -258,7 +257,6 @@ func tick(prediction_player: int = -1) -> void:
 		Combat.predict_attacker_hitstop(prediction_player,fighters,bodies,combat,melee_target_boxes)
 		_predict_class_travel(prediction_player)
 	if combat != null and prediction_player < 0:
-		for fighter in fighters.values():preload("res://logic/relic_effects.gd").tick(fighter)
 		Projectiles.step(_ranged, fighters, bodies, world, combat, rng, events)
 		Projectiles.spawn_from_moves(_ranged, fighters, bodies, world, combat, events)  # (they move from the next tick on)
 		projectiles = _ranged["projectiles"]
@@ -456,7 +454,6 @@ func _give_drop(target_id: int, killer_id: int) -> void:
 		roll_rng = _personal_loot_rng(target_id, killer_id)
 		factor = float(loot_players[killer_id][1])
 	var drop := Loot.roll(item_rules, loot_data, dead.enemy_type, dead.level, combat.weapon_ids, roll_rng, factor)
-	drop["relics"]=load("res://logic/relics.gd").roll(dead.enemy_type,roll_rng,factor)
 	# Race gear (design/gdd/race-gear-sets.md 3.12): a share of the dropped pieces become race pieces of a squad card;
 	# the boss's own drops use the boss shares (the only gold race source). Own RNG: the sim stream is unchanged.
 	var RaceDrops = load("res://logic/race_drops.gd")
@@ -468,7 +465,7 @@ func _give_drop(target_id: int, killer_id: int) -> void:
 		item_summaries.append({"slot": item.slot, "tier": item.tier, "weapon_type": item.weapon_type, "item_id": item.item_id})
 	events.append({
 		"type": "loot", "player": killer_id, "enemy": target_id, "gold": stored["gold"], "materials": stored["materials"],
-		"relics": stored.relics, "items": item_summaries, "lost_items": stored["lost_items"].size(), "lost_materials": stored["lost_materials"],
+		"items": item_summaries, "lost_items": stored["lost_items"].size(), "lost_materials": stored["lost_materials"],
 	})
 
 

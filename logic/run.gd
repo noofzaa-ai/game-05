@@ -17,7 +17,6 @@ const Stats := preload("res://logic/stats.gd")
 var profile: Profile
 var camp: CampData
 var bag: Inventory
-var relic_loot: Array = []  ## Boss collectibles carried until secured at camp/death.
 var died := false
 var used_rests: Array[String] = []  ## rest points already used on this trip
 var skill_cooldowns: Dictionary = {}  ## remaining seconds, carried across maps in the same run
@@ -52,12 +51,7 @@ func stats(item_rules: ItemRules) -> Dictionary:
 ## on the ground. Returns {"gold", "materials": stored, "items": stored, "lost_items": Array[Item],
 ## "lost_materials": {id: count}}.
 func loot_into_bag(drop: Dictionary) -> Dictionary:
-	var result := {"gold": int(drop["gold"]), "materials": {}, "items": [], "lost_items": [], "lost_materials": {}, "relics": []}
-	for entry in drop.get("relics",[]):
-		if profile.relics.owned.size()+relic_loot.size()>=512: break
-		if profile.relics.owned.any(func(item):return item.id==entry.id) or relic_loot.any(func(item):return item.id==entry.id): continue
-		relic_loot.append(entry.duplicate(true))
-		result.relics.append(entry.duplicate(true))
+	var result := {"gold": int(drop["gold"]), "materials": {}, "items": [], "lost_items": [], "lost_materials": {}}
 	bag.gold += int(drop["gold"])
 	for id in drop["materials"]:
 		var wanted := int(drop["materials"][id])
@@ -118,7 +112,6 @@ func death() -> Dictionary:
 	if died:
 		return {"items": 0, "gold": 0, "materials": {}}
 	died = true
-	_secure_relics()
 	profile.stash.gold += bag.gold
 	profile.stash.items.append_array(bag.items)
 	for id in bag.materials:
@@ -134,7 +127,6 @@ func death() -> Dictionary:
 ## death has already secured its loot in the stash.
 ## Returns {"gold": int, "materials": {id: count}, "items": int, "left_items": int, "left_materials": {id: count}}.
 func return_to_camp() -> Dictionary:
-	_secure_relics()
 	var summary := {"gold": bag.gold, "materials": {}, "items": 0, "left_items": 0, "left_materials": {}}
 	profile.stash.gold += bag.gold
 	bag.gold = 0
@@ -151,19 +143,11 @@ func return_to_camp() -> Dictionary:
 	return summary
 
 
-func _secure_relics() -> void:
-	for entry in relic_loot:
-		if not profile.relics.owned.any(func(item):return item.id==entry.id):profile.relics.owned.append(entry.duplicate(true))
-	relic_loot.clear()
-
 func discard_loot() -> Dictionary:
-	var losses := bag.clear_loot()
-	losses["relics"]=relic_loot.duplicate(true)
-	relic_loot.clear()
-	return losses
+	return bag.clear_loot()
 
 func to_dict(include_profile: bool = true) -> Dictionary:
-	var data := {"v": 1, "bag": bag.to_dict(), "died": died, "relic_loot":relic_loot.duplicate(true), "used_rests": used_rests.duplicate(), "skill_cooldowns":skill_cooldowns.duplicate(true)}
+	var data := {"v": 1, "bag": bag.to_dict(), "died": died, "used_rests": used_rests.duplicate(), "skill_cooldowns":skill_cooldowns.duplicate(true)}
 	if include_profile: data["profile"] = profile.to_dict()
 	return data
 
@@ -184,9 +168,7 @@ static func from_dict(d: Dictionary, rules: ItemRules, camp_data: CampData, play
 	# squad card's race (logic/legacy_items.gd; no flag needed, a converted piece is never converted again).
 	var LegacyItems = preload("res://logic/legacy_items.gd")
 	LegacyItems.convert_items(trip.bag.items, rules, LegacyItems.first_race(player.card_deck))
-	var pending = load("res://logic/relics.gd").decode({"v":1,"owned":d.get("relic_loot",[]),"equipped":["","",""]})
-	if pending.is_empty() or pending.owned.size()+player.relics.owned.size()>512:return null
-	trip.relic_loot=pending.owned
+	# Relics were removed (Boss 2026-11-14): a run saved before that may still hold "relic_loot"; it is ignored.
 	trip.died = bool(d["died"])
 	trip.used_rests.assign(d["used_rests"])
 	trip.skill_cooldowns = d.get("skill_cooldowns",{}).duplicate(true)
