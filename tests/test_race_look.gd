@@ -49,7 +49,7 @@ func run(ctx) -> void:
 
 	# The card path: CardDeck.look_of carries the race, card_appearance passes it on, the model shows it.
 	var deck := CardDeck.initial()
-	var card := str(deck.get("squad", ["sword_shield"])[0])
+	var card := "sword_shield"  # tutorial.md 2: a new deck has an empty squad
 	deck["cards"][card]["race"] = "elf"
 	var look := CardDeck.look_of(deck, card)
 	model.dress({"class": card, "appearance": ItemAssets.card_appearance(look, ItemAssets.appearance({}))})

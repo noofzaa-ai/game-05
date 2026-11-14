@@ -90,7 +90,10 @@ func _bad_files_fail(ctx) -> void:
 func _card_race(ctx) -> void:
 	var cosmetics = Cosmetics.load_default()
 	var deck := Deck.initial(cosmetics)
-	ctx.check("new cards carry their starter race", deck["cards"]["sword_shield"]["race"] == "human" and deck["cards"]["greatsword"]["race"] == "viking" and deck["cards"]["longbow"]["race"] == "elf" and deck["cards"]["magic"]["race"] == "runeborn")
+	ctx.check("new cards have no race until the player picks one (tutorial.md 2)", deck["cards"].values().all(func(c): return c["race"] == ""))
+	ctx.check("a raceless card's gear uses its class starter race", Deck.gear_race(deck, "greatsword") == "viking")
+	for card in deck["cards"]:
+		Deck.set_race(deck, card, Deck.starter_race(card))
 	ctx.check("the look carries the race", Deck.look_of(deck, "longbow")["race"] == "elf")
 	ctx.check("set_race accepts a known race", Deck.set_race(deck, "sword_shield", "elf") and Deck.race_of(deck, "sword_shield") == "elf" and Deck.validate(deck, cosmetics) == "")
 	ctx.check("set_race refuses an unknown race or class", not Deck.set_race(deck, "sword_shield", "dwarf") and not Deck.set_race(deck, "nope", "elf") and Deck.race_of(deck, "sword_shield") == "elf")

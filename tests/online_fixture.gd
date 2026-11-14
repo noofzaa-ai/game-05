@@ -4,6 +4,7 @@ const Camp := preload("res://logic/camp_data_loader.gd")
 const Loot := preload("res://logic/loot_data_loader.gd")
 const Combat := preload("res://logic/combat_data_loader.gd")
 const Profile := preload("res://logic/profile.gd")
+const Deck := preload("res://logic/card_deck.gd")
 const Run := preload("res://logic/run.gd")
 const Journey := preload("res://logic/journey.gd")
 const JourneyData := preload("res://logic/journey_data.gd")
@@ -17,12 +18,22 @@ static func rng(seed_value: int = 77) -> RandomNumberGenerator:
 	result.seed = seed_value
 	return result
 
+## A new player who finished the race steps (design/gdd/tutorial.md 2): starter races, the starter squad, Magic
+## unlocked. Most fixtures test a ready account; tests/test_tutorial_unlocks.gd covers the raw new player.
+static func past_tutorial(profile):
+	for card in Deck.classes():
+		Deck.set_race(profile.card_deck, card, Deck.starter_race(card))
+	Deck.set_squad(profile.card_deck, Deck.STARTER_SQUAD.duplicate())
+	profile.tutorial = Profile.done_tutorial()
+	profile.unlocks[preload("res://logic/unlocks.gd").flag()] = true
+	return profile
+
 static func make(seed_value: int = 77) -> Dictionary:
 	var rules = Rules.load_default()
 	var camp = Camp.load_default(rules.tiers.size())
 	var loot = Loot.load_default(camp.materials.keys(), rules.tiers.size())
 	var combat = Combat.load_default()
-	var profile = Profile.new_player(rules, camp, rng(seed_value))
+	var profile = past_tutorial(Profile.new_player(rules, camp, rng(seed_value)))
 	var trip = Run.start(profile, camp)
 	var data = JourneyData.load_by_id("ink_road", combat.enemies.keys())
 	return {"profile": profile, "run": trip, "rules": rules, "camp": camp,

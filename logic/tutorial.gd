@@ -120,7 +120,7 @@ static func step(profile, id: String) -> Dictionary:
 		if group_of(now) != "tour":
 			return {"ok": false, "reason": "invalid_step"}
 		profile.tutorial["tour_done"] = true
-		_set(profile, _after_group(now))
+		_store(profile, _after_group(now))
 		return {"ok": true, "step": str(profile.tutorial["step"])}
 	if id != now:
 		return {"ok": false, "reason": "invalid_step"}
@@ -128,7 +128,7 @@ static func step(profile, id: String) -> Dictionary:
 		profile.tutorial["tour_done"] = true
 	if group_of(id) == "unlock" and id == _last_of("unlock"):
 		profile.tutorial["unlock_seen"] = true
-	_set(profile, _next_after(index_of(id)))
+	_store(profile, _next_after(index_of(id)))
 	return {"ok": true, "step": str(profile.tutorial["step"])}
 
 
@@ -150,7 +150,7 @@ static func _unlock_pending(profile) -> bool:
 
 
 ## Stores `next` as the current step after passing every step that is already true.
-static func _set(profile, next: String) -> void:
+static func _store(profile, next: String) -> void:
 	while next != DONE and _already_true(profile, step_data(next)):
 		if next == _last_of("unlock"):
 			profile.tutorial["unlock_seen"] = true

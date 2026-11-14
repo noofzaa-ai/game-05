@@ -24,7 +24,7 @@ func run(ctx) -> void:
 	ctx.check("starter kit: a kit for every class in data", CardDeck.classes().all(func(c): return Profile.starter_kits().get("kits", {}).has(c)))
 	ctx.check("starter kit: no hat slot any more", rules.slot("hat").is_empty() and not rules.catalog.items.values().any(func(e): return e["slot"] == "hat"))
 	for card in CardDeck.classes():
-		var race := CardDeck.race_of(p.card_deck, card)
+		var race := CardDeck.gear_race(p.card_deck, card)  # tutorial.md R4: a raceless new card wears its class starter race kit
 		var worn = p.loadout_of(card)
 		var weapon = worn.item_at("weapon", 0)
 		ctx.check("starter kit %s: %s race weapon of family %s" % [card, race, FAMILY.get(card)], weapon != null and weapon.item_id == "race_%s_%s_weapon" % [race, card] and weapon.weapon_type == FAMILY.get(card) and Profile.card_can_wear(card, weapon, rules))
@@ -40,7 +40,7 @@ func run(ctx) -> void:
 		ctx.check("starter kit %s: accessories start empty" % card, ACCESSORY_SLOTS.all(func(s): return worn.item_at(s, 0) == null))
 		var expected := 5 + (1 if rules.slot_open_for("offhand", card) else 0)
 		ctx.check("starter kit %s: %d pieces worn (%d)" % [card, expected, worn.items().size()], worn.items().size() == expected)
-	ctx.check("starter kit: Sword & Shield starts with its race shield", p.loadout_of("sword_shield").item_at("offhand", 0) != null and p.loadout_of("sword_shield").item_at("offhand", 0).item_id == "race_%s_shield" % CardDeck.race_of(p.card_deck, "sword_shield"))
+	ctx.check("starter kit: Sword & Shield starts with its race shield", p.loadout_of("sword_shield").item_at("offhand", 0) != null and p.loadout_of("sword_shield").item_at("offhand", 0).item_id == "race_%s_shield" % CardDeck.gear_race(p.card_deck, "sword_shield"))
 	ctx.check("starter kit: a new player has no gear in the stash (no blue armour gift)", p.stash.items.is_empty())
 	ctx.check("starter kit: new player is at kit version 3", p.starter_kit_version == 3)
 	# Every class x race has its white starter outfit in the catalog (5 pieces), and a card of that race gets it.

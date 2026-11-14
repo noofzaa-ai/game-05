@@ -123,6 +123,13 @@ static func has_race(deck: Dictionary, class_id: String) -> bool:
 	return deck.get("cards", {}).has(class_id) and not race_of(deck, class_id).is_empty()
 
 
+## The race a card's GEAR uses (starter kit, race drops, legacy conversion): its race, else its class's starter race
+## while it has none (tutorial.md R4: a raceless new card still wears its white class kit).
+static func gear_race(deck: Dictionary, class_id: String) -> String:
+	var race := race_of(deck, class_id)
+	return race if not race.is_empty() else starter_race(class_id)
+
+
 ## The race a card of this class starts with (and an old card without a race has).
 static func starter_race(class_id: String) -> String:
 	return RaceData.load_default().starter_race(class_id)

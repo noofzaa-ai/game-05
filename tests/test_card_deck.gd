@@ -15,7 +15,10 @@ func run(ctx) -> void:
 	var deck := Deck.initial(cosmetics)
 	ctx.check("a new deck is valid", Deck.validate(deck, cosmetics) == "")
 	ctx.check("every class has its own card", deck["cards"].size() == classes.size())
-	ctx.check("the starter squad is three cards", deck["squad"] == ["sword_shield", "greatsword", "longbow"])
+	ctx.check("a new squad is empty until the race steps (tutorial.md 2)", deck["squad"].is_empty())
+	for c in classes:
+		Deck.set_race(deck, c, Deck.starter_race(c))
+	deck["squad"] = ["sword_shield", "greatsword", "longbow"]
 	ctx.check("the starter cards differ", deck["cards"]["sword_shield"] != deck["cards"]["greatsword"])
 
 	# One card changes, the others stay.
@@ -78,6 +81,7 @@ func run(ctx) -> void:
 	rng.seed = 3
 	var profile = Profile.new_player(rules, camp, rng)
 	ctx.check("a new profile has a valid deck", Deck.validate(profile.card_deck, cosmetics) == "")
+	preload("res://tests/online_fixture.gd").past_tutorial(profile)  # races picked, Magic unlocked (tutorial.md 2)
 	var state := {"profile": profile, "rules": rules, "camp": camp, "location": "camp", "cosmetics": cosmetics}
 	var ok: Dictionary = Commands.apply(state, {"type": "card_look", "class": "greatsword", "part": "hair", "choice": "e"}, rng)
 	ctx.check("the card_look command changes the card", ok.get("ok", false) and profile.card_deck["cards"]["greatsword"]["hair"] == "e")

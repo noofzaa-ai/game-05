@@ -194,7 +194,7 @@ func ensure_starter_shields(item_rules: ItemRules) -> void:
 			continue
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash("starter-offhand-v1-" + card)
-		var shield_id := starter_shield(item_rules, CardDeck.race_of(card_deck, card))
+		var shield_id := starter_shield(item_rules, CardDeck.gear_race(card_deck, card))
 		if shield_id.is_empty():
 			continue
 		var shield = ItemSystem.create_item(item_rules, "starter-offhand-v1-" + card, "offhand", 0, rng, "", shield_id)
@@ -276,7 +276,7 @@ func _fill_starter_kit(item_rules: ItemRules, card: String) -> void:
 		var id := "starter-kit-v3-%s-%s" % [card, slot_id]
 		if owned.has(id):
 			continue
-		var piece := starter_piece(item_rules, card, slot_id, CardDeck.race_of(card_deck, card))
+		var piece := starter_piece(item_rules, card, slot_id, CardDeck.gear_race(card_deck, card))
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(id)
 		var item = ItemSystem.create_item(item_rules, id, slot_id, tier, rng, "", piece)

@@ -31,7 +31,7 @@ static func make_squad(base, cards: Array, synergy_override: Dictionary = {}, gr
 		member.squad = members
 		members.append(member)
 	var deck: Dictionary = base.profile.card_deck
-	var races: Array = cards.map(func(card): return preload("res://logic/card_deck.gd").race_of(deck, str(card)))
+	var races: Array = cards.map(func(card): return preload("res://logic/card_deck.gd").race_of(deck, str(card))).filter(func(race): return not str(race).is_empty())  # tutorial.md R4
 	var synergy: Dictionary = synergy_override.duplicate(true) if not synergy_override.is_empty() else preload("res://logic/race_data.gd").load_default().synergy_for(races)
 	if not group.is_empty():
 		synergy["group"] = group

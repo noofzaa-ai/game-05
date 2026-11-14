@@ -22,7 +22,7 @@ func run(ctx) -> void:
 
 	# New player: the Sword & Shield card wears a starter shield; the other cards do not.
 	var p = Profile.new_player(rules, camp, rng)
-	var STARTER_SHIELD := Profile.starter_shield(rules, preload("res://logic/card_deck.gd").race_of(p.card_deck, "sword_shield"))
+	var STARTER_SHIELD := Profile.starter_shield(rules, preload("res://logic/card_deck.gd").gear_race(p.card_deck, "sword_shield"))
 	var shield = p.loadout_of("sword_shield").item_at("offhand", 0)
 	ctx.check("offhand: a new Sword & Shield card wears the starter shield", shield != null and shield.id == "starter-offhand-v1-sword_shield" and shield.item_id == STARTER_SHIELD and STARTER_SHIELD.ends_with("_shield"))
 	ctx.check("offhand: other cards get no shield", ["greatsword", "longbow", "magic"].all(func(c): return p.loadout_of(c).item_at("offhand", 0) == null))

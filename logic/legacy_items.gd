@@ -41,7 +41,7 @@ static func convert_profile(profile, rules) -> int:
 		var worn = profile.card_gear[card]["loadout"]
 		if worn == null:
 			continue
-		var race := CardDeck.race_of(profile.card_deck, str(card))
+		var race := CardDeck.gear_race(profile.card_deck, str(card))
 		for item in worn._equipped.values():
 			if convert_item(item, rules, race, str(card), true):
 				changed += 1
@@ -64,7 +64,7 @@ static func convert_items(items: Array, rules, race: String, include_plain: bool
 static func first_race(deck: Dictionary) -> String:
 	var squad: Array = deck.get("squad", [])
 	var card := str(squad[0]) if not squad.is_empty() else str(CardDeck.classes()[0])
-	return CardDeck.race_of(deck, card)
+	return CardDeck.gear_race(deck, card)
 
 
 ## True when `item` is a legacy piece (its slot has race pieces, its item_id is not a catalog item; a plain piece with

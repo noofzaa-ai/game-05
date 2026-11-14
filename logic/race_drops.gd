@@ -57,7 +57,7 @@ static func picks_for(run) -> Array:
 		var card := str(member.card_id) if "card_id" in member else ""
 		if card.is_empty() or member.profile == null:
 			continue
-		out.append({"race": CardDeck.race_of(member.profile.card_deck, card), "class": card})
+		out.append({"race": CardDeck.gear_race(member.profile.card_deck, card), "class": card})
 	return out
 
 
