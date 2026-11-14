@@ -268,7 +268,7 @@
     const tent=new T.Group();tent.position.set(-17,-.3,10);scene.add(tent);
     part(tent,G.cone4,mat(0x7b6a52),[0,2.4,0],[3,5.8,3],[0,Math.PI/4,0]);part(tent,G.box,M.woodDark,[0,1.1,2.18],[1.7,2,.15]);
     part(scene,G.box,M.wood,[-7.4,.4,13.4],[1.8,.8,.95]);part(scene,G.box,M.cloth,[-7.4,.9,13.4],[1.9,.13,1.0]);
-    part(scene,G.box,M.wood,[-5.9,1.4,7.0],[.24,3.2,.25]);part(scene,G.box,M.wood,[-5.9,2.6,7.0],[2.5,.52,.25]);
+    part(scene,G.box,M.wood,[-14.2,1.4,6.2],[.24,3.2,.25]);part(scene,G.box,M.wood,[-14.2,2.6,6.2],[2.5,.52,.25]);
 
     // ---- Stations 02-06: a slowly turning diorama on a floating rock; 07: the FIGHT gate on the ground --------
     const models=[];const hits=[];
