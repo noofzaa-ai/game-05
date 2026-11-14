@@ -1,73 +1,73 @@
 <!DOCTYPE html>
-<html lang="th" data-scene="painted">
+<html lang="th">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#1b2333" />
-  <meta name="description" content="Begin at the Campfire, then discover six forgotten Relics along the wildlands trail of ZORX: Zone of Relic eXplorers." />
-  <title>Zone of Relic eXplorers — ZORX</title>
+  <meta name="description" content="ZORX — Squad of Four Races. Pick 3 class cards from four races, build a squad and watch it fight 12 goblin waves on its own. Free to play in your browser." />
+  <title>ZORX — Squad of Four Races</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Taviraj:wght@600;700;800&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="preload" href="assets/loading_valley.webp" as="image" type="image/webp" />
-  <link rel="stylesheet" href="styles.css?v=20261114-carved" />
+  <link rel="stylesheet" href="styles.css?v=20261114-trail3d" />
 </head>
 <body>
   <header class="nav-top" id="top">
-    <a class="mark" href="#top" aria-label="ZORX home"><span class="mark-star">✧</span><b>Zone of Relic eXplorers</b><i></i><span class="mark-sub">ZORX</span></a>
-    <nav aria-label="Main"><a href="#trail">RELIC TRAIL</a><a href="#about">THE JOURNEY</a><a class="nav-play" href="#trail">ENTER WILDLANDS ↗</a></nav>
+    <a class="mark" href="#top" aria-label="ZORX home"><span class="mark-star">✧</span><b>ZORX</b><i></i><span class="mark-sub">SQUAD OF FOUR RACES</span></a>
+    <nav aria-label="Main"><a href="#trail">THE TRAIL</a><a href="#about">HOW IT PLAYS</a><a class="nav-play" href="#trail">PLAY FREE ↗</a></nav>
   </header>
   <main>
     <button class="mobile-about" id="open-journey" type="button" aria-controls="about" aria-expanded="false">เกี่ยวกับเกม</button>
-    <section class="trail-section" id="trail" aria-label="Interactive relic trail in the 3D campfire world">
-      <div class="trail-stage at-campfire" id="trail-stage" tabindex="0" aria-label="Interactive 3D relic journey. Scroll within the scene to visit each relic.">
-        <div class="scene-visual" id="scene-visual" role="img" aria-label="A moonlit low-poly fantasy forest, a large glowing campfire and six relic locations">
-          <div class="campfire-focus" aria-hidden="true"></div><div class="fallback-item" id="fallback-item"><img id="fallback-image" src="assets/ancient-core.webp" alt="Ancient Core" /></div>
+    <section class="trail-section" id="trail" aria-label="Interactive 3D trail through the ZORX night valley">
+      <div class="trail-stage at-campfire" id="trail-stage" tabindex="0" aria-label="Interactive 3D trail. Scroll, swipe or use the arrow keys inside the scene to visit each stop.">
+        <div class="scene-visual" id="scene-visual" role="img" aria-label="A moonlit low-poly valley: a squad campfire, race banners, class weapons, a synergy shrine, a goblin wave field, the goblin chief totem and the FIGHT gate">
+          
         </div>
         <div class="scene-vignette" aria-hidden="true"></div>
         <div class="scene-grain" aria-hidden="true"></div>
-        <div class="top-caption"><span>✦ &nbsp; ZORX / THE WILDLANDS</span><span>THE CAMPFIRE IS ONLY THE BEGINNING</span></div>
+        <div class="top-caption"><span>✦ &nbsp; ZORX / THE NIGHT VALLEY</span><span>THREE CARDS · ONE SQUAD · NO BUTTONS</span></div>
 
-        <nav class="relic-rail" id="relic-rail" aria-label="Select Campfire or Relic station">
-          <span class="rail-heading">THE JOURNEY</span>
+        <nav class="relic-rail" id="relic-rail" aria-label="Select a stop on the trail">
+          <span class="rail-heading">THE TRAIL</span>
           <button data-step="0" class="rail-dot is-current" type="button" aria-label="Go to Campfire"><span>01</span><i></i></button>
-          <button data-step="1" class="rail-dot" type="button" aria-label="Go to Ancient Core"><span>02</span><i></i></button>
-          <button data-step="2" class="rail-dot" type="button" aria-label="Go to Phoenix Feather"><span>03</span><i></i></button>
-          <button data-step="3" class="rail-dot" type="button" aria-label="Go to Rune of Growth"><span>04</span><i></i></button>
-          <button data-step="4" class="rail-dot" type="button" aria-label="Go to Guardian Stone"><span>05</span><i></i></button>
-          <button data-step="5" class="rail-dot" type="button" aria-label="Go to Shadow Crystal"><span>06</span><i></i></button>
-          <button data-step="6" class="rail-dot" type="button" aria-label="Go to Sun Totem"><span>07</span><i></i></button>
+          <button data-step="1" class="rail-dot" type="button" aria-label="Go to Four Races"><span>02</span><i></i></button>
+          <button data-step="2" class="rail-dot" type="button" aria-label="Go to Four Classes"><span>03</span><i></i></button>
+          <button data-step="3" class="rail-dot" type="button" aria-label="Go to Squad Synergy"><span>04</span><i></i></button>
+          <button data-step="4" class="rail-dot" type="button" aria-label="Go to Auto-Battle Waves"><span>05</span><i></i></button>
+          <button data-step="5" class="rail-dot" type="button" aria-label="Go to The Goblin Chief"><span>06</span><i></i></button>
+          <button data-step="6" class="rail-dot" type="button" aria-label="Go to The FIGHT Gate"><span>07</span><i></i></button>
           <span class="rail-line" aria-hidden="true"></span>
         </nav>
 
         <div class="info-panel" id="info-panel" aria-live="polite">
           <div class="chapter-tag"><span class="chapter-diamond">◆</span><span id="relic-chapter">PROLOGUE — THE CAMPFIRE</span></div>
           <h1 id="relic-heading"><span>ZORX</span></h1>
-          <p class="game-full-name">Zone of Relic eXplorers</p>
+          <p class="game-full-name">Squad of Four Races</p>
           <div class="ornament" aria-hidden="true"><i></i><span>◇</span><i></i></div>
-          <h2 id="relic-name">The Campfire</h2>
-          <p class="relic-description" id="relic-description">การเดินทางทุกครั้งเริ่มต้นจากกองไฟเล็ก ๆ ออกสำรวจดินแดนลึกลับ ค้นหา Relic แล้วกลับมาพัฒนาแคมป์ของคุณ</p>
-          <div class="power-line"><span id="relic-rarity">YOUR HOME IN THE WILDLANDS</span><span class="power-gap">✧</span><strong id="relic-effect">Explore · Fight · Loot · Rebuild</strong></div>
+          <h2 id="relic-name">The Squad Campfire</h2>
+          <p class="relic-description" id="relic-description">ทุกการออกรบเริ่มที่กองไฟ เลือกการ์ดคลาส 3 ใบ จัดเป็นทัพของคุณ แล้วส่งลงสนามให้สู้เอง</p>
+          <div class="power-line"><span id="relic-rarity">SQUAD OF FOUR RACES</span><span class="power-gap">✧</span><strong id="relic-effect">Pick · Build · Fight</strong></div>
           <div class="main-actions">
             <button type="button" class="primary-btn" id="start-game"><span>◇</span> START GAME <span>↗</span></button>
-            <button type="button" class="inspect-btn" id="inspect-relic" disabled aria-hidden="true">✧ &nbsp; INSPECT RELIC</button>
-            <button type="button" class="mobile-details-toggle" id="toggle-relic-details" aria-label="แสดงรายละเอียด Relic" aria-expanded="false" aria-controls="relic-description">ⓘ</button>
+            <button type="button" class="inspect-btn" id="inspect-relic" disabled aria-hidden="true">✧ &nbsp; TAKE A CLOSER LOOK</button>
+            <button type="button" class="mobile-details-toggle" id="toggle-relic-details" aria-label="แสดงรายละเอียด" aria-expanded="false" aria-controls="relic-description">ⓘ</button>
           </div>
-          <div class="step-actions"><button type="button" id="prev-step" aria-label="Previous relic">←</button><span id="relic-hint">SCROLL TO FIND THE FIRST RELIC</span><button type="button" id="next-step" aria-label="Next relic">→</button></div>
+          <div class="step-actions"><button type="button" id="prev-step" aria-label="Previous stop">←</button><span id="relic-hint">SCROLL TO MEET THE FOUR RACES</span><button type="button" id="next-step" aria-label="Next stop">→</button></div>
         </div>
 
-        <div class="scene-bottom"><span><i class="ember-dot"></i> THE FIRE IS STILL BURNING</span><span id="scene-counter">SCENE 01 / 07</span><span class="scroll-indicator">SWIPE / SCROLL TO EXPLORE &nbsp; ↕</span></div>
+        <div class="scene-bottom"><span><i class="ember-dot"></i> THE SQUAD IS READY</span><span id="scene-counter">SCENE 01 / 07</span><span class="scroll-indicator">SWIPE / SCROLL TO EXPLORE &nbsp; ↕</span></div>
         <div class="progress-track"><div id="progress-fill"></div></div>
 
         <div class="inspect-layer" id="inspect-layer" aria-hidden="true">
-          <div class="inspect-head"><span>✧ &nbsp; ARTIFACT INSPECTION</span><button id="close-inspect" type="button">← BACK TO TRAIL</button></div>
-          <div class="inspect-info"><span id="inspect-count">RELIC 01 / 06</span><h2 id="inspect-name">Ancient Core</h2><p id="inspect-copy">เศษเสี้ยวพลังจากยุคโบราณ</p><span class="inspect-gesture">↔ &nbsp; DRAG THE RELIC TO ROTATE</span></div>
+          <div class="inspect-head"><span>✧ &nbsp; A CLOSER LOOK</span><button id="close-inspect" type="button">← BACK TO TRAIL</button></div>
+          <div class="inspect-info"><span id="inspect-count">STOP 02 / 07</span><h2 id="inspect-name">Four Races</h2><p id="inspect-copy"></p><span class="inspect-gesture">↔ &nbsp; DRAG TO TURN IT</span></div>
         </div>
         <div class="login-layer" id="login-layer" aria-hidden="true">
           <div class="login-card">
-            <span class="login-mark" aria-hidden="true"><span>ZORX</span></span><span class="login-overline">WELCOME, EXPLORER</span>
-            <h2>Enter the <em>Wildlands.</em></h2>
-            <p>ออกสำรวจ ฟาร์ม Relic แล้วกลับมาสร้างหมู่บ้านของคุณให้แข็งแกร่งขึ้น</p>
+            <span class="login-mark" aria-hidden="true"><span>ZORX</span></span><span class="login-overline">WELCOME, COMMANDER</span>
+            <h2>Build your <em>squad.</em></h2>
+            <p>เข้าสู่ระบบ เลือกการ์ด 3 ใบจาก 4 เผ่า แล้วส่งทัพลงสนามสู้กับก็อบลิน 12 เวฟ</p>
             <button class="google-btn" id="google-login" type="button" aria-label="Continue with Google">
               <svg viewBox="0 0 48 48" width="21" height="21" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.23 5.48-4.71 7.18l7.73 6C44.47 38.03 46.98 31.88 46.98 24.55z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-3-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.15 1.45-4.92 2.3-8.18 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
               Continue with Google <span>↗</span>
@@ -77,9 +77,9 @@
               <button class="google-btn" id="guest-login" type="button" disabled>เข้าเล่นแบบ Guest ↗</button>
               <p class="auth-status">บัญชี Guest อยู่กับเบราว์เซอร์นี้ หากล้างข้อมูลอาจเข้าใช้บัญชีเดิมไม่ได้</p>
             </div>
-            <p id="auth-status" class="auth-status" role="status">Secure sign-in for your adventure.</p>
+            <p id="auth-status" class="auth-status" role="status">Secure sign-in for your squad.</p>
             <button class="return-btn" id="google-logout" type="button" hidden>ออกจากระบบ</button>
-            <button class="return-btn" id="return-to-trail" type="button">← BACK TO THE CAMPFIRE</button>
+            <button class="return-btn" id="return-to-trail" type="button">← BACK TO THE TRAIL</button>
           </div>
         </div>
       </div>
@@ -87,16 +87,16 @@
 
     <section class="journey" id="about">
       <button type="button" class="journey-close" id="close-journey" aria-label="ปิดข้อมูลเกม">×</button>
-      <div class="section-kicker">✧ &nbsp; THE WORLD BEYOND THE FIRE</div>
-      <h2>Every expedition begins<br />with a <em>single spark.</em></h2>
-      <p>สำรวจโลก Fantasy Low-poly ที่เต็มไปด้วย Relic โบราณ ต่อสู้กับมอนสเตอร์ เก็บทรัพยากร และกลับมาอัปเกรดแคมป์เพื่อออกเดินทางครั้งต่อไป</p>
-      <div class="cycle"><div><span>01</span><b>EXPLORE</b><small>ค้นหาเส้นทางใหม่</small></div><div><span>02</span><b>FIGHT & LOOT</b><small>รับของจากการต่อสู้</small></div><div><span>03</span><b>REBUILD</b><small>พัฒนาหมู่บ้าน</small></div><div><span>04</span><b>RISE AGAIN</b><small>อัปเกรดและออกสำรวจต่อ</small></div></div>
-      <a href="#trail" class="return-to-stage">↑ RETURN TO THE THE JOURNEY</a>
+      <div class="section-kicker">✧ &nbsp; HOW ZORX PLAYS</div>
+      <h2>Three cards. One squad.<br /><em>No buttons in the fight.</em></h2>
+      <p>ZORX เป็นเกม auto-battler แนวการ์ด เลือกการ์ดคลาส 3 ใบ ใส่เผ่าให้แต่ละใบ จัดทัพให้เข้าคู่ แล้วดูทัพของคุณสู้เองจนจบ 12 เวฟ</p>
+      <div class="cycle"><div><span>01</span><b>PICK</b><small>เลือกการ์ดคลาส 3 ใบ</small></div><div><span>02</span><b>BUILD</b><small>ใส่เผ่า จัดซินเนอร์จีของทัพ</small></div><div><span>03</span><b>FIGHT</b><small>ทัพสู้เองครบ 12 เวฟ</small></div><div><span>04</span><b>GROW</b><small>รับรางวัล อัปเกรดการ์ด แล้วออกรบใหม่</small></div></div>
+      <a href="#trail" class="return-to-stage">↑ BACK TO THE TRAIL</a>
     </section>
   </main>
-  <footer><b>ZORX <span>✧</span></b><span>Zone of Relic eXplorers</span><a href="#top">BACK TO TOP ↑</a></footer>
+  <footer><b>ZORX <span>✧</span></b><span>Squad of Four Races</span><a href="#top">BACK TO TOP ↑</a></footer>
   <script src="config.js"></script>
-  <script type="module" src="trail.js?v=20261114-carved"></script>
-  <script type="module" src="auth.js?v=20261114-carved"></script>
+  <script type="module" src="trail.js?v=20261114-trail3d"></script>
+  <script type="module" src="auth.js?v=20261114-trail3d"></script>
 </body>
 </html>
