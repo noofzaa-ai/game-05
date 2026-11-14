@@ -642,6 +642,7 @@ func _build_effects_and_hud() -> void:
 		_squad_panel = preload("res://client/squad_panel.gd").new()
 		add_child(_squad_panel)
 		_squad_panel.selected.connect(func(id: int) -> void: _focus_id = id)
+		preload("res://client/tutorial_driver.gd").attach_battle(self, _squad_panel, _session.has_method("is_remote") or _squad_room())  # tutorial.md 4 battle_tip (solo only)
 	if _boss_id >= 0:  # style the boss bar to the map once (the Chief's bar matches its floating goblin bar)
 		_hud.set_boss_style(_enemy_bars.resolve(_map_id, _map_atmosphere, "boss"))
 	_hud.set_help(help_text(_journey != null))
@@ -1658,6 +1659,8 @@ func _show_result(view: Dictionary) -> void:
 	if view.is_empty():
 		if _result_panel != null: _result_panel.hide_result()
 		return
+	if not _session.has_method("is_remote"):
+		preload("res://client/tutorial_driver.gd").note_fight_result(str(view["title"]))  # tutorial.md 6 first fight lost
 	if _result_panel == null:
 		_result_panel = preload("res://client/result_panel.gd").new()
 		add_child(_result_panel)

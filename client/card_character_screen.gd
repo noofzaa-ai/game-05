@@ -36,6 +36,7 @@ signal account_pressed()
 signal outfit_requested(class_id: String)  ## the Outfit tab: the hub opens its Tailor for this card
 signal blacksmith_requested(item_id: String)  ## the details' Blacksmith button: the hub opens its Blacksmith panel on this piece
 signal changed()  ## the profile changed (the hub refreshes gold / cards)
+signal tutorial_event(event: Dictionary)  ## design/gdd/tutorial.md done_on events: race_picker_open, card_race_ok, tab_open
 
 ## (request: Dictionary) -> Dictionary, may be a coroutine (the hub's _send). Unset: commands go nowhere.
 var send: Callable
@@ -123,6 +124,7 @@ func _ready() -> void:
 	_race_picker = RacePicker.new()
 	_race_picker.reduced_motion = reduced_motion
 	_race_picker.race_chosen.connect(_change_race)
+	_race_picker.locked_tapped.connect(func(_race: String) -> void: _say(preload("res://client/tutorial_overlay.gd").word("locked_full")))
 	_race_picker.closed.connect(func() -> void:
 		if visible and _race_button != null:
 			_race_button.grab_focus())
@@ -341,6 +343,7 @@ func select_tab(tab: String) -> void:
 		return
 	_tab = tab
 	_refresh_tabs()
+	tutorial_event.emit({"event": "tab_open", "tab": tab})
 
 
 ## Selects a paper-doll slot ("weapon:0") or a stash piece by id (the shot scripts use these too).
@@ -945,7 +948,10 @@ func open_race_picker() -> void:
 	if p == null or card.is_empty() or not visible:
 		return
 	_race_picker.size = size
+	var Unlocks := preload("res://logic/unlocks.gd")
+	_race_picker.locked_races = Unlocks.locked_races().filter(func(r): return not Unlocks.is_race_unlocked(p, str(r)))
 	_race_picker.open(card, p.card_deck)
+	tutorial_event.emit({"event": "race_picker_open", "class": card})
 
 
 ## The picker chose a race: send `card_race` (free; logic/commands.gd refunds the race + combo branches) and redraw.
@@ -961,6 +967,8 @@ func _change_race(race: String) -> void:
 		_layout_race_button(_s)
 		_refresh_skills()
 	_race_picker.finish(result.get("ok", false))
+	if result.get("ok", false):
+		tutorial_event.emit({"event": "card_race_ok", "class": card, "race": race})
 
 
 ## Sends one command; a refusal shows its reason. Returns the result.
