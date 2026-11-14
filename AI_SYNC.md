@@ -60,6 +60,7 @@
 
 ## 6. บันทึก sync (ใหม่สุดอยู่บน, บรรทัดละครั้งที่ push)
 
+- 2026-11-14 | PO + release-manager | develop 2caa255 -> k3s zorx-staging | web only: zorx-web@sha256:d15e4f18ef2a (build 659998a286cd, status VFX in core pack, online.local.json in), headless unchanged (no server/logic/data change), ZORX_SQUAD_ROOMS=1 kept; pods Ready, 0 SCRIPT ERROR; boot download +2.0 MiB; rollback: build/k3s-staging-before-2caa255.yaml + docs/tech/k3s_release_checklist.md section 9.
 - 2026-11-14 | PO + tech-artist + ui-programmer | develop | status tint removed (statuses no longer recolour fighters; hit flash 18%/0.08s), 11 daiyooo status loops + cyan immune ring (client/status_vfx.gd, art/vfx/status/), tap squad plate = camera follows that fighter, result panel with tappable buttons (client/result_panel.gd) replaces Enter/Esc/R hints
 - 2026-11-13 | PO + release-manager | develop a4744e5 -> k3s zorx-staging | first k3s deploy from this dev PC (kubeconfig scoped to zorx-staging/zorx-production): web a2bae67f9c20, room-worker and name-validator from a4744e5, equipment-tuning ConfigMap HP-100; https://zorxplay.daiyooo.com/ smoke OK; nakama unchanged (upstream 429); ZORX_SQUAD_ROOMS off; rollback: build/k3s-staging-before-20261113.yaml + docs/tech/k3s_release_checklist.md 9
 - 2026-11-13 | character-artist via PO | fix/autopilot-checkpoint (not committed) | Hair I added for every class (Tailor hair button "Hair I"): `v1111/hair/hair_i.glb` same rig/binds as body, head-weighted like G, tinted by card hair_color; shots `build/hair_i/`

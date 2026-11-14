@@ -205,7 +205,36 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release e202ae64b407-20261114 (rolled out 2026-11-13 ~18:01 UTC)
+## 9. LIVE on staging: release 2caa255db372-20261114 (rolled out 2026-11-14 ~00:36 UTC, web only)
+
+Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 2caa255 = origin/develop, with
+`data/online.local.json` copied in (enabled=true, exact bytes verified inside the core pack). `--import`, then
+`pipeline/build_web.py --skip-tests --max-file-mb 0` -> web build **659998a286cd** (tag `2caa255db372-20261114`).
+Contents: statuses no longer recolour fighters (hit flash), 11 status VFX loops + immune ring (`art/vfx/status/`, in the
+core pack: 478 refs), tap a squad plate to follow that fighter, result panel with tappable buttons.
+Headless NOT rebuilt: the room/profile images copy only `server/`, `logic/` and `data/`, and 2caa255 changes none of them
+(client, art, tests, docs only). `ZORX_SQUAD_ROOMS=1` kept.
+Before-state: `build/k3s-staging-before-2caa255.yaml` and `build/k3s-before-2caa255.txt` (main tree).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:d15e4f18ef2a6b0f5715b3684eb3d8243d691b0bbd55ecfca42da8f11425246d` (build 659998a286cd) |
+| headless/profiles | unchanged: `wiyazard:30500/zorx-name-validator@sha256:73c06c3ffbf823a4e14749d68f0a8ed641cf03d934773bb0cc3b58c4b232ac44` |
+| headless/rooms | unchanged: `wiyazard:30500/zorx-room-worker@sha256:4c75507955e73d07c6907699940e01d309368642faf41695f8f82a7bb4a5f314` |
+
+Download size: core pack 4.37 -> 6.38 MiB (+2.0 MiB, the status flipbooks); boot total (engine+core+boot packs)
+57.1 -> 59.1 MiB; everything incl. battle packs 82.7 -> 84.7 MiB. Other packs byte-identical.
+Local checks: web image paths 200 with correct types, `.wasm` immutable, missing pack 404, container healthy.
+Smoke after rollout: pods Ready, game-test 0 restarts; live `packs.json` build 659998a286cd; live core `.pck.wasm`
+`application/wasm` + `immutable` and contains `art/vfx/status/`, `status_vfx.gd`, `result_panel.gd`; Nakama healthcheck 200;
+0 `SCRIPT ERROR` in rooms/profiles logs, 0 web 5xx. Sign-in and in-battle look: OPEN for a person (Turnstile blocks automation).
+
+Rollback (web only, to e202ae6):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:dd22a508e7c449402bb9b59ff02daabd4048119a5cc37f59de55c2df91db3f8d
+```
+
+### Previous: release e202ae64b407-20261114 (rolled out 2026-11-13 ~18:01 UTC, web superseded; headless still live)
 
 Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at e202ae6 = origin/develop, with
 `data/online.local.json` copied in (enabled=true, verified inside the core pack). `--import`, then
