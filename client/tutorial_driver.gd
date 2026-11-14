@@ -239,6 +239,7 @@ func _confirm(id: String) -> void:
 	var result := await _send({"type": "tutorial_step", "step": id})
 	_busy = false
 	if not result.get("ok", false):
+		await refresh_profile()  # online: our copy may be stale; the server's step wins
 		print("tutorial step refused: ", id, " -> following the server step ", current())
 	if str(Tutorial.step_data(id).get("group")) == "tour" and Tutorial.group_of(current()) != "tour":
 		hub.tutorial_close_character()
@@ -259,6 +260,21 @@ func idle() -> void:
 		await get_tree().process_frame
 
 
+## Re-reads the profile from the server (online accounts); offline the local profile is the authority already.
+## Test seam: `refresher` (a Callable returning nothing) replaces the account refresh.
+var refresher: Callable
+func refresh_profile() -> void:
+	if refresher.is_valid():
+		await refresher.call()
+		return
+	var account = GameState.get("account_session")
+	if account == null or not account.has_method("refresh_account"):
+		return
+	var result: Dictionary = await account.refresh_account()
+	if result.get("ok", false):
+		GameState.profile = account.profile
+
+
 ## Settings "Replay tour" (tutorial.md 6).
 func replay_tour() -> void:
 	var result := await _send({"type": "tutorial_replay"})
@@ -274,6 +290,9 @@ func _show_ceremony(data: Dictionary) -> void:
 	_ceremony = Ceremony.new()
 	_ceremony.reduced_motion = hub.reduced_motion
 	_ceremony.text = text_of(data)
+	var p = _profile()
+	if p != null and p.card_deck.get("cards", {}).has("magic"):
+		_ceremony.look = CardDeck.look_of(p.card_deck, "magic")  # the player's own Magic hero
 	hub.add_child(_ceremony)
 	hub.move_child(_ceremony, hub.toast_index())
 	_ceremony.finished.connect(func() -> void:

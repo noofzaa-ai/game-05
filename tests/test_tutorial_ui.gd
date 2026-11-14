@@ -16,6 +16,7 @@ func run(ctx) -> void:
 	await _overlay_taps(ctx, tree, root)
 	await _targets(ctx, tree, root)
 	_matching(ctx)
+	await _refusal(ctx, tree, root)
 	root.queue_free()
 	await tree.process_frame
 
@@ -156,3 +157,28 @@ func _matching(ctx) -> void:
 	ctx.check("done_on refuses a wrong param", not Driver.matches({"event": "card_race_ok", "class": "longbow", "race": "elf"}, {"event": "card_race_ok", "class": "longbow", "race": "human"}))
 	ctx.check("FIGHT counts for battle_loaded", Driver.matches({"event": "battle_loaded"}, {"event": "fight_pressed"}))
 	ctx.check("timeout_s is not a param", Driver.matches({"event": "card_name_tap", "timeout_s": 8}, {"event": "card_name_tap"}))
+
+
+## A refused tutorial_step re-reads the profile from the server, then shows the server's step (fix 2026-11-15).
+func _refusal(ctx, tree: SceneTree, root: Control) -> void:
+	var hub := Control.new()
+	hub.set_script(null)
+	root.add_child(hub)
+	var driver = Driver.new()
+	var calls := {"refresh": 0}
+	driver.send = func(_r: Dictionary) -> Dictionary: return {"ok": false, "error": "invalid_step"}
+	driver.refresher = func() -> void: calls["refresh"] += 1
+	root.add_child(driver)  # hub null: _ready builds nothing
+	driver.hub = FakeHub.new()
+	driver.set_process(false)
+	await driver._confirm("welcome")
+	ctx.check("a refused step refreshes the profile from the server", calls["refresh"] == 1)
+	driver.queue_free()
+	hub.queue_free()
+	await tree.process_frame
+
+
+class FakeHub extends Control:
+	func tutorial_close_character() -> void: pass
+	func tutorial_after_step() -> void: pass
+	func tutorial_hide_hint(_h: bool) -> void: pass
