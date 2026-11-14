@@ -34,6 +34,7 @@ var reduced_motion := false
 func _ready() -> void:
 	layer = 6
 	_root = Control.new()
+	_root.name = "SquadNames"  # tutorial target (design/gdd/tutorial.md 4 battle_tip): tutorial_rect() is the plates' union
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
@@ -255,6 +256,15 @@ func select(id: int, toggle: bool = true) -> void:
 ## The picked card (-1: the automatic camera).
 func selected_id() -> int:
 	return _selected
+
+
+## The battle tip's cut-out (design/gdd/tutorial.md 4): the union of the card plates, in global coordinates.
+func tutorial_rect() -> Rect2:
+	var out := Rect2()
+	for card in _cards.values():
+		var r: Rect2 = (card["panel"] as Control).get_global_rect()
+		out = r if out.size == Vector2.ZERO else out.merge(r)
+	return out
 
 
 ## Drops the pick without a signal (the stage does this when the picked fighter falls).

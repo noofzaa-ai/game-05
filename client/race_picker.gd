@@ -71,6 +71,7 @@ func _ready() -> void:
 
 func _build_tile(race: String) -> void:
 	var b := Button.new()
+	b.name = "Race_" + race  # tutorial target (design/gdd/tutorial.md 4)
 	b.focus_mode = Control.FOCUS_ALL
 	b.clip_contents = true
 	b.pressed.connect(_on_tile.bind(race))
