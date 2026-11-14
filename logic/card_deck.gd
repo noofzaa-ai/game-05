@@ -8,7 +8,7 @@ extends RefCounted
 ##
 ## deck = {"v": 1, "cards": {class_id: card}, "squad": [class_id, ...]}
 ## card = {"hair": "a", "outfit": "none"|"silver", "eye_color": id or "#rrggbb", "skin": id or "#rrggbb",
-##         "makeup": "none"|"sharp_wing", "iris_style": id of data/cosmetics/iris_styles.json,
+##         "makeup": "anime_soft"|"sharp_wing"|"none", "iris_style": id of data/cosmetics/iris_styles.json,
 ##         "hair_color": "" (the hair's Studio default) or any "#rrggbb" (Studio #hair-color free input), "skills": [],
 ##         "race": a race id of data/races/ (design/gdd/races-and-classes.md 3.7; changed only by the card_race command),
 ##         "progress": {"level", "xp"} (design/gdd/skill-tree.md 3.2, logic/card_progress.gd; optional: missing = level 1,
@@ -20,7 +20,7 @@ const CLASS_FOLDER := "res://data/classes/"
 const CLASS_ORDER: Array[String] = ["sword_shield", "greatsword", "longbow", "magic"]
 const SQUAD_MAX := 3
 const OUTFITS: Array[String] = ["none", "silver"]  ## none = the class armor (Studio "ชุดประจำคลาส"); silver = Silver Silk + class weapons
-const MAKEUPS: Array[String] = ["none", "sharp_wing"]
+const MAKEUPS: Array[String] = ["anime_soft", "sharp_wing", "none"]  ## Studio eye-makeup.js: Anime Soft, Sharp Wing, Natural (Boss 2026-11-14)
 const PARTS: Array[String] = ["hair", "outfit", "eye_color", "skin", "makeup", "iris_style", "hair_color"]
 ## Parts added after cards shipped: a saved card without them uses this value (the card stays valid).
 const LATER_PARTS := {"iris_style": "0", "hair_color": ""}

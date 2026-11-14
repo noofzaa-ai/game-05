@@ -701,7 +701,8 @@ const STRINGS := {
 	"class_magic": ["เวทมนตร์", "Magic"],
 	"outfit_none": ["ชุดพื้นฐาน", "Basic"],
 	"outfit_silver": ["Silver Silk", "Silver Silk"],
-	"makeup_none": ["ไม่แต่งตา", "Natural"],  ## the Studio's natural / no-makeup set (PO default 2026-11-12)
+	"makeup_anime_soft": ["Anime Soft", "Anime Soft"],  ## Studio: soft curved liner with outer-corner lashes
+	"makeup_none": ["ธรรมชาติ · ไม่แต่งตา", "Natural · no eye makeup"],  ## the Studio's natural / no-makeup set (PO default 2026-11-12)
 	"makeup_sharp_wing": ["Sharp Wing", "Sharp Wing"],
 	"hair_prefix": ["ผม ", "Hair "],
 	"remove_from_squad": ["เอาออกจากทัพ", "Remove from squad"],
