@@ -698,8 +698,6 @@ func public_state(viewer: int, borrowed: bool = false) -> Dictionary:
 			var hidden := full.duplicate()
 			hidden.loadout = full.loadout.duplicate(true)
 			hidden.stash = {"v": 1, "capacity": 0, "gold": "0", "materials": {}, "items": []}
-			hidden.relics = full.relics.duplicate(true)
-			hidden.relics.owned = hidden.relics.owned.filter(func(item):return item.id in hidden.relics.equipped)
 			hidden.farm = {}; hidden.facility_levels = {}; hidden.camp_level = 1
 			for entry in hidden.loadout.equipped.values(): entry.durability = "0000000000005940"
 			_snapshot_redacted[id] = preload("res://server/rooms/snapshot_cache.gd").freeze(hidden)
@@ -746,7 +744,7 @@ func _squad_meta(meta: Dictionary) -> void:
 
 func _public_run(id: int) -> Dictionary:
 	var trip = trip_for(id)
-	var data := {"v": 1, "bag": _ownership_cache.inventory(trip.bag), "relic_loot":trip.relic_loot.duplicate(true), "died": trip.died, "used_rests": trip.used_rests.duplicate(), "skill_cooldowns":trip.skill_cooldowns.duplicate(true)}
+	var data := {"v": 1, "bag": _ownership_cache.inventory(trip.bag), "died": trip.died, "used_rests": trip.used_rests.duplicate(), "skill_cooldowns":trip.skill_cooldowns.duplicate(true)}
 	return data
 
 

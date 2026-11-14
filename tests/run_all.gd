@@ -41,6 +41,7 @@ const TEST_FILES := [
 	"res://tests/test_legacy_items.gd",
 	"res://tests/test_squad_gear.gd",
 	"res://tests/test_loot_by_squad.gd",
+	"res://tests/test_relics_removed.gd",
 	"res://tests/test_offhand_slot.gd",
 	"res://tests/test_local_session.gd",
 	"res://tests/test_session_architecture.gd",

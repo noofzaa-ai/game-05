@@ -216,7 +216,7 @@ func _race_net(ctx) -> void:
 	var bad := row.duplicate(); bad[1] = "dragon"
 	var bad_move := row.duplicate(); bad_move[6] = "other_move"
 	ctx.check("net race_net: unknown race / mismatched move rejected", SkillNet.read_race(bad).is_empty() and SkillNet.read_race(bad_move).is_empty())
-	ctx.check("net wire VERSION is 3 and carries skill_net/race_net", Wire.VERSION == 3 and Wire.FIGHTER_FIELDS.has("skill_net") and Wire.FIGHTER_FIELDS.has("race_net"))
+	ctx.check("net wire VERSION is 4 and carries skill_net/race_net", Wire.VERSION == 4 and Wire.FIGHTER_FIELDS.has("skill_net") and Wire.FIGHTER_FIELDS.has("race_net"))
 
 
 ## Bytes per 20 Hz snapshot (zstd var_to_bytes, the netfox metadata path) for a 2-card room casting skills.

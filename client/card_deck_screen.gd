@@ -41,7 +41,7 @@ signal look_changed(class_id: String, part: String, choice: String)  ## part: ha
 signal squad_changed(squad: Array)  ## the full new order, 1..3 class ids
 signal reset_card(class_id: String)
 signal fight_pressed()
-signal service_pressed(service: String)  ## a side-menu entry (blacksmith, shop, tailor, storage, quests, relics) or "account"
+signal service_pressed(service: String)  ## a side-menu entry (blacksmith, shop, tailor, storage, quests) or "account"
 signal settings_pressed()
 signal back_pressed()
 

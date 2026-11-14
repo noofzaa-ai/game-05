@@ -14,8 +14,7 @@
       "stage": "boot",
       "include": [
         "res://art/items/",
-        "res://art/armor/",
-        "res://art/relics/"
+        "res://art/armor/"
       ]
     },
     {

@@ -8,7 +8,6 @@ enum State { IDLE, ATTACK, HITSTUN, DOWN, DEAD, GUARD, DODGE, DOWNED }
 var race_state: Dictionary = {}  ## Squad members only: race passive + synergy runtime (logic/race_passives.gd); saved in checkpoints.
 var shield := 0.0  ## race shield (GDD races 4.3): absorbs damage before HP; capped by add_shield; saved in checkpoints
 var shield_until := -1  ## sim tick at which the shield runs out (-1 = no shield)
-var relic_state: Dictionary = {}  ## Authoritative per-stage Relic loadout, charge and cooldown timers.
 var team := "player"  ## fighters on the same team never hit each other
 var style := "fists"  ## which move set this fighter uses (chosen by the weapon)
 var stats: Dictionary = {}  ## HP, ATK, DEF, ATKSPD, MOVESPD, CRIRATE, CRIDMG, EFFECT_ACC, EFFECT_RES

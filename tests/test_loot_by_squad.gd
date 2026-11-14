@@ -1,7 +1,7 @@
 extends RefCounted
 ## Loot by squad size (Boss 2026-11-12): a smaller squad is easier but pays less. goblin_waves.json
 ## loot_by_squad (index 0 = 1 fighter) scales every loot source in a fight: per-kill chances, gold and
-## materials, the boss relic, challenge rewards and treasure. Same seed = same loot; the factor never
+## materials, challenge rewards and treasure. Same seed = same loot; the factor never
 ## changes how many random numbers are drawn.
 const F := preload("res://tests/online_fixture.gd")
 const Party := preload("res://logic/coop_journey.gd")
@@ -9,7 +9,6 @@ const Journey := preload("res://logic/journey.gd")
 const JourneyData := preload("res://logic/journey_data.gd")
 const SquadMember := preload("res://logic/squad_member.gd")
 const Loot := preload("res://logic/loot.gd")
-const Relics := preload("res://logic/relics.gd")
 const Sim := preload("res://logic/game_sim.gd")
 const World := preload("res://logic/sim_world.gd")
 const Map := preload("res://logic/map_loader.gd")
@@ -67,12 +66,6 @@ func _roll_scaling(ctx) -> void:
 	for key in full:
 		var ratio := float(third[key]) / maxf(1.0, float(full[key]))
 		ctx.check("loot by squad: factor 0.33 pays about a third of the %s (%.2f)" % [key, ratio], ratio > 0.26 and ratio < 0.40)
-	var relic_full := 0
-	var relic_low := 0
-	for seed in range(1, 301):
-		relic_full += Relics.roll("goblin_chief", F.rng(seed)).size()
-		relic_low += Relics.roll("goblin_chief", F.rng(seed), 0.33).size()
-	ctx.check("loot by squad: the boss relic chance scales too (%d of %d)" % [relic_low, relic_full], relic_full == 300 and relic_low > 70 and relic_low < 130)
 
 
 ## A goblin_waves fight with `cards` (1 = solo through Journey.start).

@@ -149,7 +149,7 @@ func _check_fight(fight: Dictionary, label: String, enemy_types: Array) -> void:
 
 
 ## The loot factor for a squad of `fighters` (loot_by_squad when given, else 1.0): it scales every drop chance,
-## the gold and the treasure chance of the fight (Loot.roll, Relics.roll, Journey.open_treasure).
+## the gold and the treasure chance of the fight (Loot.roll, Journey.open_treasure).
 func loot_for(fighters: int) -> float:
 	if loot_by_squad.is_empty():
 		return 1.0

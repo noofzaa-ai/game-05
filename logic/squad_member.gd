@@ -26,7 +26,6 @@ static func make_squad(base, cards: Array, synergy_override: Dictionary = {}, gr
 		member.profile = base.profile
 		member.camp = base.camp
 		member.bag = base.bag
-		member.relic_loot = base.relic_loot
 		member.used_rests = base.used_rests
 		member.card_id = str(card)
 		member.squad = members

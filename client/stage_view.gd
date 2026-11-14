@@ -571,12 +571,6 @@ func _show_loot(event: Dictionary) -> void:
 		var color: Color = InkUi.rarity_color(tier["color"], true)
 		_loot_line(at, line, "%s ×1" % label, color, ItemAssets.icon_for_id(str(item.get("item_id", "")), GameState.item_rules.catalog))
 		line += 1
-	for relic in event.get("relics",[]):
-		var definition: Dictionary=load("res://logic/relics.gd").catalog().get(relic.relic,{})
-		var icon_path: String=str(definition.get("icon",""))
-		var icon: Texture2D=load(icon_path) if not icon_path.is_empty() else null
-		_loot_line(at,line,"%s ×1"%str(definition.get("name",relic.relic)),InkUi.GOLD,icon)
-		line+=1
 	# Pickups use A-style floating icons only; do not duplicate them in a boxed feed.
 	if int(event["lost_items"]) > 0 or not event["lost_materials"].is_empty():
 		_hud.add_loot("BAG FULL: some loot was left behind", InkUi.LOOT_PROBLEM)

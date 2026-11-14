@@ -2,7 +2,7 @@ extends RefCounted
 ## Strict, bounded binary data codec. Never decodes executable Objects/Variants.
 static var last_encode_error: Dictionary = {}
 const MAGIC := 0x585a
-const VERSION := 3  ## 3: FIGHTER_FIELDS gained skill_net/race_net (logic/net/skill_net.gd); skill_view on the wire drops class_cast
+const VERSION := 4  ## 3: FIGHTER_FIELDS gained skill_net/race_net (logic/net/skill_net.gd); skill_view on the wire drops class_cast. 4: relic_state removed (Relics removed, Boss 2026-11-14)
 const MAX_FRAME := 65536
 const SkillNet := preload("res://logic/net/skill_net.gd")
 const INPUT := 1
@@ -12,7 +12,7 @@ const CONTROL := 4
 const PING := 5
 const PONG := 6
 const BODY_FIELDS := ["position", "velocity", "grounded", "move_speed_multiplier", "height", "knockback"]
-const FIGHTER_FIELDS := ["team", "style", "stats", "hp", "enemy_type", "level", "state", "state_ticks", "direction", "move_id", "move_frame", "hit_ids", "spawns_done", "buffered", "hitstun_left", "launched", "down_left", "invulnerable_left", "hitstop", "combo_hits", "dodge_left", "dodge_cooldown", "cooldowns", "gauge", "energy", "energy_wait", "exhausted", "running", "run_ticks", "run_grace", "air_run", "poise", "max_poise", "poise_wait", "combo_dealt", "combo_damage", "combo_timer", "active_started", "effects", "stat_mods", "incapacitated", "rooted", "control_immune_left", "downed_at", "bleedout_left", "revive_progress", "reviver", "eliminated", "skill_view", "skill_net", "race_net", "relic_state"]
+const FIGHTER_FIELDS := ["team", "style", "stats", "hp", "enemy_type", "level", "state", "state_ticks", "direction", "move_id", "move_frame", "hit_ids", "spawns_done", "buffered", "hitstun_left", "launched", "down_left", "invulnerable_left", "hitstop", "combo_hits", "dodge_left", "dodge_cooldown", "cooldowns", "gauge", "energy", "energy_wait", "exhausted", "running", "run_ticks", "run_grace", "air_run", "poise", "max_poise", "poise_wait", "combo_dealt", "combo_damage", "combo_timer", "active_started", "effects", "stat_mods", "incapacitated", "rooted", "control_immune_left", "downed_at", "bleedout_left", "revive_progress", "reviver", "eliminated", "skill_view", "skill_net", "race_net"]
 
 ## The wire value of one FIGHTER_FIELDS entry. Use this (never fighter.get(field)) when building entity rows:
 ## skill_net/race_net are computed views, and skill_view is sent without class_cast (skill_net carries it) and with

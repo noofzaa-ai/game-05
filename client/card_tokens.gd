@@ -376,7 +376,7 @@ static func carved_aspect(art_name: String, fallback: float) -> float:
 ## Side menu, most used first (spec §2). icon = HUB_ICON_PREFIX + icon.
 const HUB_SERVICES: Array[Dictionary] = [
 	{"id": "blacksmith", "icon": "blacksmith"}, {"id": "shop", "icon": "shop"}, {"id": "tailor", "icon": "tailor"},
-	{"id": "storage", "icon": "storage"}, {"id": "quests", "icon": "quest"}, {"id": "relics", "icon": "relics"},
+	{"id": "storage", "icon": "storage"}, {"id": "quests", "icon": "quest"},
 ]
 const HUB_STAGE_FILE := "res://data/journeys/goblin_waves.json"  ## the stage name over FIGHT (its "name")
 
@@ -417,9 +417,9 @@ const HUB_SYS_GAP := 16.0
 const HUB_GOLD_SIZE := Vector2(184.0, 54.0)
 const HUB_GOLD_GAP := 70.0  ## between the gold counter and the system buttons
 const HUB_MENU_X := 58.0  ## from the side edge (or the phone safe inset)
-const HUB_MENU_Y := 154.0  ## carved target 2026-11-14: entries centred 209 + 112 n at 1080
+const HUB_MENU_Y := 154.0  ## carved target 2026-11-14: the menu fills 154..824 at 1080 (first plate top .. last plate bottom)
 const HUB_MENU_ENTRY := Vector2(372.0, 110.0)  ## the plate (art aspect 1458x423 -> 300x87, centred in 100)
-const HUB_MENU_STEP := 112.0
+const HUB_MENU_STEP := 140.0  ## 5 entries (Relics removed, Boss 2026-11-14) spread evenly over the old 6-entry band: 112 x 5 / 4
 const HUB_MENU_HOVER_SHIFT := 6.0
 const HUB_MENU_PRESS_SHIFT := 2.0
 const HUB_MENU_ICON_SCALE := 1.05  ## medallion height / plate height
@@ -721,7 +721,6 @@ const STRINGS := {
 	"svc_tailor": ["ช่างตัดเสื้อ", "Tailor"],
 	"svc_storage": ["คลัง", "Storage"],
 	"svc_quests": ["เควสต์", "Quests"],
-	"svc_relics": ["วัตถุโบราณ", "Relics"],
 	"svc_locked_line": ["ทำเควสต์ 3 เพื่อปลดล็อก", "Quest 3 to unlock"],
 	"soon_body": ["ส่วนนี้ยังไม่เปิด", "This service is not open yet."],
 	"close": ["ปิด", "Close"],

@@ -85,7 +85,6 @@ static func tick(id: int, fighter: Fighter, data: CombatData, events: Array[Dict
 			fighter.hp = minf(fighter.max_hp(), fighter.hp + heal)
 		if float(definition["dot_power"]) > 0.0 and int(instance["age"]) % interval == 0:
 			var damage := maxf(1.0, roundf(float(instance["dps"]) * int(instance["stacks"]) * float(interval) / 60.0))
-			if bool(instance.get("exact_dot",false)):damage=maxf(0,float(instance["dps"])*float(interval)/60.0)
 			if _damage_over_time(id, fighter, damage, effect_id, int(instance["source"]), data, events):
 				return  # died: everything was cleared
 			hurt = true
@@ -160,7 +159,7 @@ static func _damage_over_time(id: int, fighter: Fighter, damage: float, effect_i
 	fighter.hp = maxf(0.0, fighter.hp - (damage - absorbed))
 	if fighter.hp <= 0.0 and not fighter.race_state.is_empty() and load("res://logic/skill_tree_mechanics.gd").cheat_death(id, fighter, events):
 		fighter.hp = 1.0  # Valhalla's Call
-	events.append({"type": "dot", "target": id, "effect": effect_id, "damage": damage if effect_id=="relic_goblin_poison" else int(damage), "absorbed": absorbed})
+	events.append({"type": "dot", "target": id, "effect": effect_id, "damage": int(damage), "absorbed": absorbed})
 	if fighter.hp <= 0.0:
 		fighter.launched = false
 		fighter.move_id = ""

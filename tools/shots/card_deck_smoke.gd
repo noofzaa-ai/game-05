@@ -21,7 +21,7 @@ func run():
 	root.size = size
 	var screen: Control = load("res://scenes/card_deck_screen.tscn").instantiate()
 	screen.auto_wire = false
-	screen.locked_services = ["relics"]
+	screen.locked_services = []
 	screen.service_badges = {"quests": "2"}
 	screen.locked_classes = ["magic"] if OS.get_environment("ZORX_LOCK_MAGIC") == "1" else []
 	root.add_child(screen)
