@@ -205,7 +205,39 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 491a8217e9c8-20261114 (rolled out 2026-11-14 ~04:27 UTC, web only)
+## 9. LIVE on staging: release 899797dee6b4-20261114 (rolled out 2026-11-14 ~05:40 UTC, web only)
+
+Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 899797d = origin/develop, with
+`data/online.local.json` present (exact bytes verified inside the core pack). `--import` (no segfault; only the 2 known
+`get_multiple_md5` notices), then `pipeline/build_web.py --skip-tests --max-file-mb 0` -> web build **2ab88cc3a193**
+(tag `899797dee6b4-20261114`). Contents: download cut (lossy character/hair textures, size-limited race weapon atlases,
+status VFX moved to the `vfx` battle pack, export exclusions), carved ink-wash loading page (7 `loading_*.webp` from
+`tools/web/static`), carved look on the card character screen, hub service panels, settings, race picker, result panel.
+Headless NOT rebuilt: 899797d changes no server/, logic/ or data/. `ZORX_SQUAD_ROOMS=1` kept.
+Before-state: `build/k3s-staging-before-899797d.yaml` and `build/k3s-before-899797d.txt` (main tree).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:49ff224f71a00ef37221d614fdda6aecc1afba8438db7b98b798d02498dba572` (build 2ab88cc3a193) |
+| headless/profiles | unchanged: `wiyazard:30500/zorx-name-validator@sha256:73c06c3ffbf823a4e14749d68f0a8ed641cf03d934773bb0cc3b58c4b232ac44` |
+| headless/rooms | unchanged: `wiyazard:30500/zorx-room-worker@sha256:4c75507955e73d07c6907699940e01d309368642faf41695f8f82a7bb4a5f314` |
+
+Download size (MiB, desktop = s3tc variants): engine 9.59, core 18.25 -> 5.89, characters 14.23, items 2.58 + 0.48,
+weapons 3.68, ui 4.02 + 0.64 (boot stage); vfx 13.40, monsters 1.56 + 2.08, stages 2.46 + 2.81 (battle stage).
+Boot total 68.8 -> **41.1 MiB**; everything 63.4 MiB. `art/vfx/status/` textures (`.ctex`/`.import`) are in the `vfx`
+battle pack; core keeps only path strings in scripts/scenes.
+Local checks: web image paths 200 with correct types, `.wasm` immutable, missing pack 404, container healthy.
+Smoke after rollout: pods Ready, game-test 0 restarts after 4 min; live `packs.json` build 2ab88cc3a193; live
+`loading_valley`/`loading_plaque` webp 200 `image/webp` and `play.html` references all 7 `loading_*` webp; core/vfx
+`.pck.wasm` `application/wasm` + `immutable`; Nakama healthcheck 200; 0 `SCRIPT ERROR` in rooms/profiles logs, 0 web
+5xx/nginx errors. Sign-in, loading page and hub look: OPEN for a person (Turnstile blocks automation).
+
+Rollback (web only, to 491a821):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:e000247fd46ea5aed0d34411329ed635cb1bbf6b2ef98f874ad49baf8e922fd6
+```
+
+### Previous: release 491a8217e9c8-20261114 (rolled out 2026-11-14 ~04:27 UTC, web superseded)
 
 Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 491a821 = origin/develop, with
 `data/online.local.json` present (exact bytes verified inside the core pack). `--import` (0 errors; new `art/ui/hub_carved`
