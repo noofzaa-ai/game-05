@@ -8,6 +8,7 @@ const TELEGRAPH_SHADER := preload("res://client/vfx/attack_telegraph.gdshader")
 const TELEGRAPH_LIFT := 0.05  ## the ground warning floats this much above the floor (no flicker)
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const CameraRig := preload("res://client/camera_rig.gd")
+const DrawStyle := preload("res://client/draw_style/draw_style.gd")
 const CameraTrigger := preload("res://client/camera_trigger.gd")
 const Effects := preload("res://client/effects.gd")
 const ClassSkillData := preload("res://logic/class_skills/skill_data.gd")
@@ -424,6 +425,7 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 	view.set_script(load("res://client/fighter_view.gd"))
 	var is_player: bool = _session.fighters[id].team == "player"
 	view.ink_outline = _ink_style
+	view.hero_ink = is_player and DrawStyle.hero_ink()  # heroes keep the cards' ink look (drawn_style on/lite)
 	view.base_color = PLAYER_COLOR if is_player else _combat_data.enemies[enemy_type]["color"]
 	_fighter_colors[id] = view.base_color
 	if is_player:

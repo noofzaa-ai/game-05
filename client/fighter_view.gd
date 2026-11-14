@@ -8,6 +8,7 @@ extends Node3D
 const AnimationSet := preload("res://client/animation_set.gd")
 const CharacterLight := preload("res://client/character_light.gd")
 const CharacterModel := preload("res://client/characters/studio05_character_model.gd")
+const DrawStyle := preload("res://client/draw_style/draw_style.gd")
 const Combat := preload("res://logic/combat.gd")
 const CombatData := preload("res://logic/combat_data.gd")
 const InkStyle := preload("res://client/ink_style.gd")
@@ -71,6 +72,9 @@ var show_health_bar := false
 var bar_style: Dictionary = {}
 ## Dark ink outlines (the ink stages): on the character model and the capsule.
 var ink_outline := false
+## The heroes' ink-wash look (cards' look in battle, client/draw_style/draw_style.gd hero_ink()): bold brown line,
+## 2-band warm shadow, paper grain. Set before _ready.
+var hero_ink := false
 
 var _material: StandardMaterial3D
 var _nose: MeshInstance3D
@@ -139,6 +143,8 @@ func _ready() -> void:
 	if not model_path.is_empty():
 		var model := CharacterModel.new()
 		model.ink_outline = ink_outline
+		if hero_ink:
+			DrawStyle.dress_hero(model)
 		_body.add_child(model)
 		if model.load_model(model_path):
 			_model = model

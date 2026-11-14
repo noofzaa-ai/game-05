@@ -36,8 +36,20 @@ func run(ctx) -> void:
 	DrawStyle.slow_device = false
 	Options.set_value("drawn_style", "lite")
 	ctx.check("lite: materials only, never the screen pass", DrawStyle.mode() == "lite" and not DrawStyle.screen_allowed())
+	ctx.check("lite: heroes keep the ink look (Boss 2026-11-15)", DrawStyle.hero_ink())
 	Options.set_value("drawn_style", "off")
 	ctx.check("off: the old look", DrawStyle.mode() == "off" and not DrawStyle.screen_allowed())
+	ctx.check("off: heroes drop the ink look", not DrawStyle.hero_ink())
+	Options.set_value("drawn_style", "on")
+	ctx.check("on (the default): heroes get the cards' ink look in battle", DrawStyle.hero_ink())
+	var hero = preload("res://client/characters/studio05_character_model.gd").new()
+	DrawStyle.dress_hero(hero)
+	ctx.check("a battle hero gets the ink look with a line in metres at least the monsters' weight",
+		hero.card_ink and hero.ink_line_world >= DrawStyle.MONSTER_OUTLINE_WIDTH and hero.ink_min_pixels >= 1.5 and hero.ink_max_pixels > hero.ink_min_pixels)
+	hero.free()
+	var studio = preload("res://client/characters/studio05_character_model.gd").new()
+	ctx.check("a model nobody dresses (Studio screens) keeps the Studio parity look", not studio.card_ink and studio.ink_line_world == 0.0)
+	studio.free()
 
 	var words_ok := true
 	for key in DrawStyle.DRAWN_KEYS + ["drawn_style", "drawn_hint"]:
@@ -61,7 +73,7 @@ func run(ctx) -> void:
 	bar.free()
 	body.free()
 
-	for path in ["res://client/draw_style/ink_world.gdshader", "res://client/draw_style/ink_screen.gdshader", "res://client/draw_style/ink_outline_brush.gdshader"]:
+	for path in ["res://client/characters/card_ink_hull.gdshader", "res://client/draw_style/ink_world.gdshader", "res://client/draw_style/ink_screen.gdshader", "res://client/draw_style/ink_outline_brush.gdshader"]:
 		var shader := load(path) as Shader
 		ctx.check("%s loads with its uniforms" % path.get_file(), shader != null and not shader.get_shader_uniform_list().is_empty())
 

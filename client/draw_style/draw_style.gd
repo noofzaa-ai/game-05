@@ -28,10 +28,18 @@ const SLOW_WINDOWS := 2
 const SLOW_WARMUP := 3.0  ## seconds after the stage opens before measuring (loading hitches are not "slow")
 const STAGE_OUTLINE_WIDTH := 0.03  ## metres before the pixel limits (props are big: a thick pen)
 const MONSTER_OUTLINE_WIDTH := 0.008
+## Heroes (Boss 2026-11-15: the cards' ink look in battle too, studio05 card_ink): a brown brush line in metres,
+## at least as heavy as the monsters' (MONSTER_OUTLINE_WIDTH, up to 3.6 px), never thinner than HERO_INK_MIN_PIXELS
+## at the overview and capped when the camera zooms in on a fighter.
+const HERO_INK_WIDTH := 0.014
+const HERO_INK_MIN_PIXELS := 2.0
+const HERO_INK_MAX_PIXELS := 4.5
+const HERO_INK_PHONE_MIN_TRIANGLES := 400  ## phones: no line on pieces smaller than this (weapons, head, hair keep it)
 const PAINT_DATA := "res://data/ui/draw_style.json"  ## per-stage painted ground, paper tile, sky
 const ENV_SATURATION := 0.95  ## the stage keeps its greens and warm browns (0.85 read grey on the goblin camp)
 
 static var _override := "?"  ## from the URL / command line, "" = none (read once)
+static var heroes_inked := true  ## tools switch it off for hero-only A/B runs (tools/perf/battle_fps.gd)
 static var slow_device := false  ## set by the guard; kept until the game restarts
 static var _two_sided_shader: Shader
 static var _world_cache: Dictionary = {}  ## source material -> ShaderMaterial (shared by all instances)
@@ -111,6 +119,31 @@ static func mode() -> String:
 		return _override
 	var chosen := str(Options.value("drawn_style"))
 	return chosen if MODES.has(chosen) else "on"
+
+
+## Heroes get the ink-wash look in "on" and "lite" (materials only, no screen pass); "off" = the Studio toon look.
+static func hero_ink() -> bool:
+	if not heroes_inked:
+		return false
+	var m := mode()
+	return m == "on" or m == "lite"
+
+
+## Sets a studio05 hero model (before load_model) to the battle ink look.
+static func dress_hero(model: Node) -> void:
+	if not "card_ink" in model:
+		return
+	model.card_ink = true
+	model.ink_line_world = HERO_INK_WIDTH
+	model.ink_min_pixels = HERO_INK_MIN_PIXELS
+	model.ink_max_pixels = HERO_INK_MAX_PIXELS
+	if is_phone():
+		model.ink_hull_min_triangles = HERO_INK_PHONE_MIN_TRIANGLES
+
+
+## A phone or tablet (web on Android/iOS, native mobile), or a forced `-- --phone-ink` for measuring.
+static func is_phone() -> bool:
+	return OS.has_feature("mobile") or OS.has_feature("web_android") or OS.has_feature("web_ios") or OS.get_cmdline_user_args().has("--phone-ink")
 
 
 ## True when the screen pass may run now (mode "on"/"ink_b", render scale 0.5, the device not found slow).

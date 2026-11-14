@@ -108,11 +108,18 @@ var _blink_start := BLINK_FIRST
 var _blink_rng := RandomNumberGenerator.new()
 var blink_enabled := true  ## eyes/blink.js: off = eyes held open
 var class_id := DEFAULT_CLASS  ## which data/classes/<id>.json drives the animations
-## Card-only ink-wash look (hub direction 2026-11-14, set by client/card_portrait.gd before load_model): flat
-## paper-tinted bands, watercolour palette and grain in the toon shader, and a dark-brown ink line sized to the
-## card render on every piece (card_ink_hull.gdshader). Off = the Studio parity look (battle, Studio, tests).
+## Ink-wash look (hub direction 2026-11-14; battle 2026-11-15), set before load_model by client/card_portrait.gd and,
+## in battle, client/fighter_view.gd (graphics setting drawn_style): flat paper-tinted bands, watercolour palette and
+## grain in the toon shader, and a dark-brown ink line on every piece (card_ink_hull.gdshader). Off = the Studio
+## parity look (Studio screens, tests).
 var card_ink := false
-var card_ink_line := 0.0042  ## line width as a fraction of the portrait render's height
+var card_ink_line := 0.0042  ## card: line width as a fraction of the portrait render's height
+var ink_line_world := 0.0  ## battle: line width in metres (> 0 replaces card_ink_line), kept within the pixel limits below
+var ink_min_pixels := 1.8
+var ink_max_pixels := 1000.0
+## Phones (battle): pieces with fewer triangles than this get no ink line (small plates, gloves, bracers), except the
+## head, hair, weapons and shield; their outline is mostly covered by the body's. 0 = every piece.
+var ink_hull_min_triangles := 0
 ## Simple stand-in shield on the left hand (GLB units, in the left hand bone): radius, thickness.
 const SHIELD_RADIUS := 0.11
 const SHIELD_THICKNESS := 0.012
@@ -671,7 +678,8 @@ func _prepare_meshes() -> void:
 		if mesh.has_meta("no_ink_hull"):
 			pass  # a face overlay (Runeborn runes) lies on the head: an outline would ring every rune
 		elif card_ink:
-			_add_card_hull(mesh, part, rest or rest_custom, has_color, rest_custom)
+			if part != 0 or ink_hull_min_triangles <= 0 or is_weapon_piece(label) or _triangles(mesh.mesh) >= ink_hull_min_triangles:
+				_add_card_hull(mesh, part, rest or rest_custom, has_color, rest_custom)
 		elif part != 0:
 			var hull := MeshInstance3D.new()
 			hull.name = label + "_StudioInk"
@@ -695,6 +703,15 @@ func _prepare_meshes() -> void:
 	CharacterLight.prepare(_model_root)
 
 
+static func _triangles(mesh: Mesh) -> int:
+	var count := 0
+	for surface in mesh.get_surface_count():
+		var arrays := mesh.surface_get_arrays(surface)
+		var indices = arrays[Mesh.ARRAY_INDEX]
+		count += (indices.size() if indices != null else (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size()) / 3
+	return count
+
+
 ## Card ink line (card_ink): a child drawing `mesh` again, pushed out by a card-relative width, back faces in
 ## brown ink. Moved by the same bones and blend shapes (the cape hull copies the cape's weights, _apply_cape).
 func _add_card_hull(mesh: MeshInstance3D, part: int, rest: bool, has_color: bool, rest_custom: bool = false) -> void:
@@ -707,6 +724,9 @@ func _add_card_hull(mesh: MeshInstance3D, part: int, rest: bool, has_color: bool
 	var ink := ShaderMaterial.new()
 	ink.shader = CardInkShader
 	ink.set_shader_parameter("line_fraction", card_ink_line * (0.8 if part == 1 else 1.0))
+	ink.set_shader_parameter("line_world", ink_line_world * (0.8 if part == 1 else 1.0))
+	ink.set_shader_parameter("min_pixels", ink_min_pixels)
+	ink.set_shader_parameter("max_pixels", ink_max_pixels)
 	ink.set_shader_parameter("is_hair", part == 2)
 	ink.set_shader_parameter("eye_cut", part == 1)
 	ink.set_shader_parameter("has_rest", rest)
