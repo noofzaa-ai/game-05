@@ -508,3 +508,12 @@ Sign-in: OPEN for a person (Google, Guest + Turnstile, logged-in redirect to zor
 from an import map in `index.html`. LIVE `wiyazard:30500/zorx-landing:trail3d-v2-20261114@sha256:1ea463b8be0e89433d10e3cc345e10fe1df223126e9c7abb5beeaddb7991b235`
 (before-state `build/k3s-staging-before-landing-trail3d-v2-20261114.yaml`; rollback = `set image ... landing=wiyazard:30500/zorx-landing:trail3d-20261114@sha256:808ea9962a797677da4a1eaaee2eabd7ae24b8d185d04dba1ff19ba6501e2d39`).
 Evidence and perf: `art_source/codex_review/landing_trail_v2_2026-11-14/`, `docs/tech/performance_budget.md` (landing section).
+**2026-11-15 trail v3 (Boss: two stops).** 01 CAMPFIRE (approved as is) and 02 LOGIN. Stops 02-07 (banners, weapons,
+synergy, goblin field, chief totem, their columns, copy and CLOSER LOOK / inspect) are removed; the FIGHT gate fort moved
+from z -112 to z -10 and one scroll / swipe / arrow, START GAME, `?play=1` or `?auth=` takes a timed 2 s eased flight
+there (the sign-in panel opens at 85 % of it); back returns to the campfire. Trees/rocks/grass cover only z 24..-46.
+The four heroes have distinct hair colours from `data/cosmetics/starter_hair_colors.json` (Human chestnut, Viking
+blond, Elf silver, Runeborn violet), set as the hair material colour at runtime in trail.js (the GLBs are unchanged).
+LIVE `wiyazard:30500/zorx-landing:trail3d-v3-20261115@sha256:794b806a6ab839bb8d16e7ffe09072f96c366a4ac78ead84d51a5e84b8cd9985`
+(before-state `build/k3s-staging-before-landing-trail3d-v3-20261115.yaml`; rollback = `set image ... landing=wiyazard:30500/zorx-landing:trail3d-v2-20261114@sha256:1ea463b8be0e89433d10e3cc345e10fe1df223126e9c7abb5beeaddb7991b235`).
+Evidence and perf: `art_source/codex_review/landing_trail_v3_2026-11-15/`, `docs/tech/performance_budget.md` (landing section).
