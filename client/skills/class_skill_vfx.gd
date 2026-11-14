@@ -18,6 +18,7 @@ const ROOT := "res://art/vfx/class_skills/"
 const PREFIX := "class_skill/"
 const SkillData := preload("res://logic/class_skills/skill_data.gd")
 const GraphicsOptions := preload("res://client/graphics_options.gd")
+const InkVfx := preload("res://client/vfx/ink_vfx.gd")
 const TICKS := 60.0
 
 const SPEC := {
@@ -280,6 +281,7 @@ func _make(skill: String) -> Node3D:
 	inst.visible = false
 	add_child(inst)
 	_slim(skill, inst)
+	InkVfx.apply(inst)  # ink-wash materials when the drawn style is on (a material swap, no extra draws)
 	return inst
 
 

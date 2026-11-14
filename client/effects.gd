@@ -14,6 +14,7 @@ const TRAIL_SHADER := preload("res://client/vfx/vfx_trail.gdshader")
 const SPRITE_SHADER := preload("res://client/vfx/vfx_sprite.gdshader")
 const GROUND_SHADER := preload("res://client/vfx/vfx_ground.gdshader")
 const BURST_SHADER := preload("res://client/vfx/vfx_burst.gdshader")
+const InkVfx := preload("res://client/vfx/ink_vfx.gd")
 const CHEST_HEIGHT := 1.1
 const GROUND_LIFT := 0.04  ## ground marks sit this far above the feet so they do not flicker with the floor
 const POOL_LIMIT := 48  ## spare nodes kept per layer type
@@ -34,6 +35,7 @@ var _trail_meshes: Dictionary = {}  ## layer text -> ArrayMesh
 var _quad: QuadMesh  ## centered unit quad
 var _tall_quad: QuadMesh  ## unit quad standing on its bottom edge (beams, afterimages)
 var _burst_mesh: ArrayMesh
+var _drawn := 0.0  ## 1 = ink-wash look on every effect material (client/vfx/ink_vfx.gd, graphics setting drawn_style)
 
 
 func _ready() -> void:
@@ -43,6 +45,13 @@ func _ready() -> void:
 	_tall_quad = QuadMesh.new()
 	_tall_quad.center_offset = Vector3(0.0, 0.5, 0.0)
 	_burst_mesh = _build_burst_mesh()
+	_drawn = InkVfx.strength()
+	if _drawn > 0.0:
+		# The stage builds its monster wind-up warnings (attack_telegraph.gdshader) itself: each is drawn in ink too.
+		var tree := get_tree()
+		var watch := func(node: Node) -> void: if node is MeshInstance3D: InkVfx.mark.call_deferred(weakref(node))
+		tree.node_added.connect(watch)
+		tree_exiting.connect(func() -> void: tree.node_added.disconnect(watch))
 
 
 ## Builds the context for `play`. `at` = the action's point (where a blow lands), `feet` = the
@@ -287,6 +296,7 @@ func _take(type: String, shader: Shader) -> MeshInstance3D:
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
+	mat.set_shader_parameter("drawn", _drawn)
 	node.material_override = mat
 	node.set_meta("vfx_type", type)
 	if type == "burst":

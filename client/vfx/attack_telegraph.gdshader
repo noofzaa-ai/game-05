@@ -10,6 +10,8 @@ shader_type spatial;
 // One quad per warning; only uniforms change per frame (no mesh rebuilds).
 render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled, fog_disabled, blend_mix;
 
+#include "res://client/vfx/vfx_common.gdshaderinc"
+
 uniform vec4 color : source_color = vec4(1.0, 0.16, 0.08, 1.0);
 uniform vec4 ink_color : source_color = vec4(0.10, 0.01, 0.01, 1.0);
 uniform int shape = 0;
@@ -19,6 +21,7 @@ uniform float far_width = 1.0;           // lane width at the far end, as a frac
 uniform float progress = 0.0;
 uniform float time = 0.0;
 uniform float opacity = 1.0;
+uniform float drawn = 0.0;  // 1 = ink-wash look (client/vfx/ink_vfx.gd via draw_style.gd): grain-broken edges, flat glazes
 
 void fragment() {
 	float t = clamp(progress, 0.0, 1.0);
@@ -65,7 +68,15 @@ void fragment() {
 	float fill = filled * (0.28 + 0.22 * ease);
 	float bright = clamp(rim + front + chevrons * 0.6 + fill * 1.6, 0.0, 1.0);
 	vec3 hot = mix(color.rgb, vec3(1.0, 0.85, 0.6), front * 0.7);
-	ALBEDO = mix(ink_color.rgb, hot, bright);
+	vec3 rgb = mix(ink_color.rgb, hot, bright);
 	float alpha = max(max(rim * pulse, rim_ink * 0.7), max(front, max(base + fill, chevrons * (0.35 + 0.25 * (1.0 - filled)))));
-	ALPHA = clamp(alpha, 0.0, 1.0) * inside * opacity * color.a;
+	alpha = clamp(alpha, 0.0, 1.0) * inside * opacity * color.a;
+	if (drawn > 0.5) {
+		// Readability first: the danger red stays saturated (no tone step), only the paint edges and glazes change.
+		vec4 o = vfx_ink(rgb, alpha, UV, UV * size_m * 2.2, ink_color.rgb);
+		rgb = mix(rgb, o.rgb, 0.5);
+		alpha = o.a;
+	}
+	ALBEDO = rgb;
+	ALPHA = alpha;
 }

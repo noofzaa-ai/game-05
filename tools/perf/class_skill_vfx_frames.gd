@@ -3,8 +3,11 @@ extends SceneTree
 ##   godot --path . --script res://tools/perf/class_skill_vfx_frames.gd -- <assets_root> <out_dir> <slim 0|1> <ids,comma> [tag]
 ## assets_root e.g. res://art/vfx/class_skills/ ; slim=1 plays them the way the game does (ClassSkillVfx._slim).
 ## Prints "VFXFRAME <id> t=<s> draws=<n>" per frame.
+## Env INK=1: the ink-wash materials (client/vfx/ink_vfx.gd) as the game draws them under the drawn style; INK=0 the
+## original materials. FLOOR=paper: a light painted-ground colour instead of the dark grey (for the ink review).
 
 const CELL := Vector2i(400, 300)
+const InkVfx := preload("res://client/vfx/ink_vfx.gd")
 const FRACTIONS := [0.08, 0.18, 0.3, 0.45, 0.65]
 
 
@@ -41,7 +44,7 @@ func run() -> void:
 	plane.size = Vector2(14, 14)
 	floor_mesh.mesh = plane
 	var fm := StandardMaterial3D.new()
-	fm.albedo_color = Color(0.32, 0.3, 0.27)
+	fm.albedo_color = Color(0.62, 0.56, 0.44) if OS.get_environment("FLOOR") == "paper" else Color(0.32, 0.3, 0.27)
 	floor_mesh.material_override = fm
 	root.add_child(floor_mesh)
 	var cam := Camera3D.new()
@@ -57,6 +60,12 @@ func run() -> void:
 		root.add_child(inst)
 		if slim:
 			vfx._slim(sid, inst)
+		if OS.get_environment("INK") == "1":
+			InkVfx._cache.clear()
+			for mi in inst.find_children("*", "MeshInstance3D", true, false):
+				for s in mi.mesh.get_surface_count():
+					if mi.get_active_material(s) is BaseMaterial3D:
+						mi.set_surface_override_material(s, InkVfx.material_for(mi.get_active_material(s)))
 		var ap: AnimationPlayer = vfx._player_of(inst)
 		var clip: StringName = vfx._clip_of(ap)
 		var length: float = ap.get_animation(clip).length

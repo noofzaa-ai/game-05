@@ -24,6 +24,7 @@ uniform float count = 16.0;
 uniform float streak = 0.05;  // seconds of motion each streak covers
 uniform float seed = 0.0;
 uniform float opacity = 1.0;
+uniform float drawn = 0.0;  // 1 = ink-wash look (client/vfx/ink_vfx.gd, graphics setting drawn_style)
 uniform float pull = 0.0;  // meters drawn toward the camera (sparks at a hit point stay in front of the body)
 
 varying float v_alpha;
@@ -96,9 +97,15 @@ void fragment() {
 		}
 	}
 	alpha *= v_alpha;
-	if (alpha <= 0.004) {
+	float a_out = clamp(alpha * opacity * color.a, 0.0, 1.0);
+	if (drawn > 0.5) {
+		vec4 o = vfx_ink(rgb, a_out, v_uv, v_uv * 2.5 + v_rand * 13.0, ink_color.rgb);
+		rgb = o.rgb;
+		a_out = o.a;
+	}
+	if (a_out <= 0.004) {
 		discard;
 	}
 	ALBEDO = rgb;
-	ALPHA = clamp(alpha * opacity * color.a, 0.0, 1.0);
+	ALPHA = a_out;
 }
