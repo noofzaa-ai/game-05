@@ -205,7 +205,46 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 2fd4ce4b8d37-20261114 (rolled out 2026-11-14 ~07:55 UTC, web only)
+## 9. LIVE on staging: release 6c8724ffa657-20261114 (rolled out 2026-11-14 ~10:57 UTC, FULL: web + rooms + profiles)
+
+Why full: 6c8724f removes Relics and raises `logic/net_wire.gd` VERSION 3 -> 4 (`relic_state` left FIGHTER_FIELDS). The
+room worker rejects a frame whose version byte differs, so web and `headless` (rooms + profiles) were set in one step.
+Built from the release worktree `zorx-release-fdf9fbb` (churn discarded, detached at 6c8724f = origin/develop,
+`data/online.local.json` present). `--import` rc 0, then `PYTHONUTF8=1 GODOT_BIN=<console exe> pipeline/build_web.py
+--skip-tests --max-file-mb 0` -> web build **6947cceda7ce**; `server/rooms/build_image.py`; `server/names/build_images.py --skip-tests`
+(worker built; the Nakama step failed, see below). Image revision labels say `-dirty` only because of untracked `.uid` files the
+import creates in `logic/` (no tracked change). Before-state: `build/k3s-staging-before-6c8724f.yaml` and `build/k3s-before-6c8724f.txt` (main tree).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:65b62628a663925b167fd0ae65958092aadf0af98b8522925ae6b2960b64cff5` (build 6947cceda7ce) |
+| headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:43b422e297d799d19682a045155676cf85c79aaf2907515e0256386ab67de9ff` |
+| headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:6f27267d72b80dd8ae7444b07551fae0af5e7b10b16c1160513fafe6dd17d4c1` (`ZORX_SQUAD_ROOMS=1` kept) |
+| nakama/nakama | **unchanged** `zorx-nakama:chest-id-fix-20261101-2@sha256:64ed2fe9...` (upstream `registry.heroiclabs.com` 429 again) |
+
+Nakama compatibility (why skipping it is safe): the only runtime change is `plaza.ts`, which stops sending a `relics` array on
+plaza actors. The old runtime guards a missing field (`r&&r.owned&&r.equipped ? ... : []`), and the new client
+(`client/online/plaza_client.gd`) reads only `id/name/x/z/fx/fz/speed/loadout/appearance`, so the extra `relics` key is ignored.
+The runtime has no net_wire version check. Rebuild Nakama when the upstream registry allows; it is not blocking.
+
+Download size: boot download 41.41 -> **41.10 MiB** (battle 22.31, total 63.41 MiB).
+Local checks: web image paths 200 with correct types, `.pck.wasm` immutable, missing pack 404, container healthy; core pack holds
+the new `net_wire.gd` (no `relic_state`) and the exact `online.local.json` bytes. Room image smoke `--squad-rooms` 14 PASS, stderr
+empty; name worker process smoke 11 PASS.
+Smoke after rollout: all pods Ready, game-test/headless 0 restarts; live `packs.json` build 6947cceda7ce; live core `.pck.wasm`
+`application/wasm` + `immutable`; Nakama healthcheck 200; `wss://zorxapi.daiyooo.com/room-v2` upgrade 101; 0 `SCRIPT ERROR` /
+0 error lines in rooms and profiles logs; 0 web 5xx. A signed-in protocol-4 room join (two browsers, finish a stage) and the hub
+without the Relics entry: OPEN for a person (Turnstile blocks automation).
+
+Rollback (all together, to 2fd4ce4 web + the previous headless; never roll back web or headless alone, the wire versions differ):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:b134ed738dae6e76f4a0728717a6cbe585ef8c94e46e521270c1ba84af246bb8
+kubectl -n zorx-staging set image deployment/headless profiles=wiyazard:30500/zorx-name-validator@sha256:73c06c3ffbf823a4e14749d68f0a8ed641cf03d934773bb0cc3b58c4b232ac44 rooms=wiyazard:30500/zorx-room-worker@sha256:4c75507955e73d07c6907699940e01d309368642faf41695f8f82a7bb4a5f314
+```
+Saves: 6c8724f drops `relics`/`relic_loot` from a profile on the next save. Rolled-back builds read a missing `relics` field as none
+(not verified); check `logic/profile.gd` from_dict before rolling back.
+
+### Previous: release 2fd4ce4b8d37-20261114 (rolled out 2026-11-14 ~07:55 UTC, web only, superseded)
 
 Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 2fd4ce4 = origin/develop, with
 `data/online.local.json` present (verified inside the core pack). `--import` (rc 0, no segfault), then
