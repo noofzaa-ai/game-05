@@ -10,6 +10,7 @@ extends Node3D
 
 const Effects := preload("res://client/effects.gd")
 const AREA_SHADER := preload("res://client/vfx/area_telegraph.gdshader")
+const InkVfx := preload("res://client/vfx/ink_vfx.gd")
 
 ## Client-side look of each kind (the rules only name the look).
 const LOOKS := {
@@ -32,7 +33,7 @@ var _arrow_model_material: Material
 var _streak_mesh: ArrayMesh
 var _arrow_material: StandardMaterial3D
 var _streak_material: StandardMaterial3D
-var _glow_material: StandardMaterial3D
+var _glow_material: Material  ## additive glow, or its ink-wash version (client/vfx/ink_vfx.gd) when the drawn style is on
 var _core_material: StandardMaterial3D
 var _quad: QuadMesh
 var _sphere: SphereMesh
@@ -213,6 +214,7 @@ func _build_area(look: String, radius: float) -> MeshInstance3D:
 	material.shader = AREA_SHADER
 	material.set_shader_parameter("color", LOOKS.get(look, {}).get("color", Color(0.78, 0.36, 1.0)))
 	material.set_shader_parameter("progress", 0.0)
+	material.set_shader_parameter("drawn", InkVfx.strength())
 	circle.material_override = material
 	circle.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(circle)
@@ -252,6 +254,9 @@ func _build_resources() -> void:
 	radial.width = 64
 	radial.height = 64
 	_glow_material.albedo_texture = radial
+	if InkVfx.enabled():
+		_glow_material = InkVfx.material_for(_glow_material)  # mix-blended ink blot instead of additive light
+		_streak_material.blend_mode = BaseMaterial3D.BLEND_MODE_MIX
 	_quad = QuadMesh.new()
 	_quad.size = Vector2.ONE
 	_sphere = SphereMesh.new()

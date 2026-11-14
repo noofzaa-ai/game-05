@@ -8,6 +8,7 @@ extends Node3D
 ## only the live lifetime phase of each particle is drawn. Budget: <= 40 draws per instance (docs/tech/performance_budget.md).
 
 const ClassSkillVfx := preload("res://client/skills/class_skill_vfx.gd")
+const InkVfx := preload("res://client/vfx/ink_vfx.gd")
 const ROOT := "res://art/vfx/status/"
 
 ## Effect id (data/combat/effects.json) -> status look. An id not listed falls back by its kind (buff / debuff).
@@ -195,6 +196,7 @@ static func _build(look: String) -> Node3D:
 		(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	if RECOLOR.has(look):
 		_tint(node, look, RECOLOR[look][1])
+	InkVfx.apply(node)  # ink-wash materials when the drawn style is on (after the tint, so the tint is kept)
 	var player := _player_of(node)
 	if player != null:
 		var clip := _clip_of(player)

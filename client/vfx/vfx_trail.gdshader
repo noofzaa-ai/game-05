@@ -14,6 +14,7 @@ uniform float sweep = 0.5;  // part of the life the head needs to travel the who
 uniform float tail = 0.7;  // how long the visible tail is (fraction of the stroke)
 uniform float seed = 0.0;
 uniform float opacity = 1.0;
+uniform float drawn = 0.0;  // 1 = ink-wash look (client/vfx/ink_vfx.gd, graphics setting drawn_style)
 
 void fragment() {
 	float head = clamp(progress / max(sweep, 0.001), 0.0, 1.0);
@@ -34,6 +35,12 @@ void fragment() {
 	float core = smoothstep(edge + 0.15, edge + 0.42, across);
 	vec3 rgb = mix(ink_color.rgb, color.rgb, mix(1.0, core, ink));
 	rgb = mix(rgb, vec3(1.0, 0.98, 0.9), smoothstep(0.08, 0.0, behind) * 0.65 * core);
+	float a_out = body * opacity * color.a * (0.72 + 0.28 * bristle) * clamp(fade * 1.6, 0.0, 1.0);
+	if (drawn > 0.5) {
+		vec4 o = vfx_ink(rgb, a_out, UV, vec2(UV.x * 14.0, UV.y * 3.0) + seed, ink_color.rgb);
+		rgb = o.rgb;
+		a_out = o.a;
+	}
 	ALBEDO = rgb;
-	ALPHA = body * opacity * color.a * (0.72 + 0.28 * bristle) * clamp(fade * 1.6, 0.0, 1.0);
+	ALPHA = a_out;
 }

@@ -16,6 +16,7 @@ uniform float ink = 0.0;
 uniform float progress = 0.0;
 uniform float seed = 0.0;
 uniform float opacity = 1.0;
+uniform float drawn = 0.0;  // 1 = ink-wash look (client/vfx/ink_vfx.gd, graphics setting drawn_style)
 uniform float spikes = 10.0;
 uniform float spin = 0.0;  // radians, turned by the CPU over time
 uniform float pull = 0.0;  // meters drawn toward the camera, so a spark at a hit point is not hidden inside the body it hit
@@ -150,9 +151,15 @@ void fragment() {
 		rgb = mix(ink_color.rgb, color.rgb, mix(1.0, smoothstep(w * 0.9, w * 0.2, min(d1, d2)), ink));
 		rgb = mix(rgb, vec3(1.0), taper * 0.4);
 	}
-	if (alpha <= 0.004) {
+	float a_out = clamp(alpha * opacity * color.a, 0.0, 1.0);
+	if (drawn > 0.5) {
+		vec4 o = vfx_ink(rgb, a_out, UV, UV * 7.0 + seed, ink_color.rgb);
+		rgb = o.rgb;
+		a_out = o.a;
+	}
+	if (a_out <= 0.004) {
 		discard;
 	}
 	ALBEDO = rgb;
-	ALPHA = clamp(alpha * opacity * color.a, 0.0, 1.0);
+	ALPHA = a_out;
 }

@@ -6,6 +6,7 @@ extends SceneTree
 ## slim=1 (default) plays them the way the game does (ClassSkillVfx._slim: phase meshes toggled by visible, no shadows);
 ## slim=0 plays the raw imported scene.
 ## Output lines "VFXCOST <id> ..." (vsync is turned off so frame times are real).
+## Env INK=1 forces the ink-wash materials (client/vfx/ink_vfx.gd), INK=0 the original ones (default: the setting).
 
 const ROOT := "res://art/vfx/class_skills/"
 
@@ -52,6 +53,11 @@ func run() -> void:
 			root.add_child(inst)
 			if slim:
 				vfx._slim(sid, inst)
+			if OS.get_environment("INK") == "1":
+				for mi in inst.find_children("*", "MeshInstance3D", true, false):
+					for s in mi.mesh.get_surface_count():
+						if mi.get_active_material(s) is BaseMaterial3D:
+							mi.set_surface_override_material(s, preload("res://client/vfx/ink_vfx.gd").material_for(mi.get_active_material(s)))
 				var ap: AnimationPlayer = vfx._player_of(inst)
 				ap.play(vfx._clip_of(ap))
 				ap.seek(0.0, true)

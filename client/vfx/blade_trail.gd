@@ -23,7 +23,8 @@ func _ready() -> void:
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	# Additive light, or mix-blended paint under the drawn style (client/vfx/ink_vfx.gd, graphics setting drawn_style).
+	material.blend_mode = BaseMaterial3D.BLEND_MODE_MIX if preload("res://client/vfx/ink_vfx.gd").enabled() else BaseMaterial3D.BLEND_MODE_ADD
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	material.vertex_color_use_as_albedo = true
 	material.no_depth_test = false

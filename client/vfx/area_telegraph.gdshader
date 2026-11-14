@@ -4,11 +4,14 @@ shader_type spatial;
 // the rim pulses faster. Flat quad on the ground, one shader for every area (compiled at stage load).
 render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled, fog_disabled, blend_mix;
 
+#include "res://client/vfx/vfx_common.gdshaderinc"
+
 uniform vec4 color : source_color = vec4(0.75, 0.35, 1.0, 1.0);
 uniform vec4 ink_color : source_color = vec4(0.06, 0.04, 0.09, 1.0);
 uniform float progress = 0.0;
 uniform float time = 0.0;
 uniform float opacity = 1.0;
+uniform float drawn = 0.0;  // 1 = ink-wash look (client/vfx/ink_vfx.gd)
 
 void fragment() {
 	vec2 p = UV * 2.0 - 1.0;
@@ -27,6 +30,12 @@ void fragment() {
 	float pulse = 0.75 + 0.25 * sin(time * mix(6.0, 22.0, t));
 	vec3 rgb = mix(ink_color.rgb, color.rgb, clamp(rim + ticks + front + fill * 2.0, 0.0, 1.0));
 	float alpha = max(max(rim * pulse, rim_ink * 0.85), max(ticks * 0.8, max(front, fill)));
+	alpha = alpha * step(r, 1.0) * opacity * color.a;
+	if (drawn > 0.5) {
+		vec4 o = vfx_ink(rgb, alpha, UV, UV * 8.0, ink_color.rgb);
+		rgb = mix(rgb, o.rgb, 0.6);
+		alpha = o.a;
+	}
 	ALBEDO = rgb;
-	ALPHA = alpha * step(r, 1.0) * opacity * color.a;
+	ALPHA = alpha;
 }

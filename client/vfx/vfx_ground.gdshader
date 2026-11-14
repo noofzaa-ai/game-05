@@ -12,6 +12,7 @@ uniform float ink = 0.5;
 uniform float progress = 0.0;
 uniform float seed = 0.0;
 uniform float opacity = 1.0;
+uniform float drawn = 0.0;  // 1 = ink-wash look (client/vfx/ink_vfx.gd, graphics setting drawn_style)
 uniform float spin = 0.0;
 
 void fragment() {
@@ -63,9 +64,15 @@ void fragment() {
 		alpha = max(max(rings, ticks), inner) * show * grow;
 		rgb = mix(color.rgb, vec3(1.0), rings * 0.4);
 	}
-	if (alpha <= 0.004) {
+	float a_out = clamp(alpha * opacity * color.a, 0.0, 1.0);
+	if (drawn > 0.5) {
+		vec4 o = vfx_ink(rgb, a_out, UV, UV * 9.0 + seed, ink_color.rgb);
+		rgb = o.rgb;
+		a_out = o.a;
+	}
+	if (a_out <= 0.004) {
 		discard;
 	}
 	ALBEDO = rgb;
-	ALPHA = clamp(alpha * opacity * color.a, 0.0, 1.0);
+	ALPHA = a_out;
 }
