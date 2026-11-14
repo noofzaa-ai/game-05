@@ -52,6 +52,7 @@ var chosen: Dictionary = PRESETS[KEY_8]
 ## 3D model up close) and the follow point slides from the board's centre to that fighter as it does.
 const ARENA_VIEW := {"name": "Arena", "offset": Vector3(0.0, 16.5, 14.0), "look_y": -0.5, "fov": 40.0}
 const ARENA_CLOSEST := 3.2  ## closest camera distance to the fighter (metres)
+const ARENA_FACE_Y := 1.0  ## aimed height at the closest zoom: a 135 cm chibi's face (Boss 2026-11-15)
 var arena := false
 var _max_radius := 28.0
 ## Auto-battle framing (Boss 2026-11-11, fighters looked tiny at the overview): while the view is the untouched
@@ -299,6 +300,8 @@ func _orbit(drag: Vector2, zoom: float = 1.0) -> void:
 		var overview: Vector3 = ARENA_VIEW["offset"]
 		var t := clampf((radius - ARENA_CLOSEST) / maxf(_max_radius - ARENA_CLOSEST, 0.1), 0.0, 1.0)
 		pitch = lerpf(deg_to_rad(24.0), asin(overview.normalized().y), t)
+		# Boss 2026-11-15: zoomed in, aim at the fighter's face, not the feet (the overview aims below the ground).
+		look = Vector3(0.0, lerpf(ARENA_FACE_Y, float(ARENA_VIEW["look_y"]), t), 0.0)
 	chosen = {"name":"Free", "offset":look+Vector3(sin(yaw)*cos(pitch),sin(pitch),cos(yaw)*cos(pitch))*radius,"look":look,"look_y":look.y,"fov":chosen["fov"]}
 	remembered_view = chosen.duplicate(true)
 	state_changed.emit()
