@@ -61,6 +61,11 @@ var tree_migration_version := 0
 var bonus_stash_slots := 0
 ## One class card per class, each customised on its own, plus the squad of the next fight (logic/card_deck.gd).
 var card_deck: Dictionary = preload("res://logic/card_deck.gd").initial(preload("res://logic/cosmetic_options.gd").load_default())
+## New-player tutorial (design/gdd/tutorial.md 2): {"version", "step" ("" = not started, "done"), "tour_done", "unlock_seen"}.
+## A save without it is an existing account (from_dict marks it done). Changed only by the tutorial_* commands.
+var tutorial: Dictionary = done_tutorial()
+## Content gates {flag: bool} (logic/unlocks.gd). Set only by the server's battle-result hook.
+var unlocks: Dictionary = {"magic_runeborn": true}
 var name := ""  ## the character's name, set when the player creates the character
 var created := false  ## false until the player has made the character (the game opens the creator first)
 
@@ -89,6 +94,8 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	profile.armor_migration_version = 2
 	profile.legacy_item_version = preload("res://logic/legacy_items.gd").VERSION  # a new player owns no legacy item
 	profile.tree_migration_version = 2  # a new player has no old tree to convert
+	profile.tutorial = {"version": 1, "step": "", "tour_done": false, "unlock_seen": false}  # tutorial.md 2: a new account
+	profile.unlocks = {preload("res://logic/unlocks.gd").flag(): false}
 	# Boss 2026-11-13: each new card gets its own eyes and makeup. A child RNG seeded from the creation RNG's
 	# state keeps it deterministic per seed without consuming draws the rest of the game relies on.
 	var looks_rng := RandomNumberGenerator.new()
@@ -403,7 +410,12 @@ func to_dict() -> Dictionary:
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
 		"armor_migration_version": armor_migration_version, "legacy_item_version": legacy_item_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
-		"card_deck": card_deck.duplicate(true)}
+		"card_deck": card_deck.duplicate(true), "tutorial": tutorial.duplicate(true), "unlocks": unlocks.duplicate(true)}
+
+
+## The tutorial block of an account that finished (or predates) the tutorial.
+static func done_tutorial() -> Dictionary:
+	return {"version": 1, "step": "done", "tour_done": true, "unlock_seen": true}
 
 
 static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
@@ -448,6 +460,17 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	p.starter_weapon_kit_version = maxi(0, int(d.get("starter_weapon_kit_version", 0)))
 	p.beta_kit_version = maxi(0, int(d.get("beta_kit_version", 0)))
 	p.bonus_stash_slots = clampi(int(d.get("bonus_stash_slots", 0)), 0, 1000)
+	# tutorial.md 2 migration: no tutorial block = an existing account -> done, everything unlocked (idempotent).
+	if d.get("tutorial") is Dictionary:
+		var t: Dictionary = d["tutorial"]
+		p.tutorial = {"version": maxi(0, int(t.get("version", 1))), "step": str(t.get("step", "done")), "tour_done": bool(t.get("tour_done", true)), "unlock_seen": bool(t.get("unlock_seen", true))}
+		p.unlocks = {}
+		if d.get("unlocks") is Dictionary:
+			for key in d["unlocks"]:
+				p.unlocks[str(key)] = bool(d["unlocks"][key])
+	else:
+		p.tutorial = done_tutorial()
+		p.unlocks = {preload("res://logic/unlocks.gd").flag(): true}
 	p.card_deck = preload("res://logic/card_deck.gd").repaired(d.get("card_deck"), preload("res://logic/cosmetic_options.gd").load_default())  # old saves get the starter cards
 	var old_builds := {}  ## card -> the save's old skill_build (dropped after the level migration below)
 	if d.has("card_gear"):

@@ -1,0 +1,307 @@
+{
+ "_comment": "New-player tutorial steps (design/gdd/tutorial.md 3-4). Groups run in file order: race, fight, tour, unlock. target = a node name the client resolves ('' = centre box with Next). done_on.event = the client event that completes the step; the server (logic/tutorial.gd) accepts only the next id. card = the class card a race step is about (the server auto-advances past it when the card already has a race). Texts at most 60 characters.",
+ "version": 1,
+ "steps": [
+  {
+   "id": "welcome",
+   "group": "race",
+   "screen": "hub",
+   "target": "",
+   "text_th": "ยินดีต้อนรับสู่ ZORX! มาจัดทีมแรกกันเถอะ",
+   "text_en": "Welcome to ZORX! Let's build your first squad.",
+   "done_on": {
+    "event": "next"
+   },
+   "skippable": false
+  },
+  {
+   "id": "race_ss_card",
+   "group": "race",
+   "screen": "hub",
+   "target": "Card_sword_shield",
+   "text_th": "แตะการ์ดโล่และดาบ เพื่อเลือกเผ่า",
+   "text_en": "Tap the Sword & Shield card to pick its race.",
+   "done_on": {
+    "event": "character_open",
+    "class": "sword_shield"
+   },
+   "skippable": false,
+   "card": "sword_shield"
+  },
+  {
+   "id": "race_ss_button",
+   "group": "race",
+   "screen": "character",
+   "target": "RaceButton",
+   "text_th": "แตะปุ่มเผ่า",
+   "text_en": "Tap the race button.",
+   "done_on": {
+    "event": "race_picker_open",
+    "class": "sword_shield"
+   },
+   "skippable": false,
+   "card": "sword_shield"
+  },
+  {
+   "id": "race_ss_pick",
+   "group": "race",
+   "screen": "race_picker",
+   "target": "Race_human",
+   "text_th": "เลือกมนุษย์ แกร่งรอบด้าน",
+   "text_en": "Pick Human: solid all-round.",
+   "done_on": {
+    "event": "card_race_ok",
+    "class": "sword_shield",
+    "race": "human"
+   },
+   "skippable": false,
+   "card": "sword_shield"
+  },
+  {
+   "id": "race_gs_card",
+   "group": "race",
+   "screen": "hub",
+   "target": "Card_greatsword",
+   "text_th": "ต่อไป ดาบใหญ่",
+   "text_en": "Next, the Great Sword.",
+   "done_on": {
+    "event": "character_open",
+    "class": "greatsword"
+   },
+   "skippable": false,
+   "card": "greatsword"
+  },
+  {
+   "id": "race_gs_button",
+   "group": "race",
+   "screen": "character",
+   "target": "RaceButton",
+   "text_th": "แตะปุ่มเผ่า",
+   "text_en": "Tap the race button.",
+   "done_on": {
+    "event": "race_picker_open",
+    "class": "greatsword"
+   },
+   "skippable": false,
+   "card": "greatsword"
+  },
+  {
+   "id": "race_gs_pick",
+   "group": "race",
+   "screen": "race_picker",
+   "target": "Race_viking",
+   "text_th": "ไวกิ้ง ยิ่งเจ็บยิ่งแรง!",
+   "text_en": "Viking: hits harder when hurt!",
+   "done_on": {
+    "event": "card_race_ok",
+    "class": "greatsword",
+    "race": "viking"
+   },
+   "skippable": false,
+   "card": "greatsword"
+  },
+  {
+   "id": "race_lb_card",
+   "group": "race",
+   "screen": "hub",
+   "target": "Card_longbow",
+   "text_th": "สุดท้าย ธนูยาว",
+   "text_en": "Last one, the Longbow.",
+   "done_on": {
+    "event": "character_open",
+    "class": "longbow"
+   },
+   "skippable": false,
+   "card": "longbow"
+  },
+  {
+   "id": "race_lb_button",
+   "group": "race",
+   "screen": "character",
+   "target": "RaceButton",
+   "text_th": "แตะปุ่มเผ่า",
+   "text_en": "Tap the race button.",
+   "done_on": {
+    "event": "race_picker_open",
+    "class": "longbow"
+   },
+   "skippable": false,
+   "card": "longbow"
+  },
+  {
+   "id": "race_lb_pick",
+   "group": "race",
+   "screen": "race_picker",
+   "target": "Race_elf",
+   "text_th": "เอลฟ์ ยิงไว ตาคม",
+   "text_en": "Elf: quick shots, sharp eyes.",
+   "done_on": {
+    "event": "card_race_ok",
+    "class": "longbow",
+    "race": "elf"
+   },
+   "skippable": false,
+   "card": "longbow"
+  },
+  {
+   "id": "alliance",
+   "group": "race",
+   "screen": "hub",
+   "target": "SquadTray",
+   "text_th": "3 เผ่าต่างกัน = พันธมิตร! HP และ ATK +8%",
+   "text_en": "3 different races = Alliance! HP and ATK +8%.",
+   "done_on": {
+    "event": "next"
+   },
+   "skippable": false
+  },
+  {
+   "id": "fight",
+   "group": "fight",
+   "screen": "hub",
+   "target": "FightButton",
+   "text_th": "พร้อมแล้ว กด FIGHT เลย!",
+   "text_en": "All set. Hit FIGHT!",
+   "done_on": {
+    "event": "battle_loaded"
+   },
+   "skippable": false
+  },
+  {
+   "id": "battle_tip",
+   "group": "fight",
+   "screen": "battle",
+   "target": "SquadNames",
+   "text_th": "ทีมสู้เองนะ แตะชื่อการ์ดให้กล้องตามตัวนั้น",
+   "text_en": "Your squad fights by itself. Tap a card name to follow it.",
+   "done_on": {
+    "event": "card_name_tap",
+    "timeout_s": 8
+   },
+   "skippable": false
+  },
+  {
+   "id": "tour_equip",
+   "group": "tour",
+   "screen": "character",
+   "target": "EquipmentTab",
+   "text_th": "อุปกรณ์และเกราะ ใส่ตรงนี้",
+   "text_en": "Weapons and armor go here.",
+   "done_on": {
+    "event": "tab_open",
+    "tab": "equipment"
+   },
+   "skippable": true
+  },
+  {
+   "id": "tour_skills",
+   "group": "tour",
+   "screen": "character",
+   "target": "SkillsTab",
+   "text_th": "ต้นสกิล อัปการ์ดให้เก่งขึ้น",
+   "text_en": "Skill tree: make the card stronger.",
+   "done_on": {
+    "event": "tab_open",
+    "tab": "skills"
+   },
+   "skippable": true
+  },
+  {
+   "id": "tour_smith",
+   "group": "tour",
+   "screen": "hub",
+   "target": "Menu_blacksmith",
+   "text_th": "ช่างตีเหล็ก ตีบวกของ",
+   "text_en": "Blacksmith: upgrade your gear.",
+   "done_on": {
+    "event": "panel_open",
+    "panel": "blacksmith"
+   },
+   "skippable": true
+  },
+  {
+   "id": "tour_shop",
+   "group": "tour",
+   "screen": "hub",
+   "target": "Menu_shop",
+   "text_th": "ร้านค้า ซื้อขายของ",
+   "text_en": "Shop: buy and sell.",
+   "done_on": {
+    "event": "panel_open",
+    "panel": "shop"
+   },
+   "skippable": true
+  },
+  {
+   "id": "tour_storage",
+   "group": "tour",
+   "screen": "hub",
+   "target": "Menu_storage",
+   "text_th": "คลัง เก็บของที่ยังไม่ใช้",
+   "text_en": "Storage: keep what you aren't using.",
+   "done_on": {
+    "event": "panel_open",
+    "panel": "storage"
+   },
+   "skippable": true
+  },
+  {
+   "id": "tour_tailor",
+   "group": "tour",
+   "screen": "hub",
+   "target": "Menu_tailor",
+   "text_th": "ช่างตัดเสื้อ แต่งลุคการ์ด",
+   "text_en": "Tailor: change your cards' look.",
+   "done_on": {
+    "event": "panel_open",
+    "panel": "tailor"
+   },
+   "skippable": true
+  },
+  {
+   "id": "tour_settings",
+   "group": "tour",
+   "screen": "hub",
+   "target": "SettingsButton",
+   "text_th": "ตั้งค่า ดูทัวร์นี้ซ้ำได้ตรงนี้",
+   "text_en": "Settings. You can replay this tour here.",
+   "done_on": {
+    "event": "panel_open",
+    "panel": "settings"
+   },
+   "skippable": true
+  },
+  {
+   "id": "unlock_ceremony",
+   "group": "unlock",
+   "screen": "hub",
+   "target": "",
+   "text_th": "ปลดล็อกแล้ว! เวทมนตร์ และ เผ่ารูนบอร์น",
+   "text_en": "Unlocked: Magic and the Runeborn race!",
+   "done_on": {
+    "event": "next"
+   },
+   "skippable": false
+  },
+  {
+   "id": "unlock_pick",
+   "group": "unlock",
+   "screen": "race_picker",
+   "target": "Race_runeborn",
+   "text_th": "ใส่รูนบอร์นให้การ์ดเวทมนตร์",
+   "text_en": "Give the Magic card the Runeborn race.",
+   "done_on": {
+    "event": "card_race_ok",
+    "class": "magic",
+    "race": "runeborn"
+   },
+   "skippable": false,
+   "card": "magic",
+   "path": [
+    "Card_magic",
+    "RaceButton",
+    "Race_runeborn"
+   ]
+  }
+ ]
+}

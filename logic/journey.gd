@@ -14,6 +14,7 @@ const JourneyData := preload("res://logic/journey_data.gd")
 const Loot := preload("res://logic/loot.gd")
 const Run := preload("res://logic/run.gd")
 const CardProgress := preload("res://logic/card_progress.gd")
+const Unlocks := preload("res://logic/unlocks.gd")
 
 ## What the journey is waiting for.
 const CHOOSING := "choosing"  ## the player picks the next stage
@@ -434,6 +435,13 @@ func xp_waves_cleared() -> int:
 	return mini(waves_cleared if data.wave_mode else completed, normal)
 
 
+## The highest wave this run cleared (the boss wave counts when the run is won): the tutorial unlock reads it.
+func cleared_wave() -> int:
+	if state == WON:
+		return data.stage_count
+	return waves_cleared if data.wave_mode else completed
+
+
 ## The cards that started this run: the squad member's card, or the lead card of a plain (pre-card) run.
 func xp_cards() -> Array:
 	return [[run.profile, _card_of(run)]]
@@ -453,6 +461,8 @@ func pay_card_xp() -> void:
 	card_xp_paid = true
 	var amount := CardProgress.run_xp(xp_waves_cleared(), state == WON, state == WON)
 	for entry in xp_cards():
+		# design/gdd/tutorial.md 2: the first goblin_waves run that clears wave 12 unlocks Magic + Runeborn (authority only).
+		Unlocks.on_battle_result(entry[0], str(data.id), cleared_wave())
 		var granted: Dictionary = CardProgress.grant(entry[0].card_deck, str(entry[1]), amount)
 		if not granted.is_empty():
 			card_xp[str(entry[1])] = granted

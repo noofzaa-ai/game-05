@@ -5,6 +5,8 @@ extends RefCounted
 const Camp := preload("res://logic/camp.gd")
 const Profile := preload("res://logic/profile.gd")
 const Repair := preload("res://logic/repair.gd")
+const Unlocks := preload("res://logic/unlocks.gd")
+const Tutorial := preload("res://logic/tutorial.gd")
 
 
 static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGenerator) -> Dictionary:
@@ -27,6 +29,8 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"set_name": {"name": TYPE_STRING},
 		"card_look": {"class": TYPE_STRING, "part": TYPE_STRING, "choice": TYPE_STRING}, "card_squad": {"squad": TYPE_ARRAY},
 		"card_race": {"class": TYPE_STRING, "race": TYPE_STRING},  # design/gdd/races-and-classes.md 3.7: free switch (Boss 2026-11-13)
+		# New-player tutorial (design/gdd/tutorial.md 2-3, logic/tutorial.gd): confirm the next step; replay the menu tour.
+		"tutorial_step": {"step": TYPE_STRING}, "tutorial_replay": {},
 		# Card skill tree (design/gdd/skill-tree.md 3.3, logic/skill_tree.gd): learn one node, confirm a whole draft, reset a branch.
 		"tree_learn": {"card": TYPE_STRING, "node": TYPE_STRING}, "tree_save": {"card": TYPE_STRING, "draft": TYPE_DICTIONARY},
 		"tree_reset_class": {"card": TYPE_STRING}, "tree_reset_race": {"card": TYPE_STRING},
@@ -165,16 +169,27 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 			if kind == "card_look":
 				if not deck_rules.set_look(p.card_deck, command["class"], command["part"], command["choice"], state.get("cosmetics")):
 					return _error("invalid_card")
-			elif not deck_rules.set_squad(p.card_deck, command["squad"]):
-				return _error("invalid_squad")
+			else:
+				var squad_problem := squad_problem(p, command["squad"])
+				if not squad_problem.is_empty():
+					return _error(squad_problem)
+				if not deck_rules.set_squad(p.card_deck, command["squad"]):
+					return _error("invalid_squad")
 		"card_race":
 			if location != "camp": return _error("not_available_here")
 			if not command.has_all(["class", "race"]): return _error("invalid_command")
+			if str(command["race"]).is_empty(): return _error("invalid_race")  # tutorial.md 2: a race can be changed, never removed
+			if not Unlocks.is_class_unlocked(p, command["class"]) or not Unlocks.is_race_unlocked(p, command["race"]):
+				return _error("locked")
 			var old_race := preload("res://logic/card_deck.gd").race_of(p.card_deck, command["class"]) if p.card_deck.get("cards", {}).has(command["class"]) else ""
 			if not preload("res://logic/card_deck.gd").set_race(p.card_deck, command["class"], command["race"]):
 				return _error("invalid_race")
 			if old_race != command["race"]:  # skill-tree.md 3.11: race + combo branches refunded for free, class kept
 				result = {"tree_refunded": preload("res://logic/skill_tree.gd").on_race_change(p.card_deck, command["class"])}
+		"tutorial_step", "tutorial_replay":
+			if location != "camp": return _error("not_available_here")
+			result = Tutorial.step(p, command["step"]) if kind == "tutorial_step" else Tutorial.replay(p)
+			if not result.get("ok", false): return _error(str(result.get("reason", "invalid_step")))
 		"tree_learn", "tree_save", "tree_reset_class", "tree_reset_race":
 			if location != "camp": return _error("in_run")  # the tree never changes during a run (skill-tree.md 3.2)
 			result = preload("res://logic/skill_tree.gd").apply_command(p, command)
@@ -224,6 +239,32 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 	if trip != null and trip.bag.to_dict() != bag_before:
 		changes["bag"] = trip.bag.to_dict()
 	return {"ok": true, "changes": changes, "result": result}
+
+
+## tutorial.md 2: "" when these cards may form the squad, "locked" for a locked class, "no_race" for a raceless card.
+static func squad_problem(p, squad: Array) -> String:
+	for class_id in squad:
+		if class_id is String and not Unlocks.is_class_unlocked(p, class_id):
+			return "locked"
+	for class_id in squad:
+		if class_id is String and p.card_deck.get("cards", {}).has(class_id) and not preload("res://logic/card_deck.gd").has_race(p.card_deck, class_id):
+			return "no_race"
+	return ""
+
+
+## tutorial.md 2 fight-start guard (the one that matters against modified clients): "" when the profile's squad may
+## fight, else "no_squad" (empty), "locked" or "no_race". Every authority that starts a fight calls it.
+static func fight_problem(p) -> String:
+	var squad: Array = p.card_deck.get("squad", [])
+	if squad.is_empty():
+		return "no_squad"
+	var problem := squad_problem(p, squad)
+	if not problem.is_empty():
+		return problem
+	for class_id in squad:
+		if not Unlocks.is_race_unlocked(p, preload("res://logic/card_deck.gd").race_of(p.card_deck, str(class_id))):
+			return "locked"
+	return ""
 
 
 static func _error(reason: String) -> Dictionary:
