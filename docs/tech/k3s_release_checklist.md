@@ -205,7 +205,40 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 6c8724ffa657-20261114 (rolled out 2026-11-14 ~10:57 UTC, FULL: web + rooms + profiles)
+## 9. LIVE on staging: release ccfae6a29f2e-20261115 (rolled out 2026-11-14 ~19:40 UTC, web only)
+
+Why web only: `git diff --stat 6c8724f ccfae6a -- server logic data` shows no change in `logic/` or `data/`; the only
+`server/` changes are under `server/landing/` (trail v2/v3 overlay). The room/profile images do not use them, so headless
+stays at 6c8724f (same net_wire VERSION 4). Landing was NOT redeployed here: it already runs
+`zorx-landing:trail3d-v3-20261115@sha256:794b806a6ab8...`, built from this same overlay code (section 10), so nothing is pending.
+Contents since 6c8724f (client side): heroes keep the cards' ink look in battle, one shared ink-wash VFX treatment, loading
+overlay changes.
+Built from the release worktree `zorx-release-fdf9fbb` (tracked churn reverted, detached at ccfae6a = origin/develop,
+`data/online.local.json` present; exact bytes verified inside the core pack). `--import` rc 0, then `PYTHONUTF8=1
+GODOT_BIN=<console exe> pipeline/build_web.py --skip-tests --max-file-mb 0` -> web build **8c5928b426c1** (tag
+`ccfae6a29f2e-20261115`). `dirty: true` in packs.json only because of untracked `.uid`/`.import` files the import creates
+(no tracked change). Before-state: `build/k3s-staging-before-ccfae6a.yaml` and `build/k3s-before-ccfae6a.txt` (main tree).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:92f2e1a544e5d2499648d73046d03dab4ea4c99d1d30e921bb6fac88a5df7412` (build 8c5928b426c1) |
+| headless/profiles | unchanged: `wiyazard:30500/zorx-name-validator@sha256:43b422e297d799d19682a045155676cf85c79aaf2907515e0256386ab67de9ff` |
+| headless/rooms | unchanged: `wiyazard:30500/zorx-room-worker@sha256:6f27267d72b80dd8ae7444b07551fae0af5e7b10b16c1160513fafe6dd17d4c1` |
+| landing, nakama | unchanged (landing `trail3d-v3-20261115`, nakama `chest-id-fix-20261101-2`) |
+
+Download size: boot download 41.10 -> **41.11 MiB** (battle 22.32, total 63.42 MiB).
+Local checks: `/`, `/play.html`, `/packs.json`, `/index.js` 200 `no-cache` with correct types; engine and core `.wasm`
+`application/wasm` + `immutable`; `/healthz` 200; missing pack 404; container healthy.
+Smoke after rollout: all pods Ready, game-test 0 restarts; live `packs.json` build 8c5928b426c1 (commit ccfae6a29f2e); live core
+`.pck.wasm` `application/wasm` + `immutable`; Nakama healthcheck 200; 0 web 5xx/error lines, 0 `SCRIPT ERROR` in headless logs.
+Sign-in and the in-battle ink look: OPEN for a person (Turnstile blocks automation).
+
+Rollback (web only, to 6c8724f; same wire version as the live headless):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:65b62628a663925b167fd0ae65958092aadf0af98b8522925ae6b2960b64cff5
+```
+
+### Previous: release 6c8724ffa657-20261114 (rolled out 2026-11-14 ~10:57 UTC, FULL: web + rooms + profiles; web superseded, headless still live)
 
 Why full: 6c8724f removes Relics and raises `logic/net_wire.gd` VERSION 3 -> 4 (`relic_state` left FIGHTER_FIELDS). The
 room worker rejects a frame whose version byte differs, so web and `headless` (rooms + profiles) were set in one step.
