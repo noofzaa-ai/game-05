@@ -279,8 +279,6 @@ const CARVED_TITLE := "title_ribbon"
 const CARVED_PILL := "pill"
 const CARVED_ROUND := "round_button"
 const CARVED_COIN := "coin"
-const CARVED_TRAY := "tray_board"
-const CARVED_SLOT := "tray_slot"
 const CARVED_FIGHT := "fight_plaque"
 const CARVED_FIGHT_RIBBON := "fight_ribbon"
 const CARVED_STAGE := "stage_pill"
@@ -315,7 +313,6 @@ const CARVED_GOLD_GAP := 53.0  ## gold pill to the first round button
 const CARVED_ONLINE_W := 224.0  ## the Play online pill
 const CARVED_ONLINE_GAP := 56.0  ## Play online pill to the gold pill
 const CARVED_STATUS_RIGHT := 1100.0  ## Online status pill: its centre, from the right screen edge
-const CARVED_TRAY_TOP_GAP := 40.0  ## the tray keeps this much under the hint ribbon (its slot crests)
 const CARVED_COIN_SIZE := 61.0
 const CARVED_HINT_H := 52.0
 const CARVED_HINT_W := 1150.0
@@ -382,7 +379,7 @@ const FONT_HUB_FIGHT := 64
 const FONT_HUB_STAGE := 22
 const FONT_HUB_GOLD := 28
 const FONT_HUB_BADGE := 20
-const FONT_HUB_TRAY_NUM := 24
+const FONT_HUB_TRAY_NUM := 23
 const FONT_HUB_TRAY_ADD := 18
 const FONT_HUB_PANEL_TITLE := 44
 const FONT_HUB_BODY := 26
@@ -487,11 +484,16 @@ const HUB_SHEEN_EDGE := 0.6  ## rim highlight of the edge facing the pointer
 const HUB_SHEEN_WIDTH := 0.17  ## band half-width, fraction of the card
 const HUB_SHEEN_COLOR := Color(1.0, 0.86, 0.62)
 const HUB_SHEEN_FADE_SECONDS := 0.2
-## Squad tray windows, fractions of the tray art (measured on hub_squad_tray_v1).
-## Carved tray (2026-11-14): each slot draws its own frame art (hub_carved/tray_slot.png, crest on top). Slot rects as
-## fractions of the board: x, y, width (the height follows the art aspect; the crest pokes over the board top).
-const HUB_TRAY_SLOTS: Array[Rect2] = [Rect2(0.102, -0.01, 0.19, 0.0), Rect2(0.402, -0.01, 0.19, 0.0), Rect2(0.705, -0.01, 0.19, 0.0)]
-const HUB_TRAY_NUM_Y := 0.075
+## Squad picks (Boss 2026-11-14: emblem only, no tray board): three small carved medallions (hub_carved/medallion.png)
+## about the size of the top-bar round buttons, the synergy ribbon right under them. Sizes at 1080.
+const HUB_TRAY_MEDAL := 116.0  ## medallion diameter
+const HUB_TRAY_MEDAL_GAP := 40.0
+const HUB_TRAY_ICON := 0.56  ## class icon box, of the medallion
+const HUB_TRAY_BADGE := 0.36  ## race letter badge edge, of the medallion
+const HUB_TRAY_BADGE_AT := Vector2(-0.06, 0.62)  ## its top-left, fractions of the medallion (lower-left rim)
+const HUB_TRAY_TAB := Vector2(64.0, 34.0)  ## the squad number tab (hub_carved/stage_pill.png)
+const HUB_TRAY_TAB_RISE := 0.55  ## how much of the tab sits above the medallion top
+const HUB_TRAY_EMPTY_TINT := Color(1.0, 1.0, 1.0, 0.6)  ## an empty medallion fades back
 const HUB_PANEL_SIZE := Vector2(1000.0, 520.0)  ## the "coming soon" panel
 const HUB_PANEL_MARGIN := 48.0
 const HUB_BUTTON := Vector2(240.0, 80.0)
@@ -622,14 +624,6 @@ const PORTRAIT_STAGE_BOTTOM := 0.84
 ## to the upper chest).
 const PORTRAIT_BUST_TOP := 0.03
 const PORTRAIT_BUST_BOTTOM := 1.48
-## The tray slot's parchment window inside its frame art (fractions of the slot: left, top, right, bottom):
-## the race plate with the class emblem fills it (Boss 2026-11-13: emblem only, no portrait in the tray).
-const HUB_TRAY_WINDOW_INSET := Vector4(0.137, 0.296, 0.139, 0.123)  ## the hollow of tray_slot.png (left, top, right, bottom)
-const HUB_TRAY_EMBLEM := 0.8  ## class icon edge, of the plate width
-const HUB_TRAY_EMBLEM_Y := 0.1  ## icon top, of the plate height
-const HUB_TRAY_NAME_H := 0.0  ## no class name under the icon (the target shows the icon only)
-const HUB_TRAY_PLATE_RADIUS := 12.0
-const HUB_TRAY_PLATE_LINE := 3.0
 const PORTRAIT_KEY_ENERGY := 0.25
 const PORTRAIT_RIM_ENERGY := 1.6  ## rim light from behind: lifts the character off the backdrop
 const PORTRAIT_AMBIENT := Color(0.82, 0.8, 0.78)
@@ -1597,8 +1591,6 @@ static func tree_ring(color: Color, s: float, radius: float) -> StyleBoxFlat:
 const RaceData := preload("res://logic/race_data.gd")
 const RACE_BADGE_CARD := 0.125  ## hub card: badge edge, of the card width
 const RACE_BADGE_CARD_AT := Vector2(0.11, 0.18)  ## its top-left, fractions of the card (inside the window corner)
-const RACE_BADGE_TRAY := 0.34  ## tray slot badge edge, of the slot width
-const RACE_BADGE_TRAY_AT := Vector2(0.06, 0.62)  ## its top-left, fractions of the slot (lower-left, clear of the face)
 const RACE_BADGE_LETTER := 0.62  ## letter size / badge edge
 const RACE_BADGE_LINE := 0.08  ## rim width / badge edge
 const RACE_BADGE_RADIUS := 0.3  ## corner radius / badge edge
@@ -1634,9 +1626,9 @@ const RACE_PICK_RING := Color("E8A93A")  ## the race waiting for the refund conf
 const RACE_WARN_INK := Color("B3261E")  ## the refund warning line
 ## Hub synergy line under the squad tray (3.5, 3.8).
 const HUB_SYNERGY_H := 67.0
-const HUB_SYNERGY_GAP := -18.0  ## the ribbon overlaps the tray foot
+const HUB_SYNERGY_GAP := 6.0  ## medallion row bottom to the ribbon top
 const HUB_SYNERGY_BOTTOM := 28.0
-const HUB_SYNERGY_GROW := 1.05  ## ribbon width / tray width
+const HUB_SYNERGY_W := 860.0  ## ribbon width (it holds the kind word, three badges and the bonus line)
 const HUB_SYNERGY_PAD := 48.0  ## clear of the ribbon's pointed ends
 const HUB_SYNERGY_BADGE := 30.0
 const FONT_HUB_SYNERGY := 20
@@ -1801,10 +1793,6 @@ static func race_tile_button(button: Button, race_id: String, current: bool, pen
 
 
 ## A filled tray slot's plate: the race colour with its rim (the class emblem sits on it).
-static func hub_tray_plate(race_id: String, s: float) -> StyleBoxFlat:
-	return flat(race_plate(race_id), race_rim(race_id), HUB_TRAY_PLATE_LINE, HUB_TRAY_PLATE_RADIUS, s, true)
-
-
 ## The synergy line's dark pill under the squad tray.
 static func hub_synergy_box(s: float) -> StyleBoxFlat:
 	return flat(HUB_PILL, HUB_GOLD_EDGE, 2.0, HUB_SYNERGY_H * 0.5, s)

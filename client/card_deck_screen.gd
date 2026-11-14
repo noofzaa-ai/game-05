@@ -87,14 +87,12 @@ var _row: Control
 var _hint: Label
 var _hint_strip: Control  ## parchment ribbon behind the hint line
 var _bar: Control  ## the squad tray
-var _bar_art: TextureRect
 var _slots: Array = []  ## TraySlot
 var _synergy: Panel  ## the squad's race synergy under the tray (Pair / Trio / Alliance + race badges + bonus)
 var _synergy_kind: Label
 var _synergy_strip: Control
 var _synergy_text: Label
 var _synergy_badges: Array = []  ## RaceBadge, one per squad card
-var _slot_numbers: Array = []
 var _fight: Button
 var _fight_art: TextureRect
 var _fight_label: Label
@@ -923,75 +921,69 @@ class MenuEntry extends Button:
 		_medal.scale = _icon.scale
 
 
-## One window of the squad tray (number medallion = fight order): the picked card's head, or an empty "+".
+## One squad pick (Boss 2026-11-14: emblem only, no tray board): a small carved medallion with the class icon, the race
+## letter badge on its rim and the fight-order number on a tab above it; empty = a faded "+".
 ## Tap a filled slot = take that card out; drag between slots = reorder; drop a deck card = put it here.
 class TraySlot extends Button:
 	var index := 0
 	var class_id := ""
 	var drop_callback: Callable  ## (from_slot: int, to_slot: int)
 	var card_drop_callback: Callable  ## (class_id: String, to_slot: int)
-	## Boss 2026-11-13: emblem only. The full cards are right above, so a filled slot is the race-coloured plate
-	## with the class emblem (cut from the class card frame) and the class name; no 3D portrait (nothing to render).
-	var _plate: Panel
+	var _medal: TextureRect  ## carved medallion (art/ui/hub_carved/medallion.png)
 	var _emblem: TextureRect
-	var _name: Label
 	var _plus: Label
 	var _badge: RaceBadge
-	var _frame: TextureRect  ## carved slot frame with its gold crest (over the race plate)
+	var _tab: CarvedStrip  ## the squad number tab over the medallion top
+	var _number: Label
 
 	func build() -> void:
 		focus_mode = Control.FOCUS_ALL
-		# Inside the slot's parchment window only (not over its frame border).
-		_plate = Panel.new()
-		_plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_plate.visible = false
-		add_child(_plate)
+		_medal = CardTokens.carved_rect(CardTokens.CARVED_MEDALLION)
+		_medal.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(_medal)
 		_emblem = TextureRect.new()
 		_emblem.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		_emblem.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		_emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		_plate.add_child(_emblem)
-		_name = CardTokens.hub_label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
-		_plate.add_child(_name)
-		_frame = CardTokens.carved_rect(CardTokens.CARVED_SLOT)
-		_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-		add_child(_frame)
+		add_child(_emblem)
 		_plus = CardTokens.hub_label("+", CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, 1.0)
 		_plus.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(_plus)
+		_tab = CarvedStrip.new(CardTokens.CARVED_STAGE, CardTokens.CARVED_STAGE_CAP)
+		add_child(_tab)
+		_number = CardTokens.hub_label(str(index + 1), CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
+		_tab.add_child(_number)
 		_badge = RaceBadge.new()
 		add_child(_badge)
 
 	func show_card(id: String, _look: Dictionary, s: float, race: String = "") -> void:
 		class_id = id
-		CardTokens.bare_button(self, s, 10.0)
-		var inset := CardTokens.HUB_TRAY_WINDOW_INSET
-		_plate.position = Vector2(inset.x * size.x, inset.y * size.y)
-		_plate.size = Vector2((1.0 - inset.x - inset.z) * size.x, (1.0 - inset.y - inset.w) * size.y)
-		_plate.visible = not id.is_empty()
+		CardTokens.bare_button(self, s, size.x * 0.5 / maxf(s, 0.001))
+		var d := size.x
+		_medal.modulate = CardTokens.HUB_WHITE if not id.is_empty() else CardTokens.HUB_TRAY_EMPTY_TINT
 		_plus.visible = id.is_empty()
 		CardTokens.hub_text(_plus, CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, s)
 		tooltip_text = CardTokens.t("tray_add") if id.is_empty() else CardTokens.t("remove_from_squad")
-		# race badge: top-left corner of the plate (the plate colour is the race too; the letter says it in shape)
-		var edge := size.x * CardTokens.RACE_BADGE_TRAY * 0.62
-		_badge.position = _plate.position + Vector2(-edge * 0.2, -edge * 0.2)
+		# number tab: centred on the medallion top, a little over its rim
+		var tab := CardTokens.HUB_TRAY_TAB * s
+		_tab.size = tab
+		_tab.position = Vector2((d - tab.x) * 0.5, -tab.y * CardTokens.HUB_TRAY_TAB_RISE)
+		_number.text = str(index + 1)
+		_number.size = tab
+		_number.position = Vector2.ZERO
+		CardTokens.hub_text(_number, CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
+		# race letter badge on the lower-left rim
+		var edge := d * CardTokens.HUB_TRAY_BADGE
+		_badge.position = d * CardTokens.HUB_TRAY_BADGE_AT
 		_badge.show_race(race if not id.is_empty() else "", edge)
+		_emblem.visible = not id.is_empty()
 		if id.is_empty():
 			return
-		CardTokens.panel(_plate, CardTokens.hub_tray_plate(race, s))
-		var w := _plate.size.x
-		var e := w * CardTokens.HUB_TRAY_EMBLEM
-		var name_h := _plate.size.y * CardTokens.HUB_TRAY_NAME_H
-		e = minf(e, _plate.size.y - name_h - _plate.size.y * CardTokens.HUB_TRAY_EMBLEM_Y)
+		var e := d * CardTokens.HUB_TRAY_ICON
 		var icon := CardTokens.carved(CardTokens.CARVED_ICON_PREFIX + id)
 		_emblem.texture = icon if icon != null else HubLook.class_emblem(id)
 		_emblem.size = Vector2(e, e)
-		_emblem.position = Vector2((w - e) * 0.5, (_plate.size.y - e) * 0.5 if name_h <= 0.0 else _plate.size.y * CardTokens.HUB_TRAY_EMBLEM_Y)
-		_name.visible = name_h > 0.0
-		_name.text = CardTokens.class_name_of(id)
-		_name.size = Vector2(w, name_h)
-		_name.position = Vector2(0.0, _plate.size.y - name_h)
-		CardTokens.hub_fit(_name, _name.text, CardTokens.FONT_CHAR_SLOT, w - 8.0 * s, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
+		_emblem.position = Vector2((d - e) * 0.5, (d - e) * 0.5)
 
 	func _get_drag_data(_at: Vector2) -> Variant:
 		if class_id.is_empty():
@@ -1112,8 +1104,6 @@ func _build_deck_layer() -> void:
 	_bar = Control.new()  # the squad tray
 	_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 	_deck_layer.add_child(_bar)
-	_bar_art = CardTokens.carved_rect(CardTokens.CARVED_TRAY)
-	_bar.add_child(_bar_art)
 	for i in CardDeck.SQUAD_MAX:
 		var slot := TraySlot.new()
 		slot.index = i
@@ -1123,10 +1113,6 @@ func _build_deck_layer() -> void:
 		slot.pressed.connect(_on_tray_pressed.bind(slot))
 		_bar.add_child(slot)
 		_slots.append(slot)
-		var number := CardTokens.hub_label(str(i + 1), CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
-		number.visible = false  # carved target: the slot crest, no number (the card plates say SQUAD N)
-		_bar.add_child(number)
-		_slot_numbers.append(number)
 	_synergy = Panel.new()  # the synergy line under the tray (races-and-classes.md 3.5, 3.8)
 	_synergy.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_deck_layer.add_child(_synergy)
@@ -1405,33 +1391,24 @@ func _layout() -> void:
 	_stage_label.size = Vector2(stage_w * 0.86, stage_h)
 	_stage_label.position = _stage_strip.position + Vector2(stage_w * 0.07, 0.0)
 	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.CARVED_FONT_STAGE, _stage_label.size.x, CardTokens.HUB_CREAM, s)
-	var tray_h := tray_w * CardTokens.carved_aspect(CardTokens.CARVED_TRAY, 0.29)
-	# the synergy ribbon runs under the tray (a little wider), overlapping its foot
+	# the squad: three small carved medallions in a row (no board), the synergy ribbon right under them, the group
+	# centred where the tray used to sit and kept left of FIGHT
+	var medal := CardTokens.HUB_TRAY_MEDAL * s
+	var medal_gap := CardTokens.HUB_TRAY_MEDAL_GAP * s
+	var row_w := medal * _slots.size() + medal_gap * (_slots.size() - 1)
 	var syn_h := CardTokens.HUB_SYNERGY_H * s
-	var syn_w := tray_w * CardTokens.HUB_SYNERGY_GROW
+	var syn_w := minf(CardTokens.HUB_SYNERGY_W * s, fight_x - gap - tray_x)
+	var group_w := maxf(row_w, syn_w)
+	var centre := minf(tray_x + tray_w * 0.5, fight_x - gap - group_w * 0.5)
 	_synergy.size = Vector2(syn_w, syn_h)
-	_synergy.position = Vector2(tray_x + (tray_w - syn_w) * 0.5, size.y - CardTokens.HUB_SYNERGY_BOTTOM * s - syn_h)
-	var tray_bottom := _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s
-	var tray_room := tray_bottom - (_hint_strip.position.y + _hint_strip.size.y) - CardTokens.CARVED_TRAY_TOP_GAP * s
-	if tray_h > tray_room:
-		tray_h = maxf(tray_room, 1.0)
-		var narrow := tray_h / CardTokens.carved_aspect(CardTokens.CARVED_TRAY, 0.29)
-		tray_x += (tray_w - narrow) * 0.5
-		tray_w = narrow
-	_bar.position = Vector2(tray_x, tray_bottom - tray_h)
-	_bar.size = Vector2(tray_w, tray_h)
-	_bar_art.size = _bar.size
-	var slot_aspect := CardTokens.carved_aspect(CardTokens.CARVED_SLOT, 1.15)
+	_synergy.position = Vector2(centre - syn_w * 0.5, size.y - CardTokens.HUB_SYNERGY_BOTTOM * s - syn_h)
+	var row_bottom := _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s
+	_bar.position = Vector2(centre - row_w * 0.5, row_bottom - medal)
+	_bar.size = Vector2(row_w, medal)
 	for i in _slots.size():
-		var r: Rect2 = CardTokens.HUB_TRAY_SLOTS[i]
 		var slot: TraySlot = _slots[i]
-		var slot_w := r.size.x * tray_w
-		slot.size = Vector2(slot_w, minf(slot_w * slot_aspect, tray_h * 1.02))
-		slot.size.x = slot.size.y / slot_aspect
-		slot.position = Vector2(r.position.x * tray_w + (slot_w - slot.size.x) * 0.5, r.position.y * tray_h + maxf(0.0, (tray_h - slot.size.y) * 0.5 - r.position.y * tray_h))
-		var number: Label = _slot_numbers[i]
-		number.size = Vector2(slot.size.x, CardTokens.FONT_HUB_TRAY_NUM * 1.4 * s)
-		number.position = Vector2(slot.position.x, 0.0)
+		slot.size = Vector2(medal, medal)
+		slot.position = Vector2((medal + medal_gap) * i, 0.0)
 	CardTokens.panel(_synergy, CardTokens.clear_style())
 	_refresh_squad_bar()
 	_layout_editor()
