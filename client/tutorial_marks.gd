@@ -14,6 +14,7 @@ enum Kind { LOCK, UNKNOWN }
 var kind := Kind.LOCK
 var _medal: TextureRect
 var _mark: Label
+var _glyph: Control
 
 static var _locked_mat: ShaderMaterial
 
@@ -36,6 +37,11 @@ func _init(p_kind: Kind = Kind.LOCK) -> void:
 	_mark.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_mark.text = "?" if kind == Kind.UNKNOWN else ""
 	add_child(_mark)
+	_glyph = Control.new()  # drawn over the medallion (a parent's _draw is under its children)
+	_glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_glyph.draw.connect(_draw_lock)
+	add_child(_glyph)
 	resized.connect(_restyle)
 
 
@@ -47,19 +53,19 @@ func place(at: Vector2, edge: float) -> void:
 
 func _restyle() -> void:
 	CardTokens.style_text(_mark, int(maxf(size.y * 0.55, 8.0)), CardTokens.HUB_INK, 1.0)
-	queue_redraw()
+	_glyph.queue_redraw()
 
 
-func _draw() -> void:
+func _draw_lock() -> void:
 	if kind != Kind.LOCK:
 		return
 	var e := minf(size.x, size.y)
 	var c := size * 0.5
 	var ink := CardTokens.HUB_INK
 	var body := Rect2(c + Vector2(-e * 0.17, -e * 0.02), Vector2(e * 0.34, e * 0.26))
-	draw_arc(c + Vector2(0.0, -e * 0.04), e * 0.11, PI, TAU, 16, ink, maxf(e * 0.06, 2.0), true)
-	draw_rect(body, ink)
-	draw_circle(body.get_center() - Vector2(0.0, e * 0.02), e * 0.035, CardTokens.HUB_CREAM)
+	_glyph.draw_arc(c + Vector2(0.0, -e * 0.04), e * 0.11, PI, TAU, 16, ink, maxf(e * 0.06, 2.0), true)
+	_glyph.draw_rect(body, ink)
+	_glyph.draw_circle(body.get_center() - Vector2(0.0, e * 0.02), e * 0.035, CardTokens.HUB_CREAM)
 
 
 ## Canvas material: keeps SATURATION of the colour (the locked Magic card, the locked Runeborn tile).

@@ -152,9 +152,23 @@ func _process(delta: float) -> void:
 			overlay.show_step(text_of(Tutorial.step_data(step)), true)
 		return
 	_missing = 0.0
+	_scroll_into_view(node)
 	if not overlay.visible:
 		overlay.visible = true
 	overlay.set_hole(node.get_global_rect())
+
+
+## A target inside a scrolling row (the phone card row) is scrolled into view once per step.
+var _scrolled := ""
+func _scroll_into_view(node: Control) -> void:
+	if _scrolled == step:
+		return
+	_scrolled = step
+	var parent := node.get_parent()
+	while parent != null and not parent is ScrollContainer:
+		parent = parent.get_parent()
+	if parent != null:
+		(parent as ScrollContainer).ensure_control_visible(node)
 
 
 ## The visible control named `target_name` under `root` (the deepest visible match), or null.
