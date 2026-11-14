@@ -1,0 +1,47 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "status/poison",
+  "duration": 2,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.15,
+    "exposure": 1.05
+  },
+  "layers": [
+    {
+      "id": "867da85d-e78e-4d21-8783-01cee3bb1c53",
+      "type": "smoke",
+      "name": "bubbles",
+      "enabled": true,
+      "seed": 850,
+      "color": "#82bc38",
+      "secondary": "#d5f780",
+      "style": "bubble",
+      "motion": "drift",
+      "start": 0,
+      "duration": 2,
+      "size": 0.09,
+      "spread": 0.45,
+      "rise": 1.6,
+      "speed": 1,
+      "energy": 0.5,
+      "opacity": 0.75,
+      "scale": 1,
+      "count": 6,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

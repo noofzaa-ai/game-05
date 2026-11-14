@@ -57,8 +57,8 @@ const HELP_JOURNEY_KEYS := "Clear the stage, then stand in a light to pick the n
 const PORTAL_DELAY := 1.2
 const PORTAL_SPACING := 4.5  ## metres between neighbouring fallback portals
 const CAMPFIRE_RADIUS := 2.2  ## standing this close to a rest camp's fire offers "E rest"
-const PORTAL_HINT := "Stand in a light to choose the next stage    Esc = route list"
-const CHEST_PROMPT := "E  open"  ## by the treasure chest (also a button: tap it on a phone)
+const PORTAL_HINT := "Stand in a light to choose the next stage"
+const CHEST_PROMPT := "Open"  ## by the treasure chest: a button (tap / click; E stays a key shortcut, not printed)
 const CHEST_AHEAD := 2.6  ## metres in front of the player the treasure chest drops
 
 var _boss_id := -1  ## the journey boss fighter (-1: none), for the HUD boss bar
@@ -106,7 +106,7 @@ var _leaving := false  ## a portal was taken: the next stage is loading
 var _clear_banner_left := 0.0  ## the STAGE CLEAR banner shows this long, then the portal hint
 var _chest: Node3D  ## client/treasure_chest.gd while a taken treasure waits to be opened (or just opened)
 var _near_chest := false
-var _chest_button: Button  ## the "E  open" prompt as a button (tap on a phone)
+var _chest_button: Button  ## the chest's "Open" button (tap on a phone; E is the key shortcut)
 
 
 func _ready() -> void:
@@ -273,21 +273,23 @@ func _physics_frame(_delta: float) -> void:
 	var player: Fighter = _session.fighters[_local_player_id]
 	if _session.local_defeated() and _result.is_empty():
 		_result = "defeated"
-	if _session.is_coop():
-		var follow_id := _local_player_id
-		if _focus_id >= 0 and _views.has(_focus_id) and _session.fighters[_focus_id].is_alive():
-			follow_id = _focus_id  # the squad card the player picked (squad_panel.gd): the camera closes on that fighter
-		elif _squad_room() and not player.is_alive():
-			for id in _session.fighters_of():
-				if _session.fighters.has(id) and _session.fighters[id].is_alive():
-					follow_id = id
-					break
-		elif player.eliminated:
-			for id in _journey.player_ids():
-				if _session.fighters[id].is_alive():
-					follow_id = id
-					break
-		_rig.target = _views[follow_id]
+	if _session.is_coop() or _squad_room() or _focus_id >= 0:
+		var alive := {}
+		for id in _views:
+			alive[id] = _session.fighters.has(id) and _session.fighters[id].is_alive()
+		if _focus_id >= 0 and not alive.get(_focus_id, false):
+			_focus_id = -1  # the picked card fell: back to the automatic camera (its ring goes too)
+			if _squad_panel != null: _squad_panel.clear_selection()
+		var fallback: Array = []
+		if _squad_room() and not player.is_alive():
+			fallback = _session.fighters_of()
+		elif player.eliminated and _journey != null and _journey.has_method("player_ids"):
+			fallback = _journey.player_ids()
+		var follow_id := follow_choice(_focus_id, _local_player_id, alive, fallback)
+		if _views.has(follow_id):
+			_rig.target = _views[follow_id]
+		if _rig.arena and _focus_id >= 0 and _views.has(_focus_id):
+			_rig.action_points = _focus_points(_focus_id)  # the auto framing closes on the picked card and its fight
 	if _party_camera != null:
 		var own_ultimate: bool = player.state == Fighter.State.ATTACK and _combat_data.styles.get(player.style, {}).get("ultimate", "") == player.move_id
 		_party_camera.update(_session, _views, own_ultimate)
@@ -295,23 +297,17 @@ func _physics_frame(_delta: float) -> void:
 	if _journey != null:
 		_update_journey_exits(player, 1.0 / float(Engine.physics_ticks_per_second))
 	_hud.update_from(player, _combat_data, _session.living_enemy_count(), _camera_text(), _bag_text())
-	_show_boss_bar()
 	_work_mark("camera_hud_exits",work_started)
-	if _session.has_method("is_remote") and not _session.connected:
-		_hud.set_prompt("ห้องปิดหรือเชื่อมต่อไม่ได้ กดกลับเพื่อไปแคมป์หลัก" if _session.can_return_to_hub() else "กำลังเชื่อมต่อห้องอีกครั้ง…")
-	if _journey != null and not _result.is_empty():
-		if _result == "defeated":
-			_hud.set_banner("พ่ายแพ้ — ของในเป้ถูกส่งกลับคลังแล้ว\nEnter = ไปต่อ")
-		elif _journey.state == Journey.WON:
-			_hud.set_banner("JOURNEY COMPLETE\nEnter = continue")
-		else:
-			_hud.set_banner("STAGE CLEAR" if _clear_banner_left > 0.0 else "")
-		return
-	match _result:
-		"cleared":
-			_hud.set_banner("STAGE CLEAR\nEsc = back to the campfire    R = play again")
-		"defeated":
-			_hud.set_banner("พ่ายแพ้ — ของในเป้ถูกส่งกลับคลังแล้ว\nR = ลองใหม่    Esc = กลับแคมป์")
+	var offline: bool = _session.has_method("is_remote") and not _session.connected
+	if offline and not _session.can_return_to_hub():
+		_hud.set_prompt("กำลังเชื่อมต่อห้องอีกครั้ง…")
+	var shown := result_view(_result, _journey != null, _journey != null and _journey.state == Journey.WON, _journey != null and _journey.is_over(), offline and _session.can_return_to_hub())
+	_show_result(shown)
+	if shown.is_empty():
+		_show_boss_bar()
+	else:
+		_hud.set_boss("", 0.0)  # the result plate takes the middle of the screen: no boss bar behind it
+	_hud.set_banner("STAGE CLEAR" if shown.is_empty() and _result == "cleared" and _journey != null and _clear_banner_left > 0.0 else "")
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -330,7 +326,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if _leaving:
 			return
 		if _journey.is_over() and not _result.is_empty() and (key == KEY_ENTER or key == KEY_KP_ENTER or key == KEY_ESCAPE or key == KEY_SPACE):
-			GameState.go_journey()  # (the summary)
+			_result_action("continue")  # (the summary; also the result plate's button)
 			return
 		if key == KEY_ESCAPE and (_camp_mode or _result == "cleared"):
 			GameState.go_journey()  # between stages the route screen is the fallback (and the way to leave)
@@ -341,13 +337,11 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		if key == KEY_ESCAPE or key == KEY_R or key == KEY_Q:
 			return  # a journey stage is fought to the end (go home from a camp)
 	if key == KEY_ESCAPE:
-		_bank_loot()  # (until the stage has rest points, leaving early brings the loot home)
-		GameState.go_card_deck()
+		_result_action("camp")  # (until the stage has rest points, leaving early brings the loot home)
 	elif _rig == null:
 		return
 	elif key == KEY_R:
-		_bank_loot()
-		get_tree().reload_current_scene()
+		_result_action("retry")
 	elif key == KEY_F3:
 		_show_hitboxes = not _show_hitboxes
 	elif key == KEY_F2:
@@ -707,8 +701,12 @@ func _build_error_hud(errors: Array[String]) -> void:
 	add_child(layer)
 	var label := Label.new()
 	label.position = Vector2(16.0, 12.0)
-	label.text = "This stage could not be loaded (Esc = back to campfire):\n- " + "\n- ".join(errors)
+	label.text = "This stage could not be loaded:\n- " + "\n- ".join(errors)
 	layer.add_child(label)
+	var panel = preload("res://client/result_panel.gd").new()  # (phones have no Esc: a real button back to camp)
+	add_child(panel)
+	panel.action.connect(func(_id: String) -> void: GameState.go_card_deck())
+	panel.show_result("load_failed", [["camp", "camp"]])
 
 
 static func help_text(in_journey: bool = false) -> String:
@@ -1613,6 +1611,84 @@ func _squad_room() -> bool:
 func _spectating() -> bool:
 	return _session != null and _session.has_method("spectating") and _session.spectating()
 
+## The camera's follow target (pure, tested in tests/test_auto_pilot.gd): the picked card while it lives, else the
+## first living fighter of `fallback` (the stage passes my cards when my own fighter is down in a squad room, the
+## party when I am out), else the local player. `alive`: fighter id -> bool.
+static func follow_choice(focus_id: int, local_id: int, alive: Dictionary, fallback: Array) -> int:
+	if focus_id >= 0 and bool(alive.get(focus_id, false)):
+		return focus_id
+	for id in fallback:
+		if bool(alive.get(id, false)):
+			return id
+	return local_id
+
+
+## Auto-battle framing while a card is picked: that fighter and the living enemies near it (its own fight).
+func _focus_points(id: int) -> Array[Vector3]:
+	var at: Vector3 = _views[id].position
+	var points: Array[Vector3] = [at]
+	for other in _views:
+		if other != id and _session.fighters.has(other) and _session.fighters[other].is_alive() and _session.fighters[other].team == "enemy" and _views[other].position.distance_to(at) <= ACTION_NEAR:
+			points.append(_views[other].position)
+	return points
+
+
+# ---------------------------------------------------------------- the result plate (Boss phone playtest 2026-11-14)
+# Phones have no keys: the result shows as a plate with real buttons (client/result_panel.gd). The keys stay as
+# shortcuts (_unhandled_key_input calls the same _result_action) but are never printed.
+var _result_panel: CanvasLayer
+
+## What the result plate shows: {"title": TEXT key, "actions": [[id, TEXT key], ...]} or {} (no plate).
+## `result` "", "cleared" or "defeated". A journey shows defeat / journey complete (continue to the summary); a
+## cleared journey stage shows nothing (the exits rise). A lone stage offers camp + retry. `room_closed`: an online
+## room that is gone for good (back to camp).
+static func result_view(result: String, in_journey: bool, journey_won: bool, journey_over: bool, room_closed: bool) -> Dictionary:
+	if room_closed:
+		return {"title": "room_closed", "actions": [["camp", "camp"]]}
+	if result.is_empty():
+		return {}
+	if in_journey:
+		if result == "defeated":
+			return {"title": "defeated", "actions": [["continue", "continue"]] if journey_over else []}
+		if journey_won and journey_over:
+			return {"title": "journey_complete", "actions": [["continue", "continue"]]}
+		return {}
+	if result == "cleared":
+		return {"title": "stage_clear", "actions": [["camp", "camp"], ["retry", "play_again"]]}
+	return {"title": "defeated", "actions": [["camp", "camp"], ["retry", "retry"]]}
+
+
+func _show_result(view: Dictionary) -> void:
+	if view.is_empty():
+		if _result_panel != null: _result_panel.hide_result()
+		return
+	if _result_panel == null:
+		_result_panel = preload("res://client/result_panel.gd").new()
+		add_child(_result_panel)
+		_result_panel.action.connect(_result_action)
+	_result_panel.show_result(str(view["title"]), view["actions"])
+
+
+## A result button or its key shortcut: "continue" (journey summary), "camp" (home), "retry" (the stage again).
+func _result_action(id: String) -> void:
+	match id:
+		"continue":
+			if _journey != null and _journey.is_over() and not _leaving:
+				_leaving = true
+				GameState.go_journey()
+		"camp":
+			if _session != null and _session.has_method("is_remote"):
+				GameState.go_card_deck()  # (it refuses while the room can still come back)
+				return
+			_bank_loot()
+			GameState.go_card_deck()
+		"retry":
+			if _journey != null:
+				return  # a journey stage is fought to the end
+			_bank_loot()
+			get_tree().reload_current_scene()
+
+
 ## The camera's "next card": steps through MY living cards (the follow target is _focus_id).
 func cycle_my_card() -> void:
 	if not _squad_room(): return
@@ -1620,7 +1696,7 @@ func cycle_my_card() -> void:
 	if mine.is_empty(): return
 	var at := mine.find(_focus_id if _focus_id >= 0 else _local_player_id)
 	_focus_id = mine[(at + 1) % mine.size()]
-	if _squad_panel != null: _squad_panel.select(_focus_id)
+	if _squad_panel != null: _squad_panel.select(_focus_id, false)
 
 
 ## Auto-battle camera framing: the living enemies and the squad members fighting near them (a shooter far

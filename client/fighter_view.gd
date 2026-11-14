@@ -23,8 +23,11 @@ const KIND_POSES := {
 	"air": "kick", "special": "punch_r", "ultimate": "heavy",
 	"run_light": "dash_punch", "run_heavy": "flying_kick", "air_heavy": "dive",
 }
-const IMMUNE_TINT := Color(0.3, 0.9, 1.0, 0.3)  ## shown while the fighter cannot be hit
-const FLASH_SECONDS := 0.12
+## A hit lands: a short, faint white flash that always clears (Boss 2026-11-14: statuses and states never
+## recolour the whole character; the old status / immune / hit-stun tints made the hero a pale ghost on phones).
+const FLASH_SECONDS := 0.08
+const FLASH_TINT := Color(1.0, 1.0, 1.0, 0.18)  ## the toon shader mixes in linear light, so 0.18 reads as a light flash
+const FLASH_GAP := 0.3  ## at most one flash per this many seconds: a mobbed hero is not kept white by back-to-back hits
 const BAR_WIDTH := 1.2
 const LOW_HP_RATIO := 0.3  ## below this the enemy bar crosses to its low-HP colour and pulses (matches InkUi.LOW_HP)
 const ATTACK_COLOR := Color(1.0, 0.7, 0.2)
@@ -32,6 +35,7 @@ const HITSTUN_COLOR := Color(1.0, 0.45, 0.45)
 const DOWN_COLOR := Color(0.45, 0.45, 0.5)
 const DEAD_COLOR := Color(0.2, 0.2, 0.22)
 const STATUS_LINE := 0.27  ## height of one status-effect tag above the head
+const StatusVfx := preload("res://client/status_vfx.gd")
 const MONSTER_RUN_SPEED := 2.44  ## m/s a monster run clip is authored for at the goblin rig's own size; played 0.6-1.4x (x the model's scale)
 
 var base_color := Color(0.85, 0.85, 0.9)
@@ -80,6 +84,9 @@ var _bar_fill_material: StandardMaterial3D  ## the fill's material (recoloured o
 var _bar_colors: Dictionary = {}  ## the resolved fill/fill_low/flash colours, cached from bar_style
 var _warning: Label3D
 var _status_tags: Dictionary = {}  ## effect id -> Label3D shown above the head
+var _status_vfx: Node3D  ## client/status_vfx.gd: small looping status effects at the feet / over the head
+var _flash_rest := 0.0  ## seconds until the next hit may flash again (FLASH_GAP)
+var _model_flash_on := false  ## the model's hit flash is on now (cleared the frame the timer runs out)
 var _flash := 0.0
 var _clock := 0.0
 var _center_skeleton: Skeleton3D  ## found once for body_center()
@@ -128,6 +135,7 @@ static func pose_for(move_id: String) -> String:
 func _ready() -> void:
 	_body = Node3D.new()
 	add_child(_body)
+	StatusVfx.prewarm(self)  # status loop materials compile once while the stage loads (no web shader cache)
 	if not model_path.is_empty():
 		var model := CharacterModel.new()
 		model.ink_outline = ink_outline
@@ -148,6 +156,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	_clock += delta
 	_flash = maxf(0.0, _flash - delta)
+	_flash_rest = maxf(0.0, _flash_rest - delta)
+	if _model_flash_on and _flash <= 0.0 and _model != null:
+		_model.tint(Color(0, 0, 0, 0))
+		_model_flash_on = false
 	_body.scale = _body.scale.lerp(Vector3.ONE, minf(1.0, 14.0 * delta))
 	if _model != null:
 		_model.apply_pose(delta)
@@ -226,9 +238,6 @@ func show_state(body: SimBody, fighter: Fighter, data: CombatData = null) -> voi
 			color = DOWN_COLOR
 		Fighter.State.DEAD:
 			color = DEAD_COLOR
-	var effect_tint := _effect_tint(fighter, data)
-	if effect_tint.a > 0.0:
-		color = color.lerp(Color(effect_tint.r, effect_tint.g, effect_tint.b), 0.4)
 	if warning:
 		color = base_color.lerp(Color(1.0, 0.95, 0.2), 0.5 + 0.5 * sin(_clock * 24.0))
 	if _flash > 0.0:
@@ -238,7 +247,9 @@ func show_state(body: SimBody, fighter: Fighter, data: CombatData = null) -> voi
 
 ## A hit lands: bright flash and a quick squash that springs back.
 func flash() -> void:
-	_flash = FLASH_SECONDS
+	if _flash_rest <= 0.0:
+		_flash = FLASH_SECONDS
+		_flash_rest = FLASH_GAP
 	_body.scale = Vector3(1.14, 0.88, 1.14)
 
 
@@ -345,8 +356,8 @@ func _use_own_materials(model: Node3D, meshes: Array) -> void:
 		outline.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-## The state tint on a textured monster: hit reddens, down and death darken, an effect colors it a
-## little; the flash and the wind-up warning glow (emission) since multiplying cannot brighten.
+## The state tint on a textured monster: hit reddens, down and death darken (statuses do not tint; they show
+## as status_vfx loops); the flash and the wind-up warning glow (emission) since multiplying cannot brighten.
 func _tint_own_materials(fighter: Fighter, data: CombatData, warning: bool) -> void:
 	var multiply := Color.WHITE
 	var glow := Color.BLACK
@@ -358,9 +369,6 @@ func _tint_own_materials(fighter: Fighter, data: CombatData, warning: bool) -> v
 			multiply = Color(0.75, 0.75, 0.8)
 		Fighter.State.DEAD:
 			multiply = Color(0.4, 0.4, 0.45)
-	var effect_tint := _effect_tint(fighter, data)
-	if effect_tint.a > 0.0:
-		multiply *= Color.WHITE.lerp(Color(effect_tint.r, effect_tint.g, effect_tint.b), 0.35)
 	if warning:
 		glow = Color(1.0, 0.85, 0.1) * (0.2 + 0.2 * sin(_clock * 24.0))
 	if _flash > 0.0:
@@ -661,7 +669,7 @@ func _update_bar_color(ratio: float) -> void:
 		_bar_fill_material.albedo_color = base
 
 
-## Chooses the stand-in pose for the fighter's state and tints the model on hits.
+## Chooses the stand-in pose for the fighter's state; the model is tinted only by the brief hit flash.
 func _show_model_state(body: SimBody, fighter: Fighter, data: CombatData) -> void:
 	var kind := "idle"
 	var phase := ""
@@ -712,14 +720,16 @@ func _show_model_state(body: SimBody, fighter: Fighter, data: CombatData) -> voi
 	var facing: Vector2 = fighter.skill_view.get("shot_aim",Vector2(fighter.direction)) if fighter.style=="bow" and fighter.state==Fighter.State.ATTACK else Vector2(fighter.direction)
 	_model.set_pose(kind, amount, speed, body.grounded, facing, lying, phase, clip, fighter.style)
 	_show_skill_pack(body, fighter)
-	if _flash > 0.0:
-		_model.tint(Color(1.0, 1.0, 1.0, 0.55))
-	elif fighter.state == Fighter.State.HITSTUN:
-		_model.tint(Color(1.0, 0.2, 0.2, 0.25))
-	elif data != null and fighter.state != Fighter.State.DOWN and Combat.is_invulnerable(fighter, data):
-		_model.tint(IMMUNE_TINT)  # untouchable right now (dodge, skill animation)
-	else:
-		_model.tint(_effect_tint(fighter, data))
+	_show_model_flash()
+
+
+## The only whole-body colour on a character model: the hit flash, on for FLASH_SECONDS, then cleared.
+func _show_model_flash() -> void:
+	var on := _flash > 0.0
+	if on == _model_flash_on:
+		return
+	_model_flash_on = on
+	_model.tint(FLASH_TINT if on else Color(0, 0, 0, 0))
 
 
 ## An ultimate with an imported skill pack (data/combat/ultimates.json): the pack's own character
@@ -763,26 +773,12 @@ func _show_thrown_weapon(in_hand: bool) -> void:
 	_model.set_weapon_visible(in_hand)
 
 
-## The colored tint of the strongest effect on the fighter (a debuff first), or a clear color if none.
-func _effect_tint(fighter: Fighter, data: CombatData) -> Color:
-	if data == null or fighter.effects.is_empty() or not fighter.is_alive():
-		return Color(0.0, 0.0, 0.0, 0.0)
-	var chosen := Color(0.0, 0.0, 0.0, 0.0)
-	var ids := fighter.effects.keys()
-	ids.sort()
-	for id in ids:
-		var definition: Dictionary = data.effects[id]
-		if definition["kind"] == "debuff":
-			return Color(definition["color"].r, definition["color"].g, definition["color"].b, 0.28)
-		chosen = Color(definition["color"].r, definition["color"].g, definition["color"].b, 0.18)
-	return chosen
-
-
 ## Small colored tags above the head for every buff and debuff, and a stagger or slump for the
 ## effects that stop the fighter (stun wobbles, sleep slumps).
 func _show_effects(fighter: Fighter, data: CombatData) -> void:
 	if data == null:
 		return
+	_show_status_vfx(fighter, data)
 	for id in _status_tags.keys():
 		if not fighter.effects.has(id) or not fighter.is_alive():
 			_status_tags[id].queue_free()
@@ -820,6 +816,26 @@ func _show_effects(fighter: Fighter, data: CombatData) -> void:
 	elif stunned:
 		target_tilt = sin(_clock * 22.0) * 0.08
 	_body.rotation.z = lerpf(_body.rotation.z, target_tilt, 0.3)
+
+## Statuses (and the immune ring) as small looping effects (client/status_vfx.gd) instead of a body tint.
+## Built on the first status or immune moment.
+func _show_status_vfx(fighter: Fighter, data: CombatData) -> void:
+	if _status_vfx == null:
+		if fighter.effects.is_empty() and (fighter.state == Fighter.State.DOWN or not Combat.is_invulnerable(fighter, data)):
+			return
+		_status_vfx = StatusVfx.new()
+		_status_vfx.name = "StatusVfx"
+		add_child(_status_vfx)
+	_status_vfx.head_height = _height + (0.95 if show_health_bar else 0.25)
+	_status_vfx.size_scale = clampf(maxf(status_visual_size.x, status_visual_size.z) / 0.8, 0.8, 2.2)
+	var immune := fighter.state != Fighter.State.DOWN and Combat.is_invulnerable(fighter, data)
+	_status_vfx.show_effects(fighter.effects.keys(), data.effects, fighter.is_alive(), immune)
+
+
+## The status loops shown now: {"head": look, "feet": look} ("" = none). Tests.
+func status_looks() -> Dictionary:
+	return _status_vfx.shown() if _status_vfx != null else {"head": "", "feet": "", "guard": ""}
+
 
 ## Class skills v2 (design/gdd/class-skills.md 3.1 rule 7): the Studio clip window of the skill being cast, timed from
 ## the sim's cast start (skill_view.class_cast). The sim moves the body only in the travel frames; the model keeps the

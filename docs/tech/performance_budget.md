@@ -18,6 +18,7 @@ Both need a window. The measure script writes `user://graphics.cfg`: delete it a
 | Materials per prop model | 1 (shared kit atlas or vertex colours) |
 | Effect nodes per hit | pooled; prewarmed at load (Effects.prewarm, presenter.warm_build, telegraph quad) |
 | Class skill VFX (art/vfx/class_skills, daiyooo-vfx GLB) | <= 300 draw calls per effect instance; pooled + prewarmed (client/skills/class_skill_vfx.gd). MET 2026-11-13: worst is arcane_orb ~97 per copy, crater_leap ~77 (was 2264) |
+| Status VFX (art/vfx/status, daiyooo-vfx GLB) | <= 40 draws per instance, at most 3 per fighter (head + feet + immune ring); slimmed like class skill VFX, prewarmed once (client/status_vfx.gd). No status may tint the body. MET 2026-11-14: 1-16 draws per look (sleep 16, burn 11), worst fighter ~27 |
 | Scene entry | no single frame over 1 s after the loading label (currently OPEN, see below) |
 
 ## Measured 2026-11-10 (native M1, GL Compatibility, 1920x912, MSAA 4x, glow, outline, scale 1.0)
@@ -59,3 +60,12 @@ On top, crater_leap / hook_sweep / starfall / intercept / iron_guard were regene
 hook_sweep 186, starfall 195, intercept 138, iron_guard 54, breaker_slam 117, reaping_arc 78, heartseeker 183,
 arcane_orb 291. Web 844x390 real battle (Chrome, RTX 3070 Ti, 2 runs each): 26.8 fps -> 30.7 fps average;
 VFX off 34.2 fps. Frames with crater_leap live 18.6 -> 30.0 fps, hook_sweep 20.1 -> 30.8, iron_guard 23.1 -> 26.8.
+
+## Status VFX, measured 2026-11-14 (tech-artist)
+
+`tools/shots/status_vfx_measure.gd` (headless, peak meshes drawn over 1.5 s after slimming / meshes in the GLB):
+stun 5/40, sleep 16/32, shock 8/64, burn 11/88, poison 6/48, bleed 6/48, slow 7/56, sunder 6/48, debuff 1/8,
+regen 5/40, buff 1/8, immune 1/8 (the buff ring tinted cyan at load, no extra asset). A fighter shows at most one
+head loop (stun or sleep), one feet loop and the immune ring (worst fighter ~28 draws). The hit flash is the
+only whole-body colour: 0.08 s at 18% white, at most once per 0.3 s (client/fighter_view.gd FLASH_*).
+Web FPS with statuses on is not measured yet (needs a phone run).

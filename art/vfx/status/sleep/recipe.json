@@ -1,0 +1,47 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "status/sleep",
+  "duration": 2.5,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.15,
+    "exposure": 1
+  },
+  "layers": [
+    {
+      "id": "e93ed652-6731-4e7d-9435-8d1c2cc45c41",
+      "type": "sparks",
+      "name": "motes",
+      "enabled": true,
+      "seed": 987,
+      "color": "#6a71cb",
+      "secondary": "#dee3ff",
+      "style": "mote",
+      "motion": "drift",
+      "start": 0,
+      "duration": 2.5,
+      "size": 0.08,
+      "spread": 0.25,
+      "rise": 0.6,
+      "speed": 0.6,
+      "energy": 1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 4,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

@@ -1,0 +1,78 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "status/shock",
+  "duration": 1.5,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.2,
+    "exposure": 1.05
+  },
+  "layers": [
+    {
+      "id": "72f3579c-b02f-41ec-b59f-fe6ffae45eca",
+      "type": "beam",
+      "name": "bolts",
+      "enabled": true,
+      "seed": 850,
+      "color": "#9142e3",
+      "secondary": "#e7daff",
+      "style": "bolt",
+      "motion": "pulse",
+      "start": 0,
+      "duration": 1.5,
+      "size": 0.12,
+      "spread": 0.35,
+      "rise": 1.1,
+      "speed": 1,
+      "energy": 0.627,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 2,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "43f592dc-fc4e-4095-b0a3-73fc17a8a3f7",
+      "type": "sparks",
+      "name": "sparks",
+      "enabled": true,
+      "seed": 987,
+      "color": "#9142e3",
+      "secondary": "#e7daff",
+      "style": "diamond",
+      "motion": "orbit",
+      "start": 0,
+      "duration": 1.5,
+      "size": 0.05,
+      "spread": 0.4,
+      "rise": 1.3,
+      "speed": 1,
+      "energy": 0.627,
+      "opacity": 0.8,
+      "scale": 1,
+      "count": 6,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

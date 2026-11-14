@@ -2,8 +2,8 @@ extends CanvasLayer
 ## The squad's info in an auto-battle fight (Boss 2026-11-10): one small leather card plate per fighter at the bottom
 ## of the screen in the approved hub look (Boss 2026-11-12): the class emblem medallion (cut from the class card frame
 ## art), the order number and class name on parchment, the race ultimate gauge (a strip in the race colour; a pulsing
-## race-coloured ring round the card while it is full) and the health bar with "hp / max". Nobody steers: a card (click,
-## or key 1-3) only picks which fighter the camera follows when zoomed in. A skill cast pops its name on a leather pill
+## race-coloured ring round the card while it is full) and the health bar with "hp / max". Nobody steers: a card (tap,
+## click or key 1-3) picks which fighter the camera follows (cream ring); the same card again = automatic camera. A skill cast pops its name on a leather pill
 ## above the caster's card; a race ultimate shows a bigger banner (race badge, "ULTIMATE", the name) above that.
 ## Display only: the gauge is read from Fighter.gauge / race_state (the same data tools/balance/class_sim.gd reads).
 ## Sizes are the stage's logical pixels (1280x720 base, scaled to the window), from card_tokens.gd.
@@ -242,17 +242,44 @@ func keep_out_rects() -> Array[Rect2]:
 	return rects
 
 
-func select(id: int) -> void:
-	if _cards.has(id):
-		_selected = id
-		selected.emit(id)
+## Picks card `id` for the camera (cream ring). Picking the picked card again goes back to the automatic camera
+## (emits -1). A card that is not on the panel is ignored.
+func select(id: int, toggle: bool = true) -> void:
+	if not _cards.has(id):
+		return
+	_selected = -1 if toggle and id == _selected else id
+	selected.emit(_selected)
 
 
+## The picked card (-1: the automatic camera).
+func selected_id() -> int:
+	return _selected
+
+
+## Drops the pick without a signal (the stage does this when the picked fighter falls).
+func clear_selection() -> void:
+	_selected = -1
+
+
+const TAP_REPEAT_MS := 250  ## one finger tap may arrive as a touch and an emulated click: count it once
+var _last_tap_ms := -TAP_REPEAT_MS
+
+
+## A tap (touch) or a left click on a card. Both may arrive for one tap (touch -> emulated mouse): counted once.
 func _on_card_input(event: InputEvent, id: int) -> void:
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		select(id)
-	elif event is InputEventScreenTouch and event.pressed:
-		select(id)
+	var tapped := false
+	if event is InputEventMouseButton:
+		tapped = event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+	elif event is InputEventScreenTouch:
+		tapped = event.pressed
+	if not tapped:
+		return
+	get_viewport().set_input_as_handled()
+	var now := Time.get_ticks_msec()
+	if now - _last_tap_ms < TAP_REPEAT_MS:
+		return
+	_last_tap_ms = now
+	select(id)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

@@ -1,0 +1,110 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "status/stun",
+  "duration": 1.5,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.2,
+    "exposure": 1
+  },
+  "layers": [
+    {
+      "id": "c3886582-dbc9-4927-b293-1eb3ad21df40",
+      "type": "beam",
+      "name": "dome",
+      "enabled": false,
+      "seed": 713,
+      "color": "#fbc138",
+      "secondary": "#fef6e7",
+      "style": "dome",
+      "motion": "pulse",
+      "start": 0.1,
+      "duration": 4,
+      "size": 1.9,
+      "spread": 0,
+      "rise": 2.3,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.22,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "4eb303d5-6df3-4269-bb56-f65686059077",
+      "type": "wave",
+      "name": "ring",
+      "enabled": false,
+      "seed": 850,
+      "color": "#fbc138",
+      "secondary": "#fef6e7",
+      "style": "ring",
+      "width": 0.035,
+      "motion": "pulse",
+      "start": 0,
+      "duration": 4,
+      "size": 1,
+      "spread": 1.9,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.5,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c093afe9-8d4c-4557-b98b-027031ccc93e",
+      "type": "sparks",
+      "name": "stars",
+      "enabled": true,
+      "seed": 987,
+      "color": "#fbc138",
+      "secondary": "#fef6e7",
+      "style": "twinkle",
+      "motion": "orbit",
+      "start": 0,
+      "duration": 1.5,
+      "size": 0.09,
+      "spread": 0.32,
+      "rise": 0.05,
+      "speed": 1.6,
+      "energy": 1.6,
+      "opacity": 1,
+      "scale": 1,
+      "count": 5,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

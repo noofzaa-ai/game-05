@@ -1,0 +1,47 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "status/regen",
+  "duration": 2,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.15,
+    "exposure": 1.05
+  },
+  "layers": [
+    {
+      "id": "4580c6a3-e4c5-4b54-b788-04b5d75aca81",
+      "type": "sparks",
+      "name": "crosses",
+      "enabled": true,
+      "seed": 850,
+      "color": "#7dffc7",
+      "secondary": "#edfff5",
+      "style": "cross",
+      "motion": "orbit",
+      "start": 0,
+      "duration": 2,
+      "size": 0.065,
+      "spread": 0.45,
+      "rise": 1.6,
+      "speed": 1.2,
+      "energy": 1.4,
+      "opacity": 1,
+      "scale": 1,
+      "count": 5,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

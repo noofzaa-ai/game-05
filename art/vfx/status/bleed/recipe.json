@@ -1,0 +1,47 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "status/bleed",
+  "duration": 2,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.1,
+    "exposure": 1
+  },
+  "layers": [
+    {
+      "id": "d14fa060-1f5e-4042-a571-25b5c16f2763",
+      "type": "sparks",
+      "name": "drops",
+      "enabled": true,
+      "seed": 987,
+      "color": "#a8102c",
+      "secondary": "#ffa9a8",
+      "style": "drop",
+      "motion": "fall",
+      "start": 0,
+      "duration": 2,
+      "size": 0.05,
+      "spread": 0.35,
+      "rise": 1.4,
+      "speed": 1.2,
+      "energy": 0.8,
+      "opacity": 1,
+      "scale": 1,
+      "count": 6,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

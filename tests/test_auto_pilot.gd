@@ -226,7 +226,38 @@ func _card_select_checks(ctx) -> void:
 	panel.select(2)
 	ctx.check("selecting a card that does not exist is ignored", picked.is_empty())
 	panel._cards[2] = {}
+	panel._cards[3] = {}
 	panel.select(2)
-	ctx.check("selecting a squad card reports its fighter id", picked == [2])
+	ctx.check("selecting a squad card reports its fighter id", picked == [2] and panel.selected_id() == 2)
+	panel.select(3)
+	ctx.check("tapping another card moves the pick", picked == [2, 3] and panel.selected_id() == 3)
+	panel.select(3)
+	ctx.check("tapping the picked card again goes back to the automatic camera (-1)", picked == [2, 3, -1] and panel.selected_id() == -1)
+	panel.select(3, false)
+	panel.select(3, false)
+	ctx.check("the 'next card' button sets the pick without toggling it off", panel.selected_id() == 3)
+	panel.clear_selection()
+	ctx.check("a fallen card's pick can be dropped", panel.selected_id() == -1)
 	panel.free()
+	# The stage's follow rule (client/stage_view.gd follow_choice): picked card while alive, else the auto rule.
+	var Stage := preload("res://client/stage_view.gd")
+	var alive := {1: true, 2: true, 3: true}
+	ctx.check("camera follows the picked card", Stage.follow_choice(3, 1, alive, []) == 3)
+	ctx.check("no pick: the camera follows the local player", Stage.follow_choice(-1, 1, alive, []) == 1)
+	alive[3] = false
+	ctx.check("the picked card fell: back to the local player", Stage.follow_choice(3, 1, alive, []) == 1)
+	alive[1] = false
+	ctx.check("the picked card and I fell: the first living card of the fallback", Stage.follow_choice(3, 1, alive, [1, 3, 2]) == 2)
+	ctx.check("an unknown pick (a card that left the snapshot) is ignored", Stage.follow_choice(9, 1, {1: true}, []) == 1)
+	# The result plate offers real buttons (phones have no keys) and never prints a key hint.
+	var lone_loss: Dictionary = Stage.result_view("defeated", false, false, false, false)
+	ctx.check("a lone stage defeat offers camp + retry buttons", lone_loss["actions"].map(func(a): return a[0]) == ["camp", "retry"])
+	ctx.check("a lone stage clear offers camp + play again", Stage.result_view("cleared", false, false, false, false)["actions"].size() == 2)
+	ctx.check("a journey defeat offers continue", Stage.result_view("defeated", true, false, true, false)["actions"] == [["continue", "continue"]])
+	ctx.check("a journey win offers continue", Stage.result_view("cleared", true, true, true, false)["title"] == "journey_complete")
+	ctx.check("a cleared journey stage shows no plate (the exits rise)", Stage.result_view("cleared", true, false, false, false).is_empty())
+	ctx.check("a closed online room offers back to camp", Stage.result_view("", true, false, false, true)["actions"] == [["camp", "camp"]])
+	var Result := preload("res://client/result_panel.gd")
+	var hints := Result.TEXT.values().filter(func(pair): return str(pair).contains("Enter =") or str(pair).contains("Esc =") or str(pair).contains("R ="))
+	ctx.check("the result plate's words carry no key hints", hints.is_empty())
 

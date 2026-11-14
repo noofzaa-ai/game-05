@@ -175,7 +175,7 @@ func _check_scenes(ctx) -> void:
 		body.position = spot + Vector3(0.0, 0.0, 1.0)
 		var near: bool = await _wait(ctx, func(): return stage.get("_near_chest"), 2.0)
 		var button: Button = stage.get("_chest_button")
-		ctx.check("walking up to the chest shows the 'E  open' prompt (a button for touch)", near and button != null and button.visible and button.text == "E  open")
+		ctx.check("walking up to the chest shows the 'Open' button (tap / click; E is a key shortcut, not printed)", near and button != null and button.visible and button.text == "Open")
 		_press(stage, KEY_E)
 		var gave: bool = await _wait(ctx, func(): return journey.run.bag.items.size() == bag_items + 1)
 		ctx.check("E opens the chest: the lid turns, the piece goes into the bag", gave and chest.is_open and not journey.is_treasure_closed() and absf(chest.lid.rotation.x) > 1.0)

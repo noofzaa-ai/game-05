@@ -1,0 +1,78 @@
+{
+  "type": "buff",
+  "playback": "loop",
+  "anchor": "actor",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "status/burn",
+  "duration": 2,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.2,
+    "exposure": 1.05
+  },
+  "layers": [
+    {
+      "id": "6be05df9-f16b-42b9-b28b-a1b517e34185",
+      "type": "flame",
+      "name": "flames",
+      "enabled": true,
+      "seed": 850,
+      "color": "#f67522",
+      "secondary": "#ffc56a",
+      "style": "tongue",
+      "motion": "pulse",
+      "start": 0,
+      "duration": 2,
+      "size": 0.14,
+      "spread": 0.35,
+      "rise": 0.9,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 3,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "97dc11b4-e59b-4eff-977c-37e57e9ced5a",
+      "type": "smoke",
+      "name": "embers",
+      "enabled": true,
+      "seed": 987,
+      "color": "#f67522",
+      "secondary": "#ffc56a",
+      "style": "dust",
+      "motion": "orbit",
+      "start": 0,
+      "duration": 2,
+      "size": 0.05,
+      "spread": 0.45,
+      "rise": 1.5,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 8,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

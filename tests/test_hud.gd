@@ -106,3 +106,24 @@ func run(ctx) -> void:
 	ctx.check("no HUD element takes mouse clicks (%d do)" % takes_clicks.size(), takes_clicks.is_empty())
 	hud.queue_free()
 	await ctx.process_frame
+
+	# The result plate (Boss phone playtest 2026-11-14): real buttons, on screen, clear of the top bars and the
+	# squad tray, tap-sized on a phone.
+	var panel = preload("res://client/result_panel.gd").new()
+	ctx.root.add_child(panel)
+	await ctx.process_frame
+	panel.show_result("defeated", [["camp", "camp"], ["retry", "retry"]])
+	var view_area: Vector2 = panel.get_viewport().get_visible_rect().size
+	var plate: Rect2 = panel.plate_rect()
+	var tray_top: float = view_area.y - preload("res://client/card_tokens.gd").SQUAD_HUD_CARD.y - preload("res://client/card_tokens.gd").SQUAD_HUD_MARGIN
+	ctx.check("result plate (%s in %s) is on screen, under the boss bar and above the squad tray" % [plate, view_area],
+		Rect2(Vector2.ZERO, view_area).encloses(plate) and plate.position.y >= 60.0 and plate.end.y <= tray_top)
+	ctx.check("result plate has two real buttons that take taps", panel.buttons().size() == 2 and panel.buttons().all(func(b): return b.mouse_filter == Control.MOUSE_FILTER_STOP and b.focus_mode == Control.FOCUS_ALL))
+	var pressed := []
+	panel.action.connect(func(id): pressed.append(id))
+	panel.buttons()[1].pressed.emit()
+	ctx.check("a result button reports its action", pressed == ["retry"])
+	panel.hide_result()
+	ctx.check("the result plate hides", not panel.shown() and panel.plate_rect() == Rect2())
+	panel.queue_free()
+	await ctx.process_frame
