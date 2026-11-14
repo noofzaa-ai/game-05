@@ -136,6 +136,8 @@ func _open_screen(data: Dictionary) -> void:
 
 
 func _process(delta: float) -> void:
+	if overlay != null and hub != null:
+		hub.tutorial_hide_hint(overlay.visible or _ceremony != null)  # the tip box never sits on the hint ribbon
 	if overlay == null or step.is_empty() or _ceremony != null:
 		return
 	var target_name := "FightButton" if step == "lost_tip" else str(Tutorial.step_data(step).get("target", ""))

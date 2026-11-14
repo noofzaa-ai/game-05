@@ -2562,3 +2562,10 @@ func tutorial_open_character(class_id: String, picker: bool) -> void:
 
 func tutorial_after_step() -> void:
 	_sync_from_profile_if_wired()
+
+
+## While the tutorial overlay shows, the hub's hint ribbon is hidden (the tip box would cover its text).
+func tutorial_hide_hint(hidden: bool) -> void:
+	if _hint != null and _hint.visible == hidden:
+		_hint.visible = not hidden
+		_hint_strip.visible = not hidden
