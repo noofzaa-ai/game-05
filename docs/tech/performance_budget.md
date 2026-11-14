@@ -69,3 +69,20 @@ regen 5/40, buff 1/8, immune 1/8 (the buff ring tinted cyan at load, no extra as
 head loop (stun or sleep), one feet loop and the immune ring (worst fighter ~28 draws). The hit flash is the
 only whole-body colour: 0.08 s at 18% white, at most once per 0.3 s (client/fighter_view.gd FLASH_*).
 Web FPS with statuses on is not measured yet (needs a phone run).
+
+## Card ink-wash look, measured 2026-11-14 (tech-artist)
+
+Hub, 4 live cards (`client/card_portrait.gd` -> studio05 `card_ink`, toggle `CardTokens.PORTRAIT_INK`). Native Windows,
+GL Compatibility, uncapped, `tools/perf/hub_fps.gd` with `ZORX_CARD_INK=0/1` run alternately (4 runs each):
+
+| | 1920x1080 avg fps (p1 ms) | 1280x592 avg fps (p1 ms) | draws, 4 cards | prims, 4 cards |
+|---|---|---|---|---|
+| ink off | 355 (4.8) | 374 (4.3) | 45 | 107k |
+| ink on | 340 (4.8) | 349 (4.4) | 74 | 180k |
+| ink on v2 (bold line 0.0105, min 1.8 px, inner lines, 2-band cel) | 354 (4.7) | 337 (4.5) | 74 | 180k |
+
+Budget for a hub card: <= 20 draws and <= 50k prims per card portrait (worst now 20 / 47.7k, longbow / greatsword).
+The ink line is one back-face hull per visible piece (same mesh, no copy), so it doubles a card's triangles.
+Off/on in v2 (4 alternating runs each): 376/354 at 1920x1080 and 352/337 at 1280x592. The inner lines are screen-space
+derivatives in the toon fragment shader (no extra pass, no extra draws).
+Web/phone not measured yet (OPEN): if a phone drops, keep the hulls on body/hair/head only.

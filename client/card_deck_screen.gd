@@ -31,6 +31,7 @@ const PackFetcher := preload("res://client/pack_fetcher.gd")  ## web: the battle
 const RaceBadge := preload("res://client/race_badge.gd")  ## race mockup badge (races-and-classes.md 3.8)
 const RaceData := preload("res://logic/race_data.gd")
 const HubLook := preload("res://client/hub_look.gd")  ## the class emblem cut from the card frame (tray)
+const CarvedStrip := preload("res://client/carved_strip.gd")  ## carved hub pills / ribbons (3-slice)
 
 signal card_selected(class_id: String)
 signal look_changed(class_id: String, part: String, choice: String)  ## part: hair|outfit|eye_color|skin|makeup
@@ -73,7 +74,9 @@ var _bg: TextureRect
 var _bg_shade: Panel
 var _deck_layer: Control
 var _top_title: Label
+var _title_art: TextureRect  ## the carved MY CARDS ribbon
 var _gold_pill: Panel
+var _gold_strip: Control
 var _gold_icon: TextureRect
 var _gold_label: Label
 var _settings_button: Button
@@ -82,11 +85,13 @@ var _menu: Array = []  ## MenuEntry
 var _row_scroll: ScrollContainer
 var _row: Control
 var _hint: Label
+var _hint_strip: Control  ## parchment ribbon behind the hint line
 var _bar: Control  ## the squad tray
 var _bar_art: TextureRect
 var _slots: Array = []  ## TraySlot
 var _synergy: Panel  ## the squad's race synergy under the tray (Pair / Trio / Alliance + race badges + bonus)
 var _synergy_kind: Label
+var _synergy_strip: Control
 var _synergy_text: Label
 var _synergy_badges: Array = []  ## RaceBadge, one per squad card
 var _slot_numbers: Array = []
@@ -96,7 +101,9 @@ var _fight_label: Label
 var _fight_progress: Label  ## web build: "Loading 42%" while the battle packs download (client/pack_fetcher.gd)
 var _fight_waiting := false  ## FIGHT was pressed before the battle packs were in
 var _fight_glow: Panel
+var _fight_ribbon: Control  ## parchment ribbon under the plaque, behind the loading line
 var _stage_label: Label
+var _stage_strip: Control  ## dark ink pill behind the stage name
 var _cards := {}  ## class id -> HubCard
 var _service_layer: Control
 var _service_open := ""
@@ -541,10 +548,19 @@ class HubCard extends Control:
 		portrait.set_render_mode(CardPortrait.Mode.LIVE)  # hub characters animate every frame from the start, not only after a hover (Boss 2026-11-13)
 		_scene_front = CardSceneLayers.new()
 		_mask.add_child(_scene_front)
-		var painted := _scene_back.setup(id, CardSceneLayers.Part.BACK) and _scene_front.setup(id, CardSceneLayers.Part.FRONT)
+		# Carved hub (2026-11-14): one inked watercolour class scene fills the window (the target art), so the
+		# 3-layer painted scene is used only when that art is missing.
+		var window_art := CardTokens.carved(CardTokens.CARVED_WINDOW_PREFIX + id)
+		var painted := window_art == null and _scene_back.setup(id, CardSceneLayers.Part.BACK) and _scene_front.setup(id, CardSceneLayers.Part.FRONT)
+		if not painted:
+			_scene_back.visible = false
+			_scene_front.visible = false
 		_scene_back.set_feet(CardTokens.PORTRAIT_HUB_BOTTOM)
 		_back.visible = not painted
-		_frame = CardTokens.art_rect(CardTokens.HUB_CARD_FRAME_PREFIX + id)
+		_back.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+		_frame = CardTokens.carved_rect(CardTokens.CARVED_FRAME_PREFIX + id)
+		if _frame.texture == null:
+			_frame.texture = CardTokens.tex(CardTokens.HUB_CARD_FRAME_PREFIX + id)
 		add_child(_frame)
 		_name = CardTokens.hub_label("", CardTokens.FONT_HUB_CARD_NAME, CardTokens.HUB_INK, 1.0)
 		add_child(_name)
@@ -583,8 +599,10 @@ class HubCard extends Control:
 		if portrait.class_id != class_id:
 			portrait.set_class(class_id)
 		portrait.set_look(look)
-		_back.texture = CardTokens.window_gradient(class_id, locked)
-		_back_glow.visible = not locked and not _scene_back.visible
+		var window_art := CardTokens.carved(CardTokens.CARVED_WINDOW_PREFIX + class_id)
+		_back.texture = window_art if window_art != null else CardTokens.window_gradient(class_id, locked)
+		_back.material = CardTokens.grey_material() if locked and window_art != null else null
+		_back_glow.visible = not locked and not _scene_back.visible and CardTokens.carved(CardTokens.CARVED_WINDOW_PREFIX + class_id) == null
 		_scene_back.set_locked(locked)
 		_scene_front.set_locked(locked)
 		portrait.material = CardTokens.grey_material() if locked else null
@@ -600,34 +618,35 @@ class HubCard extends Control:
 		s = p_s
 		phone = p_phone
 		var h := w * CardTokens.HUB_CARD.y / CardTokens.HUB_CARD.x
+		custom_minimum_size = Vector2(w, h)  # first: a smaller card must not be held at the old minimum
 		size = Vector2(w, h)
-		custom_minimum_size = size
 		pivot_offset = size * 0.5
 		_frame.position = Vector2.ZERO
 		_frame.size = size
 		var win := CardTokens.HUB_CARD_WINDOW
-		_mask.position = Vector2(win.position.x * w, win.position.y * h)
-		_mask.size = Vector2(win.size.x * w, win.size.y * h)
+		var bleed := CardTokens.HUB_CARD_WINDOW_BLEED * w
+		_mask.position = Vector2(win.position.x * w, win.position.y * h) - Vector2(bleed, bleed)
+		_mask.size = Vector2(win.size.x * w, win.size.y * h) + Vector2(bleed, bleed) * 2.0
 		CardTokens.panel(_mask, CardTokens.flat(CardTokens.HUB_WINDOW_BOTTOM, CardTokens.HUB_WINDOW_BOTTOM, 0.0, CardTokens.HUB_CARD_WINDOW_RADIUS * w, 1.0))
-		window_slot.size = _mask.size
+		window_slot.size = Vector2(_mask.size.x, _mask.size.y * CardTokens.HUB_FIGURE_GROW)
 		_place_depth()
 		var pad := CardTokens.HUB_GLOW_PAD * s
 		_glow.position = Vector2(pad, pad) * 0.5
 		_glow.size = size - Vector2(pad, pad)
 		CardTokens.panel(_glow, CardTokens.hub_glow(CardTokens.HUB_GLOW, CardTokens.HUB_GLOW_PAD * 1.4, CardTokens.HUB_RADIUS, s))
-		_glow.visible = in_squad and not locked
+		_glow.visible = false  # carved target: no glow round squad cards (the bottom plate says SQUAD N)
 		var unit := w / CardTokens.HUB_CARD.x
 		var nr := CardTokens.HUB_CARD_NAME
 		_name.position = Vector2(nr.position.x * w, nr.position.y * h)
 		_name.size = Vector2(nr.size.x * w, nr.size.y * h)
-		CardTokens.hub_fit(_name, _name.text, CardTokens.FONT_HUB_CARD_NAME, _name.size.x, CardTokens.HUB_SLOT_TEXT if locked else CardTokens.HUB_INK, unit)
-		_race_badge.position = Vector2(CardTokens.RACE_BADGE_CARD_AT.x * w, CardTokens.RACE_BADGE_CARD_AT.y * h)
-		_race_badge.show_race(race, CardTokens.RACE_BADGE_CARD * w)
+		CardTokens.hub_fit(_name, _name.text, CardTokens.CARVED_FONT_CARD_NAME, _name.size.x, CardTokens.HUB_SLOT_TEXT if locked else CardTokens.HUB_INK, unit)
+		_race_badge.position = Vector2(CardTokens.CARVED_BADGE_CARD_AT.x * w, CardTokens.CARVED_BADGE_CARD_AT.y * h)
+		_race_badge.show_race(race, CardTokens.CARVED_BADGE_CARD * w)
 		_race_badge.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
 		var sr := CardTokens.HUB_CARD_SQUAD
 		_squad_label.position = Vector2(sr.position.x * w, sr.position.y * h)
 		_squad_label.size = Vector2(sr.size.x * w, sr.size.y * h)
-		CardTokens.hub_fit(_squad_label, _squad_label.text, CardTokens.FONT_HUB_SQUAD, _squad_label.size.x, CardTokens.HUB_INK, unit, 0, "medium")
+		CardTokens.hub_fit(_squad_label, _squad_label.text, CardTokens.CARVED_FONT_CARD_PLATE, _squad_label.size.x, CardTokens.HUB_INK, unit)
 		_lock.position = Vector2(0.0, CardTokens.HUB_CARD_LOCK_Y * h - 30.0 * unit)
 		_lock.size = Vector2(w, 60.0 * unit)
 		CardTokens.hub_text(_lock, CardTokens.FONT_HUB_LOCKED, CardTokens.HUB_CREAM, unit, CardTokens.OUTLINE_HUB)
@@ -686,7 +705,7 @@ class HubCard extends Control:
 		_back.position = (win - _back.size) * 0.5 + back
 		_back_glow.size = win * CardTokens.HUB_BACK_GLOW_SIZE
 		_back_glow.position = win * CardTokens.HUB_BACK_GLOW_AT - _back_glow.size * 0.5 + back
-		window_slot.position = _tilt * CardTokens.HUB_FIGURE_PARALLAX * win
+		window_slot.position = _tilt * CardTokens.HUB_FIGURE_PARALLAX * win - Vector2(0.0, win.y * CardTokens.HUB_FIGURE_RAISE)
 		_scene_back.set_depth(_tilt, window_slot.position)
 		_scene_front.set_depth(_tilt, window_slot.position)
 
@@ -707,7 +726,7 @@ class HubCard extends Control:
 		# While tilted the mask draws its own flat window (warped) and the content clips itself in the shader.
 		_mask.clip_children = CanvasItem.CLIP_CHILDREN_DISABLED if on else CanvasItem.CLIP_CHILDREN_ONLY
 		var clip: ShaderMaterial = _clip_mat if on else null
-		_back.material = clip
+		_back.material = clip if on else (CardTokens.grey_material() if locked and CardTokens.carved(CardTokens.CARVED_WINDOW_PREFIX + class_id) != null else null)
 		_back_glow.material = clip
 		_scene_back.set_clip(clip)
 		_scene_front.set_clip(clip)
@@ -797,6 +816,7 @@ class MenuEntry extends Button:
 	var s := 1.0
 	var _glow: Panel
 	var _plate: TextureRect
+	var _medal: TextureRect  ## carved round medallion holding the icon
 	var _icon: TextureRect
 	var _label: Label
 	var _sub: Label
@@ -812,9 +832,13 @@ class MenuEntry extends Button:
 		_glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_glow.visible = false
 		add_child(_glow)
-		_plate = CardTokens.art_rect(CardTokens.HUB_MENU_PLATE)
+		_plate = CardTokens.carved_rect(CardTokens.CARVED_PLAQUE)
 		add_child(_plate)
-		_icon = CardTokens.art_rect(CardTokens.HUB_ICON_PREFIX + icon)
+		_medal = CardTokens.carved_rect(CardTokens.CARVED_MEDALLION, true)
+		add_child(_medal)
+		_icon = CardTokens.carved_rect(CardTokens.CARVED_ICON_PREFIX + icon, true)
+		if _icon.texture == null:
+			_icon.texture = CardTokens.tex(CardTokens.HUB_ICON_PREFIX + icon)
 		add_child(_icon)
 		_label = CardTokens.hub_label(CardTokens.t("svc_" + id), CardTokens.FONT_HUB_MENU, CardTokens.HUB_INK, 1.0)
 		add_child(_label)
@@ -841,21 +865,27 @@ class MenuEntry extends Button:
 		position = at
 		size = Vector2(w, h)
 		CardTokens.bare_button(self, s, CardTokens.HUB_RADIUS)
-		var plate_h := w * CardTokens.art_aspect(CardTokens.HUB_MENU_PLATE, 0.29)
-		_plate.size = Vector2(w, plate_h)
-		_plate.position = Vector2(0.0, (h - plate_h) * 0.5)
-		var icon_h := plate_h * CardTokens.HUB_MENU_ICON_SCALE
+		# carved target: an arrow plaque with the round medallion over its left end
+		var plate_h := CardTokens.HUB_MENU_ENTRY.y * CardTokens.CARVED_MENU_PLAQUE_H * s
+		var plate_x := w * CardTokens.CARVED_MENU_PLAQUE_X
+		_plate.size = Vector2(w - plate_x, plate_h)
+		_plate.position = Vector2(plate_x, (h - plate_h) * 0.5)
+		var medal := w * CardTokens.CARVED_MENU_MEDAL
+		_medal.size = Vector2(medal, medal)
+		_medal.pivot_offset = _medal.size * 0.5
+		_medal.position = Vector2(w * CardTokens.CARVED_MENU_MEDAL_X - medal * 0.5, (h - medal) * 0.5)
+		var icon_h := medal * CardTokens.CARVED_MENU_ICON
 		_icon.size = Vector2(icon_h, icon_h)
 		_icon.pivot_offset = _icon.size * 0.5
-		_icon.position = Vector2(w * CardTokens.HUB_MENU_ICON_X - icon_h * 0.5, (h - icon_h) * 0.5)
+		_icon.position = _medal.position + (_medal.size - _icon.size) * 0.5
 		_glow.position = _plate.position + Vector2(8.0, 8.0) * s
 		_glow.size = _plate.size - Vector2(16.0, 16.0) * s
 		CardTokens.panel(_glow, CardTokens.hub_glow(CardTokens.HUB_GLOW, 12.0, plate_h * 0.3 / maxf(s, 0.01), s))
-		var lx := w * CardTokens.HUB_MENU_LABEL.x
-		var lw := w * (CardTokens.HUB_MENU_LABEL.y - CardTokens.HUB_MENU_LABEL.x)
-		_label.size = Vector2(lw, plate_h * (0.5 if locked else 0.8))
-		_label.position = Vector2(lx, _plate.position.y + plate_h * (0.12 if locked else 0.1))
-		CardTokens.hub_fit(_label, _label.text, CardTokens.FONT_HUB_MENU, lw * 0.92, CardTokens.HUB_CREAM if locked else CardTokens.HUB_INK, s, CardTokens.OUTLINE_HUB if locked else 0)
+		var lx := w * CardTokens.CARVED_MENU_LABEL.x
+		var lw := w * (CardTokens.CARVED_MENU_LABEL.y - CardTokens.CARVED_MENU_LABEL.x)
+		_label.size = Vector2(lw, plate_h * (0.5 if locked else 0.9))
+		_label.position = Vector2(lx, _plate.position.y + plate_h * (0.08 if locked else 0.0))
+		CardTokens.hub_fit(_label, _label.text, CardTokens.CARVED_FONT_MENU, lw * 0.92, CardTokens.HUB_CREAM if locked else CardTokens.HUB_INK, s, CardTokens.OUTLINE_HUB if locked else 0)
 		_sub.text = locked_line
 		_sub.visible = locked
 		_sub.size = Vector2(lw, plate_h * 0.3)
@@ -870,6 +900,7 @@ class MenuEntry extends Button:
 		CardTokens.hub_text(_badge_label, CardTokens.FONT_HUB_BADGE, CardTokens.HUB_BADGE_TEXT, s, 0, "medium")
 		_badge.visible = badge != "" and not locked
 		_plate.material = CardTokens.grey_material() if locked else null
+		_medal.material = _plate.material
 		_icon.material = _plate.material
 		tooltip_text = locked_line if locked else CardTokens.t("svc_" + service)
 		_refresh_state()
@@ -886,8 +917,10 @@ class MenuEntry extends Button:
 		position.x = _base_x + _shift * s
 		var tint: Color = CardTokens.HUB_LOCKED if locked else (CardTokens.HUB_PRESSED if down else (CardTokens.HUB_HOVER if hot else CardTokens.HUB_WHITE))
 		_plate.modulate = tint
+		_medal.modulate = tint
 		_icon.modulate = tint
 		_icon.scale = Vector2.ONE * (CardTokens.HUB_MENU_PRESS_ICON if down and not locked else 1.0)
+		_medal.scale = _icon.scale
 
 
 ## One window of the squad tray (number medallion = fight order): the picked card's head, or an empty "+".
@@ -904,6 +937,7 @@ class TraySlot extends Button:
 	var _name: Label
 	var _plus: Label
 	var _badge: RaceBadge
+	var _frame: TextureRect  ## carved slot frame with its gold crest (over the race plate)
 
 	func build() -> void:
 		focus_mode = Control.FOCUS_ALL
@@ -919,6 +953,9 @@ class TraySlot extends Button:
 		_plate.add_child(_emblem)
 		_name = CardTokens.hub_label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
 		_plate.add_child(_name)
+		_frame = CardTokens.carved_rect(CardTokens.CARVED_SLOT)
+		_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(_frame)
 		_plus = CardTokens.hub_label("+", CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, 1.0)
 		_plus.set_anchors_preset(Control.PRESET_FULL_RECT)
 		add_child(_plus)
@@ -936,8 +973,8 @@ class TraySlot extends Button:
 		CardTokens.hub_text(_plus, CardTokens.FONT_HUB_TITLE, CardTokens.HUB_SLOT_TEXT, s)
 		tooltip_text = CardTokens.t("tray_add") if id.is_empty() else CardTokens.t("remove_from_squad")
 		# race badge: top-left corner of the plate (the plate colour is the race too; the letter says it in shape)
-		var edge := size.x * CardTokens.RACE_BADGE_TRAY * 0.8
-		_badge.position = _plate.position + Vector2(-edge * 0.25, -edge * 0.25)
+		var edge := size.x * CardTokens.RACE_BADGE_TRAY * 0.62
+		_badge.position = _plate.position + Vector2(-edge * 0.2, -edge * 0.2)
 		_badge.show_race(race if not id.is_empty() else "", edge)
 		if id.is_empty():
 			return
@@ -946,9 +983,11 @@ class TraySlot extends Button:
 		var e := w * CardTokens.HUB_TRAY_EMBLEM
 		var name_h := _plate.size.y * CardTokens.HUB_TRAY_NAME_H
 		e = minf(e, _plate.size.y - name_h - _plate.size.y * CardTokens.HUB_TRAY_EMBLEM_Y)
-		_emblem.texture = HubLook.class_emblem(id)
+		var icon := CardTokens.carved(CardTokens.CARVED_ICON_PREFIX + id)
+		_emblem.texture = icon if icon != null else HubLook.class_emblem(id)
 		_emblem.size = Vector2(e, e)
-		_emblem.position = Vector2((w - e) * 0.5, _plate.size.y * CardTokens.HUB_TRAY_EMBLEM_Y)
+		_emblem.position = Vector2((w - e) * 0.5, (_plate.size.y - e) * 0.5 if name_h <= 0.0 else _plate.size.y * CardTokens.HUB_TRAY_EMBLEM_Y)
+		_name.visible = name_h > 0.0
 		_name.text = CardTokens.class_name_of(id)
 		_name.size = Vector2(w, name_h)
 		_name.position = Vector2(0.0, _plate.size.y - name_h)
@@ -1012,7 +1051,10 @@ func _ready() -> void:
 
 func _build_background() -> void:
 	_bg = TextureRect.new()
-	_bg.texture = CardTokens.tex(CardTokens.HUB_BG) if CardTokens.tex(CardTokens.HUB_BG) != null else CardTokens.sky_gradient()
+	var back := CardTokens.carved(CardTokens.CARVED_BG)
+	if back == null:
+		back = CardTokens.tex(CardTokens.HUB_BG)
+	_bg.texture = back if back != null else CardTokens.sky_gradient()
 	_bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1031,12 +1073,17 @@ func _build_deck_layer() -> void:
 	_deck_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_deck_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_deck_layer)
-	_top_title = CardTokens.label(CardTokens.t("hub_title"), CardTokens.FONT_HUB_TITLE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
+	_title_art = CardTokens.carved_rect(CardTokens.CARVED_TITLE)
+	_deck_layer.add_child(_title_art)
+	_top_title = CardTokens.hub_label(CardTokens.t("hub_title"), CardTokens.FONT_HUB_TITLE, CardTokens.HUB_INK, 1.0)
 	_deck_layer.add_child(_top_title)
 	_gold_pill = Panel.new()
 	_gold_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_deck_layer.add_child(_gold_pill)
-	_gold_icon = CardTokens.art_rect(CardTokens.HUB_SYS_PREFIX + "gold")
+	_gold_strip = CarvedStrip.new(CardTokens.CARVED_PILL, CardTokens.CARVED_PILL_CAP)
+	_gold_strip.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_gold_pill.add_child(_gold_strip)
+	_gold_icon = CardTokens.carved_rect(CardTokens.CARVED_COIN, true)
 	_deck_layer.add_child(_gold_icon)
 	_gold_label = CardTokens.hub_label("0", CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, 1.0, 0, "medium")
 	_gold_pill.add_child(_gold_label)
@@ -1058,12 +1105,14 @@ func _build_deck_layer() -> void:
 	_row = Control.new()
 	_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_row_scroll.add_child(_row)
-	_hint = CardTokens.hub_label(CardTokens.t("hub_hint"), CardTokens.FONT_HUB_HINT, CardTokens.HUB_MUTED, 1.0, CardTokens.OUTLINE_HUB, "medium")
+	_hint_strip = CarvedStrip.new(CardTokens.CARVED_HINT, CardTokens.CARVED_RIBBON_CAP)
+	_deck_layer.add_child(_hint_strip)
+	_hint = CardTokens.hub_label(CardTokens.t("hub_hint"), CardTokens.FONT_HUB_HINT, CardTokens.HUB_INK, 1.0, 0, "medium")
 	_deck_layer.add_child(_hint)
 	_bar = Control.new()  # the squad tray
 	_bar.mouse_filter = Control.MOUSE_FILTER_PASS
 	_deck_layer.add_child(_bar)
-	_bar_art = CardTokens.art_rect(CardTokens.HUB_TRAY)
+	_bar_art = CardTokens.carved_rect(CardTokens.CARVED_TRAY)
 	_bar.add_child(_bar_art)
 	for i in CardDeck.SQUAD_MAX:
 		var slot := TraySlot.new()
@@ -1075,11 +1124,15 @@ func _build_deck_layer() -> void:
 		_bar.add_child(slot)
 		_slots.append(slot)
 		var number := CardTokens.hub_label(str(i + 1), CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB)
+		number.visible = false  # carved target: the slot crest, no number (the card plates say SQUAD N)
 		_bar.add_child(number)
 		_slot_numbers.append(number)
 	_synergy = Panel.new()  # the synergy line under the tray (races-and-classes.md 3.5, 3.8)
 	_synergy.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_deck_layer.add_child(_synergy)
+	_synergy_strip = CarvedStrip.new(CardTokens.CARVED_SYNERGY, CardTokens.CARVED_SYNERGY_CAP)
+	_synergy_strip.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_synergy.add_child(_synergy_strip)
 	_synergy_kind = CardTokens.hub_label("", CardTokens.FONT_HUB_SYNERGY_KIND, CardTokens.HUB_SYNERGY_KIND, 1.0, 0)
 	_synergy_kind.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_synergy.add_child(_synergy_kind)
@@ -1087,7 +1140,7 @@ func _build_deck_layer() -> void:
 		var badge := RaceBadge.new()
 		_synergy.add_child(badge)
 		_synergy_badges.append(badge)
-	_synergy_text = CardTokens.hub_label("", CardTokens.FONT_HUB_SYNERGY, CardTokens.HUB_CREAM, 1.0, 0, "medium")
+	_synergy_text = CardTokens.hub_label("", CardTokens.FONT_HUB_SYNERGY, CardTokens.HUB_INK, 1.0, 0, "medium")
 	_synergy_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_synergy.add_child(_synergy_text)
 	_fight_glow = Panel.new()
@@ -1100,16 +1153,21 @@ func _build_deck_layer() -> void:
 	_fight.button_down.connect(func() -> void: _fight_art.modulate = CardTokens.HUB_PRESSED)
 	_fight.button_up.connect(func() -> void: _fight_art.modulate = CardTokens.HUB_WHITE)
 	_deck_layer.add_child(_fight)
-	_fight_art = CardTokens.art_rect(CardTokens.HUB_FIGHT)
+	_fight_art = CardTokens.carved_rect(CardTokens.CARVED_FIGHT)
 	_fight.add_child(_fight_art)
+	_fight_ribbon = CarvedStrip.new(CardTokens.CARVED_FIGHT_RIBBON, CardTokens.CARVED_FIGHT_RIBBON_CAP)
+	_fight_ribbon.visible = false
+	_fight.add_child(_fight_ribbon)
 	_fight_label = CardTokens.hub_label(CardTokens.t("fight"), CardTokens.FONT_HUB_FIGHT, CardTokens.HUB_INK, 1.0)
 	_fight.add_child(_fight_label)
-	_fight_progress = CardTokens.hub_label("", CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium")
+	_fight_progress = CardTokens.hub_label("", CardTokens.FONT_HUB_STAGE, CardTokens.HUB_INK, 1.0, 0, "medium")
 	_fight_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_fight_progress.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_fight_progress.visible = false
 	_fight.add_child(_fight_progress)
-	_stage_label = CardTokens.hub_label(CardTokens.stage_name(), CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium")
+	_stage_strip = CarvedStrip.new(CardTokens.CARVED_STAGE, CardTokens.CARVED_STAGE_CAP)
+	_deck_layer.add_child(_stage_strip)
+	_stage_label = CardTokens.hub_label(CardTokens.stage_name(), CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, 0, "medium")
 	_deck_layer.add_child(_stage_label)
 
 
@@ -1130,6 +1188,10 @@ func _build_online_button() -> void:
 	_online_button.focus_mode = Control.FOCUS_ALL
 	_online_button.text = ONLINE_TEXT[0 if CardTokens.language == "th" else 1]
 	_online_button.pressed.connect(open_online)
+	var strip := CarvedStrip.new(CardTokens.CARVED_PILL, CardTokens.CARVED_PILL_CAP)
+	strip.set_anchors_preset(Control.PRESET_FULL_RECT)
+	strip.show_behind_parent = true
+	_online_button.add_child(strip)
 	_deck_layer.add_child(_online_button)
 
 
@@ -1145,9 +1207,19 @@ func _sys_button(art: String, callback: Callable) -> Button:
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = CardTokens.t(art)
-	var picture := CardTokens.art_rect(CardTokens.HUB_SYS_PREFIX + art)
+	# carved target: a round carved wood button with the icon on it
+	var picture := CardTokens.carved_rect(CardTokens.CARVED_ROUND, true)
+	if picture.texture == null:
+		picture.texture = CardTokens.tex(CardTokens.HUB_SYS_PREFIX + art)
 	picture.set_anchors_preset(Control.PRESET_FULL_RECT)
 	b.add_child(picture)
+	var icon := CardTokens.carved_rect(CardTokens.CARVED_ICON_PREFIX + art, true)
+	var inset := (1.0 - CardTokens.CARVED_ROUND_ICON) * 0.5
+	icon.anchor_left = inset
+	icon.anchor_top = inset
+	icon.anchor_right = 1.0 - inset
+	icon.anchor_bottom = 1.0 - inset
+	picture.add_child(icon)
 	b.pressed.connect(callback)
 	b.button_down.connect(func() -> void: picture.modulate = CardTokens.HUB_PRESSED)
 	b.button_up.connect(func() -> void: picture.modulate = CardTokens.HUB_WHITE)
@@ -1218,38 +1290,43 @@ func _layout() -> void:
 	_s = CardTokens.scale_for(size)
 	_phone = CardTokens.is_phone(size)
 	var s := _s
-	var device := _device_safe_x()
-	var side := CardTokens.hub_safe_x(size, s, device)
-	var phone_extra := side - CardTokens.HUB_SAFE.x * s  # the extra phone / notch inset, 0 on a desktop
-	# top bar: title left, gold + settings + account right
-	var title_h := CardTokens.FONT_HUB_TITLE * 1.6 * s
-	_top_title.position = Vector2(side, CardTokens.HUB_TITLE_Y * s - title_h * 0.5)
-	_top_title.size = Vector2(size.x * 0.4, title_h)
-	CardTokens.style_text(_top_title, CardTokens.FONT_HUB_TITLE, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
-	var sys := CardTokens.tap(CardTokens.HUB_SYS_SIZE, _phone) * s
-	var x := size.x - side
+	# Carved target (2026-11-14): positions are measured from the screen edge (the target uses the full phone width);
+	# the device's own safe area (notch) still pushes everything in.
+	var side := maxf(_device_safe_x(), CardTokens.HUB_DECK_PHONE_SAFE_X * s)
+	# top bar: MY CARDS ribbon left; Play online, gold, settings and account right
+	_title_art.position = Vector2(side + CardTokens.CARVED_TITLE_X * s, CardTokens.CARVED_TITLE_Y * s)
+	_title_art.size = CardTokens.CARVED_TITLE_SIZE * s
+	var tr := CardTokens.CARVED_TITLE_TEXT
+	_top_title.position = _title_art.position + Vector2(tr.position.x, tr.position.y) * _title_art.size
+	_top_title.size = Vector2(tr.size.x, tr.size.y) * _title_art.size
+	CardTokens.hub_fit(_top_title, _top_title.text, CardTokens.FONT_HUB_TITLE, _top_title.size.x, CardTokens.HUB_INK, s)
+	var sys := maxf(CardTokens.CARVED_SYS_SIZE, CardTokens.tap(0.0, _phone)) * s
+	var x := size.x - side - CardTokens.CARVED_SYS_X * s
 	for b in [_account_button, _settings_button]:
 		x -= sys
-		b.position = Vector2(x, CardTokens.HUB_SYS_Y * s)
+		b.position = Vector2(x, CardTokens.CARVED_SYS_Y * s)
 		b.size = Vector2(sys, sys)
-		CardTokens.bare_button(b, s, CardTokens.HUB_SYS_SIZE * 0.5)
-		x -= CardTokens.HUB_SYS_GAP * s
-	var pill := CardTokens.HUB_GOLD_SIZE * s
-	x -= CardTokens.HUB_GOLD_GAP * s - CardTokens.HUB_SYS_GAP * s + pill.x
-	_gold_pill.position = Vector2(x, CardTokens.HUB_SYS_Y * s + (sys - pill.y) * 0.5)
+		CardTokens.bare_button(b, s, CardTokens.CARVED_SYS_SIZE * 0.5)
+		x -= CardTokens.CARVED_SYS_GAP * s
+	var pill := CardTokens.CARVED_GOLD_SIZE * s
+	var pill_y := CardTokens.CARVED_SYS_Y * s + (sys - pill.y) * 0.5
+	x -= CardTokens.CARVED_GOLD_GAP * s - CardTokens.CARVED_SYS_GAP * s + pill.x
+	_gold_pill.position = Vector2(x, pill_y)
 	_gold_pill.size = pill
+	CardTokens.panel(_gold_pill, CardTokens.clear_style())
 	if _online_button != null:
-		_online_button.size = Vector2(pill.x * 0.9, sys)
-		_online_button.position = Vector2(x - _online_button.size.x - CardTokens.HUB_GOLD_GAP * s, CardTokens.HUB_SYS_Y * s)
-	CardTokens.panel(_gold_pill, CardTokens.hub_pill(s))
-	var coin := pill.y * 1.15
+		_online_button.size = Vector2(CardTokens.CARVED_ONLINE_W * s, pill.y)
+		_online_button.position = Vector2(x - _online_button.size.x - CardTokens.CARVED_ONLINE_GAP * s, pill_y)
+		CardTokens.bare_button(_online_button, s, pill.y * 0.5)
+		CardTokens.style_text(_online_button, CardTokens.CARVED_FONT_ONLINE, CardTokens.HUB_CREAM, s)
+	var coin := CardTokens.CARVED_COIN_SIZE * s
 	_gold_icon.size = Vector2(coin, coin)
-	_gold_icon.position = _gold_pill.position - Vector2(pill.y * 0.15, pill.y * 0.075)
-	_gold_label.position = Vector2(coin * 0.8, 0.0)
-	_gold_label.size = Vector2(pill.x - coin * 0.9, pill.y)
-	CardTokens.hub_text(_gold_label, CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, s, 0, "medium")
+	_gold_icon.position = _gold_pill.position + Vector2(pill.y * 0.08, (pill.y - coin) * 0.5)
+	_gold_label.position = Vector2(coin * 1.05, 0.0)
+	_gold_label.size = Vector2(pill.x - coin * 1.05 - pill.y * 0.35, pill.y)
+	CardTokens.hub_text(_gold_label, CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, s)
 	# side menu (left)
-	var menu_x := CardTokens.HUB_MENU_X * s + phone_extra
+	var menu_x := side + CardTokens.HUB_MENU_X * s
 	for i in _menu.size():
 		var entry: MenuEntry = _menu[i]
 		entry.locked = locked_services.has(entry.service)
@@ -1257,22 +1334,23 @@ func _layout() -> void:
 		entry.badge = str(service_badges.get(entry.service, ""))
 		entry.layout(Vector2(menu_x, (CardTokens.HUB_MENU_Y + float(i) * CardTokens.HUB_MENU_STEP) * s), s, _phone)
 	# card row: right of the menu; cards shrink to HUB_CARD_MIN_W, then the row scrolls (never two rows)
-	var row_left := CardTokens.HUB_CARD_AREA_X * s + phone_extra
-	var row_right := size.x - side
+	var row_left := side + CardTokens.HUB_CARD_AREA_X * s
+	var row_right := size.x - side - CardTokens.HUB_CARD_AREA_RIGHT * s
 	var avail := maxf(row_right - row_left, 1.0)
 	var count := maxi(_class_ids.size(), 1)
 	var gap := CardTokens.HUB_CARD_GAP * s
 	var card_w := CardTokens.HUB_CARD.x * s
-	if _phone:
-		card_w = minf(card_w * CardTokens.HUB_PHONE_CARD_GROW, (avail - gap * (count - 1)) / count)
-		card_w = maxf(card_w, CardTokens.HUB_CARD.x * s)
 	var need := card_w * count + gap * (count - 1)
+	if need > avail:  # narrower than the target (16:9): the row may use the right margin too
+		avail = maxf(size.x - side - CardTokens.CARVED_SYS_X * s - row_left, 1.0)
 	if need > avail:
 		card_w = maxf((avail - gap * (count - 1)) / count, CardTokens.HUB_CARD_MIN_W * s)
 		need = card_w * count + gap * (count - 1)
 	var card_h := card_w * CardTokens.HUB_CARD.y / CardTokens.HUB_CARD.x
 	var pad := (CardTokens.HUB_CARD_LIFT + CardTokens.HUB_CARD_FOCUS_LIFT + CardTokens.HUB_GLOW_PAD) * s
-	_row_scroll.position = Vector2(row_left, CardTokens.HUB_CARD_TOP * s - pad)
+	# smaller cards sit in the middle of the full-size card band (no empty strip above the hint)
+	var band_drop := maxf(0.0, CardTokens.HUB_CARD.y * s - card_h) * 0.5
+	_row_scroll.position = Vector2(row_left, CardTokens.HUB_CARD_TOP * s + band_drop - pad)
 	_row_scroll.size = Vector2(avail, card_h + pad * 2.0)
 	_row.custom_minimum_size = Vector2(maxf(need, avail), card_h + pad * 2.0)
 	var start_x := (maxf(need, avail) - need) * 0.5
@@ -1285,56 +1363,76 @@ func _layout() -> void:
 		card.base_position = Vector2(start_x + float(index) * (card_w + gap), pad)
 		card.position = card.base_position
 		index += 1
-	_hint.position = Vector2(row_left, maxf(CardTokens.HUB_HINT_Y * s, _row_scroll.position.y + _row_scroll.size.y - pad * 0.5))
-	_hint.size = Vector2(avail, CardTokens.FONT_HUB_HINT * 1.6 * s)
-	CardTokens.hub_fit(_hint, _hint.text, CardTokens.FONT_HUB_HINT, avail, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
+	# hint: a parchment ribbon centred under the card row
+	var hint_w := minf(CardTokens.CARVED_HINT_W * s, size.x - row_left - side)
+	var hint_h := CardTokens.CARVED_HINT_H * s
+	var hint_y := maxf(CardTokens.HUB_HINT_Y * s, _row_scroll.position.y + _row_scroll.size.y - pad)
+	_hint_strip.size = Vector2(hint_w, hint_h)
+	_hint_strip.position = Vector2(row_left + start_x + need * 0.5 - hint_w * 0.5, hint_y)
+	_hint.position = _hint_strip.position + Vector2(CardTokens.CARVED_HINT_PAD * s, 0.0)
+	_hint.size = Vector2(hint_w - CardTokens.CARVED_HINT_PAD * 2.0 * s, hint_h)
+	CardTokens.hub_fit(_hint, _hint.text, CardTokens.CARVED_FONT_HINT, _hint.size.x, CardTokens.HUB_INK, s)
 	# FIGHT (bottom right) and the squad tray (bottom, right of the menu column); the tray never runs under FIGHT
 	var fight_w := CardTokens.HUB_FIGHT_W * s
-	var tray_x := CardTokens.HUB_TRAY_X * s + phone_extra
+	var tray_x := side + CardTokens.HUB_TRAY_X * s
 	var tray_w := CardTokens.HUB_TRAY_W * s
-	var fight_x := size.x - side - fight_w
+	var fight_right := size.x - side - CardTokens.CARVED_FIGHT_X * s
+	var fight_x := fight_right - fight_w
 	if tray_x + tray_w + gap > fight_x:  # narrow screens: shrink FIGHT first, then the tray
-		fight_w = maxf(CardTokens.HUB_FIGHT_MIN_W * s, size.x - side - (tray_x + tray_w + gap))
-		fight_x = size.x - side - fight_w
+		fight_w = maxf(CardTokens.HUB_FIGHT_MIN_W * s, fight_right - (tray_x + tray_w + gap))
+		fight_x = fight_right - fight_w
 		tray_w = minf(tray_w, fight_x - gap - tray_x)
-	var fight_h := fight_w * CardTokens.art_aspect(CardTokens.HUB_FIGHT, 0.45)
+	var fight_h := fight_w * CardTokens.carved_aspect(CardTokens.CARVED_FIGHT, 0.52)
 	_fight.size = Vector2(fight_w, fight_h)
-	_fight.position = Vector2(fight_x, size.y - CardTokens.HUB_TRAY_BOTTOM * s - fight_h)
+	_fight.position = Vector2(fight_x, size.y - CardTokens.CARVED_FIGHT_BOTTOM * s - fight_h)
 	CardTokens.bare_button(_fight, s, CardTokens.HUB_RADIUS)
 	_fight_art.size = _fight.size
-	_fight_glow.position = _fight.position + _fight.size * Vector2(0.06, 0.25)
-	_fight_glow.size = _fight.size * Vector2(0.88, 0.5)
-	CardTokens.panel(_fight_glow, CardTokens.hub_glow(CardTokens.HUB_FIGHT_GLOW, CardTokens.HUB_GLOW_PAD * 1.5, CardTokens.HUB_RADIUS, s))
+	_fight_glow.visible = false  # carved target: no glow round FIGHT
 	var text_w := fight_w * CardTokens.HUB_FIGHT_TEXT_W
-	_fight_label.size = Vector2(text_w, fight_h * 0.5)
-	_fight_label.position = Vector2(fight_w * CardTokens.HUB_FIGHT_TEXT.x - text_w * 0.5, fight_h * CardTokens.HUB_FIGHT_TEXT.y - fight_h * 0.25)
+	_fight_label.size = Vector2(text_w, fight_h * 0.42)
+	_fight_label.position = Vector2(fight_w * CardTokens.HUB_FIGHT_TEXT.x - text_w * 0.5, fight_h * CardTokens.HUB_FIGHT_TEXT.y - _fight_label.size.y * 0.5)
 	CardTokens.hub_fit(_fight_label, _fight_label.text, CardTokens.FONT_HUB_FIGHT, text_w, CardTokens.HUB_INK if not _fight.disabled else CardTokens.HUB_SLOT_TEXT, s)
-	_fight_progress.size = Vector2(fight_w, CardTokens.FONT_HUB_STAGE * 1.6 * s)
-	_fight_progress.position = Vector2(0.0, fight_h - _fight_progress.size.y * 1.05)
+	var ribbon := CardTokens.CARVED_FIGHT_RIBBON_SIZE * s * minf(1.0, fight_w / (CardTokens.HUB_FIGHT_W * s))
+	_fight_ribbon.size = ribbon
+	_fight_ribbon.position = Vector2((fight_w - ribbon.x) * 0.5, fight_h * CardTokens.CARVED_FIGHT_RIBBON_Y - ribbon.y * 0.5)
+	_fight_progress.size = Vector2(ribbon.x * 0.8, ribbon.y * 0.8)
+	_fight_progress.position = _fight_ribbon.position + Vector2(ribbon.x * 0.1, ribbon.y * 0.04)
 	_fit_fight_progress()
-	_stage_label.size = Vector2(fight_w, CardTokens.FONT_HUB_STAGE * 1.6 * s)
-	_stage_label.position = Vector2(fight_x, _fight.position.y - _stage_label.size.y)
-	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.FONT_HUB_STAGE, fight_w, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium")
-	var tray_h := tray_w * CardTokens.art_aspect(CardTokens.HUB_TRAY, 0.27)
-	# the synergy line takes the strip under the tray: the tray moves up by its height
+	var stage_w := minf(CardTokens.CARVED_STAGE_W * s, fight_w * 0.9)
+	var stage_h := CardTokens.CARVED_STAGE_H * s
+	_stage_strip.size = Vector2(stage_w, stage_h)
+	_stage_strip.position = Vector2(fight_x + (fight_w - stage_w) * 0.5, _fight.position.y + fight_h * CardTokens.CARVED_STAGE_DROP - stage_h * 0.5)
+	_stage_label.size = Vector2(stage_w * 0.86, stage_h)
+	_stage_label.position = _stage_strip.position + Vector2(stage_w * 0.07, 0.0)
+	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.CARVED_FONT_STAGE, _stage_label.size.x, CardTokens.HUB_CREAM, s)
+	var tray_h := tray_w * CardTokens.carved_aspect(CardTokens.CARVED_TRAY, 0.29)
+	# the synergy ribbon runs under the tray (a little wider), overlapping its foot
 	var syn_h := CardTokens.HUB_SYNERGY_H * s
-	_synergy.size = Vector2(tray_w, syn_h)
-	_synergy.position = Vector2(tray_x, size.y - CardTokens.HUB_SYNERGY_GAP * s - syn_h)
-	tray_h = minf(tray_h, _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s - (_hint.position.y + _hint.size.y))
-	tray_w = minf(tray_w, tray_h / CardTokens.art_aspect(CardTokens.HUB_TRAY, 0.27))
-	_bar.position = Vector2(tray_x, _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s - tray_h)
+	var syn_w := tray_w * CardTokens.HUB_SYNERGY_GROW
+	_synergy.size = Vector2(syn_w, syn_h)
+	_synergy.position = Vector2(tray_x + (tray_w - syn_w) * 0.5, size.y - CardTokens.HUB_SYNERGY_BOTTOM * s - syn_h)
+	var tray_bottom := _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s
+	var tray_room := tray_bottom - (_hint_strip.position.y + _hint_strip.size.y) - CardTokens.CARVED_TRAY_TOP_GAP * s
+	if tray_h > tray_room:
+		tray_h = maxf(tray_room, 1.0)
+		var narrow := tray_h / CardTokens.carved_aspect(CardTokens.CARVED_TRAY, 0.29)
+		tray_x += (tray_w - narrow) * 0.5
+		tray_w = narrow
+	_bar.position = Vector2(tray_x, tray_bottom - tray_h)
 	_bar.size = Vector2(tray_w, tray_h)
 	_bar_art.size = _bar.size
+	var slot_aspect := CardTokens.carved_aspect(CardTokens.CARVED_SLOT, 1.15)
 	for i in _slots.size():
 		var r: Rect2 = CardTokens.HUB_TRAY_SLOTS[i]
 		var slot: TraySlot = _slots[i]
-		slot.position = Vector2(r.position.x * tray_w, r.position.y * tray_h)
-		slot.size = Vector2(r.size.x * tray_w, r.size.y * tray_h)
+		var slot_w := r.size.x * tray_w
+		slot.size = Vector2(slot_w, minf(slot_w * slot_aspect, tray_h * 1.02))
+		slot.size.x = slot.size.y / slot_aspect
+		slot.position = Vector2(r.position.x * tray_w + (slot_w - slot.size.x) * 0.5, r.position.y * tray_h + maxf(0.0, (tray_h - slot.size.y) * 0.5 - r.position.y * tray_h))
 		var number: Label = _slot_numbers[i]
-		number.size = Vector2(r.size.x * tray_w, CardTokens.FONT_HUB_TRAY_NUM * 1.4 * s)
-		number.position = Vector2(r.position.x * tray_w, CardTokens.HUB_TRAY_NUM_Y * tray_h - number.size.y * 0.5)
-		CardTokens.hub_text(number, CardTokens.FONT_HUB_TRAY_NUM, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
-	CardTokens.panel(_synergy, CardTokens.hub_synergy_box(s))
+		number.size = Vector2(slot.size.x, CardTokens.FONT_HUB_TRAY_NUM * 1.4 * s)
+		number.position = Vector2(slot.position.x, 0.0)
+	CardTokens.panel(_synergy, CardTokens.clear_style())
 	_refresh_squad_bar()
 	_layout_editor()
 	_layout_toast()
@@ -1405,7 +1503,7 @@ func _refresh_all() -> void:
 			card.squad_button.tooltip_text = CardTokens.t("squad_need_one")
 	_refresh_squad_bar()
 	_fight.disabled = squad.is_empty()
-	_fight_glow.visible = not squad.is_empty()
+	_fight_glow.visible = false  # carved target: no glow
 	_fight_art.material = CardTokens.grey_material() if squad.is_empty() else null
 	_stage_label.text = CardTokens.t("fight_need") if squad.is_empty() else CardTokens.stage_name()
 	if _mode == "editor":
@@ -1436,12 +1534,12 @@ func _refresh_synergy(squad: Array) -> void:
 	var pad := CardTokens.HUB_SYNERGY_PAD * s
 	_synergy_kind.text = CardTokens.synergy_name(kind)
 	_synergy_kind.position = Vector2(pad, 0.0)
-	_synergy_kind.size = Vector2(_synergy.size.x * 0.22, h)
-	CardTokens.hub_fit(_synergy_kind, _synergy_kind.text, CardTokens.FONT_HUB_SYNERGY_KIND, _synergy_kind.size.x, CardTokens.HUB_SYNERGY_KIND if kind != "none" else CardTokens.HUB_MUTED, s)
+	_synergy_kind.size = Vector2(_synergy.size.x * 0.16, h)
+	CardTokens.hub_fit(_synergy_kind, _synergy_kind.text, CardTokens.CARVED_FONT_SYNERGY, _synergy_kind.size.x, CardTokens.HUB_SYNERGY_KIND if kind != "none" else CardTokens.HUB_SLOT_TEXT, s)
 	var font := CardTokens.display_font()
 	var kind_w := minf(_synergy_kind.size.x, font.get_string_size(_synergy_kind.text, HORIZONTAL_ALIGNMENT_LEFT, -1, _synergy_kind.get_theme_font_size("font_size")).x if font != null else _synergy_kind.size.x)
-	var x := pad + kind_w + pad * 0.8
-	var edge := minf(CardTokens.HUB_SYNERGY_BADGE * s, h * 0.8)
+	var x := pad + kind_w + pad * 0.3
+	var edge := minf(CardTokens.CARVED_SYNERGY_BADGE * s, h * 0.62)
 	for i in _synergy_badges.size():
 		var badge: RaceBadge = _synergy_badges[i]
 		var race := str(races[i]) if i < races.size() else ""
@@ -1452,12 +1550,12 @@ func _refresh_synergy(squad: Array) -> void:
 		badge.modulate = CardTokens.HUB_WHITE if counts or kind == "none" else CardTokens.HUB_LOCKED
 		if not race.is_empty():
 			x += edge + pad * 0.35
-	x += pad * 0.5
+	x += pad * 0.25
 	var text := str(synergy.get("text", "")) if kind != "none" else CardTokens.t("synergy_none_hint")
 	_synergy_text.text = text
 	_synergy_text.position = Vector2(x, 0.0)
 	_synergy_text.size = Vector2(maxf(_synergy.size.x - x - pad, 1.0), h)
-	CardTokens.hub_fit(_synergy_text, text, CardTokens.FONT_HUB_SYNERGY, _synergy_text.size.x, CardTokens.HUB_CREAM if kind != "none" else CardTokens.HUB_MUTED, s, 0, "medium")
+	CardTokens.hub_fit(_synergy_text, text, CardTokens.CARVED_FONT_SYNERGY, _synergy_text.size.x, CardTokens.HUB_INK if kind != "none" else CardTokens.HUB_SLOT_TEXT, s)
 	_synergy.tooltip_text = "%s: %s" % [_synergy_kind.text, text]
 
 
@@ -2454,6 +2552,7 @@ func _update_fight_progress() -> void:
 	if text != _fight_progress.text:
 		_fight_progress.text = text
 		_fight_progress.visible = text != ""
+		_fight_ribbon.visible = text != ""
 		_fit_fight_progress()
 	if _fight_waiting and ready:
 		_fight_waiting = false
@@ -2462,7 +2561,7 @@ func _update_fight_progress() -> void:
 
 func _fit_fight_progress() -> void:
 	if _fight_progress != null and _fight_progress.visible:
-		CardTokens.hub_fit(_fight_progress, _fight_progress.text, CardTokens.FONT_HUB_STAGE, _fight_progress.size.x, CardTokens.HUB_CREAM, _s, CardTokens.OUTLINE_HUB, "medium")
+		CardTokens.hub_fit(_fight_progress, _fight_progress.text, CardTokens.CARVED_FONT_LOADING, _fight_progress.size.x, CardTokens.HUB_INK, _s)
 
 
 func _start_fight() -> void:

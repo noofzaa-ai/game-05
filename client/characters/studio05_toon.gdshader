@@ -36,6 +36,26 @@ uniform float hair_part = -0.003;
 uniform float painted_bangs = 0.0;
 group_uniforms;
 
+// Card-only ink-wash look (Technical Artist, hub ink-wash direction 2026-11-14). Off everywhere except the
+// class card portraits (studio05_character_model.gd card_ink): battle and the Studio parity look are unchanged.
+// A uniform branch (same value for every pixel of a draw), so the cost off-card is one compare.
+group_uniforms card_ink;
+uniform bool card_ink = false;
+uniform vec3 card_shadow_tint = vec3(0.90, 0.74, 0.68); // warm paper shadow (multiplies, instead of grey darkening)
+uniform float card_band_light = 1.10; // lit band level
+uniform float card_band_mid = 1.0; // (unused since 2-band cel; kept for tuning)
+uniform float card_band_dark = 0.78; // shadow band level (times card_shadow_tint)
+uniform float card_desaturate = 0.06; // 0..1 toward luminance: the watercolour palette
+uniform vec3 card_paper = vec3(0.86, 0.80, 0.68); // paper tone washed over the colours (linear)
+uniform float card_paper_wash = 0.035; // how much of the paper tone shows through
+uniform float card_grain = 0.045; // paper-grain multiply strength (screen space, 0 = off)
+uniform float card_grain_pixels = 3.0; // grain cell size in pixels
+uniform vec3 card_ink_color = vec3(0.010, 0.0045, 0.0025); // inner line ink (same brown as card_ink_hull)
+uniform float card_rim_ink = 0.8; // ink where the surface turns away (face edge, arm and fold edges)
+uniform float card_crease_ink = 0.7; // ink where the normal bends sharply (folds, hair locks, weapon edges)
+uniform float card_band_ink = 0.55; // a thin line along the shadow edge (drawn cel)
+group_uniforms;
+
 // Studio key light (camera space) and cel levels, STUDIO_SPEC.md.
 const vec3 CEL_KEY = vec3(-0.45, 0.65, 0.72);
 const float CEL_DARK = 0.63;
@@ -265,6 +285,22 @@ vec2 eyeSocketRim(float t) {
 	return b + 0.5 * f * ((c - a) + f * ((2.0 * a - 5.0 * b + 4.0 * c - d) + f * (3.0 * (b - c) + d - a)));
 }
 
+// Value noise for the paper grain (cheap: 4 hashes, no texture read).
+float cardHash(vec2 cell) {
+	return fract(sin(dot(cell, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float cardGrain(vec2 pixel) {
+	vec2 cell = floor(pixel);
+	vec2 f = fract(pixel);
+	f = f * f * (3.0 - 2.0 * f);
+	float a = cardHash(cell);
+	float b = cardHash(cell + vec2(1.0, 0.0));
+	float c = cardHash(cell + vec2(0.0, 1.0));
+	float d = cardHash(cell + vec2(1.0, 1.0));
+	return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
 vec3 srgb_to_linear(vec3 c) {
 	return mix(c / 12.92, pow((max(c, vec3(0.0)) + 0.055) / 1.055, vec3(2.4)), step(vec3(0.04045), c));
 }
@@ -297,6 +333,11 @@ void fragment() {
 	float band = mix(CEL_DARK, CEL_MID, smoothstep(0.05, 0.09, cel_facing));
 	band = mix(band, CEL_LIGHT, smoothstep(0.56, 0.60, cel_facing));
 	vec3 light = diffuse * band;
+	if (card_ink) {
+		// Two crisp flat cel bands; the shadow is a warm paper-tinted wash, not a grey darkening.
+		float shade = 1.0 - smoothstep(0.10, 0.13, cel_facing);
+		light = diffuse * mix(vec3(card_band_light), card_shadow_tint * card_band_dark, shade);
+	}
 	vec3 p = rest_pos;
 
 	if (part == 2) {
@@ -392,6 +433,27 @@ void fragment() {
 		float nose_y = 0.332 + 0.0019 * nose_x;
 		float nose = studioStroke(p.y - nose_y, 0.00065) * (1.0 - smoothstep(0.36, 1.0, abs(nose_x)));
 		light = mix(light, vec3(0.26, 0.105, 0.097), face_front * max(0.48 * mouth, 0.36 * nose));
+	}
+	if (card_ink) {
+		// Watercolour palette: a little desaturated, a thin paper wash, paper grain multiplied in.
+		float luma = dot(light, vec3(0.2126, 0.7152, 0.0722));
+		light = mix(light, vec3(luma), card_desaturate);
+		light = mix(light, card_paper * max(luma * 1.6, 0.35), card_paper_wash);
+		float grain = cardGrain(FRAGCOORD.xy / card_grain_pixels) * 0.6 + cardGrain(FRAGCOORD.xy / (card_grain_pixels * 4.0)) * 0.4;
+		light *= 1.0 - card_grain * grain;
+		// Drawn inner lines (screen-space derivatives, no extra pass): the rim where the surface turns away
+		// from the eye, sharp normal bends, and a thin stroke along the shadow edge.
+		vec3 view_n = normalize(NORMAL) * (FRONT_FACING ? 1.0 : -1.0);
+		float facing = abs(dot(view_n, normalize(VIEW)));
+		float rim = 1.0 - smoothstep(0.07, 0.15, facing);
+		float crease = smoothstep(0.35, 0.70, max(length(dFdx(view_n)), length(dFdy(view_n))));
+		float edge_slope = max(fwidth(cel_facing), 0.0001);
+		float band_edge = (1.0 - smoothstep(0.5, 1.4, abs(cel_facing - 0.115) / edge_slope)) * smoothstep(0.01, 0.06, edge_slope);
+		float ink = max(rim * card_rim_ink, max(crease * card_crease_ink, band_edge * card_band_ink));
+		if (part == 1) {
+			ink *= 1.0 - smoothstep(0.03, 0.05, rest_pos.z) * 0.85; // keep the face itself clean (eyes, mouth)
+		}
+		light = mix(light, card_ink_color, ink);
 	}
 	light = mix(light, flash.rgb, flash.a);
 	ALBEDO = OUTPUT_IS_SRGB ? linear_to_srgb(light) : light;

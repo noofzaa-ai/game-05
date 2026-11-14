@@ -229,7 +229,7 @@ const HUB_BADGE_TEXT := Color("FFFFFF")
 const HUB_GOLD_EDGE := Color("B98A4E")
 const HUB_PILL := Color(0.149, 0.086, 0.047, 0.9)  ## gold counter back
 const HUB_GLOW := Color(1.0, 0.75, 0.42, 0.75)  ## hover glow / squad card glow
-const HUB_SCENE_DIM := Color(0.031, 0.039, 0.078, 0.24)  ## over the background (the mock darkens it a little)
+const HUB_SCENE_DIM := Color(0.031, 0.039, 0.078, 0.0)  ## over the background (the carved backdrop is already dark)
 const HUB_FIGHT_GLOW := Color(1.0, 0.59, 0.27, 0.8)
 const HUB_HOVER := Color(1.12, 1.06, 0.96)  ## menu plate brightened on hover / focus
 const HUB_PRESSED := Color(0.92, 0.92, 0.92)  ## pressed: 8% darker
@@ -265,6 +265,103 @@ const HUB_PANEL := "hub_panel_tabs"
 const HUB_SLOT := "equip_slot_normal"
 const HUB_SLOT_SELECTED := "equip_slot_selected"
 const HUB_SYS_PREFIX := "hub_sys_"  ## settings | back | gold | account
+
+## Carved-wood hub (Boss target art_source/boss_refs/hub_inkwash_2026-11-14/hub_TARGET_carved.png, 2026-11-14).
+## Codex art cut to RGBA in art/ui/hub_carved/ (sources: art_source/codex_review/hub_target_build_2026-11-14/).
+const CARVED_DIR := "res://art/ui/hub_carved/"
+const CARVED_BG := "backdrop"
+const CARVED_FRAME_PREFIX := "frame_"  ## + class id
+const CARVED_WINDOW_PREFIX := "window_"  ## + class id: the inked watercolour class scene behind the live character
+const CARVED_ICON_PREFIX := "icon_"  ## + service icon id, class id, "gear" or "profile"
+const CARVED_PLAQUE := "menu_plaque"
+const CARVED_MEDALLION := "medallion"
+const CARVED_TITLE := "title_ribbon"
+const CARVED_PILL := "pill"
+const CARVED_ROUND := "round_button"
+const CARVED_COIN := "coin"
+const CARVED_TRAY := "tray_board"
+const CARVED_SLOT := "tray_slot"
+const CARVED_FIGHT := "fight_plaque"
+const CARVED_FIGHT_RIBBON := "fight_ribbon"
+const CARVED_STAGE := "stage_pill"
+const CARVED_HINT := "hint_ribbon"
+const CARVED_SYNERGY := "synergy_ribbon"
+## Horizontal 3-slice end caps of the strips (client/carved_strip.gd), in art px.
+const CARVED_PILL_CAP := 110.0
+const CARVED_STAGE_CAP := 60.0
+const CARVED_RIBBON_CAP := 40.0
+const CARVED_SYNERGY_CAP := 50.0
+const CARVED_PLAQUE_CAP := Vector2(60.0, 120.0)  ## menu plaque: left, right (the arrow tip)
+const CARVED_FIGHT_RIBBON_CAP := 180.0
+## Left menu entry: the round medallion over the left end of the arrow plaque, fractions of the entry width / height.
+const CARVED_MENU_MEDAL := 0.29  ## medallion diameter, of the entry width
+const CARVED_MENU_MEDAL_X := 0.145  ## medallion centre x
+const CARVED_MENU_PLAQUE_X := 0.16  ## plaque left edge
+const CARVED_MENU_PLAQUE_H := 0.6  ## plaque height, of the entry height
+const CARVED_MENU_ICON := 0.6  ## icon box, of the medallion
+const CARVED_MENU_LABEL := Vector2(0.32, 0.9)  ## label from / to
+const CARVED_ROUND_ICON := 0.54  ## gear / profile icon, of the round button
+const CARVED_TITLE_SIZE := Vector2(448.0, 125.0)  ## the MY CARDS ribbon at 1080
+const CARVED_TITLE_X := 43.0  ## from the screen edge (plus a device notch inset)
+const CARVED_TITLE_Y := 21.0
+const CARVED_TITLE_TEXT := Rect2(0.13, 0.08, 0.74, 0.58)  ## title text box on the ribbon
+const CARVED_TOP_PILL_H := 59.0  ## Online / Play online / gold pills at 1080
+const CARVED_SYS_SIZE := 99.0  ## round gear / profile buttons
+const CARVED_SYS_X := 55.0  ## the last round button from the side edge
+const CARVED_SYS_GAP := 30.0
+const CARVED_SYS_Y := 15.0
+const CARVED_GOLD_SIZE := Vector2(244.0, 58.0)
+const CARVED_GOLD_GAP := 53.0  ## gold pill to the first round button
+const CARVED_ONLINE_W := 224.0  ## the Play online pill
+const CARVED_ONLINE_GAP := 56.0  ## Play online pill to the gold pill
+const CARVED_STATUS_RIGHT := 1100.0  ## Online status pill: its centre, from the right screen edge
+const CARVED_TRAY_TOP_GAP := 40.0  ## the tray keeps this much under the hint ribbon (its slot crests)
+const CARVED_COIN_SIZE := 61.0
+const CARVED_HINT_H := 52.0
+const CARVED_HINT_W := 1150.0
+const CARVED_HINT_X := 680.0  ## from the screen edge (plus a device notch inset)
+const CARVED_HINT_PAD := 60.0  ## text clear of the folded ends
+const CARVED_STAGE_H := 56.0
+const CARVED_STAGE_W := 373.0
+const CARVED_STAGE_DROP := 0.0  ## stage pill centre below the plaque art top, of the plaque height
+const CARVED_FIGHT_RIBBON_SIZE := Vector2(389.0, 76.0)
+const CARVED_FIGHT_RIBBON_Y := 0.83  ## ribbon centre, fraction of the plaque height
+const CARVED_FIGHT_BOTTOM := 43.0  ## plaque art bottom above the screen bottom
+const CARVED_FIGHT_X := 70.0  ## plaque right edge from the side edge
+## Carved hub type sizes (at 1080; the target's lettering is bigger than the leather hub's)
+const CARVED_FONT_CARD_NAME := 30
+const CARVED_FONT_CARD_PLATE := 25
+const CARVED_FONT_MENU := 40
+const CARVED_FONT_HINT := 24
+const CARVED_FONT_SYNERGY := 23
+const CARVED_FONT_STAGE := 25
+const CARVED_FONT_LOADING := 25
+const CARVED_FONT_ONLINE := 26
+const CARVED_BADGE_CARD := 0.16  ## card race badge edge, of the card width
+const CARVED_BADGE_CARD_AT := Vector2(0.105, 0.17)
+const CARVED_SYNERGY_BADGE := 36.0
+const HUB_DECK_PHONE_SAFE_X := 0.0  ## the hub's own extra phone inset (the target uses the full width); the device safe area still applies
+
+
+static func carved(art_name: String) -> Texture2D:
+	var path := CARVED_DIR + art_name + ".png"
+	return load(path) as Texture2D if ResourceLoader.exists(path) else null
+
+
+## A carved art picture scaled to its rect (keep_aspect: centred, uniform), never takes clicks.
+static func carved_rect(art_name: String, keep_aspect: bool = false) -> TextureRect:
+	var r := TextureRect.new()
+	r.texture = carved(art_name)
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED if keep_aspect else TextureRect.STRETCH_SCALE
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return r
+
+
+## Height / width of a carved art file (fallback when missing).
+static func carved_aspect(art_name: String, fallback: float) -> float:
+	var art := carved(art_name)
+	return float(art.get_height()) / float(art.get_width()) if art != null else fallback
 
 ## Side menu, most used first (spec §2). icon = HUB_ICON_PREFIX + icon.
 const HUB_SERVICES: Array[Dictionary] = [
@@ -309,10 +406,10 @@ const HUB_SYS_Y := 26.0
 const HUB_SYS_GAP := 16.0
 const HUB_GOLD_SIZE := Vector2(184.0, 54.0)
 const HUB_GOLD_GAP := 70.0  ## between the gold counter and the system buttons
-const HUB_MENU_X := 28.0  ## from the side edge (or the phone safe inset)
-const HUB_MENU_Y := 132.0
-const HUB_MENU_ENTRY := Vector2(300.0, 100.0)  ## the plate (art aspect 1458x423 -> 300x87, centred in 100)
-const HUB_MENU_STEP := 104.0
+const HUB_MENU_X := 58.0  ## from the side edge (or the phone safe inset)
+const HUB_MENU_Y := 154.0  ## carved target 2026-11-14: entries centred 209 + 112 n at 1080
+const HUB_MENU_ENTRY := Vector2(372.0, 110.0)  ## the plate (art aspect 1458x423 -> 300x87, centred in 100)
+const HUB_MENU_STEP := 112.0
 const HUB_MENU_HOVER_SHIFT := 6.0
 const HUB_MENU_PRESS_SHIFT := 2.0
 const HUB_MENU_ICON_SCALE := 1.05  ## medallion height / plate height
@@ -321,29 +418,36 @@ const HUB_MENU_LABEL := Vector2(0.27, 0.93)  ## parchment label from/to, fractio
 const HUB_MENU_PRESS_ICON := 0.96
 const HUB_BADGE_R := 17.0
 const HUB_BADGE_AT := Vector2(0.235, 0.12)  ## badge centre on the plate
-const HUB_CARD_AREA_X := 400.0  ## the card row starts right of the menu (from the side edge)
-const HUB_CARD := Vector2(300.0, 450.0)
-const HUB_CARD_GAP := 34.0
+const HUB_CARD_AREA_X := 569.0  ## the card row starts right of the menu (from the side edge)
+const HUB_CARD_AREA_RIGHT := 205.0  ## the row ends this far in from the right side edge (the target leaves the towers open)
+const HUB_CARD := Vector2(369.0, 505.0)  ## carved frame art 768x1052
+const HUB_CARD_GAP := 30.0
 const HUB_CARD_MIN_W := 240.0
 const HUB_PHONE_CARD_GROW := 1.12  ## phones: cards a little bigger when the row has room (names stay readable)
-const HUB_CARD_TOP := 150.0
-const HUB_CARD_LIFT := 12.0  ## squad cards sit a little higher
+const HUB_CARD_TOP := 122.0
+const HUB_CARD_LIFT := 0.0  ## squad cards sit level with the rest (carved target: one even row)
 const HUB_CARD_FOCUS_LIFT := 8.0
 const HUB_GLOW_PAD := 16.0
-const HUB_HINT_Y := 640.0
-const HUB_TRAY_X := 470.0  ## from the side edge (or the phone safe inset)
-const HUB_TRAY_W := 760.0
+const HUB_HINT_Y := 659.0
+const HUB_TRAY_X := 576.0  ## from the side edge (or the phone safe inset)
+const HUB_TRAY_W := 880.0
 const HUB_TRAY_BOTTOM := 34.0
-const HUB_FIGHT_W := 470.0
+const HUB_FIGHT_W := 587.0
 const HUB_FIGHT_MIN_W := 300.0
 const HUB_FIGHT_RIGHT := 40.0
-const HUB_FIGHT_TEXT := Vector2(0.56, 0.5)  ## label centre, fraction of the button art
-const HUB_FIGHT_TEXT_W := 0.6
-## Card frame window (the hole in the frame PNG): WIN = (60, 150, 964, 1470) on 1024x1536, as fractions.
-const HUB_CARD_WINDOW := Rect2(0.0586, 0.0977, 0.8828, 0.8594)
-const HUB_CARD_WINDOW_RADIUS := 0.068  ## of the card width
-const HUB_CARD_NAME := Rect2(0.06, 0.035, 0.55, 0.066)  ## top plate text box
-const HUB_CARD_SQUAD := Rect2(0.42, 0.885, 0.36, 0.066)  ## bottom plate text box
+const HUB_FIGHT_TEXT := Vector2(0.537, 0.49)  ## label centre, fraction of the plaque art (its parchment face)
+const HUB_FIGHT_TEXT_W := 0.62
+## Card frame window (the hole in hub_carved/frame_<class>.png, 768x1052), as fractions of the card. The window art and
+## the live character are drawn a little bigger (HUB_CARD_WINDOW_BLEED) so no gap shows under the carved inner edge.
+const HUB_CARD_WINDOW := Rect2(0.0924, 0.1625, 0.8165, 0.7016)
+const HUB_CARD_WINDOW_BLEED := 0.012  ## of the card width, each side
+## Hub card character (carved target: framed tightly): the portrait view is this much taller than the window and
+## starts HUB_FIGURE_RAISE (of the window height) above it, so the head fills the window and the feet run under the plate.
+const HUB_FIGURE_GROW := 1.22
+const HUB_FIGURE_RAISE := 0.06
+const HUB_CARD_WINDOW_RADIUS := 0.07  ## of the card width
+const HUB_CARD_NAME := Rect2(0.2, 0.06, 0.6, 0.085)  ## top ribbon text box
+const HUB_CARD_SQUAD := Rect2(0.27, 0.888, 0.46, 0.072)  ## bottom carved plate text box
 const HUB_CARD_LOCK_Y := 0.47
 const HUB_CARD_PLATE_TAP := 0.16  ## squad tap area: the bottom fraction of the card
 ## Hub card depth on hover / focus / tap (Boss 2026-11-12 option A): the whole card turns in perspective toward the
@@ -384,7 +488,9 @@ const HUB_SHEEN_WIDTH := 0.17  ## band half-width, fraction of the card
 const HUB_SHEEN_COLOR := Color(1.0, 0.86, 0.62)
 const HUB_SHEEN_FADE_SECONDS := 0.2
 ## Squad tray windows, fractions of the tray art (measured on hub_squad_tray_v1).
-const HUB_TRAY_SLOTS: Array[Rect2] = [Rect2(0.098, 0.215, 0.17, 0.69), Rect2(0.413, 0.215, 0.17, 0.69), Rect2(0.728, 0.215, 0.17, 0.69)]
+## Carved tray (2026-11-14): each slot draws its own frame art (hub_carved/tray_slot.png, crest on top). Slot rects as
+## fractions of the board: x, y, width (the height follows the art aspect; the crest pokes over the board top).
+const HUB_TRAY_SLOTS: Array[Rect2] = [Rect2(0.102, -0.01, 0.19, 0.0), Rect2(0.402, -0.01, 0.19, 0.0), Rect2(0.705, -0.01, 0.19, 0.0)]
 const HUB_TRAY_NUM_Y := 0.075
 const HUB_PANEL_SIZE := Vector2(1000.0, 520.0)  ## the "coming soon" panel
 const HUB_PANEL_MARGIN := 48.0
@@ -491,6 +597,10 @@ const HUB_WINDOW_EDGE := Color("6B3F22")
 const PORTRAIT_MAX_PIXELS := Vector2(440.0, 620.0)
 const PORTRAIT_MIN_PIXELS := Vector2(64.0, 96.0)
 const PORTRAIT_FOV := 24.0
+## Ink-wash look of the live card characters (hub direction 2026-11-14, studio05_character_model.gd card_ink):
+## off = the Studio parity toon look. Line width is a fraction of the portrait render height.
+const PORTRAIT_INK := true
+const PORTRAIT_INK_LINE := 0.0105
 const PORTRAIT_FRAME_PAD := 1.08  ## "full" / "bust" framing margin
 ## "card" framing (deck and editor cards): the portrait covers the whole card; the model's top lands at
 ## PORTRAIT_FRAME_TOP and its feet at PORTRAIT_FRAME_BOTTOM (fractions of the card height, >1 = below the card,
@@ -514,10 +624,10 @@ const PORTRAIT_BUST_TOP := 0.03
 const PORTRAIT_BUST_BOTTOM := 1.48
 ## The tray slot's parchment window inside its frame art (fractions of the slot: left, top, right, bottom):
 ## the race plate with the class emblem fills it (Boss 2026-11-13: emblem only, no portrait in the tray).
-const HUB_TRAY_WINDOW_INSET := Vector4(0.085, 0.13, 0.085, 0.075)
-const HUB_TRAY_EMBLEM := 0.78  ## class emblem edge, of the plate width
-const HUB_TRAY_EMBLEM_Y := 0.06  ## emblem top, of the plate height
-const HUB_TRAY_NAME_H := 0.26  ## class name strip at the plate foot, of the plate height
+const HUB_TRAY_WINDOW_INSET := Vector4(0.137, 0.296, 0.139, 0.123)  ## the hollow of tray_slot.png (left, top, right, bottom)
+const HUB_TRAY_EMBLEM := 0.8  ## class icon edge, of the plate width
+const HUB_TRAY_EMBLEM_Y := 0.1  ## icon top, of the plate height
+const HUB_TRAY_NAME_H := 0.0  ## no class name under the icon (the target shows the icon only)
 const HUB_TRAY_PLATE_RADIUS := 12.0
 const HUB_TRAY_PLATE_LINE := 3.0
 const PORTRAIT_KEY_ENERGY := 0.25
@@ -1485,8 +1595,8 @@ static func tree_ring(color: Color, s: float, radius: float) -> StyleBoxFlat:
 # ------------------------------------------------------------------ races (design/gdd/races-and-classes.md 3.5, 3.7-3.9)
 ## Mockup look of a race (3.8): every colour and letter comes from the race file's `mockup` block (data/races/).
 const RaceData := preload("res://logic/race_data.gd")
-const RACE_BADGE_CARD := 0.15  ## hub card: badge edge, of the card width
-const RACE_BADGE_CARD_AT := Vector2(0.085, 0.118)  ## its top-left, fractions of the card (inside the window corner)
+const RACE_BADGE_CARD := 0.125  ## hub card: badge edge, of the card width
+const RACE_BADGE_CARD_AT := Vector2(0.11, 0.18)  ## its top-left, fractions of the card (inside the window corner)
 const RACE_BADGE_TRAY := 0.34  ## tray slot badge edge, of the slot width
 const RACE_BADGE_TRAY_AT := Vector2(0.06, 0.62)  ## its top-left, fractions of the slot (lower-left, clear of the face)
 const RACE_BADGE_LETTER := 0.62  ## letter size / badge edge
@@ -1523,13 +1633,15 @@ const RACE_HEAD_INK := Color("7A2E1C")  ## "Passive · name" / "Ultimate · name
 const RACE_PICK_RING := Color("E8A93A")  ## the race waiting for the refund confirmation
 const RACE_WARN_INK := Color("B3261E")  ## the refund warning line
 ## Hub synergy line under the squad tray (3.5, 3.8).
-const HUB_SYNERGY_H := 44.0
-const HUB_SYNERGY_GAP := 6.0
-const HUB_SYNERGY_PAD := 14.0
+const HUB_SYNERGY_H := 67.0
+const HUB_SYNERGY_GAP := -18.0  ## the ribbon overlaps the tray foot
+const HUB_SYNERGY_BOTTOM := 28.0
+const HUB_SYNERGY_GROW := 1.05  ## ribbon width / tray width
+const HUB_SYNERGY_PAD := 48.0  ## clear of the ribbon's pointed ends
 const HUB_SYNERGY_BADGE := 30.0
 const FONT_HUB_SYNERGY := 20
 const FONT_HUB_SYNERGY_KIND := 22
-const HUB_SYNERGY_KIND := Color("FFD35C")  ## the Pair / Trio / Alliance word
+const HUB_SYNERGY_KIND := Color("3A2414")  ## the Pair / Trio / Alliance word (ink on the parchment ribbon)
 ## Battle ground marker (3.8): a thin race-coloured ring at a squad card's feet (client/fighter_view.gd), drawn with the
 ## existing ground layer shader (client/vfx/vfx_ground.gdshader): mode 0 ring held at a late progress (thin stroke),
 ## mode 3 glyph for Runeborn.

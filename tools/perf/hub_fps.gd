@@ -1,6 +1,7 @@
 extends SceneTree
 ## Measures the class card hub's frame rate with no pointer on any card (all portraits animating).
 ##   godot --path . --script res://tools/perf/hub_fps.gd   (windowed; ZORX_SIZE=WxH, default 1920x1080)
+## ZORX_CARD_INK=0 / 1 forces the card ink-wash look off / on (A/B against CardTokens.PORTRAIT_INK).
 ## Prints "HUB_FPS avg=.. min=.. p1_ms=.. frames=.." after a warm-up.
 
 
@@ -17,6 +18,9 @@ func run() -> void:
 	root.size = size
 	Engine.max_fps = 0
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+	var ink := OS.get_environment("ZORX_CARD_INK")
+	if not ink.is_empty():
+		load("res://client/card_portrait.gd").ink_look = ink == "1"
 	var screen: Control = load("res://scenes/card_deck_screen.tscn").instantiate()
 	screen.auto_wire = false
 	root.add_child(screen)

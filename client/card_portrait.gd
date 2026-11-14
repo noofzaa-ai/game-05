@@ -17,6 +17,9 @@ const SHADOW_SHADER := preload("res://client/card_figure_shadow.gdshader")
 
 enum Mode { LIVE, THROTTLED, ONCE }
 
+## The card ink-wash look on portraits made from now on (CardTokens.PORTRAIT_INK; a tool can switch it for A/B shots).
+static var ink_look: bool = CardTokens.PORTRAIT_INK
+
 var viewport: SubViewport
 var model  ## the studio05 character model (null if its file is missing)
 var class_id := ""
@@ -93,6 +96,8 @@ func _build_scene() -> void:
 	viewport.add_child(_pivot)
 	var character := CharacterModel.new()
 	character.ink_outline = true
+	character.card_ink = ink_look  # card-only ink-wash look (hub direction 2026-11-14)
+	character.card_ink_line = CardTokens.PORTRAIT_INK_LINE
 	_pivot.add_child(character)
 	if character.load_model():
 		model = character

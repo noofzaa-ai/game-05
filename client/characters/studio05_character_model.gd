@@ -17,6 +17,7 @@ extends "res://client/character_model.gd"
 const ItemAssets := preload("res://client/item_assets.gd")
 const ToonShader := preload("res://client/characters/studio05_toon.gdshader")
 const InkShader := preload("res://client/characters/studio05_ink.gdshader")
+const CardInkShader := preload("res://client/characters/card_ink_hull.gdshader")
 const RefineEffect := preload("res://client/refine_equipment.gd")
 const FOLDER := "res://art/characters/studio05/"
 const V1111 := "res://art/characters/studio05/v1111/"
@@ -108,6 +109,11 @@ var _blink_start := BLINK_FIRST
 var _blink_rng := RandomNumberGenerator.new()
 var blink_enabled := true  ## eyes/blink.js: off = eyes held open
 var class_id := DEFAULT_CLASS  ## which data/classes/<id>.json drives the animations
+## Card-only ink-wash look (hub direction 2026-11-14, set by client/card_portrait.gd before load_model): flat
+## paper-tinted bands, watercolour palette and grain in the toon shader, and a dark-brown ink line sized to the
+## card render on every piece (card_ink_hull.gdshader). Off = the Studio parity look (battle, Studio, tests).
+var card_ink := false
+var card_ink_line := 0.0042  ## line width as a fraction of the portrait render's height
 ## Simple stand-in shield on the left hand (GLB units, in the left hand bone): radius, thickness.
 const SHIELD_RADIUS := 0.11
 const SHIELD_THICKNESS := 0.012
@@ -418,6 +424,8 @@ func _apply_cape(clip: String, time: float) -> void:
 			var t := fposmod(time, animation.length) if looping else clampf(time, 0.0, animation.length)
 			value = animation.blend_shape_track_interpolate(entry["shapes"][shape], t)
 		_cape_mesh.set_blend_shape_value(index, value)
+		if _cape_mesh.has_meta("card_hull"):
+			(_cape_mesh.get_meta("card_hull") as MeshInstance3D).set_blend_shape_value(index, value)
 
 
 ## A plain round shield (steel face, gold rim, boss in the middle) on the left hand's socket: the look of
@@ -592,9 +600,13 @@ func _prepare_meshes() -> void:
 			if part == 2:
 				material.set_shader_parameter("hair_part", 0.009 if label.begins_with("Hair_A") else -0.003)
 				material.set_shader_parameter("painted_bangs", 0.0 if label.substr(5, 1) in ["C", "D", "E", "F", "G", "I"] else 1.0)
+			if card_ink:
+				material.set_shader_parameter("card_ink", true)
 			mesh.set_surface_override_material(surface, material)
 			_toon.append(material)
-		if part != 0:
+		if card_ink:
+			_add_card_hull(mesh, part, rest, has_color)
+		elif part != 0:
 			var hull := MeshInstance3D.new()
 			hull.name = label + "_StudioInk"
 			hull.mesh = mesh.mesh
@@ -614,6 +626,28 @@ func _prepare_meshes() -> void:
 			hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			hull.set_meta("studio05_ink", part)
 	CharacterLight.prepare(_model_root)
+
+
+## Card ink line (card_ink): a child drawing `mesh` again, pushed out by a card-relative width, back faces in
+## brown ink. Moved by the same bones and blend shapes (the cape hull copies the cape's weights, _apply_cape).
+func _add_card_hull(mesh: MeshInstance3D, part: int, rest: bool, has_color: bool) -> void:
+	var hull := MeshInstance3D.new()
+	hull.name = str(mesh.name) + "_StudioInk"  # (the suffix keeps it out of the bounds, _union_bounds)
+	hull.mesh = mesh.mesh
+	hull.skin = mesh.skin
+	mesh.add_child(hull)
+	hull.skeleton = hull.get_path_to(_skeleton)
+	var ink := ShaderMaterial.new()
+	ink.shader = CardInkShader
+	ink.set_shader_parameter("line_fraction", card_ink_line * (0.8 if part == 1 else 1.0))
+	ink.set_shader_parameter("is_hair", part == 2)
+	ink.set_shader_parameter("eye_cut", part == 1)
+	ink.set_shader_parameter("has_rest", rest)
+	ink.set_shader_parameter("use_vertex_color", has_color)
+	hull.material_override = ink
+	hull.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	hull.set_meta("studio05_ink", part)
+	mesh.set_meta("card_hull", hull)
 
 
 ## Hair colour (index.html updateColors: material.color.set(#hair-color) on Hair_* meshes, multiplied in the
@@ -799,6 +833,8 @@ func _mask_body() -> void:
 	for surface in body.get_surface_override_material_count():
 		materials.append(body.get_surface_override_material(surface))
 	body.mesh = wanted
+	if body.has_meta("card_hull"):
+		(body.get_meta("card_hull") as MeshInstance3D).mesh = wanted
 	for surface in mini(materials.size(), body.get_surface_override_material_count()):
 		body.set_surface_override_material(surface, materials[surface])
 

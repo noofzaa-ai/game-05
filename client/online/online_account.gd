@@ -292,6 +292,9 @@ func _build_badge() -> void:
 	_pill = Panel.new()
 	_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	layer.add_child(_pill)
+	var strip := preload("res://client/carved_strip.gd").new(CardTokens.CARVED_PILL, CardTokens.CARVED_PILL_CAP)  # carved hub: dark ink pill
+	strip.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_pill.add_child(strip)
 	_dot = Panel.new()
 	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_pill.add_child(_dot)
@@ -324,14 +327,15 @@ func _layout_pill() -> void:
 	var screen := get_viewport().get_visible_rect().size
 	var s := CardTokens.scale_for(screen)
 	_badge.text = pill_text()
-	CardTokens.style_text(_badge, CardTokens.FONT_ONLINE, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE)
-	var h := CardTokens.ONLINE_PILL_H * s
+	CardTokens.style_text(_badge, CardTokens.CARVED_FONT_ONLINE, CardTokens.HUB_CREAM, s)  # carved hub: serif on the ink pill
+	var h := CardTokens.CARVED_TOP_PILL_H * s
 	var pad := CardTokens.ONLINE_PILL_PAD * s
 	var dot := CardTokens.ONLINE_DOT * s
 	var text_w := _badge.get_minimum_size().x
-	_pill.size = Vector2(pad * 2.5 + dot + text_w, h)
-	_pill.position = Vector2((screen.x - _pill.size.x) * 0.5, (CardTokens.HUB_TITLE_Y * s) - h * 0.5)
-	CardTokens.panel(_pill, HubLook.leather(s, CardTokens.ONLINE_PILL_H * 0.5, 2.0))
+	_pill.size = Vector2(pad * 3.0 + dot + text_w, h)
+	# carved hub (2026-11-14): left of Play online, level with the gold pill
+	_pill.position = Vector2(screen.x - CardTokens.CARVED_STATUS_RIGHT * s - _pill.size.x * 0.5, (CardTokens.CARVED_SYS_Y + CardTokens.CARVED_SYS_SIZE * 0.5) * s - h * 0.5)
+	CardTokens.panel(_pill, CardTokens.clear_style())
 	_dot.size = Vector2(dot, dot)
 	_dot.position = Vector2(pad, (h - dot) * 0.5)
 	var connecting := status == Status.CONNECTING or _reconnecting
