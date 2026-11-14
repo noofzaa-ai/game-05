@@ -56,7 +56,8 @@ function json(res, status, data) {
 }
 function redirect(res, target) { res.writeHead(303, { Location: target }); res.end(); }
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
-  '.webp': 'image/webp', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml' };
+  '.webp': 'image/webp', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary' };
+const binary = new Set(['.webp', '.jpg', '.png', '.glb']);
 // Bounded origin-wide budget: never trust a client-supplied forwarding header.
 let authTokens = 40, authAt = Date.now(), authActive = 0;
 const staticCache = new Map();
@@ -224,7 +225,7 @@ const server = http.createServer(async (req, res) => {
     const pathname = decodeURIComponent(url.pathname);
     const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
     const allowed = ['index.html', 'config.js', 'trail.js', 'auth.js', 'styles.css'].includes(relative)
-      || /^assets\/[a-zA-Z0-9_-]+\.(webp|jpg|png|svg)$/.test(relative);
+      || /^assets\/[a-zA-Z0-9_-]+\.(webp|jpg|png|svg|glb)$/.test(relative);
     if (!allowed) return json(res, 404, { error: 'not_found' });
     let body = staticCache.get(relative);
     if (!body) {
@@ -234,7 +235,8 @@ const server = http.createServer(async (req, res) => {
     }
     res.setHeader('Cache-Control', relative.startsWith('assets/') ? 'public, max-age=3600' : 'no-cache');
     res.setHeader('X-Frame-Options', 'DENY');
-    res.writeHead(200, { 'Content-Type': `${types[path.extname(relative)] || 'application/octet-stream'}; charset=utf-8` });
+    const ext = path.extname(relative);
+    res.writeHead(200, { 'Content-Type': `${types[ext] || 'application/octet-stream'}${binary.has(ext) ? '' : '; charset=utf-8'}` });
     res.end(req.method === 'HEAD' ? undefined : body);
   } catch {
     // Do not log authorization codes, tokens, cookies or Google response bodies.

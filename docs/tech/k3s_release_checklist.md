@@ -501,3 +501,10 @@ Rollback:
 kubectl --context zorx-staging -n zorx-staging set image deployment/landing landing=wiyazard:30500/zorx-landing:login-arrival-20261030-3@sha256:c47d4c110b2bb3dfcecb1bd9b76940ad96459683fc6ad9544ce2f706112d4a2e
 ```
 Sign-in: OPEN for a person (Google, Guest + Turnstile, logged-in redirect to zorxplay, `?logout=1` from the game).
+**2026-11-14 3D trail:** `data-scene="painted"` is gone; trail.js draws the 3D trail (7 ZORX stops, no relics) on a transparent canvas over the painted valley, the painting is the fallback only when three.js/WebGL fails. LIVE `wiyazard:30500/zorx-landing:trail3d-20261114@sha256:808ea9962a797677da4a1eaaee2eabd7ae24b8d185d04dba1ff19ba6501e2d39` (before-state `build/k3s-staging-before-landing-trail3d-20261114.yaml`; rollback = `set image ... landing=wiyazard:30500/zorx-landing:carved-20261114@sha256:cd7056e9bcd234431bee50e8991bd23e6215a35346afb9e1afc3fd9afdae3642`). Evidence: `art_source/codex_review/landing_trail_2026-11-14/`.
+**2026-11-14 trail v2:** the campfire shows the four race heroes (game Studio characters; `assets/squad_<race>.glb`,
+2.31 MB, built by `tools/landing/build_landing_squad.mjs`), ink toon + outline look on every station, and stop
+08 LOGIN after the FIGHT gate. The server now also serves `assets/*.glb` (`model/gltf-binary`). three.js comes
+from an import map in `index.html`. LIVE `wiyazard:30500/zorx-landing:trail3d-v2-20261114@sha256:1ea463b8be0e89433d10e3cc345e10fe1df223126e9c7abb5beeaddb7991b235`
+(before-state `build/k3s-staging-before-landing-trail3d-v2-20261114.yaml`; rollback = `set image ... landing=wiyazard:30500/zorx-landing:trail3d-20261114@sha256:808ea9962a797677da4a1eaaee2eabd7ae24b8d185d04dba1ff19ba6501e2d39`).
+Evidence and perf: `art_source/codex_review/landing_trail_v2_2026-11-14/`, `docs/tech/performance_budget.md` (landing section).

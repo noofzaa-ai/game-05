@@ -340,3 +340,8 @@ footer a{color:var(--gilt)}
 .trail-stage.no-inspect .main-actions{gap:0}
 .scene-visual canvas{position:relative;z-index:0}
 .trail-stage.is-inspecting .top-caption{opacity:0}
+
+/* Trail v2 (2026-11-14): the 8th stop is the sign-in clearing; its rail token carries a small LOGIN label. */
+.rail-dot.rail-login b{font:700 8px var(--body);letter-spacing:.12em;color:var(--gilt);text-shadow:0 1px 0 var(--edge)}
+.trail-stage.is-login .relic-rail{opacity:1;pointer-events:auto}
+@media(max-width:640px),(max-height:520px) and (pointer:coarse){.rail-dot.rail-login b{display:none}}

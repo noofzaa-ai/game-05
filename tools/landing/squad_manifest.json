@@ -1,0 +1,122 @@
+{
+ "built": "2026-11-14T13:30:50.912Z",
+ "budget_bytes": 2621440,
+ "characters": [
+  {
+   "race": "human",
+   "class": "sword_shield",
+   "file": "server/landing/dashboard/assets/squad_human.glb",
+   "bytes": 527552,
+   "triangles": 21965,
+   "body_triangles_hidden_under_wardrobe": 734,
+   "clips": [
+    "idle"
+   ],
+   "idle_channels": 86,
+   "rest_only_channels_dropped": 220,
+   "pieces_joined": 6,
+   "joints": 102,
+   "rig_sha1": "15eedee9a373cbd579f3151ed47611c2f649897c",
+   "meshes": [
+    "Base_Body (66)",
+    "Head_Anime (1500)",
+    "Hair_A (2698)",
+    "Weapon_Human | Shield (192)",
+    "Gear_Race_Wardrobe_Dyed_leather_cloth_and_plate_004 (13659)",
+    "Gear_Sword_Shield_Original_PBR_001 (3850)"
+   ],
+   "textures": [
+    "Race Wardrobe Reference Colors 512x512 image/webp 60696B",
+    "texture_pbr_20250901 512x512 image/webp 53286B"
+   ]
+  },
+  {
+   "race": "viking",
+   "class": "greatsword",
+   "file": "server/landing/dashboard/assets/squad_viking.glb",
+   "bytes": 568888,
+   "triangles": 25160,
+   "body_triangles_hidden_under_wardrobe": 734,
+   "clips": [
+    "idle"
+   ],
+   "idle_channels": 86,
+   "rest_only_channels_dropped": 220,
+   "pieces_joined": 4,
+   "joints": 102,
+   "rig_sha1": "15eedee9a373cbd579f3151ed47611c2f649897c",
+   "meshes": [
+    "Base_Body (66)",
+    "Hair_C (2697)",
+    "Head_Anime_Viking (2800)",
+    "Weapon_Viking | Sword (3500)",
+    "Gear_Race_Wardrobe_Dyed_leather_cloth_and_plate_004 (16097)"
+   ],
+   "textures": [
+    "Viking War Paint and Right Temple Tattoo 512x341 image/webp 3698B",
+    "Race Wardrobe Reference Colors 512x512 image/webp 60696B",
+    "texture_pbr_20250901 512x512 image/webp 58310B"
+   ]
+  },
+  {
+   "race": "elf",
+   "class": "longbow",
+   "file": "server/landing/dashboard/assets/squad_elf.glb",
+   "bytes": 569820,
+   "triangles": 22940,
+   "body_triangles_hidden_under_wardrobe": 734,
+   "clips": [
+    "idle"
+   ],
+   "idle_channels": 86,
+   "rest_only_channels_dropped": 220,
+   "pieces_joined": 6,
+   "joints": 102,
+   "rig_sha1": "15eedee9a373cbd579f3151ed47611c2f649897c",
+   "meshes": [
+    "Base_Body (66)",
+    "Hair_E (2699)",
+    "Head_Anime_Elf (2200)",
+    "Weapon_Elf | Bow (3088)",
+    "Gear_Race_Wardrobe_Dyed_leather_cloth_and_plate_004 (14088)",
+    "Gear_Longbow_Original_PBR (799)"
+   ],
+   "textures": [
+    "Race Wardrobe Reference Colors 512x512 image/webp 60696B",
+    "texture_pbr_20250901 512x512 image/webp 52950B",
+    "texture_pbr_20250901 512x512 image/webp 47970B"
+   ]
+  },
+  {
+   "race": "runeborn",
+   "class": "magic",
+   "file": "server/landing/dashboard/assets/squad_runeborn.glb",
+   "bytes": 647940,
+   "triangles": 27498,
+   "body_triangles_hidden_under_wardrobe": 734,
+   "clips": [
+    "idle"
+   ],
+   "idle_channels": 86,
+   "rest_only_channels_dropped": 220,
+   "pieces_joined": 4,
+   "joints": 102,
+   "rig_sha1": "15eedee9a373cbd579f3151ed47611c2f649897c",
+   "meshes": [
+    "Base_Body (66)",
+    "Hair_F (2699)",
+    "Head_Anime_Runeborn (2200)",
+    "Runeborn_Face_Runes_Studio (2636)",
+    "Weapon_Runeborn | Staff (3000)",
+    "M 03 | Spellbook (477)",
+    "Gear_Race_Wardrobe_Dyed_leather_cloth_and_plate_004 (16420)"
+   ],
+   "textures": [
+    "Race Wardrobe Reference Colors 512x512 image/webp 60696B",
+    "texture_pbr_20250901 512x512 image/webp 61462B",
+    "texture_pbr_20250901 512x512 image/webp 39916B"
+   ]
+  }
+ ],
+ "total_bytes": 2314200
+}
