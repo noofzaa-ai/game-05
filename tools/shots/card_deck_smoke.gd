@@ -1,5 +1,5 @@
 extends SceneTree
-## Smoke: opens the class card hub, a service panel, the look editor and a summon; with ZORX_SHOT=path saves PNGs
+## Smoke: opens the class card hub, a service panel and the look editor; with ZORX_SHOT=path saves PNGs
 ## (run windowed). ZORX_SIZE=WxH sets the window size (default 1920x1080).
 func _initialize():
 	call_deferred("run")
@@ -55,7 +55,4 @@ func run():
 	print("SMOKE editor ok")
 	await _shot(shot + "_editor.png" if not shot.is_empty() else "")
 	screen._close_editor()
-	screen.play_summon(["sword_shield", "greatsword"])
-	await create_timer(1.4).timeout
-	print("SMOKE summon ok done=", screen._summon_done)
 	quit()

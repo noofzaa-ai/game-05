@@ -202,6 +202,7 @@ func _enter(ticket: Dictionary) -> void:
 	GameState.party_invite = str(ticket.get("invite", code.get("invite", "")))
 	if GameState.attach_online_room(service, ticket) == null: _room = ""; note.text = "ยังเชื่อมต่อห้องไม่ได้"; return
 	note.text = TEXT.connecting
+	preload("res://client/fight_loading.gd").open(get_tree()).start_connecting()  # the carved "Connecting…" bar until the stage is up
 
 func _copy() -> void:
 	var code := Link.parse(room_field.text)

@@ -196,15 +196,6 @@ const SHAKE_PIXELS := 8.0
 const SHAKE_SECONDS := 0.25
 const FADE_SECONDS := 0.15  ## reduced motion: transitions become this fade
 const CLOUD_SPEED := 8.0
-const SUMMON_HOP := 0.30
-const SUMMON_FLIP := 0.40
-const SUMMON_BURST := 0.30
-const SUMMON_FLASH := 0.20
-const SUMMON_TOTAL := 1.2  ## summon_finished is emitted at this time (§13)
-const SUMMON_STACK_OFFSET := 14.0
-const BURST_POINTS := 12
-const BURST_INNER := 0.55
-const BURST_RADIUS := 260.0
 const CLOUD_Y: Array[float] = [0.10, 0.36, 0.60, 0.22]  ## fractions of the screen height
 const CLOUD_WIDTH: Array[float] = [420.0, 320.0, 520.0, 360.0]
 const CLOUD_HEIGHT := 120.0
@@ -212,7 +203,29 @@ const CLOUD_FADE := 0.9
 const INTRO_SECONDS := 0.3  ## coming back from a fight: the cards bob in
 const INTRO_RISE := 24.0
 const SQUAD_BAR_LABEL_W := 90.0
-const STAR_SPIN_SECONDS := 0.4
+# FIGHT loading overlay (client/fight_loading.gd, Boss 2026-11-14: replaces the card summon). Sizes at 1080; the bar
+# colours are the web loading page's bar (tools/web/play_template.html, #gate progress).
+const FIGHT_LOAD_BOARD := Vector2(900.0, 210.0)  ## the carved wood board
+const FIGHT_LOAD_BOARD_K := 0.5  ## board rim art px -> reference px
+const FIGHT_LOAD_RIBBON := Vector2(640.0, 181.0)  ## the parchment title ribbon (the web page's ZORX ribbon size)
+const FIGHT_LOAD_RIBBON_OVER := 0.62  ## how much of the ribbon height sits above the board top
+const FIGHT_LOAD_BAR_H := 52.0
+const FIGHT_LOAD_BAR_PAD := 70.0  ## bar inset from the board sides
+const FIGHT_LOAD_BAR_Y := 0.5  ## bar centre, of the board height
+const FIGHT_LOAD_FILL_INSET := Vector2(0.42, 0.27)  ## the fill inside the pill groove, of the bar height (x, y)
+const FIGHT_LOAD_CAPTION_GAP := 6.0
+const FIGHT_LOAD_FONT_TITLE := 44
+const FIGHT_LOAD_FONT_CAPTION := 22
+const FIGHT_LOAD_GOLD_TOP := Color("FBE7AE")
+const FIGHT_LOAD_GOLD_MID := Color("E3B75E")
+const FIGHT_LOAD_GOLD_LOW := Color("A8742F")
+const FIGHT_LOAD_GOLD_EDGE := Color("7A4F1D")
+const FIGHT_LOAD_GOLD_SHINE := Color("FFF4CF")
+const FIGHT_LOAD_STRIPE := Color(1.0, 1.0, 1.0, 0.55)  ## connecting: the moving gold stripes (tint over the gold wash)
+const FIGHT_LOAD_STRIPE_SPEED := 0.8  ## stripe cycles per second (still with reduced motion)
+const FIGHT_LOAD_BUILD_CREEP := 0.01  ## bar creep per frame while the stage builds its first frames
+const FIGHT_LOAD_BUILD_FRAMES := 240  ## the overlay leaves after this many stage frames even without a "presented" mark
+const FIGHT_LOAD_CONNECT_SECONDS := 20.0  ## online: give up waiting for the room after this long
 
 # ------------------------------------------------------------------ hub (docs/ui/hub_layout_spec.md, Boss 2026-11-11)
 ## Leather / parchment palette of the approved v10 art.
@@ -656,7 +669,11 @@ const STRINGS := {
 	"squad_ready": ["ทัพครบ", "Full squad"],
 	"fight": ["ออกรบ!", "FIGHT!"],
 	"fight_loading": ["กำลังโหลดสนาม %d%%", "Loading battle %d%%"],
-	"fight_wait": ["รอโหลดสนามสักครู่ แล้วจะออกรบเอง", "Loading the battle… it starts by itself"],
+	"fight_loading_bar": ["กำลังโหลดสนามรบ… %d%%", "Loading battle… %d%%"],
+	"fight_connecting": ["กำลังเชื่อมต่อ…", "Connecting…"],
+	"fight_step_download": ["กำลังดาวน์โหลดข้อมูลสนาม", "Downloading the battle"],
+	"fight_step_battle": ["กำลังเตรียมทัพและสนาม", "Preparing your squad and the field"],
+	"fight_step_room": ["กำลังเปิดห้องออนไลน์", "Opening the online room"],
 	"fight_load_failed": ["โหลดไม่สำเร็จ แตะเพื่อลองใหม่", "Load failed, tap to retry"],
 	"bag": ["กระเป๋า", "Bag"],
 	"settings": ["ตั้งค่า", "Settings"],

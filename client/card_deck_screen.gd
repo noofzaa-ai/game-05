@@ -1,7 +1,8 @@
 extends Control
 ## The class-card hub (docs/ui/hub_layout_spec.md, Boss 2026-11-11): the home screen the player sees before a fight.
 ## Night ruins background, the 4 leather class cards with their live full-body characters, the service menu on the
-## left, the squad tray (3 picks, fight order) and FIGHT. States: A hub, B look editor of one card, C summon, plus
+## left, the squad tray (3 picks, fight order) and FIGHT. States: A hub, B look editor of one card, C the FIGHT loading overlay
+## (client/fight_loading.gd), plus
 ## one "service" panel over the hub. Phones (CardTokens.is_phone) get the notch inset and 96 px tap targets.
 ## The screen draws the player's card deck (Profile.card_deck, rules in logic/card_deck.gd) and reports what the
 ## player wants through signals. It never changes the profile itself: the small controller at the bottom
@@ -27,7 +28,8 @@ const ItemAssets := preload("res://client/item_assets.gd")
 const CampScreen := preload("res://client/camp_screen.gd")
 const GraphicsPanel := preload("res://client/graphics_panel.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
-const PackFetcher := preload("res://client/pack_fetcher.gd")  ## web: the battle packs FIGHT waits for
+const PackFetcher := preload("res://client/pack_fetcher.gd")  ## web: the battle packs (the loading overlay waits for them)
+const FightLoading := preload("res://client/fight_loading.gd")  ## FIGHT: the loading overlay (no summon, Boss 2026-11-14)
 const RaceBadge := preload("res://client/race_badge.gd")  ## race mockup badge (races-and-classes.md 3.8)
 const RaceData := preload("res://logic/race_data.gd")
 const HubLook := preload("res://client/hub_look.gd")  ## the class emblem cut from the card frame (tray)
@@ -42,7 +44,6 @@ signal fight_pressed()
 signal service_pressed(service: String)  ## a side-menu entry (blacksmith, shop, tailor, storage, quests, relics) or "account"
 signal settings_pressed()
 signal back_pressed()
-signal summon_finished()
 
 ## true: the screen sends the commands itself (the game). Tests and shot scripts can set false.
 var auto_wire := true
@@ -59,15 +60,13 @@ var _deck := {}
 var _cosmetics
 var _s := 1.0
 var _phone := false
-var _mode := "deck"  ## deck | editor | summon
+var _mode := "deck"  ## deck | editor
 var _edit_class := ""
 var _tab := "hair"
 var _previous := {}
 var _class_ids: Array = []
 var _time := 0.0
 var _busy := false
-var _summon_done := false
-var _summon_tweens: Array[Tween] = []
 var _toast_tween: Tween
 var _camp: CanvasLayer
 
@@ -98,7 +97,6 @@ var _fight: Button
 var _fight_art: TextureRect
 var _fight_label: Label
 var _fight_progress: Label  ## web build: "Loading 42%" while the battle packs download (client/pack_fetcher.gd)
-var _fight_waiting := false  ## FIGHT was pressed before the battle packs were in
 var _fight_glow: Panel
 var _fight_ribbon: Control  ## parchment ribbon under the plaque, behind the loading line
 var _stage_label: Label
@@ -121,7 +119,6 @@ var _sheet_tabs: HBoxContainer
 var _sheet_body: VBoxContainer
 var _tab_buttons := {}
 
-var _summon_layer: Control
 var _picker_layer: Control
 var _picker: ColorPicker
 var _confirm_layer: Control
@@ -1002,30 +999,6 @@ class TraySlot extends Button:
 		else:
 			card_drop_callback.call(str(data["deck_card"]), index)
 
-## The comic burst of the summon: a star shaped polygon, no letters (§10).
-class BurstView extends Control:
-	var radius := 100.0
-
-	func _draw() -> void:
-		var points := PackedVector2Array()
-		var count: int = CardTokens.BURST_POINTS * 2
-		for i in count:
-			var r := radius if i % 2 == 0 else radius * CardTokens.BURST_INNER
-			var angle := float(i) / float(count) * TAU
-			points.append(Vector2(cos(angle), sin(angle)) * r)
-		draw_set_transform(size * 0.5)
-		draw_colored_polygon(points, CardTokens.INK)
-		var inner := PackedVector2Array()
-		for p in points:
-			inner.append(p * 0.88)
-		draw_colored_polygon(inner, CardTokens.FRAME)
-		var core := PackedVector2Array()
-		for p in points:
-			core.append(p * 0.55)
-		draw_colored_polygon(core, CardTokens.ACTION_LIGHT)
-
-
-
 # ================================================================== build
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -1789,12 +1762,6 @@ func _build_editor_layer() -> void:
 func _build_overlays() -> void:
 	_picker_layer = _overlay()
 	_confirm_layer = _overlay()
-	_summon_layer = Control.new()
-	_summon_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
-	_summon_layer.mouse_filter = Control.MOUSE_FILTER_STOP
-	_summon_layer.visible = false
-	_summon_layer.gui_input.connect(_on_summon_input)
-	add_child(_summon_layer)
 	_toast = Panel.new()
 	_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_toast.visible = false
@@ -2286,121 +2253,6 @@ func _ask_reset() -> void:
 	_confirm_layer.visible = true
 
 
-# ================================================================== state C: summon (§10)
-## Runs the summon of the squad cards; summon_finished fires at SUMMON_TOTAL (or at once on a tap).
-func play_summon(squad: Array) -> void:
-	if _mode == "summon":
-		return
-	_mode = "summon"
-	_summon_done = false
-	for child in _summon_layer.get_children():
-		child.queue_free()
-	_summon_layer.visible = true
-	if reduced_motion:
-		var fade := ColorRect.new()
-		fade.color = CardTokens.FLASH
-		fade.set_anchors_preset(Control.PRESET_FULL_RECT)
-		fade.modulate.a = 0.0
-		_summon_layer.add_child(fade)
-		var t := create_tween()
-		t.tween_property(fade, "modulate:a", 1.0, CardTokens.FADE_SECONDS)
-		t.tween_callback(_finish_summon)
-		_summon_tweens.append(t)
-		return
-	var centre := size * 0.5
-	var card_size: Vector2 = CardTokens.CARD_SIZE * _s
-	var stack: Array = []
-	var index := 0
-	for id in squad:
-		var holder := Control.new()
-		holder.size = card_size
-		holder.pivot_offset = card_size * 0.5
-		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var pal := CardTokens.palette(str(id))
-		var front := CardFrame.new()
-		front.kind = "solid"
-		front.tint = CardTokens.SLATE_PLATE
-		front.configure(str(id), _s, true)
-		front.size = card_size
-		var back := CardFrame.new()
-		back.kind = "solid"
-		back.tint = pal["shadow"]
-		back.configure(str(id), _s, true)
-		back.size = card_size
-		back.visible = false
-		var emblem := CardTokens.label(str(pal["emblem"]), CardTokens.FONT_FIGHT, CardTokens.TEXT_LIGHT, _s * 2.0, CardTokens.OUTLINE_TEXT)
-		emblem.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		emblem.size = card_size
-		emblem.pivot_offset = card_size * 0.5
-		back.add_child(emblem)
-		holder.add_child(front)
-		holder.add_child(back)
-		var from_card: Control = _cards.get(id)
-		holder.position = (from_card.get_global_rect().position - _summon_layer.get_global_rect().position) if from_card != null else centre
-		_summon_layer.add_child(holder)
-		var target := centre - card_size * 0.5 + Vector2(float(index) * CardTokens.SUMMON_STACK_OFFSET * _s, -float(index) * CardTokens.SUMMON_STACK_OFFSET * _s)
-		var tween := create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(holder, "position", target, CardTokens.SUMMON_HOP).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		tween.chain().tween_property(holder, "scale:x", 0.0, CardTokens.SUMMON_FLIP * 0.5)
-		tween.chain().tween_callback(func() -> void:
-			front.visible = false
-			back.visible = true)
-		tween.chain().tween_property(holder, "scale:x", 1.0, CardTokens.SUMMON_FLIP * 0.5)
-		tween.parallel().tween_property(emblem, "rotation", TAU, CardTokens.STAR_SPIN_SECONDS)
-		_summon_tweens.append(tween)
-		stack.append(holder)
-		index += 1
-	var fade_ui := create_tween()
-	fade_ui.tween_property(_deck_layer, "modulate:a", 0.0, CardTokens.SUMMON_HOP)
-	_summon_tweens.append(fade_ui)
-	var burst := BurstView.new()
-	burst.radius = CardTokens.BURST_RADIUS * _s
-	burst.size = Vector2.ONE * burst.radius * 2.0
-	burst.position = centre - burst.size * 0.5
-	burst.pivot_offset = burst.size * 0.5
-	burst.scale = Vector2.ZERO
-	burst.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_summon_layer.add_child(burst)
-	var flash := ColorRect.new()
-	flash.color = CardTokens.FLASH
-	flash.set_anchors_preset(Control.PRESET_FULL_RECT)
-	flash.modulate.a = 0.0
-	flash.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_summon_layer.add_child(flash)
-	var seq := create_tween()
-	seq.tween_interval(CardTokens.SUMMON_HOP + CardTokens.SUMMON_FLIP)
-	seq.tween_property(burst, "scale", Vector2.ONE, CardTokens.SUMMON_BURST).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	seq.tween_property(flash, "modulate:a", 1.0, CardTokens.SUMMON_FLASH * 0.5)
-	seq.tween_interval(CardTokens.SUMMON_TOTAL - CardTokens.SUMMON_HOP - CardTokens.SUMMON_FLIP - CardTokens.SUMMON_BURST - CardTokens.SUMMON_FLASH * 0.5)
-	seq.tween_callback(_finish_summon)
-	_summon_tweens.append(seq)
-
-
-func _on_summon_input(event: InputEvent) -> void:
-	var button := event as InputEventMouseButton
-	if button != null and button.pressed:
-		_finish_summon()
-
-
-func _finish_summon() -> void:
-	if _summon_done:
-		return
-	_summon_done = true
-	for t in _summon_tweens:
-		if t != null and t.is_valid():
-			t.kill()
-	_summon_tweens.clear()
-	summon_finished.emit()
-
-
-## Brings the deck back after a summon (the screen is usually replaced by the battle scene instead).
-func reset_summon() -> void:
-	_mode = "deck"
-	_summon_layer.visible = false
-	_deck_layer.modulate.a = 1.0
-
-
 ## An empty Control inside the card window where the 3D view lives: "deck" | "editor" | "mini".
 func portrait_slot(class_id: String, kind: String) -> Control:
 	match kind:
@@ -2525,7 +2377,7 @@ func _send_reset(class_id: String) -> void:
 
 
 ## Web build: the battle packs (maps, monsters, skill VFX) download in the background while the player is here.
-## FIGHT waits for them with a small readout on the button; when they are in (or on desktop) it starts at once.
+## The FIGHT ribbon shows the download; pressing FIGHT opens the loading overlay, which waits for them on its bar.
 func _update_fight_progress() -> void:
 	if _fight_progress == null:
 		return
@@ -2539,9 +2391,6 @@ func _update_fight_progress() -> void:
 		_fight_progress.visible = text != ""
 		_fight_ribbon.visible = text != ""
 		_fit_fight_progress()
-	if _fight_waiting and ready:
-		_fight_waiting = false
-		_start_fight()
 
 
 func _fit_fight_progress() -> void:
@@ -2549,22 +2398,18 @@ func _fit_fight_progress() -> void:
 		CardTokens.hub_fit(_fight_progress, _fight_progress.text, CardTokens.CARVED_FONT_LOADING, _fight_progress.size.x, CardTokens.HUB_INK, _s)
 
 
+## FIGHT: the loading overlay (client/fight_loading.gd) downloads what is missing, loads the battle in the
+## background with a real progress bar, then calls GameState.start_journey() and stays up until the stage has drawn.
 func _start_fight() -> void:
-	if _busy or _mode == "summon":
-		return
-	if not PackFetcher.battle_ready(get_tree()):
-		var node := get_tree().root.get_node_or_null(PackFetcher.BATTLE_NODE)
-		if node != null and node.state == node.State.FAILED:
-			node.retry()
-		_fight_waiting = true
-		toast(CardTokens.t("fight_wait"))
+	if _busy or FightLoading.is_open(get_tree()):
 		return
 	_busy = true
-	play_summon(_squad())
-	await summon_finished
-	GameState.start_journey()  # (leaves this scene)
-	_busy = false
-	reset_summon()
+	var overlay = FightLoading.open(get_tree(), reduced_motion)
+	overlay.failed.connect(func(message: String) -> void:
+		_busy = false
+		if not message.is_empty() and is_inside_tree():
+			toast(message))
+	overlay.start_fight()
 
 
 func _open_bag() -> void:
