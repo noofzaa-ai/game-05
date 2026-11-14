@@ -205,7 +205,37 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 2caa255db372-20261114 (rolled out 2026-11-14 ~00:36 UTC, web only)
+## 9. LIVE on staging: release 491a8217e9c8-20261114 (rolled out 2026-11-14 ~04:27 UTC, web only)
+
+Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 491a821 = origin/develop, with
+`data/online.local.json` present (exact bytes verified inside the core pack). `--import` (0 errors; new `art/ui/hub_carved`
+images), then `pipeline/build_web.py --skip-tests --max-file-mb 0` -> web build **72b76b00f9a1** (tag `491a8217e9c8-20261114`).
+Contents: My Cards hub rebuilt to the carved ink-wash target (`art/ui/hub_carved`, in the core pack: 68 refs), card-only ink
+look on live 3D portraits, 16:9 card row overflow fix.
+Headless NOT rebuilt: 491a821 changes only client/, art/, tools/, docs (no server/, logic/ or data/). `ZORX_SQUAD_ROOMS=1` kept.
+Before-state: `build/k3s-staging-before-491a821.yaml` and `build/k3s-before-491a821.txt` (main tree).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:e000247fd46ea5aed0d34411329ed635cb1bbf6b2ef98f874ad49baf8e922fd6` (build 72b76b00f9a1) |
+| headless/profiles | unchanged: `wiyazard:30500/zorx-name-validator@sha256:73c06c3ffbf823a4e14749d68f0a8ed641cf03d934773bb0cc3b58c4b232ac44` |
+| headless/rooms | unchanged: `wiyazard:30500/zorx-room-worker@sha256:4c75507955e73d07c6907699940e01d309368642faf41695f8f82a7bb4a5f314` |
+
+Download size: core pack 6.38 -> 18.25 MiB (+11.9 MiB). Cause: the 34 `art/ui/hub_carved` PNGs (16 MB source, backdrop
+3.2 MB) are imported lossless (`compress/mode=0`) and sit in the boot-stage core pack. Boot total 57.0 -> 68.8 MiB;
+everything 73.5 -> 85.4 MiB (s3tc/etc2 variants excluded). Other packs byte-identical. Follow-up for the UI owner:
+lossy/VRAM compression or a smaller backdrop would recover most of this.
+Local checks: web image paths 200 with correct types, `.wasm` immutable, missing pack 404, container healthy.
+Smoke after rollout: pods Ready, game-test 0 restarts; live `packs.json` build 72b76b00f9a1; live core `.pck.wasm`
+`application/wasm` + `immutable` and contains `art/ui/hub_carved/`; Nakama healthcheck 200; 0 `SCRIPT ERROR` in
+rooms/profiles logs, 0 web 5xx/nginx errors. Sign-in and the hub look: OPEN for a person (Turnstile blocks automation).
+
+Rollback (web only, to 2caa255):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:d15e4f18ef2a6b0f5715b3684eb3d8243d691b0bbd55ecfca42da8f11425246d
+```
+
+### Previous: release 2caa255db372-20261114 (rolled out 2026-11-14 ~00:36 UTC, web superseded)
 
 Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 2caa255 = origin/develop, with
 `data/online.local.json` copied in (enabled=true, exact bytes verified inside the core pack). `--import`, then
