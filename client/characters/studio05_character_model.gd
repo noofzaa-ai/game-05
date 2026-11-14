@@ -821,6 +821,8 @@ func set_appearance(appearance: Dictionary) -> void:
 ## any other id (the account look's "" / old ids) keeps Anime Soft.
 static func makeup_style(id: String) -> int:
 	match id:
+		"anime_soft":
+			return 0
 		"sharp_wing":
 			return 1
 		"natural", "none":

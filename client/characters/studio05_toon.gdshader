@@ -112,11 +112,14 @@ vec4 eyeMakeupShadow(vec2 lid, float lid_height) {
 
 vec4 eyeMakeupLiner(vec2 lid, float upper, float lower, float shut, vec3 skin_color) {
 	if (makeup_style == 2) {
-		// Skin-toned crease along the socket, softer below.
-		float span = 1.0 - smoothstep(0.83, 1.0, abs(lid.x));
-		float top = (1.0 - smoothstep(0.018, 0.063, abs(lid.y - upper))) * 0.73;
-		float bottom = (1.0 - smoothstep(0.012, 0.051, abs(lid.y - lower))) * 0.40;
-		return vec4(skin_color * vec3(0.46, 0.42, 0.40), span * max(top, bottom));
+		// Studio eye-makeup.js 2026-11-14: a thin brown rim tracing the sclera boundary through both corners (lid-height units).
+		float corner_distance = (1.0 - abs(lid.x)) * (0.0445 / (2.0 * 0.013));
+		float rim_distance = min(corner_distance, min(upper - lid.y, lid.y - lower));
+		float upper_rim = smoothstep(-0.06, 0.06, lid.y - (upper + lower) * 0.5);
+		float width = mix(0.055, 0.084, upper_rim);
+		float rim = 1.0 - smoothstep(width * 0.65, width + 0.026, abs(rim_distance - 0.023));
+		vec3 rim_color = mix(vec3(0.095, 0.055, 0.043), skin_color * 0.32, 0.40);
+		return vec4(rim_color, rim * mix(0.86, 0.94, upper_rim));
 	}
 	if (makeup_style == 1) {
 		float outer = smoothstep(-0.64, 0.94, lid.x);
