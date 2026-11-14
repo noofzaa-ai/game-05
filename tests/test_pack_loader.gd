@@ -72,6 +72,8 @@ func run(ctx) -> void:
 			PackLayout.pack_for_path(layout, p) == "ui" and PackLayout.stage_of(layout, "ui") == PackLayout.BOOT)
 	ctx.check("class skill VFX load with the battle packs",
 		PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/vfx/class_skills/starfall/effect.glb.import")) == PackLayout.BATTLE)
+	ctx.check("status VFX (battle-only loops) load with the battle packs",
+		PackLayout.stage_of(layout, PackLayout.pack_for_path(layout, "res://art/vfx/status/burn/effect.glb.import")) == PackLayout.BATTLE)
 	ctx.check("class skill VFX scenes stay in core (scenes always do)", PackLayout.pack_for_path(layout, "res://art/vfx/class_skills/starfall/effect.tscn") == "core")
 	ctx.check("a format variant has its base pack's stage", PackLayout.stage_of(layout, "monsters.etc2") == PackLayout.BATTLE and PackLayout.stage_of(layout, "characters.s3tc") == PackLayout.BOOT)
 	var staged := [{"name": "characters", "stage": "boot", "file": "characters.0123456789ab.pck.wasm"},

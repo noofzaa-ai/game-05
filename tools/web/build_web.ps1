@@ -124,12 +124,12 @@ $download = $engine.bytes + $core.bytes + (Get-Item "$out\index.js").Length
 foreach ($p in $packs) { if ($p.stage -eq "battle") { continue }; if (-not $p.format) { $download += $p.bytes } elseif ($p.format -eq $formats[0]) { $download += $p.bytes } }
 $download /= 1MB
 $page = Get-Content "$root\tools\web\play_template.html" -Raw -Encoding UTF8
-# Loading page look (Boss 2026-11-13, same as pipeline/build_web.py): hub ruins WebP + hub fonts, content-hash names.
-$pageFiles = [ordered]@{ "__LOADING_BACKGROUND__" = "$root\tools\web\static\loading_ruins.webp"; "__FONT_DISPLAY__" = "$root\art\fonts\Taviraj-SemiBold.woff2"; "__FONT_MEDIUM__" = "$root\art\fonts\Sarabun-SemiBold.woff2"; "__FONT_BODY__" = "$root\art\fonts\Sarabun-Regular.woff2" }
+# Loading page look (Boss 2026-11-14, same as pipeline/build_web.py): carved hub WebPs + hub fonts, content-hash names.
+$pageFiles = [ordered]@{ "__LOADING_BACKGROUND__" = "$root\tools\web\static\loading_valley.webp"; "__LOADING_PLAQUE__" = "$root\tools\web\static\loading_plaque.webp"; "__LOADING_TITLE__" = "$root\tools\web\static\loading_title.webp"; "__LOADING_PILL__" = "$root\tools\web\static\loading_pill.webp"; "__LOADING_RIBBON__" = "$root\tools\web\static\loading_ribbon.webp"; "__LOADING_BUTTON__" = "$root\tools\web\static\loading_button.webp"; "__LOADING_WOOD__" = "$root\tools\web\static\loading_wood.webp"; "__FONT_DISPLAY__" = "$root\art\fonts\Taviraj-SemiBold.woff2"; "__FONT_MEDIUM__" = "$root\art\fonts\Sarabun-SemiBold.woff2"; "__FONT_BODY__" = "$root\art\fonts\Sarabun-Regular.woff2" }
 foreach ($key in $pageFiles.Keys) {
   $source = Get-Item $pageFiles[$key]
   $hash = (Get-FileHash $source.FullName -Algorithm SHA256).Hash.ToLower().Substring(0,12)
-  $stem = if ($key -eq "__LOADING_BACKGROUND__") { "loading" } else { $source.BaseName.ToLower() }
+  $stem = $source.BaseName.ToLower()
   $name = "$stem.$hash$($source.Extension)"
   Copy-Item $source.FullName "$out\$name"
   $page = $page.Replace($key, $name)
