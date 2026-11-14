@@ -136,3 +136,24 @@ Budget for the landing page (keep to these):
 - Phones (`pointer:coarse` or <= 640 px): pixel ratio <= 1.25, no MSAA, no outline on trees/rocks/columns, fewer
   trees/grass/embers. Desktop: pixel ratio <= 1.6, MSAA, all outlines.
 - Target 60 fps on desktop and on a mid phone; not verified on a real phone yet.
+
+## Hero ink look in battle, measured 2026-11-15 (tech-artist)
+
+Boss: heroes keep the cards' ink look in battle (`client/draw_style/draw_style.gd` hero_ink/dress_hero, studio05
+`card_ink` with `ink_line_world` 0.014 m, 2.0-4.5 px). On for drawn_style on/lite (default on), off for "off".
+Tool: `tools/perf/battle_fps.gd` (3-card squad, wave journey seed 7, 1280x720, render scale 0.5, native Windows).
+Exact A/B: the same frozen frame with the hero hulls and card_ink on, then off. Mean of 3 runs:
+
+| view | draws off -> on | prims off -> on | fps off -> on |
+|---|---|---|---|
+| overview | 276 -> 333 (+57) | 499k -> 568k | 229 -> 198 |
+| follow (zoomed on hero 1) | 315 -> 341 (+26) | 731k -> 795k | 207 -> 185 |
+
+(VFX keep animating while the fight is frozen, so these draw counts carry some noise.) Exact cost per hero, counted on
+the models: ink hulls = 12 / 18 / 20 / 12 draws and 12.5k / 12.1k / 13.5k / 12.7k tris (sword_shield / greatsword /
+longbow / magic). Phones (web_android / web_ios / mobile, or `-- --phone-ink`) skip pieces under 400 tris except
+weapons, head and hair: 5 / 8 / 10 / 8 draws and 10.6k / 10.1k / 11.1k / 11.7k tris; the outer outline stays.
+
+Budget: <= 22 extra draws per hero (one hull per visible piece, 12-20 pieces; phones 5-10) and <= 14k extra tris per
+hero. The live (unfrozen) fight varies more between runs than this cost. Phone web not measured yet (OPEN).
+

@@ -41,7 +41,8 @@ uniform float hair_part = -0.003;
 uniform float painted_bangs = 0.0;
 group_uniforms;
 
-// Card-only ink-wash look (Technical Artist, hub ink-wash direction 2026-11-14). Off everywhere except the
+// Ink-wash look of cards and battle heroes (Technical Artist, hub ink-wash direction 2026-11-14, battle 2026-11-15).
+// Off everywhere except the
 // class card portraits (studio05_character_model.gd card_ink): battle and the Studio parity look are unchanged.
 // A uniform branch (same value for every pixel of a draw), so the cost off-card is one compare.
 group_uniforms card_ink;
