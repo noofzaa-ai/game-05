@@ -95,3 +95,30 @@ size_limit (<= 2048) above 1024 px, no mipmaps. 3D colour/normal maps: lossy 0.8
 used only in 3D); never lossless 2048. Battle-only art (status/class VFX, monsters, maps) goes in a battle pack
 (tools/web/pack_layout.json), never core. Unused art goes in the Web preset exclude_filter.
 Biggest left: body_<class>.glb 9.5 MiB of the characters pack, ~98% animation (47-51 clips each, about half unused).
+
+## Landing site 3D trail v2, measured 2026-11-14 (tech-artist)
+zorx.daiyooo.com (`server/landing/dashboard/trail.js`, three.js r165). Headless Edge 157 on an RTX 3070 Ti (ANGLE D3D11),
+vsync off. "Phone" = mobile emulation at DPR 3 with 4x CPU throttling (a proxy, not a real phone). Draw calls are
+counted per frame by wrapping `drawElements*`/`drawArrays*`. Raw data and screenshots: `art_source/codex_review/landing_trail_v2_2026-11-14/` (perf_before.json, perf_after.json).
+
+| per stop 01..07 (08 = new login stop) | before (trail3d-20261114) | after (v2) |
+|---|---|---|
+| draw calls, desktop 1920x1080 | 75 109 105 108 90 50 27 | 93 77 55 52 40 33 26 / 20 |
+| draw calls, phone portrait | 44 96 105 88 90 45 27 | 74 68 52 49 37 27 23 / 13 |
+| triangles drawn, desktop | 24-27 k | 239 k at the campfire, 44-50 k elsewhere |
+| triangles drawn, phone portrait | 19-21 k | 212 k at the campfire, 18-23 k elsewhere |
+| desktop mean frame (uncapped) | 0.26-0.48 ms | 0.33-0.79 ms (campfire 0.79) |
+| phone-proxy mean / p95 frame | 2.0-3.8 / 3.8-6.7 ms | 2.3-5.3 / 4.2-7.6 ms (campfire 5.1-5.3 / 7.3-7.6) |
+
+The campfire is the most expensive stop: four skinned characters (~23 k triangles each) drawn twice (fill + ink
+outline). They are frustum-culled by hand (three.js does not cull skinned meshes) and their animation stops off screen.
+
+Budget for the landing page (keep to these):
+- All four squad GLBs together <= 2.5 MB (now 2.31 MB: human 528 KB, viking 569 KB, elf 570 KB, runeborn 648 KB),
+  loaded after the first frame; <= 512 px WebP base-colour textures only; one idle clip each; 22-27.5 k triangles per
+  character, 5-7 meshes each (same-material gear joined in `tools/landing/build_landing_squad.mjs`).
+- Draw calls <= 100 at any stop (worst now: the campfire, 93 desktop / 90 phone landscape). Every outlined object costs 2 draws; station props are baked into one mesh per station
+  (fill + outline = 2 draws), scenery is instanced (1 + 1 outline).
+- Phones (`pointer:coarse` or <= 640 px): pixel ratio <= 1.25, no MSAA, no outline on trees/rocks/columns, fewer
+  trees/grass/embers. Desktop: pixel ratio <= 1.6, MSAA, all outlines.
+- Target 60 fps on desktop and on a mid phone; not verified on a real phone yet.
