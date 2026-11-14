@@ -113,11 +113,25 @@ counted per frame by wrapping `drawElements*`/`drawArrays*`. Raw data and screen
 The campfire is the most expensive stop: four skinned characters (~23 k triangles each) drawn twice (fill + ink
 outline). They are frustum-culled by hand (three.js does not cull skinned meshes) and their animation stops off screen.
 
+**Trail v3 (2026-11-15, Boss: two stops, 01 CAMPFIRE + 02 LOGIN).** Stops 02-07 and their props/columns/inspect
+are gone, the login fort moved from z -112 to z -10, trees/rocks/grass only cover z 24..-46 (desktop 92 trees, phone 62).
+Same rig and method; raw data `art_source/codex_review/landing_trail_v3_2026-11-15/perf_before.json`, `perf_after.json`.
+
+| view | campfire draw calls before -> after | login draw calls before -> after | campfire tris | login tris |
+|---|---|---|---|---|
+| desktop 1920x1080 | 93 -> 77 | 20 -> 20 | 239 k -> 212 k | 44 k -> 18 k |
+| phone landscape (932x430 @3) | 90 -> 79 | 17 -> 17 | 213 k -> 201 k | 17.6 k -> 7.3 k |
+| phone portrait (430x932 @3) | 74 -> 70 | 13 -> 13 | 212 k -> 201 k | 17.6 k -> 7.3 k |
+
+Mean frame, desktop campfire 0.67 -> 0.55 ms, login 0.27 -> 0.30 ms. Phone proxy (4x CPU throttle) campfire mean
+4.6-6.0 ms both before and after (run-to-run noise: two repeat runs gave 4.6-6.0 ms before, 5.8-6.0 ms after), p95
+7.2-8.9 ms, under the 16.7 ms frame. Most campfire cost is the squad (4 x ~23 k triangles x fill + outline).
+
 Budget for the landing page (keep to these):
 - All four squad GLBs together <= 2.5 MB (now 2.31 MB: human 528 KB, viking 569 KB, elf 570 KB, runeborn 648 KB),
   loaded after the first frame; <= 512 px WebP base-colour textures only; one idle clip each; 22-27.5 k triangles per
   character, 5-7 meshes each (same-material gear joined in `tools/landing/build_landing_squad.mjs`).
-- Draw calls <= 100 at any stop (worst now: the campfire, 93 desktop / 90 phone landscape). Every outlined object costs 2 draws; station props are baked into one mesh per station
+- Draw calls <= 100 at any stop (worst now: the campfire, 77 desktop / 79 phone landscape, v3). Every outlined object costs 2 draws; station props are baked into one mesh per station
   (fill + outline = 2 draws), scenery is instanced (1 + 1 outline).
 - Phones (`pointer:coarse` or <= 640 px): pixel ratio <= 1.25, no MSAA, no outline on trees/rocks/columns, fewer
   trees/grass/embers. Desktop: pixel ratio <= 1.6, MSAA, all outlines.
