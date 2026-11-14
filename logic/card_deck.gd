@@ -40,7 +40,8 @@ const STARTERS := {
 	"longbow": {"hair": "e", "outfit": "none"},
 	"magic": {"hair": "f", "outfit": "none"},
 }
-## The squad a new player starts with (Boss 2026-11-11): Sword & Shield, Great Sword, Bow. Magic is meant to unlock after a few quests (not built yet: the card exists and can already be picked).
+## The squad an old save falls back to (Boss 2026-11-11): Sword & Shield, Great Sword, Bow. A NEW player starts with an
+## empty squad and raceless cards (design/gdd/tutorial.md 2); Magic is locked until wave 12 (logic/unlocks.gd).
 const STARTER_SQUAD: Array[String] = ["sword_shield", "greatsword", "longbow"]
 
 static var _class_cache := {}
@@ -109,8 +110,17 @@ static func starter_card(class_id: String, cosmetics) -> Dictionary:
 		"iris_style": str(cosmetics.defaults.get("iris_style", "0")) if cosmetics != null else "0",
 		"hair_color": "",
 		"skills": [],
-		"race": starter_race(class_id),
+		"race": NO_RACE,  # tutorial.md 2: a new card has no race until the player picks one
 	}
+
+
+## A card's race before the player picks one (tutorial.md 2). Such a card cannot join the squad or fight.
+const NO_RACE := ""
+
+
+## True when the card has a race (old cards without the field use their starter race, so they count).
+static func has_race(deck: Dictionary, class_id: String) -> bool:
+	return deck.get("cards", {}).has(class_id) and not race_of(deck, class_id).is_empty()
 
 
 ## The race a card of this class starts with (and an old card without a race has).
@@ -124,12 +134,12 @@ static func race_of(deck: Dictionary, class_id: String) -> String:
 	return str(card.get(RACE_PART, starter_race(class_id)))
 
 
-## The squad's races in squad order (for the run-start synergy, logic/race_passives.gd).
+## The squad's races in squad order (for the run-start synergy, logic/race_passives.gd). Raceless cards are left out.
 static func squad_races(deck: Dictionary) -> Array:
-	return deck.get("squad", []).map(func(class_id): return race_of(deck, str(class_id)))
+	return deck.get("squad", []).map(func(class_id): return race_of(deck, str(class_id))).filter(func(race): return not str(race).is_empty())
 
 
-## Switches one card's race. Returns false (nothing changed) for an unknown class or race.
+## Switches one card's race. Returns false (nothing changed) for an unknown class or race; "" is never accepted.
 static func set_race(deck: Dictionary, class_id: String, race: String) -> bool:
 	if not deck.get("cards", {}).has(class_id) or not RaceData.load_default().has_race(race):
 		return false
@@ -137,16 +147,17 @@ static func set_race(deck: Dictionary, class_id: String, race: String) -> bool:
 	return true
 
 
-## A brand new player's deck: every class's starter card and the starter squad.
+## A brand new player's deck (tutorial.md 2): every class's starter card with no race, and an empty squad.
 static func initial(cosmetics = null) -> Dictionary:
 	var cards := {}
 	for class_id in classes():
 		cards[class_id] = starter_card(class_id, cosmetics)
-	var squad: Array = []
-	for class_id in STARTER_SQUAD:
-		if cards.has(class_id):
-			squad.append(class_id)
-	return {"v": 1, "cards": cards, "squad": squad}
+	return {"v": 1, "cards": cards, "squad": []}
+
+
+## The old-save fallback squad: STARTER_SQUAD cards the deck has that have a race.
+static func fallback_squad(deck: Dictionary) -> Array:
+	return STARTER_SQUAD.filter(func(class_id): return has_race(deck, class_id))
 
 
 ## Boss 2026-11-13: a NEW player's cards do not all look alike. Each card gets its own iris style (no two
@@ -247,7 +258,7 @@ static func validate(deck: Variant, cosmetics = null) -> String:
 		if not deck["cards"].has(class_id):
 			return "missing_card"
 	var squad: Array = deck["squad"]
-	if squad.is_empty() or squad.size() > SQUAD_MAX:
+	if squad.size() > SQUAD_MAX:  # empty = a new player before the race steps (tutorial.md 2)
 		return "bad_squad"
 	var seen := {}
 	for class_id in squad:
@@ -269,7 +280,7 @@ static func validate_card(class_id: String, card: Variant, cosmetics = null) -> 
 			return "bad_card"
 	if not card.get("skills") is Array or not (card["skills"] as Array).is_empty():
 		return "bad_card"  # skills are not part of cards yet
-	if card.has(RACE_PART) and (not card[RACE_PART] is String or not RaceData.load_default().has_race(card[RACE_PART])):
+	if card.has(RACE_PART) and (not card[RACE_PART] is String or (card[RACE_PART] != NO_RACE and not RaceData.load_default().has_race(card[RACE_PART]))):
 		return "bad_card"
 	if card.has(CardProgress.PROGRESS) and not CardProgress.problem(card[CardProgress.PROGRESS]).is_empty():
 		return "bad_card"
@@ -312,14 +323,14 @@ static func set_look(deck: Dictionary, class_id: String, part: String, choice: S
 	return true
 
 
-## Sets the squad (class ids, 1..SQUAD_MAX, no repeats, every one a card the deck has).
+## Sets the squad (class ids, 1..SQUAD_MAX, no repeats, every one a card the deck has that has a race).
 static func set_squad(deck: Dictionary, squad: Array) -> bool:
 	if squad.is_empty() or squad.size() > SQUAD_MAX:
 		return false
 	var seen := {}
 	var clean: Array = []
 	for class_id in squad:
-		if not class_id is String or not deck.get("cards", {}).has(class_id) or seen.has(class_id):
+		if not class_id is String or not deck.get("cards", {}).has(class_id) or seen.has(class_id) or not has_race(deck, class_id):
 			return false
 		seen[class_id] = true
 		clean.append(class_id)
@@ -355,7 +366,10 @@ static func squad_looks(deck: Dictionary) -> Array:
 ## Cleans a deck loaded from storage: anything missing or no longer valid falls back to the starter card.
 static func repaired(deck: Variant, cosmetics = null) -> Dictionary:
 	var fresh := initial(cosmetics)
+	for class_id in fresh["cards"]:  # a card the save lacks is an old-save card: it uses its starter race (no field)
+		fresh["cards"][class_id].erase(RACE_PART)
 	if not deck is Dictionary:
+		fresh["squad"] = fallback_squad(fresh)
 		return fresh
 	var saved_cards = deck.get("cards", {})
 	if saved_cards is Dictionary:
@@ -363,7 +377,7 @@ static func repaired(deck: Variant, cosmetics = null) -> Dictionary:
 			if not saved_cards.has(class_id) or not saved_cards[class_id] is Dictionary:
 				continue
 			var saved_card: Dictionary = (saved_cards[class_id] as Dictionary).duplicate(true)
-			if saved_card.has(RACE_PART) and not RaceData.load_default().has_race(str(saved_card[RACE_PART])):
+			if saved_card.has(RACE_PART) and str(saved_card[RACE_PART]) != NO_RACE and not RaceData.load_default().has_race(str(saved_card[RACE_PART])):
 				saved_card[RACE_PART] = RaceData.load_default().default_race()  # a removed race file (GDD 5): keep the card, default race
 			if saved_card.has(CardProgress.PROGRESS):  # JSON floats or an out-of-range block: keep the card, clean its level
 				saved_card[CardProgress.PROGRESS] = CardProgress.clean(saved_card[CardProgress.PROGRESS])
@@ -373,9 +387,9 @@ static func repaired(deck: Variant, cosmetics = null) -> Dictionary:
 				saved_card["skill_tree"] = load("res://logic/skill_tree.gd").repaired(saved_card["skill_tree"], class_id, race, CardProgress.points(int(level)))
 			if validate_card(class_id, saved_card, cosmetics).is_empty():
 				fresh["cards"][class_id] = saved_card
-	if deck.get("squad") is Array:
-		var squad: Array = fresh["squad"].duplicate()
-		if set_squad(fresh, deck["squad"]):
-			return fresh
-		fresh["squad"] = squad
+	if deck.get("squad") is Array and (deck["squad"] as Array).is_empty() and STARTER_SQUAD.all(func(c): return not has_race(fresh, c)):
+		return fresh  # a new player before the race steps keeps the empty squad
+	if deck.get("squad") is Array and set_squad(fresh, deck["squad"]):
+		return fresh
+	fresh["squad"] = fallback_squad(fresh)
 	return fresh
