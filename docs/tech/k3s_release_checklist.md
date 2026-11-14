@@ -65,7 +65,7 @@ python -X utf8 server/names/build_images.py \
 Only rebuild what changed. Web and rooms change with almost every game change. The profile worker
 also changes, because it runs `logic/` and `data/`, so rebuild it whenever profile rules or data change.
 Nakama changes only when `server/names/runtime/` changes. Landing (`pipeline/build_landing_container.py`)
-needs the sibling `zorx_web` checkout, which is not on this machine.
+needs the sibling `zorx_web` checkout (see section 10).
 
 ## 3. Local verification (before any push)
 
@@ -424,3 +424,41 @@ kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/
 kubectl -n zorx-staging set image deployment/headless profiles=wiyazard:30500/zorx-name-validator@sha256:7299e2e43e9449e26d504724cfc734d4ee96093093a390a8c5b4af094f1c06f8 rooms=wiyazard:30500/zorx-room-worker:combat-feel-20261104-1
 kubectl apply -f <equipment-tuning-before-20261113.yaml>   # only together with the old images
 ```
+
+## 10. Landing site (zorx.daiyooo.com, deployment `landing`)
+
+**Source.** `../zorx_web` (`C:\Users\wanwi\orca\workspaces\game05\zorx_web`), a local git repo with no remote.
+History: (1) files recovered from the deployed image `zorx-landing@sha256:c47d4c11…` (`/app`, without node_modules);
+(2) "Boss source 2026-11-14", Boss's own copy, which replaced (1) as the baseline. The two differ only in that Boss's
+copy has no admin "Security review" section and one extra comment in trail.js, and adds README.md / `.gitignore`.
+(3) The carved restyle. Never commit or copy `.env` / `.env.example`; runtime secrets live in the cluster only.
+**Overlay.** The build copies `server/landing/dashboard/` (this repo) over the source, so the overlay wins. The deployed
+admin pages, server code and the carved restyle (index.html, styles.css, trail.js, assets/loading_*.webp) come from this
+overlay. Change landing files here first, then mirror them into `../zorx_web` and commit there too.
+
+**Look (2026-11-14).** Carved ink-wash, the same as the hub and the web loading page. It uses the 7 `loading_*.webp`
+pieces from `tools/web/static/` (274 KB) and Taviraj/Sarabun from Google Fonts (the page already loaded Google Fonts;
+the server sends no CSP for `/`, only for `/admin`). `<html data-scene="painted">` makes trail.js take its existing
+no-WebGL path, so the three.js CDN is not loaded and the painted valley is the backdrop. Remove the attribute to bring
+the 3D forest back. Behaviour is unchanged: auth.js, config.js, Turnstile, Google, `?play=1`, `?logout=1`, `?auth=…`,
+admin, server routes and headers.
+
+**Local check.** Copy zorx_web plus the overlay to a temp directory, run `npm ci --omit=dev`, then start
+`node server/index.mjs` with dummy env only (SESSION_SECRET of 32+ characters, dummy Google/Nakama values, Cloudflare
+test Turnstile keys), and run `node server/test_admin.mjs`. Screenshots: `art_source/codex_review/landing_carved_2026-11-14/`.
+
+**Build / push / roll out.**
+```sh
+python pipeline/build_landing_container.py --source ../zorx_web --image 192.168.1.99:30500/zorx-landing:<tag>
+docker push 192.168.1.99:30500/zorx-landing:<tag>          # nodes pull the same registry as wiyazard:30500
+kubectl --context zorx-staging -n zorx-staging get deployment landing -o yaml > build/k3s-staging-before-landing-<tag>.yaml
+kubectl --context zorx-staging -n zorx-staging set image deployment/landing landing=wiyazard:30500/zorx-landing:<tag>@sha256:<digest>
+kubectl --context zorx-staging -n zorx-staging rollout status deployment/landing
+```
+LIVE on staging since 2026-11-14: `wiyazard:30500/zorx-landing:carved-20261114@sha256:cd7056e9bcd234431bee50e8991bd23e6215a35346afb9e1afc3fd9afdae3642`
+(before-state: `build/k3s-staging-before-landing-carved.yaml`).
+Rollback:
+```sh
+kubectl --context zorx-staging -n zorx-staging set image deployment/landing landing=wiyazard:30500/zorx-landing:login-arrival-20261030-3@sha256:c47d4c110b2bb3dfcecb1bd9b76940ad96459683fc6ad9544ce2f706112d4a2e
+```
+Sign-in: OPEN for a person (Google, Guest + Turnstile, logged-in redirect to zorxplay, `?logout=1` from the game).

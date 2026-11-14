@@ -117,3 +117,219 @@
 /* Guest login: keep both sign-in actions inside a landscape phone viewport. */
 #guest-section{margin-top:14px}#guest-section[hidden]{display:none}#guest-captcha{min-height:65px;margin:8px auto}#guest-login{background:#182637;color:#efd18c;border-color:#c6a67788}.google-btn:disabled{opacity:.55;cursor:wait}
 @media(max-height:600px) and (orientation:landscape){.login-card{width:min(92%,760px);padding:14px 22px;display:grid;grid-template-columns:1fr 1fr;column-gap:24px;align-items:center}.login-mark,.login-overline,.login-card>h2,.login-card>p:not(#auth-status){display:none}.login-card>#google-login{grid-column:1;grid-row:1}.login-card>#guest-section{grid-column:2;grid-row:1 / span 3;margin:0}.login-card>#auth-status{grid-column:1;grid-row:2;margin:8px 0!important}.login-card>#return-to-trail{grid-column:1;grid-row:3}.login-card #guest-section p{margin:6px 0!important;font-size:10px!important;min-height:0}.login-card #guest-captcha{margin:0 0 6px}}
+
+/* ==== Carved ink-wash look (Boss 2026-11-14) ===========================================================
+   Same look as the game hub (art/ui/hub_carved/, target art_source/boss_refs/hub_inkwash_2026-11-14/
+   hub_TARGET_carved.png) and the web loading page (tools/web/play_template.html). Images are the loading page's
+   small WebP pieces in assets/: loading_valley (night valley backdrop), loading_plaque (carved gilded rim,
+   nine-sliced), loading_wood (tray wood, tiled), loading_title (parchment ZORX ribbon), loading_ribbon (hint
+   ribbon), loading_pill (ink pill), loading_button (carved menu plaque). Fonts: Taviraj (titles) + Sarabun (text).
+   Only restyles: every id/class that trail.js and auth.js use is unchanged. */
+.login-card [hidden],.login-card[hidden]{display:none!important}
+:root{--cream:#F3E6C8;--ink-brown:#3A2414;--brown-soft:#6a5038;--gilt:#E9C987;--edge:#1c120b;--seal:#c8452f;
+ --display:'Taviraj','Noto Serif Thai',Georgia,serif;--body:'Sarabun','Noto Sans Thai',system-ui,sans-serif}
+body{background:#141a26;color:var(--cream);font:15px/1.5 var(--body)}
+button,a{font-family:var(--body)}
+:focus-visible{outline:3px solid var(--cream);outline-offset:3px}
+/* Ink pill: the hub's Online / Play online pill (nine-sliced so it fits any label). */
+.nav-top nav a,.mobile-about,.inspect-head button,.inspect-btn,.mark,.step-actions span,.scene-bottom>span,
+.top-caption span,.chapter-tag,.inspect-head>span{border:solid transparent;border-width:8px 14px;
+ border-image:url('assets/loading_pill.webp') 30 46 fill / 8px 14px stretch;background:none;color:var(--cream);
+ text-shadow:0 1px 0 var(--edge)}
+/* Header */
+.nav-top{height:84px;background:linear-gradient(#0a0d16b0,#0a0d1600)}
+.mark{gap:10px;padding:0 10px}
+.mark-star{color:var(--gilt);font-size:20px}
+.mark b{font:700 clamp(16px,1.6vw,22px)/1.2 var(--display);letter-spacing:.04em;color:var(--cream)}
+.mark i{border-left-color:#e9c98766}
+.mark-sub{color:var(--gilt);letter-spacing:.14em;font-weight:600}
+.nav-top nav{gap:12px}
+.nav-top nav a{font:600 13px var(--body);letter-spacing:.06em;padding:2px 8px;color:var(--cream)}
+.nav-top nav a:hover{filter:brightness(1.2);color:#fff}
+.nav-top nav .nav-play{border:0;border-image:none;background:url('assets/loading_button.webp') center/100% 100% no-repeat;
+ color:var(--ink-brown);font:700 15px var(--display);padding:12px 34px 14px 24px;text-shadow:none;filter:drop-shadow(0 3px 2px #00000080)}
+/* Stage: the painted night valley (the low-poly WebGL forest is off, see data-scene in trail.js). */
+.trail-stage{background:#1b2333}
+.scene-visual,.scene-visual.is-ready{background:#1b2333 url('assets/loading_valley.webp') 30% 60%/cover no-repeat}
+.trail-stage.at-campfire .scene-visual:not(.is-ready) .campfire-focus{display:none}
+.trail-stage.at-campfire .scene-visual:not(.is-ready)::after{inset:auto auto 6% 12%;width:24%;height:40%;
+ background:radial-gradient(ellipse at 50% 70%,#ffb84d40,transparent 60%)}
+.scene-vignette{background:radial-gradient(ellipse at 50% 50%,#0a0c1400 40%,#05060b99 100%)}
+.scene-grain{display:none}
+.top-caption{top:104px;font:600 11px var(--body);letter-spacing:.1em;align-items:center}
+.top-caption span{padding:0 6px}
+/* Relic art on a small carved plaque instead of glowing in a 3D forest. */
+.fallback-item{left:18%;top:26%;width:min(26%,340px);animation:none;filter:drop-shadow(0 12px 18px #000a)}
+.fallback-item img{display:block;width:100%;mix-blend-mode:normal;border-radius:0;mask-image:none;-webkit-mask-image:none;max-height:none;aspect-ratio:1;object-fit:cover;
+ box-sizing:border-box;border:22px solid transparent;border-image:url('assets/loading_plaque.webp') 56 / 22px stretch;
+ background:#f0e3c4;background-clip:padding-box}
+.trail-stage:not(.at-campfire) .fallback-item{filter:drop-shadow(0 12px 18px #000a)}
+/* Journey rail: small ink tokens, gold when current. */
+.rail-heading{color:var(--gilt);font:600 11px var(--body);letter-spacing:.14em;text-shadow:0 1px 0 var(--edge),0 0 3px var(--edge)}
+.rail-line{background:linear-gradient(#e9c98700,#e9c98799,#e9c98700)}
+.rail-dot{color:var(--cream);text-shadow:0 1px 0 var(--edge),0 0 3px var(--edge)}
+.rail-dot span{font:700 13px var(--display)}
+.rail-dot i{background:#2a1c12;border:2px solid var(--gilt);width:8px;height:8px}
+.rail-dot.is-current{color:#ffe3a0}
+.rail-dot.is-current i{background:#E0A83A;border-color:#fff1c8;width:11px;height:11px;box-shadow:0 0 0 2px var(--edge),0 0 12px #e0a83a}
+/* The info panel: the hub's carved gilded-wood tray, rim nine-sliced, wood tiled. */
+.info-panel{box-sizing:border-box;width:min(36vw,540px);padding:4px clamp(10px,1.6vw,22px) 2px;
+ background:url('assets/loading_wood.webp') center/600px auto repeat,#5a3420;background-clip:padding-box;
+ border:34px solid transparent;border-image:url('assets/loading_plaque.webp') 56 / 34px stretch;
+ filter:drop-shadow(0 10px 24px #000000b0)}
+.chapter-tag{font:600 12px var(--body);letter-spacing:.12em;padding:0 8px;color:var(--gilt);margin-bottom:6px}
+.chapter-diamond{color:#E0A83A}
+/* ZORX on the parchment title ribbon; the name sits in the ribbon's flat upper band. */
+.info-panel h1{position:relative;box-sizing:border-box;width:min(100%,400px);aspect-ratio:640/181;margin:0;
+ background:url('assets/loading_title.webp') center/100% 100% no-repeat;-webkit-text-stroke:0;
+ font:800 clamp(40px,4vw,62px)/1 var(--display);letter-spacing:.12em;text-indent:.12em;color:var(--ink-brown);text-shadow:0 1px 0 #fff6e0}
+.info-panel h1>span{position:absolute;inset:0 0 38% 0;display:grid;place-items:center;padding-top:2%}
+.info-panel .game-full-name{margin:4px 0 2px;font:700 clamp(16px,1.4vw,21px)/1.3 var(--display);letter-spacing:.05em;color:var(--cream);
+ text-shadow:0 2px 0 var(--edge),0 0 4px var(--edge)}
+.ornament{color:var(--gilt);margin:6px 0;font-size:16px}
+.ornament i{background:linear-gradient(90deg,transparent,#e9c987)}
+.info-panel h2,.trail-stage.at-campfire .info-panel h2{font:700 clamp(20px,1.8vw,27px)/1.3 var(--display);color:#ffe3a0;margin:0 0 6px;
+ text-shadow:0 2px 0 var(--edge),0 0 4px var(--edge)}
+/* Description on the parchment hint ribbon: ink-brown on paper is the most readable pair. */
+.relic-description{box-sizing:border-box;width:100%;max-width:470px;min-height:0;margin:2px auto 8px;padding:4px 12px 6px;
+ font:400 clamp(14px,1.05vw,16px)/1.6 var(--body);color:var(--ink-brown);text-shadow:none;
+ border:solid transparent;border-width:10px 22px;border-image:url('assets/loading_ribbon.webp') 14 34 14 34 fill / 10px 22px stretch}
+.power-line{font:600 12px var(--body);letter-spacing:.08em;color:#e6d3ac;text-shadow:0 1px 0 var(--edge),0 0 3px var(--edge)}
+.power-line strong{font:700 13px var(--body);color:#ffe3a0;letter-spacing:.03em}
+.power-gap{color:#E0A83A}
+/* Buttons: the carved menu plaque (parchment face, ink-brown title-font label). */
+.main-actions{margin-top:clamp(14px,2.4vh,26px)}
+.primary-btn,#guest-login{min-width:230px;min-height:56px;padding:8px 46px 10px 30px;border:0;border-radius:0;box-shadow:none;
+ background:url('assets/loading_button.webp') center/100% 100% no-repeat;color:var(--ink-brown);
+ font:700 20px var(--display);letter-spacing:.04em;text-shadow:none;filter:drop-shadow(0 3px 2px #00000080);transition:filter .15s,transform .15s}
+.primary-btn:hover,#guest-login:hover:not(:disabled){transform:none;box-shadow:none;filter:brightness(1.08) drop-shadow(0 3px 2px #00000080)}
+.primary-btn:active,#guest-login:active:not(:disabled){filter:brightness(.92);transform:translateY(1px)}
+.primary-btn:disabled,#guest-login:disabled{filter:grayscale(.7) brightness(.8);opacity:.75;cursor:not-allowed}
+.primary-btn span:first-child{font-size:16px;color:var(--seal)}
+.primary-btn span:last-child{font:18px var(--body);margin-left:6px}
+.inspect-btn{font:600 13px var(--body);letter-spacing:.06em;padding:4px 12px;color:var(--cream)}
+.inspect-btn:hover{background:none;filter:brightness(1.2)}
+.step-actions{gap:10px;margin-top:14px}
+.step-actions span{font:600 12px var(--body);letter-spacing:.06em;padding:2px 6px;min-width:0}
+.step-actions button,.mobile-details-toggle{width:44px;height:44px;border:0;border-radius:50%;color:var(--ink-brown);font:700 20px var(--body);
+ background:radial-gradient(circle at 50% 40%,#fbeac2,#e6c98a 58%,#a8742f 63%,#3a2414 70%,transparent 72%);filter:drop-shadow(0 2px 2px #0009)}
+.step-actions button:hover{background:radial-gradient(circle at 50% 40%,#fff3d4,#efd49a 58%,#b8843f 63%,#3a2414 70%,transparent 72%)}
+.step-actions button:disabled{opacity:.4}
+.scene-bottom{font:600 11px var(--body);letter-spacing:.08em;color:var(--cream)}
+.scene-bottom>span{padding:0 6px}
+.progress-track{height:6px;background:#1c120bcc}
+.progress-track div{background:linear-gradient(#fbe7ae,#e3b75e 45%,#a8742f);box-shadow:none}
+/* Inspect layer */
+.inspect-head{font:600 12px var(--body);letter-spacing:.08em}
+.inspect-head>span{padding:0 6px}
+.inspect-head button{font:600 13px var(--body);padding:4px 10px}
+.inspect-info{box-sizing:border-box;padding:4px 16px;background:url('assets/loading_wood.webp') center/600px auto repeat,#5a3420;background-clip:padding-box;
+ border:28px solid transparent;border-image:url('assets/loading_plaque.webp') 56 / 28px stretch;filter:drop-shadow(0 10px 24px #000a)}
+.inspect-info>span:first-child{color:var(--gilt);font:600 12px var(--body)}
+.inspect-info h2{font:700 clamp(24px,2.6vw,40px) var(--display);color:#ffe3a0;text-shadow:0 2px 0 var(--edge)}
+.inspect-info p{font:400 15px/1.6 var(--body);color:var(--cream)}
+.inspect-gesture{color:#e6d3ac;font:600 11px var(--body)}
+/* Sign-in: the same carved tray, ZORX ribbon on top. */
+.login-layer{background:radial-gradient(ellipse at 50% 50%,#0a0c1440 30%,#05060bc0 100%)}
+.login-card{box-sizing:border-box;width:min(calc(100% - 32px),480px);padding:6px clamp(10px,3vw,24px) 6px;backdrop-filter:none;box-shadow:none;
+ background:url('assets/loading_wood.webp') center/600px auto repeat,#5a3420;background-clip:padding-box;
+ border:34px solid transparent;border-image:url('assets/loading_plaque.webp') 56 / 34px stretch;filter:drop-shadow(0 10px 24px #000000b0);color:var(--cream)}
+.login-mark{display:block;position:relative;width:min(100%,300px);aspect-ratio:640/181;margin:-6px auto 2px;
+ background:url('assets/loading_title.webp') center/100% 100% no-repeat;color:var(--ink-brown);
+ font:800 clamp(30px,6vw,44px)/1 var(--display);letter-spacing:.12em;text-indent:.12em;text-shadow:0 1px 0 #fff6e0}
+.login-mark>span{position:absolute;inset:0 0 38% 0;display:grid;place-items:center;padding-top:2%}
+.login-overline{display:block;color:var(--gilt);font:600 12px var(--body);letter-spacing:.16em;text-shadow:0 1px 0 var(--edge)}
+.login-card h2{font:700 clamp(24px,3vw,34px)/1.3 var(--display);color:var(--cream);margin:6px 0 8px;text-shadow:0 2px 0 var(--edge),0 0 4px var(--edge)}
+.login-card h2 em{color:#ffe3a0;font-style:normal;font-weight:700}
+.login-card p{font:400 15px/1.6 var(--body);color:#ecdcb8;margin:0 0 16px;text-shadow:0 1px 0 var(--edge)}
+/* Google button keeps Google's own white face and logo (brand rules), framed with a gilt edge. */
+.google-btn{min-height:52px;border-radius:6px;border:2px solid #E9C987;box-shadow:0 0 0 2px var(--edge),0 3px 4px #0008;font:600 16px var(--body)}
+#guest-section{margin-top:14px;padding-top:10px;border-top:1px dashed #e9c98766}
+#guest-captcha{min-height:65px;margin:6px auto 10px}
+#guest-login{width:100%;justify-content:center;min-height:56px;font-size:19px}
+.auth-status{font:400 13px/1.5 var(--body)!important;color:#ecdcb8;min-height:20px}
+#auth-status{box-sizing:border-box;padding:4px 12px 6px;color:var(--ink-brown);
+ border:solid transparent;border-width:9px 20px;border-image:url('assets/loading_ribbon.webp') 14 34 14 34 fill / 9px 20px stretch;
+ font:600 14px/1.45 var(--body)!important;text-shadow:none}
+#guest-section .auth-status{color:#e6d3ac;margin:6px 0 0!important;text-shadow:0 1px 0 var(--edge)}
+.return-btn{display:inline-block;margin:2px auto 0;padding:2px 10px;min-height:44px;font:600 14px var(--body);letter-spacing:.04em;color:var(--cream);border-bottom:0;text-shadow:0 1px 0 var(--edge),0 0 3px var(--edge)}
+.return-btn:hover{filter:brightness(1.2);color:#fff}
+#google-logout{color:#ffc8b8}
+/* About / journey section below the stage. */
+.journey{background:#1b2333 url('assets/loading_valley.webp') center 85%/cover no-repeat;position:relative;isolation:isolate}
+.journey::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(#141a26f0,#141a26b0 30%,#141a26d8)}
+.section-kicker{color:var(--gilt);font:600 12px var(--body);letter-spacing:.16em}
+.journey h2{font:700 clamp(30px,4vw,56px)/1.25 var(--display);letter-spacing:0;color:var(--cream);text-shadow:0 2px 0 var(--edge)}
+.journey h2 em{color:#ffe3a0;font-style:normal}
+.journey>p{font:400 16px/1.7 var(--body);color:#ecdcb8;max-width:680px;margin-inline:auto}
+.cycle{gap:14px}
+.cycle>div{padding:6px 16px 10px;background:url('assets/loading_wood.webp') center/600px auto repeat,#5a3420;background-clip:padding-box;
+ border:24px solid transparent;border-image:url('assets/loading_plaque.webp') 56 / 24px stretch}
+.cycle span{color:#E0A83A;font:700 14px var(--display)}
+.cycle b{font:700 19px var(--display);color:#ffe3a0}
+.cycle small{font:400 14px/1.6 var(--body);color:var(--cream)}
+.return-to-stage{display:inline-block;color:var(--ink-brown);font:700 17px var(--display);letter-spacing:.02em;white-space:nowrap;padding:10px 40px 12px 28px;
+ background:url('assets/loading_button.webp') center/100% 100% no-repeat}
+footer{background:#0f131c;border-top:2px solid #6b4a24;color:#c3ab88;font:600 11px var(--body)}
+footer b{color:#ffe3a0;font:800 22px var(--display)}
+footer a{color:var(--gilt)}
+
+/* Phones (portrait, and landscape phones through the same query trail.js uses) */
+@media(max-width:760px),(max-height:520px) and (pointer:coarse){
+ .nav-top{height:64px;padding:8px 16px}
+ .mark{padding:0 6px}
+ .mark b{font-size:clamp(13px,3.6vw,18px)}
+ .mobile-about{top:14px;right:16px;padding:2px 8px;min-height:44px;font:600 13px var(--body);color:var(--cream)}
+ .scene-visual,.scene-visual.is-ready{background-position:22% 70%}
+ .fallback-item{left:calc(50% - 28vw);top:22%;width:56vw;max-width:280px}
+ .relic-rail{top:76px;left:16px;right:16px}
+ .rail-dot{min-height:44px}
+ .info-panel{left:16px;right:16px;width:auto;bottom:28px;padding:2px 8px 0;border-width:22px;border-image-width:22px;align-items:stretch;text-align:left;gap:4px;border-radius:0}
+ .info-panel h2{font-size:20px}
+ .info-panel .primary-btn{min-height:52px;height:auto;font-size:17px;letter-spacing:.02em;padding:6px 30px 8px 16px;white-space:nowrap}
+ .trail-stage:not(.at-campfire) .info-panel .primary-btn{font-size:15px;padding:6px 22px 8px 10px;gap:6px}
+ .trail-stage:not(.at-campfire) .info-panel .primary-btn span{display:none}
+ .info-panel .inspect-btn{white-space:nowrap}
+ .info-panel .inspect-btn{min-height:44px;height:auto;font-size:12px}
+ .info-panel.details-open .relic-description{font-size:14px;max-height:110px;line-height:1.55}
+ .info-panel.details-open .power-line{font-size:11px}
+ .info-panel.details-open .power-line strong{font-size:12px}
+ .mobile-details-toggle{flex:0 0 44px;border:0;font-size:20px}
+ .scene-bottom{bottom:6px;font-size:10px}
+ .scene-bottom>span{padding:0 4px}
+ .scene-bottom .scroll-indicator{font-size:10px}
+ .inspect-head{top:72px;left:16px;right:16px}
+ .inspect-info{left:16px;right:16px;bottom:24px}
+ body.journey-open .journey{inset:70px 16px 24px;border-radius:0;padding:40px 18px 24px;
+  background:url('assets/loading_wood.webp') center/600px auto repeat,#5a3420;background-clip:padding-box;
+  border:24px solid transparent;border-image:url('assets/loading_plaque.webp') 56 / 24px stretch}
+ body.journey-open .journey::before{display:none}
+ .journey h2{font-size:28px}
+ .journey>p{font-size:15px}
+ .cycle>div{padding:4px 8px 6px;border-width:16px;border-image-width:16px}
+ .cycle b{font-size:16px}
+ .cycle small{font-size:13px}
+ .return-to-stage{font-size:14px;padding:8px 30px 10px 18px}
+ .journey-close{color:var(--cream);font-size:30px;right:2px;top:-6px;width:44px;height:44px}
+ .login-card{width:calc(100% - 32px);border-width:24px;border-image-width:24px;padding:2px 10px 4px}
+}
+@media(max-height:520px) and (pointer:coarse){
+ .nav-top{height:52px;padding:4px 16px}
+ .mobile-about{top:6px}
+ .relic-rail{top:52px}
+ .info-panel{bottom:16px;width:min(460px,54vw);left:auto}
+ .trail-stage:not(.at-campfire) .info-panel .primary-btn{font-size:14px}
+ .info-panel .inspect-btn{font-size:11px;padding:2px 6px}
+ .info-panel h2{font-size:17px}
+ .scene-visual,.scene-visual.is-ready{background-position:30% 75%}
+ .fallback-item{left:10%;top:28%;width:28vw;max-width:220px}
+}
+/* Short landscape screens: sign-in packs into the original two-column layout. */
+@media(max-height:600px) and (orientation:landscape){
+ .login-card{width:min(calc(100% - 32px),760px);padding:0 12px;border-width:22px;border-image-width:22px}
+ .login-mark,.login-overline,.login-card>h2,.login-card>p:not(#auth-status){display:none}
+ .login-card>#auth-status{margin:6px 0!important}
+ .login-card>#google-logout{grid-column:2;grid-row:1}
+ #guest-section{border-top:0;padding-top:0}
+ #guest-login{min-height:48px;font-size:17px}
+}
