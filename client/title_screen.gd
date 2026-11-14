@@ -20,8 +20,8 @@ const CREDITS_PATH := "res://data/ui/credits.json"
 ## Every word the title screen shows (one place, for translation). Menu words are also how the tests
 ## find the items.
 const TEXT := {
-	"logo": "ZORX", "full_name": "Zone of Relic eXplorers",
-	"tagline": "Explore • Fight • Loot • Rebuild",
+	"logo": "ZORX", "full_name": "",  # Boss 2026-11-14: the game is just ZORX (no expanded name)
+	"tagline": "Squad of Four Races",
 	"start": "Start", "versions": "Version Info", "settings": "Settings", "staff": "Staff", "exit": "Exit",
 	"version_corner": "v%s  ·  %s  ·  development build",
 	"close": "Close", "versions_title": "Version Info", "settings_title": "Settings", "staff_title": "Staff & Credits",
