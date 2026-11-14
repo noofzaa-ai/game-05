@@ -205,7 +205,37 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 899797dee6b4-20261114 (rolled out 2026-11-14 ~05:40 UTC, web only)
+## 9. LIVE on staging: release ab543cd46d27-20261114 (rolled out 2026-11-14 ~05:54 UTC, web only)
+
+Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at ab543cd = origin/develop, with
+`data/online.local.json` present (exact bytes verified inside the gzip-compressed core pack). `--import` (rc 0, no
+segfault), then `pipeline/build_web.py --skip-tests --max-file-mb 0` -> web build **dc6a09b24cb7** (tag
+`ab543cd46d27-20261114`). Contents: carved look round 2 (battle HUD plates, Quests/Relics coming-soon panel, carved
+item slot tiles, online room/friends dialogs, keyboard hints hidden on touch devices).
+Headless NOT rebuilt: ab543cd changes no server/, logic/ or data/. `ZORX_SQUAD_ROOMS=1` kept.
+Before-state: `build/k3s-staging-before-ab543cd.yaml` and `build/k3s-before-ab543cd.txt` (main tree).
+Build notes: on Windows `build_web.py` needs `PYTHONUTF8=1` (the import log has bytes the cp1252 codec cannot decode);
+`docker push` must use `192.168.1.99:30500` because Docker Desktop cannot resolve `wiyazard` (same registry and digest).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:5d1bcc12657bf9c62aff3993fd89cf064167639ae5c13e30b57091cd20f8afa8` (build dc6a09b24cb7) |
+| headless/profiles | unchanged: `wiyazard:30500/zorx-name-validator@sha256:73c06c3ffbf823a4e14749d68f0a8ed641cf03d934773bb0cc3b58c4b232ac44` |
+| headless/rooms | unchanged: `wiyazard:30500/zorx-room-worker@sha256:4c75507955e73d07c6907699940e01d309368642faf41695f8f82a7bb4a5f314` |
+
+Download size: boot download 41.1 -> **41.44 MiB** (core 5.89 -> 5.94 MiB; engine, characters, weapons, ui, items unchanged
+in size); everything 63.75 MiB.
+Smoke after rollout: pods Ready, game-test 0 restarts after 1 min; live `packs.json` build dc6a09b24cb7; live core
+`.pck.wasm` `application/wasm` + `immutable` and contains `carved_look` and `data/online.local.json`; missing pack 404;
+Nakama healthcheck 200; 0 `SCRIPT ERROR` in headless logs, 0 web 5xx/error lines. Battle HUD, dialogs and touch hints:
+OPEN for a person (Turnstile blocks automation).
+
+Rollback (web only, to 899797d):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:49ff224f71a00ef37221d614fdda6aecc1afba8438db7b98b798d02498dba572
+```
+
+### Previous: release 899797dee6b4-20261114 (rolled out 2026-11-14 ~05:40 UTC, web superseded)
 
 Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 899797d = origin/develop, with
 `data/online.local.json` present (exact bytes verified inside the core pack). `--import` (no segfault; only the 2 known
