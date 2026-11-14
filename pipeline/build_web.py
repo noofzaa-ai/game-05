@@ -139,14 +139,21 @@ def package(stage, args):
     download = engine['bytes'] + core['bytes'] + (stage / 'index.js').stat().st_size
     battle = sum(p['bytes'] for p in device if p['stage'] == 'battle')
     download += sum(p['bytes'] for p in device if p['stage'] == 'boot')
-    # Loading page look (Boss 2026-11-13): the card hub's night ruins (a 1600px WebP of
-    # art/ui/class_cards/hub_bg_ruins.png, <= 300 KB) and the hub fonts, each under a content-hash name.
+    # Loading page look (Boss 2026-11-14): the carved ink-wash hub. Small WebP copies of art/ui/hub_carved/
+    # (backdrop, tray_board, title_ribbon, pill, hint_ribbon, menu_plaque; ~290 KB together) and the hub
+    # fonts, each under a content-hash name.
     page_files = {}
-    for key, source in (('__LOADING_BACKGROUND__', ROOT / 'tools/web/static/loading_ruins.webp'),
+    for key, source in (('__LOADING_BACKGROUND__', ROOT / 'tools/web/static/loading_valley.webp'),
+                        ('__LOADING_PLAQUE__', ROOT / 'tools/web/static/loading_plaque.webp'),
+                        ('__LOADING_TITLE__', ROOT / 'tools/web/static/loading_title.webp'),
+                        ('__LOADING_PILL__', ROOT / 'tools/web/static/loading_pill.webp'),
+                        ('__LOADING_RIBBON__', ROOT / 'tools/web/static/loading_ribbon.webp'),
+                        ('__LOADING_BUTTON__', ROOT / 'tools/web/static/loading_button.webp'),
+                        ('__LOADING_WOOD__', ROOT / 'tools/web/static/loading_wood.webp'),
                         ('__FONT_DISPLAY__', ROOT / 'art/fonts/Taviraj-SemiBold.woff2'),
                         ('__FONT_MEDIUM__', ROOT / 'art/fonts/Sarabun-SemiBold.woff2'),
                         ('__FONT_BODY__', ROOT / 'art/fonts/Sarabun-Regular.woff2')):
-        stem = 'loading' if key == '__LOADING_BACKGROUND__' else source.stem.lower()
+        stem = source.stem.lower()
         name = f'{stem}.{hashlib.sha256(source.read_bytes()).hexdigest()[:12]}{source.suffix}'
         shutil.copyfile(source, stage / name)
         page_files[key] = name

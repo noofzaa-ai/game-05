@@ -86,3 +86,12 @@ The ink line is one back-face hull per visible piece (same mesh, no copy), so it
 Off/on in v2 (4 alternating runs each): 376/354 at 1920x1080 and 352/337 at 1280x592. The inner lines are screen-space
 derivatives in the toon fragment shader (no extra pass, no extra draws).
 Web/phone not measured yet (OPEN): if a phone drops, keep the hulls on body/hair/head only.
+
+## Download, measured 2026-11-14 (tech-artist)
+Budget: first load (engine + core + boot packs, one texture format) <= 50 MiB; battle packs <= 25 MiB (background).
+Per device (s3tc), pipeline/build_web.py: 491a821 boot 70.2 / battle 21.1 MiB -> now boot 41.4 / battle 22.3 MiB.
+Rules (tests/test_ui_import_budget.gd guards art/ui/): UI images lossy (compress/mode=1, q 0.8) above 512 px,
+size_limit (<= 2048) above 1024 px, no mipmaps. 3D colour/normal maps: lossy 0.85 + size_limit 1024 (or VRAM when
+used only in 3D); never lossless 2048. Battle-only art (status/class VFX, monsters, maps) goes in a battle pack
+(tools/web/pack_layout.json), never core. Unused art goes in the Web preset exclude_filter.
+Biggest left: body_<class>.glb 9.5 MiB of the characters pack, ~98% animation (47-51 clips each, about half unused).

@@ -2,6 +2,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zone of Relic eXplore · ZORX</title>
 <link rel="preload" href="__LOADING_BACKGROUND__" as="image" type="image/webp">
+<link rel="preload" href="__LOADING_PLAQUE__" as="image" type="image/webp">
 <link rel="preload" href="__FONT_DISPLAY__" as="font" type="font/woff2" crossorigin>
 <style>
 /* The hub fonts (client/card_tokens.gd: Taviraj for titles / plates, Sarabun for text), copied next to this page by
@@ -70,93 +71,95 @@ progress { width: 100%; height: 6px; accent-color: var(--seal); }
 }
 @media (any-pointer: coarse) { #help { display: none !important; } }
 
-/* Loading gate in the card hub look (Boss 2026-11-13): the night ruins hub background (art/ui/class_cards/hub_bg_ruins,
-   a 1600px WebP copy), a stitched leather panel, the ZORX name on a parchment plate like FIGHT!, a leather + brass bar.
-   Colours are the hub tokens of client/card_tokens.gd (HUB_LEATHER, HUB_PAPER, HUB_GOLD_EDGE, HUB_CREAM ...). */
+/* Loading gate in the carved ink-wash hub look (Boss 2026-11-14, target art_source/boss_refs/hub_inkwash_2026-11-14/
+   hub_TARGET_carved.png). Every image is a small WebP copy of the hub's own art/ui/hub_carved/ pieces, copied next to
+   this page by pipeline/build_web.py / tools/web/build_web.ps1: backdrop (night valley), tray_board (carved gilded
+   plaque), title_ribbon (ZORX), pill (ink pill: beta badge + bar groove), hint_ribbon (notice), menu_plaque (button). */
 #gate {
-  --leather:#5A3420; --leather-dark:#2A140C; --paper:#F3E6C8; --paper-shade:#D9BC8C; --brass:#B98A4E; --brass-hi:#E9C987;
-  --cream:#F0E2C4; --muted-cream:#D9C8A6; --ink-brown:#3A2414; --bar-back:#2A170D; --bar-fill:#D4A866;
-  box-sizing:border-box; padding:24px;
-  background:radial-gradient(ellipse at 50% 45%,#08071000 30%,#050409b8 100%),linear-gradient(#0a0a1452,#0a0a1452),
-    url('__LOADING_BACKGROUND__') center/cover no-repeat, #0b1020;
+  --cream:#F3E6C8; --ink-brown:#3A2414; --brown-soft:#6a5038; --gold:#E9C987; --edge:#1c120b;
+  box-sizing:border-box; padding:24px; grid-template-columns:minmax(0,1fr);
+  background:radial-gradient(ellipse at 50% 50%,#0a0c1400 35%,#05060bb0 100%),
+    url('__LOADING_BACKGROUND__') center/cover no-repeat, #1b2333;
 }
+/* The panel: the hub's carved gilded-wood tray: its rim nine-sliced (corners keep their carving at any size), its
+   centre the tray's own wood (loading_wood = a crop of tray_board) tiled, so tall portrait panels do not smear. */
 #gate .card {
-  width:min(600px,100%); box-sizing:border-box; text-align:center; justify-items:center; gap:14px;
-  padding:26px clamp(20px,4vw,40px) 20px; color:var(--cream);
-  background:radial-gradient(ellipse at 50% 0%,#6e4129 0%,var(--leather) 55%,#4a2a19 100%);
-  border:3px solid var(--leather-dark); border-radius:20px;
-  box-shadow:0 0 0 2px var(--brass),0 0 0 5px var(--leather-dark),0 6px 0 4px #00000066,0 18px 50px #000000a0;
+  width:min(600px,100%); box-sizing:border-box; text-align:center; justify-items:center; gap:12px;
+  padding:6px clamp(10px,3vw,24px) 4px; color:var(--cream); border-radius:0;
+  background:url('__LOADING_WOOD__') center/600px auto repeat, #5a3420; background-clip:padding-box;
+  grid-template-columns:minmax(0,1fr); min-width:0;
+  border:34px solid transparent; border-image:url('__LOADING_PLAQUE__') 56 / 34px stretch;
+  filter:drop-shadow(0 10px 24px #000000b0);
 }
-#gate .card::after { content:""; position:absolute; inset:8px; border:2px dashed #f0e2c44d; border-radius:14px; pointer-events:none; }
 #gate .card > * { position:relative; z-index:1; }
-#gate .brand { display:grid; justify-items:center; gap:6px; }
-/* The name plate: parchment inside a brass ring and a dark leather rim, with pointed ends like the FIGHT! plate. */
-#gate .plate { display:inline-block; padding:4px; background:var(--leather-dark);
-  clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%); }
-#gate .plate-ring { display:block; padding:3px; background:linear-gradient(var(--brass-hi),var(--brass));
-  clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%); }
+#gate .brand { display:grid; justify-items:center; gap:4px; width:100%; margin-top:-6px; }
+/* ZORX on the parchment title ribbon (the hub's MY CARDS ribbon); the text sits in the upper band, tails below. */
 #gate h1 {
-  font-family:var(--display); font-weight:700; font-size:clamp(46px,7vw,76px); line-height:1; letter-spacing:.1em;
-  color:var(--ink-brown); padding:.16em 1.05em .1em 1.15em; margin:0;
-  background:linear-gradient(#f8eed6,var(--paper) 45%,var(--paper-shade));
-  clip-path:polygon(0 50%,7% 0,93% 0,100% 50%,93% 100%,7% 100%);
-  text-shadow:0 1px 0 #fff6e0;
+  box-sizing:border-box; width:min(100%,400px); aspect-ratio:640/181; display:grid; place-items:center;
+  position:relative; padding:0; margin:0; background:url('__LOADING_TITLE__') center/100% 100% no-repeat;
+  font-family:var(--display); font-weight:800; font-size:clamp(40px,6.4vw,62px); line-height:1; letter-spacing:.12em;
+  color:var(--ink-brown); text-shadow:0 1px 0 #fff6e0; text-indent:.12em;
 }
-#gate .game-full-name { margin:4px 0 0; font-family:var(--display); font-weight:700; font-size:clamp(17px,2.2vw,24px);
-  color:var(--cream); letter-spacing:.06em; text-shadow:0 2px 0 var(--leather-dark),0 0 3px var(--leather-dark); }
-/* BETA TEST: the hub's small leather pill with a dot (like the Online pill). */
-.beta-badge { display:inline-flex; align-items:center; gap:8px; padding:3px 16px 3px 12px; border-radius:999px;
-  background:#26160ce6; border:2px solid var(--brass); color:var(--cream); font:600 13px var(--body); letter-spacing:.14em; }
-.beta-badge::before { content:""; width:9px; height:9px; border-radius:50%; background:#E0A83A; box-shadow:0 0 0 2px var(--leather-dark); }
-.loading-copy { padding:10px 18px; border-radius:10px; background:var(--paper); color:var(--ink-brown);
-  box-shadow:0 0 0 2px var(--brass),0 0 0 4px var(--leather-dark); width:min(100%,460px); box-sizing:border-box; }
-.loading-copy p { margin:0 0 2px; font:600 clamp(16px,2vw,20px)/1.4 var(--body); color:var(--ink-brown); }
-.loading-copy small { color:#6a5038; font:400 clamp(12px,1.4vw,14px)/1.4 var(--body); }
-/* The bar: a dark leather groove in a brass rim, a gold-leather fill with a highlight. */
-#gate progress { -webkit-appearance:none; appearance:none; box-sizing:border-box; width:100%; height:26px; padding:4px; margin-top:4px;
-  border:2px solid var(--brass); border-radius:13px; background:var(--bar-back);
-  box-shadow:0 0 0 2px var(--leather-dark),inset 0 3px 6px #000000a0; color:var(--bar-fill); }
+/* The ribbon's flat front band is its top ~62%: centre the name there whatever the ribbon's width. */
+#gate h1 > span { position:absolute; inset:0 0 38% 0; display:grid; place-items:center; padding-top:2%; }
+#gate .game-full-name { margin:0; font-family:var(--display); font-weight:700; font-size:clamp(16px,2.1vw,22px);
+  color:var(--cream); letter-spacing:.06em; text-shadow:0 2px 0 var(--edge),0 0 4px var(--edge),0 0 2px var(--edge); }
+/* BETA TEST: an ink pill (the hub's Online / Play online pill) with a gold dot. */
+.beta-badge { display:inline-flex; align-items:center; gap:8px; padding:6px 22px 6px 18px; box-sizing:border-box; min-height:34px;
+  background:url('__LOADING_PILL__') center/100% 100% no-repeat; color:var(--cream); font:600 13px var(--body); letter-spacing:.16em; }
+.beta-badge::before { content:""; width:9px; height:9px; border-radius:50%; background:#E0A83A; box-shadow:0 0 0 2px var(--edge); }
+/* The notice on a parchment ribbon (the hub's hint ribbon), nine-sliced so the pointed ends keep their shape. */
+.loading-copy { box-sizing:border-box; width:min(100%,480px); padding:4px 14px 6px;
+  border:solid transparent; border-width:10px 24px; border-image:url('__LOADING_RIBBON__') 14 34 14 34 fill / 10px 24px stretch; }
+.loading-copy p { margin:0 0 2px; font:600 clamp(15px,1.9vw,19px)/1.35 var(--body); color:var(--ink-brown); }
+.loading-copy small { color:var(--brown-soft); font:400 clamp(12px,1.4vw,14px)/1.35 var(--body); }
+/* The bar: an ink-pill groove with a carved gold rim (nine-sliced pill), a gold-leaf fill. */
+#gate progress { -webkit-appearance:none; appearance:none; box-sizing:border-box; width:100%; height:34px; margin-top:2px;
+  padding:0; border:solid transparent; border-width:9px 14px; border-image:url('__LOADING_PILL__') 30 46 fill / 9px 14px stretch;
+  background:none; color:var(--gold); }
 #gate progress::-webkit-progress-bar { background:transparent; border-radius:8px; }
 #gate progress::-webkit-progress-value { border-radius:8px;
-  background:linear-gradient(#f7dd9c,var(--bar-fill) 45%,#9c6a2e); box-shadow:inset 0 -2px 0 #6e4520,inset 0 1px 0 #fff2c8; }
-#gate progress::-moz-progress-bar { border-radius:8px; background:linear-gradient(#f7dd9c,var(--bar-fill) 45%,#9c6a2e); }
-#gate progress:indeterminate { background:repeating-linear-gradient(-45deg,#3a2213 0 12px,var(--bar-back) 12px 24px); }
+  background:linear-gradient(#fbe7ae,#e3b75e 45%,#a8742f); box-shadow:inset 0 -2px 0 #7a4f1d,inset 0 1px 0 #fff4cf; }
+#gate progress::-moz-progress-bar { border-radius:8px; background:linear-gradient(#fbe7ae,#e3b75e 45%,#a8742f); }
+#gate progress:indeterminate { background-image:repeating-linear-gradient(-45deg,#e3b75e55 0 10px,transparent 10px 20px); background-clip:padding-box; }
 #gate progress:indeterminate::-webkit-progress-bar { background:transparent; }
 #gate progress:indeterminate::-moz-progress-bar { background:transparent; }
-#gate #status { color:var(--cream); font:600 18px var(--body); margin:0; text-shadow:0 2px 0 var(--leather-dark); }
-#gate #status.err { color:#ffc0ae; font-weight:400; font-size:15px; text-align:center; text-shadow:none;
-  background:#2a140ccc; border:1px solid #c8372d; border-radius:8px; padding:8px 12px; }
-#gate #start { justify-self:center; min-height:48px; padding:10px 34px; border-radius:14px;
-  font:700 18px var(--display); color:var(--ink-brown); letter-spacing:.04em;
-  background:linear-gradient(#f8eed6,var(--paper) 50%,var(--paper-shade)); border:3px solid var(--leather-dark);
-  box-shadow:0 0 0 2px var(--brass),0 4px 0 2px #00000066; }
-#gate #start:hover { filter:brightness(1.08); }
+#gate #status { color:var(--cream); font:600 18px var(--body); margin:0; font-variant-numeric:tabular-nums;
+  text-shadow:0 2px 0 var(--edge),0 0 3px var(--edge); }
+#gate #status.err { color:#ffc8b8; font-weight:400; font-size:15px; text-align:center; text-shadow:none;
+  background:#1c0f0ae0; border:2px solid #c8452f; border-radius:10px; padding:8px 12px; }
+/* The start / retry button: the hub's carved menu plaque, parchment face, ink-brown title-font label. */
+#gate #start { justify-self:center; min-height:52px; min-width:200px; padding:6px 46px 8px 34px; border-radius:0;
+  font:700 19px var(--display); color:var(--ink-brown); letter-spacing:.04em;
+  background:url('__LOADING_BUTTON__') center/100% 100% no-repeat; border:0; filter:drop-shadow(0 3px 2px #00000080); }
+#gate #start:hover { filter:brightness(1.08) drop-shadow(0 3px 2px #00000080); }
 #gate #start:active { filter:brightness(.92); transform:translateY(1px); }
-#gate #start:focus-visible { outline:3px solid var(--cream); outline-offset:5px; }
-#gate #download-size { color:var(--brass-hi); font:600 15px var(--body); margin:0; font-variant-numeric:tabular-nums; }
-#gate .download-note { color:var(--muted-cream); font:400 12px var(--body); margin:0; }
-#gate .build-info { color:#b9a184; font:400 11px var(--body); margin:0; letter-spacing:.06em; }
+#gate #start:focus-visible { outline:3px solid var(--cream); outline-offset:4px; }
+#gate #download-size { color:var(--gold); font:600 15px var(--body); margin:0; font-variant-numeric:tabular-nums;
+  text-shadow:0 1px 0 var(--edge),0 0 3px var(--edge); }
+#gate .download-note { color:#d9c8a6; font:400 12px var(--body); margin:0; text-shadow:0 1px 0 var(--edge); }
+#gate .build-info { color:#c3ab88; font:400 11px var(--body); margin:0; letter-spacing:.06em; text-shadow:0 1px 0 var(--edge); }
 @media (prefers-reduced-motion: reduce) { #gate #start:active { transform:none; } }
 /* Phones in landscape (and short windows): one compact column that fits a 360px tall screen. */
 @media (max-height:560px) {
- #gate { padding:10px; }
- #gate .card { width:min(560px,100%); gap:6px; padding:12px 22px 10px; border-radius:16px; }
- #gate .card::after { inset:6px; border-radius:11px; }
- #gate h1 { font-size:38px; }
- #gate .game-full-name { font-size:15px; margin:2px 0 0; }
- #gate .brand { gap:4px; }
- .beta-badge { font-size:11px; padding:1px 12px 1px 10px; }
- .loading-copy { padding:5px 12px; }
+ #gate { padding:8px; }
+ #gate .card { width:min(540px,100%); gap:5px; padding:0 14px; border-width:24px; border-image-width:24px; }
+ #gate .brand { gap:2px; margin-top:-8px; }
+ #gate h1 { width:min(100%,290px); font-size:32px; }
+ #gate .game-full-name { font-size:14px; }
+ .beta-badge { font-size:11px; padding:3px 16px 3px 14px; min-height:26px; }
+ .loading-copy { padding:0 12px 3px; border-width:8px 20px; border-image-width:8px 20px; }
  .loading-copy p { font-size:14px; margin:0; }
  .loading-copy small { font-size:11px; }
- #gate progress { height:20px; padding:3px; margin-top:2px; }
+ #gate progress { height:26px; border-width:7px 11px; border-image-width:7px 11px; margin-top:0; }
  #gate #status { font-size:15px; line-height:1.2; }
  #gate #status.err { font-size:13px; padding:5px 10px; }
+ #gate #start { min-height:44px; font-size:16px; }
  #gate #download-size { font-size:12px; }
  #gate .download-note { font-size:10px; }
  #gate .build-info { font-size:10px; }
 }
-@media (max-height:380px) { #gate .loading-copy small, #gate .download-note { display:none; } #gate h1 { font-size:32px; } }
+@media (max-height:380px) { #gate .loading-copy small, #gate .download-note { display:none; } #gate h1 { width:min(100%,240px); font-size:27px; } }
 </style>
 
 <canvas id="canvas" tabindex="0"></canvas>
@@ -165,7 +168,7 @@ progress { width: 100%; height: 6px; accent-color: var(--seal); }
   <div class="card">
     <button id="controls-close" type="button" aria-label="ปิดคู่มือควบคุม" hidden>×</button>
     <div class="brand">
-      <span class="plate"><span class="plate-ring"><h1>ZORX</h1></span></span>
+      <h1><span>ZORX</span></h1>
       <p class="game-full-name">Zone of Relic eXplore</p>
       <span class="beta-badge">BETA TEST</span>
     </div>

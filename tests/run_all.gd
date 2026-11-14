@@ -76,6 +76,7 @@ const TEST_FILES := [
 	"res://tests/test_journey.gd",
 	"res://tests/test_exit_portals.gd",
 	"res://tests/test_pack_loader.gd",
+	"res://tests/test_ui_import_budget.gd",
 	"res://tests/test_ui_tokens.gd",
 	"res://tests/test_fonts.gd",
 	"res://tests/test_title_backdrop.gd",
