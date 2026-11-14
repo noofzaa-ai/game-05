@@ -635,7 +635,7 @@ func _refresh_tabs() -> void:
 	_equip_page.visible = _tab == "equipment"
 	_other_page.visible = _tab == "outfit"
 	_skills.visible = _tab == "skills"
-	var hint := CardTokens.tt("tree_hint") if _tab == "skills" else CardTokens.t("char_hint_touch")
+	var hint := CarvedLook.hint_text(CardTokens.tt("tree_hint") if _tab == "skills" else CardTokens.t("char_hint_touch"), CarvedLook.touch_hints(size))
 	if _hint.text != hint:
 		_hint.text = hint
 		CardTokens.hub_fit(_hint, hint, CardTokens.FONT_HUB_HINT, _hint.size.x - CarvedLook.HINT_PAD * 2.0 * s, CardTokens.HUB_INK, s, 0, "medium")

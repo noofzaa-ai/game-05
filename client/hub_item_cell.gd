@@ -1,12 +1,13 @@
 extends Button
 ## A hub item cell (shared by the character screen and the hub service panels: Blacksmith, Storage, Shop, Tailor).
-## One square of the paper-doll or of the Storage grid: the leather slot tile, the real item icon (or the slot's
+## One square of the paper-doll or of the Storage grid: the carved slot tile (dark wood, carved gold rim), the real item icon (or the slot's
 ## shape), tier pips (1-4 diamonds, colour + count), "+N" refine, a "!" worn mark, the slot name when empty, a
 ## locked look, a gold "fits" frame. A Button: focus, keyboard / gamepad accept and touch.
 
 const CardTokens := preload("res://client/card_tokens.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
 const ItemIcon := preload("res://client/item_icon.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## carved slot tiles (Boss 2026-11-14)
 signal activated()
 
 var key := ""  ## paper-doll "slot:index", "" for storage cells
@@ -23,7 +24,7 @@ var s := 1.0
 var _tile: TextureRect  ## the leather tile, its own canvas item behind the cell (not mixed with the glyph draws)
 
 func setup() -> void:
-	_tile = CardTokens.art_rect(CardTokens.HUB_SLOT)
+	_tile = CardTokens.carved_rect(CarvedLook.SLOT)
 	_tile.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_tile.show_behind_parent = true
 	add_child(_tile)
@@ -50,7 +51,7 @@ func _on_input(event: InputEvent) -> void:
 
 func _draw() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
-	_tile.texture = CardTokens.tex(CardTokens.HUB_SLOT_SELECTED if selected else CardTokens.HUB_SLOT)
+	_tile.texture = CarvedLook.tex(CarvedLook.SLOT_SELECTED if selected else CarvedLook.SLOT)
 	_tile.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
 	var font := CardTokens.medium_font()
 	if item != null:

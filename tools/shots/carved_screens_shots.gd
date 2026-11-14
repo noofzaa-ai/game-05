@@ -101,6 +101,22 @@ func run() -> void:
 		screen._panels["tailor"].close()
 		for i in 6:
 			await process_frame
+	if only.is_empty() or only.has("soon"):
+		screen._show_soon("quests")
+		await _shot("svc_quests_soon", 8)
+		screen._close_service()
+	if only.is_empty() or only.has("online"):
+		var room = load("res://client/online/room_panel.gd").new()
+		screen.add_child(room)
+		await _shot("online_room", 12)
+		room.queue_free()
+		var friends = load("res://client/online/social_panel.gd").new()
+		friends.account = root.get_node("Online")
+		screen.add_child(friends)
+		await _shot("online_friends", 12)
+		friends.queue_free()
+		for i in 4:
+			await process_frame
 	if only.is_empty() or only.has("settings"):
 		var settings = load("res://client/graphics_panel.gd").new()
 		screen.add_child(settings)
@@ -115,6 +131,8 @@ func run() -> void:
 		for i in 60 * 9:
 			await process_frame
 		await _shot("battle_hud", 2)
+		var full := root.get_texture().get_image()
+		full.get_region(Rect2i(size.x / 4, size.y - size.y / 5, size.x / 2, size.y / 5)).save_png(_out.path_join("%s_battle_plates_crop.png" % _tag))
 		var result = load("res://client/result_panel.gd").new()
 		current_scene.add_child(result)
 		result.show_result("stage_clear", [["continue", "continue"], ["camp", "camp"]])

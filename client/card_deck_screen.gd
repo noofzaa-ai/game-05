@@ -32,6 +32,7 @@ const RaceBadge := preload("res://client/race_badge.gd")  ## race mockup badge (
 const RaceData := preload("res://logic/race_data.gd")
 const HubLook := preload("res://client/hub_look.gd")  ## the class emblem cut from the card frame (tray)
 const CarvedStrip := preload("res://client/carved_strip.gd")  ## carved hub pills / ribbons (3-slice)
+const CarvedLook := preload("res://client/carved_look.gd")  ## the carved look of the other screens (Coming soon panel)
 
 signal card_selected(class_id: String)
 signal look_changed(class_id: String, part: String, choice: String)  ## part: hair|outfit|eye_color|skin|makeup
@@ -1699,20 +1700,23 @@ func _layout_service() -> void:
 	var box := Panel.new()
 	box.size = CardTokens.HUB_PANEL_SIZE * s
 	box.position = (size - box.size) * 0.5
-	CardTokens.panel(box, CardTokens.hub_leather(s))
+	CarvedLook.board(box, s)  # carved gilded-wood board; its parchment face is the paper (Boss 2026-11-14)
 	_service_layer.add_child(box)
 	var paper := Panel.new()
-	var m := CardTokens.HUB_PANEL_MARGIN * s * 0.5
+	var m := maxf(CardTokens.HUB_PANEL_MARGIN * s * 0.5, CarvedLook.board_frame(s) * 1.4)
 	paper.position = Vector2(m, m)
 	paper.size = box.size - Vector2(m, m) * 2.0
-	CardTokens.panel(paper, CardTokens.hub_paper(s))
+	CardTokens.panel(paper, CardTokens.clear_style())
 	box.add_child(paper)
 	var service := _service_open
 	var icon_name := service
 	for entry in CardTokens.HUB_SERVICES:
 		if str(entry["id"]) == service:
 			icon_name = str(entry["icon"])
-	var icon := CardTokens.art_rect(CardTokens.HUB_ICON_PREFIX + icon_name)
+	var icon := TextureRect.new()
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CarvedLook.medallion(icon, icon_name)
 	var icon_size := CardTokens.HUB_MENU_ENTRY.y * 1.6 * s
 	icon.size = Vector2(icon_size, icon_size)
 	icon.position = Vector2((paper.size.x - icon_size) * 0.5, CardTokens.HUB_PANEL_MARGIN * s * 0.5)
@@ -1725,13 +1729,17 @@ func _layout_service() -> void:
 	var body := CardTokens.hub_label(CardTokens.t("coming_soon") + "\n" + CardTokens.t("soon_body"), CardTokens.FONT_HUB_BODY, CardTokens.HUB_INK, s, 0, "medium")
 	body.position = Vector2(0.0, title.position.y + title.size.y)
 	body.size = Vector2(paper.size.x, CardTokens.FONT_HUB_BODY * 3.2 * s)
+	body.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	paper.add_child(body)
 	var close := Button.new()
 	close.text = CardTokens.t("close")
 	close.size = Vector2(CardTokens.HUB_BUTTON.x, CardTokens.tap(CardTokens.HUB_BUTTON.y, _phone)) * s
-	close.position = Vector2((paper.size.x - close.size.x) * 0.5, paper.size.y - close.size.y - CardTokens.HUB_PANEL_MARGIN * s * 0.5)
-	CardTokens.hub_button(close, s)
-	CardTokens.hub_text(close, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, s)
+	close.position = Vector2((paper.size.x - close.size.x) * 0.5, maxf(paper.size.y - close.size.y, body.position.y + CardTokens.FONT_HUB_BODY * 2.8 * s))
+	box.size.y = maxf(box.size.y, close.position.y + close.size.y + m * 2.0)
+	box.position = (size - box.size) * 0.5
+	paper.size.y = box.size.y - m * 2.0
+	CarvedLook.plate_button(close, s)
+	CardTokens.hub_fit(close, close.text, CardTokens.FONT_CHAR_BUTTON, CarvedLook.plate_room(close.size), CardTokens.HUB_INK, s)
 	close.pressed.connect(_close_service)
 	paper.add_child(close)
 	close.grab_focus.call_deferred()
