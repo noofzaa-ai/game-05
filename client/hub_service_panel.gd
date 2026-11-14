@@ -1,5 +1,5 @@
 extends Control
-## Base of the hub service panels (docs/ui/hub_layout_spec.md §2): a leather / parchment panel centred over the
+## Base of the hub service panels (docs/ui/hub_layout_spec.md §2): a carved gilded-wood board with a parchment face centred over the
 ## dimmed hub with the service medallion + title, the gold counter, a Close button and a status line for outcome
 ## messages. Subclasses (hub_blacksmith_panel.gd, hub_storage_panel.gd) build their content in `body` and redraw
 ## it in refresh(). Display only: every change is a server command through `send` (the hub's _send, rules in
@@ -9,6 +9,7 @@ extends Control
 const CardTokens := preload("res://client/card_tokens.gd")
 const HubItemCell := preload("res://client/hub_item_cell.gd")
 const HubItemDetails := preload("res://client/hub_item_details.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wash look (Boss 2026-11-14)
 
 signal closed()
 signal changed()  ## the profile changed (the hub refreshes gold / cards)
@@ -50,7 +51,10 @@ func _ready() -> void:
 	for entry in CardTokens.HUB_SERVICES:
 		if str(entry["id"]) == service:
 			icon_name = str(entry["icon"])
-	_icon = CardTokens.art_rect(CardTokens.HUB_ICON_PREFIX + icon_name)
+	_icon = TextureRect.new()
+	_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CarvedLook.medallion(_icon, icon_name)
 	_paper.add_child(_icon)
 	_title = CardTokens.label(CardTokens.t("svc_" + service), CardTokens.FONT_HUB_PANEL_TITLE, CardTokens.HUB_INK, 1.0)
 	_paper.add_child(_title)
@@ -58,7 +62,7 @@ func _ready() -> void:
 	_gold.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_paper.add_child(_gold)
 	_close = Button.new()
-	_close.text = CardTokens.t("close")
+	_close.tooltip_text = CardTokens.t("close")  # a round carved button with an X (the word is its tooltip)
 	_close.focus_mode = Control.FOCUS_ALL
 	_close.pressed.connect(close)
 	_paper.add_child(_close)
@@ -102,11 +106,11 @@ func _layout() -> void:
 	var want := CardTokens.SVC_PANEL * s if not full_screen else size
 	_box.size = Vector2(minf(want.x, size.x - side * 2.0), minf(want.y, size.y - CardTokens.HUB_SAFE.y * s * 2.0))
 	_box.position = (size - _box.size) * 0.5
-	CardTokens.panel(_box, CardTokens.hub_leather(s))
-	var m := CardTokens.SVC_LEATHER * s
+	CarvedLook.board(_box, s)  # carved gilded-wood board with the parchment face (the paper is the board's own)
+	var m := CarvedLook.board_frame(s) + CardTokens.SVC_LEATHER * s * 0.35
 	_paper.position = Vector2(m, m)
 	_paper.size = _box.size - Vector2(m, m) * 2.0
-	CardTokens.panel(_paper, CardTokens.hub_paper(s))
+	CardTokens.panel(_paper, CardTokens.clear_style())
 	var pad := CardTokens.SVC_PAD * s
 	var head := CardTokens.tap(CardTokens.SVC_HEAD, phone) * s
 	_icon.size = Vector2(head, head)
@@ -114,19 +118,23 @@ func _layout() -> void:
 	_title.position = Vector2(pad * 1.5 + head, pad * 0.5)
 	_title.size = Vector2(_paper.size.x * 0.4, head)
 	CardTokens.hub_text(_title, CardTokens.FONT_HUB_PANEL_TITLE, CardTokens.HUB_INK, s)
-	var close_w := CardTokens.HUB_BUTTON.x * s * 0.8
+	var close_w := head
 	_close.size = Vector2(close_w, head)
-	_close.position = Vector2(_paper.size.x - pad - close_w, pad * 0.5)
-	CardTokens.hub_plate_button(_close, s)
-	CardTokens.hub_text(_close, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, s)
-	_gold.size = Vector2(_paper.size.x * CardTokens.SVC_GOLD_W, head)
-	_gold.position = Vector2(_close.position.x - pad - _gold.size.x, pad * 0.5)
-	CardTokens.hub_text(_gold, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "medium")
+	_close.position = Vector2(_paper.size.x - pad * 0.5 - close_w, pad * 0.5)
+	CarvedLook.round_button(_close, "close", s)
+	# the money on a dark ink pill, cream text (the hub's gold pill)
+	var pill_h := head * 0.72
+	_gold.size = Vector2(_paper.size.x * CardTokens.SVC_GOLD_W, pill_h)
+	_gold.position = Vector2(_close.position.x - pad - _gold.size.x, pad * 0.5 + (head - pill_h) * 0.5)
+	_gold.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	CarvedLook.dark_pill(_gold, s)
+	CardTokens.hub_text(_gold, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_CREAM, s, 0, "medium")
 	# the outcome line sits in the header, between the title and the gold (always in view, never under buttons)
 	var title_w := CardTokens.display_font().get_string_size(_title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(int(round(CardTokens.FONT_HUB_PANEL_TITLE * s)), CardTokens.FONT_MIN)).x
 	var status_x := _title.position.x + title_w + pad
 	_status.position = Vector2(status_x, pad * 0.5)
 	_status.size = Vector2(maxf(_gold.position.x - status_x - pad * 0.5, 0.0), head)
+	_gold.visible = not _gold.text.is_empty()
 	CardTokens.hub_text(_status, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_GOOD, s, 0, "medium")
 	body.position = Vector2(pad, pad + head + pad * 0.4)
 	body.size = Vector2(_paper.size.x - pad * 2.0, _paper.size.y - body.position.y - pad * 0.8)
@@ -143,6 +151,20 @@ func refresh() -> void:
 	var p = _profile()
 	if p != null and _gold != null:
 		_gold.text = currency_text(p)
+		_gold.visible = not _gold.text.is_empty()
+		_fit_gold()
+
+
+## The gold pill grows to its text (Tailor adds diamonds), right-aligned against Close.
+func _fit_gold() -> void:
+	if _gold == null or _close == null:
+		return
+	var font: Font = _gold.get_theme_font("font")
+	var px := _gold.get_theme_font_size("font_size")
+	var want := (font.get_string_size(_gold.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x if font != null else 0.0) + _gold.size.y * 1.2
+	var right := _gold.position.x + _gold.size.x
+	_gold.size.x = maxf(_paper.size.x * CardTokens.SVC_GOLD_W, want)
+	_gold.position.x = right - _gold.size.x
 
 
 func say(text: String, good: bool = true) -> void:
@@ -176,7 +198,7 @@ func plate(text: String, callback: Callable) -> Button:
 
 
 func style_plate(b: Button, on: bool) -> void:
-	CardTokens.hub_button(b, s, not on)
+	CarvedLook.chip_button(b, s, on, not on)
 	var w := b.size.x if b.size.x > 0.0 else b.custom_minimum_size.x
 	CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_LINE, maxf(w - 16.0 * s, 1.0), CardTokens.HUB_INK if on else CardTokens.HUB_TAB_IDLE, s, 0, "display" if on else "medium")
 

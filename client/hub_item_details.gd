@@ -6,6 +6,7 @@ extends Panel
 ## Every colour, size and word comes from client/card_tokens.gd.
 
 const CardTokens := preload("res://client/card_tokens.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wash look (Boss 2026-11-14)
 const HubItemCell := preload("res://client/hub_item_cell.gd")
 const ItemText := preload("res://client/item_text.gd")
 const HubLook := preload("res://client/hub_look.gd")
@@ -73,7 +74,7 @@ func _init() -> void:
 func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = true) -> void:
 	s = p_s
 	size = Vector2(w, h)
-	CardTokens.panel(self, CardTokens.hub_box(CardTokens.HUB_DETAIL_BACK, CardTokens.HUB_DETAIL_EDGE, 3.0, 18.0, s))
+	CarvedLook.inset(self, s)
 	var pad := CardTokens.CHAR_PAD * s
 	var line := CardTokens.FONT_CHAR_LINE * 1.3 * s
 	var icon := minf(CardTokens.CHAR_DETAIL_ICON * s, h - button_h - pad * 3.0 - (0.0 if wide else line))
@@ -210,7 +211,8 @@ func add_action(text: String, callback: Callable) -> Button:
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.custom_minimum_size = Vector2(0.0, actions.size.y)
 	b.clip_text = true
-	CardTokens.hub_plate_button(b, s)
+	b.size = Vector2(b.size.x, actions.size.y)
+	CarvedLook.plate_button(b, s)
 	CardTokens.hub_text(b, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, s)
 	b.pressed.connect(callback)
 	actions.add_child(b)
@@ -224,21 +226,16 @@ static func fit_buttons(row: Container, p_s: float, columns: int = 0) -> void:
 	var gap := 18.0 * p_s
 	# The plate art's 9-slice margins (left + arrow tip) were content margins in unscaled art px: on a small screen
 	# they ate the whole label ("To vau", "Discar"). Scale them with the layout so the text keeps its room.
-	var left := CardTokens.HUB_PLATE_MARGINS[0] * minf(p_s, 1.0)
-	var right := CardTokens.HUB_PLATE_MARGINS[2] * minf(p_s, 1.0)
-	var w := (row.size.x - gap * float(n - 1)) / float(n) - left - right - 8.0 * p_s
+	# Carved plaques (carved_look.gd): the caps scale with the button height; the text keeps clear of them.
+	var cell_w := (row.size.x - gap * float(n - 1)) / float(n)
+	var w := CarvedLook.plate_room(Vector2(cell_w, row.size.y if row.size.y > 0.0 else CardTokens.CHAR_ACTION_H * p_s))
 	for child in row.get_children():
 		var b := child as Button
 		if b == null:
 			continue
-		for state in ["normal", "hover", "pressed", "disabled", "hover_pressed"]:
-			var box := b.get_theme_stylebox(state) as StyleBoxTexture
-			if box != null:
-				box.content_margin_left = left
-				box.content_margin_right = right
 		var full: String = b.get_meta("full_text", b.text)
 		b.set_meta("full_text", full)
-		var vertical := CardTokens.HUB_PLATE_MARGINS[1] * 2.0 * minf(p_s, 1.0)
+		var vertical := 8.0 * p_s
 		var fitted := HubLook.fit(b, full, CardTokens.FONT_CHAR_BUTTON, w, CardTokens.HUB_INK, p_s, CardTokens.FIT_MAX_LINES)
 		if int(fitted["lines"]) > 1 and HubLook.lines_height(int(fitted["lines"]), int(fitted["px"])) > row.size.y - vertical:
 			HubLook.fit(b, full, CardTokens.FONT_CHAR_BUTTON, w, CardTokens.HUB_INK, p_s, 1)  # no room for 2 lines: "…"

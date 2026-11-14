@@ -13,6 +13,7 @@ extends Control
 ## Every colour, size and word comes from client/card_tokens.gd.
 
 const CardTokens := preload("res://client/card_tokens.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wash look (Boss 2026-11-14)
 const CardDeck := preload("res://logic/card_deck.gd")
 const CardPortrait := preload("res://client/card_portrait.gd")
 const CardSceneLayers := preload("res://client/card_scene_layers.gd")
@@ -70,6 +71,9 @@ var _panel_art: TextureRect
 var _tabs := {}  ## tab id -> Button
 var _tab_tints := {}  ## tab id -> Panel
 var _underline: Panel
+var _title_ribbon: Control  ## carved look: the card name on a parchment ribbon
+var _switch_pill: Control  ## carved look: the card switcher on a dark ink pill
+var _hint_strip: Control  ## carved look: the hint on the thin parchment ribbon
 var _equip_page: Control
 var _other_page: Control
 var _other_text: Label
@@ -110,7 +114,11 @@ func _ready() -> void:
 	add_child(_shade)
 	_build_top()
 	_build_panel()
-	_hint = CardTokens.hub_label(CardTokens.t("char_hint_touch"), CardTokens.FONT_HUB_HINT, CardTokens.HUB_MUTED, 1.0, CardTokens.OUTLINE_HUB, "medium")
+	_hint_strip = Control.new()
+	_hint_strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CarvedLook.hint_ribbon(_hint_strip)
+	add_child(_hint_strip)
+	_hint = CardTokens.hub_label(CardTokens.t("char_hint_touch"), CardTokens.FONT_HUB_HINT, CardTokens.HUB_INK, 1.0, 0, "medium")
 	add_child(_hint)
 	_race_picker = RacePicker.new()
 	_race_picker.reduced_motion = reduced_motion
@@ -128,8 +136,16 @@ func _ready() -> void:
 
 func _build_top() -> void:
 	_back = _round_button("back", func() -> void: close())
-	_title = CardTokens.label("", CardTokens.FONT_CHAR_TITLE, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
+	_title_ribbon = Control.new()
+	_title_ribbon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CarvedLook.ribbon(_title_ribbon)
+	add_child(_title_ribbon)
+	_title = CardTokens.label("", CardTokens.FONT_CHAR_TITLE, CardTokens.HUB_INK, 1.0, 0, "display", CardTokens.HUB_OUTLINE)
 	add_child(_title)
+	_switch_pill = Control.new()
+	_switch_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	CarvedLook.dark_pill(_switch_pill, 1.0)
+	add_child(_switch_pill)
 	_race_button = Button.new()
 	_race_button.focus_mode = Control.FOCUS_ALL
 	_race_button.tooltip_text = CardTokens.t("race_change")
@@ -153,7 +169,7 @@ func _build_top() -> void:
 	_gold_pill = Panel.new()
 	_gold_pill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_gold_pill)
-	_gold_icon = CardTokens.art_rect(CardTokens.HUB_SYS_PREFIX + "gold")
+	_gold_icon = CardTokens.carved_rect(CarvedLook.COIN, true)
 	add_child(_gold_icon)
 	_gold_label = CardTokens.hub_label("0", CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, 1.0, 0, "medium")
 	_gold_pill.add_child(_gold_label)
@@ -165,12 +181,8 @@ func _round_button(art: String, callback: Callable) -> Button:
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_ALL
 	b.tooltip_text = CardTokens.t(art)
-	var picture := CardTokens.art_rect(CardTokens.HUB_SYS_PREFIX + art)
-	picture.set_anchors_preset(Control.PRESET_FULL_RECT)
-	b.add_child(picture)
+	b.set_meta("icon", art)  # a round carved button with this icon (CarvedLook.round_button in _layout)
 	b.pressed.connect(callback)
-	b.button_down.connect(func() -> void: picture.modulate = CardTokens.HUB_PRESSED)
-	b.button_up.connect(func() -> void: picture.modulate = CardTokens.HUB_WHITE)
 	add_child(b)
 	return b
 
@@ -179,11 +191,13 @@ func _build_panel() -> void:
 	_panel = Control.new()
 	_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	add_child(_panel)
-	_panel_art = CardTokens.art_rect(CardTokens.HUB_PANEL)
+	_panel_art = TextureRect.new()  # carved look: the board under the tab plaques (no leather tab art)
+	_panel_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_panel.add_child(_panel_art)
 	for tab in ["equipment", "outfit", "skills"]:
 		var tint := Panel.new()
 		tint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		tint.visible = false  # carved look: the plaque tint shows the open tab
 		_panel.add_child(tint)
 		_tab_tints[tab] = tint
 		var b := Button.new()
@@ -375,26 +389,28 @@ func _layout() -> void:
 	var sys := CardTokens.tap(CardTokens.HUB_SYS_SIZE, _phone) * s
 	_back.position = Vector2(side, CardTokens.HUB_SYS_Y * s)
 	_back.size = Vector2(sys, sys)
-	CardTokens.bare_button(_back, s, CardTokens.HUB_SYS_SIZE * 0.5)
+	CarvedLook.round_button(_back, "back", s)
 	var title_h := CardTokens.FONT_CHAR_TITLE * 1.5 * s
-	_title.position = Vector2(side + sys + CardTokens.HUB_SYS_GAP * s, CardTokens.HUB_TITLE_Y * s - title_h * 0.5)
+	var ribbon_h := title_h * CarvedLook.TITLE_H_OF_TEXT
+	var tail := CarvedLook.ribbon_tail(ribbon_h)
+	_title.position = Vector2(side + sys + CardTokens.HUB_SYS_GAP * s + tail, CardTokens.HUB_TITLE_Y * s - title_h * 0.5)
 	_title.size = Vector2(size.x * 0.45, title_h)
-	CardTokens.style_text(_title, CardTokens.FONT_CHAR_TITLE, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
+	CardTokens.style_text(_title, CardTokens.FONT_CHAR_TITLE, CardTokens.HUB_INK, s, 0, "display", CardTokens.HUB_OUTLINE)
 	var x := size.x - side
 	for b in [_account, _settings]:
 		x -= sys
 		b.position = Vector2(x, CardTokens.HUB_SYS_Y * s)
 		b.size = Vector2(sys, sys)
-		CardTokens.bare_button(b, s, CardTokens.HUB_SYS_SIZE * 0.5)
+		CarvedLook.round_button(b, str(b.get_meta("icon")), s)
 		x -= CardTokens.HUB_SYS_GAP * s
 	var pill := CardTokens.HUB_GOLD_SIZE * s
 	x -= CardTokens.HUB_GOLD_GAP * s - CardTokens.HUB_SYS_GAP * s + pill.x
 	_gold_pill.position = Vector2(x, CardTokens.HUB_SYS_Y * s + (sys - pill.y) * 0.5)
 	_gold_pill.size = pill
-	CardTokens.panel(_gold_pill, CardTokens.hub_pill(s))
-	var coin := pill.y * 1.15
+	CarvedLook.dark_pill(_gold_pill, s)
+	var coin := pill.y * 1.05
 	_gold_icon.size = Vector2(coin, coin)
-	_gold_icon.position = _gold_pill.position - Vector2(pill.y * 0.15, pill.y * 0.075)
+	_gold_icon.position = _gold_pill.position + Vector2(pill.y * 0.08, (pill.y - coin) * 0.5)
 	_gold_label.position = Vector2(coin * 0.8, 0.0)
 	_gold_label.size = Vector2(pill.x - coin * 0.9, pill.y)
 	CardTokens.hub_text(_gold_label, CardTokens.FONT_HUB_GOLD, CardTokens.HUB_CREAM, s, 0, "medium")
@@ -403,7 +419,10 @@ func _layout() -> void:
 	var ph := minf(CardTokens.CHAR_PANEL_H * s, size.y - CardTokens.CHAR_PANEL_Y * s - CardTokens.HUB_SAFE.y * s * 0.25)
 	_panel.position = Vector2((size.x - pw) * 0.5, CardTokens.CHAR_PANEL_Y * s)
 	_panel.size = Vector2(pw, ph)
-	_panel_art.size = _panel.size
+	var board_top := CardTokens.CHAR_TAB_H * ph / CardTokens.CHAR_PANEL_ART.y * 0.62
+	_panel_art.position = Vector2(0.0, board_top)
+	_panel_art.size = Vector2(pw, ph - board_top)
+	CarvedLook.board(_panel_art, s)
 	# card switcher under the title: < prev | Card n of N | next >
 	var sw_h := CardTokens.tap(CardTokens.CHAR_SWITCH_H, _phone) * s
 	var sw_w := CardTokens.CHAR_SWITCH_W * s
@@ -413,7 +432,9 @@ func _layout() -> void:
 	var title_w := CardTokens.display_font().get_string_size(_title.text, HORIZONTAL_ALIGNMENT_LEFT, -1, maxi(int(round(CardTokens.FONT_CHAR_TITLE * s)), CardTokens.FONT_MIN)).x
 	var race_h := CardTokens.tap(CardTokens.RACE_BUTTON.y, _phone) * s
 	_race_button.size = Vector2(CardTokens.RACE_BUTTON.x * s, race_h)
-	_race_button.position = Vector2(_title.position.x + title_w + CardTokens.RACE_BUTTON_GAP * s, _title.position.y + (title_h - race_h) * 0.5)
+	_title_ribbon.size = Vector2(title_w + tail * 2.0, ribbon_h)
+	_title_ribbon.position = Vector2(_title.position.x - tail, _title.position.y + (title_h - ribbon_h) * 0.5 + ribbon_h * 0.06)
+	_race_button.position = Vector2(_title.position.x + title_w + tail + CardTokens.RACE_BUTTON_GAP * s, _title.position.y + (title_h - race_h) * 0.5)
 	_layout_race_button(s)
 	if _panel.position.y - sw_h < _title.position.y + title_h * 0.8:  # no room under the title: the switcher goes right of it
 		sw_x = _race_button.position.x + _race_button.size.x + CardTokens.CHAR_GAP * s * 2.0
@@ -426,10 +447,12 @@ func _layout() -> void:
 	_next.size = Vector2(sw_w, sw_h)
 	for b in [_prev, _next]:
 		CardTokens.hub_button(b, s, true)
-		CardTokens.hub_text(b, CardTokens.FONT_CHAR_SWITCH, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
-	_prev.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_next.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	CardTokens.hub_text(_count, CardTokens.FONT_CHAR_SWITCH, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
+		CardTokens.hub_text(b, CardTokens.FONT_CHAR_SWITCH, CardTokens.HUB_CREAM, s, 0, "medium")
+	_prev.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_next.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	CardTokens.hub_text(_count, CardTokens.FONT_CHAR_SWITCH, CardTokens.HUB_MUTED, s, 0, "medium")
+	_switch_pill.position = _prev.position - Vector2(sw_h * 0.35, 0.0)
+	_switch_pill.size = Vector2(minf(sw_w * 2.8 + sw_h * 0.7, _gold_icon.position.x - CardTokens.HUB_SYS_GAP * s - _switch_pill.position.x), sw_h)
 	# tabs on the bookmark plates of the art
 	var sx := pw / CardTokens.CHAR_PANEL_ART.x
 	var sy := ph / CardTokens.CHAR_PANEL_ART.y
@@ -446,7 +469,8 @@ func _layout() -> void:
 	_hint.position = Vector2(side, CardTokens.CHAR_HINT_Y * s - CardTokens.FONT_HUB_HINT * 0.8 * s)
 	_hint.size = Vector2(size.x - side * 2.0, CardTokens.FONT_HUB_HINT * 1.6 * s)
 	_hint.position.y = minf(_hint.position.y, size.y - _hint.size.y)
-	CardTokens.hub_fit(_hint, _hint.text, CardTokens.FONT_HUB_HINT, size.x - side * 2.0, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
+	CardTokens.hub_fit(_hint, _hint.text, CardTokens.FONT_HUB_HINT, size.x - side * 2.0 - CarvedLook.HINT_PAD * 2.0 * s, CardTokens.HUB_INK, s, 0, "medium")
+	_place_hint_strip()
 	_race_picker.size = size
 	_layout_equipment(pw, ph)
 	_layout_other(pw, ph)
@@ -471,7 +495,7 @@ func _layout_equipment(pw: float, ph: float) -> void:
 		c.size = Vector2(cell, cell)
 	_window.position = origin + Vector2(cell + gap, cell + gap)
 	_window.size = Vector2(cell * 3.0 + gap * 2.0, cell * 4.0 + gap * 3.0)
-	CardTokens.panel(_window, CardTokens.hub_box(CardTokens.palette(card)["shadow"], CardTokens.HUB_WINDOW_EDGE, CardTokens.CHAR_WINDOW_LINE, CardTokens.CHAR_WINDOW_RADIUS, s))
+	CardTokens.panel(_window, CarvedLook.window_box(CardTokens.palette(card)["shadow"], s))
 	_portrait.position = Vector2.ZERO
 	_portrait.size = _window.size
 	var line := CardTokens.CHAR_WINDOW_LINE * s
@@ -482,7 +506,7 @@ func _layout_equipment(pw: float, ph: float) -> void:
 	var strip_h := CardTokens.CHAR_STAT_STRIP_H * s
 	_strip.position = Vector2(6.0 * s, _window.size.y - strip_h - 6.0 * s)
 	_strip.size = Vector2(_window.size.x - 12.0 * s, strip_h)
-	CardTokens.panel(_strip, CardTokens.hub_strip(s))
+	CarvedLook.dark_pill(_strip, s)
 	var col := _strip.size.x / float(_stat_keys.size())
 	for n in _stat_keys.size():
 		var k: Label = _stat_keys[n]
@@ -515,7 +539,6 @@ func _layout_equipment(pw: float, ph: float) -> void:
 	for id in _filter_buttons:
 		var b: Button = _filter_buttons[id]
 		b.custom_minimum_size = Vector2(CardTokens.tap(CardTokens.CHAR_FILTER_W, _phone) * s * (0.8 if _phone else 1.0), filter_h)
-		CardTokens.hub_button(b, s, true)
 	var store_cell := CardTokens.tap(CardTokens.CHAR_STORE_CELL, _phone) * s
 	var store_gap := CardTokens.CHAR_STORE_GAP * s
 	_store_scroll.position = Vector2(rx, head_y + filter_h + CardTokens.CHAR_GAP * s * 0.3)
@@ -525,11 +548,23 @@ func _layout_equipment(pw: float, ph: float) -> void:
 	refresh()
 
 
+## The hint's parchment ribbon: as wide as the hint text plus the folded ends, centred on the hint line.
+func _place_hint_strip() -> void:
+	var s := _s
+	var px := _hint.get_theme_font_size("font_size")
+	var font: Font = _hint.get_theme_font("font")
+	var text_w := font.get_string_size(_hint.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x if font != null else _hint.size.x
+	var h := maxf(CarvedLook.HINT_H * s, px * 1.5)
+	var w := minf(text_w + CarvedLook.HINT_PAD * 2.0 * s, size.x)
+	_hint_strip.size = Vector2(w, h)
+	_hint_strip.position = Vector2(_hint.position.x + (_hint.size.x - w) * 0.5, _hint.position.y + (_hint.size.y - h) * 0.5)
+
+
 ## The race button's look: parchment plate, the race badge, the race name.
 func _layout_race_button(s: float) -> void:
 	var p = _profile()
 	var race := CardDeck.race_of(p.card_deck, card) if p != null and not card.is_empty() else ""
-	CardTokens.hub_button(_race_button, s)
+	CarvedLook.chip_button(_race_button, s)
 	var h := _race_button.size.y
 	var edge := CardTokens.RACE_BUTTON.y * s * CardTokens.RACE_BUTTON_BADGE
 	var inset := (CardTokens.RACE_BUTTON.y * s - edge) * 0.5
@@ -552,7 +587,7 @@ func _layout_other(pw: float, ph: float) -> void:
 	var bh := CardTokens.tap(CardTokens.CHAR_ACTION_H, _phone) * s
 	_other_button.size = Vector2(420.0 * s, bh)
 	_other_button.position = Vector2((pw - _other_button.size.x) * 0.5, ph * 0.55)
-	CardTokens.hub_plate_button(_other_button, s)
+	CarvedLook.plate_button(_other_button, s)
 	CardTokens.hub_text(_other_button, CardTokens.FONT_CHAR_BUTTON, CardTokens.HUB_INK, s)
 
 
@@ -588,22 +623,23 @@ func _refresh_tabs() -> void:
 	for tab in _tabs:
 		var b: Button = _tabs[tab]
 		var on: bool = tab == _tab
-		CardTokens.hub_button(b, s, true)
-		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_TAB, b.size.x * 0.8, CardTokens.HUB_INK if on else CardTokens.HUB_TAB_IDLE, s)
+		CarvedLook.plate_button(b, s, "chosen" if on else "idle")
+		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_TAB, CarvedLook.plate_room(b.size), CardTokens.HUB_INK if on else CardTokens.HUB_TAB_IDLE, s)
 		var tint: Panel = _tab_tints[tab]
 		CardTokens.panel(tint, CardTokens.hub_box(CardTokens.HUB_TAB_LIT if on else CardTokens.HUB_TAB_DIM, CardTokens.HUB_CLEAR, 0.0, 10.0, s))
 		if on:
 			var w := b.size.x * CardTokens.CHAR_UNDERLINE.x
-			_underline.position = Vector2(b.position.x + (b.size.x - w) * 0.5, CardTokens.CHAR_UNDERLINE.y * sy)
-			_underline.size = Vector2(w, 4.0 * s)
-	CardTokens.panel(_underline, CardTokens.hub_line(CardTokens.HUB_UNDERLINE))
+			_underline.position = Vector2(b.position.x + (b.size.x - w * 0.6) * 0.5, b.position.y + b.size.y * 0.74)
+			_underline.size = Vector2(w * 0.6, 4.0 * s)  # the open tab: a short ink bar under its name (shape cue)
+	CardTokens.panel(_underline, CardTokens.hub_line(CardTokens.HUB_INK))
 	_equip_page.visible = _tab == "equipment"
 	_other_page.visible = _tab == "outfit"
 	_skills.visible = _tab == "skills"
 	var hint := CardTokens.tt("tree_hint") if _tab == "skills" else CardTokens.t("char_hint_touch")
 	if _hint.text != hint:
 		_hint.text = hint
-		CardTokens.hub_fit(_hint, hint, CardTokens.FONT_HUB_HINT, _hint.size.x, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
+		CardTokens.hub_fit(_hint, hint, CardTokens.FONT_HUB_HINT, _hint.size.x - CarvedLook.HINT_PAD * 2.0 * s, CardTokens.HUB_INK, s, 0, "medium")
+		_place_hint_strip()
 	_other_button.visible = _tab == "outfit"
 	_other_text.text = CardTokens.t("outfit_body") if _tab == "outfit" else CardTokens.t("skills_soon")
 
@@ -694,8 +730,8 @@ func refresh() -> void:
 	for id in _filter_buttons:
 		var b: Button = _filter_buttons[id]
 		var on: bool = id == _filter
+		CarvedLook.chip_button(b, _s, on, not on)
 		CardTokens.hub_text(b, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK if on else CardTokens.HUB_TAB_IDLE, _s, 0, "display" if on else "medium")
-		b.flat = true
 		b.button_pressed = on
 	_refresh_detail(p, rules, worn, selected_item, fits_count)
 

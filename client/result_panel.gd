@@ -1,5 +1,5 @@
 extends CanvasLayer
-## The end-of-fight result in the battle (Boss phone playtest 2026-11-14): a leather + parchment plate with the
+## The end-of-fight result in the battle (Boss phone playtest 2026-11-14): a carved board (hub_carved art) with the
 ## result line and real buttons (tap, click, or focus + Enter / gamepad A) instead of printed key hints. The stage
 ## decides which actions a result offers and what each does (stage_view.gd _result_action); the keys stay as
 ## shortcuts but are never printed. Display only: no game rules here.
@@ -9,6 +9,7 @@ extends CanvasLayer
 signal action(id: String)
 
 const CardTokens := preload("res://client/card_tokens.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wash look (Boss 2026-11-14)
 const HubLook := preload("res://client/hub_look.gd")
 
 ## Every word the panel shows ([th, en]; CardTokens.language picks). Kept here so the shared token file is not
@@ -124,11 +125,11 @@ func _place() -> void:
 	var phone := CardTokens.is_phone(area)
 	var margin := 24.0
 	var width := minf(PANEL_W * s, area.x - margin * 2.0)
-	var rim := RIM * s
+	var rim := maxf(RIM * s, CarvedLook.board_frame(s))
 	var pad := PAD * s
 	var inner := width - rim * 2.0 - pad * 2.0
-	CardTokens.panel(_plate, HubLook.leather(s))
-	CardTokens.panel(_paper, HubLook.parchment(s))
+	CarvedLook.board(_plate, s)  # carved gilded-wood board; its parchment face is the paper
+	CardTokens.panel(_paper, CardTokens.clear_style())
 	CardTokens.hub_text(_title, FONT_TITLE, CardTokens.HUB_INK, s)
 	_title.size = Vector2(inner, 0.0)
 	_title.custom_minimum_size = Vector2(inner, 0.0)
@@ -140,8 +141,9 @@ func _place() -> void:
 	CardTokens.gap(_row, GAP, s)
 	for b in _buttons:
 		b.custom_minimum_size = button_size
-		CardTokens.hub_plate_button(b, s)
-		CardTokens.hub_fit(b, b.text, FONT_BUTTON, button_size.x - (CardTokens.HUB_PLATE_MARGINS[0] + CardTokens.HUB_PLATE_MARGINS[2]) * s, CardTokens.HUB_INK, s)
+		b.size = button_size
+		CarvedLook.plate_button(b, s)
+		CardTokens.hub_fit(b, b.text, FONT_BUTTON, CarvedLook.plate_room(button_size), CardTokens.HUB_INK, s)
 	var row_h := button_size.y if count > 0 else 0.0
 	var height := rim * 2.0 + pad * 2.0 + title_h + (GAP * s + row_h if count > 0 else 0.0)
 	# Middle of the free band: under the top bars, over the squad tray at the bottom.

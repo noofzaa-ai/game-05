@@ -139,7 +139,7 @@ func _refresh_buy(p) -> void:
 		b.focus_mode = Control.FOCUS_ALL
 		b.custom_minimum_size = Vector2(CardTokens.TAILOR_CHIP.x, CardTokens.tap(CardTokens.TAILOR_CHIP.y * 1.4, phone)) * s
 		b.clip_text = true
-		CardTokens.hub_button(b, s, false)
+		CarvedLook.chip_button(b, s)
 		# long names: shrink, then two lines, then "…" (the price stays its own line)
 		HubLook.fit(b, str(offer["name"]), CardTokens.FONT_CHAR_LINE, b.custom_minimum_size.x - 16.0 * s, CardTokens.HUB_INK, s, CardTokens.FIT_MAX_LINES,
 			"display" if str(offer["sku"]) == selected else "medium", 0, CardTokens.t("cost_gold") % int(offer["price"]))
@@ -201,7 +201,7 @@ func _fill_materials(p) -> void:
 		var b := plate(CardTokens.t("shop_sell_material") % [count, name, price], _sell_material.bind(str(id), count, price))
 		b.custom_minimum_size = Vector2(CardTokens.TAILOR_CHIP.x * s * 1.3, CardTokens.tap(CardTokens.SVC_ROW_H, phone) * s)
 		b.disabled = price < 1
-		CardTokens.hub_button(b, s)
+		CarvedLook.chip_button(b, s)
 		CardTokens.hub_text(b, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
 		_mats.add_child(b)
 

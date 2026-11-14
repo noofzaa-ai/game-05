@@ -12,6 +12,7 @@ extends Control
 ## Every colour, size and word comes from client/card_tokens.gd (STRINGS_TREE).
 
 const CardTokens := preload("res://client/card_tokens.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wash look (Boss 2026-11-14)
 const SkillTreeNode := preload("res://client/skill_tree_node.gd")
 const SkillTree := preload("res://logic/skill_tree.gd")
 const TreeData := preload("res://logic/skill_tree_data.gd")
@@ -359,7 +360,7 @@ func layout_tab() -> void:
 		_detail.position = Vector2(size.x - dw, top)
 		_detail.size = Vector2(dw, size.y - top)
 		canvas = Rect2(0.0, top, size.x - dw - gap, size.y - top)
-	CardTokens.panel(_detail, CardTokens.hub_paper(s))
+	CarvedLook.inset(_detail, s)  # carved look: a parchment inset with an ink line
 	_map.position = canvas.position
 	_map.size = canvas.size
 	_lines.position = Vector2.ZERO
@@ -376,7 +377,7 @@ func _layout_header() -> float:
 	var head_h := CardTokens.tap(CardTokens.TREE_HEADER_H, phone) * s
 	_header.position = Vector2.ZERO
 	_header.size = Vector2(size.x, head_h)
-	CardTokens.panel(_header, CardTokens.hub_strip(s))
+	CarvedLook.dark_pill(_header, s)  # carved look: the dark ink pill
 	var bh := head_h - gap
 	var x := gap
 	_level.position = Vector2(x, gap * 0.2)
@@ -429,7 +430,7 @@ func _layout_header_compact() -> float:
 	var head_h := maxf(CardTokens.tap(CardTokens.TREE_HEADER_H, phone) * s, line * 2.2)
 	_header.position = Vector2.ZERO
 	_header.size = Vector2(size.x, head_h)
-	CardTokens.panel(_header, CardTokens.hub_strip(s))
+	CarvedLook.dark_pill(_header, s)  # carved look: the dark ink pill
 	var face := CardTokens.medium_font()
 	var fpx := int(_px(CardTokens.FONT_CHAR_SLOT))
 	var xp_sample := CardTokens.tt("tree_xp") % [99999, 99999]
@@ -479,9 +480,9 @@ func _style_xp() -> void:
 func _skin(b: Button) -> void:
 	b.custom_minimum_size = Vector2.ZERO
 	if s >= CardTokens.TREE_PLATE_MIN_SCALE:
-		CardTokens.hub_plate_button(b, s)
+		CarvedLook.plate_button(b, s)
 	else:
-		CardTokens.hub_button(b, s)
+		CarvedLook.chip_button(b, s)
 	CardTokens.tree_keep_plate_when_disabled(b)
 	b.clip_text = true  # the text never makes the button wider than its slot (it wraps instead, _fit_button)
 

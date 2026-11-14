@@ -127,7 +127,7 @@ func layout_body(area: Vector2) -> void:
 		(_cards[id] as Button).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_window.position = Vector2(0.0, row_h + gap * 0.5)
 	_window.size = Vector2(left_w, area.y - _window.position.y)
-	CardTokens.panel(_window, CardTokens.hub_box(CardTokens.palette(card)["shadow"], CardTokens.HUB_WINDOW_EDGE, CardTokens.CHAR_WINDOW_LINE, CardTokens.CHAR_WINDOW_RADIUS, s))
+	CardTokens.panel(_window, CarvedLook.window_box(CardTokens.palette(card)["shadow"], s))
 	_portrait.position = Vector2.ZERO
 	_portrait.size = _window.size
 	var rx := left_w + gap * 2.0
@@ -142,7 +142,7 @@ func layout_body(area: Vector2) -> void:
 	var strip_h := CardTokens.FONT_CHAR_ITEM * 1.5 * s + CardTokens.FONT_CHAR_LINE * 1.5 * s + button_h + gap * 1.5
 	_strip.position = Vector2(rx, area.y - strip_h)
 	_strip.size = Vector2(rw, strip_h)
-	CardTokens.panel(_strip, CardTokens.hub_box(CardTokens.HUB_DETAIL_BACK, CardTokens.HUB_DETAIL_EDGE, 3.0, 18.0, s))
+	CarvedLook.inset(_strip, s)
 	var pad := gap
 	_strip_name.position = Vector2(pad, gap * 0.3)
 	_strip_name.size = Vector2(rw - pad * 2.0, CardTokens.FONT_CHAR_ITEM * 1.5 * s)
@@ -175,7 +175,7 @@ func refresh() -> void:
 		style_plate(_cards[id], id == card)
 	for id in _cats:
 		style_plate(_cats[id], id == category)
-	CardTokens.panel(_window, CardTokens.hub_box(CardTokens.palette(card)["shadow"], CardTokens.HUB_WINDOW_EDGE, CardTokens.CHAR_WINDOW_LINE, CardTokens.CHAR_WINDOW_RADIUS, s))
+	CardTokens.panel(_window, CarvedLook.window_box(CardTokens.palette(card)["shadow"], s))
 	if _portrait.class_id != card:
 		_portrait.set_class(card)
 	_portrait.set_look(CardDeck.look_of(p.card_deck, card))
@@ -277,7 +277,7 @@ func _option(text: String, picture: Texture2D, swatch: String, chosen: bool, cal
 	b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	b.clip_text = true
 	b.toggle_mode = false
-	CardTokens.hub_button(b, s)
+	CarvedLook.chip_button(b, s)
 	CardTokens.hub_text(b, CardTokens.FONT_CHAR_SLOT if big else CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "display" if chosen else "medium")
 	# long names: shrink, then two lines, then "…"; a second line of `text` ("Owned 1") stays its own line
 	var name_part := text.get_slice("
@@ -333,7 +333,7 @@ func _strip_button(text: String, callback: Callable) -> Button:
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.custom_minimum_size = Vector2(0.0, _strip_buttons.size.y)
 	b.clip_text = true
-	CardTokens.hub_plate_button(b, s)
+	CarvedLook.plate_button(b, s)
 	b.pressed.connect(callback)
 	_strip_buttons.add_child(b)
 	return b
