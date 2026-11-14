@@ -129,7 +129,7 @@ func layout_body(area: Vector2) -> void:
 	CardTokens.flow_gap(_buttons, CardTokens.CHAR_GAP * 0.75, s)
 	for b in [_refine, _upgrade, _tier, _repair, _repair_all]:
 		b.custom_minimum_size = Vector2(0.0, button_h)
-		CardTokens.hub_plate_button(b, s)
+		CarvedLook.plate_button(b, s)
 	HubItemDetails.fit_buttons(_buttons, s, 3)
 	_odds.position = Vector2(rx, detail_h + gap * 0.5)
 	_odds.size = Vector2(rw, maxf(area.y - buttons_h - detail_h - gap, 0.0))

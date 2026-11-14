@@ -12,6 +12,7 @@ extends Control
 ## Touch first (tiles and buttons >= 96 px on phones), keyboard / gamepad focus on every tile, Esc / B closes.
 
 const CardTokens := preload("res://client/card_tokens.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wash look (Boss 2026-11-14)
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
 const SkillTree := preload("res://logic/skill_tree.gd")
@@ -222,15 +223,15 @@ func _layout() -> void:
 	var ph := minf(CardTokens.RACE_PANEL.y * s, size.y - CardTokens.HUB_SAFE.y * s * 2.0)
 	_panel.size = Vector2(pw, ph)
 	_panel.position = (size - _panel.size) * 0.5
-	CardTokens.panel(_panel, CardTokens.hub_leather(s))
+	CarvedLook.board(_panel, s)  # carved gilded-wood board, parchment face: ink text
 	var pad := CardTokens.RACE_PANEL_PAD * s
 	var head_h := CardTokens.RACE_HEADER_H * s
 	_title.position = Vector2(pad, pad * 0.5)
 	_title.size = Vector2(pw - pad * 2.0, head_h * 0.58)
-	CardTokens.hub_fit(_title, _title.text, CardTokens.FONT_RACE_TITLE, _title.size.x, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
+	CardTokens.hub_fit(_title, _title.text, CardTokens.FONT_RACE_TITLE, _title.size.x, CardTokens.HUB_INK, s)
 	_sub.position = Vector2(pad, pad * 0.5 + head_h * 0.58)
 	_sub.size = Vector2(pw - pad * 2.0, head_h * 0.36)
-	CardTokens.hub_fit(_sub, _sub.text, CardTokens.FONT_RACE_SUB, _sub.size.x, CardTokens.HUB_MUTED, s, 0, "medium")
+	CardTokens.hub_fit(_sub, _sub.text, CardTokens.FONT_RACE_SUB, _sub.size.x, CardTokens.HUB_TAB_IDLE, s, 0, "medium")
 	var foot_h := CardTokens.tap(CardTokens.RACE_FOOT_H, _phone) * s
 	var gap := CardTokens.RACE_TILE_GAP * s
 	var count := maxi(_ids.size(), 1)
@@ -284,7 +285,7 @@ func _layout() -> void:
 	_warn.size = Vector2(_confirm.position.x - pad * 2.0, bh)
 	_warn.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	for b in [_close, _cancel, _confirm]:
-		CardTokens.hub_plate_button(b, s)
+		CarvedLook.plate_button(b, s)
 	_refresh_state()
 
 
@@ -295,7 +296,7 @@ func _refresh_state() -> void:
 	var s := _s
 	for race in _tiles:
 		var b: Button = _tiles[race]["button"]
-		CardTokens.race_tile_button(b, race, race == current, race == pending, s)
+		CarvedLook.race_tile(b, race, race == current, race == pending, s)
 		b.disabled = busy
 	var confirming := not pending.is_empty() and refund_points > 0
 	_confirm.visible = confirming
@@ -306,9 +307,9 @@ func _refresh_state() -> void:
 	if confirming:
 		_confirm.text = CardTokens.t("race_confirm") % CardTokens.race_name(pending)
 		_warn.text = CardTokens.t("race_refund_warn") % refund_points
-		CardTokens.hub_fit(_warn, _warn.text, CardTokens.FONT_RACE_WARN, _warn.size.x, CardTokens.RACE_PICK_RING, s, CardTokens.OUTLINE_HUB, "medium")
+		CardTokens.hub_fit(_warn, _warn.text, CardTokens.FONT_RACE_WARN, _warn.size.x, CardTokens.RACE_HEAD_INK, s, 0, "display")
 	else:
 		_warn.text = CardTokens.t("race_hint")
-		CardTokens.hub_fit(_warn, _warn.text, CardTokens.FONT_HUB_HINT, _warn.size.x, CardTokens.HUB_MUTED, s, CardTokens.OUTLINE_HUB, "medium")
+		CardTokens.hub_fit(_warn, _warn.text, CardTokens.FONT_HUB_HINT, _warn.size.x, CardTokens.HUB_TAB_IDLE, s, 0, "medium")
 	for b in [_close, _cancel, _confirm]:
 		CardTokens.hub_fit(b, b.text, CardTokens.FONT_RACE_BUTTON, b.size.x * 0.85, CardTokens.HUB_INK, s)

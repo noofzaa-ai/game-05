@@ -1,5 +1,5 @@
 extends CanvasLayer
-## Settings (graphics) overlay in the hub look: the leather / parchment service panel of client/hub_service_panel.gd
+## Settings (graphics) overlay in the hub look: the carved board service panel of client/hub_service_panel.gd
 ## with the settings medallion and title, then four sections (Quality, Drawn look, Scene, Effects) of rows: a
 ## setting's name and its choice plates (the Tailor's parchment chips; the chosen one gets the dark ring and a check).
 ## Opened from the hub / character screen gear (card_deck_screen.gd `settings_pressed`) and the battle HUD
@@ -10,6 +10,7 @@ extends CanvasLayer
 
 const Options := preload("res://client/graphics_options.gd")
 const CardTokens := preload("res://client/card_tokens.gd")
+const CarvedLook := preload("res://client/carved_look.gd")
 
 ## The rows: [option key, word key, values, value word keys]. Sections are [title word key, rows].
 const QUALITY := [["render_scale", "gfx_render_scale", [0.5, 0.75, 1.0], ["gfx_scale_normal", "gfx_scale_high", "gfx_scale_ultra"]],
@@ -71,11 +72,7 @@ static func _header(column: VBoxContainer, text: String, s: float, gap_above: bo
 		column.add_child(space)
 	var title := CardTokens.label(text, CardTokens.FONT_CHAR_TAB, CardTokens.HUB_INK, s)
 	column.add_child(title)
-	var line := Panel.new()
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.custom_minimum_size = Vector2(0.0, maxf(1.0, round(CardTokens.SET_HEADER_LINE * s)))
-	CardTokens.panel(line, CardTokens.hub_line(CardTokens.HUB_DIVIDER))
-	column.add_child(line)
+	column.add_child(CarvedLook.divider(maxf(6.0, round(CardTokens.SET_HEADER_LINE * s * 6.0))))  # carved wood bar
 
 
 ## A small hint under a row (muted ink, wraps).
@@ -111,7 +108,7 @@ static func _row(column: VBoxContainer, row: Array, s: float, phone: bool) -> Bu
 		b.custom_minimum_size = Vector2(CardTokens.SET_CHIP_W * s, h)
 		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		b.set_meta("value", values[index])
-		CardTokens.hub_button(b, s)
+		CarvedLook.chip_button(b, s)
 		var ring := Panel.new()
 		ring.name = "Ring"
 		ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -138,6 +135,8 @@ static func _mark(chips: Array[Button], key: String, words: Array, s: float) -> 
 		var on: bool = typeof(value) == typeof(current) and value == current
 		b.text = ("✓ " if on else "") + CardTokens.t(words[index])
 		(b.get_node("Ring") as Control).visible = on
+		CarvedLook.skin_of(b).base = CarvedLook.TINT_CHOSEN if on else CarvedLook.TINT_NORMAL
+		CarvedLook.skin_of(b).queue_redraw()
 		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_LINE, b.custom_minimum_size.x - 14.0 * s, CardTokens.HUB_INK, s, 0, "display" if on else "medium")
 
 
@@ -151,7 +150,7 @@ class SettingsPanel extends "res://client/hub_service_panel.gd":
 		service = "settings"
 
 	func build() -> void:
-		_icon.texture = CardTokens.tex(CardTokens.HUB_SYS_PREFIX + "settings")
+		CarvedLook.medallion(_icon, "settings")
 		_scroll = ScrollContainer.new()
 		_scroll.name = "Scroll"
 		_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED

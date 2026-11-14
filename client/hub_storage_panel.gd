@@ -88,7 +88,7 @@ func layout_body(area: Vector2) -> void:
 	var row_px := maxf(button_h, CardTokens.tap(CardTokens.SVC_ROW_H, phone) * s)
 	_picker.position = Vector2(rx, area.y * 0.22)
 	_picker.size = Vector2(rw, area.y * 0.78 - row_px - gap * 1.5)
-	CardTokens.panel(_picker, CardTokens.hub_box(CardTokens.HUB_PAPER, CardTokens.HUB_DETAIL_EDGE, 3.0, 18.0, s))
+	CarvedLook.inset(_picker, s)
 	var head_h := CardTokens.FONT_CHAR_LINE * 2.6 * s
 	_picker_head.position = Vector2(gap, gap * 0.3)
 	_picker_head.size = Vector2(rw - gap * 2.0, head_h)
@@ -143,7 +143,7 @@ func _picker_button(text: String, callback: Callable, disabled := false, why := 
 	b.custom_minimum_size = Vector2(0.0, CardTokens.tap(CardTokens.SVC_ROW_H, phone) * s)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.disabled = disabled
-	CardTokens.hub_button(b, s)
+	CarvedLook.chip_button(b, s)
 	_picker_box.add_child(b)
 	CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_LINE, (_picker_box.size.x * 0.5 - 24.0 * s), CardTokens.HUB_INK, s, 0, "medium")
 	return b
