@@ -205,7 +205,32 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release ccfae6a29f2e-20261115 (rolled out 2026-11-14 ~19:40 UTC, web only)
+## 9. LIVE on staging: release e7dbeb842345-20261115 (rolled out 2026-11-15 ~22:30 UTC, FULL: web + headless)
+
+Built from the release worktree `zorx-release-fdf9fbb` at e7dbeb8 = origin/develop (tutorial: logic/profile, commands,
+card_deck, unlocks, tutorial; data/tutorial; server/profile/runner.gd; server/rooms manager.gd + room.gd; Nakama rooms.ts),
+`data/online.local.json` present. Web build **1b3e59b01877**; boot 41.5 MiB, all packs 68.6 MiB. net_wire VERSION still 4.
+Tests: passed=3343 failed=33, all pre-existing (none tutorial/migration/raceless; 40 such checks PASS).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:067c017c111ec451fd89ed93835cd231449a9e9df1c9f68fe66f83d0c27e2a3f` |
+| headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:e16e785340da6469939c6ac52dc50f1ec7177b6964064a4ba7e8efd72258e393` (ZORX_SQUAD_ROOMS=1 kept) |
+| headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:a2850ce23943e0cac4d5dac1a2b9299885badd262b2da3fdaa96ea54ef2c4250` |
+| nakama | NOT rebuilt (registry.heroiclabs.com 429). Safe: rooms.ts only adds a `tutorial` join refusal; room manager.gd refuses shared rooms before battle_tip too. Old runtime lets a pre-tour player reach the room server, which refuses. Rebuild later. |
+
+Local: rooms image smoke all PASS (stderr empty), profile worker smoke 11 PASS, web paths OK. After rollout: pods Ready
+0 restarts, live packs.json 1b3e59b01877, Nakama healthcheck 200, room-v2 101, rooms/profiles 0 SCRIPT ERROR and 0
+migration/error lines. Before-state: `build/k3s-staging-before-e7dbeb8.yaml`, `build/k3s-before-e7dbeb8.txt` (main tree).
+OPEN for a person: new account tutorial; old account stays unlocked with raced cards.
+
+Rollback (web + headless together):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:92f2e1a544e5d2499648d73046d03dab4ea4c99d1d30e921bb6fac88a5df7412
+kubectl -n zorx-staging set image deployment/headless rooms=wiyazard:30500/zorx-room-worker@sha256:6f27267d72b80dd8ae7444b07551fae0af5e7b10b16c1160513fafe6dd17d4c1 profiles=wiyazard:30500/zorx-name-validator@sha256:43b422e297d799d19682a045155676cf85c79aaf2907515e0256386ab67de9ff
+```
+
+### Previous: release ccfae6a29f2e-20261115 (rolled out 2026-11-14 ~19:40 UTC, web only)
 
 Why web only: `git diff --stat 6c8724f ccfae6a -- server logic data` shows no change in `logic/` or `data/`; the only
 `server/` changes are under `server/landing/` (trail v2/v3 overlay). The room/profile images do not use them, so headless
