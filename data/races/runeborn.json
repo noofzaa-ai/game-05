@@ -2,7 +2,7 @@
  "id": "runeborn", "name": "Runeborn", "order": 4, "theme": "runes",
  "summary": "A rhythm of build-up and release; arcane wards.",
  "color": "#3fe6ff", "color_2": "#9a5cff",
- "look": {"ears": "", "hair_extra": "", "beard": "", "face_paint": "", "skin_decal": "runes_a", "emblem": ""},
+ "look": {"head_file": "res://art/characters/studio05/v1111/race/race_heads.glb", "head": "Head_Anime_Runeborn", "overlay": "Runeborn_Face_Runes_Studio", "emblem": ""},
  "mockup": {"plate_color": "#3fe6ff", "rim_color": "#9a5cff", "aura_vfx": "race_aura/runeborn", "badge_text": "R"},
  "classes": {
   "sword_shield": {"passive": {"name": "Rune Aegis", "text": "+1 rune per hit taken or blocked (max 5). At 5: shield self 20% max HP + Fortify 4 s.",

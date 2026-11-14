@@ -98,6 +98,7 @@ static func card_appearance(look: Dictionary, base: Dictionary) -> Dictionary:
 	var picks: Dictionary = result.get("choices", {}).duplicate()
 	result["studio_hair"] = str(look.get("hair", "a"))
 	result["studio_silver"] = bool(look.get("silver", false))
+	result["race"] = str(look.get("race", ""))  # the race head (data/races/<id>.json "look"), "" = the Studio head
 	var parts: Dictionary = cosmetics().resolve({"eye_color": look.get("eye_color", ""), "skin": look.get("skin", "")})
 	if parts.has("eye_color"):
 		result["eye_color"] = Color(parts["eye_color"]["color"])

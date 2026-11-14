@@ -7,6 +7,7 @@ render_mode unshaded, cull_front, fog_disabled;
 uniform float grow = 0.0019; // GLB units: hair 0.0019, head 0.0014
 uniform bool is_hair = true;
 uniform bool has_rest = false;
+uniform bool rest_in_custom = false; // a textured head: bind-pose position in CUSTOM0 (see the model)
 uniform vec3 base_color_linear = vec3(0.43, 0.39, 0.52); // hair material colour
 uniform bool use_albedo_tex = false; // Hair G: its texture is part of the hull colour (diffuseColor)
 // No source_color hint: the Compatibility renderer returns the raw sRGB texels for a source_color
@@ -20,7 +21,7 @@ varying vec3 rest_pos;
 varying vec4 vertex_color;
 
 void vertex() {
-	rest_pos = has_rest ? vec3(UV.x, UV.y, UV2.x) : VERTEX;
+	rest_pos = rest_in_custom ? CUSTOM0.xyz : (has_rest ? vec3(UV.x, UV.y, UV2.x) : VERTEX);
 	vertex_color = COLOR;
 	VERTEX += normalize(NORMAL) * grow;
 }

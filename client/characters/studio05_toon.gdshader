@@ -18,12 +18,17 @@ uniform sampler2D albedo_tex : filter_linear_mipmap, repeat_enable;
 uniform bool use_normal_tex = false; // class gear / Hair G: normalTexture (perturbs the cel normal)
 uniform sampler2D normal_tex : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform bool use_vertex_color = false; // COLOR_0 multiplies the colour (Hair C-F)
+// Race head paint (Viking war paint): the texture is bare skin + paint. Texels near the bare-skin colour
+// (paint_ground, linear) take the card skin (base_color_linear); the paint keeps its own colour.
+uniform bool albedo_is_paint = false;
+uniform vec3 paint_ground = vec3(0.72, 0.56, 0.48);
 uniform vec4 flash = vec4(0.0); // game tint (hit flash etc.): rgb, a = strength
 group_uniforms;
 
 group_uniforms face;
 uniform int part = 0; // 0 body/outfit/gear, 1 face (Head_Anime), 2 hair
 uniform bool has_rest = false;
+uniform bool rest_in_custom = false; // a textured head (Viking race head): bind-pose position in CUSTOM0, UV kept for its paint
 uniform vec3 iris_tint = vec3(0.5776, 0.2384, 0.0331); // #C98634 in linear
 uniform int iris_style = 0; // Studio menu value: 0 Classic, 1 Starry Violet, 3, 6, 7, 9, 10
 uniform int makeup_style = 0; // 0 Anime Soft, 1 Sharp Wing, 2 Natural (no makeup)
@@ -66,7 +71,7 @@ varying vec3 rest_pos;
 varying vec4 vertex_color;
 
 void vertex() {
-	rest_pos = has_rest ? vec3(UV.x, UV.y, UV2.x) : VERTEX;
+	rest_pos = rest_in_custom ? CUSTOM0.xyz : (has_rest ? vec3(UV.x, UV.y, UV2.x) : VERTEX);
 	vertex_color = COLOR;
 }
 
@@ -323,7 +328,12 @@ void fragment() {
 		n = -n;
 	}
 	vec3 diffuse = base_color_linear;
-	if (use_albedo_tex) {
+	if (use_albedo_tex && albedo_is_paint) {
+		// Paint coverage = how far the texel is from the bare skin (0 on skin, 1 on a full stroke).
+		vec3 paint = srgb_to_linear(texture(albedo_tex, UV).rgb);
+		float coverage = smoothstep(0.02, 0.12, length(paint - paint_ground));
+		diffuse = mix(base_color_linear, paint, coverage);
+	} else if (use_albedo_tex) {
 		diffuse *= srgb_to_linear(texture(albedo_tex, UV).rgb);
 	}
 	if (use_vertex_color) {
