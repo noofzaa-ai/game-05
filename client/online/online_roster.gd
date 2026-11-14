@@ -5,6 +5,7 @@ signal invite_friend(id: String)
 signal accepted(entry: Dictionary)
 signal message(text: String)
 const InkUi := preload("res://client/ink_ui.gd")
+const CarvedLook := preload("res://client/carved_look.gd")
 const Words := preload("res://client/online/online_text.gd")
 var account
 var social = preload("res://client/online/social_client.gd").new()
@@ -27,10 +28,10 @@ func _ready() -> void:
 
 func _column(title: Label) -> VBoxContainer:
 	var panel := PanelContainer.new(); panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL; panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.add_theme_stylebox_override("panel", InkUi.flat(InkUi.PANEL, InkUi.BORDER, 1, 6, 14))
+	panel.add_theme_stylebox_override("panel", CarvedLook.dialog_theme().get_stylebox("panel", "PanelContainer"))  # parchment inset
 	add_child(panel)
 	var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 14); panel.add_child(box)
-	title.add_theme_font_size_override("font_size", 24); title.add_theme_color_override("font_color", InkUi.HEADING_ACCENT); box.add_child(title)
+	title.add_theme_font_size_override("font_size", 24); title.add_theme_color_override("font_color", CarvedLook.CardTokens.HUB_INK); box.add_child(title)
 	var scroll := ScrollContainer.new(); scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_ALWAYS; box.add_child(scroll)
 	InkUi.inventory_scrollbar(scroll.get_v_scroll_bar(), true)
 	scroll.get_v_scroll_bar().custom_minimum_size.x = 18
@@ -42,7 +43,7 @@ func _button(parent: Control, caption: String, action: Callable, disabled: bool 
 	var button := Button.new(); button.text = caption; button.custom_minimum_size = Vector2(96, 44); button.disabled = disabled; button.pressed.connect(action); parent.add_child(button); return button
 
 func _card(list: Control) -> VBoxContainer:
-	var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", InkUi.flat(InkUi.PANEL_LIGHT, Color.TRANSPARENT, 0, 4, 10)); list.add_child(card)
+	var card := PanelContainer.new(); card.add_theme_stylebox_override("panel", CarvedLook.dialog_theme().get_stylebox("panel", "PanelContainer")); list.add_child(card)
 	var box := VBoxContainer.new(); box.add_theme_constant_override("separation", 8); card.add_child(box); return box
 
 func _label(parent: Control, text: String, small: bool = false) -> Label:

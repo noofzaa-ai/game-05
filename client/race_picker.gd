@@ -309,7 +309,7 @@ func _refresh_state() -> void:
 		_warn.text = CardTokens.t("race_refund_warn") % refund_points
 		CardTokens.hub_fit(_warn, _warn.text, CardTokens.FONT_RACE_WARN, _warn.size.x, CardTokens.RACE_HEAD_INK, s, 0, "display")
 	else:
-		_warn.text = CardTokens.t("race_hint")
+		_warn.text = CarvedLook.hint_text(CardTokens.t("race_hint"), CarvedLook.touch_hints(size))
 		CardTokens.hub_fit(_warn, _warn.text, CardTokens.FONT_HUB_HINT, _warn.size.x, CardTokens.HUB_TAB_IDLE, s, 0, "medium")
 	for b in [_close, _cancel, _confirm]:
 		CardTokens.hub_fit(b, b.text, CardTokens.FONT_RACE_BUTTON, b.size.x * 0.85, CardTokens.HUB_INK, s)

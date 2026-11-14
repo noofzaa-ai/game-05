@@ -5,6 +5,7 @@ const Words := preload("res://client/online/online_text.gd")
 const Link := preload("res://client/online/invite_link.gd")
 const TEXT := {"friends": "เพื่อน/คำเชิญ", "copied": "คัดลอกลิงก์เชิญแล้ว", "connecting": "กำลังเข้าแคมป์ปาร์ตี้…"}
 const InkUi := preload("res://client/ink_ui.gd")
+const CarvedLook := preload("res://client/carved_look.gd")
 var service
 var companion := ""
 var companion_seed := ""
@@ -37,8 +38,8 @@ func _ready() -> void:
 	service = get_node("/root/Online")
 	var dim := ColorRect.new(); dim.color = InkUi.SCRIM; dim.set_anchors_preset(Control.PRESET_FULL_RECT); add_child(dim)
 	_center = CenterContainer.new(); dim.add_child(_center)
-	_panel = PanelContainer.new(); _panel.custom_minimum_size = Vector2(1060, 540); InkUi.panel(_panel, InkUi.window_style()); _center.add_child(_panel)
-	_panel.theme = InkUi.make_theme()
+	_panel = PanelContainer.new(); _panel.custom_minimum_size = Vector2(1060, 540); InkUi.panel(_panel, CarvedLook.board_box()); _center.add_child(_panel)
+	_panel.theme = CarvedLook.dialog_theme()  # carved look (Boss 2026-11-14)
 	var box := VBoxContainer.new(); InkUi.gap(box, 10); _panel.add_child(box)
 	var heading := HBoxContainer.new(); box.add_child(heading)
 	var title := InkUi.brush_title("เล่นออนไลน์", 28); title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; heading.add_child(title)

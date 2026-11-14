@@ -6,6 +6,7 @@ signal cycle_camera
 signal choose(index: int)
 const CardTokens := preload("res://client/card_tokens.gd")
 const ExitPortal := preload("res://client/exit_portal.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## carved ink-wash plates (Boss 2026-11-14)
 ## EN/TH text (CardTokens.language picks), kept here so the shared token file is not edited by two agents at once.
 const TEXT := {
 	"next_card": ["การ์ดถัดไป", "Next card"],
@@ -26,6 +27,7 @@ var _route: VBoxContainer
 var _route_title: Label
 var _buttons: HBoxContainer
 var _countdown: Label
+var _title_ribbon: Control  ## the route title's parchment ribbon
 var _key := ""
 var _refresh := 0.0
 
@@ -42,11 +44,16 @@ func _ready() -> void:
 	_synergy = CardTokens.label("", 20, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE)
 	_synergy.name = "SynergyBanner"; _synergy.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_synergy.mouse_filter = Control.MOUSE_FILTER_IGNORE; _root.add_child(_synergy)
+	CarvedLook.dark_pill(_synergy, 1.0)  # the line sits on the hub's dark ink pill
 	_next = Button.new(); _next.name = "NextCard"; _next.text = text("next_card"); _next.focus_mode = Control.FOCUS_ALL
-	_next.custom_minimum_size = Vector2(150, 48); _next.pressed.connect(func(): cycle_camera.emit()); _root.add_child(_next)
+	_next.custom_minimum_size = Vector2(180, 56); _next.size = _next.custom_minimum_size; _next.pressed.connect(func(): cycle_camera.emit()); _root.add_child(_next)
+	CarvedLook.plate_button(_next, 1.0); CardTokens.hub_text(_next, 20, CardTokens.HUB_INK, 1.0)
 	_route = VBoxContainer.new(); _route.name = "Route"; _route.alignment = BoxContainer.ALIGNMENT_CENTER; _root.add_child(_route)
-	_route_title = CardTokens.label("", 26, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
+	_route_title = CardTokens.label("", 26, CardTokens.HUB_INK, 1.0, 0, "display", CardTokens.HUB_OUTLINE)
+	_route_title.custom_minimum_size = Vector2(0, 64)
 	_route_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; _route.add_child(_route_title)
+	_title_ribbon = Control.new(); _title_ribbon.mouse_filter = Control.MOUSE_FILTER_IGNORE; CarvedLook.ribbon(_title_ribbon)
+	_title_ribbon.show_behind_parent = true; _route_title.add_child(_title_ribbon)
 	_buttons = HBoxContainer.new(); _buttons.alignment = BoxContainer.ALIGNMENT_CENTER; _route.add_child(_buttons)
 	_countdown = CardTokens.label("", 20, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE)
 	_countdown.name = "Countdown"; _countdown.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; _route.add_child(_countdown)
@@ -56,7 +63,8 @@ func _ready() -> void:
 
 func _fit() -> void:
 	var area := get_viewport().get_visible_rect().size
-	_synergy.position = Vector2(0, 56); _synergy.size = Vector2(area.x, 30)
+	var line_w := minf(area.x - 40.0, maxf(_synergy.get_minimum_size().x + 80.0, 320.0))
+	_synergy.position = Vector2((area.x - line_w) * 0.5, 52); _synergy.size = Vector2(line_w, 38)
 	_next.position = Vector2(area.x - 170, 100)
 	_route.position = Vector2(0, area.y * 0.3); _route.size = Vector2(area.x, 160)
 
@@ -80,7 +88,8 @@ func _process(delta: float) -> void:
 	_refresh = 0.1
 	var names := {}
 	for member in session.party_view().get("members", []): names[int(member.id)] = str(member.name)
-	_synergy.text = synergy_line(session.synergy_groups(), names, session.player_id())
+	var line := synergy_line(session.synergy_groups(), names, session.player_id())
+	if line != _synergy.text: _synergy.text = line; _fit()
 	_next.visible = session.fighters_of().size() > 1
 	var choices: Array = session.journey.upcoming_choices() if session.journey != null else []
 	var waiting: bool = not session.is_lobby() and session.auto_continue_left() >= 0.0 and not choices.is_empty()
@@ -88,6 +97,8 @@ func _process(delta: float) -> void:
 	if not waiting: _key = ""; return
 	var leader: bool = session.is_leader()
 	_route_title.text = text("choose") if leader else text("waiting")
+	var title_w := _route_title.get_minimum_size().x + 200.0
+	_title_ribbon.size = Vector2(title_w, 64); _title_ribbon.position = Vector2((_route.size.x - title_w) * 0.5, 0)
 	_countdown.text = text("auto") % ceili(session.auto_continue_left())
 	var key := "%s%s" % [leader, str(choices)]
 	if key == _key: return
@@ -97,6 +108,7 @@ func _process(delta: float) -> void:
 	for index in choices.size():
 		var kind := str(choices[index].get("kind", "combat"))
 		var b := Button.new(); b.text = text(kind) if TEXT.has(kind) else str(ExitPortal.NAMES.get(kind, kind))
-		b.custom_minimum_size = Vector2(160, 56); b.focus_mode = Control.FOCUS_ALL
+		b.custom_minimum_size = Vector2(200, 64); b.size = b.custom_minimum_size; b.focus_mode = Control.FOCUS_ALL
+		CarvedLook.plate_button(b, 1.0); CardTokens.hub_text(b, 22, CardTokens.HUB_INK, 1.0)
 		b.pressed.connect(func(): choose.emit(index))
 		_buttons.add_child(b)

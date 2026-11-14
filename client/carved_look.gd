@@ -12,6 +12,8 @@ const CardTokens := preload("res://client/card_tokens.gd")
 # art (art/ui/hub_carved/<name>.png)
 const BOARD := "panel_board"  ## a big parchment window in a carved gilded-wood frame (9-slice)
 const PLAQUE := "button_plaque"  ## a symmetric carved plaque with a parchment face (action buttons, tabs)
+const BOARD_SMALL := "panel_board_small"  ## half size: dialog windows drawn with StyleBoxTexture (1:1 margins)
+const INSET_SMALL := "inset_box_small"  ## half size: dialog buttons and fields
 const INSET := "inset_box"  ## a flat parchment box with a thin ink line (detail boxes, choice chips, tiles)
 const PILL := "pill"  ## the dark ink pill of the hub's top bar (dark strips: stats, tree header, gold)
 const ROUND := "round_button"
@@ -23,6 +25,10 @@ const ICON_PREFIX := "icon_"  ## + close | back | prev | next | settings | accou
 const DIVIDER := "divider"
 const DIVIDER_CAP := 40.0
 const DIVIDER_CENTRE := Vector2(380.0, 520.0)  ## the gold diamond and its leaves
+const WOOD := "tray_board"  ## dark wood board in a carved gold rim (battle plates)
+const WOOD_MARGIN := 60.0
+const WOOD_K := 0.22  ## battle plates are small: thin rim, corners kept
+const HUD_INSET_K := 0.3  ## the parchment inset on battle plates
 const SLOT := "slot_tile"
 const SLOT_SELECTED := "slot_tile_selected"
 
@@ -63,6 +69,30 @@ const TITLE_H_OF_TEXT := 1.55  ## title ribbon height, of the title text line
 const TITLE_PAD := 0.62  ## text clear of the ribbon tails, of the cap width
 
 
+## Key names in hint lines ("Q / E = switch card", "Esc / B = back"): hidden on touch devices.
+const KEY_HINT_MARKS := ["Esc", "Q / E", "Enter", "R ="]
+
+
+## True on a touch device or a phone-shaped screen: hint lines show touch words only.
+static func touch_hints(screen: Vector2) -> bool:
+	return DisplayServer.is_touchscreen_available() or CardTokens.is_phone(screen)
+
+
+## A hint line ("a  ·  b  ·  c") without the parts that name keys, when `touch` is on.
+static func hint_text(text: String, touch: bool) -> String:
+	if not touch:
+		return text
+	var sep := "  ·  " if text.contains("  ·  ") else " · "
+	var kept: Array = []
+	for part in text.split(sep):
+		var keys := false
+		for mark in KEY_HINT_MARKS:
+			keys = keys or part.contains(mark)
+		if not keys:
+			kept.append(part)
+	return sep.join(kept) if not kept.is_empty() else text
+
+
 static func tex(art: String) -> Texture2D:
 	return CardTokens.carved(art)
 
@@ -100,6 +130,14 @@ static func board(control: Control, s: float) -> CarvedSkin:
 ## Inside width of the board frame in screen px (keep content inside it).
 static func board_frame(s: float) -> float:
 	return BOARD_FRAME * BOARD_K * s
+
+
+## The dark carved wood board of the hub tray (battle squad plates): cheap, one 9-slice draw.
+static func wood_plate(control: Control) -> CarvedSkin:
+	clear(control)
+	var sk := skin_of(control)
+	sk.set_nine(WOOD, WOOD_MARGIN, WOOD_K)
+	return sk
 
 
 ## A flat parchment inset (detail boxes, tiles).
@@ -239,6 +277,58 @@ static func race_tile(b: Button, race: String, current: bool, pending: bool, s: 
 	for state in ["normal", "hover", "pressed", "hover_pressed", "disabled"]:
 		b.add_theme_stylebox_override(state, ring.duplicate())
 	b.add_theme_stylebox_override("focus", CardTokens.hub_focus(s, CardTokens.RACE_TILE_RADIUS))
+
+
+## A Theme for the older dialogs built from containers (online room, friends): ink text on parchment, plain Buttons
+## and LineEdits as parchment insets with an ink line, and every PanelContainer the carved board (its content
+## margins clear the frame). Uses StyleBoxTexture at a fixed art scale, so it needs no layout calls.
+static var _dialog_themes := {}
+
+
+static func dialog_theme(font_size: int = 22) -> Theme:
+	if _dialog_themes.has(font_size):
+		return _dialog_themes[font_size]
+	var theme := Theme.new()
+	_dialog_themes[font_size] = theme
+	theme.default_font_size = font_size
+	var body := CardTokens.medium_font()
+	if body != null:
+		theme.default_font = body
+	var ink := CardTokens.HUB_INK
+	theme.set_color("font_color", "Label", ink)
+	var tints := {"normal": TINT_NORMAL, "hover": TINT_HOVER, "pressed": TINT_PRESSED, "hover_pressed": TINT_PRESSED, "disabled": TINT_DISABLED}
+	for state in tints:
+		theme.set_stylebox(state, "Button", _tex_box(INSET_SMALL, INSET_MARGIN * 0.5, 0.5, tints[state], 12.0))
+	theme.set_stylebox("focus", "Button", CardTokens.hub_focus(1.0, 12.0))
+	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_hover_pressed_color", "font_focus_color"]:
+		theme.set_color(state, "Button", ink)
+	theme.set_color("font_disabled_color", "Button", Color(ink, 0.5))
+	for type in ["OptionButton"]:
+		for state in tints:
+			theme.set_stylebox(state, type, _tex_box(INSET_SMALL, INSET_MARGIN * 0.5, 0.5, tints[state], 12.0))
+		theme.set_color("font_color", type, ink)
+	theme.set_stylebox("normal", "LineEdit", _tex_box(INSET_SMALL, INSET_MARGIN * 0.5, 0.5, TINT_IDLE, 12.0))
+	theme.set_stylebox("focus", "LineEdit", CardTokens.hub_focus(1.0, 12.0))
+	theme.set_color("font_color", "LineEdit", ink)
+	theme.set_color("font_placeholder_color", "LineEdit", Color(CardTokens.HUB_TAB_IDLE, 0.85))
+	theme.set_color("caret_color", "LineEdit", ink)
+	theme.set_stylebox("panel", "PanelContainer", _tex_box(INSET_SMALL, INSET_MARGIN * 0.5, 0.5, TINT_NORMAL, 10.0))
+	return theme
+
+
+## The carved board as a StyleBoxTexture at `k` screen px per art px (dialog windows built from containers).
+static func board_box(k: float = 0.5) -> StyleBoxTexture:
+	return _tex_box(BOARD_SMALL, BOARD_MARGIN * 0.5, k, TINT_NORMAL, BOARD_FRAME * 0.5 + 18.0)
+
+
+static func _tex_box(art: String, margin: float, _k: float, tint: Color, content: float) -> StyleBoxTexture:
+	var box := StyleBoxTexture.new()
+	box.texture = tex(art)
+	for side in [SIDE_LEFT, SIDE_TOP, SIDE_RIGHT, SIDE_BOTTOM]:
+		box.set_texture_margin(side, margin)
+		box.set_content_margin(side, content)
+	box.modulate_color = tint
+	return box
 
 
 ## The portrait window's rim: the class colour inside a carved gold line with an ink edge.

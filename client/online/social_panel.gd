@@ -1,6 +1,7 @@
 extends CanvasLayer
 signal accepted(invite: Dictionary)
 const InkUi := preload("res://client/ink_ui.gd")
+const CarvedLook := preload("res://client/carved_look.gd")
 const Words := preload("res://client/online/online_text.gd")
 const TEXT := {"title": "เพื่อนและคำเชิญ", "add": "ขอเป็นเพื่อน", "refresh": "รีเฟรช", "close": "กลับ", "accept": "รับเป็นเพื่อน", "invite": "เชิญเข้าแคมป์", "join": "เข้าปาร์ตี้", "remove": "ลบ", "more": "โหลดเพิ่ม", "done": "สำเร็จ", "empty": "ยังไม่มีเพื่อนหรือคำเชิญ", "name": "ชื่อตัวละครของเพื่อน", "dismiss": "ปฏิเสธ", "more_invites": "คำเชิญเพิ่มเติม", "copy": "คัดลอกลิงก์เชิญ", "copied": "คัดลอกลิงก์แล้ว"}
 var account
@@ -21,7 +22,7 @@ func _ready() -> void:
 	layer = 40
 	var dim := ColorRect.new(); dim.color = InkUi.SCRIM; dim.set_anchors_preset(Control.PRESET_FULL_RECT); add_child(dim)
 	var center := CenterContainer.new(); dim.add_child(center)
-	var panel := PanelContainer.new(); panel.theme = InkUi.make_theme(); InkUi.panel(panel, InkUi.window_style()); center.add_child(panel)
+	var panel := PanelContainer.new(); panel.theme = CarvedLook.dialog_theme(); InkUi.panel(panel, CarvedLook.board_box()); center.add_child(panel)  # carved look
 	_box = VBoxContainer.new(); _box.custom_minimum_size = Vector2(540, 300); InkUi.gap(_box, 8); panel.add_child(_box)
 	var header := HBoxContainer.new()
 	header.add_child(InkUi.brush_title(TEXT.title, 26))

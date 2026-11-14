@@ -20,6 +20,7 @@ const InkUi := preload("res://client/ink_ui.gd")
 const InputReader := preload("res://client/input_reader.gd")
 const CardTokens := preload("res://client/card_tokens.gd")
 const HubLook := preload("res://client/hub_look.gd")
+const CarvedLook := preload("res://client/carved_look.gd")
 
 ## Every word the HUD shows, so it can be translated in one place.
 const TEXT := {
@@ -580,12 +581,12 @@ func _place_leather() -> void:
 	_leather_boss.size = Vector2(bar.size.x + p.x * 2.0, bar.position.y + bar.size.y - top + p.y * 2.0)
 
 
-## A leather plate with a parchment inside (`rim` px of leather), never taking clicks.
+## A carved wood plate with a parchment inside (`rim` px of leather), never taking clicks.
 static func _leather_plate(parent: Control, rim: float, radius: float) -> Panel:
 	var plate := Panel.new()
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	plate.visible = false
-	CardTokens.panel(plate, HubLook.leather(1.0, radius, 2.0))
+	CarvedLook.wood_plate(plate)  # carved look: dark wood in a carved gold rim (Boss 2026-11-14)
 	parent.add_child(plate)
 	var paper := Panel.new()
 	paper.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -594,7 +595,7 @@ static func _leather_plate(parent: Control, rim: float, radius: float) -> Panel:
 		paper.set_offset(side, rim)
 	for side in [SIDE_RIGHT, SIDE_BOTTOM]:
 		paper.set_offset(side, -rim)
-	CardTokens.panel(paper, HubLook.parchment(1.0, maxf(radius - rim, 2.0)))
+	CarvedLook.inset(paper, CarvedLook.HUD_INSET_K)
 	plate.add_child(paper)
 	return plate
 

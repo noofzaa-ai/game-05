@@ -10,6 +10,7 @@ extends CanvasLayer
 
 const CardTokens := preload("res://client/card_tokens.gd")
 const HubLook := preload("res://client/hub_look.gd")
+const CarvedLook := preload("res://client/carved_look.gd")  ## carved ink-wash plates (Boss 2026-11-14)
 const Fighter := preload("res://logic/fighter.gd")
 const RaceBadge := preload("res://client/race_badge.gd")
 const RacePassives := preload("res://logic/race_passives.gd")
@@ -308,7 +309,7 @@ func _rebuild() -> void:
 		var panel := Panel.new()
 		panel.mouse_filter = Control.MOUSE_FILTER_STOP
 		panel.gui_input.connect(_on_card_input.bind(id))
-		CardTokens.panel(panel, HubLook.leather(1.0, CardTokens.SQUAD_HUD_RADIUS, 3.0))
+		CarvedLook.wood_plate(panel)  # the dark carved wood board of the hub tray
 		_root.add_child(panel)
 		var emblem := TextureRect.new()
 		emblem.texture = HubLook.class_emblem(class_id)
@@ -317,7 +318,7 @@ func _rebuild() -> void:
 		emblem.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		panel.add_child(emblem)
 		var paper := _plain(panel)
-		CardTokens.panel(paper, HubLook.parchment(1.0, CardTokens.SQUAD_HUD_RADIUS * 0.6))
+		CarvedLook.inset(paper, CarvedLook.HUD_INSET_K)  # parchment inset; two texture draws per plate
 		var title := "%d  %s" % [index, CardTokens.class_name_of(class_id)]
 		if not is_mine(id):
 			title = "%s · %s" % [str(owner_names.get(int(owners.get(id, 0)), "P%d" % int(owners.get(id, 0)))), CardTokens.class_name_of(class_id)]
@@ -346,7 +347,7 @@ func _rebuild() -> void:
 		var ult_ring := _plain(panel)
 		ult_ring.visible = false
 		var pill := _plain(panel)
-		CardTokens.panel(pill, HubLook.leather(1.0, CALLOUT_HEIGHT * 0.5, 2.0))
+		CarvedLook.dark_pill(pill, 1.0)  # the hub's dark ink pill
 		pill.visible = false
 		var callout := CardTokens.label("", CardTokens.FONT_SQUAD_HUD_CALLOUT, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
 		callout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
