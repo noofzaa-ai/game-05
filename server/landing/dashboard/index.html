@@ -1,15 +1,16 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="th" data-scene="painted">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#050b17" />
+  <meta name="theme-color" content="#1b2333" />
   <meta name="description" content="Begin at the Campfire, then discover six forgotten Relics along the wildlands trail of ZORX: Zone of Relic eXplorers." />
   <title>Zone of Relic eXplorers — ZORX</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css?v=20261022-guest" />
+  <link href="https://fonts.googleapis.com/css2?family=Taviraj:wght@600;700;800&family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="preload" href="assets/loading_valley.webp" as="image" type="image/webp" />
+  <link rel="stylesheet" href="styles.css?v=20261114-carved" />
 </head>
 <body>
   <header class="nav-top" id="top">
@@ -41,7 +42,7 @@
 
         <div class="info-panel" id="info-panel" aria-live="polite">
           <div class="chapter-tag"><span class="chapter-diamond">◆</span><span id="relic-chapter">PROLOGUE — THE CAMPFIRE</span></div>
-          <h1 id="relic-heading">ZORX</h1>
+          <h1 id="relic-heading"><span>ZORX</span></h1>
           <p class="game-full-name">Zone of Relic eXplorers</p>
           <div class="ornament" aria-hidden="true"><i></i><span>◇</span><i></i></div>
           <h2 id="relic-name">The Campfire</h2>
@@ -64,7 +65,7 @@
         </div>
         <div class="login-layer" id="login-layer" aria-hidden="true">
           <div class="login-card">
-            <span class="login-mark">✧</span><span class="login-overline">WELCOME, EXPLORER</span>
+            <span class="login-mark" aria-hidden="true"><span>ZORX</span></span><span class="login-overline">WELCOME, EXPLORER</span>
             <h2>Enter the <em>Wildlands.</em></h2>
             <p>ออกสำรวจ ฟาร์ม Relic แล้วกลับมาสร้างหมู่บ้านของคุณให้แข็งแกร่งขึ้น</p>
             <button class="google-btn" id="google-login" type="button" aria-label="Continue with Google">
@@ -95,7 +96,7 @@
   </main>
   <footer><b>ZORX <span>✧</span></b><span>Zone of Relic eXplorers</span><a href="#top">BACK TO TOP ↑</a></footer>
   <script src="config.js"></script>
-  <script type="module" src="trail.js?v=20261030-login-arrival3"></script>
-  <script type="module" src="auth.js?v=20261022-guest"></script>
+  <script type="module" src="trail.js?v=20261114-carved"></script>
+  <script type="module" src="auth.js?v=20261114-carved"></script>
 </body>
 </html>
