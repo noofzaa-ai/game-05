@@ -42,12 +42,13 @@ func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, c
 			if p == null or not Room.squad_profile_problem(entry.profile, p, k).is_empty(): return failure("invalid_payload")
 	# design/gdd/tutorial.md 2 + 6: every fielded squad needs races and unlocked cards (the fight-start guard), and a shared
 	# room (lobby or several players) is refused with `tutorial` until the player is past the battle tip.
-	for entry in profiles:
+	# Card-squad (auto-battler) rooms only: legacy ink_road / farm rooms field the pre-card loadout, not the deck.
+	for entry in (profiles if squad_rooms and farm_map.is_empty() else []):
 		if not entry is Dictionary or not entry.get("profile") is Dictionary: continue
 		var p = preload("res://logic/profile.gd").from_dict(entry.profile.duplicate(true), rules, camp)
 		if p == null: continue
 		if (lobby or profiles.size() > 1 or capacity > 1) and not preload("res://logic/tutorial.gd").past(p, "battle_tip"): return failure("tutorial")
-		if farm_map.is_empty() and not lobby:
+		if not lobby:
 			var fight_problem: String = preload("res://logic/commands.gd").fight_problem(p)
 			if not fight_problem.is_empty(): return failure(fight_problem)
 	if RegEx.create_from_string("^[a-z0-9-]{8,64}$").search(id) == null: return failure("invalid_payload")

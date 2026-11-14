@@ -44,6 +44,7 @@ func _one_per_pair(nodes: Array) -> Array:
 
 func _deck_at(level: int) -> Dictionary:
 	var deck := Deck.initial()
+	for c in Deck.classes(): Deck.set_race(deck, c, Deck.starter_race(c))  # tutorial.md 2: new cards are raceless
 	var need := 0
 	for l in range(1, level):
 		need += Progress.xp_req(l)

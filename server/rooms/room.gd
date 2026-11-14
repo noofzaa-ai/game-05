@@ -178,7 +178,9 @@ func _squad_trips(profiles: Dictionary, config: Dictionary) -> Dictionary:
 		var cards: Array = profiles[slot].card_deck.squad.slice(0, k)
 		if cards.is_empty(): return {}
 		picked[slot] = cards
-		for card in cards: races.append(CardDeck.race_of(profiles[slot].card_deck, str(card)))
+		for card in cards:
+			var race := CardDeck.race_of(profiles[slot].card_deck, str(card))
+			if not race.is_empty(): races.append(race)  # tutorial.md R4: a raceless card adds no race
 	var room_group := k == 1 and slots.size() > 1
 	var override: Dictionary = preload("res://logic/race_data.gd").load_default().synergy_for(races) if room_group else {}
 	var used := {}

@@ -84,6 +84,14 @@ var roomCreate: nkruntime.RpcFunction = function(ctx, _logger, nk, payload) {
         return JSON.stringify(ticket);
     } catch (_) { return nameResult("conflict"); }
 };
+// design/gdd/tutorial.md 6: shared rooms open only after the battle tip (logic/tutorial.gd past("battle_tip")).
+// A profile with no tutorial block is an existing account (done). Pre-tour steps: welcome, race_*, alliance, fight, battle_tip.
+function tutorialBeforeBattleTip(profile: any): boolean {
+    var t = profile && profile.tutorial;
+    if (!t || typeof t !== "object") { return false; }
+    var step = typeof t.step === "string" ? t.step : "done";
+    return step === "" || step === "welcome" || step.indexOf("race_") === 0 || step === "alliance" || step === "fight" || step === "battle_tip";
+}
 var roomJoin: nkruntime.RpcFunction = function(ctx, _logger, nk, payload) {
     var uid = nameUser(ctx); var p = roomPayload(payload);
     var friendJoin=false;var friendTarget="";
@@ -106,6 +114,7 @@ var roomJoin: nkruntime.RpcFunction = function(ctx, _logger, nk, payload) {
         if (!friendJoin && (!p.invite || nk.sha256Hash(p.invite) !== room.invite_hash)) { return nameResult("not_invited"); }
         var player = roomProfile(nk, uid); if (!player) { return nameResult("character_required"); }
         if (player.state.active_room) { return nameResult("in_match"); }
+        if (tutorialBeforeBattleTip(player.state.profile)) { return nameResult("tutorial"); }
         var occupied = Object.keys(room.members).map(function(id) {return room.members[id];}).concat((room.companions || []).map(function(c:any){return c.slot;}));
         if(room.pending_companion)occupied.push(room.pending_companion.slot);
         var slot = 1; while (occupied.indexOf(slot) >= 0) {slot++;}

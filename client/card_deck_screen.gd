@@ -1478,7 +1478,7 @@ func _refresh_synergy(squad: Array) -> void:
 	if _synergy == null:
 		return
 	var s := _s
-	var races: Array = squad.map(func(id): return CardDeck.race_of(_deck, str(id)))
+	var races: Array = squad.map(func(id): return CardDeck.race_of(_deck, str(id))).filter(func(race): return not str(race).is_empty())  # tutorial.md R4
 	var synergy: Dictionary = RaceData.load_default().synergy_for(races)
 	var kind := str(synergy.get("kind", "none"))
 	var h := _synergy.size.y
