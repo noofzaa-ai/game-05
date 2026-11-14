@@ -2512,9 +2512,15 @@ func open_settings() -> void:
 			panel.queue_free()
 			tutorial.replay_tour())
 		panel.panel.body.add_child(replay)
-		replay.position = Vector2(0.0, -replay.get_combined_minimum_size().y)
-		replay.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT, Control.PRESET_MODE_MINSIZE)
-		CarvedLook.plate_button(replay, _s)
+		var place := func() -> void:
+			var body: Control = panel.panel.body
+			var s := CardTokens.scale_for(size)
+			replay.size = Vector2(300.0, CardTokens.tap(64.0, _phone)) * Vector2(s, s)
+			replay.position = body.size - replay.size
+			CarvedLook.plate_button(replay, s)
+			CardTokens.hub_fit(replay, replay.text, 26, CarvedLook.plate_room(replay.size), CardTokens.HUB_INK, s)
+		place.call_deferred()
+		panel.panel.body.resized.connect(place)
 	tutorial_event.emit({"event": "panel_open", "panel": "settings"})
 
 

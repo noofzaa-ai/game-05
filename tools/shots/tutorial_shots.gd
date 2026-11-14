@@ -90,4 +90,22 @@ func run():
 	for i in 30:
 		await process_frame
 	await _shot("%s/%dx%d_%02d_locked_runeborn.png" % [folder, size.x, size.y, n + 2])
+	# Settings with Replay tour (tutorial.md 6)
+	screen.tutorial_show_hub()
+	screen.open_settings()
+	for i in 30:
+		await process_frame
+	await _shot("%s/%dx%d_25_settings_replay_tour.png" % [folder, size.x, size.y])
+	screen.tutorial_close_panels()
+	# the 2 s fallback: a step whose target is missing turns into text + Next
+	p.tutorial["step"] = "alliance"
+	p.unlocks["magic_runeborn"] = true
+	driver.refresh()
+	var tray: Control = screen.find_child("SquadTray", true, false)
+	tray.name = "SquadTrayHidden"  # (shot only: the target goes missing)
+	for i in 160:
+		await process_frame
+	print("FALLBACK ", driver._fallback, " hole=", driver.overlay.hole)
+	await _shot("%s/%dx%d_26_fallback_target_missing.png" % [folder, size.x, size.y])
+	tray.name = "SquadTray"
 	quit()

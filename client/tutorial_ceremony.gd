@@ -201,9 +201,12 @@ func _layout() -> void:
 	CardTokens.hub_fit(_title, _title.text, CardTokens.FONT_HUB_TITLE, _title.size.x, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)
 	y += _title.size.y
 	_body.position = Vector2(side, y)
-	_body.size = Vector2(size.x - side * 2.0, 0.0)
 	CardTokens.style_text(_body, 30, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE)
-	_body.size.y = maxf(_body.get_minimum_size().y, 40.0 * s)
+	_body.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+	_body.custom_minimum_size = Vector2(size.x - side * 2.0, 0.0)
+	_body.size = Vector2(size.x - side * 2.0, 0.0)
+	var lines := maxi(_body.get_line_count(), 1)
+	_body.size.y = maxf(_body.get_line_height() * lines + 8.0 * s, 40.0 * s)
 	y += _body.size.y + 12.0 * s
 	var bh := CardTokens.tap(64.0, CardTokens.is_phone(size)) * s
 	_next.size = Vector2(240.0 * s, bh)
