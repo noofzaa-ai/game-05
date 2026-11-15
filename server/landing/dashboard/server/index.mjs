@@ -51,6 +51,7 @@ function cookie(name, value, age) {
   return `${name}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${age}${secure ? '; Secure' : ''}`;
 }
 function json(res, status, data) {
+  if (data && typeof data.error === 'string') res.zorxReason = data.error;
   res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(data));
 }
@@ -58,6 +59,27 @@ function redirect(res, target) { res.writeHead(303, { Location: target }); res.e
 const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript',
   '.webp': 'image/webp', '.jpg': 'image/jpeg', '.png': 'image/png', '.svg': 'image/svg+xml', '.glb': 'model/gltf-binary' };
 const binary = new Set(['.webp', '.jpg', '.png', '.glb']);
+// Auth diagnostics (guest bounce 2026-11-15): one line per auth request, never cookies, tokens or account ids.
+// Bounded: at most 120 lines per minute; the dropped count is reported on the next window.
+const authLogPaths = new Set(['/auth/guest', '/auth/session', '/auth/game-session']);
+let authLogWindow = 0, authLogCount = 0, authLogDropped = 0;
+function uaFamily(ua) {
+  ua = String(ua || '');
+  const os = /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mac OS X/.test(ua) ? 'mac' : /Windows/.test(ua) ? 'win' : /Linux/.test(ua) ? 'linux' : 'other';
+  const br = /CriOS/.test(ua) ? 'chrome-ios' : /FxiOS/.test(ua) ? 'firefox-ios' : /EdgiOS|Edg\//.test(ua) ? 'edge' : /Chrome\//.test(ua) ? 'chrome' : /Firefox\//.test(ua) ? 'firefox' : /Safari\//.test(ua) ? 'safari' : 'other';
+  return os + '/' + br;
+}
+function authLog(req, res, pathname, startedAt, sessionKind) {
+  const now = Date.now();
+  if (now - authLogWindow >= 60000) {
+    if (authLogDropped) console.log(JSON.stringify({ auth_log: 'dropped', count: authLogDropped }));
+    authLogWindow = now; authLogCount = 0; authLogDropped = 0;
+  }
+  if (++authLogCount > 120) { authLogDropped++; return; }
+  const origin = ['https://zorx.daiyooo.com', 'https://zorxplay.daiyooo.com'].includes(req.headers.origin) ? req.headers.origin : (req.headers.origin ? 'other' : 'none');
+  console.log(JSON.stringify({ auth: pathname, method: req.method, status: res.statusCode, reason: res.zorxReason || '',
+    origin, ua: uaFamily(req.headers['user-agent']), session: sessionKind, ms: now - startedAt }));
+}
 // Bounded origin-wide budget: never trust a client-supplied forwarding header.
 let authTokens = 40, authAt = Date.now(), authActive = 0;
 const staticCache = new Map();
@@ -77,6 +99,12 @@ const server = http.createServer(async (req, res) => {
       authTokens--; authActive++; authSlot = true;
     }
     const jar = cookies(req);
+    if (authLogPaths.has(url.pathname) && req.method !== 'OPTIONS') {
+      // Cookie presence and kind only; the sealed value is never logged.
+      const kind = jar[sessionName] ? (unseal(jar[sessionName])?.kind === 'session' ? (unseal(jar[sessionName]).user?.guest ? 'guest' : 'google') : 'invalid') : 'none';
+      const startedAt = Date.now(), pathname = url.pathname;
+      res.on('finish', () => authLog(req, res, pathname, startedAt, kind));
+    }
     const trustedOrigin = req.headers.origin === origin.origin || req.headers.origin === gameOrigin;
     if (url.pathname === '/admin' || url.pathname.startsWith('/admin/')) {
       const session=unseal(jar[sessionName]);
@@ -238,9 +266,10 @@ const server = http.createServer(async (req, res) => {
     const ext = path.extname(relative);
     res.writeHead(200, { 'Content-Type': `${types[ext] || 'application/octet-stream'}${binary.has(ext) ? '' : '; charset=utf-8'}` });
     res.end(req.method === 'HEAD' ? undefined : body);
-  } catch {
+  } catch (error) {
     // Do not log authorization codes, tokens, cookies or Google response bodies.
     if (!res.headersSent) {
+      res.zorxReason = 'exception' + (error?.status ? '_' + error.status : '');
       if (req.url?.startsWith('/auth/google/callback')) return redirect(res, '/?auth=failed');
       return json(res, 500, { error: 'request_failed' });
     }

@@ -113,7 +113,7 @@ func reconnect() -> void:
 	if _reconnecting or status == Status.CONNECTING:
 		return
 	if needs_website_sign_in():
-		JavaScriptBridge.eval("window.zorxAutoEnter = false; location.replace('https://zorx.daiyooo.com/?play=1');", true)
+		JavaScriptBridge.eval("console.warn('[zorx auth] back to website: reconnect needs sign-in reason=%s'); window.zorxAutoEnter = false; location.replace('https://zorx.daiyooo.com/?play=1');" % reason.validate_filename(), true)
 		return
 	var game_state = get_node_or_null("/root/GameState")
 	if game_state == null:

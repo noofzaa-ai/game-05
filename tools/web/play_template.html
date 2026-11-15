@@ -377,10 +377,26 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
   start.hidden = true;
   async function authenticate() {
     status.textContent = 'กำลังตรวจสอบบัญชีเกม…';
-    const response = await window.zorxRealFetch(website + '/auth/game-session', {
-      method: 'POST', credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(15000)
-    });
+    const exchange = function () {
+      return window.zorxRealFetch(website + '/auth/game-session', {
+        method: 'POST', credentials: 'include', cache: 'no-store', signal: AbortSignal.timeout(15000)
+      });
+    };
+    let response = await exchange();
     if (response.status === 401) {
+      // A tab reloaded after a crash (iOS memory kill) can race the cookie store: retry once before bouncing.
+      console.warn('[zorx auth] game-session 401, retrying once');
+      await new Promise(function (r) { setTimeout(r, 800); });
+      response = await exchange();
+    }
+    if (response.status === 401) {
+      // Diagnostics for the guest bounce (2026-11-15): say why we leave, briefly, before the redirect.
+      let reason = '';
+      try { reason = String((await response.clone().json()).error || ''); } catch (_) {}
+      console.warn('[zorx auth] back to website: game-session status=401 reason=' + reason);
+      status.className = 'err';
+      status.textContent = 'ยังไม่ได้เข้าสู่ระบบ (401 ' + reason + ') กำลังกลับไปหน้าเข้าสู่ระบบ…';
+      await new Promise(function (r) { setTimeout(r, 1500); });
       try {
         if (new URLSearchParams(location.search).get('replay_probe') === '1') { sessionStorage.setItem('zorxPendingReplayProbe', '1'); }
         if (new URLSearchParams(location.search).get('real_room_probe') === '1') {
@@ -390,7 +406,10 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
       location.replace(website + '/?play=1');
       return false;
     }
-    if (!response.ok) throw new Error('เชื่อมบัญชีเกมไม่ได้ กรุณาลองใหม่');
+    if (!response.ok) {
+      console.warn('[zorx auth] game-session failed status=' + response.status);
+      throw new Error('เชื่อมบัญชีเกมไม่ได้ กรุณาลองใหม่ (' + response.status + ')');
+    }
     const session = await response.json();
     if (typeof session.token !== 'string' || typeof session.refresh_token !== 'string' ||
         typeof session.user_id !== 'string' || session.api_origin !== 'https://zorxapi.daiyooo.com') {
