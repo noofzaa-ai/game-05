@@ -257,6 +257,8 @@ func _card_select_checks(ctx) -> void:
 	ctx.check("a journey win offers continue", Stage.result_view("cleared", true, true, true, false)["title"] == "journey_complete")
 	ctx.check("a cleared journey stage shows no plate (the exits rise)", Stage.result_view("cleared", true, false, false, false).is_empty())
 	ctx.check("a closed online room offers back to camp", Stage.result_view("", true, false, false, true)["actions"] == [["camp", "camp"]])
+	ctx.check("a won journey keeps Victory after the room closes (was connection lost)", Stage.result_view("", true, true, true, true)["title"] == "journey_complete")
+	ctx.check("a lost journey keeps Defeat + continue after the room closes", Stage.result_view("", true, false, true, true) == {"title": "defeated", "actions": [["continue", "continue"]]})
 	var Result := preload("res://client/result_panel.gd")
 	var hints := Result.TEXT.values().filter(func(pair): return str(pair).contains("Enter =") or str(pair).contains("Esc =") or str(pair).contains("R ="))
 	ctx.check("the result plate's words carry no key hints", hints.is_empty())

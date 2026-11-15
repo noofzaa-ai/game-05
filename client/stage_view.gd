@@ -1684,15 +1684,20 @@ var _result_panel: CanvasLayer
 ## cleared journey stage shows nothing (the exits rise). A lone stage offers camp + retry. `room_closed`: an online
 ## room that is gone for good (back to camp).
 static func result_view(result: String, in_journey: bool, journey_won: bool, journey_over: bool, room_closed: bool) -> Dictionary:
+	# An ended journey keeps its own plate even after the online room closes: the server closes a finished room
+	# 60 s later, and that used to replace Victory / Defeat with "connection lost" (staging 2026-11-16). The
+	# result is saved by then; Continue goes to the summary.
+	if in_journey and journey_over:
+		if journey_won:
+			return {"title": "journey_complete", "actions": [["continue", "continue"]]}
+		return {"title": "defeated", "actions": [["continue", "continue"]]}
 	if room_closed:
 		return {"title": "room_closed", "actions": [["camp", "camp"]]}
 	if result.is_empty():
 		return {}
 	if in_journey:
 		if result == "defeated":
-			return {"title": "defeated", "actions": [["continue", "continue"]] if journey_over else []}
-		if journey_won and journey_over:
-			return {"title": "journey_complete", "actions": [["continue", "continue"]]}
+			return {"title": "defeated", "actions": []}
 		return {}
 	if result == "cleared":
 		return {"title": "stage_clear", "actions": [["camp", "camp"], ["retry", "play_again"]]}
