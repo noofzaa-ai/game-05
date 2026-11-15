@@ -358,7 +358,12 @@ func _refresh_account() -> void:
 	_refreshing_account = true
 	var result: Dictionary = await account_session.refresh_account()
 	_refreshing_account = false
-	if result.get("ok", false): profile = account_session.profile
+	if result.get("ok", false):
+		profile = account_session.profile
+		# Staging 2026-11-15: back from an online fight the hub kept the old gold; redraw it from the fresh profile.
+		var scene := get_tree().current_scene
+		if scene != null and scene.has_method("_sync_from_profile_if_wired"):
+			scene._sync_from_profile_if_wired()
 	else: online_error = "ยังโหลดข้อมูลล่าสุดไม่ได้ กรุณาเชื่อมต่อใหม่"
 
 func _start_solo(farm_map: String = "") -> void:
