@@ -144,9 +144,9 @@ static func pose_for(move_id: String) -> String:
 	return KIND_POSES[kind] if kind != "" else "punch_r"
 
 
-## A hidden view (a fallen enemy is hidden 2.4 s after its "killed" event, stage_view.gd) stops processing, with
-## everything under it (model AnimationPlayers, status VFX loops). Solo wave journeys keep every dead enemy in the sim,
-## so without this ~30-70 corpses were still animated each frame by the late waves.
+## A hidden view stops processing, with everything under it (model AnimationPlayers, status VFX loops), and frees its
+## status loops. (Fallen enemies no longer hide: they fade out and are freed, see fade_out; this stays for any view
+## hidden by other code.)
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED:
 		process_mode = PROCESS_MODE_INHERIT if visible else PROCESS_MODE_DISABLED
@@ -185,7 +185,57 @@ static func display_position(prev: Vector3, now: Vector3, fraction: float) -> Ve
 	return prev.lerp(now, clampf(fraction, 0.0, 1.0))
 
 
+## Boss 2026-11-15: a fallen enemy lies CORPSE_SECONDS (stage_view), then fades out over FADE_SECONDS and the whole
+## view (model, AnimationPlayers, status VFX, bar) is freed. The stage has already dropped it from its maps, so nothing
+## calls show_state again; the view sinks its last pose into the ground and shrinks (ink look kept). No alpha: the
+## toon/ink materials are opaque, and an alpha pass switched on mid-fight would compile a new shader on the web.
+const FADE_SECONDS := 0.5
+const FADE_SINK := 0.45  ## metres the corpse sinks while it fades (a fallen goblin lies ~0.3 m high: under the floor by the end)
+const FADE_SCALE := 0.3  ## and it shrinks to this
+var _fade_left := -1.0  ## < 0: not fading
+
+
+func fade_out(seconds: float = FADE_SECONDS) -> void:
+	if _fade_left >= 0.0:
+		return
+	if _status_vfx != null:
+		_status_vfx.queue_free()
+		_status_vfx = null
+	if _bar_root != null:
+		_bar_root.visible = false
+	if _warning != null:
+		_warning.visible = false
+	for tag in _status_tags.values():
+		tag.queue_free()
+	_status_tags.clear()
+	if seconds <= 0.0 or not visible or not is_inside_tree():
+		queue_free()
+		return
+	process_mode = PROCESS_MODE_INHERIT
+	_fade_left = seconds
+	for node in find_children("*", "GeometryInstance3D", true, false):
+		(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF  # (its shadow would stay on the floor)
+
+
+func _fade(delta: float) -> void:
+	_fade_left -= delta
+	var t := clampf(1.0 - _fade_left / FADE_SECONDS, 0.0, 1.0)
+	var eased := t
+	if _body != null:
+		_body.position = Vector3(0.0, -FADE_SINK * eased, 0.0)
+		_body.scale = Vector3.ONE * lerpf(1.0, FADE_SCALE, eased)
+	if _fade_left <= 0.0:
+		queue_free()
+
+
+func is_fading() -> bool:
+	return _fade_left >= 0.0
+
+
 func _process(delta: float) -> void:
+	if _fade_left >= 0.0:
+		_fade(delta)
+		return
 	_clock += delta
 	if interpolate and _sim_seen:
 		position = display_position(_sim_prev, _sim_now, Engine.get_physics_interpolation_fraction())

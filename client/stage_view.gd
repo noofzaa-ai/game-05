@@ -75,6 +75,7 @@ var _combat_data
 var _vfx  ## what every action looks like (client/vfx/vfx_library.gd, from data/combat/vfx.json)
 var _fighter_colors: Dictionary = {}  ## fighter id -> its own color (a monster's 'weapon' color in the effect data)
 var _views: Dictionary = {}  ## fighter id -> fighter_view node
+var _retired: Dictionary = {}  ## fighter id -> true: its corpse faded out and was freed; never rebuilt (online snapshots)
 var _hitbox_views: Dictionary = {}  ## fighter id -> translucent box shown while a move is active (F3)
 var _telegraph_views: Dictionary = {}  ## fighter id -> red ground warning while a telegraphed move winds up
 var _rig: Node
@@ -149,6 +150,7 @@ func _ready() -> void:
 		return
 
 	_ink_style = map.atmosphere == "ink"
+	DrawStyle.begin_battle()  # slow device or not: decided once now, before any fighter view, for the whole battle
 	_build_atmosphere(map.atmosphere)
 	_build_stage(map)
 	if not _build_session(map): return
@@ -234,6 +236,7 @@ func _physics_frame(_delta: float) -> void:
 	else:_session.step(frame)
 	work_started=_work_mark("controls_predict",work_started)
 	if _session.has_method("is_remote"): _update_remote_views()
+	_retire_gone_views()
 	_update_heal_numbers()
 	_handle_events()
 	work_started=_work_mark("remote_views_events",work_started)
@@ -413,8 +416,42 @@ func _build_session(map) -> bool:
 	return true
 
 
+## A fallen enemy lies this long before it fades out (fighter_view.fade_out) and its view is freed (Boss 2026-11-15).
+const CORPSE_SECONDS := 3.0
+
+## Every view whose fighter left the sim (a wave journey drops its corpses; online the room prunes them).
+func _retire_gone_views() -> void:
+	for id in _views.keys():
+		if not _session.fighters.has(id):
+			_retire_view(id, _views[id])
+
+
+## Drops fighter `id`'s view from every map of the stage (views, the class VFX's shared view map, colours, telegraph
+## and hit-box quads, heal samples) and lets it fade out and free itself. Effects that follow it check is_instance_valid.
+func _retire_view(id: int, view) -> void:  # (untyped: the timer may hand over a view freed meanwhile)
+	if not is_instance_valid(view) or _views.get(id) != view or id == _local_player_id:
+		return
+	_views.erase(id)
+	_retired[id] = true
+	_fighter_colors.erase(id)
+	_heal_samples.erase(id)
+	for quads in [_telegraph_views, _hitbox_views]:
+		if quads.has(id):
+			quads[id].queue_free()
+			quads.erase(id)
+	if _focus_id == id:
+		_focus_id = -1
+		if _squad_panel != null: _squad_panel.clear_selection()
+	if is_instance_valid(view):
+		if view.has_method("fade_out"): view.fade_out()
+		else: view.queue_free()
+
+
 ## Builds the view of one fighter (player or monster) and starts showing it.
 func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
+	if _retired.has(id) and not (_session.fighters.has(id) and _session.fighters[id].is_alive()):
+		return  # a corpse that already faded out (an online snapshot may still list it for a moment)
+	_retired.erase(id)
 	if _views.has(id):
 		# Online, the snapshot (_update_remote_views) usually builds a new enemy's view before its wave_arrived event
 		# is handled. Building it again orphaned the first view: frozen in place, with its own HP bar stacked over the
@@ -820,8 +857,13 @@ func _handle_events() -> void:
 				_play_at_fighter("death", dead_id)
 				if dead_id != _local_player_id and _views.has(dead_id):
 					var dead_view: Node3D = _views[dead_id]
-					# (a bound method, not a lambda: the connection drops by itself if the view is freed first)
-					get_tree().create_timer(2.4).timeout.connect(dead_view.hide)
+					if _session.fighters.has(dead_id) and _session.fighters[dead_id].team == "enemy":
+						# Boss 2026-11-15: the corpse lies CORPSE_SECONDS, then fades out and is freed (wave journeys drop
+						# it from the sim at the same time, GameSim.corpse_clear_ticks; the first of the two retires it).
+						get_tree().create_timer(CORPSE_SECONDS).timeout.connect(_retire_view.bind(dead_id, dead_view))
+					else:
+						# (a bound method, not a lambda: the connection drops by itself if the view is freed first)
+						get_tree().create_timer(2.4).timeout.connect(dead_view.hide)
 			"downed":
 				_popup(_session.bodies[event["player"]].position, "P%d DOWN - stand nearby to revive" % event["player"], Color.MEDIUM_PURPLE, .01)
 			"revived":
@@ -1547,8 +1589,7 @@ func _update_remote_views() -> void:
 		if _chest_button != null: _chest_button.visible = false
 	for id in _session.fighters:
 		if not _views.has(id): _add_fighter_view(id, _session.fighters[id].enemy_type, str(_session.fighters[id].enemy_type).contains("chief"))
-	for id in _views.keys():
-		if not _session.fighters.has(id): _views[id].queue_free(); _views.erase(id)
+	_retire_gone_views()
 	if _journey.state == Journey.CHOOSING and _result.is_empty():
 		_result = "cleared"; _portal_delay = PORTAL_DELAY; _clear_banner_left = PORTAL_DELAY
 	if _spectating():
