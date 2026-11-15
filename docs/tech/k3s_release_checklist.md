@@ -205,7 +205,26 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 88cb6f888904-20261115T063827Z (rolled out 2026-11-15, web + headless)
+## 9. LIVE on staging: release 9dd1bbf37a2f-20261115T092240Z (rolled out 2026-11-15, web + headless)
+
+Tutorial online fixes (alliance Next, first race joins squad, auto character name, online hub-look summary, battle tip on web).
+Tested before release on a local Nakama + profile + room stack (desktop + phone, every step), then walked live on staging in
+Chrome with a new Guest: every step to `done`, battle, DEFEAT summary in the new look. Rooms smoke 14 PASS, worker smoke 11 PASS.
+Nakama NOT rebuilt (not needed).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:9c6ab08036a6961b53e0877aea3fb9d0ef5423e0ebed93052f7a6db0313cbfb0` |
+| headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:660f64cea792dfcf9d3e69265c49c114a8689487678bf68ac748540d1bf97a2c` |
+| headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:3ad6337d6faa4e357060f45ac12838bec78d7af572266a1eb8ee9b393f565475` |
+
+Rollback (to 88cb6f8 release):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:5aeeee19c9318592c21a3e99d47b40ecd1e84cf4a736e211a5050a53a7df2c18
+kubectl -n zorx-staging set image deployment/headless rooms=wiyazard:30500/zorx-room-worker@sha256:354cd5cd01fad09b1290afa19aeeaa5e76c4e853e11b0fc5da2bfe2e077deb0f profiles=wiyazard:30500/zorx-name-validator@sha256:da8e9cff8c2ff59fce886e5c40744df0679a74b75767f4a15c14734ecf8d0afd
+```
+
+### Previous: release 88cb6f888904-20261115T063827Z
 
 Adds dead-enemy 3 s clear/sink, slow-device verdict at load, no stage_cleared while waves queued. Clean worktree
 `zorx-release-88cb6f8`; suite there: passed=3368 failed=34 + 1 script error = baseline 32 + 2 checkout-only
