@@ -70,6 +70,9 @@ func _build_sun() -> void:
 	sun.shadow_blur = 2.5 if style == "ink" else 1.0
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 40.0
+	# One orthogonal shadow map, not the default 4 splits: every caster was drawn into each split (battle web 2026-11-15:
+	# ~140 of ~400 draw calls per frame). The stages fit inside the 40 m range, the look is the same at the board camera.
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	# (Boss 2026-10-15: the floor showed fine dark stripes that stopped at a hard line following the camera =
 	# the floor shadowing itself (shadow acne; the line is where the next shadow cascade starts). Bias alone
 	# did not cure it. Back faces cast instead: the floor is one open surface (no back side), so it never

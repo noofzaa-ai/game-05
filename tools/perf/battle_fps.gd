@@ -74,6 +74,10 @@ func run() -> void:
 	await _frames(300)  # loading done, the squad meets the first wave
 	var stage: Node = current_scene
 	var tag := "hero_ink_%d" % int(hero)
+	if OS.get_cmdline_user_args().has("--shadow-ab"):
+		await _shadow_ab(stage, frames)
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("--breakdown"):
 		_breakdown(stage)
 		quit()
@@ -271,6 +275,25 @@ func _breakdown(stage: Node) -> void:
 		if node.is_visible_in_tree() and node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: casters += 1
 	print("BREAKDOWN shadow_casters_visible=%d canvas_items_2d=%d" % [casters, root.find_children("*", "CanvasItem", true, false).filter(func(c): return c.is_visible_in_tree()).size()])
 	print("BREAKDOWN total_surface_passes=%d engine_dc=%d" % [total, Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)])
+
+
+## Frozen fight, the sun's shadow as 4 splits (the default), 2 splits, orthogonal, and off.
+func _shadow_ab(stage: Node, frames: int) -> void:
+	stage.set_physics_process(false)
+	var suns := root.find_children("*", "DirectionalLight3D", true, false).filter(func(l): return l.shadow_enabled)
+	for mode in ["4_splits", "2_splits", "orthogonal", "off", "4_splits"]:
+		for sun in suns:
+			sun.shadow_enabled = mode != "off"
+			sun.directional_shadow_mode = {"4_splits": DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS, "2_splits": DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS}.get(mode, DirectionalLight3D.SHADOW_ORTHOGONAL)
+		await _frames(20)
+		var shots := ""
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--shots="): shots = a.substr(8)
+		if not shots.is_empty():
+			DirAccess.make_dir_recursive_absolute(shots)
+			await RenderingServer.frame_post_draw
+			root.get_texture().get_image().save_png(shots.path_join("shadow_%s.png" % mode))
+		await _measure(stage, "shadow_" + mode, "overview", frames / 2)
 
 
 func _series_wanted() -> bool:
