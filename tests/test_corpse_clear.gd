@@ -67,6 +67,9 @@ func run(ctx) -> void:
 	ctx.check("clearing corpses keeps the fight identical: ticks, waves, kills, loot (%s vs %s)" % [cleared.digest, kept_run.digest], cleared.digest == kept_run.digest)
 	ctx.check("the late waves carry no pile of corpses (max %d fighters in the sim vs %d)" % [cleared.max_fighters, kept_run.max_fighters], cleared.max_fighters < kept_run.max_fighters and cleared.end_dead <= 12 and kept_run.end_dead > 30)
 	ctx.check("the fight reaches the late waves (wave %d)" % cleared.waves, cleared.waves >= 8)
+	# Seed 1 used to report the stage cleared with waves still queued (a race-trigger kill after the wave release).
+	var early := _wave_fight(f, data, 1, true, ctx)
+	ctx.check("a wave fight is never reported cleared while waves are still queued (%d)" % early.early_clear, early.early_clear == 0)
 
 	# Checkpoints keep the clearing state.
 	var saved = F.simulation(F.make(54))
@@ -121,6 +124,7 @@ func _wave_fight(f: Dictionary, data, seed_value: int, clear: bool, ctx) -> Dict
 	var gold := 0
 	var items := 0
 	var max_fighters := 0
+	var early_clear := 0
 	var tick := 0
 	while tick < 60 * 600 and sim.living_enemy_count() + sim.pending_wave_count() > 0:
 		for id in journey.player_ids():
@@ -131,6 +135,8 @@ func _wave_fight(f: Dictionary, data, seed_value: int, clear: bool, ctx) -> Dict
 		max_fighters = maxi(max_fighters, sim.fighters.size())
 		for event in sim.events:
 			match str(event["type"]):
+				"stage_cleared":
+					if sim.pending_wave_count() > 0: early_clear += 1
 				"killed":
 					kills.append([tick, int(event["target"]), int(event.get("by", -1))])
 				"loot":
@@ -147,4 +153,4 @@ func _wave_fight(f: Dictionary, data, seed_value: int, clear: bool, ctx) -> Dict
 	for id in journey.player_ids():
 		hp += maxf(0.0, sim.fighters[id].hp)
 	return {"digest": "t%d w%d k%d h%d g%d i%d hp%.2f" % [tick, journey.waves_cleared, kills.size(), hash(kills), gold, items, hp],
-		"max_fighters": max_fighters, "end_dead": end_dead, "waves": sim._waves_released + 1}
+		"max_fighters": max_fighters, "end_dead": end_dead, "early_clear": early_clear, "waves": sim._waves_released + 1}

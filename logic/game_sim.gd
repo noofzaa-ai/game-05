@@ -569,7 +569,9 @@ func _aimed_at(id: int) -> bool:
 
 
 func _check_stage_clear() -> void:
-	if _had_enemies and not _clear_reported and living_enemy_count() == 0:
+	# (not while waves are queued: a kill by a race trigger after _release_waves this tick left 0 living for a moment,
+	# and the fight was reported won at wave 6-8 in ~1 run of 3; the next wave arrives on the next tick)
+	if _had_enemies and not _clear_reported and _waves.is_empty() and living_enemy_count() == 0:
 		_clear_reported = true
 		events.append({"type": "stage_cleared"})
 
