@@ -102,6 +102,7 @@ var _boss_name: Label
 ## wave / skill banner and the boss bar. Built once, shown only while auto_battle is on.
 var _leather_trip: Panel
 var _leather_banner: Panel
+var _leather_styled := false  ## the auto-battle label styles are applied (once; see _apply_leather_look)
 var _leather_boss: Panel
 
 var _warning: Label
@@ -544,9 +545,11 @@ func _apply_auto_battle() -> void:
 func _apply_leather_look() -> void:
 	if _leather_trip == null:
 		return
-	CardTokens.style_text(_trip, CardTokens.FONT_HUD_TRIP, CardTokens.HUB_INK, 1.0, 0, "medium")
-	CardTokens.style_text(_skill_label, CardTokens.FONT_HUD_BANNER, CardTokens.HUB_INK, 1.0, 0, "display")
-	CardTokens.style_text(_boss_name, CardTokens.FONT_HUD_BOSS, CardTokens.HUB_INK, 1.0, 0, "display")
+	if not _leather_styled:  # once: every add_theme_*_override re-shapes the label, and this runs every tick
+		_leather_styled = true
+		CardTokens.style_text(_trip, CardTokens.FONT_HUD_TRIP, CardTokens.HUB_INK, 1.0, 0, "medium")
+		CardTokens.style_text(_skill_label, CardTokens.FONT_HUD_BANNER, CardTokens.HUB_INK, 1.0, 0, "display")
+		CardTokens.style_text(_boss_name, CardTokens.FONT_HUD_BOSS, CardTokens.HUB_INK, 1.0, 0, "display")
 	_leather_banner.visible = true
 	for child in _skill_banner.get_children():
 		if child is Polygon2D or child is Line2D:
