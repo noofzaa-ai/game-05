@@ -205,7 +205,26 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 2caa255db372-20261114 (rolled out 2026-11-14 ~00:36 UTC, web only)
+## 9. LIVE on staging: release 97fe50db7f2c-20261115T060515Z (rolled out 2026-11-15, web + headless)
+
+Fix: online tutorial stuck on `welcome` (AccountSession.refresh_account did not copy `tutorial`/`unlocks`; tutorial send
+timeout). Built from clean worktree `zorx-release-97fe50d`, `pipeline/build_web.py --skip-tests` (suite run separately:
+32 known failures + 1 script error), web build **1a4f560363cb**. Rooms smoke PASS, profile worker smoke 11 PASS.
+Nakama NOT rebuilt (heroiclabs 429 again; not needed for this fix).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:3edfdb55e9915d73b3da02d0b6f6d6d668af547e76997c796e2815230818cda7` |
+| headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:adf40f034dc3b9d1d5c5afc3810bb8cc7cfc105c6af290cd5359f30ef697048d` |
+| headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:b4adf677596ec40aea6a2ba7f8afc265dd8e2ed5e6d7aa52732a763e6d49c327` |
+
+Rollback (to e7dbeb8 release):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:067c017c111ec451fd89ed93835cd231449a9e9df1c9f68fe66f83d0c27e2a3f
+kubectl -n zorx-staging set image deployment/headless rooms=wiyazard:30500/zorx-room-worker@sha256:e16e785340da6469939c6ac52dc50f1ec7177b6964064a4ba7e8efd72258e393 profiles=wiyazard:30500/zorx-name-validator@sha256:a2850ce23943e0cac4d5dac1a2b9299885badd262b2da3fdaa96ea54ef2c4250
+```
+
+### Previous: release 2caa255db372-20261114 (rolled out 2026-11-14 ~00:36 UTC, web only)
 
 Built from the release worktree `zorx-release-fdf9fbb` checked out (detached) at 2caa255 = origin/develop, with
 `data/online.local.json` copied in (enabled=true, exact bytes verified inside the core pack). `--import`, then
