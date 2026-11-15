@@ -2,6 +2,8 @@ extends SceneTree
 ## Battle frame rate and shots of the 3-card squad's wave fight (hero ink look A/B, 2026-11-15). Run windowed:
 ##   godot --path . --script res://tools/perf/battle_fps.gd -- [--hero-ink=0|1] [--size=1280x720] [--scale=0.5]
 ##       [--frames=600] [--shots=<dir>] [--style=on|lite|off]
+##   --series [--windows=40] [--speed=3] [--no-marks]: live windows of 120 frames from FIGHT on (fps, nodes, memory,
+##       views, sim fighters, wave); --speed fast-forwards the fight (Engine.time_scale) to reach the late waves.
 ## Starts the default wave journey with the profile's squad, waits for the fight to close in, measures `frames`
 ## frames of the running fight (no freeze), then freezes it and saves <shots>/<tag>_{overview,follow}.png (the follow
 ## view zooms the camera on squad member 1). Prints "BATTLE_FPS hero_ink=.. view=.. avg=.. p50_ms=.. p95_ms=.. p99_ms=..
@@ -69,7 +71,12 @@ func run() -> void:
 	seed(7)
 	game_state.start_journey(game_state.DEFAULT_JOURNEY, 7)
 	if _series_wanted():
-		await _series(40)
+		var windows := 40
+		for a in OS.get_cmdline_user_args():
+			if a.begins_with("--windows="): windows = int(a.substr(10))
+			elif a.begins_with("--speed="): Engine.time_scale = float(a.substr(8))  # fast-forward to the late waves
+		await _series(windows)
+		if not OS.has_feature("web"): quit()
 		return
 	await _frames(300)  # loading done, the squad meets the first wave
 	var stage: Node = current_scene
@@ -330,9 +337,14 @@ func _series(windows: int) -> void:
 		if marks is Dictionary and _steps > 0:
 			for k in marks: mark_text += " %s=%.2f" % [k, marks[k] / 1000.0 / _steps]
 			marks.clear()
-		print("SERIES t=%.1f fps=%.1f p50=%.1f max=%.0f hitches50=%d ticks/frame=%.2f dc=%d nodes=%d objects=%d%s" % [
+		var views = stage.get("_views") if stage != null else null
+		var session = stage.get("_session") if stage != null else null
+		var sim_fighters: int = session.fighters.size() if session != null else 0
+		print("SERIES t=%.1f fps=%.1f p50=%.1f max=%.0f hitches50=%d ticks/frame=%.2f dc=%d nodes=%d objects=%d mem_mb=%.1f views=%d sim_fighters=%d wave=%s%s" % [
 			(Time.get_ticks_msec() - start) / 1000.0, 120000.0 / total, times[60], times[-1], hitches, _steps / 120.0, roundi(dc / 120.0),
-			Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Performance.get_monitor(Performance.OBJECT_COUNT), mark_text])
+			Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Performance.get_monitor(Performance.OBJECT_COUNT),
+			Performance.get_monitor(Performance.MEMORY_STATIC) / 1048576.0, views.size() if views is Dictionary else 0, sim_fighters,
+			str(stage.get("_wave_now")) if stage != null else "-", "" if OS.get_cmdline_user_args().has("--no-marks") else mark_text])
 	print("WEBPROBE done")
 
 
@@ -366,7 +378,7 @@ func _census() -> void:
 					dead_visible += 1
 					for gi in v.find_children("*", "GeometryInstance3D", true, false):
 						if gi.is_visible_in_tree(): dead_meshes += 1
-	print("CENSUS views=%d dead=%d dead_visible=%d dead_visible_meshes=%d" % [stage.get("_views").size() if stage != null else 0, dead, dead_visible, dead_meshes])
+	print("CENSUS views=%d dead=%d dead_visible=%d dead_visible_meshes=%d" % [stage.get("_views").size() if stage != null and stage.get("_views") is Dictionary else 0, dead, dead_visible, dead_meshes])
 	var rows := []
 	for k in counts:
 		rows.append([counts[k] - _census_before.get(k, 0), k, counts[k]])
