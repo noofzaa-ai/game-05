@@ -120,12 +120,25 @@ func _tick(_dt:float,tick:int)->void:
    var echo=preload("res://logic/net_wire.gd").packet(6,1,{"nonce":probe.nonce,"echo_stage":"after_tick","worker_wait_ms":maxi(0,Time.get_ticks_msec()-int(probe.at)),"worker_tick":tick})
    bus.reply.rpc_id(peer,echo)
   _probes.erase(peer)
+## Events (small, reliable; they carry the fight's end: team_wiped / stage_cleared) get their own, higher cap than
+## snapshots. With one shared 64 KiB cap a late-fight snapshot kept the buffer over it on a slow link, so events never
+## went out (staging 2026-11-16: the room ended, the player never saw it, and the room closed 60 s later as
+## "connection lost"). Well under the socket's 1 MiB outbound buffer.
+const EVENT_BUFFER_CAP:=262144
 func _snapshot(peer:int,room)->void:
  if peer not in endpoint.api.get_peers() or not lease.peers.has(peer) or lease.peers[peer].ws.get_ready_state()!=WebSocketPeer.STATE_OPEN:return
  # Keep room-control metadata from building an unbounded reliable backlog.
  # Skipped snapshots are replaced by the next current authoritative snapshot.
  var socket:WebSocketPeer=endpoint.peer.get_peer(peer)
- if socket==null or socket.get_current_outbound_buffered_amount()>=65536:return
+ if socket==null:return
+ if socket.get_current_outbound_buffered_amount()>=65536:
+  # No snapshot this time, but the event stream must still move (see EVENT_BUFFER_CAP).
+  preload("res://server/rooms/netfox/event_delivery.gd").flush(lease.peers[peer],room.events,lease.peers[peer].slot,
+   func(packet:PackedByteArray)->bool:
+    if peer not in endpoint.api.get_peers() or socket.get_ready_state()!=WebSocketPeer.STATE_OPEN:return false
+    bus.reply.rpc_id(peer,packet);return true,
+   func()->bool:return peer in endpoint.api.get_peers() and socket.get_ready_state()==WebSocketPeer.STATE_OPEN and socket.get_current_outbound_buffered_amount()<EVENT_BUFFER_CAP)
+  return
  var group=_room_group(room)
  if group==null:return
  _sync_nodes(room,group)
@@ -166,7 +179,7 @@ func _snapshot(peer:int,room)->void:
   func(packet:PackedByteArray)->bool:
    if peer not in endpoint.api.get_peers() or socket.get_ready_state()!=WebSocketPeer.STATE_OPEN:return false
    bus.reply.rpc_id(peer,packet);return true,
-  func()->bool:return peer in endpoint.api.get_peers() and socket.get_ready_state()==WebSocketPeer.STATE_OPEN and socket.get_current_outbound_buffered_amount()<65536)
+  func()->bool:return peer in endpoint.api.get_peers() and socket.get_ready_state()==WebSocketPeer.STATE_OPEN and socket.get_current_outbound_buffered_amount()<EVENT_BUFFER_CAP)
 func _replica_ready(peer:int,epoch:int)->void:
  var route:Dictionary=endpoint.gate.route(peer)
  if route.is_empty() or not lease.bindings.has(route.room):return
