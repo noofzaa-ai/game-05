@@ -173,7 +173,18 @@ const server = http.createServer(async (req, res) => {
         const session = unseal(jar[sessionName]);
         if (session?.kind !== 'session' || !session.game) return json(res, 401, { error: 'login_required' });
         // Refresh on exchange so the game never receives an expired session.
-        const game = await refreshGameSession(session.game);
+        let game;
+        try { game = await refreshGameSession(session.game); }
+        catch (error) {
+          // The game account behind this cookie is gone or its refresh token is refused (deleted/reset account):
+          // drop the stale session so the website signs in again (a guest cookie re-creates the account).
+          if ([400, 401, 403, 404].includes(error?.status)) {
+            res.setHeader('Set-Cookie', cookie(sessionName, '', 0));
+            json(res, 401, { error: 'login_required' }); res.zorxReason = 'stale_session_' + error.status; return;
+          }
+          res.zorxReason = 'refresh_' + (error?.status || 'error');
+          throw error;
+        }
         session.game = game;
         res.setHeader('Set-Cookie', cookie(sessionName, seal(session), Math.max(0, Math.floor((session.exp - Date.now()) / 1000))));
         return json(res, 200, { ...game, api_origin: process.env.NAKAMA_PUBLIC_ORIGIN || 'https://zorxapi.daiyooo.com' });
