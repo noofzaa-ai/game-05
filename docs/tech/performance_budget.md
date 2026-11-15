@@ -157,3 +157,40 @@ weapons, head and hair: 5 / 8 / 10 / 8 draws and 10.6k / 10.1k / 11.1k / 11.7k t
 Budget: <= 22 extra draws per hero (one hull per visible piece, 12-20 pieces; phones 5-10) and <= 14k extra tris per
 hero. The live (unfrozen) fight varies more between runs than this cost. Phone web not measured yet (OPEN).
 
+
+## Battle lag on the web, measured 2026-11-15 (tech-artist)
+
+Boss: the auto-battle feels laggy on staging. Rig: local web export of this branch served from localhost, Chrome
+(ANGLE D3D11, RTX 3070 Ti, vsync off), 1280x720, render scale 0.5, 3-card squad (sword_shield/human, greatsword/viking,
+longbow/elf), goblin_waves seed 7. Probe: `tools/perf/battle_fps.gd` (native) and the same code as a temporary autoload
+in the web export (`?perfprobe`, `?perfprobe&series`; not committed). Per-frame split = physics (sim + stage tick),
+process (scripts' _process), draw (render submit until frame_post_draw).
+
+Before (web, desktop): live fight 19.6 fps overview / 29.8 follow; split physics 17.8 ms + process 4.6 + draw 27.8
+at ~400 draw calls. Over a whole run it got worse: 26 fps in wave 1, 11-16 fps from ~3 minutes on, with
+every frame over 50 ms (series windows of 120 frames: hitches50 = 120/120).
+
+Causes, by impact:
+1. Fallen enemies were never removed: solo wave journeys keep every dead enemy in the sim, and its hidden view kept
+   posing its model, AnimationPlayers and status loops each frame. 30-70 corpses by the late waves; node count 5k -> 12k+.
+   Fixed (client/fighter_view.gd: a hidden view disables its subtree and frees its status VFX; show_state skips it).
+2. Sun shadow in 4 PSSM splits: each caster drawn into every split. Frozen battle frame 396 -> 255 draw calls,
+   549k -> 398k prims (native 171 -> 201 fps). Fixed: one orthogonal map (client/atmosphere.gd); shots in
+   art_source/codex_review/battle_perf_2026-11-15/ (pssm4/ vs ortho/, shadow_*.png): same look at the board camera.
+3. Auto-battle HUD restyled 3 labels with add_theme_*_override every physics tick (text reshaped each time):
+   0.53-0.67 ms per tick native, ~3x on wasm. Fixed (client/hud.gd: once).
+
+After (web, desktop, same rig; build without the subtree part of fix 1): live 28.5 fps overview / 31.3 follow, split
+physics 8.4 + process 2.5 + draw 23.5 ms; whole run 24-31 fps with a few hitches (was 11-26). Native late fight
+69-85 -> 105-160 fps.
+
+Still OPEN (not changed, needs a decision or another owner):
+- Draw: ~0.07-0.09 ms per draw call on WebGL. Hero ink look costs ~+30-60 draws / +4-5 ms per frame on the web
+  (frozen A/B: overview 40.3 -> 50.2 fps, follow 53.8 -> 65.9 fps without it). Class skill VFX are the largest draw
+  group while live (~117 of ~270 visible surfaces in one frame).
+- Physics: the sim runs at 60 Hz; on the web each tick costs ~4 ms (stage tick incl. sim), so at 30 fps two ticks run
+  per frame (8-10 ms). Dead enemies still sit in the sim's fighter list (logic/, not changed here).
+- The drawn-style slow-device guard (draw_style.gd SLOW_FPS 27) switched the screen pass off on this RTX 3070 Ti
+  desktop in both drawn-style runs: the look changes mid-battle on ordinary PCs.
+- Battle entry: one ~27 s frame on the web (3 s native) when the stage opens. Not investigated here.
+- Phones not measured (needs a real phone).
