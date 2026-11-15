@@ -344,10 +344,18 @@ static func _travel(sim, id: int, cast: Dictionary) -> void:
 	body.knockback = Vector2.ZERO
 
 
+const RE_AIM_KINDS := ["shot", "volley", "vault_shot"]  ## kinds that re-aim at release (Boss 2026-11-15, option c)
+
+
 static func _release(sim, id: int, fighter, cast: Dictionary, index: int) -> void:
 	var stats: Dictionary = cast["stats"]
 	var skill := str(cast["skill"])
 	var at: Vector3 = sim.bodies[id].position
+	# Boss 2026-11-15 (option c): arrows home in. Shot kinds re-aim at a living target's current position at release;
+	# melee arcs, circles and orbs keep the committed cast-start aim (a dodge window).
+	if str(cast["kind"]) in RE_AIM_KINDS and _enemy_ok(sim, id, int(cast["target"])):
+		cast["aim"] = sim.bodies[int(cast["target"])].position
+		_face(sim, id, cast["aim"])
 	if index < 0:
 		index = -1 - index  # a Grand Archmage copy: same release, no events
 	elif index == 0:

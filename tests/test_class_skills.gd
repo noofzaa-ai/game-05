@@ -36,6 +36,7 @@ func run(ctx) -> void:
 	_lost_cast(ctx)
 	_tree_and_race_hooks(ctx)
 	_checkpoint(ctx)
+	_release_aim(ctx)
 
 
 # ---------------------------------------------------------------- fixture
@@ -569,3 +570,23 @@ func _checkpoint(ctx) -> void:
 	step(sim, 20)
 	var snap: Dictionary = Codec.unpack(Codec.pack(sim.fighters[1].skill_state))
 	ctx.check("skill_state survives the checkpoint codec unchanged", Codec.digest(snap) == Codec.digest(sim.fighters[1].skill_state))
+
+
+## Boss 2026-11-15 option c: a shot re-aims at its living target's position at release; a melee arc keeps the cast-start aim.
+func _release_aim(ctx) -> void:
+	var sim := world(["longbow"])
+	put(sim, 10, Vector3(6, 0, 0))
+	Skills.cast(sim, 1, "heartseeker_shot", {"target": 10})
+	put(sim, 10, Vector3(6, 0, 3))  # the target steps aside during the draw
+	var ev := step(sim, 110)
+	var rel := of(ev, "class_skill_release")
+	ctx.check("option c: a shot's release aims at the target's current position (%s)" % [rel],
+		not rel.is_empty() and (rel[0]["aim"] as Vector3).is_equal_approx(Vector3(6, 0, 3)))
+	var arc := world(["greatsword"])
+	put(arc, 10, Vector3(2, 0, 0))
+	Skills.cast(arc, 1, "reaping_arc", {"target": 10})
+	put(arc, 10, Vector3(2, 0, 3))
+	var aev := step(arc, 45)
+	var arel := of(aev, "class_skill_release")
+	ctx.check("option c: a melee arc keeps its cast-start aim (%s)" % [arel],
+		not arel.is_empty() and (arel[0]["aim"] as Vector3).is_equal_approx(Vector3(2, 0, 0)))
