@@ -205,7 +205,27 @@ kubectl diff -f server/k3s/equipment-tuning.yaml; kubectl apply -f server/k3s/eq
 Rollback: `kubectl -n zorx-staging set image deployment/<name> <container>=<repo@sha256 from before-fdf9fbb.txt>`,
 or use the table above. The ConfigMap rollback is `git show 27116b6:server/k3s/equipment-tuning.yaml | kubectl apply -f -`.
 
-## 9. LIVE on staging: release 97fe50db7f2c-20261115T060515Z (rolled out 2026-11-15, web + headless)
+## 9. LIVE on staging: release 88cb6f888904-20261115T063827Z (rolled out 2026-11-15, web + headless)
+
+Adds dead-enemy 3 s clear/sink, slow-device verdict at load, no stage_cleared while waves queued. Clean worktree
+`zorx-release-88cb6f8`; suite there: passed=3368 failed=34 + 1 script error = baseline 32 + 2 checkout-only
+(`an effect with no duration is reported` line endings; version-corner test without build metadata), so built with
+`build_web.py --skip-tests`. Web build **478752428cce**. Rooms smoke PASS, profile worker smoke 11 PASS, web paths OK,
+pods Ready 0 restarts, 0 error lines. Nakama NOT rebuilt (heroiclabs 429).
+
+| Deployment/container | Live image |
+|---|---|
+| game-test/game-test | `wiyazard:30500/zorx-web@sha256:5aeeee19c9318592c21a3e99d47b40ecd1e84cf4a736e211a5050a53a7df2c18` |
+| headless/rooms | `wiyazard:30500/zorx-room-worker@sha256:354cd5cd01fad09b1290afa19aeeaa5e76c4e853e11b0fc5da2bfe2e077deb0f` |
+| headless/profiles | `wiyazard:30500/zorx-name-validator@sha256:da8e9cff8c2ff59fce886e5c40744df0679a74b75767f4a15c14734ecf8d0afd` |
+
+Rollback (to 97fe50d release):
+```sh
+kubectl -n zorx-staging set image deployment/game-test game-test=wiyazard:30500/zorx-web@sha256:3edfdb55e9915d73b3da02d0b6f6d6d668af547e76997c796e2815230818cda7
+kubectl -n zorx-staging set image deployment/headless rooms=wiyazard:30500/zorx-room-worker@sha256:adf40f034dc3b9d1d5c5afc3810bb8cc7cfc105c6af290cd5359f30ef697048d profiles=wiyazard:30500/zorx-name-validator@sha256:b4adf677596ec40aea6a2ba7f8afc265dd8e2ed5e6d7aa52732a763e6d49c327
+```
+
+### Previous: release 97fe50db7f2c-20261115T060515Z (rolled out 2026-11-15, web + headless)
 
 Fix: online tutorial stuck on `welcome` (AccountSession.refresh_account did not copy `tutorial`/`unlocks`; tutorial send
 timeout). Built from clean worktree `zorx-release-97fe50d`, `pipeline/build_web.py --skip-tests` (suite run separately:
