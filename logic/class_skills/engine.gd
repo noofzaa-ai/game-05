@@ -352,7 +352,7 @@ static func _release(sim, id: int, fighter, cast: Dictionary, index: int) -> voi
 		index = -1 - index  # a Grand Archmage copy: same release, no events
 	elif index == 0:
 		sim.events.append({"type": "skill_cast", "player": id, "skill": skill, "class_skill": true, "pos": at, "aim": cast["aim"]})
-	sim.events.append({"type": "class_skill_release", "player": id, "skill": skill, "index": index, "pos": at, "aim": cast["aim"],
+	sim.events.append({"type": "class_skill_release", "player": id, "skill": skill, "index": index, "pos": at, "aim": cast["aim"], "target": int(cast["target"]),
 		"vfx": str(SkillData.load_default().skill(skill).get("vfx", ""))})
 	var target := int(cast["target"])
 	match str(cast["kind"]):

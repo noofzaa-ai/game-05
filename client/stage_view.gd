@@ -189,8 +189,10 @@ func _process(_delta:float)->void:
 	for id in _views:
 		if _session.bodies.has(id):_views[id].position=_session.presentation_position(id)
 
+static var perf_marks := {}
 func _work_mark(label:String,start_us:int)->int:
 	var end_us:=Time.get_ticks_usec()
+	perf_marks[label]=perf_marks.get(label,0)+end_us-start_us
 	if _session!=null and _session.has_method("is_remote"):_session.input_trace.work.record(label,start_us,end_us)
 	return end_us
 
@@ -457,6 +459,7 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 	if is_boss:
 		_add_boss_label(view)
 		_boss_id = id
+	view.interpolate = not _session.has_method("presentation_position")  # online: the session places it
 	view.show_state(_session.bodies[id], _session.fighters[id], _combat_data)
 
 

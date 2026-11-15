@@ -117,6 +117,14 @@ var _seen_state := -1  ## the fighter state and state_ticks last shown, to resta
 var _seen_ticks := 0
 var _fit := 1.0  ## how much the monster model is scaled (its rig's size; the run clip's speed grows with it)
 var _nock: Node3D  ## the nocked arrow (monster_nock_mesh), or null
+## Render interpolation (movement snap fix 2026-11-15): the sim moves bodies once per 60 Hz physics tick, render
+## frames do not line up with ticks (web/uneven frame rate gives 0 or 2 ticks per frame = a jerky run). The view is
+## drawn between the last two sim positions by the physics interpolation fraction; a jump of SNAP_M or more snaps.
+const SNAP_M := 1.5
+var interpolate := true  ## false: the stage drives position itself (online presentation_position)
+var _sim_prev := Vector3.ZERO
+var _sim_now := Vector3.ZERO
+var _sim_seen := false
 var _height := SimBody.HEIGHT  ## the body's height in the rules: the health bar, "!" and tags sit above it
 
 
@@ -159,8 +167,17 @@ func _ready() -> void:
 		_build_warning_sign()
 
 
+## Where the view is drawn between two sim ticks: prev..now by fraction (0..1), snapping on a teleport.
+static func display_position(prev: Vector3, now: Vector3, fraction: float) -> Vector3:
+	if prev.distance_to(now) >= SNAP_M:
+		return now
+	return prev.lerp(now, clampf(fraction, 0.0, 1.0))
+
+
 func _process(delta: float) -> void:
 	_clock += delta
+	if interpolate and _sim_seen:
+		position = display_position(_sim_prev, _sim_now, Engine.get_physics_interpolation_fraction())
 	_flash = maxf(0.0, _flash - delta)
 	_flash_rest = maxf(0.0, _flash_rest - delta)
 	if _model_flash_on and _flash <= 0.0 and _model != null:
@@ -187,7 +204,10 @@ func set_looks(new_looks: Dictionary) -> void:
 
 
 func show_state(body: SimBody, fighter: Fighter, data: CombatData = null) -> void:
-	position = body.position
+	_sim_prev = _sim_now if _sim_seen else body.position
+	_sim_now = body.position
+	_sim_seen = true
+	position = display_position(_sim_prev, _sim_now, Engine.get_physics_interpolation_fraction()) if interpolate else body.position
 	_show_race_ring(fighter)
 	if not is_equal_approx(_height, body.height):
 		_height = body.height

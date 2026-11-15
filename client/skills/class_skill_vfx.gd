@@ -134,6 +134,10 @@ func _on(trigger: String, skill: String, event: Dictionary) -> void:
 	var caster: Vector3 = _position_of(player)
 	var aim: Vector3 = event.get("aim", caster + Vector3.FORWARD) if event.get("aim") is Vector3 else caster + Vector3.FORWARD
 	var target := int(event.get("target", -1))
+	# The sim freezes "aim" at cast start; by release the target has often moved 1-4 m (skill aim fix 2026-11-15).
+	# A release on a living target is drawn where the target is shown now.
+	if trigger == "release" and target >= 0 and target != player and session.bodies.has(target) 			and (not session.fighters.has(target) or session.fighters[target].is_alive()):
+		aim = _position_of(target)
 	var dir := Vector3(aim.x - caster.x, 0.0, aim.z - caster.z)
 	if dir.length() < 0.01:
 		dir = Vector3.FORWARD

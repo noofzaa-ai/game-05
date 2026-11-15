@@ -201,6 +201,17 @@ func _check_class_skill_vfx(ctx) -> void:
 	for i in 30:
 		vfx._process(0.1)
 	ctx.check("every class skill effect ends and returns to its pool", vfx.live_count() == 0)
+	# Skill aim fix (2026-11-15): the sim's aim is frozen at cast start; a release on a target is drawn where the
+	# target is now (fake body 2 sits at x=4), not at the stale aim (x=-6).
+	vfx.handle_events([{"type": "class_skill_release", "player": 1, "skill": "heartseeker_shot", "index": 0, "pos": Vector3.ZERO, "aim": Vector3(-6, 0, 0), "target": 2}])
+	var shot: Node3D = vfx._live[-1]["node"]
+	ctx.check("a targeted release lands on the target's current position (got %s)" % shot.global_position, shot.global_position.x > 0.0 and absf(shot.global_position.x - (4.0 - 2.6)) < 0.01)
+	for i in 30:
+		vfx._process(0.1)
+	# Movement snap fix: the view is drawn between the last two sim positions, snapping on a teleport.
+	var FV = load("res://client/fighter_view.gd")
+	ctx.check("a fighter view is drawn halfway between ticks", FV.display_position(Vector3.ZERO, Vector3(0.2, 0, 0), 0.5).is_equal_approx(Vector3(0.1, 0, 0)))
+	ctx.check("a teleport snaps instead of sliding", FV.display_position(Vector3.ZERO, Vector3(5, 0, 0), 0.5) == Vector3(5, 0, 0))
 	# Draw-call fix: a daiyooo flipbook hides off phases by scale 0.0001 (still drawn); _slim turns those into
 	# visible keys, so only live phases draw. After the all-visible prewarm frame a play must restore them.
 	var leap: Node3D = vfx._take("crater_leap")
