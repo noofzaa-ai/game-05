@@ -66,8 +66,28 @@ let authLogWindow = 0, authLogCount = 0, authLogDropped = 0;
 function uaFamily(ua) {
   ua = String(ua || '');
   const os = /iPhone|iPad|iPod/.test(ua) ? 'ios' : /Android/.test(ua) ? 'android' : /Mac OS X/.test(ua) ? 'mac' : /Windows/.test(ua) ? 'win' : /Linux/.test(ua) ? 'linux' : 'other';
-  const br = /CriOS/.test(ua) ? 'chrome-ios' : /FxiOS/.test(ua) ? 'firefox-ios' : /EdgiOS|Edg\//.test(ua) ? 'edge' : /Chrome\//.test(ua) ? 'chrome' : /Firefox\//.test(ua) ? 'firefox' : /Safari\//.test(ua) ? 'safari' : 'other';
+  const br = /Line\//i.test(ua) ? 'line' : /FBAN|FBAV|FB_IAB|FBIOS/.test(ua) ? 'facebook' : /Instagram/.test(ua) ? 'instagram' :
+    /musical_ly|TikTok|BytedanceWebview/i.test(ua) ? 'tiktok' : /MicroMessenger/.test(ua) ? 'wechat' : /Twitter/.test(ua) ? 'twitter' :
+    /CriOS/.test(ua) ? 'chrome-ios' : /FxiOS/.test(ua) ? 'firefox-ios' : /EdgiOS|Edg\//.test(ua) ? 'edge' : /SamsungBrowser/.test(ua) ? 'samsung' :
+    /Chrome\//.test(ua) ? 'chrome' : /Firefox\//.test(ua) ? 'firefox' : /Version\/[\d.]+.*Safari\//.test(ua) ? 'safari' :
+    /AppleWebKit/.test(ua) && os === 'ios' ? 'ios-webview' : 'other';
   return os + '/' + br;
+}
+// The Origin value is public, not a secret; keep it short and printable for diagnostics.
+function originLabel(value) {
+  if (value === undefined) return 'none';
+  return String(value).slice(0, 80).replace(/[^!-~]/g, '?');
+}
+// CSRF gate for same-site POSTs. Exact Origin match first. Some iOS in-app browsers and older WebKit send
+// no Origin or "null" on same-origin fetch: accept those only when the browser itself says same-origin
+// (Sec-Fetch-Site) or, when that header is absent, the Referer is our exact origin. Any other Origin is refused.
+function sameOriginRequest(req) {
+  const value = req.headers.origin;
+  if (value === origin.origin) return true;
+  if (value !== undefined && value !== 'null') return false;
+  const site = req.headers['sec-fetch-site'];
+  if (site !== undefined) return site === 'same-origin';
+  try { return new URL(String(req.headers.referer || '')).origin === origin.origin; } catch { return false; }
 }
 function authLog(req, res, pathname, startedAt, sessionKind) {
   const now = Date.now();
@@ -76,9 +96,10 @@ function authLog(req, res, pathname, startedAt, sessionKind) {
     authLogWindow = now; authLogCount = 0; authLogDropped = 0;
   }
   if (++authLogCount > 120) { authLogDropped++; return; }
-  const origin = ['https://zorx.daiyooo.com', 'https://zorxplay.daiyooo.com'].includes(req.headers.origin) ? req.headers.origin : (req.headers.origin ? 'other' : 'none');
+  let referer = 'none';
+  try { if (req.headers.referer) referer = new URL(String(req.headers.referer)).origin.slice(0, 80); } catch { referer = 'invalid'; }
   console.log(JSON.stringify({ auth: pathname, method: req.method, status: res.statusCode, reason: res.zorxReason || '',
-    origin, ua: uaFamily(req.headers['user-agent']), session: sessionKind, ms: now - startedAt }));
+    origin: originLabel(req.headers.origin), referer, fetch_site: originLabel(req.headers['sec-fetch-site']), ua: uaFamily(req.headers['user-agent']), session: sessionKind, ms: now - startedAt }));
 }
 // Bounded origin-wide budget: never trust a client-supplied forwarding header.
 let authTokens = 40, authAt = Date.now(), authActive = 0;
@@ -172,7 +193,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { configured, guest: {configured:guestConfigured, site_key:guestSiteKey}, user: session?.kind === 'session' ? session.user : null, game_account_id: session?.game?.user_id || null });
     }
     if (url.pathname === '/auth/guest' && req.method === 'POST') {
-      if(req.headers.origin!==origin.origin || !req.headers['content-type']?.startsWith('application/json')) return json(res,403,{error:'origin_rejected'});
+      if(!sameOriginRequest(req) || !req.headers['content-type']?.startsWith('application/json')) return json(res,403,{error:'origin_rejected'});
       if(!guestConfigured) return json(res,503,{error:'guest_not_configured'});
       const current=unseal(jar[sessionName]);
       if(current?.kind==='session') return json(res,409,{error:'already_logged_in'});
@@ -198,7 +219,7 @@ const server = http.createServer(async (req, res) => {
       return json(res,200,{ok:true});
     }
     if (url.pathname === '/auth/logout' && req.method === 'POST') {
-      if (req.headers.origin !== origin.origin) return json(res, 403, { error: 'origin_rejected' });
+      if (!sameOriginRequest(req)) return json(res, 403, { error: 'origin_rejected' });
       const session = unseal(jar[sessionName]);
       if (session?.game) {
         try { await logoutGameSession(session.game); } catch { /* Expired sessions still clear locally. */ }

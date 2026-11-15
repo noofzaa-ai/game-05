@@ -26,9 +26,15 @@ guestButton.addEventListener('click',async()=>{
   status.textContent='กำลังเข้าสู่ระบบ Guest…';
   try{
     const response=await fetch('/auth/guest',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:captchaToken})});
-    if(!response.ok) throw Error('guest_failed');
+    if(!response.ok){let code='';try{code=String((await response.json()).error||'');}catch{}throw Error(code||'guest_failed');}
     location.assign(gameUrl);
-  }catch{status.textContent='เข้า Guest ไม่สำเร็จ กรุณาตรวจสอบป้องกันบอทแล้วลองอีกครั้ง';}
+  }catch(error){
+    // In-app browsers (LINE, Facebook, Instagram, TikTok...) often block sign-in: tell the player to open a real browser.
+    const inApp=/Line\/|FBAN|FBAV|FB_IAB|Instagram|musical_ly|TikTok|BytedanceWebview|MicroMessenger|Twitter/i.test(navigator.userAgent);
+    status.textContent=inApp||error.message==='origin_rejected'
+      ?'เข้า Guest ไม่สำเร็จในเบราว์เซอร์ของแอปนี้ กรุณาเปิดลิงก์ใน Safari หรือ Chrome แล้วลองอีกครั้ง'
+      :'เข้า Guest ไม่สำเร็จ กรุณาตรวจสอบป้องกันบอทแล้วลองอีกครั้ง';
+  }
   finally{guestBusy=false;captchaToken='';guestButton.disabled=true;login.disabled=false;if(widgetId!==null)window.turnstile.reset(widgetId);}
 });
 let user = null;
