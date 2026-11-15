@@ -111,6 +111,18 @@ const server = http.createServer(async (req, res) => {
   let authSlot = false;
   try {
     const url = new URL(req.url, origin);
+    if (secure) {
+      // Path: visitor -> Cloudflare edge -> Cloudflare Tunnel -> traefik :80 -> here. traefik serves plain :80, so its
+      // X-Forwarded-Proto says "http" for every request; the visitor's real scheme is Cloudflare's CF-Visitor header.
+      // Plain http (LINE / iOS Safari typed links) breaks the Origin check and __Host- cookies: 301 to https.
+      let proto = '';
+      try { proto = String(JSON.parse(String(req.headers['cf-visitor'] || '{}')).scheme || '').toLowerCase(); } catch { proto = ''; }
+      if (proto === 'http') {
+        res.writeHead(301, { Location: origin.origin + url.pathname + url.search, 'Cache-Control': 'no-store' });
+        return res.end();
+      }
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000');
+    }
     if ((url.pathname.startsWith('/auth/') && url.pathname !== '/auth/session') || url.pathname.startsWith('/admin/api/')) {
       const now = Date.now();
       authTokens = Math.min(40, authTokens + Math.max(0, now - authAt) * 5 / 1000); authAt = now;

@@ -1,3 +1,5 @@
+// Plain http breaks the same-origin check and __Host- cookies (LINE / iOS Safari): always continue on https.
+if (location.protocol === 'http:' && !['localhost','127.0.0.1'].includes(location.hostname)) location.replace('https://' + location.host + location.pathname + location.search + location.hash);
 // Google login resolves to a Nakama account on the website backend.
 const status = document.getElementById('auth-status');
 const login = document.getElementById('google-login');
