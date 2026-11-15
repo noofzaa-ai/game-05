@@ -329,7 +329,29 @@ func connect_account_profile() -> bool:
 	account_session = candidate
 	session = candidate; profile = candidate.profile; journey = null
 	online_error = ""
+	await ensure_online_name(account)
 	return true
+
+
+## Since boot goes straight to the hub (no title/creator), a new account has no character name, and the
+## server refuses every fight with character_required. Give it a generated one ("Hero 1234"; Boss can add a
+## rename later). An account that already has a name keeps it. Failure is not fatal: the fight retries it.
+func ensure_online_name(account) -> bool:
+	var names = preload("res://client/online/name_client.gd").new()
+	var current: Dictionary = await names.get_name(account)
+	if current.get("ok", false) and not str(current.get("name", "")).is_empty():
+		return true
+	var rng := RandomNumberGenerator.new()
+	rng.randomize()
+	for attempt in 6:
+		var result: Dictionary = await names.claim(account, "Hero %d" % rng.randi_range(1000, 999999))
+		if result.get("ok", false):
+			print("online account: name assigned")
+			return true
+		if str(result.get("error", "")) not in ["name_taken", "conflict"]:
+			push_warning("online name claim failed: %s" % result.get("error", ""))
+			return false
+	return false
 
 func _refresh_account() -> void:
 	if account_session == null or _refreshing_account: return

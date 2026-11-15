@@ -112,9 +112,14 @@ func refresh() -> void:
 		overlay.hide_step()
 		_show_ceremony(data)
 		return
-	var target := str(data.get("target", ""))
-	overlay.show_step(text_of(data), target.is_empty())
+	overlay.show_step(text_of(data), shows_next(data))
 	overlay.set_hole(Rect2())
+
+
+## A step shows the Next button when it has no target, or when Next is how it completes: alliance points at
+## the squad tray but is done by Next (staging 2026-11-15: no button = the tutorial was stuck there).
+static func shows_next(data: Dictionary) -> bool:
+	return str(data.get("target", "")).is_empty() or str(data.get("done_on", {}).get("event")) == "next"
 
 
 static func text_of(data: Dictionary) -> String:
@@ -327,7 +332,12 @@ func _show_ceremony(data: Dictionary) -> void:
 ## The battle tip (tutorial.md 4 battle_tip): solo auto-battle only, never in online rooms. `squad_panel` is
 ## client/squad_panel.gd. Done on a card-name tap or after 8 s; queued for the next hub (commands are camp-only).
 static func attach_battle(parent: Node, squad_panel: CanvasLayer, online: bool) -> CanvasLayer:
-	var p = GameState.profile
+	# Online (every web fight runs in a server room) the battle's profile is the room's copy; the tutorial lives
+	# on the account profile. The server refuses SHARED rooms before battle_tip, so a player at battle_tip is
+	# always in their own solo room: the tip shows there (staging 2026-11-15: it never showed on the web).
+	var p = GameState.account_session.profile if GameState.account_session != null else GameState.profile
+	if p != null and "tutorial" in p and Tutorial.current(p) == "battle_tip":
+		online = false
 	if online or squad_panel == null or p == null or not "tutorial" in p or Tutorial.current(p) != "battle_tip":
 		return null
 	GameState.set_meta(FIRST_FIGHT_META, true)

@@ -184,6 +184,13 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 			var old_race := preload("res://logic/card_deck.gd").race_of(p.card_deck, command["class"]) if p.card_deck.get("cards", {}).has(command["class"]) else ""
 			if not preload("res://logic/card_deck.gd").set_race(p.card_deck, command["class"], command["race"]):
 				return _error("invalid_race")
+			# tutorial.md 2: a card given its first race joins the squad when there is room (the new player's
+			# three race picks build the squad the alliance step and FIGHT need).
+			if old_race.is_empty():
+				var squad: Array = p.card_deck.get("squad", [])
+				if not squad.has(command["class"]) and squad.size() < preload("res://logic/card_deck.gd").SQUAD_MAX:
+					squad.append(command["class"])
+					p.card_deck["squad"] = squad
 			if old_race != command["race"]:  # skill-tree.md 3.11: race + combo branches refunded for free, class kept
 				result = {"tree_refunded": preload("res://logic/skill_tree.gd").on_race_change(p.card_deck, command["class"])}
 		"tutorial_step", "tutorial_replay":

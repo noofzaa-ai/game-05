@@ -126,6 +126,12 @@ func run(ctx) -> void:
 	_cmd(f, fresh, {"type": "card_race", "class": "sword_shield", "race": "human"})
 	_cmd(f, fresh, {"type": "card_race", "class": "greatsword", "race": "viking"})
 	_cmd(f, fresh, {"type": "card_race", "class": "longbow", "race": "elf"})
+	# Staging 2026-11-15: the alliance step and FIGHT need the squad; a card's FIRST race joins it (no card_squad sent).
+	ctx.check("first race picks build the squad in order %s" % [fresh.card_deck["squad"]], fresh.card_deck["squad"] == ["sword_shield", "greatsword", "longbow"])
+	ctx.check("the three race picks make the squad fight-ready", Commands.fight_problem(fresh) == "")
+	_cmd(f, fresh, {"type": "card_race", "class": "longbow", "race": "human"})
+	ctx.check("changing an existing race does not touch the squad", fresh.card_deck["squad"] == ["sword_shield", "greatsword", "longbow"])
+	_cmd(f, fresh, {"type": "card_race", "class": "longbow", "race": "elf"})
 	_cmd(f, fresh, {"type": "card_squad", "squad": ["sword_shield", "greatsword", "longbow"]})
 	var lobby: Dictionary = mgr.create("tutorialroomguard1", 6, [{"id": 1, "profile": fresh.to_dict()}], true, 2)
 	ctx.check("AC9 a shared room is refused with tutorial", lobby.get("error") == "tutorial")

@@ -72,6 +72,15 @@ func journey():
 
 
 func _refresh() -> void:
+	if _summary_built:
+		return
+	if _is_wave_summary():  # online: the run can end after this screen opened; swap to the hub-look summary
+		for child in get_children():
+			remove_child(child)
+			child.queue_free()
+		theme = null
+		_build_wave_summary()
+		return
 	for child in _box.get_children():
 		_box.remove_child(child)
 		child.queue_free()
@@ -244,7 +253,8 @@ func _open_online_treasure() -> void:
 ## GameState.run_loot (noted from the fight's loot events); the bag itself was already settled by the rules.
 func _is_wave_summary() -> bool:
 	var j = journey()
-	return j != null and GameState.remote_session == null and bool(j.data.wave_mode) \
+	# Online fights too (staging 2026-11-15: an online run ended on the old brass "VICTORY" screen).
+	return j != null and bool(j.data.wave_mode) \
 		and j.state in [Journey.WON, Journey.LOST, Journey.RETREATED, Journey.ABANDONED]
 
 
@@ -261,7 +271,27 @@ static func waves_cleared(state: String, wave_reached: int, total: int) -> int:
 	return clampi(wave_reached - 1, 0, total)
 
 
+var _summary_built := false
+var _summary_back: Button
+var _summary_back_text := ""
+
+
+## Online: the server must save the run before the player leaves; the button waits ("saving") until it has.
+func _update_summary_back() -> void:
+	if _summary_back == null:
+		return
+	var waiting: bool = GameState.remote_session != null and not GameState.remote_session.can_return_to_hub()
+	_summary_back.disabled = waiting
+	_summary_back.text = HubLook.t("summary_saving") if waiting else _summary_back_text
+
+
+func _process(_delta: float) -> void:
+	if _summary_back != null and _summary_back.disabled:
+		_update_summary_back()
+
+
 func _build_wave_summary() -> void:
+	_summary_built = true
 	var j = journey()
 	var screen := get_viewport().get_visible_rect().size
 	var s := CardTokens.scale_for(screen)
@@ -324,6 +354,9 @@ func _build_wave_summary() -> void:
 	row.add_child(back)
 	_buttons.append(back)
 	back.grab_focus.call_deferred()
+	_summary_back = back
+	_summary_back_text = back.text
+	_update_summary_back()
 
 
 func _back_to_cards() -> void:
