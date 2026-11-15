@@ -17,6 +17,8 @@ func run(ctx) -> void:
 	await _targets(ctx, tree, root)
 	_matching(ctx)
 	await _refusal(ctx, tree, root)
+	await _online_refresh_applies_tutorial(ctx)
+	await _send_timeout_clears_busy(ctx, tree, root)
 	root.queue_free()
 	await tree.process_frame
 
@@ -176,6 +178,51 @@ func _refusal(ctx, tree: SceneTree, root: Control) -> void:
 	driver.queue_free()
 	hub.queue_free()
 	await tree.process_frame
+
+
+## Staging bug 2026-11-15: the server accepted `welcome` but the client kept showing it, because
+## AccountSession.refresh_account copied a fixed field list without `tutorial`/`unlocks`.
+func _online_refresh_applies_tutorial(ctx) -> void:
+	var runner = load("res://server/profile/runner.gd").new()
+	var made: Dictionary = runner.execute({"v": 1, "state": null, "seed": "0123456789abcde", "name": "Hero", "command": null})
+	var stored: Dictionary = made.get("profile", {}).duplicate(true)
+	var session = load("res://client/session/account_session.gd").new(null, runner.rules, runner.camp, null)
+	var api := FakeProfileApi.new()
+	stored["tutorial"] = {"version": 1, "step": "welcome", "tour_done": false, "unlock_seen": false}
+	api.profile = stored.duplicate(true)
+	session.api = api
+	await session.refresh_account()
+	ctx.check("online fetch starts at welcome", session.profile != null and Tutorial.current(session.profile) == "welcome")
+	var next := str(Tutorial.steps()[1]["id"])
+	api.profile["tutorial"]["step"] = next
+	await session.refresh_account()
+	ctx.check("online refresh applies the server's tutorial step (was stuck on welcome)", Tutorial.current(session.profile) == next)
+
+
+## `_busy` always clears: a send that never answers counts as refused after the timeout.
+func _send_timeout_clears_busy(ctx, tree: SceneTree, root: Control) -> void:
+	var driver = Driver.new()
+	var never := Signal(driver, "tree_exiting")
+	driver.send = func(_r: Dictionary) -> Dictionary:
+		await never
+		return {"ok": true}
+	var calls := {"refresh": 0}
+	driver.refresher = func() -> void: calls["refresh"] += 1
+	driver.send_timeout_s = 0.2
+	root.add_child(driver)
+	driver.hub = FakeHub.new()
+	driver.set_process(false)
+	await driver._confirm("welcome")
+	ctx.check("a send with no answer times out and clears _busy", not driver._busy and calls["refresh"] == 1)
+	driver.queue_free()
+	await tree.process_frame
+
+
+class FakeProfileApi extends RefCounted:
+	var profile: Dictionary
+	func fetch(_account) -> Dictionary:
+		var tuning = JSON.parse_string(FileAccess.get_file_as_string("res://data/items/equipment_tuning.json"))
+		return {"ok": true, "revision": 1, "profile": profile.duplicate(true), "equipment_tuning": tuning}
 
 
 class FakeHub extends Control:

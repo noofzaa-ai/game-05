@@ -247,10 +247,32 @@ func _confirm(id: String) -> void:
 	refresh()
 
 
+## Never waits forever: after SEND_TIMEOUT_S the step counts as refused (the caller re-reads the server's step).
+const SEND_TIMEOUT_S := 15.0
+var send_timeout_s := SEND_TIMEOUT_S
+
+
 func _send(request: Dictionary) -> Dictionary:
+	var box := {"done": false, "result": {"ok": false, "error": "timeout"}}
+	_run_send(request, box)
+	var waited := 0.0
+	while not box["done"] and waited < send_timeout_s and is_inside_tree():
+		await get_tree().process_frame
+		waited += get_process_delta_time() if get_process_delta_time() > 0.0 else 1.0 / 60.0
+	if not box["done"]:
+		push_warning("tutorial: %s got no answer in %.1f s" % [str(request.get("type")), send_timeout_s])
+	return box["result"]
+
+
+func _run_send(request: Dictionary, box: Dictionary) -> void:
+	var result: Dictionary
 	if send.is_valid():
-		return await send.call(request)
-	return await hub._send(request)
+		result = await send.call(request)
+	else:
+		result = await hub._send(request)
+	if not box["done"]:
+		box["result"] = result
+		box["done"] = true
 
 
 ## Waits until no tutorial_step is out (FIGHT waits for `fight` to be saved before leaving camp).
