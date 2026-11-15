@@ -364,6 +364,11 @@ func _refresh_account() -> void:
 		var scene := get_tree().current_scene
 		if scene != null and scene.has_method("_sync_from_profile_if_wired"):
 			scene._sync_from_profile_if_wired()
+			# The hub's tutorial read the profile before this refresh: a fight that unlocked Magic (wave 12) must
+			# start the unlock ceremony now, not on the next reload (staging 2026-11-15).
+			var driver = scene.get("tutorial")
+			if driver != null and is_instance_valid(driver) and driver.current() != driver.step:
+				driver.refresh()
 	else: online_error = "ยังโหลดข้อมูลล่าสุดไม่ได้ กรุณาเชื่อมต่อใหม่"
 
 func _start_solo(farm_map: String = "") -> void:
