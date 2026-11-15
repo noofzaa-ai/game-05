@@ -10,6 +10,12 @@ static func next_batch(events:Array, after:int, slot:int)->Dictionary:
    through=int(event.sequence);continue
   var candidate:Array=records.duplicate();candidate.append(event)
   var packet:=Wire.packet(Wire.EVENTS,1,{"events":candidate})
+  if packet.is_empty() and records.is_empty():
+   # One event alone does not fit a frame. Skipping it is the only way forward: waiting for it stalled the whole
+   # reliable stream (staging 2026-11-16: the win's end events and every pong after it never arrived; the room
+   # closed 60 s later and the player saw "connection lost").
+   print("EVENT_SKIPPED_TOO_BIG ",JSON.stringify({"type":str(event.event.get("type","")),"sequence":int(event.sequence),"error":Wire.last_encode_error}))
+   through=int(event.sequence);continue
   if packet.is_empty():break
   records=candidate;through=int(event.sequence)
   if records.size()>=32:break
