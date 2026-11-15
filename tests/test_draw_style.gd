@@ -33,7 +33,9 @@ func run(ctx) -> void:
 	Options.set_value("render_scale", 0.5)
 	DrawStyle.slow_device = true
 	ctx.check("on, but the device was found slow: the screen pass is off", not DrawStyle.screen_allowed())
+	ctx.check("on, but the device was found slow: heroes drop the ink hulls", not DrawStyle.hero_ink())
 	DrawStyle.slow_device = false
+	_slow_device_checks(ctx)
 	Options.set_value("drawn_style", "lite")
 	ctx.check("lite: materials only, never the screen pass", DrawStyle.mode() == "lite" and not DrawStyle.screen_allowed())
 	ctx.check("lite: heroes keep the ink look (Boss 2026-11-15)", DrawStyle.hero_ink())
@@ -110,3 +112,30 @@ func run(ctx) -> void:
 		file.close()
 	else:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(Options.PATH))
+
+
+## PO 2026-11-15: the slow-device verdict is made once when a battle loads, from a remembered earlier battle (or a
+## software renderer), never mid-battle; a battle only records its median for the next one.
+func _slow_device_checks(ctx) -> void:
+	var had := FileAccess.file_exists(DrawStyle.DEVICE_PATH)
+	var saved := FileAccess.get_file_as_string(DrawStyle.DEVICE_PATH) if had else ""
+	DrawStyle.forget_slow()
+	DrawStyle.begin_battle()
+	ctx.check("a device with no slow battle on record starts a battle with the full look", not DrawStyle.slow_device and DrawStyle.screen_allowed() and DrawStyle.hero_ink())
+	ctx.check("a short or fast battle does not mark the device slow", not DrawStyle.record_battle(10.0, 5.0) and not DrawStyle.record_battle(DrawStyle.SLOW_FPS + 5.0, 120.0))
+	ctx.check("a slow battle is remembered", DrawStyle.record_battle(DrawStyle.SLOW_FPS - 5.0, 120.0) and FileAccess.file_exists(DrawStyle.DEVICE_PATH))
+	ctx.check("... but the battle in progress keeps its look (no mid-battle switch)", not DrawStyle.slow_device and DrawStyle.screen_allowed() and DrawStyle.hero_ink())
+	DrawStyle.begin_battle()
+	ctx.check("the next battle loads with the light look: no screen pass, no hero ink hulls", DrawStyle.slow_device and not DrawStyle.screen_allowed() and not DrawStyle.hero_ink())
+	var driver = DrawStyle.new()
+	ctx.check("the battle driver has no mid-battle guard any more", not driver.has_method("_slow_windows") and not "_slow_windows" in driver)
+	driver.free()
+	DrawStyle.forget_slow()
+	DrawStyle.begin_battle()
+	ctx.check("picking On again forgets the verdict", not DrawStyle.slow_device and DrawStyle.hero_ink())
+	if had:
+		var file := FileAccess.open(DrawStyle.DEVICE_PATH, FileAccess.WRITE)
+		file.store_string(saved)
+		file.close()
+	DrawStyle._decided = false
+	DrawStyle.slow_device = false

@@ -7,8 +7,12 @@ extends Node
 ##              outlines (ink_outline_brush.gdshader); the monsters' ink outline becomes the brush line. Cost ~0 ms.
 ##   screen     one full-screen pass (ink_screen.gdshader): depth ink lines, softened value bands, light hatching
 ##              inside cast shadows. It reads a copy of the screen and depth, which costs 1-3 ms on WebGL2 at render
-##              scale 0.5 but 6-20 ms at 1.0, so it runs only at scale 0.5 and switches itself off for the rest of the
-##              session when the battle runs below SLOW_FPS (a slow device). HP bars, numbers and VFX draw after it.
+##              scale 0.5 but 6-20 ms at 1.0, so it runs only at scale 0.5 and not on a slow device. HP bars, numbers
+##              and VFX draw after it.
+## Slow devices (PO 2026-11-15): decided ONCE when a battle loads (begin_battle), never changed mid-battle. A device is
+## slow when it renders in software, or when an earlier battle on it ran below SLOW_FPS (median over the fight,
+## remembered in DEVICE_PATH). A slow device gets no screen pass and no hero ink hulls (the stage materials stay).
+## Picking "On" again in the graphics panel forgets the verdict.
 ## The graphics setting `drawn_style` (client/graphics_options.gd): "on" = materials + screen pass, "lite" = materials
 ## only, "off" = the old look. Debug overrides: web URL `?style=` / native `-- --style=` with on|lite|off, or the
 ## prototype ids ink_a (= lite), ink_b (screen only), ink_c (= on). Presentation only: never touches logic/.
@@ -22,10 +26,11 @@ const MODES := ["off", "lite", "on", "ink_b"]
 const ALIASES := {"ink_a": "lite", "ink_c": "on"}
 const DRAWN_KEYS := ["drawn_off", "drawn_lite", "drawn_on"]  ## panel words, in the order of Options.DRAWN_STYLES
 const SCREEN_SCALE := 0.5  ## the only render scale the screen pass runs at (the shipped default)
-const SLOW_FPS := 27.0  ## below this for SLOW_WINDOWS windows in a row: the screen pass goes off for the session
-const SLOW_WINDOW := 2.0  ## seconds per measuring window
-const SLOW_WINDOWS := 2
+const SLOW_FPS := 22.0  ## a battle whose median frame rate is below this marks the device slow for the next battles
+const SLOW_MIN_SECONDS := 20.0  ## a verdict needs at least this much measured fight
 const SLOW_WARMUP := 3.0  ## seconds after the stage opens before measuring (loading hitches are not "slow")
+const DEVICE_PATH := "user://device_speed.cfg"  ## the remembered verdict (device-local, like graphics.cfg)
+const SOFTWARE_RENDERERS := ["swiftshader", "llvmpipe", "softpipe", "microsoft basic render"]
 const STAGE_OUTLINE_WIDTH := 0.03  ## metres before the pixel limits (props are big: a thick pen)
 const MONSTER_OUTLINE_WIDTH := 0.008
 ## Heroes (Boss 2026-11-15: the cards' ink look in battle too, studio05 card_ink): a brown brush line in metres,
@@ -40,7 +45,8 @@ const ENV_SATURATION := 0.95  ## the stage keeps its greens and warm browns (0.8
 
 static var _override := "?"  ## from the URL / command line, "" = none (read once)
 static var heroes_inked := true  ## tools switch it off for hero-only A/B runs (tools/perf/battle_fps.gd)
-static var slow_device := false  ## set by the guard; kept until the game restarts
+static var slow_device := false  ## decided by begin_battle when a battle loads; never changed during the battle
+static var _decided := false
 static var _two_sided_shader: Shader
 static var _world_cache: Dictionary = {}  ## source material -> ShaderMaterial (shared by all instances)
 static var _sun_direction := Vector3(0.47, 0.53, 0.70)  ## towards the stage's sun, for ink_world.gdshader hatching
@@ -49,9 +55,7 @@ var _camera: Camera3D
 var _screen: MeshInstance3D
 var _revision := -1
 var _age := 0.0
-var _window_time := 0.0
-var _window_frames := 0
-var _slow_windows := 0
+var _frame_times: PackedFloat32Array = []  ## this battle's frame times after the warm-up (the verdict for the next one)
 
 
 ## Words of the graphics panel's "Drawn style" control, Thai first and English second (the same layout and language
@@ -61,7 +65,7 @@ const STRINGS := {
 	"drawn_on": ["เต็ม", "On"],
 	"drawn_lite": ["เบา", "Lite"],
 	"drawn_off": ["ปิด", "Off"],
-	"drawn_hint": ["เต็ม: เส้นหมึกทั้งจอที่ 50% เท่านั้น เครื่องช้าจะลดเป็นเบาเอง", "On: full-screen ink at 50% only; slow devices drop to Lite"],
+	"drawn_hint": ["เต็ม: เส้นหมึกทั้งจอที่ 50% เท่านั้น เครื่องช้าจะลดเป็นเบาเอง", "On: full-screen ink at 50% only; a slow device gets Lite from its next battle"],
 }
 
 
@@ -89,7 +93,10 @@ static func settings_control() -> VBoxContainer:
 		button.button_group = group
 		button.button_pressed = choice == current
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.pressed.connect(func(): Options.set_value("drawn_style", choice))
+		button.pressed.connect(func():
+			if choice == "on":
+				forget_slow()  # the player asks for the full look again: measure afresh
+			Options.set_value("drawn_style", choice))
 		row.add_child(button)
 	holder.add_child(row)
 	var hint := Label.new()
@@ -122,11 +129,61 @@ static func mode() -> String:
 
 
 ## Heroes get the ink-wash look in "on" and "lite" (materials only, no screen pass); "off" = the Studio toon look.
+## A slow device (begin_battle) keeps the Studio toon look: the hulls cost ~+30-60 draws / +4-5 ms a frame on WebGL.
 static func hero_ink() -> bool:
 	if not heroes_inked:
 		return false
 	var m := mode()
-	return m == "on" or m == "lite"
+	if not _override.is_empty():
+		return m == "on" or m == "lite"  # (a debug override measures the look as asked)
+	return (m == "on" or m == "lite") and not is_slow_device()
+
+
+## Decides once, as a battle loads (stage_view._ready, before any fighter view is built), whether this device is slow.
+## The answer holds for the whole battle.
+static func begin_battle() -> void:
+	_decided = true
+	slow_device = _software_renderer() or _remembered_slow()
+	if slow_device:
+		print("draw_style: slow device (remembered or software renderer): no screen pass, no hero ink this battle")
+
+
+static func is_slow_device() -> bool:
+	if not _decided:
+		begin_battle()
+	return slow_device
+
+
+static func _software_renderer() -> bool:
+	var adapter := RenderingServer.get_video_adapter_name().to_lower()
+	for word in SOFTWARE_RENDERERS:
+		if adapter.contains(word):
+			return true
+	return false
+
+
+static func _remembered_slow() -> bool:
+	var config := ConfigFile.new()
+	return config.load(DEVICE_PATH) == OK and bool(config.get_value("device", "slow", false))
+
+
+## A finished battle's median frame rate: below SLOW_FPS (over at least SLOW_MIN_SECONDS) the device is remembered as
+## slow. A battle never marks it fast again (a slow device runs faster without the look); the panel's "On" forgets it.
+static func record_battle(median_fps: float, seconds: float) -> bool:
+	if seconds < SLOW_MIN_SECONDS or median_fps >= SLOW_FPS or _remembered_slow():
+		return false
+	var config := ConfigFile.new()
+	config.set_value("device", "slow", true)
+	config.set_value("device", "median_fps", snappedf(median_fps, 0.1))
+	config.save(DEVICE_PATH)
+	print("draw_style: this battle ran at %.1f fps (median): the next battles use the light look" % median_fps)
+	return true
+
+
+static func forget_slow() -> void:
+	if FileAccess.file_exists(DEVICE_PATH):
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(DEVICE_PATH))
+	_decided = false
 
 
 ## Sets a studio05 hero model (before load_model) to the battle ink look.
@@ -154,7 +211,7 @@ static func screen_allowed() -> bool:
 		return false
 	if not _override.is_empty():
 		return true
-	return is_equal_approx(float(Options.value("render_scale")), SCREEN_SCALE) and not slow_device
+	return is_equal_approx(float(Options.value("render_scale")), SCREEN_SCALE) and not is_slow_device()
 
 
 ## Applies the look to a built stage (art, fighters, environment) and its camera. Called once at the end of
@@ -190,17 +247,17 @@ static func apply(stage: Node3D, camera: Camera3D, fighters: Array) -> void:
 			continue
 		for node in view.find_children("*", "GeometryInstance3D", true, false):
 			_check_node.call_deferred(weakref(node), m)
+	var driver := new()  # (also in "lite": it measures the battle for the next slow-device verdict)
+	driver.name = "DrawStyleScreen"
+	driver._camera = camera
 	if m == "on" or m == "ink_b":
-		var driver := new()
-		driver.name = "DrawStyleScreen"
-		driver._camera = camera
 		driver._screen = _screen_quad(m)
 		camera.add_child(driver._screen)
-		stage.add_child(driver)
 		driver._fit()
 		driver._screen.visible = screen_allowed()
 		if m == "ink_b":
 			_tone_environment(stage, 1.0)
+	stage.add_child(driver)
 
 
 ## A node that entered during the battle: a monster's InkOutline gets the brush, a bar quad joins the clean layer.
@@ -227,35 +284,36 @@ static func _keep_clean(node: GeometryInstance3D) -> void:
 
 func _process(delta: float) -> void:
 	_fit()
-	if _revision != Options.revision:  # the graphics settings changed (render scale, drawn style)
+	if _screen != null and _revision != Options.revision:  # the graphics settings changed (render scale, drawn style)
 		_revision = Options.revision
 		_screen.visible = screen_allowed()
 	_watch_speed(delta)
 
 
-## The slow-device guard: after the warm-up, if SLOW_WINDOWS windows in a row average under SLOW_FPS while the
-## screen pass is drawn, it goes off for the rest of the session (the materials stay).
+## Frame times of this battle after the warm-up. The verdict is written when the battle ends (_exit_tree) and only
+## used by the next battle (begin_battle): the look never changes mid-battle (PO 2026-11-15).
 func _watch_speed(delta: float) -> void:
 	_age += delta
-	if _age < SLOW_WARMUP or _screen == null or not _screen.visible or not _override.is_empty():
+	if _age < SLOW_WARMUP or not _override.is_empty() or not is_equal_approx(Engine.time_scale, 1.0):
 		return
-	_window_time += delta
-	_window_frames += 1
-	if _window_time < SLOW_WINDOW:
+	if _frame_times.size() < 36000:  # (10 minutes at 60 fps is plenty)
+		_frame_times.append(delta)
+
+
+func _exit_tree() -> void:
+	if _frame_times.is_empty() or is_slow_device():
 		return
-	var fps := float(_window_frames) / _window_time
-	_window_time = 0.0
-	_window_frames = 0
-	_slow_windows = _slow_windows + 1 if fps < SLOW_FPS else 0
-	if _slow_windows >= SLOW_WINDOWS:
-		slow_device = true
-		_screen.visible = false
-		print("draw_style: %.1f fps with the screen pass: it is off for this session (materials stay)" % fps)
+	var seconds := 0.0
+	for t in _frame_times:
+		seconds += t
+	var sorted := _frame_times.duplicate()
+	sorted.sort()
+	record_battle(1.0 / maxf(sorted[sorted.size() / 2], 0.0001), seconds)
 
 
 ## Keeps the screen quad just in front of the camera and covering its whole view (fov and aspect change).
 func _fit() -> void:
-	if _camera == null or _screen == null:
+	if _screen == null or _camera == null or not is_instance_valid(_camera):
 		return
 	var distance := _camera.near * 1.5
 	var size := _camera.get_viewport().get_visible_rect().size
