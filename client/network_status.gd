@@ -70,14 +70,15 @@ func _process(delta: float) -> void:
 
 func _update() -> void:
 	if session == null: return
+	if session.has_method("net_watchdog"): session.net_watchdog()
 	var metrics: Dictionary = session.debug_metrics()
 	var ping := "—"
 	var color := Ink.PAPER
 	if not session.connected:
-		ping = "เชื่อมต่อใหม่…"
+		ping = "reconnecting…"
 		color = Ink.BAD
 	elif int(metrics.get("ping_age_ms", -1)) > 5000:
-		ping = "รอสัญญาณ…"
+		ping = "waiting…"
 		color = Ink.BAD
 	elif int(metrics.get("ping_age_ms", -1)) >= 0:
 		var latency := int(metrics.ping_ms)

@@ -57,6 +57,7 @@ func _connected()->void:
  connection_changed.emit()
 func _lost()->void:
  if _deliberate_close:return
+ _net_note("lost",{"since_state_ms":Time.get_ticks_msec()-_last_state_at if _last_state_at>0 else -1,"tick":server_state.get("tick",0),"journey":str(server_state.get("meta",{}).get("journey",{}).get("state","")) if server_state.get("meta",{}).get("journey") is Dictionary else ""})
  if net_root!=null:net_root.get_node("/root/NetworkTime").stop()
  connected=false;connecting=false;error="reconnecting";disconnect_count+=1
  diagnostics.recorder.record("disconnected",{"epoch":_epoch,"count":disconnect_count})
@@ -72,14 +73,16 @@ func _dispose_net()->void:
  net_root=null;group=null;own_actor=null;net_entities.clear();_received_group=""
 func _state_bytes(bytes:PackedByteArray)->void:
  var decode_start:=Time.get_ticks_usec()
+ _last_state_at=Time.get_ticks_msec()
  var raw:=Blob.unpack(bytes)
- if raw.is_empty():return
+ if raw.is_empty():_net_note("state_unpack_failed",{"bytes":bytes.size()});return
+ if bytes.size()>131072:_net_note("state_big",{"bytes":bytes.size(),"raw":raw.size()})
  var state=bytes_to_var(raw)
  lag_decode_us+=Time.get_ticks_usec()-decode_start
  if state is Dictionary and state.has("diagnostic_capture"):
   diagnostics.accept_worker(state.diagnostic_capture);return
  if not state is Dictionary or not state.has_all(["tick","epoch","entities","meta","netfox"]):return
- if state.netfox.get("protocol")!=4 or state.epoch<_epoch:return
+ if state.netfox.get("protocol")!=4 or state.epoch<_epoch:_net_note("state_ignored",{"protocol":state.netfox.get("protocol"),"epoch":state.epoch,"mine":_epoch});return
  if state.epoch==_epoch and state.tick<_last_metadata_tick:return
  _metadata_bytes+=bytes.size();_last_metadata_tick=state.tick;lag_states+=1
  var apply_started:=Time.get_ticks_usec()
@@ -238,3 +241,15 @@ func _remote_cast_position(id:int,entity)->Vector3:
  if _sim==null or not _sim.fighters.has(id) or own_actor==null or entity.synchronizer==null:return sampled
  var clock:float=float(entity.synchronizer.rendered_tick)-float(own_actor.base_tick) if float(entity.synchronizer.rendered_tick)>=0 else -1.0
  return preload("res://logic/net/skill_net.gd").remote_position(_sim.fighters[id].skill_view,sampled,clock,_sim.world.half_width,_sim.world.half_depth,TRAVEL_SNAP_M)
+
+## Staging 2026-11-16 (won fights end on "connection lost"): print why states stop, rate-limited, no ids or tokens.
+var _last_state_at:=0
+var _net_notes:={}
+func _net_note(kind:String,detail:Dictionary)->void:
+ var now:=Time.get_ticks_msec()
+ if now-int(_net_notes.get(kind,-10000))<2000:return
+ _net_notes[kind]=now
+ print("[zorx net] ",kind," ",JSON.stringify(detail))
+func net_watchdog()->void:
+ if connected and _last_state_at>0 and Time.get_ticks_msec()-_last_state_at>3000:
+  _net_note("no_state",{"ms":Time.get_ticks_msec()-_last_state_at,"ping_age_ms":Time.get_ticks_msec()-_last_pong if _last_pong>=0 else -1,"tick":server_state.get("tick",0)})

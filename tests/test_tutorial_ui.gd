@@ -20,6 +20,8 @@ func run(ctx) -> void:
 	await _online_refresh_applies_tutorial(ctx)
 	await _send_timeout_clears_busy(ctx, tree, root)
 	await _follows_late_server_step(ctx, tree, root)
+	await _busy_is_not_refusal(ctx, tree, root)
+	await _done_pick_confirms_itself(ctx, tree, root)
 	root.queue_free()
 	await tree.process_frame
 
@@ -270,3 +272,50 @@ class TourHub extends Control:
 	func tutorial_close_panels() -> void: pass
 	func tutorial_after_step() -> void: pass
 	func tutorial_hide_hint(_h: bool) -> void: pass
+
+## Local 24 fps walk 2026-11-16: tutorial_step sent while the card_race was still running came back "busy"; the
+## driver treated it as a refusal and the Elf pick never advanced. "busy" must be retried, not refused.
+func _busy_is_not_refusal(ctx, tree: SceneTree, root: Control) -> void:
+	var driver = Driver.new()
+	var calls := {"sent": 0, "refresh": 0}
+	driver.send = func(_r: Dictionary) -> Dictionary:
+		calls["sent"] += 1
+		return {"ok": false, "error": "busy"} if calls["sent"] == 1 else {"ok": true}
+	driver.refresher = func() -> void: calls["refresh"] += 1
+	root.add_child(driver)
+	driver.hub = FakeHub.new()
+	driver.set_process(false)
+	await driver._confirm("welcome")
+	ctx.check("a busy reply is sent again, not treated as refused (sent %d, refreshed %d)" % [calls["sent"], calls["refresh"]], calls["sent"] == 2 and calls["refresh"] == 0)
+	driver.queue_free()
+	await tree.process_frame
+
+
+## The pick went through but its confirm was lost: the step must confirm itself (picking again changes nothing).
+func _done_pick_confirms_itself(ctx, tree: SceneTree, root: Control) -> void:
+	var gs = tree.root.get_node("GameState")
+	var saved = gs.profile
+	var p = load("res://logic/profile.gd").new()
+	p.card_deck = load("res://logic/card_deck.gd").initial()
+	p.card_deck["cards"]["longbow"]["race"] = "elf"
+	p.tutorial = {"version": 1, "step": "race_lb_pick", "tour_done": false, "unlock_seen": false}
+	gs.profile = p
+	var sent := []
+	var hub := TourHub.new()
+	hub.size = Vector2(1920, 1080)
+	root.add_child(hub)
+	var driver = Driver.new()
+	driver.name = "TutorialDriver"
+	driver.hub = hub
+	driver.send = func(r: Dictionary) -> Dictionary:
+		sent.append(str(r.get("step", "")))
+		return {"ok": false, "error": "invalid_step"}
+	driver.refresher = func() -> void: pass
+	hub.add_child(driver)
+	for i in 3:
+		await tree.process_frame
+	ctx.check("a card step whose race is already set confirms itself %s" % [sent], sent.has("race_lb_pick"))
+	hub.queue_free()
+	gs.profile = saved
+	await tree.process_frame
+

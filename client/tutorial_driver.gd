@@ -30,6 +30,7 @@ var _fallback := false
 var _busy := false
 var _ceremony: Control
 var _lost_tip := false
+var _auto_confirmed := ""  ## the step refresh() already confirmed on its own (its card had the race)
 ## Test seam: a Callable(request) -> Dictionary; default = the hub's sender.
 var send: Callable
 
@@ -75,7 +76,15 @@ func _flush_pending() -> void:
 	GameState.remove_meta(PENDING_META)
 	for id in pending:
 		if current() == str(id):
-			await _send({"type": "tutorial_step", "step": str(id)})
+			# A lost send (busy, timeout, a dropped request) is retried; otherwise the battle tip reappears in the hub.
+			for attempt in 4:
+				var result := await _send({"type": "tutorial_step", "step": str(id)})
+				if result.get("ok", false) or str(result.get("error", "")) == "invalid_step":
+					break
+				await get_tree().create_timer(BUSY_WAIT_S * (attempt + 1)).timeout
+				await refresh_profile()
+				if current() != str(id):
+					break
 
 
 func _profile():
@@ -111,6 +120,13 @@ func refresh() -> void:
 	if step == "unlock_ceremony":
 		overlay.hide_step()
 		_show_ceremony(data)
+		return
+	# A card step whose card already has its race (its pick went through but the confirm was lost): confirm it now,
+	# otherwise picking the same race again changes nothing and the tutorial waits forever.
+	# Once per step: a refusal re-reads the server's step, and that must not loop.
+	if not _busy and _auto_confirmed != step and _profile() != null and Tutorial._already_true(_profile(), data):
+		_auto_confirmed = step
+		_confirm.call_deferred(step)
 		return
 	overlay.show_step(text_of(data), shows_next(data))
 	overlay.set_hole(Rect2())
@@ -257,6 +273,13 @@ func _confirm(id: String) -> void:
 		return
 	_busy = true
 	var result := await _send({"type": "tutorial_step", "step": id})
+	# "busy" = another command (e.g. the card_race this step follows) is still running: not a refusal. Wait and resend
+	# (local 24 fps walk 2026-11-16: treated as a refusal, the Elf pick never advanced and the tutorial stuck).
+	var tries := 0
+	while str(result.get("error", "")) == "busy" and tries < BUSY_RETRIES and is_inside_tree():
+		tries += 1
+		await get_tree().create_timer(BUSY_WAIT_S).timeout
+		result = await _send({"type": "tutorial_step", "step": id})
 	_busy = false
 	if not result.get("ok", false):
 		await refresh_profile()  # online: our copy may be stale; the server's step wins
@@ -269,6 +292,8 @@ func _confirm(id: String) -> void:
 
 ## Never waits forever: after SEND_TIMEOUT_S the step counts as refused (the caller re-reads the server's step).
 const SEND_TIMEOUT_S := 15.0
+const BUSY_RETRIES := 20
+const BUSY_WAIT_S := 0.5
 var send_timeout_s := SEND_TIMEOUT_S
 
 

@@ -13,7 +13,9 @@ func replica_ready(epoch:int)->void:
  if multiplayer.is_server() and on_ready.is_valid():on_ready.call(multiplayer.get_remote_sender_id(),epoch)
 @rpc("authority","call_remote","reliable")
 func snapshot(bytes:PackedByteArray)->void:
+ if not multiplayer.is_server() and bytes.size()>524288:print("[zorx net] snapshot_dropped_size ",bytes.size())
  if not multiplayer.is_server() and on_state.is_valid() and bytes.size()<=524288:on_state.call(bytes)
 @rpc("authority","call_remote","reliable")
 func reply(bytes:PackedByteArray)->void:
+ if not multiplayer.is_server() and bytes.size()>65536:print("[zorx net] reply_dropped_size ",bytes.size())
  if not multiplayer.is_server() and on_reply.is_valid() and bytes.size()<=65536:on_reply.call(bytes)
