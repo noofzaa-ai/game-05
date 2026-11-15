@@ -17,7 +17,14 @@ if (secret.length < 32) throw new Error('Set SESSION_SECRET to at least 32 rando
 const configured = Boolean(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && nakamaConfigured);
 const guestSiteKey = process.env.TURNSTILE_SITE_KEY || '0x4AAAAAAFfYmmETLpxucNy3';
 const guestSecret = process.env.ZORX_GUEST_SECRET || '';
-const guestConfigured = process.env.ZORX_GUEST_ENABLED === '1' && Boolean(process.env.TURNSTILE_SECRET_KEY) && guestSecret.length >= 32 && nakamaConfigured;
+// Staging-only switch (Boss 2026-11-15): Guest without Turnstile so the team can drive the live staging site end to end.
+// Honoured only on the exact staging origin; any other origin refuses to start, so it can never reach a public production site.
+// The origin check, the guest HMAC proof and Nakama's GUEST_BUDGET (20 / min) stay in force. Turn back on: unset the env.
+const CAPTCHA_OFF_ORIGINS = new Set(['https://zorx.daiyooo.com']);
+const captchaOff = process.env.ZORX_GUEST_CAPTCHA_OFF === '1';
+if (captchaOff && !CAPTCHA_OFF_ORIGINS.has(origin.origin)) throw new Error('ZORX_GUEST_CAPTCHA_OFF is allowed only on the staging origin');
+if (captchaOff) console.log(JSON.stringify({ auth_config: 'captcha_off', origin: origin.origin }));
+const guestConfigured = process.env.ZORX_GUEST_ENABLED === '1' && (captchaOff || Boolean(process.env.TURNSTILE_SECRET_KEY)) && guestSecret.length >= 32 && nakamaConfigured;
 const guestName = secure ? '__Host-zorx_guest' : 'zorx_guest';
 const gameOrigin = new URL(process.env.GAME_ORIGIN || 'https://zorxplay.daiyooo.com').origin;
 const oauth = new OAuth2Client(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET,
@@ -99,7 +106,8 @@ function authLog(req, res, pathname, startedAt, sessionKind) {
   let referer = 'none';
   try { if (req.headers.referer) referer = new URL(String(req.headers.referer)).origin.slice(0, 80); } catch { referer = 'invalid'; }
   console.log(JSON.stringify({ auth: pathname, method: req.method, status: res.statusCode, reason: res.zorxReason || '',
-    origin: originLabel(req.headers.origin), referer, fetch_site: originLabel(req.headers['sec-fetch-site']), ua: uaFamily(req.headers['user-agent']), session: sessionKind, ms: now - startedAt }));
+    origin: originLabel(req.headers.origin), referer, fetch_site: originLabel(req.headers['sec-fetch-site']), ua: uaFamily(req.headers['user-agent']), session: sessionKind, ms: now - startedAt,
+    ...(captchaOff ? { captcha_off: true } : {}) }));
 }
 // Bounded origin-wide budget: never trust a client-supplied forwarding header.
 let authTokens = 40, authAt = Date.now(), authActive = 0;
@@ -213,7 +221,7 @@ const server = http.createServer(async (req, res) => {
     }
     if (url.pathname === '/auth/session' && req.method === 'GET') {
       const session = unseal(jar[sessionName]);
-      return json(res, 200, { configured, guest: {configured:guestConfigured, site_key:guestSiteKey}, user: session?.kind === 'session' ? session.user : null, game_account_id: session?.game?.user_id || null });
+      return json(res, 200, { configured, guest: captchaOff ? {configured:guestConfigured, site_key:null, captcha:false} : {configured:guestConfigured, site_key:guestSiteKey}, user: session?.kind === 'session' ? session.user : null, game_account_id: session?.game?.user_id || null });
     }
     if (url.pathname === '/auth/guest' && req.method === 'POST') {
       if(!sameOriginRequest(req) || !req.headers['content-type']?.startsWith('application/json')) return json(res,403,{error:'origin_rejected'});
@@ -222,6 +230,7 @@ const server = http.createServer(async (req, res) => {
       if(current?.kind==='session') return json(res,409,{error:'already_logged_in'});
       let input;
       try{input=await readJson(req);}catch{return json(res,400,{error:'invalid_payload'});}
+      if(!captchaOff){
       if(typeof input.token!=='string' || input.token.length<1 || input.token.length>2048) return json(res,400,{error:'captcha_required'});
       const verify=await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify',{
         method:'POST',redirect:'error',signal:AbortSignal.timeout(8000),
@@ -230,6 +239,7 @@ const server = http.createServer(async (req, res) => {
       if(!verify.ok) return json(res,503,{error:'captcha_unavailable'});
       const check=await verify.json();
       if(check.success!==true || check.hostname!==origin.hostname || check.action!=='guest_login') return json(res,403,{error:'captcha_failed'});
+      }
       const prior=unseal(jar[guestName]);
       const id=prior?.kind==='guest' && /^zorx_guest_[a-f0-9]{64}$/.test(prior.id) ? prior.id : 'zorx_guest_'+randomBytes(32).toString('hex');
       const at=String(Date.now()), nonce=randomBytes(16).toString('hex');

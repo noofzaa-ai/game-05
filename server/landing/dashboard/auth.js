@@ -7,8 +7,11 @@ const logout = document.getElementById('google-logout');
 const guestSection=document.getElementById('guest-section');
 const guestButton=document.getElementById('guest-login');
 let guestConfig=null, captchaToken='', widgetId=null, captchaLoading=null, guestBusy=false;
+// Staging only: the server reports captcha:false when ZORX_GUEST_CAPTCHA_OFF is on; no widget, the button is enabled directly.
+const captchaSkipped=()=>guestConfig?.captcha===false;
 async function prepareCaptcha(){
   if(!guestConfig?.configured || user || widgetId!==null) return;
+  if(captchaSkipped()){guestButton.disabled=guestBusy;return;}
   if(!captchaLoading) captchaLoading=new Promise((resolve,reject)=>{
     const script=document.createElement('script');script.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
     script.async=true;script.onload=resolve;script.onerror=reject;document.head.append(script);
@@ -23,11 +26,11 @@ async function prepareCaptcha(){
   }catch{status.textContent='โหลดระบบป้องกันบอทไม่ได้ กรุณาโหลดหน้าใหม่';}
 }
 guestButton.addEventListener('click',async()=>{
-  if(!captchaToken || guestBusy) return;
+  if((!captchaToken && !captchaSkipped()) || guestBusy) return;
   guestBusy=true;guestButton.disabled=true;login.disabled=true;
   status.textContent='กำลังเข้าสู่ระบบ Guest…';
   try{
-    const response=await fetch('/auth/guest',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:captchaToken})});
+    const response=await fetch('/auth/guest',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(captchaSkipped()?{}:{token:captchaToken})});
     if(!response.ok){let code='';try{code=String((await response.json()).error||'');}catch{}throw Error(code||'guest_failed');}
     location.assign(gameUrl);
   }catch(error){
@@ -37,7 +40,7 @@ guestButton.addEventListener('click',async()=>{
       ?'เข้า Guest ไม่สำเร็จในเบราว์เซอร์ของแอปนี้ กรุณาเปิดลิงก์ใน Safari หรือ Chrome แล้วลองอีกครั้ง'
       :'เข้า Guest ไม่สำเร็จ กรุณาตรวจสอบป้องกันบอทแล้วลองอีกครั้ง';
   }
-  finally{guestBusy=false;captchaToken='';guestButton.disabled=true;login.disabled=false;if(widgetId!==null)window.turnstile.reset(widgetId);}
+  finally{guestBusy=false;captchaToken='';guestButton.disabled=!captchaSkipped();login.disabled=false;if(widgetId!==null)window.turnstile.reset(widgetId);}
 });
 let user = null;
 let configured = false;
