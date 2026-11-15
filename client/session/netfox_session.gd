@@ -100,12 +100,13 @@ func _accept_metadata(state:Dictionary)->void:
  # resending it; this must happen before `ownership` below, and before server_state=state,
  # so every downstream read (including online_session.gd's profile_for()) sees the real
  # value exactly as if it had been resent. See runtime/netfox/profile_diff.gd.
- if not preload("res://runtime/netfox/profile_diff.gd").restore_cached(state.meta.profiles,_player_id,previous_meta.get("profiles",{})):return
+ if run!=null and state.meta.has_all(["state","current","stage","path","choices","players","treasure_pending"]):journey.update(state.meta,run)  # (see below: never gated on the profile)
+ if not preload("res://runtime/netfox/profile_diff.gd").restore_cached(state.meta.profiles,_player_id,previous_meta.get("profiles",{})):_net_note("profile_cache_miss",{"tick":state.tick});return
  var ownership:bool=previous_meta.get("profiles",{})!=state.meta.profiles or previous_meta.get("run",{})!=state.meta.run
  server_state=state;_epoch=state.epoch;_received_at=Time.get_ticks_msec()
  var map=_map
  if map==null or str(map.id)!=str(state.meta.map):map=preload("res://logic/map_loader.gd").load_by_id(state.meta.map)
- if not map.is_valid():error="invalid_map";return
+ if not map.is_valid():error="invalid_map";_net_note("invalid_map",{});return
  _map=map
  if changed or _sim==null:_sim=make_sim(state,map)
  else:
@@ -114,16 +115,21 @@ func _accept_metadata(state:Dictionary)->void:
   if own_actor!=null and not spectating():
    _sim.bodies.erase(_player_id);_sim.fighters.erase(_player_id)
   apply_entities(_sim,state)
+ # The fight's state (won / lost / saved) first: it must not depend on decoding the profile below. Staging
+ # 2026-11-16: at a fight's end the profile changes (loot moves to storage); when it failed to decode here the
+ # early return skipped journey.update, so the player never saw the end and the room closed as "connection lost".
+ if run!=null:journey.update(state.meta,run)
+ saved=bool(state.meta.get("cloud_saved",false))
  var profiles:Dictionary=state.meta.profiles
  if profile==null or ownership:
   var decoded=Profile.from_dict(profiles[_player_id],rules,camp)
-  if decoded==null:return
+  if decoded==null:_net_note("profile_decode_failed",{"tick":state.tick});return
   if profile==null:profile=decoded
   else:copy_fields(decoded,profile,["stash","vault","loadout","camp_level","facility_levels","farm","appearance","name","created","beta_kit_version","diamonds", "mall_owned", "bonus_stash_slots"])
   var trip=Run.from_dict(state.meta.run,rules,camp,profile)
-  if trip==null:return
+  if trip==null:_net_note("run_decode_failed",{"tick":state.tick});return
   run=trip
- journey.update(state.meta,run);saved=bool(state.meta.get("cloud_saved",false))
+ journey.update(state.meta,run)
  _command_id=maxi(_command_id,int(state.meta.get("command_id",0)))
  if changed:
   if group!=null:
