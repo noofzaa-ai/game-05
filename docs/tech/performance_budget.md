@@ -189,8 +189,42 @@ Still OPEN (not changed, needs a decision or another owner):
   (frozen A/B: overview 40.3 -> 50.2 fps, follow 53.8 -> 65.9 fps without it). Class skill VFX are the largest draw
   group while live (~117 of ~270 visible surfaces in one frame).
 - Physics: the sim runs at 60 Hz; on the web each tick costs ~4 ms (stage tick incl. sim), so at 30 fps two ticks run
-  per frame (8-10 ms). Dead enemies still sit in the sim's fighter list (logic/, not changed here).
+  per frame (8-10 ms). Dead enemies in the sim: FIXED 2026-11-15, see below.
 - The drawn-style slow-device guard (draw_style.gd SLOW_FPS 27) switched the screen pass off on this RTX 3070 Ti
-  desktop in both drawn-style runs: the look changes mid-battle on ordinary PCs.
+  desktop in both drawn-style runs: the look changes mid-battle on ordinary PCs. FIXED 2026-11-15, see below.
 - Battle entry: one ~27 s frame on the web (3 s native) when the stage opens. Not investigated here.
 - Phones not measured (needs a real phone).
+
+
+## Corpses removed and slow-device verdict at load, measured 2026-11-15 (tech-artist)
+
+PO / Boss 2026-11-15: a fallen enemy lies 3 s, then fades out and is freed completely; the sim drops it too (wave
+journeys only, `corpse_clear_seconds` in data/journeys/goblin_waves.json -> GameSim.corpse_clear_ticks). The view
+sinks and shrinks over 0.5 s (no alpha pass: no shader compile mid-fight) and is queue_free'd with its model,
+AnimationPlayers, status VFX and bar; stage_view drops it from every map. Slow device: decided once at battle load.
+
+Rig: native Windows, RTX 3070 Ti, 1280x720, render scale 0.5, drawn style on, 3-card squad, goblin_waves seed 7,
+`battle_fps.gd -- --series --windows=160 --speed=3 --no-marks` (3x fast-forward, 120-frame windows; median per wave).
+
+| wave | fps before -> after | nodes max | static memory MB max | fighters in sim / views max |
+|---|---|---|---|---|
+| 1 | 163 -> 146 | 5478 -> 5484 | 163.8 -> 164.0 | 9/9 -> 9/9 |
+| 3 | 123 -> 151 | 5848 -> 5674 | 170.6 -> 168.4 | 25/25 -> 13/12 |
+| 5 | 119 -> 156 | 6472 -> 5841 | 176.1 -> 170.3 | 41/41 -> 13/12 |
+| 7 | 113 -> 168 | 6919 -> 5920 | 179.6 -> 170.8 | 52/52 -> 10/10 |
+| 9 | 96 -> 146 | 7265 -> 5969 | 182.8 -> 171.2 | 66/66 -> 12/11 |
+| 11 | 85 -> (not reached: the 160 windows ended in wave 9) | 7527 | 185.8 | 82/82 |
+
+Node count and memory now stay flat over the run (~5.5-6k nodes, ~170 MB) instead of climbing with every wave.
+Sim: a 12-wave fight carried max 90 fighters, now max 15; same seed = same ticks, kills, loot and waves
+(tests/test_corpse_clear.gd). Web not re-measured yet (OPEN); the web cost per corpse was larger (physics ~4 ms/tick).
+
+Found on the way: a wave fight could be reported cleared with waves still queued (a race-trigger kill after the
+wave release left 0 living for one tick): the local journey ended "won" at wave 6-8 in 4 of 12 seeds. Fixed in
+GameSim._check_stage_clear (no clear while waves are queued).
+
+Slow device (docs/po_defaults.md): no mid-battle switch any more. begin_battle (stage load) marks the device slow
+when it renders in software or an earlier battle on it ran below 22 fps median over >= 20 s (user://device_speed.cfg);
+slow = no screen pass and no hero ink hulls for that whole battle. The battle's own median is only written for the next
+one. Graphics "On" forgets the verdict. Not tested on a real phone (OPEN).
+
