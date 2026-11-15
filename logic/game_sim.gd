@@ -66,6 +66,11 @@ var _clear_reported := false
 var _waves: Array = []
 var wave_heal_fraction := 0.0  ## wave-mode journeys: each arriving wave first heals the living players by this much of max HP
 var _waves_released := 0
+## Fallen enemies leave the sim this many ticks after they fell (0 = they stay for the whole fight, the old way).
+## Wave-mode journeys set it from their data (corpse_clear_seconds, Boss 2026-11-15: 3 s): without it a 12-wave fight
+## kept every dead goblin in `fighters`, and every system looped over 70-80 corpses each tick by the last waves.
+var corpse_clear_ticks := 0
+var _fallen: Dictionary = {}  ## enemy id -> the tick it was first seen dead (only while corpse_clear_ticks > 0)
 
 
 func _init(sim_world: SimWorld, combat_data: CombatData = null, random: RandomNumberGenerator = null) -> void:
@@ -268,6 +273,7 @@ func tick(prediction_player: int = -1) -> void:
 		_check_stage_clear()
 		_process_economy()
 		Coop.step(self)
+		_clear_corpses()
 	tick_count += 1
 
 
@@ -528,6 +534,40 @@ func _release_waves() -> void:
 	events.append({"type": "wave_arrived", "wave": _waves_released + 1, "enemies": ids})
 
 
+## Drops the fallen enemies whose corpse_clear_ticks are up, once no shot or ground area of their own is still out
+## (those look up their owner). Kills and their rewards were handled on the tick they fell; a later "killed" or
+## "loot" never needs the corpse. Ids are walked in order, so a run stays deterministic.
+func _clear_corpses() -> void:
+	if corpse_clear_ticks <= 0:
+		return
+	var ids := _ai.keys()
+	ids.sort()
+	for id in ids:
+		var fighter: Fighter = fighters.get(id)
+		if fighter == null or fighter.is_alive():
+			_fallen.erase(id)
+			continue
+		if not _fallen.has(id):
+			_fallen[id] = tick_count
+			continue
+		if tick_count - int(_fallen[id]) < corpse_clear_ticks:
+			continue
+		if _ranged["projectiles"].any(func(shot): return int(shot.get("owner", -1)) == id) or _ranged["areas"].any(func(area): return int(area.get("owner", -1)) == id):
+			continue
+		if _aimed_at(id):
+			continue  # a class-skill cast still travels toward it (its travel reads the target's body)
+		_fallen.erase(id)
+		remove_player(id)
+
+
+func _aimed_at(id: int) -> bool:
+	for other in fighters:
+		var cast: Dictionary = fighters[other].skill_state.get("cast", {})
+		if not cast.is_empty() and int(cast.get("target", -1)) == id:
+			return true
+	return false
+
+
 func _check_stage_clear() -> void:
 	if _had_enemies and not _clear_reported and living_enemy_count() == 0:
 		_clear_reported = true
@@ -574,7 +614,8 @@ func _checkpoint() -> Array:
 		"rng_seed": rng.seed, "rng_state": rng.state, "tick": tick_count,
 		"ranged": _ranged, "events": events, "waves": _waves, "waves_released": _waves_released,
 		"coop": _coop, "had_enemies": _had_enemies, "clear_reported": _clear_reported,
-		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor, "reward_wave": reward_wave, "loot_players": loot_players})
+		"wave_heal_fraction": wave_heal_fraction, "class_styles": class_styles, "loot_factor": loot_factor, "reward_wave": reward_wave, "loot_players": loot_players,
+		"corpse_clear_ticks": corpse_clear_ticks, "fallen": _fallen})
 
 
 ## Restore into a sim constructed with the same combat/rules. Supply camp data if runs exist.
@@ -658,6 +699,10 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 	for fid in d.get("loot_players", {}):
 		loot_players[int(fid)] = [int(d["loot_players"][fid][0]), float(d["loot_players"][fid][1])]
 	reward_wave = int(d.get("reward_wave", -1))
+	corpse_clear_ticks = int(d.get("corpse_clear_ticks", 0))
+	_fallen = {}
+	for fid in d.get("fallen", {}):
+		_fallen[int(fid)] = int(d["fallen"][fid])
 	class_styles = d.get("class_styles", {}).duplicate()
 	# (an old checkpoint's "skill_system" block belongs to the deleted skill-build runtime: ignored)
 	for id in fighters:  # race ultimate moves are built at attach; a restored sim may have fresh combat data

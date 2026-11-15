@@ -22,6 +22,7 @@ var wave_power_by_squad: Array[float] = []  ## optional: wave_power_scale per sq
 ## squad uses the last entry; empty = full loot. Scales every loot source of the fight (see loot_for).
 var loot_by_squad: Array[float] = []
 var wave_heal_fraction := 0.0  ## how much of their max HP the living players get back as each wave arrives
+var corpse_clear_seconds := 0.0  ## wave mode: a fallen monster leaves the fight this long after it fell (0 = stays)
 
 var choice_count := 3  ## how many next stages the player picks from
 var first_camp_stages: Array[int] = []  ## the first camp lands on one of these (picked at random)
@@ -92,6 +93,7 @@ static func parse(text: String, enemy_types: Array = []) -> RefCounted:
 	for value in root.get("loot_by_squad", []):
 		data.loot_by_squad.append(maxf(0.0, float(value)))
 	data.wave_heal_fraction = clampf(float(root.get("wave_heal_fraction", 0.0)), 0.0, 1.0)
+	data.corpse_clear_seconds = maxf(0.0, float(root.get("corpse_clear_seconds", 0.0)))
 	data.choice_count = int(root.get("choices", 3))
 	for stage in root.get("first_camp_stages", []):
 		data.first_camp_stages.append(int(stage))

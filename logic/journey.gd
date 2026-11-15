@@ -323,6 +323,7 @@ func _populate_waves(sim: GameSim, map, first_enemy_id: int) -> Array[int]:
 	# No party HP scaling here: PartyJourney.populate multiplies every enemy on the field and in the queued
 	# waves by combat coop hp_multiplier once (scaling here too counted it twice: 4.84x for a squad of 3).
 	sim.wave_heal_fraction = data.wave_heal_fraction
+	sim.corpse_clear_ticks = roundi(data.corpse_clear_seconds * 60.0)  # fallen goblins leave the sim (GameSim._clear_corpses)
 	var next_id := first_enemy_id
 	for wave in range(1, data.stage_count + 1):
 		var fight: Dictionary = data.stages[wave - 1]
