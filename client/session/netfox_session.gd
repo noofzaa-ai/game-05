@@ -103,6 +103,8 @@ func _accept_metadata(state:Dictionary)->void:
  if run!=null and state.meta.has_all(["state","current","stage","path","choices","players","treasure_pending"]):journey.update(state.meta,run)  # (see below: never gated on the profile)
  if not preload("res://runtime/netfox/profile_diff.gd").restore_cached(state.meta.profiles,_player_id,previous_meta.get("profiles",{})):_net_note("profile_cache_miss",{"tick":state.tick});return
  var ownership:bool=previous_meta.get("profiles",{})!=state.meta.profiles or previous_meta.get("run",{})!=state.meta.run
+ if str(previous_meta.get("state",""))!=str(state.meta.get("state","")) or bool(previous_meta.get("cloud_saved",false))!=bool(state.meta.get("cloud_saved",false)):
+  _net_note("journey_"+str(state.meta.get("state","")),{"from":str(previous_meta.get("state","")),"saved":bool(state.meta.get("cloud_saved",false)),"tick":state.tick,"wave":state.meta.get("wave",0)})
  server_state=state;_epoch=state.epoch;_received_at=Time.get_ticks_msec()
  var map=_map
  if map==null or str(map.id)!=str(state.meta.map):map=preload("res://logic/map_loader.gd").load_by_id(state.meta.map)
