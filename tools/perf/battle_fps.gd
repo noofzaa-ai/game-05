@@ -343,7 +343,14 @@ func _census() -> void:
 	for node in (current_scene if current_scene != null else root).find_children("*", "", true, false):
 		var parent := node.get_parent()
 		var ps = parent.get_script()
-		var key := "%s > %s" % [str(ps.resource_path).get_file() if ps != null else parent.get_class(), str(node.get_script().resource_path).get_file() if node.get_script() != null else node.get_class()]
+		var owner_name := ""
+		var anc := parent
+		while anc != null and anc != current_scene:
+			if anc.get_script() != null:
+				owner_name = str(anc.get_script().resource_path).get_file() + ":" + str(anc.name).left(24)
+				break
+			anc = anc.get_parent()
+		var key := "%s > %s [in %s]" % [str(ps.resource_path).get_file() if ps != null else parent.get_class(), str(node.get_script().resource_path).get_file() if node.get_script() != null else node.get_class(), owner_name]
 		counts[key] = counts.get(key, 0) + 1
 	var stage := current_scene
 	var dead := 0

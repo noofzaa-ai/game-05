@@ -144,11 +144,15 @@ static func pose_for(move_id: String) -> String:
 	return KIND_POSES[kind] if kind != "" else "punch_r"
 
 
-## A hidden view (a fallen enemy is hidden 2.4 s after its "killed" event, stage_view.gd) stops posing itself. Solo wave
-## journeys keep every dead enemy in the sim, so without this ~30 corpses were still animated each frame by wave 12.
+## A hidden view (a fallen enemy is hidden 2.4 s after its "killed" event, stage_view.gd) stops processing, with
+## everything under it (model AnimationPlayers, status VFX loops). Solo wave journeys keep every dead enemy in the sim,
+## so without this ~30-70 corpses were still animated each frame by the late waves.
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_VISIBILITY_CHANGED:
-		set_process(is_visible_in_tree())
+		process_mode = PROCESS_MODE_INHERIT if visible else PROCESS_MODE_DISABLED
+		if not visible and _status_vfx != null:  # its status loops (40-56 meshes per kept look) would stay with the corpse
+			_status_vfx.queue_free()
+			_status_vfx = null
 
 
 func _ready() -> void:
