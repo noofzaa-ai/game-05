@@ -20,8 +20,14 @@ var _acc_draw := 0.0
 var _steps := 0
 
 
+func _on_physics_frame() -> void:
+	_steps += 1
+	if _t_phys == 0:
+		_t_phys = Time.get_ticks_usec()
+
+
 func _initialize() -> void:
-	physics_frame.connect(func(): if _t_phys == 0: _t_phys = Time.get_ticks_usec(); _steps += 1)
+	physics_frame.connect(_on_physics_frame)
 	process_frame.connect(func(): _t_proc = Time.get_ticks_usec(); if _t_phys != 0: _acc_phys += (_t_proc - _t_phys) / 1000.0)
 	RenderingServer.frame_pre_draw.connect(func(): _t_pre = Time.get_ticks_usec(); if _t_proc != 0: _acc_proc += (_t_pre - _t_proc) / 1000.0)
 	RenderingServer.frame_post_draw.connect(func():
@@ -62,9 +68,16 @@ func run() -> void:
 	deck["squad"] = ["sword_shield", "greatsword", "longbow"]
 	seed(7)
 	game_state.start_journey(game_state.DEFAULT_JOURNEY, 7)
+	if _series_wanted():
+		await _series(40)
+		return
 	await _frames(300)  # loading done, the squad meets the first wave
 	var stage: Node = current_scene
 	var tag := "hero_ink_%d" % int(hero)
+	if OS.get_cmdline_user_args().has("--breakdown"):
+		_breakdown(stage)
+		quit()
+		return
 	if OS.get_cmdline_user_args().has("--attribution"):
 		await _attribution(stage, frames)
 		quit()
@@ -153,7 +166,7 @@ func _measure(stage: Node, tag: String, view: String, frames: int) -> void:
 	var heroes := 0
 	for id in stage.get("_views"):
 		if str(stage.get("_session").fighters[id].team) == "player": heroes += 1
-	print("BATTLE_FPS %s view=%s heroes=%d avg=%.1f p50_ms=%.2f p95_ms=%.2f p99_ms=%.2f max_ms=%.1f hitches50=%d dc=%d prims=%d process_ms=%.2f physics_ms=%.2f render_cpu_ms=%.2f render_gpu_ms=%.2f | frame_split physics=%.2f process=%.2f draw=%.2f steps/frame=%.2f" % [
+	print("BATTLE_FPS %s view=%s heroes=%d avg=%.1f p50_ms=%.2f p95_ms=%.2f p99_ms=%.2f max_ms=%.1f hitches50=%d dc=%d prims=%d process_ms=%.2f physics_ms=%.2f render_cpu_ms=%.2f render_gpu_ms=%.2f | frame_split physics=%.2f process=%.2f draw=%.2f ticks/frame=%.2f" % [
 		tag, view, heroes, 1000.0 * n / mean, times[int(n * 0.5)], times[int(n * 0.95)], times[int(n * 0.99)],
 		times[-1], hitches, roundi(dc / n), roundi(prims / n), proc / n, phys / n, rcpu / n, rgpu / n,
 		_acc_phys / n, _acc_proc / n, _acc_draw / n, _steps / n])
@@ -189,6 +202,148 @@ func _process_ms(frames: int) -> float:
 	_acc_proc = 0.0
 	for i in frames: await RenderingServer.frame_post_draw
 	return _acc_proc / frames
+
+
+## Surfaces drawn (visible, in view), grouped: heroes (fill / ink hull), monsters, effects, map, labels, other.
+func _breakdown(stage: Node) -> void:
+	var camera := root.get_camera_3d()
+	var planes := camera.get_frustum()
+	var groups := {}
+	var views: Dictionary = stage.get("_views")
+	var owner_of := {}
+	for id in views:
+		owner_of[views[id]] = "hero" if str(stage.get("_session").fighters[id].team) == "player" else "monster"
+	for node in root.find_children("*", "GeometryInstance3D", true, false):
+		var gi := node as GeometryInstance3D
+		if not gi.is_visible_in_tree():
+			continue
+		var aabb := gi.global_transform * gi.get_aabb()
+		var inside := true
+		for plane in planes:
+			if plane.distance_to(aabb.get_center()) > aabb.size.length() * 0.5:
+				inside = false
+				break
+		if not inside:
+			continue
+		var group := "other"
+		var p := gi.get_parent()
+		while p != null:
+			if owner_of.has(p):
+				group = owner_of[p]
+				break
+			p = p.get_parent()
+		var path := str(gi.get_path()).to_lower()
+		if group == "other":
+			if path.contains("vfx") or path.contains("effect") or path.contains("skill"): group = "effects"
+			elif path.contains("map") or path.contains("arena") or path.contains("prop") or path.contains("ground"): group = "map"
+		if gi is Label3D or gi is SpriteBase3D: group += ":label/sprite"
+		elif str(gi.name).ends_with("_StudioInk") or str(gi.name) == "InkOutline": group += ":ink_hull"
+		var surfaces := 1
+		var passes := 0
+		if gi is MeshInstance3D and (gi as MeshInstance3D).mesh != null:
+			var mi := gi as MeshInstance3D
+			surfaces = mi.mesh.get_surface_count()
+			for s in surfaces:
+				var m: Material = mi.get_active_material(s)
+				while m != null and m.next_pass != null:
+					passes += 1
+					m = m.next_pass
+		if group == "other":
+			var parts := str(gi.get_path()).split("/")
+			var anc := gi.get_parent()
+			var trail := []
+			while anc != null and anc != stage and trail.size() < 4:
+				trail.push_front("%s(%s)" % [anc.name, str(anc.get_script().resource_path).get_file() if anc.get_script() != null else anc.get_class()])
+				anc = anc.get_parent()
+			group = "other[%s]" % ("/".join(trail.slice(0, 2)) + " :" + gi.get_class())
+		if not groups.has(group): groups[group] = [0, 0, 0]
+		groups[group][0] += 1
+		groups[group][1] += surfaces
+		groups[group][2] += passes
+	var total := 0
+	for g in groups:
+		total += groups[g][1] + groups[g][2]
+		print("BREAKDOWN %s nodes=%d surfaces=%d next_passes=%d" % [g, groups[g][0], groups[g][1], groups[g][2]])
+	for light in root.find_children("*", "Light3D", true, false):
+		print("BREAKDOWN light %s %s shadow=%s visible=%s" % [light.name, light.get_class(), light.shadow_enabled, light.is_visible_in_tree()])
+	var casters := 0
+	for node in root.find_children("*", "GeometryInstance3D", true, false):
+		if node.is_visible_in_tree() and node.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF: casters += 1
+	print("BREAKDOWN shadow_casters_visible=%d canvas_items_2d=%d" % [casters, root.find_children("*", "CanvasItem", true, false).filter(func(c): return c.is_visible_in_tree()).size()])
+	print("BREAKDOWN total_surface_passes=%d engine_dc=%d" % [total, Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)])
+
+
+func _series_wanted() -> bool:
+	if OS.has_feature("web"):
+		return str(JavaScriptBridge.eval("location.search", true)).contains("series")
+	return OS.get_cmdline_user_args().has("--series")
+
+
+## From FIGHT on: `windows` windows of 120 frames each, live: "SERIES t=<s> fps p50 max hitches50 ticks/frame dc".
+func _series(windows: int) -> void:
+	var start := Time.get_ticks_msec()
+	for w in windows:
+		if w == 4 or w == windows - 1: _census()
+		var times: Array[float] = []
+		var dc := 0.0
+		_steps = 0
+		var last := Time.get_ticks_usec()
+		for i in 120:
+			await RenderingServer.frame_post_draw
+			var now := Time.get_ticks_usec()
+			times.append((now - last) / 1000.0)
+			last = now
+			dc += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
+		var total := 0.0
+		var hitches := 0
+		for t in times:
+			total += t
+			if t > 50.0: hitches += 1
+		times.sort()
+		var stage: Node = current_scene
+		var tick_ms := 0.0
+		var marks = stage.get_script().get("perf_marks") if stage != null else null
+		var mark_text := ""
+		if marks is Dictionary and _steps > 0:
+			for k in marks: mark_text += " %s=%.2f" % [k, marks[k] / 1000.0 / _steps]
+			marks.clear()
+		print("SERIES t=%.1f fps=%.1f p50=%.1f max=%.0f hitches50=%d ticks/frame=%.2f dc=%d nodes=%d objects=%d%s" % [
+			(Time.get_ticks_msec() - start) / 1000.0, 120000.0 / total, times[60], times[-1], hitches, _steps / 120.0, roundi(dc / 120.0),
+			Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Performance.get_monitor(Performance.OBJECT_COUNT), mark_text])
+	print("WEBPROBE done")
+
+
+var _census_before := {}
+## Nodes by (parent script or class / own class): prints the groups that grew since the last call.
+func _census() -> void:
+	var counts := {}
+	for node in (current_scene if current_scene != null else root).find_children("*", "", true, false):
+		var parent := node.get_parent()
+		var ps = parent.get_script()
+		var key := "%s > %s" % [str(ps.resource_path).get_file() if ps != null else parent.get_class(), str(node.get_script().resource_path).get_file() if node.get_script() != null else node.get_class()]
+		counts[key] = counts.get(key, 0) + 1
+	var stage := current_scene
+	var dead := 0
+	var dead_visible := 0
+	var dead_meshes := 0
+	if stage != null and stage.get("_views") is Dictionary:
+		for id in stage.get("_views"):
+			var f = stage.get("_session").fighters.get(id)
+			if f != null and not f.is_alive():
+				dead += 1
+				var v: Node3D = stage.get("_views")[id]
+				if v.is_visible_in_tree():
+					dead_visible += 1
+					for gi in v.find_children("*", "GeometryInstance3D", true, false):
+						if gi.is_visible_in_tree(): dead_meshes += 1
+	print("CENSUS views=%d dead=%d dead_visible=%d dead_visible_meshes=%d" % [stage.get("_views").size() if stage != null else 0, dead, dead_visible, dead_meshes])
+	var rows := []
+	for k in counts:
+		rows.append([counts[k] - _census_before.get(k, 0), k, counts[k]])
+	rows.sort_custom(func(a, b): return a[0] > b[0])
+	for r in rows.slice(0, 12):
+		print("CENSUS +%d %s (now %d)" % [r[0], r[1], r[2]])
+	_census_before = counts
 
 
 func _print_marks(stage: Node, frames: int) -> void:

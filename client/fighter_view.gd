@@ -144,6 +144,13 @@ static func pose_for(move_id: String) -> String:
 	return KIND_POSES[kind] if kind != "" else "punch_r"
 
 
+## A hidden view (a fallen enemy is hidden 2.4 s after its "killed" event, stage_view.gd) stops posing itself. Solo wave
+## journeys keep every dead enemy in the sim, so without this ~30 corpses were still animated each frame by wave 12.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_VISIBILITY_CHANGED:
+		set_process(is_visible_in_tree())
+
+
 func _ready() -> void:
 	_body = Node3D.new()
 	add_child(_body)
@@ -204,6 +211,8 @@ func set_looks(new_looks: Dictionary) -> void:
 
 
 func show_state(body: SimBody, fighter: Fighter, data: CombatData = null) -> void:
+	if not visible and not fighter.is_alive():
+		return  # a fallen, already hidden enemy (see _notification): nothing to show
 	_sim_prev = _sim_now if _sim_seen else body.position
 	_sim_now = body.position
 	_sim_seen = true
