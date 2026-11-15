@@ -122,6 +122,15 @@ static func shows_next(data: Dictionary) -> bool:
 	return str(data.get("target", "")).is_empty() or str(data.get("done_on", {}).get("event")) == "next"
 
 
+## The step refresh() would put on screen for the profile now ("" = nothing in the hub).
+func expected_step() -> String:
+	var at := current()
+	var data := Tutorial.step_data(at)
+	if at == Tutorial.DONE or data.is_empty():
+		return ""
+	return at  # (a battle-screen step stays the current step in the hub, hidden: same as refresh())
+
+
 static func text_of(data: Dictionary) -> String:
 	return str(data.get("text_th" if CardTokens.language == "th" else "text_en", ""))
 
@@ -143,6 +152,12 @@ func _open_screen(data: Dictionary) -> void:
 func _process(delta: float) -> void:
 	if overlay != null and hub != null:
 		hub.tutorial_hide_hint(overlay.visible or _ceremony != null)  # the tip box never sits on the hint ribbon
+	# Staging 2026-11-15: on a slow server a step can land after our send gave up and re-read the old step; the
+	# profile then moves on later (any command refetches it) but nothing redrew. Follow the profile whenever the
+	# step it says differs from the one on screen.
+	if overlay != null and not _busy and _ceremony == null and not _lost_tip and expected_step() != step:
+		refresh()
+		return
 	if overlay == null or step.is_empty() or _ceremony != null:
 		return
 	var target_name := "FightButton" if step == "lost_tip" else str(Tutorial.step_data(step).get("target", ""))

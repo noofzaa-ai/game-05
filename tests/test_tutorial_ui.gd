@@ -19,6 +19,7 @@ func run(ctx) -> void:
 	await _refusal(ctx, tree, root)
 	await _online_refresh_applies_tutorial(ctx)
 	await _send_timeout_clears_busy(ctx, tree, root)
+	await _follows_late_server_step(ctx, tree, root)
 	root.queue_free()
 	await tree.process_frame
 
@@ -231,5 +232,41 @@ class FakeProfileApi extends RefCounted:
 
 class FakeHub extends Control:
 	func tutorial_close_character() -> void: pass
+	func tutorial_after_step() -> void: pass
+	func tutorial_hide_hint(_h: bool) -> void: pass
+
+## Staging 2026-11-15: the server applied `alliance` after our send had given up and re-read the old step; the
+## profile moved on later but the box stayed on alliance. The driver must follow the profile on its own.
+func _follows_late_server_step(ctx, tree: SceneTree, root: Control) -> void:
+	var gs = tree.root.get_node("GameState")
+	var saved = gs.profile
+	var p = load("res://logic/profile.gd").new()
+	p.tutorial = {"version": 1, "step": "alliance", "tour_done": false, "unlock_seen": false}
+	gs.profile = p
+	var hub := TourHub.new()
+	hub.size = Vector2(1920, 1080)
+	root.add_child(hub)
+	var driver = Driver.attach_hub(hub)
+	await tree.process_frame
+	await tree.process_frame
+	ctx.check("arrange: the box shows alliance", driver.step == "alliance")
+	p.tutorial["step"] = "fight"  # the server's step arrives through a later refetch, not through our _confirm
+	for i in 3:
+		await tree.process_frame
+	ctx.check("the box follows a server step that changed later (was stuck on alliance)", driver.step == "fight")
+	hub.queue_free()
+	gs.profile = saved
+	await tree.process_frame
+
+
+class TourHub extends Control:
+	signal tutorial_event(event: Dictionary)
+	var reduced_motion := false
+	func toast_index() -> int: return get_child_count()
+	func tutorial_show_hub() -> void: pass
+	func tutorial_first_card() -> String: return ""
+	func tutorial_open_character(_c: String, _p: bool) -> void: pass
+	func tutorial_close_character() -> void: pass
+	func tutorial_close_panels() -> void: pass
 	func tutorial_after_step() -> void: pass
 	func tutorial_hide_hint(_h: bool) -> void: pass
