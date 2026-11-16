@@ -54,6 +54,8 @@ func run() -> void:
 	elif OS.get_environment("ZORX_ONLY") == "weapons":
 		await _weapon_shots()
 		await _icons()
+	elif OS.get_environment("ZORX_ONLY") == "lv15":
+		await _lv15_shots()
 	elif OS.get_environment("ZORX_ONLY") == "icons":
 		await _icons()
 	else:
@@ -379,3 +381,36 @@ func _race_weapon_shots() -> void:
 					await _save(vp, "weapons/%s_%s_%s_%s.png" % [cls, race, frame[0], side[0]])
 		model.clear_class_skill_frame()
 	vp.queue_free()
+
+
+## Level-15 look vs the starter look (ZORX_ONLY=lv15): every race, front / side / back, idle and mid-run, sword & shield and
+## magic bodies, closer view of the upper body. build/race_outfits/lv15/<class>_<race>_<look>_<pose>_<side>.png.
+func _lv15_shots() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT + "lv15"))
+	var stage := _stage(Vector2i(360, 480))
+	var vp: SubViewport = stage["vp"]
+	var cam: Camera3D = stage["cam"]
+	cam.fov = 40.0
+	var model = CharacterModel.new()
+	model.ink_outline = true
+	vp.add_child(model)
+	model.load_model()
+	for cls in ["sword_shield", "magic"]:
+		model.dress({"class": cls, "weapon": {"path": "", "family": "", "style": ""}})
+		for race in RACES:
+			for look in ["starter", "lv15"]:
+				var looks := {}
+				for slot in SLOTS:
+					looks[slot] = "res://art/armor/race_shared/%s_%s%s.glb" % [race, slot, "_lv15" if look == "lv15" else ""]
+				model.dress(looks)
+				for pose in ["idle", "run"]:
+					for side in [["front", 20.0], ["side", 90.0], ["back", 200.0]]:
+						model.rotation.y = deg_to_rad(side[1])
+						cam.position = Vector3(0.0, 0.95, 1.7) if OS.get_environment("ZORX_CLOSE") == "1" else Vector3(0.0, 1.15, 2.8)
+						cam.look_at(Vector3(0.0, 0.66, 0.0))
+						model.set_pose(pose, 1.0 if pose == "run" else 0.0, 4.0 if pose == "run" else 0.0, true, Vector2(0.0, 1.0), false, "", "", "")
+						for i in 3:
+							model.apply_pose(0.11)
+						await _save(vp, "lv15/%s%s_%s_%s_%s_%s.png" % ["close_" if OS.get_environment("ZORX_CLOSE") == "1" else "", cls, race, look, pose, side[0]])
+	vp.queue_free()
+	await _frames(2)
