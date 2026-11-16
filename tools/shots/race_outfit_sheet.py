@@ -186,5 +186,43 @@ def main():
     print("sheets in", OUT)
 
 
+def compare_sheets(dest):
+    """ZORX_COMPARE=<dest folder>: compare_<class>.png (columns = races; rows: starter front, lv15 front, starter side+back,
+    lv15 side+back) and compare_overview.png (all classes, starter over lv15, front only) from build/race_outfits/compare/."""
+    src = os.path.join(OUT, "compare")
+    os.makedirs(dest, exist_ok=True)
+    label = lambda d, xy, text: (d.rectangle([xy[0], xy[1], xy[0] + 8 * len(text) + 8, xy[1] + 14], fill=(20, 20, 24)), d.text((xy[0] + 4, xy[1] + 1), text, fill=(240, 230, 150)))
+    for cls in CLASSES:
+        sheet = Image.new("RGB", (2400, 800 * 2 + 400 * 2), (40, 40, 44))
+        d = ImageDraw.Draw(sheet)
+        y = 0
+        for look in ("starter", "lv15"):
+            for c, race in enumerate(RACES):
+                sheet.paste(Image.open(os.path.join(src, "%s_%s_%s_front.png" % (cls, race, look))).convert("RGB"), (c * 600, y))
+                label(d, (c * 600 + 4, y + 4), "%s | %s | %s | front" % (cls, race, "lv1 starter" if look == "starter" else "lv15"))
+            y += 800
+        for look in ("starter", "lv15"):
+            for c, race in enumerate(RACES):
+                for k, side in enumerate(("side", "back")):
+                    sheet.paste(Image.open(os.path.join(src, "%s_%s_%s_%s.png" % (cls, race, look, side))).convert("RGB"), (c * 600 + k * 300, y))
+                    label(d, (c * 600 + k * 300 + 4, y + 4), "%s | %s | %s" % (race, "lv1" if look == "starter" else "lv15", side))
+            y += 400
+        sheet.save(os.path.join(dest, "compare_%s.png" % cls))
+    w, h = 450, 600
+    sheet = Image.new("RGB", (4 * w, len(CLASSES) * 2 * h), (40, 40, 44))
+    d = ImageDraw.Draw(sheet)
+    for r, cls in enumerate(CLASSES):
+        for k, look in enumerate(("starter", "lv15")):
+            for c, race in enumerate(RACES):
+                im = Image.open(os.path.join(src, "%s_%s_%s_front.png" % (cls, race, look))).convert("RGB").resize((w, h), Image.LANCZOS)
+                sheet.paste(im, (c * w, (r * 2 + k) * h))
+                label(d, (c * w + 4, (r * 2 + k) * h + 4), "%s | %s | %s" % (cls, race, "lv1" if look == "starter" else "lv15"))
+    sheet.save(os.path.join(dest, "compare_overview.png"))
+    print("compare sheets in", dest)
+
+
 if __name__ == "__main__":
-    main()
+    if os.environ.get("ZORX_COMPARE"):
+        compare_sheets(os.environ["ZORX_COMPARE"])
+    else:
+        main()

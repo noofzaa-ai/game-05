@@ -54,6 +54,8 @@ func run() -> void:
 	elif OS.get_environment("ZORX_ONLY") == "weapons":
 		await _weapon_shots()
 		await _icons()
+	elif OS.get_environment("ZORX_ONLY") == "compare":
+		await _compare_shots()
 	elif OS.get_environment("ZORX_ONLY") == "lv15":
 		await _lv15_shots()
 	elif OS.get_environment("ZORX_ONLY") == "icons":
@@ -413,4 +415,43 @@ func _lv15_shots() -> void:
 							model.apply_pose(0.11)
 						await _save(vp, "lv15/%s%s_%s_%s_%s_%s.png" % ["close_" if OS.get_environment("ZORX_CLOSE") == "1" else "", cls, race, look, pose, side[0]])
 	vp.queue_free()
+	await _frames(2)
+
+
+## Starter (lv1) vs level-15 look on every class body with the class's own weapon (ZORX_ONLY=compare; the metal glint
+## graphics option is on by default). build/race_outfits/compare/<class>_<race>_<look>_<front|side|back>.png: front 600x800,
+## side and back 300x400. tools/shots/race_outfit_sheet.py compare_sheets() puts them on sheets.
+func _compare_shots() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT + "compare"))
+	var big := _stage(Vector2i(600, 800))
+	var small := _stage(Vector2i(300, 400))
+	var model = CharacterModel.new()
+	model.ink_outline = true
+	(big["vp"] as SubViewport).add_child(model)
+	model.load_model()
+	for cls in CLASSES:
+		var family := str(CardDeck.class_data(cls).get("weapon", ""))
+		model.dress({"class": cls, "weapon": {"path": "", "family": family, "style": family}})
+		for race in RACES:
+			for look in ["starter", "lv15"]:
+				var looks := {}
+				for slot in SLOTS:
+					looks[slot] = "res://art/armor/race_shared/%s_%s%s.glb" % [race, slot, "_lv15" if look == "lv15" else ""]
+				model.dress(looks)
+				for side in [["front", 20.0, big], ["side", 90.0, small], ["back", 200.0, small]]:
+					var stage: Dictionary = side[2]
+					if model.get_parent() != stage["vp"]:
+						model.get_parent().remove_child(model)
+						(stage["vp"] as SubViewport).add_child(model)
+					var cam: Camera3D = stage["cam"]
+					cam.fov = 40.0
+					model.rotation.y = deg_to_rad(side[1])
+					cam.position = Vector3(0.0, 1.0, 2.4)
+					cam.look_at(Vector3(0.0, 0.7, 0.0))
+					model.set_pose("idle", 0.0, 0.0, true, Vector2(0.0, 1.0), false, "", "", family)
+					for i in 60:
+						model.apply_pose(0.11)
+					await _save(stage["vp"], "compare/%s_%s_%s_%s.png" % [cls, race, look, side[0]])
+	(big["vp"] as SubViewport).queue_free()
+	(small["vp"] as SubViewport).queue_free()
 	await _frames(2)
