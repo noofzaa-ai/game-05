@@ -180,6 +180,7 @@ func _refresh_buy(p) -> void:
 		piece.slot = str(chosen.get("slot", ""))
 		piece.tier = 0 if boss else int(Shop.config().get("equipment_tier", 0))  # boss pieces roll their tier at purchase
 		_details.cell.show_item(piece, GameState.item_rules, "")
+		_details.show_level(piece, GameState.item_rules)
 	if short:
 		CardTokens.hub_text(_details.subs, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_BAD, s, 0, "medium")
 	else:
@@ -230,6 +231,11 @@ func _offer_tile(offer: Dictionary, p) -> Button:
 	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(tag)
+	if str(offer.get("kind", "")) == "item" and GameState.item_rules.catalog.req_level(str(offer.get("id", ""))) > 1:  # level chip (Boss 2026-11-16)
+		var level := CardTokens.label(CardTokens.t("req_lv_short") % GameState.item_rules.catalog.req_level(str(offer["id"])), CardTokens.FONT_CHAR_LINE, CardTokens.HUB_SUBTEXT, s, 0, "medium")
+		level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		level.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		row.add_child(level)
 	b.pressed.connect(select_item.bind(str(offer["sku"])))
 	return b
 

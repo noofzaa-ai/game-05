@@ -20,6 +20,8 @@ var locked := false
 var fits := false
 var selected := false
 var low := false  ## worn down (stats reduced)
+var _rules  ## the ItemRules of the last show_item (the level badge reads the catalog)
+var card_level := -1  ## level of the card this cell is viewed for (-1: the lead card), for the level badge warning
 var s := 1.0
 var _tile: TextureRect  ## the leather tile, its own canvas item behind the cell (not mixed with the glyph draws)
 
@@ -36,6 +38,7 @@ func setup() -> void:
 
 func show_item(p_item, rules, empty_caption: String) -> void:
 	item = p_item
+	_rules = rules
 	caption = empty_caption
 	icon_tex = ItemAssets.icon(item, rules.catalog, _look_race()) if item != null and rules != null else null
 	low = item != null and rules != null and item.durability_ratio() < rules.durability_full_above
@@ -49,6 +52,16 @@ func _look_race() -> String:
 		return ""
 	var deck: Dictionary = state.profile.card_deck
 	return preload("res://logic/card_deck.gd").gear_race(deck, str(state.profile.lead_card()))
+
+
+## The viewed card's level: set by the owner, else the lead card's, -1 outside a game.
+func viewed_card_level() -> int:
+	if card_level >= 0:
+		return card_level
+	var state := get_node_or_null("/root/GameState")
+	if state == null or state.get("profile") == null:
+		return -1
+	return preload("res://logic/card_progress.gd").level_of(state.profile.card_deck, str(state.profile.lead_card()))
 
 
 func _on_input(event: InputEvent) -> void:
@@ -93,6 +106,7 @@ func _draw() -> void:
 			var mp := maxi(int(rr * 1.7), 8)
 			var mw := font.get_string_size("!", HORIZONTAL_ALIGNMENT_LEFT, -1, mp).x
 			draw_string(font, cc + Vector2(-mw * 0.5, mp * 0.36), "!", HORIZONTAL_ALIGNMENT_LEFT, -1, mp, CardTokens.HUB_BADGE_TEXT)
+		_draw_level_badge(font, count)
 	elif not caption.is_empty():
 		var px := maxi(int(round(CardTokens.FONT_CHAR_SLOT * s)), CardTokens.FONT_MIN)
 		var shown := caption
@@ -107,6 +121,30 @@ func _draw() -> void:
 		draw_colored_polygon(PackedVector2Array([inner.position, inner.position + Vector2(k, 0.0), inner.position + Vector2(0.0, k)]), CardTokens.HUB_FIT_MARK)
 	if has_focus():
 		draw_style_box(CardTokens.hub_focus(s, 12.0), rect)
+
+## Level chip (Boss 2026-11-16), bottom-left, only for pieces above level 1: "Lv 15", or just "15" when the full
+## text would run into the tier pips. Brass on dark ink; red (same text) when the viewed card is below it.
+func _draw_level_badge(font: Font, pips: int) -> void:
+	var rules = _rules
+	if rules == null:
+		return
+	var words := CardTokens.item_level_badge(item, rules.catalog)
+	if words.is_empty():
+		return
+	var warn := CardTokens.item_level_low(item, rules.catalog, viewed_card_level())
+	var px := maxi(int(round(size.x * 0.17)), 12)
+	var pip_left := size.x * 0.5 - float(pips - 1) * 0.5 * size.x * 0.045 * CardTokens.CHAR_PIP_SPACING - size.x * 0.045 - 3.0
+	var pad := 3.0
+	var w := font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	if size.x * 0.05 + w + pad * 2.0 > pip_left:
+		words = str(CardTokens.item_level(item, rules.catalog))
+		w = font.get_string_size(words, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+	var chip := Rect2(Vector2(size.x * 0.05, size.y - px * 1.3 - 2.0), Vector2(w + pad * 2.0, px * 1.3))
+	var ink: Color = CardTokens.HUB_BADGE_TEXT if warn else CardTokens.HUB_REFINE
+	draw_rect(chip, CardTokens.HUB_BAD if warn else CardTokens.HUB_OUTLINE)
+	draw_rect(chip, ink, false, 1.0)
+	draw_string(font, chip.position + Vector2(pad, px * 1.0), words, HORIZONTAL_ALIGNMENT_LEFT, -1, px, ink)
+
 
 static func _tier_color(tier: int) -> Color:
 	return CardTokens.HUB_TIER[clampi(tier, 0, CardTokens.HUB_TIER.size() - 1)]

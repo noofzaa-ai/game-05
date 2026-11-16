@@ -949,6 +949,31 @@ static func t(key: String) -> String:
 	return str(entry[0 if language == "th" else 1])
 
 
+## Item level (Boss 2026-11-16): the card level a piece needs. Starter pieces (id "starter-...") are level 1 whatever
+## their catalog entry says (they are exempt from the requirement); no item / no req_level is level 1.
+static func item_level(item, catalog) -> int:
+	if item == null or catalog == null or str(item.id).begins_with("starter-"):
+		return 1
+	return catalog.req_level(str(item.item_id))
+
+
+## "Lv 15" / "เลเวล 15" for any piece; "" for no piece.
+static func item_level_label(item, catalog) -> String:
+	if item == null:
+		return ""
+	return t("req_lv_short") % item_level(item, catalog)
+
+
+## True when the viewed card (level `card_level`; -1 = unknown) is below the piece's level: the label is a warning.
+static func item_level_low(item, catalog, card_level: int) -> bool:
+	return item != null and card_level >= 0 and item_level(item, catalog) > card_level
+
+
+## The cell badge text: only pieces above level 1 get one ("" otherwise, to keep the grid calm).
+static func item_level_badge(item, catalog) -> String:
+	return item_level_label(item, catalog) if item_level(item, catalog) > 1 else ""
+
+
 static func class_name_of(class_id: String) -> String:
 	var key := "class_" + class_id
 	return t(key) if STRINGS.has(key) else class_id.replace("_", " ").capitalize()

@@ -33,6 +33,43 @@ func run(ctx) -> void:
 	_check_files(ctx)
 	_check_tokens(ctx)
 	_check_themes(ctx)
+	_check_item_level(ctx)
+
+
+## Item level (Boss 2026-11-16): "Lv N" for every piece, a badge only above level 1, a warning when the card is below.
+func _check_item_level(ctx) -> void:
+	var CardTokens = preload("res://client/card_tokens.gd")
+	var rules = preload("res://logic/item_rules_loader.gd").load_default()
+	var catalog = rules.catalog
+	var high_id := ""
+	for id in catalog.items:
+		if catalog.req_level(str(id)) == 15:
+			high_id = str(id)
+			break
+	ctx.check("item level: the catalog has a level-15 piece", not high_id.is_empty())
+	var Item = preload("res://logic/item.gd")
+	var starter = Item.new()
+	starter.id = "starter-weapon-1"
+	starter.item_id = high_id  # a starter piece is level 1 even when it shares a level-15 catalog id
+	var high = Item.new()
+	high.id = "drop-1"
+	high.item_id = high_id
+	var plain = Item.new()
+	plain.id = "drop-2"
+	plain.item_id = "no_such_item"  # no catalog entry, no req_level
+	for lang in ["en", "th"]:
+		CardTokens.language = lang
+		var prefix := "Lv " if lang == "en" else "เลเวล "
+		ctx.check("item level (%s): starter is %s1" % [lang, prefix], CardTokens.item_level_label(starter, catalog) == prefix + "1")
+		ctx.check("item level (%s): level-15 piece is %s15" % [lang, prefix], CardTokens.item_level_label(high, catalog) == prefix + "15")
+		ctx.check("item level (%s): a piece without req_level is %s1" % [lang, prefix], CardTokens.item_level_label(plain, catalog) == prefix + "1")
+		ctx.check("item level (%s): badge only above level 1" % lang, CardTokens.item_level_badge(starter, catalog) == "" and CardTokens.item_level_badge(plain, catalog) == "" and CardTokens.item_level_badge(high, catalog) == prefix + "15")
+	CardTokens.language = "en"
+	ctx.check("item level: no piece, no label", CardTokens.item_level_label(null, catalog) == "")
+	ctx.check("item level: warning when the card is below", CardTokens.item_level_low(high, catalog, 14) and CardTokens.item_level_low(high, catalog, 1))
+	ctx.check("item level: no warning at or above the level", not CardTokens.item_level_low(high, catalog, 15) and not CardTokens.item_level_low(high, catalog, 40))
+	ctx.check("item level: starter and no-req pieces never warn", not CardTokens.item_level_low(starter, catalog, 1) and not CardTokens.item_level_low(plain, catalog, 1))
+	ctx.check("item level: unknown card level (-1) never warns", not CardTokens.item_level_low(high, catalog, -1))
 
 
 func _check_files(ctx) -> void:

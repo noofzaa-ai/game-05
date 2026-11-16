@@ -15,6 +15,7 @@ extends Control
 const CardTokens := preload("res://client/card_tokens.gd")
 const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wash look (Boss 2026-11-14)
 const CardDeck := preload("res://logic/card_deck.gd")
+const CardProgress := preload("res://logic/card_progress.gd")
 const CardPortrait := preload("res://client/card_portrait.gd")
 const CardSceneLayers := preload("res://client/card_scene_layers.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
@@ -692,6 +693,7 @@ func refresh() -> void:
 		var c: SlotCell = _slots[key]
 		var open: bool = rules.slot_open_for(c.slot_id, card) and not rules.slot(c.slot_id).is_empty()
 		c.locked = not open
+		c.card_level = CardProgress.level_of(_deck, card)
 		c.show_item(worn.item_at(c.slot_id, c.index) if open else null, rules, CardTokens.t("slot_locked") if not open else CardTokens.slot_name(c.slot_id))
 		c.selected = key == _sel_slot and _sel_item.is_empty()
 		c.fits = selected_item != null and selected_item.slot == c.slot_id and open
@@ -727,6 +729,7 @@ func refresh() -> void:
 		c.custom_minimum_size = Vector2(store_size, store_size)
 		var item = shown[n] if n < shown.size() else null
 		c.slot_id = item.slot if item != null else ""
+		c.card_level = CardProgress.level_of(_deck, card)
 		c.show_item(item, rules, "")
 		c.selected = item != null and item.id == _sel_item
 		c.fits = item != null and _sel_item.is_empty() and item.slot == sel_slot_id and _can_wear(item, rules)
@@ -778,6 +781,7 @@ func _refresh_detail(p, rules, worn, stash_item, fits_count: int, none_for_class
 		else:
 			_detail.show_empty(heading, CardTokens.t("vs_empty"), CardTokens.t("fits_count") % fits_count if fits_count > 0 else CardTokens.t("fits_none"), CardTokens.t("storage_none_for_class") if none_for_class else ("" if not p.stash.items.is_empty() else CardTokens.t("storage_empty")), caption)
 		return
+	_detail.cell.card_level = CardProgress.level_of(_deck, card)
 	_detail.show_item(item, rules)
 	if from_stash:
 		var index := int(_sel_slot.split(":")[1]) if _sel_slot.begins_with(item.slot + ":") else 0

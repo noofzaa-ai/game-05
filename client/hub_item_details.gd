@@ -17,6 +17,8 @@ var s := 1.0
 var cell: HubItemCell
 var title: Label
 var sub: Label
+var level_tag: Label  ## "Lv 15", right end of the sub line; warning colour when the card is below it
+var _tag_color := CardTokens.HUB_SUBTEXT
 var main_line: Label
 var subs: Label
 var compare: HBoxContainer
@@ -55,6 +57,10 @@ func _init() -> void:
 	sub = CardTokens.label("", CardTokens.FONT_CHAR_LINE, CardTokens.HUB_SUBTEXT, 1.0, 0, "medium")
 	sub.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	add_child(sub)
+	level_tag = CardTokens.label("", CardTokens.FONT_CHAR_LINE, CardTokens.HUB_SUBTEXT, 1.0, 0, "medium")
+	level_tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	level_tag.visible = false
+	add_child(level_tag)
 	main_line = CardTokens.label("", CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, 1.0, 0, "medium")
 	main_line.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	add_child(main_line)
@@ -130,6 +136,7 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 	_button_h = button_h
 	_text_x = tx
 	_text_w = tw
+	_place_level_tag()
 	_line = line
 	var bar_y := maxf(pad + icon + pad * 0.5, compare.position.y + compare.size.y)
 	var key_w := 130.0 * s
@@ -170,8 +177,30 @@ func show_empty(heading: String, line_sub: String, line_main: String, line_subs:
 	title.text = heading
 	_fit_title()
 	sub.text = line_sub
+	level_tag.visible = false
+	_place_level_tag()
 	main_line.text = line_main
 	subs.text = line_subs
+
+
+## Shows the "Lv N" tag of `item` (also for the Shop preview, which has no full piece line).
+func show_level(item, rules) -> void:
+	level_tag.text = CardTokens.item_level_label(item, rules.catalog)
+	level_tag.visible = true
+	_tag_color = CardTokens.HUB_BAD if CardTokens.item_level_low(item, rules.catalog, cell.viewed_card_level()) else CardTokens.HUB_SUBTEXT
+	_place_level_tag()
+
+
+## Gives the level tag the right end of the sub line (and takes the same room from the sub text) while it is shown.
+func _place_level_tag() -> void:
+	var tag_w := 96.0 * s
+	if not level_tag.visible:
+		sub.size.x = _text_w
+		return
+	level_tag.size = Vector2(tag_w, sub.size.y)
+	level_tag.position = Vector2(_text_x + _text_w - tag_w, sub.position.y)
+	CardTokens.hub_text(level_tag, CardTokens.FONT_CHAR_LINE, _tag_color, s, 0, "medium")
+	sub.size.x = _text_w - tag_w
 
 
 ## A piece: name + refine, slot · tier, main stat (refine share), substats, durability.
@@ -185,8 +214,13 @@ func show_item(item, rules) -> void:
 	_fit_title()
 	var tier_id := str(rules.tiers[clampi(item.tier, 0, rules.tiers.size() - 1)]["id"])
 	sub.text = "%s  ·  %s  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), "◆".repeat(item.tier + 1)]
-	if rules.catalog.req_level(item.item_id) > 1 and not item.id.begins_with("starter-"):  # Boss 2026-11-16: level-15 gear
-		sub.text = "%s  ·  %s  ·  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), CardTokens.t("req_lv_short") % rules.catalog.req_level(item.item_id)]  # short form, no diamonds here: the line would be cut
+	# Boss 2026-11-16: the item level is always shown ("Lv 1" for starter pieces) in its own tag at the end of the line;
+	# the diamonds are dropped when the line would not fit beside it.
+	show_level(item, rules)
+	var font := sub.get_theme_font("font")
+	var px := sub.get_theme_font_size("font_size")
+	if font.get_string_size(sub.text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > sub.size.x:
+		sub.text = "%s  ·  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id)]
 	var factor: float = rules.durability_factor(item.durability_ratio())
 	var main: float = item.main_value(rules) * factor
 	var refine_part: float = item.base_value(rules) * float(rules.refine.get("bonus_per_level", 0.0)) * float(item.refine_level) * factor

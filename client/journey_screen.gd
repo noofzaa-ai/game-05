@@ -404,7 +404,7 @@ func _add_loot(loot: Dictionary, width: float, s: float) -> void:
 		cell.mouse_filter = Control.MOUSE_FILTER_PASS
 		cell.custom_minimum_size = Vector2(cell_px, cell_px)
 		cell.show_item(piece, GameState.item_rules, "")
-		cell.tooltip_text = str(GameState.item_rules.catalog.entry(piece.item_id).get("name", CardTokens.slot_name(piece.slot)))
+		cell.tooltip_text = str(GameState.item_rules.catalog.entry(piece.item_id).get("name", CardTokens.slot_name(piece.slot))) + "  ·  " + CardTokens.item_level_label(piece, GameState.item_rules.catalog)
 		grid.add_child(cell)
 	if sorted.size() > CardTokens.SUMMARY_MAX_ITEMS:
 		var more := CardTokens.label(HubLook.t("summary_more") % (sorted.size() - CardTokens.SUMMARY_MAX_ITEMS), CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_INK, s, 0, "medium")
@@ -455,7 +455,7 @@ func _add_boss_loot(j, width: float, s: float) -> void:
 		cell.mouse_filter = Control.MOUSE_FILTER_PASS
 		cell.custom_minimum_size = Vector2.ONE * CardTokens.SUMMARY_CELL * s
 		cell.show_item(piece, rules, "")
-		cell.tooltip_text = str(rules.catalog.entry(piece.item_id).get("name", CardTokens.slot_name(piece.slot)))
+		cell.tooltip_text = str(rules.catalog.entry(piece.item_id).get("name", CardTokens.slot_name(piece.slot))) + "  ·  " + CardTokens.item_level_label(piece, rules.catalog)
 		row.add_child(cell)
 	if row.get_child_count() == 0:
 		row.queue_free()
