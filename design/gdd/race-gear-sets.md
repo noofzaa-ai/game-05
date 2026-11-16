@@ -359,3 +359,16 @@ Worked example, with ~10 kill items per run (loot.json `_tuning`), ~4 of them in
 8. **drops-and-rewards.md edit**: done 2026-11-13 (its 3.8 and dependencies link back here).
 9. **Gold race rate**: with today's Chief loot table a gold race piece is ~0.4% of winning runs. A. keep it as is and raise the rate later with the planned guaranteed boss piece (**default**); B. raise the Chief's legendary weight now; C. add a guaranteed boss piece now (drops-and-rewards 3.1). Boss call.
 10. **Gold slot protection** (3.12): not built (**default**: deferred until gold drops are common enough to repeat).
+
+## Tier-up path (Boss 2026-11-16)
+
+The old substat Upgrade is retired (command `upgrade` answers `deprecated`; the `upgrade` block in `equipment_tuning.json` stays, `enabled: false`, so the loader and the staging runtime still validate; saved substat upgrade values and counters stay valid). It is replaced by **tier-up**: a level-1 piece becomes the level-15 piece.
+
+- **Command** `tier_up {item, card?}` (`logic/tier_up.gd`, data `data/items/tier_up.json`, camp only, in the profile runner allow-list). A worn piece uses its wearer; a stash piece needs `card`.
+- **Path (by slot + class, data-driven)**: weapon -> `race_<card race>_<class>_weapon`; shirt/pants/armband/shoes -> `armour_<class>_<slot>`. Shields, back, boss accessories and relics have no path (`not_eligible`).
+- **Level-1 piece**: an instance whose id starts with `starter-` (the starter kit). A piece already at the target level (any non-starter level-15 piece) is `not_eligible`.
+- **Condition**: card level >= target `req_level` (15), else `card_level_too_low`. The card must exist and have a race (`no_card`); another class's piece is refused with the equip reasons (`wrong_weapon_family`, `wrong_armour_class`).
+- **Cost**: 2500 gold flat per piece (Boss), `not_enough_gold` when short.
+- **Kept**: tier colour (white stays white ... gold stays gold), durability ratio, refine and enhancement level, socketed relic, substats and their upgrade bonuses, upgrade counter. Changed: the item id becomes `tier-up-<old id>` (no `starter-` prefix, so the level-15 wear gate now applies) and the catalog item becomes the target. Armour keeps its catalog id (the starter kit already uses the class armour id), so only the look (starter look -> level-15 look) and the wear gate change; the weapon becomes the card's current race weapon. OPEN for the Boss: should tier-up also raise stats?
+- `stash_full` cannot happen: the piece is changed in place and takes no slot.
+- UI: Blacksmith "Tier up" button in the old Upgrade place; the line shows the target piece (name, icon), "Requires card level 15 (now N)", the cost, and the refusal reason.

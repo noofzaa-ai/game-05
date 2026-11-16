@@ -80,3 +80,6 @@ Every path below is read from `data/items/catalog.json` (`asset_path`, `icon_pat
 2. Make 5 icons, 192 × 192, through Codex, and get the Boss's review.
 3. Put the files at the exact paths in section 1, then run the import.
 4. Take comparison shots (front, side, back; standing, running; mixed with another race; with the class weapon) for the parity doc. They stay OPEN until the Boss accepts them.
+
+## Tier-up (2026-11-16)
+Nothing new to generate: tier-up reuses the existing level-15 armour GLBs/icons and the race weapons.
