@@ -128,7 +128,13 @@ func layout_body(area: Vector2) -> void:
 		b.custom_minimum_size = Vector2(0.0, row_h)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var grid_top := row_h + gap * 0.5
-	place_grid(_grid, Rect2(0.0, grid_top, left_w, area.y - grid_top))
+	# Phone: the grid keeps two rows and the lines (refine / tier up / repair) take the free space under it, so they never
+	# run into the buttons; elsewhere the lines sit under the details on the right.
+	var cell_h := CardTokens.tap(CardTokens.CHAR_STORE_CELL, phone) * s
+	var grid_h := area.y - grid_top
+	if phone:
+		grid_h = cell_h * 2.0 + CardTokens.CHAR_STORE_GAP * s + gap * 0.5
+	place_grid(_grid, Rect2(0.0, grid_top, left_w, grid_h))
 	var rx := left_w + gap * 2.0
 	var rw := area.x - rx
 	var button_h := CardTokens.tap(CardTokens.CHAR_ACTION_H, phone) * s
@@ -143,14 +149,22 @@ func layout_body(area: Vector2) -> void:
 		b.custom_minimum_size = Vector2(0.0, button_h)
 		CarvedLook.plate_button(b, s)
 	HubItemDetails.fit_buttons(_buttons, s, 2)
+	var odds_x := rx
+	var odds_y := detail_h + gap * 0.5
+	var odds_area_w := rw
 	var odds_h := maxf(area.y - buttons_h - detail_h - gap, 0.0)
+	if phone:
+		odds_x = 0.0
+		odds_y = grid_top + grid_h + gap * 0.5
+		odds_area_w = left_w
+		odds_h = maxf(area.y - odds_y, 0.0)
 	var icon_side := minf(button_h * 1.2, odds_h)
-	var odds_w := maxf(rw - icon_side - gap * 0.5, 0.0)
-	_odds_scroll.position = Vector2(rx, detail_h + gap * 0.5)
+	var odds_w := maxf(odds_area_w - icon_side - gap * 0.5, 0.0)
+	_odds_scroll.position = Vector2(odds_x, odds_y)
 	_odds_scroll.size = Vector2(odds_w, odds_h)
 	_odds.custom_minimum_size = Vector2(odds_w, 0.0)
 	_odds.size = Vector2(odds_w, 0.0)
-	_tier_icon.position = Vector2(rx + rw - icon_side, detail_h + gap * 0.5)
+	_tier_icon.position = Vector2(odds_x + odds_area_w - icon_side, odds_y)
 	_tier_icon.size = Vector2(icon_side, icon_side)
 	CardTokens.hub_text(_odds, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
 

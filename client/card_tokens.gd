@@ -760,6 +760,7 @@ const STRINGS := {
 	"err_wrong_weapon_family": ["คลาสนี้ใช้อาวุธนี้ไม่ได้", "This class can't use that weapon"],
 	"err_wrong_armour_class": ["ชุดนี้เป็นของคลาสอื่น", "This armour belongs to another class"],
 	"err_level_too_low": ["เลเวลการ์ดไม่ถึง", "This card's level is too low"],
+	"req_lv_short": ["เลเวล %d", "Lv %d"],
 	"req_level_line": ["ต้องเลเวล %d", "Requires level %d"],
 	"err_weapon_required": ["ต้องถืออาวุธไว้เสมอ", "A weapon must stay equipped"],
 	"err_reskill_required": ["ต้องรีเซ็ตสกิลก่อนเปลี่ยนอาวุธ", "Reset the skills before changing weapon family"],
