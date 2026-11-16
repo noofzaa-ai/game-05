@@ -84,7 +84,8 @@
 		"broken_factor": 0.5,
 		"armor_wear_per_full_hp": 25,
 		"weapon_wear_per_hit": 0.3,
-		"death_wear": 20
+		"death_wear": 20,
+		"max_loss_per_run_fraction": 0.15
 	},
 
 	"enhancement": {

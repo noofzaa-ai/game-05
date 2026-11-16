@@ -170,6 +170,9 @@ static func _parse_durability(root: Dictionary, rules: ItemRules) -> void:
 	rules.armor_wear_per_full_hp = float(durability.get("armor_wear_per_full_hp", -1.0))
 	rules.weapon_wear_per_hit = float(durability.get("weapon_wear_per_hit", -1.0))
 	rules.death_wear = float(durability.get("death_wear", -1.0))
+	rules.max_loss_per_run_fraction = float(durability.get("max_loss_per_run_fraction", -1.0))
+	if rules.max_loss_per_run_fraction > 1.0:
+		rules.errors.append("durability.max_loss_per_run_fraction must be at most 1")
 	if rules.durability_max <= 0.0:
 		rules.errors.append("durability.max must be above 0")
 	if rules.durability_full_above <= 0.0 or rules.durability_full_above > 1.0:

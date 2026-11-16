@@ -20,6 +20,7 @@ var substats: Array[Dictionary] = []  ## {"stat": String, "quality": float 0..1,
 var destroyed := false  ## set when an enhancement attempt breaks the item
 var durability := 100.0  ## wears down with use; below some level the item's stats drop (see ItemRules.durability_factor)
 var max_durability := 100.0
+var run_wear := 0.0  ## durability this item lost during the current run (capped by rules durability.max_loss_per_run_fraction, logic/wear.gd); reset when a run starts
 var relic := ""  ## the boss Relic socketed in this item (design/gdd/boss-loot.md 2; logic/boss_loot.gd), "" = empty / no socket
 
 
@@ -77,6 +78,7 @@ func duplicate_item() -> Object:
 	copy.durability = durability
 	copy.max_durability = max_durability
 	copy.relic = relic
+	copy.run_wear = run_wear
 	for sub in substats:
 		copy.substats.append(sub.duplicate())
 	return copy
@@ -95,7 +97,7 @@ func to_dict() -> Dictionary:
 	return {"v": 1, "stat_scale": STAT_SCALE, "id": id, "slot": slot, "tier": tier, "level": level,
 		"upgrade_count": upgrade_count, "refine_level": refine_level, "main_stat": main_stat, "weapon_type": weapon_type, "item_id": item_id,
 		"substats": substats.map(func(sub): return {"stat": sub["stat"], "quality": StateCodec.float_text(sub["quality"]), "boosts": sub["boosts"], "upgrade_bonus": StateCodec.float_text(float(sub.get("upgrade_bonus", 0.0)))}), "destroyed": destroyed,
-		"durability": StateCodec.float_text(durability), "max_durability": StateCodec.float_text(max_durability)}.merged({"relic": relic} if not relic.is_empty() else {})
+		"durability": StateCodec.float_text(durability), "max_durability": StateCodec.float_text(max_durability)}.merged({"relic": relic} if not relic.is_empty() else {}).merged({"run_wear": StateCodec.float_text(run_wear)} if run_wear > 0.0 else {})
 
 
 static func from_dict(d: Dictionary):
@@ -112,6 +114,7 @@ static func from_dict(d: Dictionary):
 	item.durability = StateCodec.float_value(d["durability"])
 	item.max_durability = StateCodec.float_value(d["max_durability"])
 	item.relic = str(d.get("relic", ""))
+	item.run_wear = StateCodec.float_value(d["run_wear"]) if d.has("run_wear") else 0.0  # saves from before the per-run cap have none
 	for sub in d["substats"]:
 		item.substats.append({"stat": str(sub["stat"]), "quality": StateCodec.float_value(sub["quality"]), "boosts": int(sub["boosts"]), "upgrade_bonus": StateCodec.float_value(sub.get("upgrade_bonus", "0"))})
 	if int(d.get("stat_scale", 1)) < STAT_SCALE:  # saved before HP scale 100: rescale the saved upgrade amounts once

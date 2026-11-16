@@ -13,6 +13,7 @@ const ItemRules := preload("res://logic/item_rules.gd")
 const Loadout := preload("res://logic/loadout.gd")
 const Profile := preload("res://logic/profile.gd")
 const Stats := preload("res://logic/stats.gd")
+const Wear := preload("res://logic/wear.gd")
 
 var profile: Profile
 var camp: CampData
@@ -22,10 +23,12 @@ var used_rests: Array[String] = []  ## rest points already used on this trip
 var skill_cooldowns: Dictionary = {}  ## remaining seconds, carried across maps in the same run
 
 
-static func start(player: Profile, camp_data: CampData) -> RefCounted:
+static func start(player: Profile, camp_data: CampData, fresh: bool = true) -> RefCounted:
 	var run = load("res://logic/run.gd").new()
 	run.profile = player
 	run.camp = camp_data
+	if fresh:
+		Wear.reset_run(player)  # a new run: every item may lose its per-run share again (a restored run keeps its tally)
 	var stacks := {}
 	for id in camp_data.materials:
 		stacks[id] = camp_data.materials[id]["stack"]
@@ -160,7 +163,7 @@ static func from_dict(d: Dictionary, rules: ItemRules, camp_data: CampData, play
 		player = Profile.from_dict(d["profile"], rules, camp_data)
 	if player == null:
 		return null
-	var trip = start(player, camp_data)
+	var trip = start(player, camp_data, false)
 	trip.bag = Inventory.from_dict(d["bag"], trip.bag._stack_sizes)
 	if trip.bag == null:
 		return null

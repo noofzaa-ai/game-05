@@ -22,6 +22,7 @@ var durability_broken_factor := 0.5  ## the stat multiplier of an item at 0 dura
 var armor_wear_per_full_hp := 0.0  ## see rules.json: wear of every worn non-weapon item per max-HP of damage taken
 var weapon_wear_per_hit := 0.0
 var death_wear := 0.0
+var max_loss_per_run_fraction := -1.0  ## hard cap: one item loses at most this fraction of its max durability per run (< 0 = no cap)
 var refine: Dictionary = {}
 var upgrade: Dictionary = {}
 var mobility: Dictionary = {}
