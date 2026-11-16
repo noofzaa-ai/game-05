@@ -3,7 +3,7 @@ extends SceneTree
 ## a fresh device account signs in, tools/localstack/fixture.py puts it into fixtures/<name>.json, the game re-reads
 ## its profile from the server and opens the screen asked for. Then it stays open (play/click by hand), or takes a
 ## screenshot and quits.
-##   godot --path . --script res://tools/localstack/scenario.gd -- --fixture unlock_ceremony [--open hub|map|character:<class>|storage|shop|blacksmith|tailor|fight] [--size 1280x720] [--shot OUT.png] [--wait 2]
+##   godot --path . --script res://tools/localstack/scenario.gd -- --fixture unlock_ceremony [--open hub|map|character:<class>|storage|shop|blacksmith|tailor|fight] [--size 1280x720] [--shot OUT.png] [--wait 2] [--lang th|en]
 ## The local client key is read from build/localstack/state.json (throwaway, local only).
 
 var fixture := "new_player"
@@ -26,6 +26,7 @@ func run() -> void:
 			"--size": size = Vector2i(int(args[i + 1].split("x")[0]), int(args[i + 1].split("x")[1]))
 			"--shot": shot = args[i + 1]
 			"--wait": wait_s = float(args[i + 1])
+			"--lang": load("res://client/card_tokens.gd").language = args[i + 1]
 	root.size = size
 	DisplayServer.window_set_size(size)
 	var state = JSON.parse_string(FileAccess.get_file_as_string(ProjectSettings.globalize_path("res://build/localstack/state.json")))

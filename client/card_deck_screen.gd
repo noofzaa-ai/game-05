@@ -491,6 +491,7 @@ class HubCard extends Control:
 	var _back: TextureRect
 	var _frame: TextureRect
 	var _name: Label
+	const LOCKED_RIBBON_FILL := 0.86  ## share of the ribbon text box the locked hint may fill
 	var _squad_label: Label
 	var _lock: Label
 	var _mark: Control  ## tutorial.md 5: padlock (locked) or "?" (no race) medallion over the race badge
@@ -650,7 +651,8 @@ class HubCard extends Control:
 		var nr := CardTokens.HUB_CARD_NAME
 		_name.position = Vector2(nr.position.x * w, nr.position.y * h)
 		_name.size = Vector2(nr.size.x * w, nr.size.y * h)
-		CardTokens.hub_fit(_name, _name.text, CardTokens.CARVED_FONT_CARD_NAME, _name.size.x, CardTokens.HUB_SLOT_TEXT if locked else CardTokens.HUB_INK, unit)
+		# the locked hint is longer than a class name: keep it off the ribbon's dark curled ends
+		CardTokens.hub_fit(_name, _name.text, CardTokens.CARVED_FONT_CARD_NAME, _name.size.x * (LOCKED_RIBBON_FILL if locked else 1.0), CardTokens.HUB_SLOT_TEXT if locked else CardTokens.HUB_INK, unit)
 		_race_badge.position = Vector2(CardTokens.CARVED_BADGE_CARD_AT.x * w, CardTokens.CARVED_BADGE_CARD_AT.y * h)
 		_race_badge.show_race(race, CardTokens.CARVED_BADGE_CARD * w)
 		_race_badge.modulate = CardTokens.HUB_LOCKED if locked else CardTokens.HUB_WHITE
