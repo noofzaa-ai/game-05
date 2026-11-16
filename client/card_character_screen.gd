@@ -936,9 +936,20 @@ func _refine(item_id: String, level: int) -> void:
 
 
 func _repair(item_id: String) -> void:
+	var p = _profile()
+	var item = null
+	if p != null:
+		for list in p.worn_lists() + [p.stash.items]:
+			for worn_item in list:
+				if worn_item.id == item_id:
+					item = worn_item
+	var cost: Dictionary = Repair.quote(item, GameState.camp_data, Camp.repair_discount(p, GameState.camp_data)) if item != null else {}
 	var result := await _run({"type": "repair", "item": item_id})
 	if result.get("ok", false):
 		_say(CardTokens.t("repaired_ok"))
+	elif str(result.get("error", "")) == "cannot_afford" and not cost.is_empty():
+		# Say what is short (2026-11-16 "can't repair": the bare message hid that a material, not gold, was missing).
+		_say("%s: %s" % [CardTokens.error_text("cannot_afford"), HubItemDetails.cost_text(Repair.missing(cost, p.stash), GameState.camp_data)])
 	refresh()
 
 

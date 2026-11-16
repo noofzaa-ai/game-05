@@ -28,6 +28,18 @@ static func quote(item: Item, camp: CampData, discount: float = 0.0) -> Dictiona
 	return {"kind": kind, "points": missing, "gold": ceili(missing * float(entry["gold_per_point"]) * scale), "materials": materials}
 
 
+## What `stash` lacks to pay `cost` (a quote): {"gold": int, "materials": {id: count}}; all zero/empty when payable.
+## The screen names this on "cannot_afford" instead of a bare "Not enough gold or materials".
+static func missing(cost: Dictionary, stash) -> Dictionary:
+	var short := {"gold": maxi(0, int(cost.get("gold", 0)) - int(stash.gold)), "materials": {}}
+	var needed: Dictionary = cost.get("materials", {})
+	for id in needed:
+		var lack := int(needed[id]) - int(stash.material_count(str(id)))
+		if lack > 0:
+			short["materials"][id] = lack
+	return short
+
+
 ## Repairs an item fully, paying from the profile's stash. The workbench must be built.
 ## Returns {"ok": bool, "reason": "nothing_to_repair" | "no_workbench" | "cannot_afford" | "", "cost": Dictionary}.
 static func repair(item: Item, profile: Profile, camp: CampData) -> Dictionary:
