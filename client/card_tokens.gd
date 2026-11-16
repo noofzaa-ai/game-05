@@ -615,7 +615,7 @@ const PORTRAIT_FOV := 24.0
 ## Ink-wash look of the live card characters (hub direction 2026-11-14, studio05_character_model.gd card_ink):
 ## off = the Studio parity toon look. Line width is a fraction of the portrait render height.
 const PORTRAIT_INK := true
-const PORTRAIT_INK_LINE := 0.0105
+const PORTRAIT_INK_LINE := 0.0065  ## Boss 2026-11-16: 0.0105 was too thick and hid the outfit
 const PORTRAIT_FRAME_PAD := 1.08  ## "full" / "bust" framing margin
 ## "card" framing (deck and editor cards): the portrait covers the whole card; the model's top lands at
 ## PORTRAIT_FRAME_TOP and its feet at PORTRAIT_FRAME_BOTTOM (fractions of the card height, >1 = below the card,
