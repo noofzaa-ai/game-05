@@ -780,6 +780,7 @@ const STRINGS := {
 	"vs_empty": ["ช่องนี้ยังว่าง", "slot is empty"],
 	"fits_count": ["ในคลังมี %d ชิ้นที่ใส่ช่องนี้ได้ (มีกรอบทอง)", "%d piece(s) in Storage fit this slot (gold frame)."],
 	"fits_none": ["ในคลังยังไม่มีชิ้นที่ใส่ช่องนี้ได้", "Nothing in Storage fits this slot yet."],
+	"storage_none_for_class": ["ในคลังไม่มีชิ้นที่คลาสนี้ใส่ได้", "No items in Storage for this class."],
 	"storage_empty": ["คลังว่าง มอนสเตอร์ดรอปอุปกรณ์", "Storage is empty. Monsters drop gear."],
 	"refined_ok": ["ตีบวกสำเร็จ: +%d", "Refined to +%d"],
 	"refine_failed": ["ตีบวกไม่สำเร็จ: เหลือ +%d", "Refine failed: now +%d"],

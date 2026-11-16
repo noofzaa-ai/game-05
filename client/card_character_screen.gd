@@ -682,6 +682,8 @@ func refresh() -> void:
 		(_stat_values[n] as Label).text = ("%d%%" % int(round(value))) if stat == "CRIRATE" else str(int(round(value)))
 	# the selected piece
 	var selected_item = _find_stash(p, _sel_item)
+	if selected_item != null and not preload("res://logic/profile.gd").card_can_wear(card, selected_item, rules):
+		selected_item = null  # switched to a card that cannot wear it: it is no longer listed
 	if selected_item == null:
 		_sel_item = ""
 	var sel_slot_id := _sel_slot.split(":")[0] if not _sel_slot.is_empty() else ""
@@ -700,7 +702,8 @@ func refresh() -> void:
 		if str(entry["id"]) == _filter:
 			filter_slots = entry["slots"]
 	var shown: Array = []
-	for item in p.stash.items:
+	var wearable: Array = preload("res://logic/profile.gd").wearable_items(card, p.stash.items, rules)
+	for item in wearable:
 		if filter_slots.is_empty() or filter_slots.has(item.slot):
 			shown.append(item)
 	var columns := _store_grid.columns
@@ -738,7 +741,7 @@ func refresh() -> void:
 		CarvedLook.chip_button(b, _s, on, not on)
 		CardTokens.hub_text(b, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK if on else CardTokens.HUB_TAB_IDLE, _s, 0, "display" if on else "medium")
 		b.button_pressed = on
-	_refresh_detail(p, rules, worn, selected_item, fits_count)
+	_refresh_detail(p, rules, worn, selected_item, fits_count, wearable.is_empty() and not p.stash.items.is_empty())
 
 
 func _can_wear(item, rules) -> bool:
@@ -754,7 +757,7 @@ func _find_stash(p, id: String):
 	return null
 
 
-func _refresh_detail(p, rules, worn, stash_item, fits_count: int) -> void:
+func _refresh_detail(p, rules, worn, stash_item, fits_count: int, none_for_class: bool = false) -> void:
 	var item = stash_item
 	var from_stash: bool = stash_item != null
 	var slot_id := _sel_slot.split(":")[0] if not _sel_slot.is_empty() else ""
@@ -773,7 +776,7 @@ func _refresh_detail(p, rules, worn, stash_item, fits_count: int) -> void:
 		elif slot_id.is_empty():
 			_detail.show_empty(heading, "", "", "", caption)
 		else:
-			_detail.show_empty(heading, CardTokens.t("vs_empty"), CardTokens.t("fits_count") % fits_count if fits_count > 0 else CardTokens.t("fits_none"), "" if not p.stash.items.is_empty() else CardTokens.t("storage_empty"), caption)
+			_detail.show_empty(heading, CardTokens.t("vs_empty"), CardTokens.t("fits_count") % fits_count if fits_count > 0 else CardTokens.t("fits_none"), CardTokens.t("storage_none_for_class") if none_for_class else ("" if not p.stash.items.is_empty() else CardTokens.t("storage_empty")), caption)
 		return
 	_detail.show_item(item, rules)
 	if from_stash:

@@ -166,6 +166,12 @@ static func card_can_wear(card: String, item: Item, item_rules: ItemRules = null
 	return slot_problem(card, item, item_rules).is_empty()
 
 
+## The items of `items` that class card `card` can wear (same rule as the equip command: card_can_wear). Keeps the order.
+## UI lists (the Equipment tab's storage) show only these; the equip command still rejects the rest.
+static func wearable_items(card: String, items: Array, item_rules: ItemRules = null) -> Array:
+	return items.filter(func(item) -> bool: return card_can_wear(card, item, item_rules))
+
+
 ## "" when `card` may wear `item`, else "slot_closed" (the class cannot use that slot) or "wrong_weapon_family".
 static func slot_problem(card: String, item: Item, item_rules: ItemRules = null) -> String:
 	if item_rules != null and not item_rules.slot_open_for(item.slot, card):

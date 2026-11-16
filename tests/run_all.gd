@@ -56,6 +56,7 @@ const TEST_FILES := [
 	"res://tests/test_serialization.gd",
 	"res://tests/test_commands.gd",
 	"res://tests/test_repair.gd",
+	"res://tests/test_wear_run_cap.gd",
 	"res://tests/test_sim_restore.gd",
 	"res://tests/test_determinism.gd",
 	"res://tests/test_input_codec.gd",
