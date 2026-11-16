@@ -63,7 +63,7 @@ func run() -> void:
 			await create_timer(1.5).timeout
 			await shot("storage_socketed_" + tag)
 			print("DRIVE relic after socket: ", gs.profile.stash.material_count("relic_goblin_chief"), " item relic: ", _item(storage.selected).relic)
-			await press(storage._details, "Remove")
+			await press(storage._details, "Unsocket")
 			await create_timer(1.5).timeout
 			await shot("storage_unsocketed_" + tag)
 			print("DRIVE relic after unsocket: ", gs.profile.stash.material_count("relic_goblin_chief"), " item relic: '", _item(storage.selected).relic, "'")
@@ -98,7 +98,7 @@ func _item(id: String):
 
 ## Presses the details action whose label starts with `prefix` (the real button, its own pressed signal).
 func press(details, prefix: String) -> void:
-	for b in details.actions.get_children():
+	for b in details.actions.get_children() + details.socket_row.get_children().filter(func(n): return n is Button):
 		var full := str(b.get_meta("full_text", b.text))
 		if full.begins_with(prefix):
 			print("DRIVE press '", full, "' disabled=", b.disabled)

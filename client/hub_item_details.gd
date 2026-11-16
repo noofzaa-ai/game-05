@@ -36,6 +36,7 @@ var _text_x := 0.0
 var _text_w := 0.0
 var _line := 0.0
 var _cost_full := ""
+var _button_h := 0.0
 var _cost_y := 0.0
 var _cost_h := 0.0
 
@@ -126,11 +127,11 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 	compare.size = Vector2(tw, line)
 	CardTokens.gap(compare, 12.0, s)
 	_wide = wide
+	_button_h = button_h
 	_text_x = tx
 	_text_w = tw
 	_line = line
-	var below := compare.position.y + compare.size.y + (0.0 if wide else line)  # narrow boxes: the socket row has its own line
-	var bar_y := maxf(pad + icon + pad * 0.5, below)
+	var bar_y := maxf(pad + icon + pad * 0.5, compare.position.y + compare.size.y)
 	var key_w := 130.0 * s
 	dur_key.position = Vector2(pad, bar_y)
 	dur_key.size = Vector2(key_w, CardTokens.CHAR_BAR_H * s * 1.4)
@@ -233,12 +234,24 @@ static func owned_relic(profile, rules) -> String:
 func add_socket_action(item, rules, profile, on_socket: Callable, on_unsocket: Callable) -> Button:
 	if item == null or rules == null or not BossLoot.has_socket(rules, item):
 		return null
-	if not item.relic.is_empty():
-		return add_action(CardTokens.t("relic_unsocket_btn"), on_unsocket.bind(item.id))
 	var relic := owned_relic(profile, rules)
-	var b := add_action(CardTokens.t("relic_socket_btn"), on_socket.bind(item.id, relic))
-	b.disabled = relic.is_empty()
-	b.tooltip_text = CardTokens.t("relic_none_owned") if relic.is_empty() else ""
+	var empty: bool = item.relic.is_empty()
+	var text := CardTokens.t("relic_socket_btn" if empty else "relic_unsocket_btn")
+	var callback := on_socket.bind(item.id, relic) if empty else on_unsocket.bind(item.id)
+	var b: Button
+	if _wide:
+		b = add_action(text, callback)
+	else:  # narrow boxes have room: the button sits at the end of the socket row (the action row keeps its labels)
+		b = Button.new()
+		b.text = text
+		b.focus_mode = Control.FOCUS_ALL
+		b.custom_minimum_size = Vector2(socket_row.size.x * 0.32, _button_h)
+		CarvedLook.plate_button(b, s)
+		b.pressed.connect(callback)
+		socket_row.add_child(b)
+		HubLook.fit(b, text, CardTokens.FONT_CHAR_BUTTON, CarvedLook.plate_room(b.custom_minimum_size), CardTokens.HUB_INK, s, 1)
+	b.disabled = empty and relic.is_empty()
+	b.tooltip_text = CardTokens.t("relic_none_owned") if b.disabled else ""
 	return b
 
 
@@ -250,24 +263,25 @@ static func relic_icon(rules, relic_id: String) -> Texture2D:
 	return BrassIcons.texture("ultimate", 48, CardTokens.HUB_INK)
 
 
-## Wide boxes: the socket sits right of the main stat line (that line gives up half its width); narrow boxes: its
-## own line under the compare row.
+## Wide boxes: the socket sits right of the main stat line (that line gives up half its width); narrow boxes (Storage,
+## Shop, Blacksmith have room below): its own line under the durability / cost lines, full width.
 func _place_socket() -> void:
 	if socket_row == null or _text_w <= 0.0:
 		return
 	main_line.size.x = _text_w * 0.5 if socket_row.visible and _wide else _text_w
-	var h := _line
+	var h := _line if _wide else maxf(_line, _button_h)
 	if _wide:
 		socket_row.position = Vector2(_text_x + _text_w * 0.52, main_line.position.y)
 		socket_row.size = Vector2(_text_w * 0.48, h)
 	else:
-		socket_row.position = Vector2(_text_x, compare.position.y + compare.size.y)
-		socket_row.size = Vector2(_text_w, h)
-	socket_icon.custom_minimum_size = Vector2(h, h)
+		var x := dur_key.position.x
+		socket_row.position = Vector2(x, maxf(cost.position.y + cost.size.y, dur_key.position.y + dur_key.size.y) + _line * 0.3)
+		socket_row.size = Vector2(size.x - x * 2.0, h)
+	socket_icon.custom_minimum_size = Vector2.ONE * minf(h, _line * 1.4)
 	CardTokens.gap(socket_row, 6.0, s)
 	if socket_row.visible:
 		HubLook.fit(socket_text, socket_text.get_meta("full_text", socket_text.text) if socket_text.text.ends_with("…") else socket_text.text,
-			CardTokens.FONT_CHAR_SLOT, socket_row.size.x - h - 6.0 * s, CardTokens.HUB_INK, s, 1, "medium")
+			CardTokens.FONT_CHAR_SLOT, socket_row.size.x - socket_icon.custom_minimum_size.x - 12.0 * s - (0.0 if _wide else socket_row.size.x * 0.32), CardTokens.HUB_INK, s, 1, "medium")
 		socket_text.set_meta("full_text", socket_text.text if not socket_text.text.ends_with("…") else socket_text.get_meta("full_text", socket_text.text))
 
 
@@ -276,6 +290,7 @@ func _place_socket() -> void:
 func set_cost(text: String) -> void:
 	_cost_full = text
 	_fit_cost()
+	_place_socket()
 
 
 func _fit_cost() -> void:
@@ -330,6 +345,11 @@ func clear_actions() -> void:
 		for child in box.get_children():
 			box.remove_child(child)
 			child.queue_free()
+	if socket_row != null:
+		for child in socket_row.get_children():
+			if child is Button:
+				socket_row.remove_child(child)
+				child.queue_free()
 
 
 ## The title (an item name can be long): shrink to FONT_MIN on one line, then "…" (the box has one title line).

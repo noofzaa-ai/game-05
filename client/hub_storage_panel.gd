@@ -140,9 +140,15 @@ func _relic_socket(item_id: String, relic: String) -> void:
 
 
 func _relic_unsocket(item_id: String) -> void:
+	var relic := ""
+	var p = _profile()
+	for list in (p.worn_lists() + [p.stash.items] if p != null else []):
+		for piece in list:
+			if piece.id == item_id:
+				relic = piece.relic
 	var result := await run({"type": "relic_unsocket", "item": item_id})
 	if result.get("ok", false):
-		say(CardTokens.t("relic_removed") % _relic_name(str(result.get("result", {}).get("relic", ""))))
+		say(CardTokens.t("relic_removed") % _relic_name(relic))
 
 
 static func _relic_name(relic: String) -> String:
