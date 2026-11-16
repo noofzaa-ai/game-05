@@ -104,7 +104,7 @@
 		"max_level": 10,
 		"bonus_per_level": 0.013,
 		"cost": {
-			"gold": 100,
+			"gold": 250,
 			"materials": {}
 		},
 		"success_chance": 1.0
