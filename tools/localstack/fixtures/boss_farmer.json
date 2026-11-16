@@ -1,0 +1,127 @@
+{
+ "_about": "Boss farmer (design/gdd/boss-loot.md): past the tutorial, Goblin Chief beaten, 600 Goblin Chief coins (one shop piece + 100), one unsocketed Relic, four Goblin Chief set pieces in the stash (necklace, 2 earrings, epic ring: wear 2 or 4 to see the set steps).",
+ "card_deck": {
+  "cards": {
+   "sword_shield": {
+    "race": "human",
+    "progress": {
+     "level": 5,
+     "xp": 0
+    }
+   },
+   "greatsword": {
+    "race": "viking",
+    "progress": {
+     "level": 5,
+     "xp": 0
+    }
+   },
+   "longbow": {
+    "race": "elf",
+    "progress": {
+     "level": 5,
+     "xp": 0
+    }
+   },
+   "magic": {
+    "race": "runeborn",
+    "progress": {
+     "level": 5,
+     "xp": 0
+    }
+   }
+  },
+  "squad": [
+   "sword_shield",
+   "greatsword",
+   "longbow"
+  ]
+ },
+ "tutorial": {
+  "version": 1,
+  "step": "done",
+  "tour_done": true,
+  "unlock_seen": true
+ },
+ "unlocks": {
+  "magic_runeborn": true,
+  "boss_goblin_base": true
+ },
+ "stash": {
+  "gold": "5000",
+  "materials": {
+   "coin_goblin_chief": 600,
+   "relic_goblin_chief": 1
+  },
+  "items": [
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "fixture-boss-1",
+    "slot": "necklace",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "STAMINA",
+    "weapon_type": "",
+    "item_id": "boss_goblin_chief_necklace",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "fixture-boss-2",
+    "slot": "earring",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "EFFECT_ACC",
+    "weapon_type": "",
+    "item_id": "boss_goblin_chief_earring",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "fixture-boss-3",
+    "slot": "earring",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "EFFECT_ACC",
+    "weapon_type": "",
+    "item_id": "boss_goblin_chief_earring",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "fixture-boss-4",
+    "slot": "ring",
+    "tier": 2,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "EFFECT_RES",
+    "weapon_type": "",
+    "item_id": "boss_goblin_chief_ring",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   }
+  ]
+ }
+}

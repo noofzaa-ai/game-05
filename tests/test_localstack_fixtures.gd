@@ -46,4 +46,9 @@ func run(ctx) -> void:
 	ctx.check("tutorial_tour is on the Equipment tour step", Tutorial.current(loaded.tutorial_tour) == "tour_equip")
 	ctx.check("unlock_ceremony shows the ceremony", Tutorial.current(loaded.unlock_ceremony) == "unlock_ceremony")
 	ctx.check("veteran: tutorial done, Magic unlocked, Chief beaten", Tutorial.current(loaded.veteran) == Tutorial.DONE and Unlocks.unlocked(loaded.veteran) and Zones.boss_beaten(loaded.veteran, "goblin_base"))
+	if loaded.has("boss_farmer"):  # design/gdd/boss-loot.md: coins, a relic and Goblin Chief set pieces
+		var bf = loaded.boss_farmer
+		ctx.check("boss_farmer: 600 coins, 1 relic, 4 Goblin Chief pieces", bf.stash.material_count("coin_goblin_chief") == 600 and bf.stash.material_count("relic_goblin_chief") == 1
+			and bf.stash.items.filter(func(i): return i.item_id.begins_with("boss_goblin_chief_")).size() == 4)
+	ctx.check("the boss_farmer state exists", loaded.has("boss_farmer"))
 	ctx.check("old_account migrates to done and unlocked", Tutorial.current(loaded.old_account) == Tutorial.DONE and Unlocks.unlocked(loaded.old_account))

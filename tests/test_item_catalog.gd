@@ -46,6 +46,8 @@ func run(ctx) -> void:
 	for item_id in catalog.items:
 		if catalog.items[item_id].get("procedural", false):
 			continue  # a look built in code (off-hand round shield): its slot shape is drawn, like a plain piece
+		if not str(catalog.items[item_id].get("boss", "")).is_empty() and not ResourceLoader.exists(str(catalog.items[item_id]["icon_path"])):
+			continue  # boss loot (design/gdd/boss-loot.md): its 2D icon is being drawn; until then the slot shape is drawn (null, no crash)
 		if ItemAssets.icon(ItemSystem.create_item(rules, "i", catalog.items[item_id]["slot"], 0, rng, "", item_id), catalog) == null:
 			no_icon.append(item_id)
 	ctx.check("catalog items have an inventory icon from the model team's preview (none: %s)" % [no_icon], no_icon.is_empty())
@@ -63,6 +65,8 @@ func _test_assets(ctx, catalog) -> void:
 	var bad_type: Array[String] = []
 	for item_id in catalog.items:
 		var item: Dictionary = catalog.items[item_id]
+		if not str(item.get("boss", "")).is_empty():
+			continue  # boss accessories are 2D only, never shown on the 3D model (design/gdd/boss-loot.md 5)
 		var file := ItemAssets.armor_file(item) if item["slot"] in ItemAssets.BODY_SLOTS else str(item["asset_path"])
 		if (file.is_empty() or not ResourceLoader.exists(file)) and not item.get("procedural", false):
 			missing.append(item_id)

@@ -65,7 +65,11 @@ func run(ctx) -> void:
 		same = same and _gear(p, card) == _gear(r, card)
 	ctx.check("starter kit: the same items on every authority (fixed seed per class and slot)", same)
 	# Boss 2026-11-13: the old items are gone; every catalog item is a race piece and every one can drop.
-	ctx.check("starter kit: the catalog holds only race pieces, and they all drop", rules.catalog.items.keys().all(func(id): return str(id).begins_with("race_") and rules.catalog.candidates(rules.catalog.entry(id)["slot"], rules.catalog.entry(id)["weapon_type"], 1).has(id)))
+	# Boss loot (design/gdd/boss-loot.md): boss set pieces are the only non-race items, and they never drop from monsters.
+	var plain_ids: Array = rules.catalog.items.keys().filter(func(id): return str(rules.catalog.entry(id).get("boss", "")).is_empty())
+	var boss_ids: Array = rules.catalog.items.keys().filter(func(id): return not str(rules.catalog.entry(id).get("boss", "")).is_empty())
+	ctx.check("starter kit: the catalog holds only race pieces (+ boss pieces), and the race pieces all drop", plain_ids.all(func(id): return str(id).begins_with("race_") and rules.catalog.candidates(rules.catalog.entry(id)["slot"], rules.catalog.entry(id)["weapon_type"], 1).has(id)))
+	ctx.check("starter kit: boss pieces never drop from monsters", boss_ids.all(func(id): return str(id).begins_with("boss_") and not rules.catalog.candidates(rules.catalog.entry(id)["slot"], "", 99).has(id)))
 
 	# Old save (pre-kit): S&S wears a rare blade + epic shirt, greatsword holds a blade and lost its pants, magic is bare.
 	var old: Dictionary = p.to_dict()
