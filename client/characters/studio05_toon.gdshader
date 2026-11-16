@@ -40,17 +40,21 @@ group_uniforms;
 // per-cell sparkle where the metal mask (UV space of the armour atlas) is set. Cloth, leather and skin stay matte.
 group_uniforms metal;
 uniform bool use_metal = false;
-uniform sampler2D metal_mask : filter_linear_mipmap, repeat_disable;
-uniform float metal_core = 0.93;
-uniform float metal_halo = 0.82;
+uniform sampler2D metal_mask : filter_linear_mipmap, repeat_disable; // R metal, G warm (gold/brass), B stud (buckle, rivet)
+uniform float metal_core = 0.80;
+uniform float metal_halo = 0.62;
 uniform float metal_soft = 0.012;
-uniform float metal_halo_strength = 0.34;
+uniform float metal_halo_strength = 0.55;
 uniform float metal_jitter = 0.10;
 uniform float metal_cells = 80.0;
-uniform float metal_rim_edge = 0.30;
-uniform float metal_rim_soft = 0.07;
-uniform float metal_rim_strength = 0.50;
-uniform float metal_lift = 0.68;
+uniform float metal_line_w = 0.05;
+uniform float metal_line_strength = 0.70;
+uniform float metal_rim_edge = 0.50;
+uniform float metal_rim_soft = 0.06;
+uniform float metal_rim_strength = 1.0;
+uniform float metal_stud_edge = 0.70;
+uniform float metal_stud_base = 0.50;
+uniform float metal_lift = 0.60;
 uniform float metal_strength = 1.0;
 group_uniforms;
 
@@ -371,18 +375,32 @@ void fragment() {
 		light = diffuse * mix(vec3(card_band_light), card_shadow_tint * card_band_dark, shade);
 	}
 	if (use_metal) {
-		float metal = smoothstep(0.40, 0.60, texture(metal_mask, UV).r) * metal_strength;
+		vec3 mk = texture(metal_mask, UV).rgb;
+		float metal = smoothstep(0.40, 0.60, mk.r) * metal_strength;
 		if (metal > 0.0) {
+			float warm = smoothstep(0.40, 0.60, mk.g);
+			float stud = smoothstep(0.40, 0.60, mk.b);
 			vec3 view_dir = normalize(VIEW);
 			float spec = dot(n, normalize(normalize(CEL_KEY) + view_dir));
-			float s_jit = spec + (cardHash(floor(UV * metal_cells)) - 0.5) * metal_jitter;
+			float cell = cardHash(floor(UV * metal_cells));
+			float s_jit = spec + (cell - 0.5) * metal_jitter;
 			float core = smoothstep(metal_core, metal_core + metal_soft, s_jit);
 			float halo = smoothstep(metal_halo, metal_halo + metal_soft, s_jit) * metal_halo_strength;
+			// a thin dark ink line just outside the halo: contrast for the highlight on pale plates
+			float line = smoothstep(metal_halo - metal_line_w, metal_halo - metal_line_w + metal_soft, s_jit)
+				* (1.0 - smoothstep(metal_halo, metal_halo + metal_soft, s_jit));
 			float rim_m = (1.0 - smoothstep(metal_rim_edge, metal_rim_edge + metal_rim_soft, dot(n, view_dir)))
 				* smoothstep(-0.10, 0.35, cel_facing);
-			float shine = max(max(core, halo * (1.0 - core)), rim_m * metal_rim_strength);
-			vec3 glint_color = mix(vec3(1.0, 0.97, 0.90), diffuse * 1.7, 0.18);
-			light = mix(light * metal_lift * vec3(0.90, 0.95, 1.06), glint_color, clamp(shine, 0.0, 1.0)) * metal + light * (1.0 - metal);
+			float shine = clamp(max(max(core, halo * (1.0 - core)), rim_m * metal_rim_strength), 0.0, 1.0);
+			vec3 base = light * metal_lift * vec3(0.90, 0.95, 1.06);
+			base = mix(base, light * metal_lift * vec3(1.12, 0.96, 0.66), warm * 0.7);
+			base *= 1.0 - metal_line_strength * line * (1.0 - shine);
+			vec3 glint_color = mix(vec3(1.0, 0.98, 0.94), vec3(1.0, 0.86, 0.42), warm);
+			vec3 metal_light = mix(base, glint_color, shine);
+			// studs and buckles: a bright star-like dot at a wide range of angles, each at its own angle
+			float dot_on = max(smoothstep(metal_stud_edge, metal_stud_edge + metal_soft, s_jit + (cell - 0.5) * 0.2), metal_stud_base);
+			metal_light = mix(metal_light, mix(vec3(1.0, 0.97, 0.86), vec3(1.0, 0.88, 0.45), warm) * 1.1, stud * dot_on);
+			light = mix(light, metal_light, metal);
 		}
 	}
 	vec3 p = rest_pos;
