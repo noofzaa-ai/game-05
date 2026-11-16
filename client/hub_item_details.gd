@@ -10,6 +10,8 @@ const CarvedLook := preload("res://client/carved_look.gd")  ## the carved ink-wa
 const HubItemCell := preload("res://client/hub_item_cell.gd")
 const ItemText := preload("res://client/item_text.gd")
 const HubLook := preload("res://client/hub_look.gd")
+const BossLoot := preload("res://logic/boss_loot.gd")
+const BrassIcons := preload("res://client/brass_icons.gd")
 
 var s := 1.0
 var cell: HubItemCell
@@ -24,8 +26,18 @@ var dur_fill: Panel
 var dur_text: Label
 var cost: Label
 var actions: HBoxContainer
+var socket_row: HBoxContainer  ## boss-loot.md 2: the Relic socket (icon + effect, or "empty"); hidden without a socket
+var socket_icon: TextureRect
+var socket_text: Label
 var _ratio := 1.0
 var _low := false
+var _wide := true
+var _text_x := 0.0
+var _text_w := 0.0
+var _line := 0.0
+var _cost_full := ""
+var _cost_y := 0.0
+var _cost_h := 0.0
 
 
 func _init() -> void:
@@ -64,9 +76,23 @@ func _init() -> void:
 	add_child(dur_text)
 	cost = CardTokens.label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, 1.0, 0, "medium")
 	cost.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	add_child(cost)
 	actions = HBoxContainer.new()
 	add_child(actions)
+	socket_row = HBoxContainer.new()
+	socket_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	socket_row.visible = false
+	add_child(socket_row)
+	socket_icon = TextureRect.new()
+	socket_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	socket_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	socket_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	socket_row.add_child(socket_icon)
+	socket_text = CardTokens.label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, 1.0, 0, "medium")
+	socket_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	socket_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	socket_row.add_child(socket_text)
 
 
 ## Places everything inside a w x h box; `button_h` is the action row height (already a tap size).
@@ -99,7 +125,12 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 	compare.position = Vector2(tx, y + subs.size.y)
 	compare.size = Vector2(tw, line)
 	CardTokens.gap(compare, 12.0, s)
-	var bar_y := maxf(pad + icon + pad * 0.5, compare.position.y + compare.size.y)
+	_wide = wide
+	_text_x = tx
+	_text_w = tw
+	_line = line
+	var below := compare.position.y + compare.size.y + (0.0 if wide else line)  # narrow boxes: the socket row has its own line
+	var bar_y := maxf(pad + icon + pad * 0.5, below)
 	var key_w := 130.0 * s
 	dur_key.position = Vector2(pad, bar_y)
 	dur_key.size = Vector2(key_w, CardTokens.CHAR_BAR_H * s * 1.4)
@@ -115,7 +146,10 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 	else:
 		cost.position = Vector2(pad, bar_y + dur_key.size.y)
 	cost.size = Vector2(maxf(w - cost.position.x - pad, 0.0), dur_key.size.y)
-	CardTokens.hub_text(cost, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_TAB_IDLE, s, 0, "medium")
+	_cost_y = cost.position.y
+	_cost_h = cost.size.y
+	_fit_cost()
+	_place_socket()
 	_fit_title()
 	actions.position = Vector2(pad, h - pad * 0.7 - button_h)
 	actions.size = Vector2(w - pad * 2.0, button_h)
@@ -130,6 +164,8 @@ func show_empty(heading: String, line_sub: String, line_main: String, line_subs:
 	cell.locked = locked
 	for node in [dur_key, dur_back, dur_text, cost]:
 		node.visible = false
+	socket_row.visible = false
+	_place_socket()
 	title.text = heading
 	_fit_title()
 	sub.text = line_sub
@@ -161,7 +197,109 @@ func show_item(item, rules) -> void:
 	_low = _ratio < rules.durability_full_above
 	_draw_bar()
 	dur_text.text = CardTokens.t("durability_of") % [int(round(item.durability)), int(round(item.max_durability))]
-	cost.text = ""
+	set_cost("")
+	show_socket(item, rules)
+
+
+## The Relic socket of `item` (boss set pieces and legendary items): the socketed Relic's icon + effect text, or an
+## empty socket. Items without a socket hide the row. The owner adds the Socket / Remove buttons (it sends commands).
+func show_socket(item, rules) -> void:
+	socket_row.visible = item != null and rules != null and BossLoot.has_socket(rules, item)
+	if socket_row.visible:
+		if item.relic.is_empty():
+			socket_icon.texture = BrassIcons.texture("ultimate", 48, CardTokens.HUB_TAB_IDLE)
+			socket_text.text = CardTokens.t("relic_empty")
+		else:
+			var info: Dictionary = rules.catalog.relics.get(item.relic, {})
+			socket_icon.texture = relic_icon(rules, item.relic)
+			socket_text.text = CardTokens.t("relic_in") % str(info.get("text", info.get("name", item.relic)))
+	_place_socket()
+
+
+## The Relic id the player can socket (the first one in the stash, by id), "" when none.
+static func owned_relic(profile, rules) -> String:
+	if profile == null or rules == null:
+		return ""
+	var ids: Array = rules.catalog.relics.keys()
+	ids.sort()
+	for id in ids:
+		if profile.stash.material_count(str(id)) > 0:
+			return str(id)
+	return ""
+
+
+## Adds the socket action of a socketable `item`: "Remove Relic" when one is in, else "Socket Relic" (disabled, with a
+## reason, when the player has none). The owner's callbacks send relic_socket / relic_unsocket.
+func add_socket_action(item, rules, profile, on_socket: Callable, on_unsocket: Callable) -> Button:
+	if item == null or rules == null or not BossLoot.has_socket(rules, item):
+		return null
+	if not item.relic.is_empty():
+		return add_action(CardTokens.t("relic_unsocket_btn"), on_unsocket.bind(item.id))
+	var relic := owned_relic(profile, rules)
+	var b := add_action(CardTokens.t("relic_socket_btn"), on_socket.bind(item.id, relic))
+	b.disabled = relic.is_empty()
+	b.tooltip_text = CardTokens.t("relic_none_owned") if relic.is_empty() else ""
+	return b
+
+
+## The painted icon of a Relic (catalog icon_path), else the brass "ultimate" mark.
+static func relic_icon(rules, relic_id: String) -> Texture2D:
+	var path := str(rules.catalog.relics.get(relic_id, {}).get("icon_path", "")) if rules != null else ""
+	if not path.is_empty() and ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return BrassIcons.texture("ultimate", 48, CardTokens.HUB_INK)
+
+
+## Wide boxes: the socket sits right of the main stat line (that line gives up half its width); narrow boxes: its
+## own line under the compare row.
+func _place_socket() -> void:
+	if socket_row == null or _text_w <= 0.0:
+		return
+	main_line.size.x = _text_w * 0.5 if socket_row.visible and _wide else _text_w
+	var h := _line
+	if _wide:
+		socket_row.position = Vector2(_text_x + _text_w * 0.52, main_line.position.y)
+		socket_row.size = Vector2(_text_w * 0.48, h)
+	else:
+		socket_row.position = Vector2(_text_x, compare.position.y + compare.size.y)
+		socket_row.size = Vector2(_text_w, h)
+	socket_icon.custom_minimum_size = Vector2(h, h)
+	CardTokens.gap(socket_row, 6.0, s)
+	if socket_row.visible:
+		HubLook.fit(socket_text, socket_text.get_meta("full_text", socket_text.text) if socket_text.text.ends_with("…") else socket_text.text,
+			CardTokens.FONT_CHAR_SLOT, socket_row.size.x - h - 6.0 * s, CardTokens.HUB_INK, s, 1, "medium")
+		socket_text.set_meta("full_text", socket_text.text if not socket_text.text.ends_with("…") else socket_text.get_meta("full_text", socket_text.text))
+
+
+## The cost line: one line when it fits (shrinking to FONT_MIN), else its "  ·  " parts on two lines (the repair cost
+## used to end in "…"). Use this instead of setting cost.text.
+func set_cost(text: String) -> void:
+	_cost_full = text
+	_fit_cost()
+
+
+func _fit_cost() -> void:
+	cost.text = _cost_full
+	if _cost_h <= 0.0 or cost.size.x <= 0.0:
+		return
+	cost.position.y = _cost_y
+	cost.size.y = _cost_h
+	var one := HubLook.fit(cost, _cost_full, CardTokens.FONT_CHAR_SLOT, cost.size.x, CardTokens.HUB_TAB_IDLE, s, 1, "medium")
+	if not str(one["text"]).ends_with("…") or not _cost_full.contains("  ·  "):
+		return
+	var parts := _cost_full.split("  ·  ")
+	var px := 9999
+	for part in parts:
+		px = mini(px, int(HubLook.fit_text(part, CardTokens.FONT_CHAR_SLOT, cost.size.x, s, 1, "medium")["px"]))
+	var lines: Array = []
+	for part in parts:
+		lines.append(str(HubLook.fit_text(part, px, cost.size.x, 1.0, 1, "medium")["text"]))
+	CardTokens.style_text(cost, px, CardTokens.HUB_TAB_IDLE, 1.0, 0, "medium", CardTokens.HUB_OUTLINE)
+	cost.text = "\n".join(lines)
+	cost.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	var tall := HubLook.lines_height(lines.size(), px)
+	cost.position.y = _cost_y - maxf(tall - _cost_h, 0.0) * 0.5  # centred on the durability row
+	cost.size.y = maxf(tall, _cost_h)
 
 
 ## The "vs worn" row (green up / red down arrows + signed numbers, not colour only). `old` null = an empty slot.

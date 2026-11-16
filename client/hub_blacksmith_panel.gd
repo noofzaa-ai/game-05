@@ -193,7 +193,7 @@ func refresh() -> void:
 	else:
 		lines.append(CardTokens.t("smith_repair_line") % [HubItemDetails.cost_text(repair_cost, camp), int(round(float(repair_cost["points"])))])
 	_odds.text = "\n".join(lines)
-	_details.cost.text = ""
+	_details.set_cost("")
 	_refine.disabled = not refine_offer.get("ok", false) and str(refine_offer.get("reason", "")) in ["invalid_item", "max_level", "not_configured"]
 	_upgrade.disabled = not upgrade_offer.get("ok", false) and str(upgrade_offer.get("reason", "")) in ["invalid_item", "max_level", "not_configured"]
 	_tier.disabled = true

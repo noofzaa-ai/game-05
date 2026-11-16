@@ -789,7 +789,7 @@ func _refresh_detail(p, rules, worn, stash_item, fits_count: int) -> void:
 	elif str(refine_offer.get("reason", "")) == "max_level":
 		costs.append(CardTokens.t("refine_max"))
 	costs.append("%s: %s" % [CardTokens.t("repair"), HubItemDetails.cost_text(repair_cost, camp)] if str(repair_cost["kind"]) != "none" else CardTokens.t("like_new"))
-	_detail.cost.text = "  ·  ".join(costs)
+	_detail.set_cost("  ·  ".join(costs))
 	if from_stash:
 		var problem: String = preload("res://logic/profile.gd").slot_problem(card, item, rules)
 		var wear := _detail.add_action(CardTokens.t("equip"), _equip.bind(item.id, item.slot))
@@ -800,6 +800,7 @@ func _refresh_detail(p, rules, worn, stash_item, fits_count: int) -> void:
 	refine_button.disabled = not refine_offer.get("ok", false) and str(refine_offer.get("reason", "")) in ["invalid_item", "max_level"]
 	var repair_button := _detail.add_action(CardTokens.t("repair"), _repair.bind(item.id))
 	repair_button.disabled = str(repair_cost["kind"]) == "none"
+	_detail.add_socket_action(item, rules, p, _relic_socket, _relic_unsocket)
 	_detail.add_action(CardTokens.t("svc_blacksmith"), func() -> void: blacksmith_requested.emit(item.id))
 
 
@@ -951,6 +952,26 @@ func _repair(item_id: String) -> void:
 		# Say what is short (2026-11-16 "can't repair": the bare message hid that a material, not gold, was missing).
 		_say("%s: %s" % [CardTokens.error_text("cannot_afford"), HubItemDetails.cost_text(Repair.missing(cost, p.stash), GameState.camp_data)])
 	refresh()
+
+
+## Boss Relic sockets (design/gdd/boss-loot.md 2; rules in logic/boss_loot.gd).
+func _relic_socket(item_id: String, relic: String) -> void:
+	var result := await _run({"type": "relic_socket", "item": item_id, "relic": relic})
+	if result.get("ok", false):
+		_say(CardTokens.t("relic_socketed") % _relic_name(relic))
+	refresh()
+
+
+func _relic_unsocket(item_id: String) -> void:
+	var result := await _run({"type": "relic_unsocket", "item": item_id})
+	if result.get("ok", false):
+		_say(CardTokens.t("relic_removed") % _relic_name(str(result.get("result", {}).get("relic", ""))))
+	refresh()
+
+
+static func _relic_name(relic: String) -> String:
+	var info: Dictionary = GameState.item_rules.catalog.relics.get(relic, {}) if GameState.item_rules != null else {}
+	return str(info.get("name_th" if CardTokens.language == "th" else "name", info.get("name", relic)))
 
 
 ## Opens the race picker of this card (also R / gamepad Y).

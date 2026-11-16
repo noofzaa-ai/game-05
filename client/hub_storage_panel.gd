@@ -127,8 +127,27 @@ func refresh() -> void:
 		_details.add_action(CardTokens.t("wear_on"), _show_wear_picker)
 		_details.add_action(CardTokens.t("to_vault"), _move.bind(item.id, "stash"))
 		_details.add_action(CardTokens.t("discard"), _ask_discard)
+		_details.add_socket_action(item, rules, p, _relic_socket, _relic_unsocket)  # stash only: the server refuses vault items
 	else:
 		_details.add_action(CardTokens.t("to_stash"), _move.bind(item.id, "vault"))
+
+
+## Boss Relic sockets (design/gdd/boss-loot.md 2; rules in logic/boss_loot.gd).
+func _relic_socket(item_id: String, relic: String) -> void:
+	var result := await run({"type": "relic_socket", "item": item_id, "relic": relic})
+	if result.get("ok", false):
+		say(CardTokens.t("relic_socketed") % _relic_name(relic))
+
+
+func _relic_unsocket(item_id: String) -> void:
+	var result := await run({"type": "relic_unsocket", "item": item_id})
+	if result.get("ok", false):
+		say(CardTokens.t("relic_removed") % _relic_name(str(result.get("result", {}).get("relic", ""))))
+
+
+static func _relic_name(relic: String) -> String:
+	var info: Dictionary = GameState.item_rules.catalog.relics.get(relic, {}) if GameState.item_rules != null else {}
+	return str(info.get("name_th" if CardTokens.language == "th" else "name", info.get("name", relic)))
 
 
 func _picker_title(text: String) -> void:

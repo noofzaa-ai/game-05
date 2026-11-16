@@ -7,9 +7,14 @@ extends "res://client/hub_service_panel.gd"
 ##   `shop_sell {item, expected_price}`, or Mark several and sell them together `shop_sell_batch {entries,
 ##   expected_price}`. Materials are sold one stack at a time: `shop_sell_material {material, count, expected_price}`.
 ## Prices shown are the server's own quote functions, so a stale quote is refused as "price_changed".
+## Boss loot (design/gdd/boss-loot.md 2, Boss 2026-11-16): the stock is the boss set pieces, priced in that boss's coin
+## (offer["currency"], a camp material with its painted icon_path); the coin count sits beside the tabs. Relics are
+## never offered. A tile shows the piece icon, its name and the coin icon + price; short of coins, the details say
+## "Need 500 coins (have 120)" and Buy is off.
 
 const Shop := preload("res://logic/shop.gd")
 const HubLook := preload("res://client/hub_look.gd")
+const ItemAssets := preload("res://client/item_assets.gd")
 
 var tab := "buy"  ## buy | sell
 var selected := ""  ## item id (sell) or sku (buy)
@@ -24,6 +29,8 @@ var _empty: Label
 var _details: HubItemDetails
 var _mats_title: Label
 var _mats: HFlowContainer
+var _coins: HBoxContainer  ## the boss coins the player has (buy tab)
+var _tile_w := 0.0  ## a stock tile: half the list width (two columns)
 
 
 func _init() -> void:
@@ -37,6 +44,10 @@ func build() -> void:
 		var b := plate(CardTokens.t("shop_tab_" + id), select_tab.bind(id))
 		_tab_row.add_child(b)
 		_tabs[id] = b
+	_coins = HBoxContainer.new()
+	_coins.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_coins.alignment = BoxContainer.ALIGNMENT_END
+	body.add_child(_coins)
 	_grid = make_grid(body)
 	_stock_scroll = ScrollContainer.new()
 	_stock_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -82,11 +93,15 @@ func layout_body(area: Vector2) -> void:
 	for id in _tabs:
 		(_tabs[id] as Button).custom_minimum_size = Vector2(0.0, row_h)
 		(_tabs[id] as Button).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_coins.position = Vector2(left_w * 0.6, 0.0)
+	_coins.size = Vector2(left_w * 0.4, row_h)
+	CardTokens.gap(_coins, 8.0, s)
 	var list := Rect2(0.0, row_h + gap * 0.5, left_w, area.y - row_h - gap * 0.5)
 	place_grid(_grid, list)
 	_stock_scroll.position = list.position
 	_stock_scroll.size = list.size
 	CardTokens.flow_gap(_stock, CardTokens.CHAR_STORE_GAP, s)
+	_tile_w = floorf((list.size.x - CardTokens.CHAR_STORE_GAP * s) * 0.5 - 2.0)
 	_empty.position = list.position + Vector2(0.0, list.size.y * 0.3)
 	_empty.size = Vector2(list.size.x, list.size.y * 0.3)
 	CardTokens.hub_text(_empty, CardTokens.FONT_HUB_BODY, CardTokens.HUB_INK, s, 0, "medium")
@@ -111,11 +126,13 @@ func refresh() -> void:
 		return
 	for id in _tabs:
 		style_plate(_tabs[id], id == tab)
+	_details.subs.remove_theme_color_override("font_color")  # the buy tab paints a shortfall line red
 	var selling := tab == "sell"
 	(_grid.get_parent() as Control).visible = selling
 	_stock_scroll.visible = not selling
 	_mats_title.visible = selling
 	_mats.visible = selling
+	_coins.visible = not selling
 	if selling:
 		_refresh_sell(p)
 	else:
@@ -124,35 +141,132 @@ func refresh() -> void:
 
 # ------------------------------------------------------------------ Buy
 func _refresh_buy(p) -> void:
-	for child in _stock.get_children():
-		_stock.remove_child(child)
-		child.queue_free()
+	for box in [_stock, _coins]:
+		for child in box.get_children():
+			box.remove_child(child)
+			child.queue_free()
 	var offers := Shop.stock(GameState.item_rules, GameState.camp_data)
 	_empty.visible = offers.is_empty()
 	_empty.text = CardTokens.t("shop_empty_stock") + "\n" + CardTokens.t("shop_empty_stock_line")
+	var currencies: Array = []
 	var chosen := {}
 	for offer in offers:
+		var currency := str(offer.get("currency", "gold"))
+		if currency != "gold" and not currencies.has(currency):
+			currencies.append(currency)
 		if str(offer["sku"]) == selected:
 			chosen = offer
-		var b := Button.new()
-		b.text = "%s\n%s" % [str(offer["name"]), CardTokens.t("cost_gold") % int(offer["price"])]
-		b.focus_mode = Control.FOCUS_ALL
-		b.custom_minimum_size = Vector2(CardTokens.TAILOR_CHIP.x, CardTokens.tap(CardTokens.TAILOR_CHIP.y * 1.4, phone)) * s
-		b.clip_text = true
-		CarvedLook.chip_button(b, s)
-		# long names: shrink, then two lines, then "…" (the price stays its own line)
-		HubLook.fit(b, str(offer["name"]), CardTokens.FONT_CHAR_LINE, b.custom_minimum_size.x - 16.0 * s, CardTokens.HUB_INK, s, CardTokens.FIT_MAX_LINES,
-			"display" if str(offer["sku"]) == selected else "medium", 0, CardTokens.t("cost_gold") % int(offer["price"]))
-		b.pressed.connect(select_item.bind(str(offer["sku"])))
-		_stock.add_child(b)
+		_stock.add_child(_offer_tile(offer, p))
+	for currency in currencies:  # the coins the player has, beside the tabs
+		_coins.add_child(_icon_rect(_currency_icon(currency), CardTokens.FONT_CHAR_LINE * 1.5 * s))
+		var count := CardTokens.label(CardTokens.t("shop_coins") % _have(p, currency), CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s, 0, "medium")
+		count.tooltip_text = _currency_name(currency)
+		count.mouse_filter = Control.MOUSE_FILTER_PASS
+		count.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		_coins.add_child(count)
 	if chosen.is_empty():
 		_details.show_empty(CardTokens.t("shop_tab_buy"), "", "" if offers.is_empty() else CardTokens.t("pick_piece"), "")
 		return
-	_details.show_empty(str(chosen["name"]), CardTokens.slot_name(str(chosen.get("slot", ""))) if chosen.has("slot") else "", CardTokens.t("cost_gold") % int(chosen["price"]), "")
-	var buy := _details.add_action(CardTokens.t("shop_buy_for") % int(chosen["price"]), _buy.bind(str(chosen["sku"]), str(chosen["name"])))
-	buy.disabled = p.stash.gold < int(chosen["price"])
-	if buy.disabled:
-		buy.tooltip_text = CardTokens.error_text("cannot_afford")
+	var price := int(chosen["price"])
+	var currency := str(chosen.get("currency", "gold"))
+	var have := _have(p, currency)
+	var short := have < price
+	var boss := currency != "gold"
+	_details.show_empty(str(chosen["name"]), CardTokens.slot_name(str(chosen.get("slot", ""))) if chosen.has("slot") else "", _price_text(price, currency),
+		_need_text(price, have, currency) if short else (CardTokens.t("shop_boss_piece") if boss else ""))
+	if str(chosen.get("kind", "")) == "item":  # a preview of the piece as bought (icon + tier pips)
+		var piece = preload("res://logic/item.gd").new()
+		piece.item_id = str(chosen["id"])
+		piece.slot = str(chosen.get("slot", ""))
+		piece.tier = int(Shop.config().get("boss_item_tier" if boss else "equipment_tier", 0))
+		_details.cell.show_item(piece, GameState.item_rules, "")
+	if short:
+		_details.subs.add_theme_color_override("font_color", CardTokens.HUB_BAD)
+	else:
+		_details.subs.remove_theme_color_override("font_color")
+	var buy := _details.add_action(CardTokens.t("shop_buy_coins" if boss else "shop_buy_for") % price, _buy.bind(str(chosen["sku"]), str(chosen["name"])))
+	buy.disabled = short
+	if short:
+		buy.tooltip_text = _need_text(price, have, currency)
+
+
+## One stock tile: the piece icon, its name, and the price (coin icon + number for boss coins, "N gold" otherwise).
+func _offer_tile(offer: Dictionary, p) -> Button:
+	var b := Button.new()
+	var currency := str(offer.get("currency", "gold"))
+	var price := int(offer["price"])
+	b.focus_mode = Control.FOCUS_ALL
+	b.custom_minimum_size = Vector2(maxf(_tile_w, CardTokens.TAILOR_CHIP.x * s), CardTokens.tap(CardTokens.TAILOR_CHIP.y * 1.4, phone) * s)
+	b.clip_contents = true
+	b.tooltip_text = "%s  ·  %s" % [str(offer["name"]), _price_text(price, currency)]
+	CarvedLook.chip_button(b, s)
+	var on := str(offer["sku"]) == selected
+	var pad := 8.0 * s
+	var h := b.custom_minimum_size.y
+	var icon_px := h - pad * 2.0
+	var picture := _icon_rect(ItemAssets.icon_for_id(str(offer.get("id", "")), GameState.item_rules.catalog) if str(offer.get("kind", "")) == "item" else null, icon_px)
+	picture.position = Vector2(pad, pad)
+	picture.size = Vector2(icon_px, icon_px)
+	b.add_child(picture)
+	var tx := pad * 2.0 + icon_px
+	var tw := b.custom_minimum_size.x - tx - pad
+	var title := CardTokens.label("", CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	title.position = Vector2(tx, pad * 0.5)
+	title.size = Vector2(tw, h * 0.5 - pad * 0.5)
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	HubLook.fit(title, str(offer["name"]), CardTokens.FONT_CHAR_LINE, tw, CardTokens.HUB_INK, s, 1, "display" if on else "medium")
+	b.add_child(title)
+	var row := HBoxContainer.new()
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.position = Vector2(tx, h * 0.5)
+	row.size = Vector2(tw, h * 0.5 - pad * 0.5)
+	CardTokens.gap(row, 6.0, s)
+	b.add_child(row)
+	var short := _have(p, currency) < price
+	if currency != "gold":
+		row.add_child(_icon_rect(_currency_icon(currency), row.size.y))
+	var tag := CardTokens.label(str(price) if currency != "gold" else CardTokens.t("cost_gold") % price, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_BAD if short else CardTokens.HUB_INK, s, 0, "medium")
+	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(tag)
+	b.pressed.connect(select_item.bind(str(offer["sku"])))
+	return b
+
+
+func _icon_rect(texture: Texture2D, px: float) -> TextureRect:
+	var picture := TextureRect.new()
+	picture.texture = texture
+	picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	picture.custom_minimum_size = Vector2(px, px)
+	picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return picture
+
+
+func _have(p, currency: String) -> int:
+	return int(p.stash.gold) if currency == "gold" else int(p.stash.material_count(currency))
+
+
+func _currency_icon(currency: String) -> Texture2D:
+	var path := str(GameState.camp_data.materials.get(currency, {}).get("icon_path", ""))
+	if not path.is_empty() and ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return preload("res://client/brass_icons.gd").texture(currency, 48, CardTokens.HUB_INK)
+
+
+func _currency_name(currency: String) -> String:
+	var info: Dictionary = GameState.camp_data.materials.get(currency, {})
+	return str(info.get("name_th" if CardTokens.language == "th" else "name", info.get("name", currency)))
+
+
+func _price_text(price: int, currency: String) -> String:
+	return CardTokens.t("cost_gold") % price if currency == "gold" else "%s  ·  %s" % [CardTokens.t("shop_price_coins") % price, _currency_name(currency)]
+
+
+## "Need 500 coins (have 120)": what the player is short of.
+func _need_text(price: int, have: int, currency: String) -> String:
+	return CardTokens.t("shop_need_gold" if currency == "gold" else "shop_need_coins") % [price, have]
 
 
 # ------------------------------------------------------------------ Sell
@@ -175,7 +289,7 @@ func _refresh_sell(p) -> void:
 	else:
 		_details.show_item(item, rules)
 		var price := Shop.item_sell_price(item, rules)
-		_details.cost.text = CardTokens.t("shop_price_line") % price if price > 0 else CardTokens.t("shop_not_sellable")
+		_details.set_cost(CardTokens.t("shop_price_line") % price if price > 0 else CardTokens.t("shop_not_sellable"))
 		var sell := _details.add_action(CardTokens.t("shop_sell_for") % price, _sell.bind(item.id, price))
 		sell.disabled = price < 1
 		_details.add_action(CardTokens.t("shop_unmark") if marked.has(item.id) else CardTokens.t("shop_mark"), _toggle_mark.bind(item.id))
@@ -232,9 +346,16 @@ func _toggle_mark(id: String) -> void:
 
 # ------------------------------------------------------------------ commands (rules in logic/commands.gd)
 func _buy(sku: String, name: String) -> void:
+	var offer := {}
+	for o in Shop.stock(GameState.item_rules, GameState.camp_data):
+		if str(o["sku"]) == sku:
+			offer = o
 	var result := await run({"type": "shop_buy", "sku": sku})
 	if result.get("ok", false):
 		say(CardTokens.t("shop_bought") % name)
+	elif str(result.get("error", result.get("reason", ""))) == "cannot_afford" and not offer.is_empty() and _profile() != null:
+		var currency := str(offer.get("currency", "gold"))
+		say(_need_text(int(offer["price"]), _have(_profile(), currency), currency), false)
 
 
 func _sell(item_id: String, price: int) -> void:
