@@ -338,7 +338,9 @@ func _build_wave_summary() -> void:
 	CardTokens.panel(line, CardTokens.hub_line(CardTokens.HUB_DIVIDER))
 	_box.add_child(line)
 	_box.add_child(CardTokens.hub_label(HubLook.t("summary_loot"), CardTokens.FONT_SUMMARY_STAGE, CardTokens.HUB_INK, s))
-	_add_loot(loot, width, s)
+	if not (_loot_empty(loot) and "boss_loot" in j and not (j.get("boss_loot") as Dictionary).is_empty()):  # boss loot alone: no "nothing" line
+		_add_loot(loot, width, s)
+	_add_boss_loot(j, width, s)
 	if not _loot_empty(loot):
 		var lost: bool = j.state == Journey.ABANDONED
 		_box.add_child(CardTokens.hub_label(HubLook.t("summary_left_lost" if lost else "summary_safe"), CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_BAD if lost else CardTokens.HUB_GOOD, s, 0, "medium"))
@@ -419,6 +421,50 @@ func _add_loot(loot: Dictionary, width: float, s: float) -> void:
 		var tier_id := str(GameState.item_rules.tiers[tier]["id"]) if tier < GameState.item_rules.tiers.size() else "normal"
 		var words := "%s %s" % ["◆".repeat(tier + 1), HubLook.t("summary_tiers") % [counts[tier], CardTokens.t("tier_" + tier_id)]]
 		tiers.add_child(CardTokens.label(words, CardTokens.FONT_SUMMARY_LINE, HubLook.tier_color(tier), s, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE))
+
+
+## The boss kill rewards of this player (journey.boss_loot, design/gdd/boss-loot.md 2): the coin, the set piece (a hub
+## cell with its icon and tier) and the Relic. Solo runs use key "1"; a squad room the local player's slot.
+func _add_boss_loot(j, width: float, s: float) -> void:
+	var paid: Dictionary = j.get("boss_loot") if "boss_loot" in j and j.get("boss_loot") is Dictionary else {}
+	if paid.is_empty():
+		return
+	var key := "1"
+	if GameState.remote_session != null and GameState.remote_session.has_method("player_id"):
+		key = str(GameState.remote_session.player_id())
+	var mine: Dictionary = paid.get(key, paid.values()[0] if paid.size() == 1 else {})
+	if mine.is_empty():
+		return
+	var camp = GameState.camp_data
+	var rules = GameState.item_rules
+	var row := _flow(width, CardTokens.SUMMARY_GAP * 1.5, s)
+	var coin := str(mine.get("coin", ""))
+	if int(mine.get("coins", 0)) > 0 and not coin.is_empty():
+		var info: Dictionary = camp.materials.get(coin, {}) if camp != null else {}
+		row.add_child(_amount(_painted(str(info.get("icon_path", "")), coin), CardTokens.t("summary_boss_coin") % [int(mine["coins"]), str(info.get("name", coin))], s))
+	for relic in mine.get("relics", {}):
+		var info: Dictionary = rules.catalog.relics.get(relic, {}) if rules != null else {}
+		row.add_child(_amount(_painted(str(info.get("icon_path", "")), str(relic)), CardTokens.t("summary_boss_relic") % str(info.get("name", relic)), s))
+	for piece in mine.get("items", []):
+		if piece == null or rules == null:
+			continue
+		var cell := HubItemCell.new()
+		cell.setup()
+		cell.s = s
+		cell.focus_mode = Control.FOCUS_NONE
+		cell.mouse_filter = Control.MOUSE_FILTER_PASS
+		cell.custom_minimum_size = Vector2.ONE * CardTokens.SUMMARY_CELL * s
+		cell.show_item(piece, rules, "")
+		cell.tooltip_text = str(rules.catalog.entry(piece.item_id).get("name", CardTokens.slot_name(piece.slot)))
+		row.add_child(cell)
+	if row.get_child_count() == 0:
+		row.queue_free()
+
+
+static func _painted(path: String, fallback: String) -> Texture2D:
+	if not path.is_empty() and ResourceLoader.exists(path):
+		return load(path) as Texture2D
+	return InkUi.icon(fallback, int(CardTokens.SUMMARY_ICON))
 
 
 func _flow(width: float, gap: float, s: float) -> HFlowContainer:
