@@ -190,7 +190,12 @@ const RACE_WEAPONS := {"greatsword": "greatsword", "longbow": "longbow", "magic"
 
 
 func _icons() -> void:
-	var stage := _stage(Vector2i(1024, 1024))
+	var lv15_icons := OS.get_environment("ZORX_LV15") == "1"
+	if lv15_icons:
+		# the level-15 icons are drawn like the level-1 ones: no metal glints (a graphics option; set in memory only, nothing saved)
+		load("res://client/graphics_options.gd")._values["metal_glint"] = false
+	var frame := int(OS.get_environment("ZORX_ICON_PX")) if not OS.get_environment("ZORX_ICON_PX").is_empty() else 1024
+	var stage := _stage(Vector2i(frame, frame))
 	var vp: SubViewport = stage["vp"]
 	vp.transparent_bg = true
 	(stage["env"] as Environment).background_mode = Environment.BG_CLEAR_COLOR

@@ -60,8 +60,39 @@ def _rim(img):
     return out
 
 
-def _icon(raw, diagonal, flip=False):
+def _pair(im):
+    """Level-15 gloves: the mesh is two separate gloves (and a few stray pieces) far apart on the 1024 frame. Keep the two
+    biggest pieces, crop each, and set them side by side (left glove, right glove) so the icon reads as a pair like the
+    level-1 bracer icons."""
+    from scipy import ndimage
+    alpha = np.asarray(im.getchannel("A")) > 8
+    labels, count = ndimage.label(ndimage.binary_dilation(alpha, iterations=6))
+    labels = np.where(alpha, labels, 0)
+    areas = sorted(((labels == i).sum(), i) for i in range(1, count + 1))[::-1]
+    keep = [i for a, i in areas[:2] if a > 0.15 * areas[0][0]]
+    parts = []
+    for i in keep:
+        m = labels == i
+        ys, xs = np.nonzero(m)
+        box = (xs.min(), ys.min(), xs.max() + 1, ys.max() + 1)
+        piece = Image.fromarray(np.where(m[..., None], np.asarray(im), 0).astype(np.uint8), "RGBA").crop(box)
+        parts.append((xs.mean(), piece))
+    parts.sort(key=lambda t: t[0])
+    pieces = [p for _, p in parts]
+    height = max(p.size[1] for p in pieces)
+    gap = int(height * 0.08)
+    out = Image.new("RGBA", (sum(p.size[0] for p in pieces) + gap * (len(pieces) - 1), height), (0, 0, 0, 0))
+    x = 0
+    for p in pieces:
+        out.alpha_composite(p, (x, (height - p.size[1]) // 2))
+        x += p.size[0] + gap
+    return out
+
+
+def _icon(raw, diagonal, flip=False, pair=False):
     im = Image.open(raw).convert("RGBA")
+    if pair:
+        im = _pair(im)
     box = im.getchannel("A").point(lambda a: 255 if a > 8 else 0).getbbox()
     if box is None:
         return None
@@ -92,7 +123,7 @@ def make_icons():
         raw = os.path.join(OUT, "iconraw-%s_%s.png" % (race, piece))
         if not os.path.exists(raw):
             continue
-        icon = _icon(raw, piece in ("sword", "greatsword", "magic"), piece == "magic")
+        icon = _icon(raw, piece in ("sword", "greatsword", "magic"), piece == "magic", LV15 and piece == "armband_lv15")
         if icon is None:
             continue
         icon.save(os.path.join(OUT, "icon-%s_%s.png" % (race, piece)))
