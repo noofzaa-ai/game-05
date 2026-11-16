@@ -12,6 +12,7 @@ const ItemRules := preload("res://logic/item_rules.gd")
 const ItemSystem := preload("res://logic/item_system.gd")
 const Loadout := preload("res://logic/loadout.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
+const CardProgress := preload("res://logic/card_progress.gd")
 
 ## Appearance parts of the removed old-model fashion and face / hair-style lists (Boss 2026-11-13); dropped from saves on load.
 const LEGACY_FASHION_PARTS: Array[String] = ["face", "hair_style", "hair_color", "fashion", "fashion_display", "fashion_hat", "fashion_back", "wear_shirt", "wear_pants", "wear_shoes", "wear_head", "wear_hair", "wear_mask"]
@@ -172,13 +173,35 @@ static func wearable_items(card: String, items: Array, item_rules: ItemRules = n
 	return items.filter(func(item) -> bool: return card_can_wear(card, item, item_rules))
 
 
-## "" when `card` may wear `item`, else "slot_closed" (the class cannot use that slot) or "wrong_weapon_family".
-static func slot_problem(card: String, item: Item, item_rules: ItemRules = null) -> String:
+## Instance ids starting with this are starter pieces (starter kit, starter shield, wardrobe grant): exempt from req_level.
+const STARTER_ID_PREFIX := "starter-"
+
+
+## "" when `card` may wear `item`, else "slot_closed" (the class cannot use that slot), "wrong_weapon_family",
+## "wrong_armour_class" (class armour of another class; Boss 2026-11-16) or "level_too_low" (the catalog req_level is above
+## `card_level`; checked only when `card_level` >= 0 and the rules are given, starter pieces are exempt).
+static func slot_problem(card: String, item: Item, item_rules: ItemRules = null, card_level: int = -1) -> String:
 	if item_rules != null and not item_rules.slot_open_for(item.slot, card):
 		return "slot_closed"
 	if item.slot == "weapon" and not weapon_families(card).has(item.weapon_type):
 		return "wrong_weapon_family"
+	if item_rules != null and ARMOUR_SLOTS.has(item.slot):
+		var armour_class := str(item_rules.catalog.entry(item.item_id).get("class", ""))
+		if not armour_class.is_empty() and armour_class != card:
+			return "wrong_armour_class"
+	if item_rules != null and card_level >= 0 and not item.id.begins_with(STARTER_ID_PREFIX) and item_rules.catalog.req_level(item.item_id) > card_level:
+		return "level_too_low"
 	return ""
+
+
+const ARMOUR_SLOTS: Array[String] = ["shirt", "pants", "armband", "shoes"]
+
+
+## slot_problem for card `card` ("" = the lead card) with that card's level from the deck: the one rule the equip
+## command, equip_from_stash and the UI share.
+func wear_problem(card: String, item: Item, item_rules: ItemRules) -> String:
+	var id := lead_card() if card.is_empty() else card
+	return slot_problem(id, item, item_rules, CardProgress.level_of(card_deck, id))
 
 
 ## The catalog item every class card that can use the offhand slot starts with: its race's shield (Boss 2026-11-13;
@@ -251,6 +274,25 @@ func ensure_starter_kit_v2(item_rules: ItemRules) -> void:
 			stash.items.append(worn.unequip("weapon", 0))  # may pass capacity: earned gear is never dropped
 		_fill_starter_kit(item_rules, card)
 	starter_kit_version = STARTER_KIT_VERSION
+
+
+## Boss 2026-11-16: armour is class-bound. Class armour (old race armour migrates to it on load, logic/armor_migration.gd)
+## worn by a card of another class moves to the stash (nothing is lost, capacity may be passed like the weapon case); the
+## class starter kit then fills the empty slot. Idempotent; runs on every load.
+func stash_wrong_class_armour(item_rules: ItemRules) -> int:
+	var moved := 0
+	for card in CardDeck.classes():
+		var worn := loadout_of(card)
+		if worn == null:
+			continue
+		for slot_id in ARMOUR_SLOTS:
+			var piece := worn.item_at(slot_id, 0)
+			if piece != null and slot_problem(card, piece, item_rules) == "wrong_armour_class":
+				stash.items.append(worn.unequip(slot_id, 0))
+				moved += 1
+		if moved > 0:
+			_fill_starter_kit(item_rules, card)
+	return moved
 
 
 ## Puts the starter pieces into the empty slots of `card`: the white race starter outfit of the card's race
@@ -380,7 +422,7 @@ func equip_from_stash(stash_index: int, slot_index: int = 0, card: String = "") 
 		return false
 	var worn := loadout_of(card)
 	var item: Item = stash.items[stash_index]
-	if worn == null or not card_can_wear(lead_card() if card.is_empty() else card, item, item_rules_of(worn)):
+	if worn == null or not wear_problem(card, item, item_rules_of(worn)).is_empty():
 		return false
 	var old := worn.item_at(item.slot, slot_index)
 	if not worn.equip(item, slot_index):
@@ -502,6 +544,7 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	# Before the starter kit below, so a converted worn piece still counts as worn and the kit fills only empty slots.
 	p.legacy_item_version = maxi(0, int(d.get("legacy_item_version", 0)))
 	preload("res://logic/legacy_items.gd").convert_profile(p, item_rules)
+	p.stash_wrong_class_armour(item_rules)  # Boss 2026-11-16: class armour worn by another class goes to the stash
 	p.ensure_starter_cards(item_rules)  # a card with no gear yet (or a class added later) gets the class kit
 	p.starter_kit_version = maxi(0, int(d.get("starter_kit_version", 0)))
 	p.ensure_starter_kit_v2(item_rules)  # old saves: the white class kit fills empty slots once (race-gear-sets.md 3.3)

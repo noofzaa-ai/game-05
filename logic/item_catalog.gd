@@ -60,6 +60,7 @@ func parse(item_data: Dictionary, set_data: Dictionary, known_slots: Array, know
 			"asset_id": str(entry.get("asset_id", "")), "name": str(entry.get("name", item_id)), "slot": slot,
 			"armor_class": str(entry.get("armor_class", "")), "main_stat": str(entry.get("main_stat", "")), "asset_path": str(entry.get("asset_path", "")), "icon_path": str(entry.get("icon_path", "")), "source_style": str(entry.get("source_style", "")),
 			"weapon_type": str(entry.get("weapon_type", "")), "set": set_id, "drop_level": int(entry.get("drop_level", 1)),
+			"req_level": int(entry.get("req_level", 1)),  ## the card level needed to WEAR it (equip command); 1 = none (Boss 2026-11-16: class armour + race weapons 15)
 			"procedural": bool(entry.get("procedural", false)),  ## the client builds the look in code (no model file)
 			"race": str(entry.get("race", "")), "class": str(entry.get("class", "")),  ## race gear: the set's race, the class whose look it is
 			"fallback_asset_path": str(entry.get("fallback_asset_path", "")), "fallback_icon_path": str(entry.get("fallback_icon_path", "")),  ## shown until the Studio file exists
@@ -115,9 +116,15 @@ func race_set_of(item_id: String) -> Dictionary:
 	return sets.get(set_id, {}) if str(sets.get(set_id, {}).get("kind", "")) == "race" else {}
 
 
-## The race gear piece id for `race` x `class_id` x `slot_id` ("" when the catalog has none).
+## The card level needed to wear `item_id` (1 for an unknown item or one with no requirement).
+func req_level(item_id: String) -> int:
+	return maxi(1, int(items.get(item_id, {}).get("req_level", 1)))
+
+
+## The piece id a card of `race` x `class_id` gets for `slot_id` ("" when the catalog has none). Boss 2026-11-16: the
+## weapon is the RACE weapon race_<race>_<class>_weapon; armour is the CLASS armour armour_<class>_<slot> (race-free).
 func race_piece(race: String, class_id: String, slot_id: String) -> String:
-	var id := "race_%s_%s_%s" % [race, class_id, slot_id]
+	var id := "race_%s_%s_%s" % [race, class_id, slot_id] if slot_id == "weapon" else "armour_%s_%s" % [class_id, slot_id]
 	return id if items.has(id) else ""
 
 

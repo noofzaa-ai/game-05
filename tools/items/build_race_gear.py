@@ -1,9 +1,12 @@
 """Race gear sets data (design/gdd/race-gear-sets.md, Boss 2026-11-13). Idempotent: run again after editing the tables.
 
+Boss 2026-11-16 revision (design/gdd/race-gear-sets.md "Boss revision 2026-11-16"): the race set is the WEAPON only;
+armour is CLASS-bound; this is the level-15 generation.
 Writes into data/items/catalog.json, data/items/sets.json and data/items/starter_kits.json:
-- 80 race pieces `race_<race>_<class>_<slot>` (slot: weapon, shirt, pants, armband, shoes). The weapon is in the class's
-  weapon family; armour has the class's armour weight. Any card can wear any piece; the set option needs the card's race.
-- 4 race sets `race_<race>` (kind "race"): steps 2 / 4 / 5 pieces that boost the race passive (cell_mod vocabulary).
+- 16 race weapons `race_<race>_<class>_weapon` (req_level 15, set race_<race>) and 4 race shields.
+- 16 class armour pieces `armour_<class>_<slot>` (slot: shirt, pants, armband, shoes; req_level 15; no set). Worn by any
+  race of that class; the race only picks the mesh/icon (paths carry {race}, resolved by client/item_assets.gd).
+- 4 race sets `race_<race>` (kind "race"): ONE step at 1 piece (the weapon) that boosts the race passive (cell_mod).
 - Removes the old game's items (Boss 2026-11-13): blade_01..07, the Ash/Obsidian/Royal armour and their sets, the neutral
   starter pieces and round_shield. Race pieces drop (drop_level 1) and make the starter kits and the shop stock.
 - Asset hook: asset_path / icon_path point at the Studio files (art/armor/race_<race>/<class>/<slot>.glb,
@@ -47,6 +50,7 @@ ARMOR_MAIN_STAT = {"shirt": "DEF", "pants": "HP", "armband": "DEF", "shoes": "DE
 # Every race piece can drop: logic/loot.gd draws a catalog piece of the rolled slot, then logic/race_drops.gd makes it the
 # piece of a squad card's race and class.
 DROP_LEVEL = 1
+REQ_LEVEL = 15  # level-15 generation (Boss 2026-11-16): the class armour and the race weapons need a card of this level
 LEGACY_SET = r"armor_(ash|obsidian|royal)_"
 
 
@@ -138,33 +142,34 @@ def save(rel, data, crlf, indent):
 def main():
     catalog, cat_crlf = load("data/items/catalog.json")
     items = catalog["items"]
-    for key in [k for k, v in items.items() if v.get("slot") == "hat" or k.startswith("race_") or is_legacy(k)]:
+    for key in [k for k, v in items.items() if v.get("slot") == "hat" or k.startswith("race_") or k.startswith("armour_") or is_legacy(k)]:
         del items[key]
+    for cls, (cname, cname_th, weight, wtype, wname, wname_th) in CLASSES.items():
+        for slot in SLOTS[1:]:
+            item_id = "armour_%s_%s" % (cls, slot)
+            sname, sname_th = ARMOR[slot]
+            items[item_id] = {
+                "asset_id": item_id, "name": "%s %s" % (cname, sname), "name_th": "%s · %s" % (sname_th, cname_th),
+                "slot": slot, "class": cls, "drop_level": DROP_LEVEL, "req_level": REQ_LEVEL, "armor_class": weight,
+                "main_stat": ARMOR_MAIN_STAT[slot],
+                "asset_path": "res://art/armor/race_{race}/%s/%s.glb" % (cls, slot),
+                "icon_path": "res://art/armor/race_{race}/%s/icon-%s.png" % (cls, slot),
+                "fallback_asset_path": "res://art/armor/race_shared/{race}_%s.glb" % slot,
+                "fallback_icon_path": "res://art/armor/race_shared/icon-{race}_%s.png" % slot,
+            }
     for race, (rname, rname_th, _, _) in RACES.items():
         for cls, (cname, cname_th, weight, wtype, wname, wname_th) in CLASSES.items():
-            for slot in SLOTS:
+            for slot in SLOTS[:1]:
                 item_id = "race_%s_%s_%s" % (race, cls, slot)
                 if slot == "weapon":
                     entry = {
                         "asset_id": WEAPON_LOOK[wtype]["asset_id"], "name": "%s %s" % (rname, wname), "name_th": "%s%s" % (wname_th, rname_th),
-                        "slot": "weapon", "weapon_type": wtype, "set": "race_" + race, "race": race, "class": cls, "drop_level": DROP_LEVEL,
+                        "slot": "weapon", "weapon_type": wtype, "set": "race_" + race, "race": race, "class": cls, "drop_level": DROP_LEVEL, "req_level": REQ_LEVEL,
                         "asset_path": "res://art/weapons/race_%s/%s.glb" % (race, cls),
                         "icon_path": "res://art/weapons/race_%s/icon-%s.png" % (race, cls),
                     }
                     if WEAPON_LOOK[wtype].get("procedural"):
                         entry["procedural"] = True
-                else:
-                    sname, sname_th = ARMOR[slot]
-                    entry = {
-                        "asset_id": item_id, "name": "%s %s (%s)" % (rname, sname, cname), "name_th": "%s%s · %s" % (sname_th, rname_th, cname_th),
-                        "slot": slot, "set": "race_" + race, "race": race, "class": cls, "drop_level": DROP_LEVEL, "armor_class": weight,
-                        "main_stat": ARMOR_MAIN_STAT[slot],
-                        "asset_path": "res://art/armor/race_%s/%s/%s.glb" % (race, cls, slot),
-                        "icon_path": "res://art/armor/race_%s/%s/icon-%s.png" % (race, cls, slot),
-                    }
-                    if OUTFIT_SCOPE == "race":
-                        entry["fallback_asset_path"] = SHARED_ARMOR % (race, slot)
-                        entry["fallback_icon_path"] = SHARED_ICON % (race, slot)
                 items[item_id] = entry
     # Race off-hand shields (Boss 2026-11-13: the Studio's sword & shield delivery has a shield per race): slot offhand
     # (Sword & Shield only), no set (the race set is weapon + 4 armour), one item for every tier. The procedural round
@@ -186,39 +191,37 @@ def main():
         for bonus in info.get("bonuses", []):
             bonus["pieces"] = min(int(bonus["pieces"]), 4)
     for race, (rname, rname_th, gear, gear_th) in RACES.items():
-        attuned, awakened = {}, {}
+        # ONE step at 1 piece (the race weapon; Boss 2026-11-16): the old 2-piece generic effect (+10% passive numbers)
+        # plus the class "Attuned" (old 4-piece) effect. The old 5-piece "Awakened" effect is dropped. PLACEHOLDER numbers.
+        weapon_step = {}
         for cls in CLASSES:
-            (t4, e4), (t5, e5) = STEPS[race][cls]
-            attuned[cls] = {"text": t4, "effects": e4}
-            awakened[cls] = {"text": t5, "effects": e5}
-        attuned["default_class"] = {"text": "The passive's numbers +5% more.", "effects": [mod(scale_add=0.05)]}
+            (t4, e4), _ = STEPS[race][cls]
+            weapon_step[cls] = {"text": "The race passive's numbers +10%%. %s" % t4, "effects": [mod(scale_add=0.10)] + e4}
+        weapon_step["default_class"] = {"text": "The race passive's numbers +10%.", "effects": [mod(scale_add=0.10)]}
         sets["sets"]["race_" + race] = {
             "name": "%s %s" % (rname, gear), "name_th": "%s%s" % (gear_th, rname_th), "kind": "race", "race": race,
             "tier_mul": {"normal": 0.75, "rare": 1.0, "epic": 1.25, "legendary": 1.5},
-            "steps": [
-                {"pieces": 2, "name": "Kindled", "all": {"text": "The race passive's numbers +10%.", "effects": [mod(scale_add=0.10)]}},
-                {"pieces": 4, "name": "Attuned", "by_class": attuned},
-                {"pieces": 5, "name": "Awakened", "by_class": awakened},
-            ],
+            "steps": [{"pieces": 1, "name": "Race Weapon", "by_class": weapon_step}],
             "bonuses": [],
         }
     sets["_race_sets"] = ("Race gear sets (design/gdd/race-gear-sets.md 3.5-3.10, Boss 2026-11-13; built by tools/items/build_race_gear.py). "
-                          "kind race: 5 pieces (the race weapon of the class + shirt, pants, armband, shoes). The set option works only when the card's race "
-                          "equals `race`; steps boost the race passive with cell_mod words (logic/race_sets.gd). A step's numbers x tier_mul of the LOWEST "
-                          "tier among the N best pieces it counts (white starter 0.75, PO default). bonuses stays empty: ItemCatalog.set_bonus ignores race sets.")
+                          "kind race: ONE piece, the race weapon of the class (Boss 2026-11-16; armour is class-bound and has no set). The set option works only when "
+                          "the card's race equals `race`; the single step boosts the race passive with cell_mod words (logic/race_sets.gd). Its numbers x tier_mul "
+                          "of the weapon's tier (white starter 0.75, PO default; step numbers are PLACEHOLDERS). bonuses stays empty: ItemCatalog.set_bonus ignores race sets.")
     save("data/items/sets.json", sets, sets_crlf, 2)
 
     kits, kits_crlf = load("data/items/starter_kits.json")
     kits.pop("race_kit", None)
     kits.pop("_race_kit", None)
-    kits["version"] = 4
-    kits["kits"] = {cls: {slot: "race_{race}_%s_%s" % (cls, slot) for slot in SLOTS} for cls in CLASSES}
+    kits["version"] = 5
+    kits["kits"] = {cls: {slot: ("race_{race}_%s_weapon" % cls if slot == "weapon" else "armour_%s_%s" % (cls, slot)) for slot in SLOTS} for cls in CLASSES}
     kits["offhand"] = "race_{race}_shield"
     kits["_comment"] = ("Class starter kits (design/gdd/race-gear-sets.md 3.2-3.3, Boss 2026-11-13; built by tools/items/build_race_gear.py). "
                         "Every class card starts wearing its OWN race's starter outfit at tier `tier` (white): `kits` maps class -> slot -> "
                         "a catalog id, {race} = the card's race. `offhand`: the starter shield of a card whose offhand slot is open (Sword & "
-                        "Shield), {race} likewise. logic/profile.gd: new players get the kit; old saves get it once (starter_kit_version) in "
-                        "EMPTY slots only. Accessories start empty. The neutral starter pieces and round_shield are gone (Boss 2026-11-13).")
+                        "Shield), {race} likewise. Armour is the CLASS armour (Boss 2026-11-16). Starter pieces (instance id starting starter-) "
+                        "are exempt from req_level (they stay level 1). logic/profile.gd: new players get the kit; old saves "
+                        "get it once (starter_kit_version) in EMPTY slots only. Accessories start empty.")
     text = json.dumps(kits, indent=1, ensure_ascii=False) + "\n"
     (ROOT / "data/items/starter_kits.json").write_bytes((text.replace("\n", "\r\n") if kits_crlf else text).encode("utf-8"))
 

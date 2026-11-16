@@ -130,9 +130,9 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 					return _error("item_not_in_container")
 				if item.destroyed:
 					return _error("item_destroyed")
-				var wear_problem := Profile.slot_problem(p.lead_card() if card.is_empty() else card, item, state["rules"])
+				var wear_problem: String = p.wear_problem(card, item, state["rules"])
 				if not wear_problem.is_empty():
-					return _error(wear_problem)  # slot_closed (offhand: Sword & Shield only) or wrong_weapon_family
+					return _error(wear_problem)  # slot_closed, wrong_weapon_family, wrong_armour_class or level_too_low (req_level)
 				if source == "bag" and not card.is_empty() and card != p.lead_card():
 					return _error("not_available_here")  # run bags dress the fighting character only (plan step 4)
 				if not (p.equip_from_stash(at, index, card) if source == "stash" else trip.equip_from_bag(at, index)):

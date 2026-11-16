@@ -1,35 +1,35 @@
 {
- "version": 4,
- "_comment": "Class starter kits (design/gdd/race-gear-sets.md 3.2-3.3, Boss 2026-11-13; built by tools/items/build_race_gear.py). Every class card starts wearing its OWN race's starter outfit at tier `tier` (white): `kits` maps class -> slot -> a catalog id, {race} = the card's race. `offhand`: the starter shield of a card whose offhand slot is open (Sword & Shield), {race} likewise. logic/profile.gd: new players get the kit; old saves get it once (starter_kit_version) in EMPTY slots only. Accessories start empty. The neutral starter pieces and round_shield are gone (Boss 2026-11-13).",
+ "version": 5,
+ "_comment": "Class starter kits (design/gdd/race-gear-sets.md 3.2-3.3, Boss 2026-11-13; built by tools/items/build_race_gear.py). Every class card starts wearing its OWN race's starter outfit at tier `tier` (white): `kits` maps class -> slot -> a catalog id, {race} = the card's race. `offhand`: the starter shield of a card whose offhand slot is open (Sword & Shield), {race} likewise. Armour is the CLASS armour (Boss 2026-11-16). Starter pieces (instance id starting starter-) are exempt from req_level (they stay level 1). logic/profile.gd: new players get the kit; old saves get it once (starter_kit_version) in EMPTY slots only. Accessories start empty.",
  "tier": "normal",
  "kits": {
   "sword_shield": {
    "weapon": "race_{race}_sword_shield_weapon",
-   "shirt": "race_{race}_sword_shield_shirt",
-   "pants": "race_{race}_sword_shield_pants",
-   "armband": "race_{race}_sword_shield_armband",
-   "shoes": "race_{race}_sword_shield_shoes"
+   "shirt": "armour_sword_shield_shirt",
+   "pants": "armour_sword_shield_pants",
+   "armband": "armour_sword_shield_armband",
+   "shoes": "armour_sword_shield_shoes"
   },
   "greatsword": {
    "weapon": "race_{race}_greatsword_weapon",
-   "shirt": "race_{race}_greatsword_shirt",
-   "pants": "race_{race}_greatsword_pants",
-   "armband": "race_{race}_greatsword_armband",
-   "shoes": "race_{race}_greatsword_shoes"
+   "shirt": "armour_greatsword_shirt",
+   "pants": "armour_greatsword_pants",
+   "armband": "armour_greatsword_armband",
+   "shoes": "armour_greatsword_shoes"
   },
   "longbow": {
    "weapon": "race_{race}_longbow_weapon",
-   "shirt": "race_{race}_longbow_shirt",
-   "pants": "race_{race}_longbow_pants",
-   "armband": "race_{race}_longbow_armband",
-   "shoes": "race_{race}_longbow_shoes"
+   "shirt": "armour_longbow_shirt",
+   "pants": "armour_longbow_pants",
+   "armband": "armour_longbow_armband",
+   "shoes": "armour_longbow_shoes"
   },
   "magic": {
    "weapon": "race_{race}_magic_weapon",
-   "shirt": "race_{race}_magic_shirt",
-   "pants": "race_{race}_magic_pants",
-   "armband": "race_{race}_magic_armband",
-   "shoes": "race_{race}_magic_shoes"
+   "shirt": "armour_magic_shirt",
+   "pants": "armour_magic_pants",
+   "armband": "armour_magic_armband",
+   "shoes": "armour_magic_shoes"
   }
  },
  "offhand": "race_{race}_shield"
