@@ -88,7 +88,7 @@ func refresh() -> void:
 		var id := str(z.id)
 		var st := Zones.state(p, id)
 		var b: Button = _markers[id]
-		var mark := "◆ " if st == Zones.OPEN else ("" if st == Zones.LOCKED else "")
+		var mark := ""
 		b.text = mark + _zone_name(z)
 		b.modulate = Color.WHITE if st == Zones.OPEN else Color(0.78, 0.78, 0.78, 0.92)
 		style_plate(b, id == selected)
