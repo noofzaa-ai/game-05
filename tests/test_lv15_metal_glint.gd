@@ -45,13 +45,15 @@ func run(ctx) -> void:
 	ctx.check("no glint when the surface faces away", MetalGlint.glint(0.2, 0.5) == 0.0)
 	ctx.check("full glint at the highlight centre", MetalGlint.glint(1.0, 0.5) == 1.0)
 	var halo := MetalGlint.glint(float(MetalGlint.PARAMS["metal_halo"]) + 0.03, 0.5)
-	ctx.check("a dimmer second band between halo and core", halo > 0.3 and halo < 0.7)
+	ctx.check("a dimmer second band between halo and core", halo > 0.2 and halo < 0.6)
 	ctx.check("glint is monotonic in the half-vector dot", MetalGlint.glint(0.80, 0.5) <= MetalGlint.glint(0.90, 0.5) and MetalGlint.glint(0.90, 0.5) <= MetalGlint.glint(0.97, 0.5))
 	var edge := float(MetalGlint.PARAMS["metal_core"])
 	ctx.check("the core is stepped (hard edge within 0.03)", MetalGlint.glint(edge + 0.03, 0.5) >= 0.99 and MetalGlint.glint(edge + 0.03, 0.5) - MetalGlint.glint(edge - 0.015, 0.5) > 0.4)
 	ctx.check("each cell sparkles at its own angle", MetalGlint.glint(edge - 0.01, 0.95) > MetalGlint.glint(edge - 0.01, 0.05))
 	ctx.check("dark ink line sits just below the halo edge only", MetalGlint.dark_line(float(MetalGlint.PARAMS["metal_halo"]) - 0.01, 0.5) > 0.9 and MetalGlint.dark_line(0.2, 0.5) == 0.0 and MetalGlint.dark_line(1.0, 0.5) == 0.0)
 	ctx.check("studs always show a dot, and a bright one over a wider angle than plates", MetalGlint.stud(0.0, 0.5) >= float(MetalGlint.PARAMS["metal_stud_base"]) and MetalGlint.stud(0.80, 0.5) == 1.0 and MetalGlint.glint(0.80, 0.5) < 1.0)
+	ctx.check("plate glint fades when small on screen, never below its floor", MetalGlint.small_scale(1.0) == 1.0 and MetalGlint.small_scale(20.0) == float(MetalGlint.PARAMS["metal_small_floor"]) and MetalGlint.small_scale(4.5) < 1.0)
+	ctx.check("the glint never covers a whole plate (texture stays visible)", float(MetalGlint.PARAMS["metal_glint_mix"]) <= 0.75 and float(MetalGlint.PARAMS["metal_lift"]) >= 0.8 and float(MetalGlint.PARAMS["metal_lift"]) <= 1.0)
 	ctx.check("rim: thin, only at grazing angles on the lit side", MetalGlint.rim(0.05, 0.8) > 0.9 and MetalGlint.rim(0.6, 0.8) == 0.0 and MetalGlint.rim(0.05, -0.8) == 0.0)
 
 	# shader and switch

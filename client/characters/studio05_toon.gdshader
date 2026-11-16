@@ -41,20 +41,24 @@ group_uniforms;
 group_uniforms metal;
 uniform bool use_metal = false;
 uniform sampler2D metal_mask : filter_linear_mipmap, repeat_disable; // R metal, G warm (gold/brass), B stud (buckle, rivet)
-uniform float metal_core = 0.80;
-uniform float metal_halo = 0.62;
+uniform float metal_core = 0.88;
+uniform float metal_halo = 0.78;
 uniform float metal_soft = 0.012;
-uniform float metal_halo_strength = 0.55;
+uniform float metal_halo_strength = 0.30;
 uniform float metal_jitter = 0.10;
 uniform float metal_cells = 80.0;
 uniform float metal_line_w = 0.05;
-uniform float metal_line_strength = 0.70;
-uniform float metal_rim_edge = 0.50;
+uniform float metal_line_strength = 0.45;
+uniform float metal_rim_edge = 0.42;
 uniform float metal_rim_soft = 0.06;
-uniform float metal_rim_strength = 1.0;
+uniform float metal_rim_strength = 0.55;
 uniform float metal_stud_edge = 0.70;
-uniform float metal_stud_base = 0.50;
-uniform float metal_lift = 0.60;
+uniform float metal_stud_base = 0.40;
+uniform float metal_lift = 0.84;
+uniform float metal_glint_mix = 0.70; // plates: the glint covers at most this much of the plate, so its texture stays visible
+uniform float metal_small_lo = 2.5; // atlas texels per screen pixel where the plate glint starts to fade (small on screen)
+uniform float metal_small_hi = 7.0; // ... and where it has faded to metal_small_floor
+uniform float metal_small_floor = 0.35;
 uniform float metal_strength = 1.0;
 group_uniforms;
 
@@ -391,12 +395,14 @@ void fragment() {
 				* (1.0 - smoothstep(metal_halo, metal_halo + metal_soft, s_jit));
 			float rim_m = (1.0 - smoothstep(metal_rim_edge, metal_rim_edge + metal_rim_soft, dot(n, view_dir)))
 				* smoothstep(-0.10, 0.35, cel_facing);
-			float shine = clamp(max(max(core, halo * (1.0 - core)), rim_m * metal_rim_strength), 0.0, 1.0);
-			vec3 base = light * metal_lift * vec3(0.90, 0.95, 1.06);
-			base = mix(base, light * metal_lift * vec3(1.12, 0.96, 0.66), warm * 0.7);
-			base *= 1.0 - metal_line_strength * line * (1.0 - shine);
+			// small on screen (card portraits, far fighters): plate glints fade so the plate texture shows; studs keep their dots
+			float texels = max(length(dFdx(UV)), length(dFdy(UV))) * 2048.0;
+			float plate_scale = mix(1.0, metal_small_floor, smoothstep(metal_small_lo, metal_small_hi, texels));
+			float shine = clamp(max(max(core, halo * (1.0 - core)), rim_m * metal_rim_strength) * plate_scale, 0.0, 1.0);
+			vec3 base = light * metal_lift; // brightness only: no colour shift
+			base *= 1.0 - metal_line_strength * line * (1.0 - shine) * plate_scale;
 			vec3 glint_color = mix(vec3(1.0, 0.98, 0.94), vec3(1.0, 0.86, 0.42), warm);
-			vec3 metal_light = mix(base, glint_color, shine);
+			vec3 metal_light = mix(base, glint_color, shine * metal_glint_mix);
 			// studs and buckles: a bright star-like dot at a wide range of angles, each at its own angle
 			float dot_on = max(smoothstep(metal_stud_edge, metal_stud_edge + metal_soft, s_jit + (cell - 0.5) * 0.2), metal_stud_base);
 			metal_light = mix(metal_light, mix(vec3(1.0, 0.97, 0.86), vec3(1.0, 0.88, 0.45), warm) * 1.1, stud * dot_on);

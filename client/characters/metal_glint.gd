@@ -7,20 +7,24 @@ const MASK_PATH := "res://art/armor/race_shared/race_wardrobe_atlas_lv15_metal.p
 const OPTION := "metal_glint"  ## client/graphics_options.gd boolean (device quality switch)
 ## Shader uniforms (name -> value), set on every lv15 material.
 const PARAMS := {
-	"metal_core": 0.80,  ## half-vector . normal above this = the bright glint (stepped, 1 band)
-	"metal_halo": 0.62,  ## above this = the dimmer second band
+	"metal_core": 0.88,  ## half-vector . normal above this = the bright glint (stepped, 1 band)
+	"metal_halo": 0.78,  ## above this = the dimmer second band
 	"metal_soft": 0.012,  ## step softness (anti-aliasing only; the look stays hard-edged)
-	"metal_halo_strength": 0.55,
+	"metal_halo_strength": 0.30,
 	"metal_jitter": 0.10,  ## per atlas cell shift of the thresholds: each plate patch / stud sparkles at its own angle
 	"metal_cells": 80.0,  ## atlas cells per UV unit for that shift
 	"metal_line_w": 0.05,  ## width (in the same dot) of the thin dark ink line just outside the halo
-	"metal_line_strength": 0.70,
-	"metal_rim_edge": 0.50,  ## facing (n . view) below this = rim
+	"metal_line_strength": 0.45,
+	"metal_rim_edge": 0.42,  ## facing (n . view) below this = rim
 	"metal_rim_soft": 0.06,
-	"metal_rim_strength": 1.0,
+	"metal_rim_strength": 0.55,
 	"metal_stud_edge": 0.70,  ## studs / buckles: the star dot is on above this (much wider than the plate glint)
-	"metal_stud_base": 0.50,  ## ... and never fully off, so a stud always reads as a small bright dot
-	"metal_lift": 0.60,  ## metal base is darker than cloth in the same band, so the glints stand out
+	"metal_stud_base": 0.40,  ## ... and never fully off, so a stud always reads as a small bright dot
+	"metal_lift": 0.84,  ## metal base is darker than cloth in the same band, so the glints stand out
+	"metal_glint_mix": 0.70,  ## plates: the glint covers at most this much of the plate (its texture stays visible)
+	"metal_small_lo": 2.5,  ## atlas texels per screen pixel where the plate glint starts to fade (card portrait, far fighter)
+	"metal_small_hi": 7.0,
+	"metal_small_floor": 0.35,  ## ... to this share of its strength (studs keep their dots)
 	"metal_strength": 1.0,
 }
 
@@ -57,6 +61,11 @@ static func stud(spec: float, hash: float) -> float:
 	var s: float = spec + (hash - 0.5) * float(PARAMS["metal_jitter"]) + (hash - 0.5) * 0.2
 	var edge: float = PARAMS["metal_stud_edge"]
 	return maxf(_smooth(edge, edge + float(PARAMS["metal_soft"]), s), float(PARAMS["metal_stud_base"]))
+
+
+## Mirror of the shader: how much of the plate glint is left when a screen pixel covers `texels` atlas texels.
+static func small_scale(texels: float) -> float:
+	return lerpf(1.0, float(PARAMS["metal_small_floor"]), _smooth(float(PARAMS["metal_small_lo"]), float(PARAMS["metal_small_hi"]), texels))
 
 
 ## Mirror of the shader: rim 0..1 for facing = n . view and cel_facing = n . key light (lit side only).
