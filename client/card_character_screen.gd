@@ -944,7 +944,7 @@ func _repair(item_id: String) -> void:
 				if worn_item.id == item_id:
 					item = worn_item
 	var cost: Dictionary = Repair.quote(item, GameState.camp_data, Camp.repair_discount(p, GameState.camp_data)) if item != null else {}
-	var result := await _run({"type": "repair", "item": item_id})
+	var result := await _run({"type": "repair", "item": item_id}, cost.is_empty())
 	if result.get("ok", false):
 		_say(CardTokens.t("repaired_ok"))
 	elif str(result.get("error", "")) == "cannot_afford" and not cost.is_empty():
@@ -983,13 +983,13 @@ func _change_race(race: String) -> void:
 
 
 ## Sends one command; a refusal shows its reason. Returns the result.
-func _run(request: Dictionary) -> Dictionary:
+func _run(request: Dictionary, say_error: bool = true) -> Dictionary:
 	if _busy or not send.is_valid():
 		return {"ok": false}
 	_busy = true
 	var result: Dictionary = await send.call(request)
 	_busy = false
-	if not result.get("ok", false):
+	if not result.get("ok", false) and (say_error or str(result.get("error", "")) != "cannot_afford"):
 		_say(CardTokens.error_text(str(result.get("error", result.get("reason", "")))))
 	else:
 		changed.emit()
