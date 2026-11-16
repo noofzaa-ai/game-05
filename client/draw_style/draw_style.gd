@@ -37,8 +37,8 @@ const MONSTER_OUTLINE_WIDTH := 0.008
 ## at least as heavy as the monsters' (MONSTER_OUTLINE_WIDTH, up to 3.6 px), never thinner than HERO_INK_MIN_PIXELS
 ## at the overview and capped when the camera zooms in on a fighter.
 const HERO_INK_WIDTH := 0.014
-const HERO_INK_MIN_PIXELS := 1.6
-const HERO_INK_MAX_PIXELS := 2.0  ## the brush wobble (+-22%) goes on top: never over ~2.5 px at any zoom (was 4.5: black blobs zoomed in)
+const HERO_INK_MIN_PIXELS := 1.0
+const HERO_INK_MAX_PIXELS := 1.8  ## the brush wobble (+-22%) goes on top: never over ~2.5 px at any zoom (was 4.5: black blobs zoomed in)
 ## Monsters' brush line: a hard pixel band that includes the swell, so zooming in never thickens it (was 0..3.6 px
 ## before a swell of up to 1.55x: ~0.8 px at the overview, ~5.6 px zoomed in, the fur became a black blob).
 const MONSTER_INK_MIN_PIXELS := 1.0

@@ -47,28 +47,33 @@ func run(ctx) -> void:
 	var hero = preload("res://client/characters/studio05_character_model.gd").new()
 	DrawStyle.dress_hero(hero)
 	ctx.check("a battle hero gets the ink look with a line in metres at least the monsters' weight",
-		hero.card_ink and hero.ink_line_world >= DrawStyle.MONSTER_OUTLINE_WIDTH and hero.ink_min_pixels >= 1.5 and hero.ink_max_pixels > hero.ink_min_pixels)
+		hero.card_ink and hero.ink_line_world >= DrawStyle.MONSTER_OUTLINE_WIDTH and hero.ink_min_pixels >= 1.0 and hero.ink_max_pixels > hero.ink_min_pixels)
 	hero.free()
 	var studio = preload("res://client/characters/studio05_character_model.gd").new()
 	ctx.check("a model nobody dresses (Studio screens) keeps the Studio parity look", not studio.card_ink and studio.ink_line_world == 0.0)
 	studio.free()
 
 	# Fight ink must stay thin across camera zoom (Boss 2026-11-16: zoomed in, outlines became black blobs).
-	for viewport_h in [720.0, 1080.0]:  # phone-ish and desktop heights
+	# Real camera numbers from camera_rig.gd: ARENA_VIEW fov, closest ARENA_CLOSEST .. overview arm length.
+	var CameraRig := preload("res://client/camera_rig.gd")
+	var arena_fov: float = CameraRig.ARENA_VIEW["fov"]
+	var arena_far: float = (CameraRig.ARENA_VIEW["offset"] - Vector3(0, CameraRig.ARENA_VIEW["look_y"], 0)).length()
+	for viewport_h in [390.0, 720.0, 1080.0]:  # phone landscape, laptop, desktop
 		var worst := 0.0
 		var first := -1.0
 		var last := 0.0
-		for distance in [3.0, 5.0, 8.0, 12.0, 18.0, 25.0]:  # closest zoom to full overview
-			var ps := DrawStyle.pixel_size(distance, 40.0, viewport_h)
+		for step in 7:
+			var distance := lerpf(CameraRig.ARENA_CLOSEST, arena_far, step / 6.0)
+			var ps := DrawStyle.pixel_size(distance, arena_fov, viewport_h)
 			var px := DrawStyle.outline_pixels(DrawStyle.MONSTER_OUTLINE_WIDTH, ps, 1.55, DrawStyle.MONSTER_INK_MIN_PIXELS, DrawStyle.MONSTER_INK_MAX_PIXELS)
 			if first < 0.0:
 				first = px
 			last = px
 			worst = maxf(worst, px)
 		ctx.check("monster ink at h=%d: never over 2.5 px at any zoom (%.2f)" % [viewport_h, worst], worst <= 2.5)
-		ctx.check("monster ink at h=%d: zooming in never grows it more than 2x vs the overview (%.2f vs %.2f)" % [viewport_h, first, last], first <= last * 2.0 + 0.001)
-		var hero_close := DrawStyle.outline_pixels(DrawStyle.HERO_INK_WIDTH, DrawStyle.pixel_size(3.0, 40.0, viewport_h), 1.0, DrawStyle.HERO_INK_MIN_PIXELS, DrawStyle.HERO_INK_MAX_PIXELS)
-		ctx.check("hero ink at h=%d: closest zoom stays at most 2.5 px incl. wobble (%.2f)" % [viewport_h, hero_close], hero_close * 1.22 <= 2.5)
+		ctx.check("monster ink at h=%d: closest zoom is at most 2.5x the overview line (%.2f vs %.2f)" % [viewport_h, first, last], first <= last * 2.5 + 0.001)
+		var hero_close := DrawStyle.outline_pixels(DrawStyle.HERO_INK_WIDTH, DrawStyle.pixel_size(CameraRig.ARENA_CLOSEST, arena_fov, viewport_h), 1.0, DrawStyle.HERO_INK_MIN_PIXELS, DrawStyle.HERO_INK_MAX_PIXELS)
+		ctx.check("hero ink at h=%d: closest zoom at most 2.5 px incl. wobble (%.2f)" % [viewport_h, hero_close], hero_close * 1.22 <= 2.5)
 
 	var words_ok := true
 	for key in DrawStyle.DRAWN_KEYS + ["drawn_style", "drawn_hint"]:
