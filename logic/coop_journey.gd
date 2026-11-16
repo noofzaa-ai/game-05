@@ -121,6 +121,18 @@ func xp_cards() -> Array:
 			cards.append(pair)
 	return cards
 
+## Boss loot targets (design/gdd/boss-loot.md 4): one per account. Online squads: one per owner slot at that player's
+## personal factor; separate-profile parties: one per player.
+func boss_loot_targets() -> Array:
+	var out: Array = []
+	var seen: Array = []
+	for slot in owners():
+		var profile = runs_by_player[fighters_of(slot)[0]].profile
+		if seen.any(func(p): return is_same(p, profile)): continue
+		seen.append(profile)
+		out.append({"key": str(slot), "profile": profile, "factor": loot_factor_for(slot)})
+	return out
+
 ## Loot by squad size: the party's fighters (a member down still counts; the squad chose its size).
 func fighter_count() -> int:
 	return runs_by_player.size()

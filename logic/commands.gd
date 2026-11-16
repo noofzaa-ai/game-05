@@ -7,6 +7,7 @@ const Profile := preload("res://logic/profile.gd")
 const Repair := preload("res://logic/repair.gd")
 const Unlocks := preload("res://logic/unlocks.gd")
 const Tutorial := preload("res://logic/tutorial.gd")
+const BossLoot := preload("res://logic/boss_loot.gd")
 
 
 static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGenerator) -> Dictionary:
@@ -36,6 +37,8 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"tree_reset_class": {"card": TYPE_STRING}, "tree_reset_race": {"card": TYPE_STRING},
 		"farm_seed": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_plant": {"plot":TYPE_INT,"crop":TYPE_STRING}, "farm_harvest": {"plot":TYPE_INT},
 		"shop_buy": {"sku": TYPE_STRING},
+		# Boss Relics (design/gdd/boss-loot.md 2, logic/boss_loot.gd): free, camp only; unsocket returns the relic intact.
+		"relic_socket": {"item": TYPE_STRING, "relic": TYPE_STRING}, "relic_unsocket": {"item": TYPE_STRING},
 		"shop_sell": {"item": TYPE_STRING, "expected_price": TYPE_INT},
 		"shop_sell_batch": {"entries": TYPE_ARRAY, "expected_price": TYPE_INT},
 		"shop_sell_material": {"material": TYPE_STRING, "count": TYPE_INT, "expected_price": TYPE_INT},
@@ -151,6 +154,10 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				var at: int = inventory.items.find(item)
 				if at < 0:
 					return _error("item_not_in_container")
+				var relic_problem: String = BossLoot.release_problem(p, item)  # boss-loot.md 4: the relic returns to the stash first
+				if not relic_problem.is_empty():
+					return _error(relic_problem)
+				BossLoot.release(p, item)
 				inventory.take_item(at)
 			else:
 				var count := int(command["count"])
@@ -230,6 +237,8 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				"shop_sell": result = preload("res://logic/shop.gd").sell_item(p, state["rules"], command.item, int(command.expected_price))
 				"shop_sell_material": result = preload("res://logic/shop.gd").sell_material(p, state["camp"], command.material, int(command.count), int(command.expected_price))
 				"shop_buy": result = preload("res://logic/shop.gd").buy(p, state["rules"], state["camp"], command.sku, _rng)
+				"relic_socket": result = BossLoot.socket(p, state["rules"], item, command.relic)
+				"relic_unsocket": result = BossLoot.unsocket(p, item)
 				"upgrade": result = preload("res://logic/upgrade.gd").apply(item, p, state["rules"], state["camp"], int(command.count), _rng)
 				"refine": result = preload("res://logic/refine.gd").apply(item, p, state["rules"], state["camp"], int(command.level), _rng)
 				"repair": result = Repair.repair(item, p, state["camp"])

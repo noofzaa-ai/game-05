@@ -22,6 +22,8 @@ static func stock(rules, camp) -> Array[Dictionary]:
 			if not cfg.get("include_catalog", false) and id not in cfg.get("catalog_items", []): continue
 			var entry: Dictionary = rules.catalog.items[id]
 			result.append({"sku": "item:" + str(id), "id": str(id), "kind": "item", "name": entry.name, "slot": entry.slot, "price": int(cfg.price)})
+	if cfg.get("boss_items", false):  # Boss 2026-11-16 (design/gdd/boss-loot.md 2): boss set pieces for that boss's coins
+		result.append_array(preload("res://logic/boss_loot.gd").shop_offers(rules))
 	if cfg.get("include_materials", false):
 		var ids: Array = camp.materials.keys(); ids.sort()
 		for id in ids:
@@ -34,13 +36,15 @@ static func buy(profile, rules, camp, sku: String, rng: RandomNumberGenerator) -
 		if offer.sku == sku: product = offer; break
 	if product.is_empty(): return {"ok": false, "reason": "invalid_product"}
 	var price := int(product.price)
-	if profile.stash.gold < price: return {"ok": false, "reason": "cannot_afford"}
+	var currency := str(product.get("currency", "gold"))
+	if currency == "gold" and profile.stash.gold < price: return {"ok": false, "reason": "cannot_afford"}
+	if currency != "gold" and profile.stash.material_count(currency) < price: return {"ok": false, "reason": "cannot_afford"}
 	if product.kind == "material":
 		if profile.stash.room_for(product.id) < 1: return {"ok": false, "reason": "stash_full"}
 		if profile.stash.add_material(product.id, 1) != 1: return {"ok": false, "reason": "stash_full"}
 	else:
 		if profile.stash.free_slots() < 1: return {"ok": false, "reason": "stash_full"}
-		var tier := int(config().get("equipment_tier", -1))
+		var tier := int(config().get("boss_item_tier" if currency != "gold" else "equipment_tier", config().get("equipment_tier", -1)))
 		if tier < 0 or tier >= rules.tiers.size(): return {"ok": false, "reason": "not_configured"}
 		var used := {}
 		for item in profile.stash.items + profile.vault.items: used[item.id] = true
@@ -57,8 +61,9 @@ static func buy(profile, rules, camp, sku: String, rng: RandomNumberGenerator) -
 		if piece == null: return {"ok": false, "reason": "invalid_product"}
 		if not profile.stash.add_item(piece): return {"ok": false, "reason": "stash_full"}
 	# All capacity/config checks have passed; one unit and its price commit together.
-	profile.stash.gold -= price
-	return {"ok": true, "sku": sku, "price": price, "count": 1}
+	if currency == "gold": profile.stash.gold -= price
+	else: profile.stash.remove_material(currency, price)
+	return {"ok": true, "sku": sku, "price": price, "currency": currency, "count": 1}
 
 
 ## Sale quotes and proceeds are authority-owned. Client expected_price only prevents stale quotes.
@@ -93,6 +98,10 @@ static func sell_item(profile, rules, id: String, expected_price: int) -> Dictio
 	if price < 1: return {"ok": false, "reason": "not_sellable"}
 	if expected_price != price: return {"ok": false, "reason": "price_changed"}
 	if profile.stash.gold < 0 or profile.stash.gold > 2147483647 - price: return {"ok": false, "reason": "gold_limit"}
+	var BossLoot = preload("res://logic/boss_loot.gd")  # design/gdd/boss-loot.md 4: a socketed relic returns to the stash first
+	var relic_problem: String = BossLoot.release_problem(profile, profile.stash.items[at])
+	if not relic_problem.is_empty(): return {"ok": false, "reason": relic_problem}
+	BossLoot.release(profile, profile.stash.items[at])
 	# No yield: remove one existing owned instance and credit its server-computed price together.
 	profile.stash.take_item(at)
 	profile.stash.gold += price
@@ -155,7 +164,13 @@ static func sell_batch(profile, rules, camp, entries: Array, expected_price: int
 	if profile.stash.gold < 0 or profile.stash.gold > 2147483647 - total: return {"ok": false, "reason": "gold_limit"}
 	take_indices.sort()
 	take_indices.reverse()
-	for index in take_indices: profile.stash.take_item(index)
+	var BossLoot = preload("res://logic/boss_loot.gd")  # socketed relics go back to the stash first (boss-loot.md 4)
+	for index in take_indices:
+		var relic_problem: String = BossLoot.release_problem(profile, profile.stash.items[index])
+		if not relic_problem.is_empty(): return {"ok": false, "reason": relic_problem}
+	for index in take_indices:
+		BossLoot.release(profile, profile.stash.items[index])
+		profile.stash.take_item(index)
 	for id in materials: profile.stash.remove_material(id, int(materials[id]))
 	profile.stash.gold += total
 	return {"ok": true, "price": total, "items": take_indices.size(), "materials": materials}

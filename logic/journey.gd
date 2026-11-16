@@ -50,6 +50,9 @@ var treasure_pending := false  ## at a treasure node whose chest is not opened y
 var waves_cleared := 0
 var card_xp_paid := false
 var card_xp: Dictionary = {}
+## Boss loot (design/gdd/boss-loot.md 2): what each account got from the boss at run end (BossLoot.grant summaries,
+## key = boss_loot_targets() key). Paid with the card XP (once, card_xp_paid), only on a WON run.
+var boss_loot: Dictionary = {}
 
 
 ## Starts a journey and lays out every stage's choices from `seed`.
@@ -460,6 +463,8 @@ func pay_card_xp() -> void:
 	if card_xp_paid or not is_over():
 		return
 	card_xp_paid = true
+	if state == WON:
+		pay_boss_loot()
 	var amount := CardProgress.run_xp(xp_waves_cleared(), state == WON, state == WON)
 	for entry in xp_cards():
 		# design/gdd/tutorial.md 2: the first goblin_waves run that clears wave 12 unlocks Magic + Runeborn (authority only).
@@ -469,6 +474,28 @@ func pay_card_xp() -> void:
 		var granted: Dictionary = CardProgress.grant(entry[0].card_deck, str(entry[1]), amount)
 		if not granted.is_empty():
 			card_xp[str(entry[1])] = granted
+
+
+## The accounts that get boss loot: [{"key", "profile", "factor"}], one per account (design/gdd/boss-loot.md 4: each
+## player of a squad room gets their own coin and rolls). A plain journey: the run's profile at the journey's factor.
+func boss_loot_targets() -> Array:
+	return [{"key": "1", "profile": run.profile, "factor": loot_factor()}]
+
+
+## Run end of a WON run (authority; called from pay_card_xp BEFORE the world map marks the boss beaten, so the first
+## kill is still visible): BossLoot.grant for every account into its stash. A lost run never comes here (4: no coin).
+func pay_boss_loot() -> void:
+	var BossLoot = load("res://logic/boss_loot.gd")
+	var Zones = load("res://logic/world_zones.gd")
+	var found: Array = BossLoot.boss_for_journey(str(data.id))
+	if found[1].is_empty():
+		return
+	for target in boss_loot_targets():
+		var rng := _rng_for("boss-loot-" + str(target["key"]), 0)
+		var summary: Dictionary = BossLoot.grant(target["profile"], item_rules, loot_data, data, not Zones.boss_beaten(target["profile"], str(found[0])),
+			float(target["factor"]), rng, "boss-%d-%s" % [seed_value, target["key"]])
+		if not summary.is_empty():
+			boss_loot[str(target["key"])] = summary
 
 
 ## Run end (GDD races 3.10.2): the carried ultimate gauge goes back to 0.
@@ -557,7 +584,15 @@ func to_dict() -> Dictionary:
 		"first_camp": first_camp, "completed": completed, "current": current.duplicate(true),
 		"state": state, "hp_fraction": StateCodec.float_text(hp_fraction), "gauge": StateCodec.float_text(gauge),
 		"path": path.duplicate(), "last_reward": reward, "treasure_pending": treasure_pending,
-		"waves_cleared": waves_cleared, "card_xp_paid": card_xp_paid, "card_xp": card_xp.duplicate(true)}
+		"waves_cleared": waves_cleared, "card_xp_paid": card_xp_paid, "card_xp": card_xp.duplicate(true),
+		"boss_loot": _boss_loot_dict()}
+
+
+func _boss_loot_dict() -> Dictionary:
+	var out := {}
+	for key in boss_loot:
+		out[key] = load("res://logic/boss_loot.gd").summary_to_dict(boss_loot[key])
+	return out
 
 
 static func from_dict(d: Dictionary, journey_data: JourneyData, rules, camp_data, loot, weapons: Array):
@@ -598,6 +633,12 @@ static func from_dict(d: Dictionary, journey_data: JourneyData, rules, camp_data
 			for key in paid_xp[card]:
 				entry[key] = paid_xp[card][key] if paid_xp[card][key] is String else int(paid_xp[card][key])
 			j.card_xp[str(card)] = entry
+	j.boss_loot = {}
+	var paid_boss = d.get("boss_loot", {})
+	if paid_boss is Dictionary:
+		for key in paid_boss:
+			if paid_boss[key] is Dictionary:
+				j.boss_loot[str(key)] = load("res://logic/boss_loot.gd").summary_from_dict(paid_boss[key])
 	j.last_reward = d["last_reward"].duplicate(true)
 	if j.last_reward.has("gold"):
 		j.last_reward["gold"] = int(j.last_reward["gold"])

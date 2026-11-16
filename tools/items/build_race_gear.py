@@ -225,8 +225,9 @@ def main():
     shop, shop_crlf = load("data/items/shop.json")
     # Boss 2026-11-13 (PO default): the merchant sells the race armour of the Sword & Shield look (any card may wear any
     # armour) plus each race's shield; legacy stock is gone. White like every shop piece (equipment_tier).
-    shop["catalog_items"] = (["race_%s_sword_shield_%s" % (race, slot) for race in RACES for slot in ARMOR]
-                             + ["race_%s_shield" % race for race in RACES])
+    # Boss 2026-11-16 (design/gdd/boss-loot.md 2 Shop): the race gold stock is removed; the shop sells only boss set
+    # pieces for boss coins (shop.json boss_items, logic/boss_loot.gd).
+    shop["catalog_items"] = []
     save("data/items/shop.json", shop, shop_crlf, 2)
 
     tuning, tun_crlf = load("data/items/equipment_tuning.json")

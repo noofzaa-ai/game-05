@@ -2,6 +2,7 @@
   "version": 1,
   "price": 1000,
   "equipment_tier": 0,
+  "boss_item_tier": 0,
   "include_catalog": false,
   "include_materials": false,
   "sell": {
