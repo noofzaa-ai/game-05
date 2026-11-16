@@ -37,8 +37,12 @@ const MONSTER_OUTLINE_WIDTH := 0.008
 ## at least as heavy as the monsters' (MONSTER_OUTLINE_WIDTH, up to 3.6 px), never thinner than HERO_INK_MIN_PIXELS
 ## at the overview and capped when the camera zooms in on a fighter.
 const HERO_INK_WIDTH := 0.014
-const HERO_INK_MIN_PIXELS := 2.0
-const HERO_INK_MAX_PIXELS := 4.5
+const HERO_INK_MIN_PIXELS := 1.6
+const HERO_INK_MAX_PIXELS := 2.0  ## the brush wobble (+-22%) goes on top: never over ~2.5 px at any zoom (was 4.5: black blobs zoomed in)
+## Monsters' brush line: a hard pixel band that includes the swell, so zooming in never thickens it (was 0..3.6 px
+## before a swell of up to 1.55x: ~0.8 px at the overview, ~5.6 px zoomed in, the fur became a black blob).
+const MONSTER_INK_MIN_PIXELS := 1.0
+const MONSTER_INK_MAX_PIXELS := 2.0
 const HERO_INK_PHONE_MIN_TRIANGLES := 400  ## phones: no line on pieces smaller than this (weapons, head, hair keep it)
 const PAINT_DATA := "res://data/ui/draw_style.json"  ## per-stage painted ground, paper tile, sky
 const ENV_SATURATION := 0.95  ## the stage keeps its greens and warm browns (0.85 read grey on the goblin camp)
@@ -529,6 +533,18 @@ static func _brush(width: float) -> ShaderMaterial:
 	return material
 
 
+## Metres one screen pixel covers at `distance` from a perspective camera (what the outline shaders compute).
+static func pixel_size(distance: float, fov_degrees: float, viewport_height: float) -> float:
+	return 2.0 * distance * tan(deg_to_rad(fov_degrees) * 0.5) / maxf(viewport_height, 1.0)
+
+
+## The outline thickness in screen pixels that ink_outline_brush.gdshader draws: the width in metres seen at this
+## pixel size, times the brush swell (1 +- wobble), kept inside [min_pixels, max_pixels] AFTER the swell so the
+## cap is a real cap. Pure, so tests can walk the camera zoom.
+static func outline_pixels(width_m: float, pixel_size_m: float, swell: float, min_pixels: float, max_pixels: float) -> float:
+	return clampf(width_m / maxf(pixel_size_m, 0.000001) * swell, min_pixels, max_pixels)
+
+
 static var _brush_monster: ShaderMaterial
 
 
@@ -538,6 +554,8 @@ static func _rebrush(reference: WeakRef) -> void:
 		return
 	if _brush_monster == null:
 		_brush_monster = _brush(MONSTER_OUTLINE_WIDTH)
+		_brush_monster.set_shader_parameter("min_pixels", MONSTER_INK_MIN_PIXELS)
+		_brush_monster.set_shader_parameter("max_pixels", MONSTER_INK_MAX_PIXELS)
 	node.material_override = _brush_monster
 
 

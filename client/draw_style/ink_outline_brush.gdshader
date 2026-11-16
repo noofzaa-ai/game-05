@@ -34,7 +34,8 @@ void vertex() {
 	}
 	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 	float swell = 1.0 + wobble * (value_noise(world * wobble_scale) * 2.0 - 1.0);
-	float pixels = clamp(width * units_to_view / pixel_size, min_pixels, max_pixels) * swell;
+	// swell inside the clamp: max_pixels is a true cap at every zoom (mirrors DrawStyle.outline_pixels)
+	float pixels = clamp(width * units_to_view / pixel_size * swell, min_pixels, max_pixels);
 	VERTEX += direction * pixels * pixel_size / units_to_view;
 }
 
