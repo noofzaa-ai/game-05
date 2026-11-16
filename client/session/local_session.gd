@@ -263,7 +263,7 @@ func enter_camp() -> void:
 func command(request: Dictionary) -> Dictionary:
 	var result := Commands.apply({"now":int(Time.get_unix_time_from_system()),"profile": profile, "rules": rules, "camp": camp,
 		"run": run, "journey": journey, "location": _location, "cosmetics": cosmetics}, request, _command_rng)
-	if result["ok"] and _sim != null and request["type"] in ["equip", "unequip", "repair", "repair_all", "upgrade_camp", "upgrade_facility"]:
+	if result["ok"] and _sim != null and request["type"] in ["equip", "unequip", "repair", "repair_all", "upgrade_camp", "upgrade_facility", "tier_up"]:
 		_sim.gear_changed(_player_id)
 	# Present local Item views to the existing treasure renderer; the command itself returns JSON data.
 	if result["ok"] and request["type"] == "journey_treasure" and not result["result"].is_empty():

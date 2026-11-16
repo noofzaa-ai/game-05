@@ -1,0 +1,13 @@
+{
+ "version": 1,
+ "_comment": "Equipment TIER-UP (Boss 2026-11-16; design/gdd/race-gear-sets.md 'Tier-up path'; logic/tier_up.gd; command tier_up). It replaces the old substat Upgrade. A level-1 piece (a starter piece: instance id starts with starter-) becomes the level-15 piece of its slot for the card that holds it. The tier (white/blue/purple/gold) is kept exactly; durability ratio, refine level, enhancement level, sockets/relics, substats and upgrade counters are kept. `paths`: slot id -> the catalog id the piece becomes, {race} = the card's race, {class} = the card's class (the path is by slot + class, never by a hard-coded id). A slot not listed (shields, boss relic pieces, back, accessories) is never eligible. `cost_gold`: gold paid per piece (Boss 2026-11-16: 2500, flat, not scaled by tier). The card's level must reach the target item's req_level (catalog.json, 15 for the level-15 gear).",
+ "enabled": true,
+ "cost_gold": 2500,
+ "paths": {
+  "weapon": "race_{race}_{class}_weapon",
+  "shirt": "armour_{class}_shirt",
+  "pants": "armour_{class}_pants",
+  "armband": "armour_{class}_armband",
+  "shoes": "armour_{class}_shoes"
+ }
+}

@@ -4,7 +4,7 @@ var securityCollectorId="", securityLookupAt=0, securityWindow=0, securitySent=0
 var SECURITY_REASONS=["protected_write","protected_delete","item_not_owned","invalid_payload","invalid_command","invalid_count","unknown_command","not_available_here","request_id_reused","revision_conflict"];
 function securityCommand(payload:string):string {
  try{var p=JSON.parse(payload),t=p.command&&p.command.type;
- var allowed=["mall_buy","storage_item","storage_material","upgrade","shop_buy","shop_sell","shop_sell_material","shop_sell_batch","refine","equip","unequip","discard","discard_material","repair","repair_all","upgrade_camp","upgrade_facility","appearance","randomize_appearance","enhance","upgrade_tier"];
+ var allowed=["mall_buy","storage_item","storage_material","upgrade","shop_buy","shop_sell","shop_sell_material","shop_sell_batch","refine","equip","unequip","discard","discard_material","repair","repair_all","upgrade_camp","upgrade_facility","appearance","randomize_appearance","enhance","upgrade_tier","tier_up"];
  return allowed.indexOf(t)>=0?t:"other";}catch(_){return "other";}
 }
 function securityObserve(ctx:nkruntime.Context,nk:nkruntime.Nakama,reason:string,command:string):void {

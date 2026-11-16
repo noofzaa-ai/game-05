@@ -16,6 +16,8 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 	if not command.get("type") is String:
 		return _error("invalid_command")
 	var kind: String = command["type"]
+	if kind == "upgrade":
+		return _error("deprecated")  # the substat Upgrade was replaced by tier_up (Boss 2026-11-16, logic/tier_up.gd)
 	var schemas := {
 		# "card" (optional, per-card gear, Boss 2026-11-11): the class card whose slots/build change. Missing =
 		# the lead card (Profile.lead_card) with the old weapon-led skill rule, so older clients keep working.
@@ -45,7 +47,9 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"refine": {"item": TYPE_STRING, "level": TYPE_INT},
 		"storage_item": {"item": TYPE_STRING, "source": TYPE_STRING},
 		"storage_material": {"material": TYPE_STRING, "count": TYPE_INT, "source": TYPE_STRING},
-		"upgrade": {"item": TYPE_STRING, "count": TYPE_INT},
+		# Tier-up (Boss 2026-11-16, logic/tier_up.gd): a level-1 starter piece becomes the level-15 piece. "card" = the card the
+		# piece is for when it is in the stash (a worn piece uses its wearer).
+		"tier_up": {"item": TYPE_STRING, "card": TYPE_STRING},
 		"enhance": {"item": TYPE_STRING, "protect": TYPE_BOOL},
 		"upgrade_tier": {"item": TYPE_STRING},
 		"randomize_appearance": {}, "bank_bag": {}, "return_to_camp": {},
@@ -239,7 +243,7 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				"shop_buy": result = preload("res://logic/shop.gd").buy(p, state["rules"], state["camp"], command.sku, _rng)
 				"relic_socket": result = BossLoot.socket(p, state["rules"], item, command.relic)
 				"relic_unsocket": result = BossLoot.unsocket(p, item)
-				"upgrade": result = preload("res://logic/upgrade.gd").apply(item, p, state["rules"], state["camp"], int(command.count), _rng)
+				"tier_up": result = preload("res://logic/tier_up.gd").apply(p, state["rules"], item, card)
 				"refine": result = preload("res://logic/refine.gd").apply(item, p, state["rules"], state["camp"], int(command.level), _rng)
 				"repair": result = Repair.repair(item, p, state["camp"])
 				"repair_all": result = Repair.repair_all_worn(p, state["camp"], card)
