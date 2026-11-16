@@ -70,6 +70,8 @@ const ICONS := {
 const ALIASES := {
 	"inventory": "stash", "combat": "weapon", "treasure": "stash", "boss": "ultimate", "special": "skill",
 	"pve": "weapon", "pvp": "enemies", "customize": "look", "fists": "weapon",
+	# Boss loot materials (data/camp/camp.json; their painted icon is icon_path): coin -> gold, relic -> ultimate.
+	"coin_goblin_chief": "gold", "relic_goblin_chief": "ultimate",
 }
 
 static var _cache := {}
