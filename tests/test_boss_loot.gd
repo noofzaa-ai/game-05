@@ -260,6 +260,7 @@ func _shop_random_tier(ctx) -> void:
 		Commands.apply(g, {"type": "shop_buy", "sku": "boss:boss_goblin_chief_ring"}, F.rng(seed_value))
 		same_seed_ok = same_seed_ok and int(boss_items(g.profile)[-1].tier) == int(piece.tier)
 	ctx.check("shop: 60 seeded buys cover more than one tier %s" % [tiers.keys()], tiers.size() > 1)
+	ctx.check("shop: bought tiers are only rare/epic/legendary, never normal %s" % [tiers.keys()], tiers.keys().all(func(t): return t >= 1 and t <= 3))
 	ctx.check("shop: a random-tier buy spends exactly 500 coins and no gold", coins_ok and gold_ok)
 	ctx.check("shop: the tier is deterministic from the command rng", same_seed_ok)
 

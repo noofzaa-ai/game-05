@@ -50,7 +50,7 @@ slots, so the two never compete for a slot.
 
 ### Shop (Boss: clear the shop page, sell boss items)
 
-- **Stock.** The shop sells only boss set pieces now. Each one costs **500 Boss Coins** of that boss, and only that one coin type per boss. The piece's tier is random: rolled at purchase on the server from the boss's `shop_tier_weights` (data/loot/boss_loot.json; white/blue/purple/gold all possible, placeholder 60/28/8/4), using the command's own rng. The shop card says "random tier".
+- **Stock.** The shop sells only boss set pieces now. Each one costs **500 Boss Coins** of that boss, and only that one coin type per boss. The piece's tier is random: rolled at purchase on the server from the boss's `shop_tier_weights` (data/loot/boss_loot.json; never white: blue/purple/gold only, placeholder weights 0/70/22/8), using the command's own rng. The shop card says "random tier".
 - **Not sold.** Relics are never sold; they only drop.
 - **Selling.** Selling gear for gold stays as it is.
 - **Removed.** The old catalogue (race pieces for gold) is removed from the stock.

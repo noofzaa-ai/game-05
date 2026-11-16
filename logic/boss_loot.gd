@@ -295,7 +295,8 @@ static func summary_from_dict(d: Dictionary) -> Dictionary:
 
 # --- shop --------------------------------------------------------------------------------------------------------
 
-## The tier a bought piece of boss `zone_id` rolls (Boss 2026-11-16): one rng draw over that boss's shop_tier_weights.
+## The tier a bought piece of boss `zone_id` rolls (Boss 2026-11-16): one rng draw over that boss's shop_tier_weights
+## (normal has weight 0: shop pieces are only rare / epic / legendary).
 ## Returns -1 when the boss has no usable table.
 static func shop_tier(rules, zone_id: String, rng: RandomNumberGenerator) -> int:
 	var weights: Array = boss(zone_id).get("shop_tier_weights", [])
