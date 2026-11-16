@@ -59,7 +59,22 @@ static func with_race(text: String, race: String) -> String:
 	return text.replace("{race}", race if not race.is_empty() else DEFAULT_RACE)
 
 
-static func armor_file(info: Dictionary, race: String = "") -> String:
+## The level-15 look of a class armour piece (Boss 2026-11-16, art/armor/race_shared/<race>_<slot>_lv15.glb, split by
+## tools/items/split_race_outfits_lv15.py): the file for the wearing card's race, "" for anything that is not class armour.
+static func lv15_path(info: Dictionary, race: String, icon: bool = false) -> String:
+	if not str(info.get("asset_id", "")).begins_with("armour_") or str(info.get("slot", "")).is_empty():
+		return ""
+	var look := with_race("{race}", race)
+	var folder := "res://art/armor/race_shared/"
+	return folder + ("icon-%s_%s_lv15.png" % [look, info["slot"]] if icon else "%s_%s_lv15.glb" % [look, info["slot"]])
+
+
+## `starter`: the starter white kit (instance ids "starter-...") keeps the old starter look.
+static func armor_file(info: Dictionary, race: String = "", starter: bool = false) -> String:
+	if not starter:
+		var lv15 := lv15_path(info, race)
+		if not lv15.is_empty() and ResourceLoader.exists(lv15):
+			return lv15
 	var file := with_race(str(info.get("asset_path", "")), race)
 	if not file.is_empty() and ResourceLoader.exists(file):
 		return file
@@ -71,14 +86,17 @@ static func armor_file(info: Dictionary, race: String = "") -> String:
 
 ## The inventory icon of a catalog item (`catalog`: ItemCatalog), or null (draw the slot's shape).
 static func icon(item, catalog, race: String = "") -> Texture2D:
-	return null if item == null else icon_for_id(item.item_id, catalog, race)
+	return null if item == null else icon_for_id(item.item_id, catalog, race, str(item.id).begins_with("starter-"))
 
 
 ## The same for a catalog item id ("" or unknown: null).
-static func icon_for_id(item_id: String, catalog, race: String = "") -> Texture2D:
+static func icon_for_id(item_id: String, catalog, race: String = "", starter: bool = false) -> Texture2D:
 	if catalog == null or item_id.is_empty():
 		return null
 	var info: Dictionary = catalog.entry(item_id)
+	if not starter:
+		var lv15_icon := lv15_path(info, race, true)
+		if not lv15_icon.is_empty() and ResourceLoader.exists(lv15_icon): return load(lv15_icon) as Texture2D
 	var native_icon := with_race(str(info.get("icon_path","")), race)
 	if not native_icon.is_empty() and ResourceLoader.exists(native_icon): return load(native_icon) as Texture2D
 	for fallback_icon in chain(with_race(str(info.get("fallback_icon_path", "")), race)):  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
@@ -169,7 +187,7 @@ static func looks(loadout, catalog, style: String, race: String = "") -> Diction
 			continue
 		var asset_id: String = catalog.entry(item.item_id).get("asset_id", "")
 		result["refine"][slot_id] = item.refine_level
-		var file := armor_file(catalog.entry(item.item_id), race)  # race gear: race x class file, else the race's shared file, else the class look
+		var file := armor_file(catalog.entry(item.item_id), race, str(item.id).begins_with("starter-"))  # race gear: race x class file, else the race's shared file, else the class look
 		if file.is_empty():
 			continue  # a plain piece (no catalog look) keeps the empty-slot look
 		result["armor_styles"][slot_id] = str(catalog.entry(item.item_id).get("source_style",""))

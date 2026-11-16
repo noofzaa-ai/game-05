@@ -5,6 +5,7 @@ extends SceneTree
 ## rendered from the meshes. Run windowed (needs a GPU):
 ##   godot --path . --script res://tools/shots/race_outfit_shots.gd
 ## Output: build/race_outfits/ (PNG per shot; contact sheets are put together by tools/shots/race_outfit_sheet.py).
+## ZORX_LV15=1 (with ZORX_ONLY=icons): the level-15 armour icons (iconraw-<race>_<slot>_lv15.png; sheet script: ZORX_LV15=1 too).
 ## ZORX_ICONS=1 also writes the icons to art/armor/race_shared/icon-<race>_<slot>.png.
 ## ZORX_ONLY=weapons: only the race weapon shots (all four classes) and the icons; ZORX_ONLY=icons: only the icons.
 
@@ -195,9 +196,12 @@ func _icons() -> void:
 	model.load_model()
 	model.dress({"class": "sword_shield", "weapon": {"path": "", "family": "", "style": ""}})
 	var jobs := []
+	var lv15 := OS.get_environment("ZORX_LV15") == "1"  # the level-15 armour only (files <race>_<slot>_lv15.glb, raw frames ..._lv15.png)
 	for race in RACES:
 		for slot in SLOTS:
-			jobs.append([race, slot, "armour", "res://art/armor/race_shared/%s_%s.glb" % [race, slot]])
+			jobs.append([race, slot, "armour", "res://art/armor/race_shared/%s_%s%s.glb" % [race, slot, "_lv15" if lv15 else ""]])
+		if lv15:
+			continue
 		jobs.append([race, "sword", "sword", "res://art/weapons/race_%s/sword_shield.glb" % race])
 		jobs.append([race, "shield", "shield", "res://art/weapons/race_%s/shield.glb" % race])
 		for cls in RACE_WEAPONS:
@@ -252,7 +256,7 @@ func _icons() -> void:
 			var mid := Vector2(used.position) + Vector2(used.size) * 0.5 - Vector2(vp.size) * 0.5
 			center += cam.global_basis.x * mid.x * px - cam.global_basis.y * mid.y * px
 			cam.size = maxf(float(used.size.x), float(used.size.y)) * px * 1.15
-		await _save(vp, "iconraw-%s_%s.png" % [job[0], job[1]])
+		await _save(vp, "iconraw-%s_%s%s.png" % [job[0], job[1], "_lv15" if lv15 else ""])
 	vp.queue_free()
 
 

@@ -13,6 +13,7 @@ CLASSES = ["sword_shield", "greatsword", "longbow", "magic"]
 RACES = ["human", "viking", "elf", "runeborn"]
 SLOTS = ["shirt", "pants", "armband", "shoes"]
 RACE_WEAPONS = ["greatsword", "longbow", "magic"]  # one file per race x class (art/weapons/race_<race>/<class>.glb)
+LV15 = os.environ.get("ZORX_LV15") == "1"  # the level-15 armour icons only: raw frames iconraw-<race>_<slot>_lv15.png
 PIECES = SLOTS + ["sword", "shield"] + RACE_WEAPONS
 ICON = 96  # the item icon size (art/items/icons)
 SUPER = 4  # work at 4x, then scale down (soft edges)
@@ -21,6 +22,7 @@ TARGETS = {}
 for _r in RACES:
     for _s in SLOTS:
         TARGETS[(_r, _s)] = "armor/race_shared/icon-%s_%s.png" % (_r, _s)
+        TARGETS[(_r, _s + "_lv15")] = "armor/race_shared/icon-%s_%s_lv15.png" % (_r, _s)
     TARGETS[(_r, "sword")] = "weapons/race_%s/icon-sword_shield.png" % _r
     TARGETS[(_r, "shield")] = "weapons/race_%s/icon-shield.png" % _r
     for _c in RACE_WEAPONS:
@@ -85,6 +87,8 @@ def _icon(raw, diagonal, flip=False):
 def make_icons():
     made = 0
     for (race, piece), target in TARGETS.items():
+        if LV15 != piece.endswith("_lv15"):
+            continue
         raw = os.path.join(OUT, "iconraw-%s_%s.png" % (race, piece))
         if not os.path.exists(raw):
             continue
@@ -131,6 +135,8 @@ def review_sheet():
 
 def main():
     make_icons()
+    if LV15:
+        return
     review_sheet()
     looks = ["suit"] + RACES + ["mix_viking_elf", "mix_human_runeborn"]
     for side in ["front", "back"]:
