@@ -126,7 +126,7 @@ func refresh() -> void:
 		return
 	for id in _tabs:
 		style_plate(_tabs[id], id == tab)
-	_details.subs.remove_theme_color_override("font_color")  # the buy tab paints a shortfall line red
+	CardTokens.hub_text(_details.subs, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")  # the buy tab paints a shortfall line red
 	var selling := tab == "sell"
 	(_grid.get_parent() as Control).visible = selling
 	_stock_scroll.visible = not selling
@@ -181,9 +181,9 @@ func _refresh_buy(p) -> void:
 		piece.tier = int(Shop.config().get("boss_item_tier" if boss else "equipment_tier", 0))
 		_details.cell.show_item(piece, GameState.item_rules, "")
 	if short:
-		_details.subs.add_theme_color_override("font_color", CardTokens.HUB_BAD)
+		CardTokens.hub_text(_details.subs, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_BAD, s, 0, "medium")
 	else:
-		_details.subs.remove_theme_color_override("font_color")
+		CardTokens.hub_text(_details.subs, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
 	var buy := _details.add_action(CardTokens.t("shop_buy_coins" if boss else "shop_buy_for") % price, _buy.bind(str(chosen["sku"]), str(chosen["name"])))
 	buy.disabled = short
 	if short:
