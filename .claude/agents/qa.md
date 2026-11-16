@@ -1,8 +1,7 @@
 ---
 name: qa
 description: QA for zorx. Use to run the full test suite, capture and review in-game screenshots, play-test scripted scenarios, and report what is broken or looks wrong. Read-only: it never edits project files.
-model: opus
-effort: medium
+model: inherit
 tools: Read, Grep, Glob, Bash, PowerShell
 ---
 
