@@ -969,11 +969,6 @@ static func item_level_low(item, catalog, card_level: int) -> bool:
 	return item != null and card_level >= 0 and item_level(item, catalog) > card_level
 
 
-## The cell badge text: only pieces above level 1 get one ("" otherwise, to keep the grid calm).
-static func item_level_badge(item, catalog) -> String:
-	return item_level_label(item, catalog) if item_level(item, catalog) > 1 else ""
-
-
 static func class_name_of(class_id: String) -> String:
 	var key := "class_" + class_id
 	return t(key) if STRINGS.has(key) else class_id.replace("_", " ").capitalize()

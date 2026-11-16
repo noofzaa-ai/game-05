@@ -36,7 +36,7 @@ func run(ctx) -> void:
 	_check_item_level(ctx)
 
 
-## Item level (Boss 2026-11-16): "Lv N" for every piece, a badge only above level 1, a warning when the card is below.
+## Item level (Boss 2026-11-16): "Lv N" for every piece, a , a warning when the card is below.
 func _check_item_level(ctx) -> void:
 	var CardTokens = preload("res://client/card_tokens.gd")
 	var rules = preload("res://logic/item_rules_loader.gd").load_default()
@@ -63,7 +63,6 @@ func _check_item_level(ctx) -> void:
 		ctx.check("item level (%s): starter is %s1" % [lang, prefix], CardTokens.item_level_label(starter, catalog) == prefix + "1")
 		ctx.check("item level (%s): level-15 piece is %s15" % [lang, prefix], CardTokens.item_level_label(high, catalog) == prefix + "15")
 		ctx.check("item level (%s): a piece without req_level is %s1" % [lang, prefix], CardTokens.item_level_label(plain, catalog) == prefix + "1")
-		ctx.check("item level (%s): badge only above level 1" % lang, CardTokens.item_level_badge(starter, catalog) == "" and CardTokens.item_level_badge(plain, catalog) == "" and CardTokens.item_level_badge(high, catalog) == prefix + "15")
 	CardTokens.language = "en"
 	ctx.check("item level: no piece, no label", CardTokens.item_level_label(null, catalog) == "")
 	ctx.check("item level: warning when the card is below", CardTokens.item_level_low(high, catalog, 14) and CardTokens.item_level_low(high, catalog, 1))
