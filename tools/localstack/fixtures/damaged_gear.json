@@ -1,0 +1,9 @@
+{"_about": "The veteran state with worn gear on the Greatsword card: weapon at 40/100, shirt at 10/100, shoes at 0/100 (worn down, the costly 'broken' repair). Durability is the hex double of logic/state_codec.gd (40.0 = 0000000000004440).",
+ "card_deck": {"cards": {"sword_shield": {"race": "human", "progress": {"level": 10, "xp": 0}}, "greatsword": {"race": "viking", "progress": {"level": 10, "xp": 0}}, "longbow": {"race": "elf", "progress": {"level": 10, "xp": 0}}, "magic": {"race": "runeborn", "progress": {"level": 10, "xp": 0}}}, "squad": ["sword_shield", "greatsword", "longbow"]},
+ "tutorial": {"version": 1, "step": "done", "tour_done": true, "unlock_seen": true},
+ "unlocks": {"magic_runeborn": true, "boss_goblin_base": true},
+ "stash": {"gold": "500000"},
+ "card_gear": {"greatsword": {"loadout": {"equipped": {
+   "weapon:0": {"durability": "0000000000004440"},
+   "shirt:0": {"durability": "0000000000002440"},
+   "shoes:0": {"durability": "0000000000000000"}}}}}}
