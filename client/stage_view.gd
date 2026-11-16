@@ -611,7 +611,7 @@ func _show_loot(event: Dictionary) -> void:
 		var label := str(item["weapon_type"]) if item["slot"] == "weapon" and not str(item["weapon_type"]).is_empty() else str(item["slot"])
 		label = str(GameState.item_rules.catalog.entry(str(item.get("item_id", ""))).get("name", label.capitalize()))
 		var color: Color = InkUi.rarity_color(tier["color"], true)
-		_loot_line(at, line, "%s ×1" % label, color, ItemAssets.icon_for_id(str(item.get("item_id", "")), GameState.item_rules.catalog, int(item["tier"])))
+		_loot_line(at, line, "%s ×1" % label, color, ItemAssets.icon_for_id(str(item.get("item_id", "")), GameState.item_rules.catalog))
 		line += 1
 	# Pickups use A-style floating icons only; do not duplicate them in a boxed feed.
 	if int(event["lost_items"]) > 0 or not event["lost_materials"].is_empty():
@@ -1552,7 +1552,7 @@ func _on_chest_opened() -> void:
 		var tier: Dictionary = GameState.item_rules.tiers[int(item.tier)]
 		var label := str(GameState.item_rules.catalog.entry(str(item.item_id)).get("name", str(item.slot).capitalize()))
 		var color: Color = InkUi.rarity_color(tier["color"], true)
-		_loot_line(at,loot_line,"%s ×1" % label,color,ItemAssets.icon_for_id(str(item.item_id),GameState.item_rules.catalog,int(item.tier)))
+		_loot_line(at,loot_line,"%s ×1" % label,color,ItemAssets.icon_for_id(str(item.item_id),GameState.item_rules.catalog))
 		loot_line += 1
 	if not reward.get("lost_items", []).is_empty():
 		_hud.add_loot("BAG FULL: the treasure was left behind", InkUi.LOOT_PROBLEM)

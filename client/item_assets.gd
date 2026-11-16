@@ -50,31 +50,12 @@ static func chain(field: String) -> PackedStringArray:
 	return result
 
 
-## The lowest item tier (index into rules.tiers: 0 normal/white, 1 rare/blue, 2 epic/purple, 3 legendary/gold) that shows
-## the race's MID look instead of the starter look (PO 2026-11-16; legendary shows MID until its own top set exists).
-const MID_TIER_MIN := 1
-const RACE_SHARED_DIR := "res://art/armor/race_shared/"
-
-
-## The tier's version of a race-shared interim file: `<race>_<slot>.glb` -> `<race>_<slot>_mid.glb`,
-## `icon-<race>_<slot>.png` -> `icon-<race>_<slot>_mid.png`. Any other path, or tier 0, is returned as it is.
-static func tiered(file: String, tier: int) -> String:
-	if tier < MID_TIER_MIN or not file.begins_with(RACE_SHARED_DIR) or file.get_basename().ends_with("_mid"):
-		return file
-	return file.get_basename() + "_mid." + file.get_extension()
-
-
 ## The model file a catalog armour piece shows: its own asset_path, else the first existing fallback, else "".
-## `tier`: the item's tier. Tier >= MID_TIER_MIN picks the MID file at the race-shared step; a missing MID file falls
-## back to the starter file of that step. A race x class file (asset_path) is final and wins at every tier.
-static func armor_file(info: Dictionary, tier: int = 0) -> String:
+static func armor_file(info: Dictionary) -> String:
 	var file := str(info.get("asset_path", ""))
 	if not file.is_empty() and ResourceLoader.exists(file):
 		return file
 	for fallback in chain(str(info.get("fallback_asset_path", ""))):
-		var mid := tiered(fallback, tier)
-		if mid != fallback and ResourceLoader.exists(mid):
-			return mid
 		if ResourceLoader.exists(fallback):
 			return fallback
 	return path(str(info.get("asset_id", "")))
@@ -82,19 +63,17 @@ static func armor_file(info: Dictionary, tier: int = 0) -> String:
 
 ## The inventory icon of a catalog item (`catalog`: ItemCatalog), or null (draw the slot's shape).
 static func icon(item, catalog) -> Texture2D:
-	return null if item == null else icon_for_id(item.item_id, catalog, int(item.tier))
+	return null if item == null else icon_for_id(item.item_id, catalog)
 
 
 ## The same for a catalog item id ("" or unknown: null).
-static func icon_for_id(item_id: String, catalog, tier: int = 0) -> Texture2D:
+static func icon_for_id(item_id: String, catalog) -> Texture2D:
 	if catalog == null or item_id.is_empty():
 		return null
 	var info: Dictionary = catalog.entry(item_id)
 	var native_icon := str(info.get("icon_path",""))
 	if not native_icon.is_empty() and ResourceLoader.exists(native_icon): return load(native_icon) as Texture2D
 	for fallback_icon in chain(str(info.get("fallback_icon_path", ""))):  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
-		var mid_icon := tiered(fallback_icon, tier)  # rare and up: the MID icon, else the starter one
-		if mid_icon != fallback_icon and ResourceLoader.exists(mid_icon): return load(mid_icon) as Texture2D
 		if ResourceLoader.exists(fallback_icon): return load(fallback_icon) as Texture2D
 	return null  # the old art/items/icons folder is gone with the legacy items (Boss 2026-11-13)
 
@@ -182,7 +161,7 @@ static func looks(loadout, catalog, style: String) -> Dictionary:
 			continue
 		var asset_id: String = catalog.entry(item.item_id).get("asset_id", "")
 		result["refine"][slot_id] = item.refine_level
-		var file := armor_file(catalog.entry(item.item_id), item.tier)  # race gear: race x class file, else the race's shared file, else the class look
+		var file := armor_file(catalog.entry(item.item_id))  # race gear: race x class file, else the race's shared file, else the class look
 		if file.is_empty():
 			continue  # a plain piece (no catalog look) keeps the empty-slot look
 		result["armor_styles"][slot_id] = str(catalog.entry(item.item_id).get("source_style",""))

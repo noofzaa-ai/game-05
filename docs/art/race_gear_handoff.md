@@ -68,8 +68,3 @@ Every path below is read from `data/items/catalog.json` (`asset_path`, `icon_pat
 2. Make 5 icons, 192 × 192, through Codex, and get the Boss's review.
 3. Put the files at the exact paths in section 1, then run the import.
 4. Take comparison shots (front, side, back; standing, running; mixed with another race; with the class weapon) for the parity doc. They stay OPEN until the Boss accepts them.
-
-
-## 6. Mid-tier look (2026-11-16)
-
-Normal (white) shows the starter file `race_shared/<race>_<slot>.glb`; rare, epic and legendary show `race_shared/<race>_<slot>_mid.glb` (icon `icon-<race>_<slot>_mid.png`); a missing MID file falls back to the starter one. Legendary is reserved for a later top set. Meshes: same vertices/rig/weights as the starter, second atlas `race_wardrobe_atlas_mid.jpg` (tools/items/build_mid_armor.py). Icons: Codex sheets cut by tools/items/cut_mid_icons.py. Code: `ItemAssets.tiered()`, `armor_file(info, tier)`, `icon_for_id(id, catalog, tier)`.
