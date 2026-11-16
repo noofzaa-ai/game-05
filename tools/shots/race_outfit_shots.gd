@@ -54,6 +54,8 @@ func run() -> void:
 	elif OS.get_environment("ZORX_ONLY") == "weapons":
 		await _weapon_shots()
 		await _icons()
+	elif OS.get_environment("ZORX_ONLY") == "sil":
+		await _silhouettes()
 	elif OS.get_environment("ZORX_ONLY") == "compare":
 		await _compare_shots()
 	elif OS.get_environment("ZORX_ONLY") == "lv15":
@@ -454,4 +456,47 @@ func _compare_shots() -> void:
 					await _save(stage["vp"], "compare/%s_%s_%s_%s.png" % [cls, race, look, side[0]])
 	(big["vp"] as SubViewport).queue_free()
 	(small["vp"] as SubViewport).queue_free()
+	await _frames(2)
+
+
+## Girth check (ZORX_ONLY=sil, ZORX_TAG=<tag in the file names>): each race's four pieces alone in the bind pose, starter and
+## level 15, orthographic front and side from the same camera: build/race_outfits/sil/<tag>_<race>_<look>_<front|side>.png
+## (transparent; tools/shots/girth_sheet.py measures the silhouette widths and builds the before / after sheets).
+func _silhouettes() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT + "sil"))
+	var tag := OS.get_environment("ZORX_TAG") if not OS.get_environment("ZORX_TAG").is_empty() else "now"
+	var stage := _stage(Vector2i(700, 1000))
+	var vp: SubViewport = stage["vp"]
+	vp.transparent_bg = true
+	(stage["env"] as Environment).background_mode = Environment.BG_CLEAR_COLOR
+	var cam: Camera3D = stage["cam"]
+	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	cam.size = 0.36
+	var model = CharacterModel.new()
+	vp.add_child(model)
+	model.load_model()
+	model.dress({"class": "sword_shield", "weapon": {"path": "", "family": "", "style": ""}})
+	for race in RACES:
+		for look in ["starter", "lv15"]:
+			var looks := {"offhand": {}, "weapon": {"path": "", "family": "", "style": ""}}
+			for slot in SLOTS:
+				looks[slot] = "res://art/armor/race_shared/%s_%s%s.glb" % [race, slot, "_lv15" if look == "lv15" else ""]
+			model.dress(looks)
+			model._skeleton.reset_bone_poses()
+			var keepers: Array = []
+			for slot in SLOTS:
+				keepers.append_array(model._worn.get(slot, {}).get("meshes", []))
+			for mesh in model._skeleton.find_children("*", "MeshInstance3D", true, false):
+				var keep := false
+				for piece in keepers:
+					keep = keep or mesh == piece or piece.is_ancestor_of(mesh)
+				mesh.visible = keep
+			var basis: Basis = model._skeleton.global_transform.basis.orthonormalized()
+			var center: Vector3 = model._skeleton.global_transform * Vector3(0.0, 0.3, 0.0)
+			cam.size = 0.72 * model._skeleton.global_transform.basis.get_scale().y
+			for view in [["front", Vector3(0.0, 0.0, 1.0)], ["side", Vector3(1.0, 0.0, 0.0)]]:
+				cam.position = center + (basis * (view[1] as Vector3)) * 2.0
+				cam.look_at(center, basis * Vector3.UP)
+				await _save(vp, "sil/%s_%s_%s_%s.png" % [tag, race, look, view[0]])
+	vp.queue_free()
 	await _frames(2)

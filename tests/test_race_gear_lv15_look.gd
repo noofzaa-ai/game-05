@@ -54,6 +54,49 @@ func run(ctx) -> void:
 			mats = mats and found
 			root.free()
 	ctx.check("lv15 look: the shared material keeps its name 'Level 15 | Original Armor' in all 16 meshes", mats)
+	_girth(ctx)
+
+
+## Girth (Boss 2026-11-16: the lv15 outfits looked much too thin next to the starter ones): front-to-back depth of the four
+## pieces together in the bind pose, at chest / waist / hips height, lv15 against the starter of the same race. The delivered
+## meshes were 81-90% at the hips and waist (young viking and elf: the same); the girth adjustment of tools/items/split_race_outfits_lv15.py brings them to
+## 91% or more (the rest is the shorter hem tail of the coat, a design difference).
+const GIRTH_BANDS := {"chest": [0.225, 0.27], "waist": [0.185, 0.225], "hips": [0.14, 0.185]}
+const GIRTH_MIN := 0.91
+
+
+func _depth(race: String, suffix: String) -> Dictionary:
+	var zs := {}
+	for band in GIRTH_BANDS:
+		zs[band] = PackedFloat32Array()
+	for slot in SLOTS:
+		var root: Node = (load(DIR + "%s_%s%s.glb" % [race, slot, suffix]) as PackedScene).instantiate()
+		for m in root.find_children("*", "MeshInstance3D", true, false):
+			var faces: PackedVector3Array = (m as MeshInstance3D).mesh.get_faces()
+			for v in faces:
+				for band in GIRTH_BANDS:
+					if v.y >= GIRTH_BANDS[band][0] and v.y < GIRTH_BANDS[band][1]:
+						zs[band].append(v.z)
+		root.free()
+	var out := {}
+	for band in zs:
+		var arr: PackedFloat32Array = zs[band]
+		arr.sort()
+		out[band] = arr[int(arr.size() * 0.98)] - arr[int(arr.size() * 0.02)] if arr.size() > 20 else 0.0
+	return out
+
+
+func _girth(ctx) -> void:
+	var ok := true
+	var worst := 9.9
+	for race in RACES:
+		var starter := _depth(race, "")
+		var lv15 := _depth(race, "_lv15")
+		for band in GIRTH_BANDS:
+			var ratio: float = lv15[band] / maxf(starter[band], 0.0001)
+			worst = minf(worst, ratio)
+			ok = ok and ratio >= GIRTH_MIN
+	ctx.check("lv15 look: depth of the outfit at chest, waist and hips is at least %d%% of the starter's for every race (worst %.0f%%)" % [int(GIRTH_MIN * 100), worst * 100.0], ok)
 
 
 class _FakeCatalog:
