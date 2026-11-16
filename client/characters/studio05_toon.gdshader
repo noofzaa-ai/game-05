@@ -36,6 +36,24 @@ uniform float blink = 0.0; // 0 open .. 1 shut (eyes/blink.js)
 uniform bool eyes_visible = true;
 group_uniforms;
 
+// Level-15 race armour only (client/characters/metal_glint.gd feeds these): a stepped specular glint, a thin lit rim and a
+// per-cell sparkle where the metal mask (UV space of the armour atlas) is set. Cloth, leather and skin stay matte.
+group_uniforms metal;
+uniform bool use_metal = false;
+uniform sampler2D metal_mask : filter_linear_mipmap, repeat_disable;
+uniform float metal_core = 0.93;
+uniform float metal_halo = 0.82;
+uniform float metal_soft = 0.012;
+uniform float metal_halo_strength = 0.34;
+uniform float metal_jitter = 0.10;
+uniform float metal_cells = 80.0;
+uniform float metal_rim_edge = 0.30;
+uniform float metal_rim_soft = 0.07;
+uniform float metal_rim_strength = 0.50;
+uniform float metal_lift = 0.68;
+uniform float metal_strength = 1.0;
+group_uniforms;
+
 group_uniforms hair;
 uniform float hair_part = -0.003;
 uniform float painted_bangs = 0.0;
@@ -351,6 +369,21 @@ void fragment() {
 		// Two crisp flat cel bands; the shadow is a warm paper-tinted wash, not a grey darkening.
 		float shade = 1.0 - smoothstep(0.10, 0.13, cel_facing);
 		light = diffuse * mix(vec3(card_band_light), card_shadow_tint * card_band_dark, shade);
+	}
+	if (use_metal) {
+		float metal = smoothstep(0.40, 0.60, texture(metal_mask, UV).r) * metal_strength;
+		if (metal > 0.0) {
+			vec3 view_dir = normalize(VIEW);
+			float spec = dot(n, normalize(normalize(CEL_KEY) + view_dir));
+			float s_jit = spec + (cardHash(floor(UV * metal_cells)) - 0.5) * metal_jitter;
+			float core = smoothstep(metal_core, metal_core + metal_soft, s_jit);
+			float halo = smoothstep(metal_halo, metal_halo + metal_soft, s_jit) * metal_halo_strength;
+			float rim_m = (1.0 - smoothstep(metal_rim_edge, metal_rim_edge + metal_rim_soft, dot(n, view_dir)))
+				* smoothstep(-0.10, 0.35, cel_facing);
+			float shine = max(max(core, halo * (1.0 - core)), rim_m * metal_rim_strength);
+			vec3 glint_color = mix(vec3(1.0, 0.97, 0.90), diffuse * 1.7, 0.18);
+			light = mix(light * metal_lift * vec3(0.90, 0.95, 1.06), glint_color, clamp(shine, 0.0, 1.0)) * metal + light * (1.0 - metal);
+		}
 	}
 	vec3 p = rest_pos;
 

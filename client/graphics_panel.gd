@@ -17,7 +17,7 @@ const QUALITY := [["render_scale", "gfx_render_scale", [0.5, 0.75, 1.0], ["gfx_s
 	["antialiasing", "gfx_aa", [0, 2, 4], ["gfx_off", "gfx_aa_2", "gfx_aa_4"]]]
 const DRAWN := [["drawn_style", "gfx_drawn_style", ["on", "lite", "off"], ["gfx_drawn_on", "gfx_drawn_lite", "gfx_off"]]]
 const SCENE := [["shadows", "gfx_shadows"], ["decorative_lights", "gfx_lights"], ["fog", "gfx_fog"], ["glow", "gfx_glow"]]
-const EFFECTS := [["outline", "gfx_outline"], ["ultimate_vfx", "gfx_ult_vfx"], ["combat_vfx", "gfx_combat_vfx"], ["ultimate_camera", "gfx_ult_camera"]]
+const EFFECTS := [["outline", "gfx_outline"], ["metal_glint", "gfx_metal"], ["ultimate_vfx", "gfx_ult_vfx"], ["combat_vfx", "gfx_combat_vfx"], ["ultimate_camera", "gfx_ult_camera"]]
 
 var panel: Control  ## the hub panel (SettingsPanel), for tests and shot scripts
 

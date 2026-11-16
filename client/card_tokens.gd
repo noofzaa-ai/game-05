@@ -931,6 +931,7 @@ const STRINGS := {
 	"gfx_lights": ["แสงตกแต่ง", "Decorative lights"],
 	"gfx_fog": ["หมอก", "Fog"],
 	"gfx_glow": ["แสงฟุ้ง", "Glow"],
+	"gfx_metal": ["ประกายโลหะ", "Metal shine"],
 	"gfx_ult_vfx": ["เอฟเฟกต์อัลติ", "Ultimate effects"],
 	"gfx_combat_vfx": ["เอฟเฟกต์ต่อสู้ / ริ้วอาวุธ", "Combat effects / trails"],
 	"gfx_ult_camera": ["กล้องอัลติ", "Ultimate camera"],

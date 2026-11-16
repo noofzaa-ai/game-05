@@ -5,7 +5,7 @@ const SCALES := [0.5, 0.75, 1.0]
 static var revision := 0
 static var _loaded := false
 static var _values := {"ultimate_vfx": true, "combat_vfx": true, "ultimate_camera": true,
-	"outline": true, "shadows": true, "decorative_lights": true, "fog": true, "glow": true,
+	"outline": true, "metal_glint": true, "shadows": true, "decorative_lights": true, "fog": true, "glow": true,
 	"render_scale": 0.5, "antialiasing": 2, "drawn_style": "on"}
 ## Drawn (ink-and-wash) battle look, client/draw_style/draw_style.gd (Boss 2026-11-13 picked ink_c):
 ## "on" = materials + screen pass (screen pass only at render scale 0.5 and not on a slow device), "lite" = materials

@@ -18,6 +18,8 @@ const ItemAssets := preload("res://client/item_assets.gd")
 const ToonShader := preload("res://client/characters/studio05_toon.gdshader")
 const InkShader := preload("res://client/characters/studio05_ink.gdshader")
 const CardInkShader := preload("res://client/characters/card_ink_hull.gdshader")
+const MetalGlint := preload("res://client/characters/metal_glint.gd")
+const Options := preload("res://client/graphics_options.gd")
 const RefineEffect := preload("res://client/refine_equipment.gd")
 const FOLDER := "res://art/characters/studio05/"
 const V1111 := "res://art/characters/studio05/v1111/"
@@ -620,6 +622,15 @@ static func _paint_ground(texture: Texture2D) -> Color:
 	return _paint_grounds[key]
 
 
+static var _metal_mask_texture: Texture2D
+
+
+static func _metal_mask() -> Texture2D:
+	if _metal_mask_texture == null and ResourceLoader.exists(MetalGlint.MASK_PATH):
+		_metal_mask_texture = load(MetalGlint.MASK_PATH) as Texture2D
+	return _metal_mask_texture
+
+
 func _prepare_meshes() -> void:
 	for mesh in _meshes.duplicate():
 		if not is_instance_valid(mesh) or mesh.has_meta("studio05"):
@@ -673,6 +684,8 @@ func _prepare_meshes() -> void:
 				material.set_shader_parameter("painted_bangs", 0.0 if label.substr(5, 1) in ["C", "D", "E", "F", "G", "I"] else 1.0)
 			if card_ink:
 				material.set_shader_parameter("card_ink", true)
+			if MetalGlint.is_metal_material(material.resource_name) and Options.enabled(MetalGlint.OPTION):
+				MetalGlint.apply(material, _metal_mask())  # level-15 race armour: ink-style metal glints, nothing else
 			mesh.set_surface_override_material(surface, material)
 			_toon.append(material)
 		if mesh.has_meta("no_ink_hull"):
