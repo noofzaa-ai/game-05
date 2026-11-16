@@ -696,9 +696,62 @@
         }
       ],
       "bonuses": []
+    },
+    "boss_goblin_chief": {
+      "name": "Goblin Chief's Regalia",
+      "name_th": "ชุดหัวหน้าก็อบลิน",
+      "kind": "boss",
+      "boss": "goblin_base",
+      "tier_mul": {
+        "normal": 0.75,
+        "rare": 1.0,
+        "epic": 1.25,
+        "legendary": 1.5
+      },
+      "steps": [
+        {
+          "pieces": 2,
+          "name": "Warband",
+          "text": "ATK +5%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "ATK",
+              "mul": 0.05
+            }
+          ]
+        },
+        {
+          "pieces": 4,
+          "name": "Hide of the Chief",
+          "text": "Max HP +8%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "HP",
+              "mul": 0.08
+            }
+          ]
+        },
+        {
+          "pieces": 6,
+          "name": "Swarm Breaker",
+          "text": "ATK +6%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "ATK",
+              "mul": 0.06
+            }
+          ],
+          "_v1": "GDD 6-piece is ATK +10% while 3+ enemies are within 4 m; v1 uses the GDD's allowed flat ATK +6% (no per-tick crowd check yet)."
+        }
+      ],
+      "bonuses": []
     }
   },
   "_comment": "Set bonuses. Wearing `pieces` or more items of the same set adds `value` to `stat` (each step adds on top of the ones before). All numbers are PLACEHOLDERS to tune by feel.",
   "starter_armor_sets": [],
-  "_race_sets": "Race gear sets (design/gdd/race-gear-sets.md 3.5-3.10, Boss 2026-11-13; built by tools/items/build_race_gear.py). kind race: 5 pieces (the race weapon of the class + shirt, pants, armband, shoes). The set option works only when the card's race equals `race`; steps boost the race passive with cell_mod words (logic/race_sets.gd). A step's numbers x tier_mul of the LOWEST tier among the N best pieces it counts (white starter 0.75, PO default). bonuses stays empty: ItemCatalog.set_bonus ignores race sets."
+  "_race_sets": "Race gear sets (design/gdd/race-gear-sets.md 3.5-3.10, Boss 2026-11-13; built by tools/items/build_race_gear.py). kind race: 5 pieces (the race weapon of the class + shirt, pants, armband, shoes). The set option works only when the card's race equals `race`; steps boost the race passive with cell_mod words (logic/race_sets.gd). A step's numbers x tier_mul of the LOWEST tier among the N best pieces it counts (white starter 0.75, PO default). bonuses stays empty: ItemCatalog.set_bonus ignores race sets.",
+  "_boss_sets": "Boss accessory sets (design/gdd/boss-loot.md 2, Boss 2026-11-16). kind boss: count the set's pieces worn on a card (earring/bracelet/ring can be worn twice, 8 at most); steps 2/4/6 apply stat_mod (mul = percent of the stat after gear) in logic/stats.gd via logic/boss_loot.gd. A step's numbers x tier_mul of the LOWEST tier among the N best pieces it counts, as race sets."
 }

@@ -77,6 +77,7 @@ static func item_sell_price(item, rules) -> int:
 
 static func material_sell_price(camp, material: String, count: int) -> int:
 	if not camp.materials.has(material) or count < 1 or count > int(camp.materials[material].get("stack", 99)): return 0
+	if not bool(camp.materials[material].get("sellable", true)): return 0  # boss coins / relics (design/gdd/boss-loot.md)
 	var tuning = config().get("sell", {})
 	if not tuning is Dictionary: return 0
 	var price := _sell_price(tuning.get("material_per_unit", 0))

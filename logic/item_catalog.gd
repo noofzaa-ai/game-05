@@ -11,6 +11,7 @@ const SETS_PATH := "res://data/items/sets.json"
 var items: Dictionary = {}  ## item_id -> {"asset_id", "name", "slot", "weapon_type", "set", "drop_level"}
 var sets: Dictionary = {}  ## set id -> {"name", "bonuses": [{"pieces", "stat", "value"}] by pieces, fewest first}
 var starter_armor_sets: Array[String] = []
+var relics: Dictionary = {}  ## boss Relics (design/gdd/boss-loot.md 2): relic id -> {"name", "boss", "icon_path", "text", "effects"}
 var errors: Array[String] = []
 
 
@@ -21,6 +22,7 @@ static func load_default(known_slots: Array, known_stats: Array) -> RefCounted:
 	for id in set_data.get("starter_armor_sets", []):
 		catalog.starter_armor_sets.append(str(id))
 	catalog.parse(item_data.get("items", {}), set_data.get("sets", {}), known_slots, known_stats)
+	catalog.relics = (item_data.get("relics", {}) as Dictionary).duplicate(true) if item_data.get("relics") is Dictionary else {}
 	return catalog
 
 
@@ -40,6 +42,11 @@ func parse(item_data: Dictionary, set_data: Dictionary, known_slots: Array, know
 			sets[set_id]["race"] = str(set_data[set_id].get("race", ""))
 			sets[set_id]["tier_mul"] = (set_data[set_id].get("tier_mul", {}) as Dictionary).duplicate(true)
 			sets[set_id]["steps"] = (set_data[set_id].get("steps", []) as Array).duplicate(true)
+		elif str(set_data[set_id].get("kind", "")) == "boss":  # a boss accessory set (design/gdd/boss-loot.md 2): logic/boss_loot.gd reads it
+			sets[set_id]["kind"] = "boss"
+			sets[set_id]["boss"] = str(set_data[set_id].get("boss", ""))
+			sets[set_id]["tier_mul"] = (set_data[set_id].get("tier_mul", {}) as Dictionary).duplicate(true)
+			sets[set_id]["steps"] = (set_data[set_id].get("steps", []) as Array).duplicate(true)
 	for item_id in item_data:
 		var entry: Dictionary = item_data[item_id]
 		var slot := str(entry.get("slot", ""))
@@ -56,6 +63,7 @@ func parse(item_data: Dictionary, set_data: Dictionary, known_slots: Array, know
 			"procedural": bool(entry.get("procedural", false)),  ## the client builds the look in code (no model file)
 			"race": str(entry.get("race", "")), "class": str(entry.get("class", "")),  ## race gear: the set's race, the class whose look it is
 			"fallback_asset_path": str(entry.get("fallback_asset_path", "")), "fallback_icon_path": str(entry.get("fallback_icon_path", "")),  ## shown until the Studio file exists
+			"boss": str(entry.get("boss", "")), "no_drop": bool(entry.get("no_drop", false)),  ## boss loot: the zone whose boss gives it; never a normal drop
 		}
 
 
@@ -69,7 +77,7 @@ func candidates(slot_id: String, weapon_type: String, level: int) -> Array[Strin
 	var found: Array[String] = []
 	for item_id in items:
 		var item: Dictionary = items[item_id]
-		if item["slot"] == slot_id and item["drop_level"] <= maxi(level, 1) and (slot_id != "weapon" or item["weapon_type"] == weapon_type):
+		if item["slot"] == slot_id and not item["no_drop"] and item["drop_level"] <= maxi(level, 1) and (slot_id != "weapon" or item["weapon_type"] == weapon_type):
 			found.append(item_id)
 	found.sort()
 	return found

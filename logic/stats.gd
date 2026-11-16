@@ -25,6 +25,8 @@ static func totals(rules: ItemRules, worn: Array[Item]) -> Dictionary:
 	for stat in from_sets:
 		if result.has(stat):
 			result[stat] += from_sets[stat]
+	# Boss sets + socketed Relics (design/gdd/boss-loot.md 2): percent / flat stat_mods after gear and set bonuses.
+	preload("res://logic/boss_loot.gd").apply_stats(rules, worn, result)
 	var mobility := preload("res://logic/equipment_mobility.gd").factors(rules,worn)
 	result["EQUIPMENT_MOVE_FACTOR"] = mobility.move_factor
 	result["EQUIPMENT_DODGE_FACTOR"] = mobility.dodge_factor

@@ -96,7 +96,9 @@ static func _parse_materials(root: Dictionary, data: CampData) -> void:
 		if typeof(color) != TYPE_ARRAY or color.size() != 3:
 			data.errors.append("%s.color must be [r, g, b]" % label)
 			color = [1.0, 1.0, 1.0]
-		data.materials[str(id)] = {"name": str(materials[id].get("name", id)), "stack": stack, "color": Color(float(color[0]), float(color[1]), float(color[2]))}
+		data.materials[str(id)] = {"name": str(materials[id].get("name", id)), "stack": stack, "color": Color(float(color[0]), float(color[1]), float(color[2])),
+			# Boss loot (design/gdd/boss-loot.md): coins and relics are never sold for gold; an icon is optional (2D, may not exist yet).
+			"sellable": bool(materials[id].get("sellable", true)), "name_th": str(materials[id].get("name_th", "")), "icon_path": str(materials[id].get("icon_path", ""))}
 	if data.materials.is_empty():
 		data.errors.append("materials must list at least one material")
 

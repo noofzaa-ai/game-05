@@ -55,6 +55,30 @@
 				0.85,
 				0.4
 			]
+		},
+		"coin_goblin_chief": {
+			"name": "Goblin Chief Coin",
+			"name_th": "เหรียญหัวหน้าก็อบลิน",
+			"stack": 99,
+			"sellable": false,
+			"icon_path": "res://art/items/boss/goblin_chief/coin.png",
+			"color": [
+				0.95,
+				0.75,
+				0.25
+			]
+		},
+		"relic_goblin_chief": {
+			"name": "Goblin Chief's Relic",
+			"name_th": "เรลิกหัวหน้าก็อบลิน",
+			"stack": 99,
+			"sellable": false,
+			"icon_path": "res://art/items/boss/goblin_chief/relic.png",
+			"color": [
+				0.85,
+				0.3,
+				0.2
+			]
 		}
 	},
 	"bag": {

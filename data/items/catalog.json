@@ -1292,7 +1292,89 @@
    "procedural": true,
    "asset_path": "res://art/weapons/race_runeborn/shield.glb",
    "icon_path": "res://art/weapons/race_runeborn/icon-shield.png"
+  },
+  "boss_goblin_chief_necklace": {
+   "asset_id": "",
+   "name": "Chief's Fang Necklace",
+   "name_th": "สร้อยเขี้ยวหัวหน้า",
+   "slot": "necklace",
+   "set": "boss_goblin_chief",
+   "boss": "goblin_base",
+   "no_drop": true,
+   "drop_level": 1,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/goblin_chief/necklace.png"
+  },
+  "boss_goblin_chief_earring": {
+   "asset_id": "",
+   "name": "Chief's War Earring",
+   "name_th": "ต่างหูศึกหัวหน้า",
+   "slot": "earring",
+   "set": "boss_goblin_chief",
+   "boss": "goblin_base",
+   "no_drop": true,
+   "drop_level": 1,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/goblin_chief/earring.png"
+  },
+  "boss_goblin_chief_bracelet": {
+   "asset_id": "",
+   "name": "Chief's Iron Bracelet",
+   "name_th": "กำไลเหล็กหัวหน้า",
+   "slot": "bracelet",
+   "set": "boss_goblin_chief",
+   "boss": "goblin_base",
+   "no_drop": true,
+   "drop_level": 1,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/goblin_chief/bracelet.png"
+  },
+  "boss_goblin_chief_ring": {
+   "asset_id": "",
+   "name": "Chief's Signet Ring",
+   "name_th": "แหวนตราหัวหน้า",
+   "slot": "ring",
+   "set": "boss_goblin_chief",
+   "boss": "goblin_base",
+   "no_drop": true,
+   "drop_level": 1,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/goblin_chief/ring.png"
+  },
+  "boss_goblin_chief_back": {
+   "asset_id": "",
+   "name": "Chief's Banner Cloak",
+   "name_th": "ผ้าคลุมธงหัวหน้า",
+   "slot": "back",
+   "set": "boss_goblin_chief",
+   "boss": "goblin_base",
+   "no_drop": true,
+   "drop_level": 1,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/goblin_chief/back.png"
   }
  },
- "_comment": "Game items made from the model team's assets (art/items/item_manifest.json). The key is the item_id the game and saves use; asset_id finds the model. slot is the game's slot, weapon_type the combat style, set a set id in sets.json, drop_level the lowest monster level that drops it. tools/items/build_catalog.py adds new assets and never changes entries already here."
+ "_comment": "Game items made from the model team's assets (art/items/item_manifest.json). The key is the item_id the game and saves use; asset_id finds the model. slot is the game's slot, weapon_type the combat style, set a set id in sets.json, drop_level the lowest monster level that drops it. tools/items/build_catalog.py adds new assets and never changes entries already here.",
+ "relics": {
+  "relic_goblin_chief": {
+   "name": "Goblin Chief's Relic",
+   "name_th": "เรลิกหัวหน้าก็อบลิน",
+   "boss": "goblin_base",
+   "icon_path": "res://art/items/boss/goblin_chief/relic.png",
+   "text": "ATK +6%, crit rate +5.",
+   "effects": [
+    {
+     "type": "stat_mod",
+     "stat": "ATK",
+     "mul": 0.06
+    },
+    {
+     "type": "stat_mod",
+     "stat": "CRIRATE",
+     "add": 5.0
+    }
+   ]
+  }
+ },
+ "_boss_items": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16): boss_<boss>_<slot> = that boss's accessory set (necklace, earring, bracelet, ring, back), 2D icons only (never on the 3D model), no_drop = never a normal monster/chest/shop-tier drop (logic/boss_loot.gd gives them). relics = socket gems (a stack material in camp.json, never worn alone); effects count while the socketed item is worn and not broken (durability 0). Not built by tools/items/build_race_gear.py (it keeps non-race keys)."
 }

@@ -1,0 +1,17 @@
+{
+	"version": 1,
+	"_comment": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16), read by logic/boss_loot.gd. One entry per zone boss (key = data/world/zones.json zone id). On a WON run of the zone's journey (server, Journey.pay_card_xp) each account gets: coins_per_kill of `coin` (a camp.json material, never scaled); a `piece_chance` chance of one random piece of `set` (uniform over the set's catalog items), its tier rolled from data/loot/loot.json tier_weights at the boss's level (the journey's last stage, enemy with boss: true); a `relic_chance` chance of one `relic` (a camp.json material). Both chances x that player's loot_by_squad factor. first_kill_min_tier: the account's first win (before unlocks.boss_<zone> is set) guarantees one piece of at least this tier (rerolled tier below it is raised to it); it replaces that run's piece roll. price_coins: the shop price of each set piece in this boss's coin. PLACEHOLDER numbers (25% / 1% / 500 are the GDD's; the 500-coin farm time is flagged for a Boss check in GDD 3).",
+	"bosses": {
+		"goblin_base": {
+			"enemy": "goblin_chief",
+			"set": "boss_goblin_chief",
+			"coin": "coin_goblin_chief",
+			"relic": "relic_goblin_chief",
+			"coins_per_kill": 1,
+			"piece_chance": 0.25,
+			"relic_chance": 0.01,
+			"first_kill_min_tier": "rare",
+			"price_coins": 500
+		}
+	}
+}

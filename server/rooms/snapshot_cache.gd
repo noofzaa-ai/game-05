@@ -28,7 +28,7 @@ static func freeze(value):
 
 func item(value) -> Dictionary:
 	var key: int = value.get_instance_id(); _used[key] = true
-	var signature := [value.id, value.slot, value.tier, value.level, value.refine_level, value.upgrade_count, value.main_stat, value.weapon_type, value.item_id, value.substats, value.destroyed, value.durability, value.max_durability]
+	var signature := [value.id, value.slot, value.tier, value.level, value.refine_level, value.upgrade_count, value.main_stat, value.weapon_type, value.item_id, value.substats, value.destroyed, value.durability, value.max_durability, value.relic]
 	if _items.has(key) and _items[key].signature == signature: return _items[key].data
 	var data: Dictionary = freeze(value.to_dict())
 	_items[key] = {"signature": signature.duplicate(true), "data": data}
