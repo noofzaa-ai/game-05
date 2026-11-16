@@ -37,10 +37,19 @@ func setup() -> void:
 func show_item(p_item, rules, empty_caption: String) -> void:
 	item = p_item
 	caption = empty_caption
-	icon_tex = ItemAssets.icon(item, rules.catalog) if item != null and rules != null else null
+	icon_tex = ItemAssets.icon(item, rules.catalog, _look_race()) if item != null and rules != null else null
 	low = item != null and rules != null and item.durability_ratio() < rules.durability_full_above
 	tooltip_text = ""
 	queue_redraw()
+
+## The race whose look class armour shows in the icon (Boss 2026-11-16): the lead card's race, "" outside a game.
+func _look_race() -> String:
+	var state := get_node_or_null("/root/GameState")
+	if state == null or state.get("profile") == null:
+		return ""
+	var deck: Dictionary = state.profile.card_deck
+	return preload("res://logic/card_deck.gd").gear_race(deck, str(state.profile.lead_card()))
+
 
 func _on_input(event: InputEvent) -> void:
 	var button := event as InputEventMouseButton

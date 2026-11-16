@@ -682,7 +682,7 @@ func refresh() -> void:
 		(_stat_values[n] as Label).text = ("%d%%" % int(round(value))) if stat == "CRIRATE" else str(int(round(value)))
 	# the selected piece
 	var selected_item = _find_stash(p, _sel_item)
-	if selected_item != null and not preload("res://logic/profile.gd").card_can_wear(card, selected_item, rules):
+	if selected_item != null and not preload("res://logic/profile.gd").card_can_wear(card, selected_item, rules):  # class rules only: a too-low level stays listed (greyed equip, reason in the tooltip)
 		selected_item = null  # switched to a card that cannot wear it: it is no longer listed
 	if selected_item == null:
 		_sel_item = ""
@@ -745,7 +745,7 @@ func refresh() -> void:
 
 
 func _can_wear(item, rules) -> bool:
-	return preload("res://logic/profile.gd").slot_problem(card, item, rules).is_empty()
+	return _profile().wear_problem(card, item, rules).is_empty()
 
 
 func _find_stash(p, id: String):
@@ -794,9 +794,10 @@ func _refresh_detail(p, rules, worn, stash_item, fits_count: int, none_for_class
 	costs.append("%s: %s" % [CardTokens.t("repair"), HubItemDetails.cost_text(repair_cost, camp)] if str(repair_cost["kind"]) != "none" else CardTokens.t("like_new"))
 	_detail.set_cost("  ·  ".join(costs))
 	if from_stash:
-		var problem: String = preload("res://logic/profile.gd").slot_problem(card, item, rules)
+		var problem: String = p.wear_problem(card, item, rules)
 		var wear := _detail.add_action(CardTokens.t("equip"), _equip.bind(item.id, item.slot))
 		wear.tooltip_text = CardTokens.error_text(problem) if not problem.is_empty() else ""
+		wear.disabled = not problem.is_empty()
 	else:
 		_detail.add_action(CardTokens.t("unequip"), _unequip.bind(item.slot, slot_index))
 	var refine_button := _detail.add_action(CardTokens.t("refine"), _refine.bind(item.id, item.refine_level))

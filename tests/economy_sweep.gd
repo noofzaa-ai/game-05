@@ -19,7 +19,7 @@ const Run := preload("res://logic/run.gd")
 const SimWorld := preload("res://logic/sim_world.gd")
 
 const SEEDS := 12
-const FULL_SET := ["race_human_sword_shield_shirt", "race_human_sword_shield_pants", "race_human_sword_shield_armband", "race_human_sword_shield_shoes"]
+const FULL_SET := ["armour_sword_shield_shirt", "armour_sword_shield_pants", "armour_sword_shield_armband", "armour_sword_shield_shoes"]
 
 
 func _initialize() -> void:

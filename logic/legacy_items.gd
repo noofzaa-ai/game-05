@@ -82,7 +82,7 @@ static func target(item, rules, race: String, card: String) -> String:
 	var class_id := card
 	if class_id.is_empty() or not WEAPON_CLASS.values().has(class_id):
 		class_id = str(WEAPON_CLASS.get(item.weapon_type, "sword_shield")) if item.slot == "weapon" else str(WEIGHT_CLASS[weight_of(item.item_id)])
-	return rules.catalog.race_piece(race, class_id, item.slot)
+	return rules.catalog.race_piece(race, class_id, item.slot)  # armour: the class armour (Boss 2026-11-16)
 
 
 ## The old armour weight of a legacy id (frozen WEIGHT_TOKENS; default heavy).

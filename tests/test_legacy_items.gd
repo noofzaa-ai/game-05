@@ -69,9 +69,9 @@ func run(ctx) -> void:
 	for item in p.stash.items + p.vault.items:
 		by_id[item.id] = item
 	var expect := {
-		"old-katana": "race_human_sword_shield_weapon", "old-cuirass": "race_human_sword_shield_shirt", "old-shield": "race_human_shield",
-		"old-armband": "race_viking_greatsword_armband",
-		"old-shoes": "race_elf_magic_shoes", "old-staff": "race_elf_magic_weapon", "old-vest": "race_elf_sword_shield_shirt", "old-broken": "race_elf_sword_shield_weapon"}
+		"old-katana": "race_human_sword_shield_weapon", "old-cuirass": "armour_sword_shield_shirt", "old-shield": "race_human_shield",
+		"old-armband": "armour_greatsword_armband",
+		"old-shoes": "armour_magic_shoes", "old-staff": "race_elf_magic_weapon", "old-vest": "armour_sword_shield_shirt", "old-broken": "race_elf_sword_shield_weapon"}
 	var wrong: Array = []
 	for id in expect:
 		if not by_id.has(id) or by_id[id].item_id != expect[id]:
@@ -126,4 +126,4 @@ func run(ctx) -> void:
 	var bag: Dictionary = trip.to_dict(false)
 	(bag["bag"]["items"] as Array).append(legacy("old-bag-pants", "pants", "armor_ash_leather_pants", 1, 0, 0))
 	var restored = Run.from_dict(JSON.parse_string(JSON.stringify(bag)), rules, camp, p)
-	ctx.check("legacy items: a saved run bag's piece converts (first squad card's race, light -> longbow)", restored != null and restored.bag.items.any(func(i): return i.id == "old-bag-pants" and i.item_id == "race_elf_longbow_pants" and i.tier == 1))
+	ctx.check("legacy items: a saved run bag's piece converts (first squad card's race, light -> longbow)", restored != null and restored.bag.items.any(func(i): return i.id == "old-bag-pants" and i.item_id == "armour_longbow_pants" and i.tier == 1))

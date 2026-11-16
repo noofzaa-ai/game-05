@@ -25,7 +25,7 @@ func run(ctx) -> void:
 	var rules := ItemRulesLoader.load_default()
 	ctx.check("the rule book with the catalog is valid %s" % [rules.errors], rules.is_valid())
 	var catalog = rules.catalog
-	ctx.check("the catalog has the model team's weapons and clothing (%d items, %d sets)" % [catalog.items.size(), catalog.sets.size()], catalog.items.size() >= 84 and catalog.sets.size() >= 4)
+	ctx.check("the catalog has the model team's weapons and clothing (%d items, %d sets)" % [catalog.items.size(), catalog.sets.size()], catalog.items.size() >= 41 and catalog.sets.size() >= 4)
 	var not_english: Array[String] = []
 	for item_id in catalog.items:
 		var name: String = catalog.items[item_id]["name"]
@@ -55,7 +55,7 @@ func run(ctx) -> void:
 	_test_assets(ctx, catalog)
 	_test_drops(ctx, rules)
 	_test_kit(ctx, rules)
-	ctx.check("a catalog item keeps its id when copied", ItemSystem.create_item(rules, "c", "shirt", 0, rng, "", "race_elf_magic_shirt").duplicate_item().item_id == "race_elf_magic_shirt")
+	ctx.check("a catalog item keeps its id when copied", ItemSystem.create_item(rules, "c", "shirt", 0, rng, "", "armour_magic_shirt").duplicate_item().item_id == "armour_magic_shirt")
 	_test_loot_feed(ctx)
 
 
@@ -107,7 +107,7 @@ func _test_drops(ctx, rules) -> void:
 	ctx.check("a dropped catalog weapon has the catalog's weapon type", weapons_ok)
 	var profile = Profile.new_player(rules, CampDataLoader.load_default(), rng)
 	var weapon = profile.loadout.item_at("weapon")
-	ctx.check("the starter gear is catalog items (%s, %s, %s)" % [weapon.item_id, profile.loadout.item_at("shirt").item_id, profile.loadout.item_at("shoes").item_id], weapon.item_id == "race_human_sword_shield_weapon" and profile.loadout.item_at("shirt").item_id == "race_human_sword_shield_shirt" and profile.loadout.item_at("shoes").item_id == "race_human_sword_shield_shoes")
+	ctx.check("the starter gear is catalog items (%s, %s, %s)" % [weapon.item_id, profile.loadout.item_at("shirt").item_id, profile.loadout.item_at("shoes").item_id], weapon.item_id == "race_human_sword_shield_weapon" and profile.loadout.item_at("shirt").item_id == "armour_sword_shield_shirt" and profile.loadout.item_at("shoes").item_id == "armour_sword_shield_shoes")
 
 
 ## The Boss test kit: one of every catalog item not worn, all of it fits in the stash.

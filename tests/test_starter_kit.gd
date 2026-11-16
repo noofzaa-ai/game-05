@@ -31,7 +31,7 @@ func run(ctx) -> void:
 		var armor_ok := true
 		for slot in ARMOR_SLOTS:
 			var item = worn.item_at(slot, 0)
-			armor_ok = armor_ok and item != null and item.item_id == "race_%s_%s_%s" % [race, card, slot] and rules.catalog.entry(item.item_id)["armor_class"] == WEIGHT[card]
+			armor_ok = armor_ok and item != null and item.item_id == "armour_%s_%s" % [card, slot] and rules.catalog.entry(item.item_id)["armor_class"] == WEIGHT[card] and Profile.card_can_wear(card, item, rules)
 		ctx.check("starter kit %s: own race outfit, shirt/pants/armband/shoes of weight %s" % [card, WEIGHT[card]], armor_ok)
 		var white := true
 		for item in worn.items():
@@ -48,7 +48,7 @@ func run(ctx) -> void:
 	for card in CardDeck.classes():
 		for race in RACES:
 			for slot in ["weapon"] + ARMOR_SLOTS:
-				all_ok = all_ok and Profile.starter_piece(rules, card, slot, race) == "race_%s_%s_%s" % [race, card, slot]
+				all_ok = all_ok and Profile.starter_piece(rules, card, slot, race) == ("race_%s_%s_weapon" % [race, card] if slot == "weapon" else "armour_%s_%s" % [card, slot])
 	ctx.check("starter kit: every class x race has its starter outfit (16 x 5 pieces)", all_ok)
 	var deck_rng := RandomNumberGenerator.new()
 	deck_rng.seed = 5
@@ -56,7 +56,7 @@ func run(ctx) -> void:
 	q.card_gear.erase("longbow")
 	CardDeck.set_race(q.card_deck, "longbow", "viking")
 	q.ensure_starter_cards(rules)
-	ctx.check("starter kit: a Viking longbow card starts in the Viking longbow outfit", q.loadout_of("longbow").item_at("shirt", 0).item_id == "race_viking_longbow_shirt" and q.loadout_of("longbow").item_at("weapon", 0).item_id == "race_viking_longbow_weapon")
+	ctx.check("starter kit: a Viking longbow card starts in the Viking longbow outfit", q.loadout_of("longbow").item_at("shirt", 0).item_id == "armour_longbow_shirt" and q.loadout_of("longbow").item_at("weapon", 0).item_id == "race_viking_longbow_weapon")
 	var rng2 := RandomNumberGenerator.new()
 	rng2.seed = 9999
 	var r = Profile.new_player(rules, camp, rng2)
@@ -68,14 +68,14 @@ func run(ctx) -> void:
 	# Boss loot (design/gdd/boss-loot.md): boss set pieces are the only non-race items, and they never drop from monsters.
 	var plain_ids: Array = rules.catalog.items.keys().filter(func(id): return str(rules.catalog.entry(id).get("boss", "")).is_empty())
 	var boss_ids: Array = rules.catalog.items.keys().filter(func(id): return not str(rules.catalog.entry(id).get("boss", "")).is_empty())
-	ctx.check("starter kit: the catalog holds only race pieces (+ boss pieces), and the race pieces all drop", plain_ids.all(func(id): return str(id).begins_with("race_") and rules.catalog.candidates(rules.catalog.entry(id)["slot"], rules.catalog.entry(id)["weapon_type"], 1).has(id)))
+	ctx.check("starter kit: the catalog holds only race pieces (+ boss pieces), and the race pieces all drop", plain_ids.all(func(id): return (str(id).begins_with("race_") or str(id).begins_with("armour_")) and rules.catalog.candidates(rules.catalog.entry(id)["slot"], rules.catalog.entry(id)["weapon_type"], 1).has(id)))
 	ctx.check("starter kit: boss pieces never drop from monsters", boss_ids.all(func(id): return str(id).begins_with("boss_") and not rules.catalog.candidates(rules.catalog.entry(id)["slot"], "", 99).has(id)))
 
 	# Old save (pre-kit): S&S wears a rare blade + epic shirt, greatsword holds a blade and lost its pants, magic is bare.
 	var old: Dictionary = p.to_dict()
 	old.erase("starter_kit_version")
 	var gs_blade = ItemSystem.create_item(rules, "old-gs-blade", "weapon", 1, rng, "blade", "race_human_sword_shield_weapon")
-	var ss_shirt = ItemSystem.create_item(rules, "old-shirt", "shirt", 2, rng, "", "race_human_sword_shield_shirt")
+	var ss_shirt = ItemSystem.create_item(rules, "old-shirt", "shirt", 2, rng, "", "armour_sword_shield_shirt")
 	var ss_weapon = ItemSystem.create_item(rules, "old-weapon", "weapon", 1, rng, "blade", "race_human_sword_shield_weapon")
 	var ss = old["card_gear"]["sword_shield"]["loadout"]["equipped"]
 	var gs = old["card_gear"]["greatsword"]["loadout"]["equipped"]
@@ -111,7 +111,7 @@ func run(ctx) -> void:
 	ctx.check("hat removed: the refund is paid once", reloaded != null and reloaded.stash.gold == m.stash.gold)
 	var s_worn = m.loadout_of("sword_shield")
 	ctx.check("starter kit migration: worn gear is kept (rare blade, epic shirt)", s_worn.item_at("weapon", 0).id == "old-weapon" and s_worn.item_at("shirt", 0).id == "old-shirt" and s_worn.item_at("shirt", 0).tier == 2)
-	ctx.check("starter kit migration: empty slots get the white race outfit", s_worn.item_at("pants", 0) != null and s_worn.item_at("pants", 0).item_id == "race_human_sword_shield_pants" and s_worn.item_at("pants", 0).tier == 0 and s_worn.item_at("shoes", 0).item_id == "race_human_sword_shield_shoes")
+	ctx.check("starter kit migration: empty slots get the white race outfit", s_worn.item_at("pants", 0) != null and s_worn.item_at("pants", 0).item_id == "armour_sword_shield_pants" and s_worn.item_at("pants", 0).tier == 0 and s_worn.item_at("shoes", 0).item_id == "armour_sword_shield_shoes")
 	ctx.check("starter kit migration: an emptied slot is filled by the kit once", m.loadout_of("greatsword").item_at("pants", 0) != null and m.loadout_of("greatsword").item_at("pants", 0).id == "starter-kit-v3-greatsword-pants")
 	var gs_weapon = m.loadout_of("greatsword").item_at("weapon", 0)
 	ctx.check("starter kit migration: a greatsword holding a blade gets its race weapon", gs_weapon != null and gs_weapon.weapon_type == "greatsword" and gs_weapon.item_id == "race_viking_greatsword_weapon")
@@ -125,10 +125,10 @@ func run(ctx) -> void:
 	# A v2 save (white class kit already given) keeps its class kit pieces; only empty slots get the race outfit.
 	var v2: Dictionary = p.to_dict()
 	v2["starter_kit_version"] = 2
-	v2["card_gear"]["longbow"]["loadout"]["equipped"]["shirt:0"] = ItemSystem.create_item(rules, "starter-kit-v2-longbow-shirt", "shirt", 0, rng, "", "race_elf_longbow_shirt").to_dict()
+	v2["card_gear"]["longbow"]["loadout"]["equipped"]["shirt:0"] = ItemSystem.create_item(rules, "starter-kit-v2-longbow-shirt", "shirt", 0, rng, "", "armour_longbow_shirt").to_dict()
 	v2["card_gear"]["longbow"]["loadout"]["equipped"].erase("shoes:0")
 	var v2p = Profile.from_dict(JSON.parse_string(JSON.stringify(v2)), rules, camp)
-	ctx.check("starter kit v2 save: worn class kit piece kept, empty slot gets the race piece", v2p.loadout_of("longbow").item_at("shirt", 0).id == "starter-kit-v2-longbow-shirt" and v2p.loadout_of("longbow").item_at("shoes", 0).item_id == "race_elf_longbow_shoes")
+	ctx.check("starter kit v2 save: worn class kit piece kept, empty slot gets the race piece", v2p.loadout_of("longbow").item_at("shirt", 0).id == "starter-kit-v2-longbow-shirt" and v2p.loadout_of("longbow").item_at("shoes", 0).item_id == "armour_longbow_shoes")
 	# After the grant, a slot the player empties stays empty on reload.
 	var after = Profile.from_dict(JSON.parse_string(JSON.stringify(m.to_dict())), rules, camp)
 	after.unequip_to_stash("armband", 0, "longbow")

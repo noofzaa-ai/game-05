@@ -51,29 +51,37 @@ static func chain(field: String) -> PackedStringArray:
 
 
 ## The model file a catalog armour piece shows: its own asset_path, else the first existing fallback, else "".
-static func armor_file(info: Dictionary) -> String:
-	var file := str(info.get("asset_path", ""))
+## Class armour (Boss 2026-11-16) writes "{race}" in its paths: the look is the wearing card's race (`race`, "" = DEFAULT_RACE).
+const DEFAULT_RACE := "human"
+
+
+static func with_race(text: String, race: String) -> String:
+	return text.replace("{race}", race if not race.is_empty() else DEFAULT_RACE)
+
+
+static func armor_file(info: Dictionary, race: String = "") -> String:
+	var file := with_race(str(info.get("asset_path", "")), race)
 	if not file.is_empty() and ResourceLoader.exists(file):
 		return file
-	for fallback in chain(str(info.get("fallback_asset_path", ""))):
+	for fallback in chain(with_race(str(info.get("fallback_asset_path", "")), race)):
 		if ResourceLoader.exists(fallback):
 			return fallback
 	return path(str(info.get("asset_id", "")))
 
 
 ## The inventory icon of a catalog item (`catalog`: ItemCatalog), or null (draw the slot's shape).
-static func icon(item, catalog) -> Texture2D:
-	return null if item == null else icon_for_id(item.item_id, catalog)
+static func icon(item, catalog, race: String = "") -> Texture2D:
+	return null if item == null else icon_for_id(item.item_id, catalog, race)
 
 
 ## The same for a catalog item id ("" or unknown: null).
-static func icon_for_id(item_id: String, catalog) -> Texture2D:
+static func icon_for_id(item_id: String, catalog, race: String = "") -> Texture2D:
 	if catalog == null or item_id.is_empty():
 		return null
 	var info: Dictionary = catalog.entry(item_id)
-	var native_icon := str(info.get("icon_path",""))
+	var native_icon := with_race(str(info.get("icon_path","")), race)
 	if not native_icon.is_empty() and ResourceLoader.exists(native_icon): return load(native_icon) as Texture2D
-	for fallback_icon in chain(str(info.get("fallback_icon_path", ""))):  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
+	for fallback_icon in chain(with_race(str(info.get("fallback_icon_path", "")), race)):  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
 		if ResourceLoader.exists(fallback_icon): return load(fallback_icon) as Texture2D
 	return null  # the old art/items/icons folder is gone with the legacy items (Boss 2026-11-13)
 
@@ -143,7 +151,7 @@ static func appearance(chosen: Dictionary) -> Dictionary:
 ## What a character wearing `loadout` looks like:
 ## {"weapon": {"path", "family", "style"}, "hat"/"shirt"/...: path or "", "hide_hair": bool}.
 ## `catalog` is the ItemCatalog; `style` the combat style of the weapon (its stand-in model's name).
-static func looks(loadout, catalog, style: String) -> Dictionary:
+static func looks(loadout, catalog, style: String, race: String = "") -> Dictionary:
 	var result := {"weapon": {"path": "", "family": style, "style": style}, "hide_hair": false, "refine": {}, "armor_styles": {}}
 	for slot_id in BODY_SLOTS:
 		result[slot_id] = path(EMPTY_LOOKS.get(slot_id, ""))
@@ -161,7 +169,7 @@ static func looks(loadout, catalog, style: String) -> Dictionary:
 			continue
 		var asset_id: String = catalog.entry(item.item_id).get("asset_id", "")
 		result["refine"][slot_id] = item.refine_level
-		var file := armor_file(catalog.entry(item.item_id))  # race gear: race x class file, else the race's shared file, else the class look
+		var file := armor_file(catalog.entry(item.item_id), race)  # race gear: race x class file, else the race's shared file, else the class look
 		if file.is_empty():
 			continue  # a plain piece (no catalog look) keeps the empty-slot look
 		result["armor_styles"][slot_id] = str(catalog.entry(item.item_id).get("source_style",""))

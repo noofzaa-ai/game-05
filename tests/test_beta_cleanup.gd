@@ -9,7 +9,7 @@ func run(ctx) -> void:
 	preload("res://logic/test_kit.gd").fill(profile, runner.rules, test_camp, rng)
 	for item in profile.stash.items: item.id = "beta-v1-" + item.item_id
 	profile.bonus_stash_slots = profile.stash.items.size(); profile.beta_kit_version = 1
-	var kept = profile.stash.items.pop_at(profile.stash.items.find_custom(func(i): return i.slot != "weapon"))  # a card always holds a weapon: keep a piece that can come off
+	var kept = profile.stash.items.pop_at(profile.stash.items.find_custom(func(i): return i.slot != "weapon" and preload("res://logic/profile.gd").card_can_wear("sword_shield", i, runner.rules)))  # a card always holds a weapon: keep a piece that can come off
 	profile.loadout.equip(kept)
 	var earned = kept.duplicate_item(); earned.id = "earned-drop-1"; profile.stash.items.append(earned)
 	var previous: Dictionary = profile.to_dict()
@@ -20,7 +20,7 @@ func run(ctx) -> void:
 	ctx.check("cleanup preserves earned item exact values", cleaned.profile.stash.items[0] == earned.to_dict())
 	ctx.check("cleanup preserves gold materials appearance and RNG", cleaned.profile.stash.gold == previous.stash.gold and cleaned.profile.stash.materials == previous.stash.materials and cleaned.profile.appearance == previous.appearance and cleaned.rng_state == initial.rng_state)
 	ctx.check("cleanup retires capacity and marks v2", cleaned.profile.beta_kit_version == 2 and cleaned.profile.bonus_stash_slots == 0 and cleaned.profile.stash.capacity == preload("res://logic/camp.gd").stash_slots(preload("res://logic/profile.gd").from_dict(cleaned.profile, runner.rules, runner.camp), runner.camp))
-	ctx.check("cleanup never mutates borrowed storage", request.state.profile == previous and previous.stash.items.size() > 50)  # the race catalog (84 items) since the legacy items left
+	ctx.check("cleanup never mutates borrowed storage", request.state.profile == previous and previous.stash.items.size() > 30)  # the catalog (41 items after the class armour change) since the legacy items left
 	request.state = {"profile": cleaned.profile, "rng_state": cleaned.rng_state}
 	ctx.check("cleanup is idempotent", runner.execute(request).profile == cleaned.profile)
 	request.command = {"type": "unequip", "slot": kept.slot, "destination": "stash"}

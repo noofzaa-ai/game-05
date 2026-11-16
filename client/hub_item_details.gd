@@ -185,6 +185,8 @@ func show_item(item, rules) -> void:
 	_fit_title()
 	var tier_id := str(rules.tiers[clampi(item.tier, 0, rules.tiers.size() - 1)]["id"])
 	sub.text = "%s  ·  %s  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), "◆".repeat(item.tier + 1)]
+	if rules.catalog.req_level(item.item_id) > 1 and not item.id.begins_with("starter-"):  # Boss 2026-11-16: level-15 gear
+		sub.text += "  ·  " + CardTokens.t("req_level_line") % rules.catalog.req_level(item.item_id)
 	var factor: float = rules.durability_factor(item.durability_ratio())
 	var main: float = item.main_value(rules) * factor
 	var refine_part: float = item.base_value(rules) * float(rules.refine.get("bonus_per_level", 0.0)) * float(item.refine_level) * factor

@@ -1,5 +1,7 @@
 extends RefCounted
 ## Race gear drops (design/gdd/race-gear-sets.md 3.12; design/gdd/drops-and-rewards.md 3.8; Boss 2026-11-13). Pure rules.
+## Boss 2026-11-16: only the WEAPON is a race piece (race x class); armour becomes the CLASS armour of a squad card (any race
+## wears it, ItemCatalog.race_piece); the shield stays the race shield. The race share therefore matters for weapons only.
 ## Race pieces add no rolls: a piece that already dropped (per-kill item, wave chest) keeps its tier and slot, and with
 ## the share in data/loot/race_drops.json for (source, wave, tier) it BECOMES the race piece of one squad card's race and
 ## class (uniform pick among the squad that played; an offhand becomes that card's race shield). Boss 2026-11-13 (old item

@@ -36,8 +36,8 @@ static func piece(rules, i: int, tier: int, slot: String = ""):
 	return item
 
 
-static func is_race(rules, item) -> bool:  ## a race set piece or a race shield
-	return not str(rules.catalog.entry(item.item_id).get("race", "")).is_empty()
+static func is_race(rules, item) -> bool:  ## a race weapon / race shield, or (Boss 2026-11-16) a class armour piece
+	return not str(rules.catalog.entry(item.item_id).get("race", "")).is_empty() or str(item.item_id).begins_with("armour_")
 
 
 ## Fraction of N shirt pieces of `tier` that become race pieces from (source, wave).
@@ -82,7 +82,7 @@ func _gold_only_boss(ctx, rules, picks: Array) -> void:
 					continue
 				if int(item.tier) == LEGENDARY:
 					leaked += 1
-				if int(item.tier) != EPIC or not item.item_id.begins_with("race_"):
+				if int(item.tier) != EPIC or not is_race(rules, item):
 					not_purple += 1
 	ctx.check("race drops: no wave or chest drop is ever gold", leaked == 0)
 	ctx.check("race drops: a wave or chest gold roll drops as a purple race piece", not_purple == 0)
@@ -105,6 +105,8 @@ func _race_from_squad(ctx, rules, picks: Array) -> void:
 		var item = RaceDrops.convert_piece(rules, piece(rules, 90000 + i, EPIC), picks, RaceDrops.BOSS, 12)
 		if not is_race(rules, item) or item.slot == "offhand":
 			continue
+		if item.slot != "weapon":
+			continue  # armour is class-bound (race-free): only race weapons carry the card's race
 		var entry: Dictionary = rules.catalog.entry(item.item_id)
 		var key := "%s:%s" % [entry["race"], entry["class"]]
 		seen[key] = int(seen.get(key, 0)) + 1

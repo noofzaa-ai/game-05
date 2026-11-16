@@ -1,9 +1,9 @@
 extends RefCounted
-## Race gear sets (design/gdd/race-gear-sets.md 3.5-3.8, 4.1-4.2; Boss 2026-11-13). Pure rules, no randomness.
-## A race set (data/items/sets.json kind "race") is 5 pieces: the race weapon of the class + shirt, pants, armband, shoes.
-## Any card may wear any piece (its stats always count). The set OPTION works only when the card's race equals the set's
-## race: steps at 2 / 4 / 5 worn pieces add cell_mod words to the race passive. A step's numbers are scaled by tier_mul of
-## the LOWEST tier among the N best pieces worn (N = the step's pieces; formula 4.1), as formula 4.2 says:
+## Race gear sets (design/gdd/race-gear-sets.md 3.5-3.8, 4.1-4.2; Boss revision 2026-11-16). Pure rules, no randomness.
+## Boss 2026-11-16: a race set (data/items/sets.json kind "race") is the race WEAPON only (1 piece); armour is class-bound
+## (armour_<class>_<slot>) and has no set. The set OPTION works only when the card's race equals the set's race: the one
+## step (1 piece) adds cell_mod words to the race passive. Its numbers are scaled by tier_mul of the weapon's tier
+## (the LOWEST tier among the N best pieces worn, N = 1; formula 4.1), as formula 4.2 says:
 ##   scale_add x m; a *_mul field f -> 1 + (f - 1) x m; hp_threshold_add x m; inside extra_actions / extra_effects the
 ##   fractions, seconds, atk_mul, max_mul, crit_add, cap_max_hp and durations x m. Integer fields (charges_max_add,
 ##   every_n_add, charges_reset_to, every_n, cooldown_ticks) and thresholds (hp_below, below) are not scaled.
@@ -132,3 +132,4 @@ static func scale_effect(effect: Dictionary, m: float) -> Dictionary:
 	if out.get("actions") is Array:
 		out["actions"] = scale_actions(out["actions"], m)
 	return out
+

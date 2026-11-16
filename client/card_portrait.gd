@@ -240,7 +240,7 @@ func _card_looks() -> Dictionary:
 	var loadout = state.profile.loadout_of(class_id) if state.profile.has_method("loadout_of") else null
 	if loadout == null:
 		return {}
-	return ItemAssets.looks(loadout, state.item_rules.catalog, _weapon)
+	return ItemAssets.looks(loadout, state.item_rules.catalog, _weapon, preload("res://logic/card_deck.gd").gear_race(state.profile.card_deck, class_id))
 
 
 ## Back to the class idle and a fresh wait (class change, toggled).

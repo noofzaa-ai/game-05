@@ -1,7 +1,7 @@
 extends RefCounted
-## Race gear sets (design/gdd/race-gear-sets.md 3.6-3.8, 3.14, 4.1-4.4; acceptance 5-9; Boss 2026-11-13): a race set is
-## the race weapon + shirt, pants, armband, shoes (5 pieces), steps 2 / 4 / 5. The option boosts the race passive only
-## when the card's race matches the set; a step uses the lowest tier of the N best pieces; set + tree share the caps.
+## Race gear sets (design/gdd/race-gear-sets.md 3.6-3.8, 3.14, 4.1-4.4; acceptance 5-9; Boss revision 2026-11-16): a race set
+## is the race WEAPON only (one step at 1 piece); armour is class-bound and gives no race bonus. The option boosts the race
+## passive only when the card's race matches the weapon's race; the step uses the weapon's tier; set + tree share the caps.
 const RP := preload("res://tests/test_race_passives.gd")
 const RaceSets := preload("res://logic/race_sets.gd")
 const RacePassives := preload("res://logic/race_passives.gd")
@@ -37,7 +37,8 @@ static func dress(f: Dictionary, card: String, race: String, tiers: Array) -> vo
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash([card, slot])
 		worn.unequip(slot, 0)
-		worn.equip(ItemSystem.create_item(f.rules, "set-%s-%s" % [card, slot], slot, int(tiers[i]), rng, "", "race_%s_%s_%s" % [race, card, slot]))
+		var item_id := "race_%s_%s_weapon" % [race, card] if slot == "weapon" else "armour_%s_%s" % [card, slot]
+		worn.equip(ItemSystem.create_item(f.rules, "set-%s-%s" % [card, slot], slot, int(tiers[i]), rng, "", item_id))
 
 
 ## A squad whose `card` wears `race`'s set at `tiers` (the other cards plain), fighters attached after dressing.
@@ -68,26 +69,30 @@ func _data(ctx) -> void:
 	var ok := true
 	for race in ["human", "viking", "elf", "runeborn"]:
 		var info: Dictionary = rules.catalog.sets.get("race_" + race, {})
-		ok = ok and str(info.get("kind", "")) == "race" and info["steps"].map(func(s): return int(s["pieces"])) == [2, 4, 5] and info["bonuses"].is_empty()
+		ok = ok and str(info.get("kind", "")) == "race" and info["steps"].map(func(s): return int(s["pieces"])) == [1] and info["bonuses"].is_empty()
 		for card in Deck.classes():
 			for slot in SLOTS:
 				ok = ok and rules.catalog.race_piece(race, card, slot) != ""
+				ok = ok and (slot == "weapon" or (str(rules.catalog.entry("armour_%s_%s" % [card, slot]).get("set", "x")) == "" and rules.catalog.race_piece(race, card, slot) == "armour_%s_%s" % [card, slot]))
 			ok = ok and rules.catalog.entry("race_%s_%s_weapon" % [race, card])["weapon_type"] in preload("res://logic/profile.gd").weapon_families(card)
-	ctx.check("race sets: 4 sets of 5 pieces (race weapon + 4 armour) per class, steps 2/4/5, no flat bonus", ok)
-	var ids: Array = ["race_viking_greatsword_weapon", "race_viking_greatsword_shirt", "race_viking_greatsword_pants", "race_viking_greatsword_armband", "race_viking_greatsword_shoes"]
+	ctx.check("race sets: 4 weapon-only sets (one step at 1 piece), class armour has no set, no flat bonus", ok)
+	var ids: Array = ["race_viking_greatsword_weapon", "armour_greatsword_shirt", "armour_greatsword_pants", "armour_greatsword_armband", "armour_greatsword_shoes"]
 	ctx.check("race sets: race pieces never feed the flat set bonus", rules.catalog.set_bonus(ids).is_empty())
 
 
-## 3.7 / 4.1: gold, gold, purple, blue, blue -> step 2 gold (1.5), step 4 blue (1.0), step 5 blue (1.0).
+## One step at 1 piece: the weapon's tier decides m, whatever the armour tiers are.
 func _lowest_tier(ctx) -> void:
-	var f := squad_with(["human", "viking", "elf"], GS, "viking", [LEGENDARY, LEGENDARY, EPIC, RARE, RARE])
+	var f := squad_with(["human", "viking", "elf"], GS, "viking", [LEGENDARY, RARE, RARE, RARE, RARE])
 	var status: Array = RaceSets.status(f.rules, f.profile.loadout_of(GS).items(), "viking", GS)
 	var steps: Array = status[0]["steps"] if status.size() == 1 else []
-	ctx.check("lowest tier: steps use legendary / rare / rare (%s)" % [steps.map(func(s): return s["tier"])], steps.size() == 3 and steps[0]["tier"] == "legendary" and steps[1]["tier"] == "rare" and steps[2]["tier"] == "rare")
-	ctx.check("lowest tier: m = 1.5 / 1.0 / 1.0", steps.size() == 3 and is_equal_approx(steps[0]["m"], 1.5) and is_equal_approx(steps[1]["m"], 1.0) and is_equal_approx(steps[2]["m"], 1.0))
-	var white := squad_with(["human", "viking", "elf"], GS, "viking", [0, 0])
+	ctx.check("weapon tier: one step at the weapon's tier (%s)" % [steps.map(func(s): return s["tier"])], steps.size() == 1 and steps[0]["tier"] == "legendary" and is_equal_approx(steps[0]["m"], 1.5) and status[0]["count"] == 1 and status[0]["total"] == 1)
+	var white := squad_with(["human", "viking", "elf"], GS, "viking", [0])
 	var w: Array = RaceSets.status(white.rules, white.profile.loadout_of(GS).items(), "viking", GS)
-	ctx.check("white starter pieces: the option works at x0.75 of blue", is_equal_approx(w[0]["steps"][0]["m"], 0.75) and w[0]["steps"][0]["active"])
+	ctx.check("white starter weapon: the option works at x0.75 of blue", is_equal_approx(w[0]["steps"][0]["m"], 0.75) and w[0]["steps"][0]["active"])
+	var armour_only := squad_with(["human", "viking", "elf"], GS, "viking", [])
+	for slot in ["shirt", "pants", "armband", "shoes"]:
+		armour_only.profile.loadout_of(GS).equip(ItemSystem.create_item(armour_only.rules, "arm-" + slot, slot, EPIC, RandomNumberGenerator.new(), "", "armour_greatsword_" + slot))
+	ctx.check("armour: class armour alone gives no race set status", RaceSets.status(armour_only.rules, armour_only.profile.loadout_of(GS).items(), "viking", GS).is_empty())
 
 
 ## 4.4 / acceptance 5: Viking greatsword with 2 / 4 / 5 blue Viking pieces vs the same pieces on an Elf greatsword.
@@ -95,31 +100,38 @@ func _match_vs_mismatch(ctx) -> void:
 	var base := RP.squad(["human", "viking", "elf"])
 	var plain: float = berserker_at(fighter_of(base, GS), 0.5)
 	ctx.check("4.4 no set: Berserker +25.0%% ATK at 50%% HP (%.3f)" % plain, absf(plain - 0.25) < 0.001)
-	var two := squad_with(["human", "viking", "elf"], GS, "viking", [RARE, RARE])
-	ctx.check("4.4 2 blue: +27.5%% at 50%% HP (%.3f)" % berserker_at(fighter_of(two, GS), 0.5), absf(berserker_at(fighter_of(two, GS), 0.5) - 0.275) < 0.001)
-	var four := squad_with(["human", "viking", "elf"], GS, "viking", [RARE, RARE, RARE, RARE])
-	ctx.check("4.4 4 blue: +29.3%% at 50%% HP (%.3f)" % berserker_at(fighter_of(four, GS), 0.5), absf(berserker_at(fighter_of(four, GS), 0.5) - 0.44 * 0.5 / 0.75) < 0.001)
-	var five := squad_with(["human", "viking", "elf"], GS, "viking", [RARE, RARE, RARE, RARE, RARE])
-	var gs5 = fighter_of(five, GS)
+	var weapon := squad_with(["human", "viking", "elf"], GS, "viking", [RARE])
+	var w_at: float = berserker_at(fighter_of(weapon, GS), 0.5)
+	ctx.check("4.4 blue Viking weapon: +29.3%% at 50%% HP (%.3f)" % w_at, absf(w_at - 0.44 * 0.5 / 0.75) < 0.001)
+	var all_blue := squad_with(["human", "viking", "elf"], GS, "viking", [RARE, RARE, RARE, RARE, RARE])
+	var gs5 = fighter_of(all_blue, GS)
 	var blood_up: Array = gs5.race_state["effects"].filter(func(e): return e["src"] == "passive" and e["effect"]["type"] == "trigger" and str(e["effect"]["on"]) == "self_low_hp")
-	ctx.check("4.4 5 blue: same Berserker numbers plus Blood Up (rage 360 ticks below 50%)", absf(berserker_at(gs5, 0.5) - 0.44 * 0.5 / 0.75) < 0.001 and blood_up.size() == 1 and int(blood_up[0]["effect"]["actions"][0]["duration"]) == 360)
-	var gold := squad_with(["human", "viking", "elf"], GS, "viking", [LEGENDARY, LEGENDARY, LEGENDARY, LEGENDARY, LEGENDARY])
-	ctx.check("4.4 5 gold: +31.7%% at 50%% HP (%.3f)" % berserker_at(fighter_of(gold, GS), 0.5), absf(berserker_at(fighter_of(gold, GS), 0.5) - 0.46 * 0.5 / 0.725) < 0.001)
+	ctx.check("armour adds nothing: weapon + 4 armour = the weapon alone, no 5-piece Blood Up", absf(berserker_at(gs5, 0.5) - w_at) < 0.001 and blood_up.is_empty())
+	var armour_only := squad_with(["human", "viking", "elf"], GS, "viking", [])
+	armour_only.profile.loadout_of(GS).unequip("weapon", 0)
+	for slot in ["shirt", "pants", "armband", "shoes"]:
+		armour_only.profile.loadout_of(GS).equip(ItemSystem.create_item(armour_only.rules, "arm-" + slot, slot, EPIC, RandomNumberGenerator.new(), "", "armour_greatsword_" + slot))
+	for id in armour_only.sim.runs:
+		armour_only.sim.attach_run(id, armour_only.sim.runs[id], armour_only.rules, armour_only.loot)
+	var armour_at: float = berserker_at(fighter_of(armour_only, GS), 0.5)
+	ctx.check("armour gives no race bonus (Berserker %.3f = no set %.3f, race_set 0)" % [armour_at, plain], absf(armour_at - plain) < 0.001 and int(fighter_of(armour_only, GS).race_state["race_set"]) == 0)
+	var gold := squad_with(["human", "viking", "elf"], GS, "viking", [LEGENDARY])
+	ctx.check("4.4 gold Viking weapon: +31.7%% at 50%% HP (%.3f)" % berserker_at(fighter_of(gold, GS), 0.5), absf(berserker_at(fighter_of(gold, GS), 0.5) - 0.46 * 0.5 / 0.725) < 0.001)
 	# The same 5 Viking pieces on an Elf greatsword: same raw stats, Living Bark unchanged.
 	var elf_plain := RP.squad(["human", "elf", "elf"])
 	var elf_set := squad_with(["human", "elf", "elf"], GS, "viking", [RARE, RARE, RARE, RARE, RARE])
 	var a = fighter_of(elf_plain, GS)
 	var b = fighter_of(elf_set, GS)
 	ctx.check("mismatch: an Elf greatsword in Viking pieces keeps its passive exactly", JSON.stringify(a.race_state["effects"]) == JSON.stringify(b.race_state["effects"]) and int(b.race_state.get("race_set", -1)) == 0)
-	var stats_viking: Dictionary = Stats.totals(five.rules, five.profile.loadout_of(GS).items())
+	var stats_viking: Dictionary = Stats.totals(all_blue.rules, all_blue.profile.loadout_of(GS).items())
 	var stats_elf: Dictionary = Stats.totals(elf_set.rules, elf_set.profile.loadout_of(GS).items())
 	ctx.check("mismatch: the pieces' stats are the same whoever wears them", stats_viking == stats_elf)
 
 
 ## 3.6 / acceptance 6: changing the card's race turns the option on or off at the next attach.
 func _race_toggle(ctx) -> void:
-	var f := squad_with(["human", "viking", "elf"], GS, "viking", [RARE, RARE, RARE, RARE])
-	ctx.check("toggle: Viking card in Viking pieces has the option", int(fighter_of(f, GS).race_state["race_set"]) > 0)
+	var f := squad_with(["human", "viking", "elf"], GS, "viking", [RARE])
+	ctx.check("toggle: Viking card with the Viking weapon has the option", int(fighter_of(f, GS).race_state["race_set"]) > 0)
 	Deck.set_race(f.profile.card_deck, GS, "elf")
 	ctx.check("toggle: the hub preview turns off at once (status matched false)", not RaceSets.status(f.rules, f.profile.loadout_of(GS).items(), Deck.race_of(f.profile.card_deck, GS), GS)[0]["matched"])
 	for id in f.sim.runs:
@@ -129,12 +141,10 @@ func _race_toggle(ctx) -> void:
 	for id in f.sim.runs:
 		f.sim.attach_run(id, f.sim.runs[id], f.rules, f.loot)
 	ctx.check("toggle: back to Viking turns it on again", int(fighter_of(f, GS).race_state["race_set"]) > 0)
-	f.profile.loadout_of(GS).unequip("shirt", 0)
-	f.profile.loadout_of(GS).unequip("pants", 0)
-	f.profile.loadout_of(GS).unequip("armband", 0)
+	f.profile.loadout_of(GS).equip(ItemSystem.create_item(f.rules, "other-weapon", "weapon", RARE, RandomNumberGenerator.new(), "", "race_elf_greatsword_weapon"))
 	for id in f.sim.runs:
 		f.sim.attach_run(id, f.sim.runs[id], f.rules, f.loot)
-	ctx.check("toggle: taking pieces off below 2 turns it off", int(fighter_of(f, GS).race_state["race_set"]) == 0)
+	ctx.check("toggle: wearing another race's weapon turns it off", int(fighter_of(f, GS).race_state["race_set"]) == 0)
 
 
 static func _learn(f: Dictionary, card: String, ids: Array) -> void:
@@ -151,7 +161,7 @@ func _caps_with_tree(ctx) -> void:
 	var rules: Dictionary = preload("res://logic/race_data.gd").load_default().rules
 	# Threshold cap: 5 gold Viking (+0.075) + Thick Blood (+0.10) -> capped at +0.15: full_at 0.35 (4.4 last row).
 	var thick := _node("viking", func(e): return e["type"] == "cell_mod" and e.has("hp_threshold_add"))
-	var f := squad_with(["human", "viking", "elf"], GS, "viking", [LEGENDARY, LEGENDARY, LEGENDARY, LEGENDARY, LEGENDARY], func(f): _learn(f, GS, [thick]))
+	var f := squad_with(["human", "viking", "elf"], GS, "viking", [LEGENDARY], func(f): _learn(f, GS, [thick]))
 	var gs = fighter_of(f, GS)
 	ctx.check("caps: gold set + Thick Blood -> +35.4%% at 50%% HP (threshold capped 0.15) (%.3f)" % berserker_at(gs, 0.5), absf(berserker_at(gs, 0.5) - 0.46 * 0.5 / 0.65) < 0.001)
 	# Scale cap: many scale_adds never pass passive_scale_cap.
@@ -159,13 +169,13 @@ func _caps_with_tree(ctx) -> void:
 	ctx.check("caps: passive scale capped at %.2f (%.2f)" % [float(rules["passive_scale_cap"]), merged["scale"]], is_equal_approx(merged["scale"], float(rules["passive_scale_cap"])))
 	# Cooldown floor: Drilled Ranks (0.75) + 4 Human pieces (0.85) -> 0.6375 >= floor 0.60; with gold 0.775 -> floored.
 	var drilled := _node("human", func(e): return e["type"] == "cell_mod" and e.has("icd_mul") and e.has("scale"))
-	f = squad_with(["human", "viking", "elf"], SS, "human", [LEGENDARY, LEGENDARY, LEGENDARY, LEGENDARY], func(f): _learn(f, SS, [drilled]))
+	f = squad_with(["human", "viking", "elf"], SS, "human", [LEGENDARY], func(f): _learn(f, SS, [drilled]))
 	var drill: Array = fighter_of(f, SS).race_state["effects"].filter(func(e): return e["src"] == "passive" and e["effect"].has("cooldown_ticks"))
 	var floor_ticks := int(round(600.0 * float(rules["cooldown_mul_floor"])))
 	ctx.check("caps: Rallying Drill cooldown never below the 0.60 floor (%s ticks)" % [drill.map(func(e): return e["effect"]["cooldown_ticks"])], drill.size() == 1 and int(drill[0]["effect"]["cooldown_ticks"]) == floor_ticks)
 	# Rune floor: Quick Glyphs (-1) + 4 Runeborn pieces (-1) on the bow: 6 -> 4; never below 2.
 	var glyphs := _node("runeborn", func(e): return e["type"] == "cell_mod" and e.has("charges_max_add"))
-	f = squad_with(["human", "viking", "runeborn"], LB, "runeborn", [RARE, RARE, RARE, RARE], func(f): _learn(f, LB, [glyphs]))
+	f = squad_with(["human", "viking", "runeborn"], LB, "runeborn", [RARE], func(f): _learn(f, LB, [glyphs]))
 	var charges: Array = fighter_of(f, LB).race_state["effects"].filter(func(e): return e["effect"]["type"] == "charges")
 	ctx.check("caps: Glyph Shot runes 6 -> 4 with tree + set", charges.size() == 1 and int(charges[0]["effect"]["max"]) == 4)
 	var low: Dictionary = TreeEffects.cell_mod_effect({"type": "charges", "gain_on": ["hit"], "gain": 1, "max": 3, "actions": []}, {"charges_max_add": -5})

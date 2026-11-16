@@ -283,7 +283,7 @@ func _ac5_shop(ctx) -> void:
 	r = Commands.apply(f, {"type": "shop_buy", "sku": "boss:boss_goblin_chief_ring"}, F.rng(6))
 	ctx.check("AC5 buying spends 500 coins and gives the piece", r.ok and p.stash.material_count(COIN) == 100 and boss_items(p).size() == count + 1)
 	ctx.check("AC5 buying spends no gold", p.stash.gold == gold_before)
-	r = Commands.apply(f, {"type": "shop_buy", "sku": "item:race_human_sword_shield_shirt"}, F.rng(6))
+	r = Commands.apply(f, {"type": "shop_buy", "sku": "item:armour_sword_shield_shirt"}, F.rng(6))
 	ctx.check("AC5 the old race gold stock is gone", not r.ok and r.error == "invalid_product")
 	# Selling gear for gold still works.
 	var bought = boss_items(p)[-1]

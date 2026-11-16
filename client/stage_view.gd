@@ -551,7 +551,7 @@ func _player_looks(id: int = -1) -> Dictionary:
 	if _squad_room() and not _session.card_of(id).is_empty() and owner != null:
 		var card: String = _session.card_of(id)
 		var card_loadout = owner.loadout_of(card)
-		looks = ItemAssets.looks(card_loadout, GameState.item_rules.catalog, card_loadout.weapon_style(_combat_data.styles.keys()))
+		looks = ItemAssets.looks(card_loadout, GameState.item_rules.catalog, card_loadout.weapon_style(_combat_data.styles.keys()), preload("res://logic/card_deck.gd").gear_race(owner.card_deck, card))
 		looks["class"] = card
 		looks["appearance"] = ItemAssets.card_appearance(preload("res://logic/card_deck.gd").look_of(owner.card_deck, card), ItemAssets.appearance(own))
 		return looks

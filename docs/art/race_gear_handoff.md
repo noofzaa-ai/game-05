@@ -1,5 +1,15 @@
 # Race gear: art handoff for the Studio team
 
+> **Boss revision 2026-11-16 (read first, supersedes section 1 below).** Armour is now CLASS-bound and the level-15 generation: the Boss generates **4 class armour sets (one per class) x 4 slots at level 15** and **16 race weapons** himself. Armour keeps one look per race (the race is picked by the wearing card), so the art count is still 4 races x 4 classes x 4 slots = 64 meshes + 64 icons, but the items are `armour_<class>_<slot>` (16 catalog items), not 64 race items. Exact ids and paths:
+>
+> | Item id | Mesh (`{race}` = human, viking, elf, runeborn) | Icon |
+> |---|---|---|
+> | `armour_<class>_<slot>` (class: sword_shield, greatsword, longbow, magic; slot: shirt, pants, armband, shoes; 16 ids) | `res://art/armor/race_{race}/<class>/<slot>.glb` | `res://art/armor/race_{race}/<class>/icon-<slot>.png` |
+> | `race_<race>_<class>_weapon` (16 ids, set `race_<race>`, the race bonus) | `res://art/weapons/race_<race>/<class>.glb` | `res://art/weapons/race_<race>/icon-<class>.png` |
+> | `race_<race>_shield` (4, unchanged, no level gate) | `res://art/weapons/race_<race>/shield.glb` | `res://art/weapons/race_<race>/icon-shield.png` |
+>
+> All armour and weapon ids above need card level 15 (`req_level`). The fallback chain is unchanged (the race x class file, then `art/armor/race_shared/<race>_<slot>.glb`, then the procedural look), resolved with the wearing card's race, so nothing breaks until the files land. The paths are the same as section 1; only the item ids and the "any race wears it" rule changed.
+
 **Date**: 2026-11-13 · **For**: the Studio 3D team (meshes, race weapons) and the 2D/Codex art agents (icons) · **Design**: `design/gdd/race-gear-sets.md` (3.5, 3.11) · **Data**: `data/items/catalog.json` (80 entries `race_<race>_<class>_<slot>`), generator `tools/items/build_race_gear.py`
 
 Every path below is read from `data/items/catalog.json` (`asset_path`, `icon_path`). Drop a file at its path and the game uses it on the next import. No code or data change is needed. Until then the fallback below is shown.

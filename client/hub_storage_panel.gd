@@ -183,7 +183,7 @@ func _show_wear_picker() -> void:
 	_picker_title(CardTokens.t("wear_on_title"))
 	var first: Button = null
 	for id in CardDeck.classes():
-		var problem := Profile.slot_problem(id, item, GameState.item_rules)
+		var problem: String = GameState.profile.wear_problem(id, item, GameState.item_rules)
 		var b := _picker_button(CardTokens.class_name_of(id), _wear.bind(item.id, id), not problem.is_empty(), CardTokens.error_text(problem) if not problem.is_empty() else "")
 		if first == null and not b.disabled:
 			first = b
