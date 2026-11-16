@@ -1,0 +1,4 @@
+{"_about": "Tutorial done and the Goblin Chief just beaten: the hub shows the Magic seal-break ceremony.",
+ "card_deck": {"cards": {"sword_shield": {"race": "human"}, "greatsword": {"race": "viking"}, "longbow": {"race": "elf"}}, "squad": ["sword_shield", "greatsword", "longbow"]},
+ "tutorial": {"version": 1, "step": "done", "tour_done": true, "unlock_seen": false},
+ "unlocks": {"magic_runeborn": true, "boss_goblin_base": true}}

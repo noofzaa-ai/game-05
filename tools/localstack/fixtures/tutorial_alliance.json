@@ -1,0 +1,3 @@
+{"_about": "New player who picked Human / Viking / Elf; the tutorial waits on the Alliance step.",
+ "card_deck": {"cards": {"sword_shield": {"race": "human"}, "greatsword": {"race": "viking"}, "longbow": {"race": "elf"}}, "squad": ["sword_shield", "greatsword", "longbow"]},
+ "tutorial": {"version": 1, "step": "alliance", "tour_done": false, "unlock_seen": false}}

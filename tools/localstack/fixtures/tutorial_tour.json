@@ -1,0 +1,3 @@
+{"_about": "First fight done; the tutorial is at the menu tour (Equipment tab).",
+ "card_deck": {"cards": {"sword_shield": {"race": "human"}, "greatsword": {"race": "viking"}, "longbow": {"race": "elf"}}, "squad": ["sword_shield", "greatsword", "longbow"]},
+ "tutorial": {"version": 1, "step": "tour_equip", "tour_done": false, "unlock_seen": false}}
