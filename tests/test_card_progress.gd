@@ -31,9 +31,9 @@ func _formulas(ctx) -> void:
 	var reqs := [1, 2, 3, 4, 5, 10, 15, 20, 24].map(func(l): return Progress.xp_req(l))
 	ctx.check("xp_req follows round(100 * L^1.2) %s" % [reqs], reqs == [100, 230, 374, 528, 690, 1585, 2578, 3641, 4532])  # GDD 4.2 table rounds 15 -> 2580, 24 -> 4530 by hand; the formula is the rule
 	ctx.check("no XP needed past max level", Progress.xp_req(25) == 0)
-	ctx.check("run XP: full win = 700", Progress.run_xp(11, true, true) == 700)
-	ctx.check("run XP: a loss after 5 waves = 175", Progress.run_xp(5, false, false) == 175)
-	ctx.check("run XP: nothing cleared = 0, waves past 11 do not count", Progress.run_xp(0, false, false) == 0 and Progress.run_xp(40, false, false) == Progress.run_xp(11, false, false))
+	ctx.check("run XP: full win (8 waves + the boss) = 714", Progress.run_xp(8, true, true) == 714)
+	ctx.check("run XP: a loss after 5 waves = 285", Progress.run_xp(5, false, false) == 285)
+	ctx.check("run XP: nothing cleared = 0, waves past 8 do not count", Progress.run_xp(0, false, false) == 0 and Progress.run_xp(40, false, false) == Progress.run_xp(8, false, false))
 
 
 func _grant(ctx) -> void:
@@ -83,21 +83,21 @@ func _run_end(ctx) -> void:
 	var j = _squad_journey(f, CARDS)
 	j.choose(0)
 	var sim := FakeSim.new()
-	sim._waves_released = 11
+	sim._waves_released = 8
 	j.note_waves(sim)
 	j.stage_cleared(1.0)
 	ctx.check("a won squad run is over", j.state == Journey.WON)
 	var levels: Array = CARDS.map(func(c): return Progress.progress_of(f.profile.card_deck, c))
-	ctx.check("every squad card gets 700 XP for a full win %s" % [levels], levels.all(func(p): return p == {"level": 3, "xp": 370}))  # 700 - 100 - 230
+	ctx.check("every squad card gets 714 XP for a full win %s" % [levels], levels.all(func(p): return p == {"level": 4, "xp": 10}))  # 714 - 100 - 230 - 374
 	ctx.check("the card outside the squad gets none", Progress.level_of(f.profile.card_deck, "magic") == 1)
-	ctx.check("the journey reports what each card got", j.card_xp.size() == 3 and int(j.card_xp["longbow"]["xp_gained"]) == 700)
+	ctx.check("the journey reports what each card got", j.card_xp.size() == 3 and int(j.card_xp["longbow"]["xp_gained"]) == 714)
 	j.pay_card_xp()
 	j.died()
 	ctx.check("a repeated run end never pays twice", Progress.progress_of(f.profile.card_deck, "longbow") == levels[2])
 	var restored = Party.from_dict(JSON.parse_string(JSON.stringify(j.to_dict())), j.data, f.rules, f.camp, f.loot, f.combat.weapon_ids)
 	ctx.check("the paid flag survives a checkpoint", restored != null and restored.card_xp_paid and restored.card_xp.size() == 3)
 
-	# A loss at wave 6: waves 1-5 cleared -> 175, downed or not.
+	# A loss at wave 6: waves 1-5 cleared -> 285, downed or not.
 	f = F.make()
 	j = _squad_journey(f, CARDS)
 	j.choose(0)
@@ -105,7 +105,7 @@ func _run_end(ctx) -> void:
 	sim._waves_released = 5
 	j.note_waves(sim)
 	j.died()
-	ctx.check("a loss after 5 waves pays 175 to every squad card", CARDS.all(func(c): return Progress.progress_of(f.profile.card_deck, c) == {"level": 2, "xp": 75}))
+	ctx.check("a loss after 5 waves pays 285 to every squad card", CARDS.all(func(c): return Progress.progress_of(f.profile.card_deck, c) == {"level": 2, "xp": 185}))
 	sim._waves_released = 9
 	j.note_waves(sim)
 	ctx.check("waves noted after the run ended do not count", j.waves_cleared == 5)
@@ -118,6 +118,6 @@ func _run_end(ctx) -> void:
 	sim._waves_released = 2
 	j.note_waves(sim)
 	j.died()
-	ctx.check("a solo run levels only its card (25+30 = 55 XP)", Progress.progress_of(f.profile.card_deck, "magic") == {"level": 1, "xp": 55} and Progress.level_of(f.profile.card_deck, "sword_shield") == 1)
+	ctx.check("a solo run levels only its card (39+48 = 87 XP)", Progress.progress_of(f.profile.card_deck, "magic") == {"level": 1, "xp": 87} and Progress.level_of(f.profile.card_deck, "sword_shield") == 1)
 	var solo = Journey.from_dict(JSON.parse_string(JSON.stringify(j.to_dict())), j.data, f.rules, f.camp, f.loot, f.combat.weapon_ids)
 	ctx.check("a solo checkpoint keeps waves cleared and the paid flag", solo != null and solo.waves_cleared == 2 and solo.card_xp_paid)

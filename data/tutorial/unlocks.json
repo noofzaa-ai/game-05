@@ -1,6 +1,6 @@
 {
- "_comment": "Content gates (design/gdd/tutorial.md 2). A class or race listed under locked is usable only when profile.unlocks[flag] is true. The server sets the flag the first time a run of unlock_on.journey reaches cleared_wave >= unlock_on.wave (logic/unlocks.gd).",
+ "_comment": "Content gates (design/gdd/tutorial.md 2). A class or race listed under locked is usable only when profile.unlocks[flag] is true. The server sets the flag the first time a run of unlock_on.journey reaches cleared_wave >= unlock_on.wave (9 = the Goblin Chief, Boss 2026-11-16) (logic/unlocks.gd).",
  "flag": "magic_runeborn",
  "locked": {"classes": ["magic"], "races": ["runeborn"]},
- "unlock_on": {"journey": "goblin_waves", "wave": 12}
+ "unlock_on": {"journey": "goblin_waves", "wave": 9}
 }

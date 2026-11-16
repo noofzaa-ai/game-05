@@ -33,7 +33,7 @@ static func unlock_journey() -> String:
 
 
 static func unlock_wave() -> int:
-	return int(config().get("unlock_on", {}).get("wave", 12))
+	return int(config().get("unlock_on", {}).get("wave", 9))
 
 
 ## `profile` is a Profile (or anything with an `unlocks` Dictionary).

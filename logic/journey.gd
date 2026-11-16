@@ -464,6 +464,8 @@ func pay_card_xp() -> void:
 	for entry in xp_cards():
 		# design/gdd/tutorial.md 2: the first goblin_waves run that clears wave 12 unlocks Magic + Runeborn (authority only).
 		Unlocks.on_battle_result(entry[0], str(data.id), cleared_wave())
+		# World map (Boss 2026-11-16): the first boss kill of a zone opens the next zone.
+		preload("res://logic/world_zones.gd").on_battle_result(entry[0], str(data.id), cleared_wave(), int(data.stage_count))
 		var granted: Dictionary = CardProgress.grant(entry[0].card_deck, str(entry[1]), amount)
 		if not granted.is_empty():
 			card_xp[str(entry[1])] = granted

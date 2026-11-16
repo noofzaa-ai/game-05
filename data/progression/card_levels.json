@@ -4,5 +4,6 @@
  "xp_base": 100,
  "xp_exp": 1.2,
  "milestone_levels": [10, 20],
- "xp_rewards": {"wave_base": 20, "wave_step": 5, "max_waves": 11, "boss": 100, "win": 50}
+ "_xp_nine_waves": "Boss 2026-11-16, 12 -> 9 waves: wave XP 20+5w over 11 waves -> 30+9w over 8 so a full win still pays ~the same (714 vs 700) in a shorter run (more XP per minute for farming).",
+ "xp_rewards": {"wave_base": 30, "wave_step": 9, "max_waves": 8, "boss": 100, "win": 50}
 }

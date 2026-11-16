@@ -106,6 +106,7 @@ var _fight_glow: Panel
 var _fight_ribbon: Control  ## parchment ribbon under the plaque, behind the loading line
 var _stage_label: Label
 var _stage_strip: Control  ## dark ink pill behind the stage name
+var _map_button: Button  ## over the stage strip: opens the world map
 var _cards := {}  ## class id -> HubCard
 var _service_layer: Control
 var _service_open := ""
@@ -1150,6 +1151,14 @@ func _build_deck_layer() -> void:
 	_deck_layer.add_child(_stage_strip)
 	_stage_label = CardTokens.hub_label(CardTokens.stage_name(), CardTokens.FONT_HUB_STAGE, CardTokens.HUB_CREAM, 1.0, 0, "medium")
 	_deck_layer.add_child(_stage_label)
+	# World map (Boss 2026-11-16): the stage strip over FIGHT opens it (a flat button over the strip).
+	_map_button = Button.new()
+	_map_button.name = "MapButton"
+	_map_button.flat = true
+	_map_button.focus_mode = Control.FOCUS_ALL
+	_map_button.tooltip_text = CardTokens.t("svc_map")
+	_map_button.pressed.connect(open_world_map)
+	_deck_layer.add_child(_map_button)
 
 
 ## Online squad rooms entry (design/gdd/online-squads.md chunk 5): opens the existing online room panel (create a
@@ -1388,6 +1397,8 @@ func _layout() -> void:
 	_stage_label.size = Vector2(stage_w * 0.86, stage_h)
 	_stage_label.position = _stage_strip.position + Vector2(stage_w * 0.07, 0.0)
 	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.CARVED_FONT_STAGE, _stage_label.size.x, CardTokens.HUB_CREAM, s)
+	_map_button.position = _stage_strip.position
+	_map_button.size = _stage_strip.size
 	# the squad: three small carved medallions in a row (no board), the synergy ribbon right under them, the group
 	# centred where the tray used to sit and kept left of FIGHT
 	var medal := CardTokens.HUB_TRAY_MEDAL * s
@@ -1641,6 +1652,19 @@ func open_service(service: String) -> void:
 			open_tailor(id)
 		_:
 			_show_soon(service)
+
+
+## The world map (client/hub_world_map_panel.gd), built once like the service panels.
+func open_world_map() -> void:
+	if not _panels.has("map"):
+		var panel: Control = preload("res://client/hub_world_map_panel.gd").new()
+		panel.visible = false
+		panel.reduced_motion = reduced_motion
+		panel.send = _send
+		add_child(panel)
+		move_child(panel, _toast.get_index())
+		_panels["map"] = panel
+	_panels["map"].open()
 
 
 ## The Blacksmith / Storage panel (built once, over the hub and the character screen, under the toast).

@@ -78,21 +78,21 @@ func run(ctx) -> void:
 	ctx.check("AC4 room fight start refused for a raceless squad %s" % [made], not made.get("ok", true))
 
 	# 5. Battle-result unlock hook.
-	ctx.check("AC5 cleared 11 does not unlock", not Unlocks.on_battle_result(p, "goblin_waves", 11) and not Unlocks.unlocked(p))
+	ctx.check("AC5 cleared 8 does not unlock", not Unlocks.on_battle_result(p, "goblin_waves", 8) and not Unlocks.unlocked(p))
 	ctx.check("AC5 another journey does not unlock", not Unlocks.on_battle_result(p, "ink_road", 12) and not Unlocks.unlocked(p))
 	var j = _wave_journey(f, p)
 	var sim := FakeSim.new()
-	sim._waves_released = 11
+	sim._waves_released = 8
 	j.note_waves(sim)
 	j.died()
-	ctx.check("AC5 a goblin_waves run ending at 11 cleared does not unlock", not Unlocks.unlocked(p))
+	ctx.check("AC5 a goblin_waves run ending at 8 cleared does not unlock", not Unlocks.unlocked(p))
 	var p2 = Profile.from_dict(JSON.parse_string(JSON.stringify(p.to_dict())), f.rules, f.camp)
 	var j2 = _wave_journey(f, p2)
 	var sim2 := FakeSim.new()
-	sim2._waves_released = 12
+	sim2._waves_released = 9
 	j2.note_waves(sim2)
 	j2.died()
-	ctx.check("AC5 a goblin_waves run with 12 cleared unlocks", Unlocks.unlocked(p2) and j2.cleared_wave() == 12)
+	ctx.check("AC5 a goblin_waves run with 9 cleared (the Chief) unlocks", Unlocks.unlocked(p2) and j2.cleared_wave() == 9)
 
 	# 6. tutorial_step order, skip, replay.
 	var t = Profile.new_player(f.rules, f.camp, F.rng(9))

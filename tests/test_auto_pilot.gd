@@ -101,7 +101,7 @@ func _wave_checks(ctx) -> void:
 	# the same squad tools/balance/class_sim.gd measures. Plain runs would have no race passives or ultimates.
 	var trips := _squad_trips(f.run, Array(preload("res://logic/card_deck.gd").STARTER_SQUAD))
 	var journey = Party.start_party(data, trips, f.rules, f.loot, f.combat.weapon_ids, 31)
-	ctx.check("a wave journey is one stage with one map", journey.total_stages() == 1 and journey.nodes.size() == 1 and journey.wave_total() == 12)
+	ctx.check("a wave journey is one stage with one map", journey.total_stages() == 1 and journey.nodes.size() == 1 and journey.wave_total() == 9)
 	while journey.state != journey.IN_STAGE and not journey.is_over():
 		if journey.state == journey.CHOOSING:
 			journey.choose(0)
@@ -114,7 +114,7 @@ func _wave_checks(ctx) -> void:
 	var sim := Sim.new(world, f.combat, F.rng(31))
 	journey.populate(sim, map, 1, 100)
 	ctx.check("wave 1 has 4 x 1.5 = 6 goblins on the field", sim.living_enemy_count() == 6)
-	ctx.check("eleven more waves are queued", sim.pending_wave_count() == 11)
+	ctx.check("eight more waves are queued", sim.pending_wave_count() == 8)
 	var starter: Array = Array(preload("res://logic/card_deck.gd").STARTER_SQUAD)
 	for i in starter.size():  # as the game does: each squad member fights in its class's style
 		sim.set_class_style(i + 1, str(preload("res://logic/card_deck.gd").class_data(str(starter[i])).get("weapon", "")))

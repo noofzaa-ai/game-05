@@ -1,5 +1,5 @@
 extends SceneTree
-## Class balance check (auto-battler): fixed-seed scripted fights of the 12-wave journey
+## Class balance check (auto-battler): fixed-seed scripted fights of the goblin wave journey
 ## (data/journeys/goblin_waves.json) through the real rules, with logic/auto_pilot.gd driving our fighters.
 ##   godot --headless --path . --script res://tools/balance/class_sim.gd [-- seeds=8 only=solo,squad,greatsword]
 ## Scenarios: each class solo, the starter squad (logic/card_deck.gd STARTER_SQUAD), and each class x3
