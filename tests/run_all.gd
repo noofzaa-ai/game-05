@@ -26,6 +26,7 @@ const TEST_FILES := [
 	"res://tests/test_event_stream.gd",
 	"res://tests/test_world_zones.gd",
 	"res://tests/test_boss_loot.gd",
+	"res://tests/test_tier_up.gd",
 	"res://tests/test_localstack_fixtures.gd",
 	"res://tests/test_card_progress.gd",
 	"res://tests/test_class_skills.gd",

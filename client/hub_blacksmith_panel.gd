@@ -1,15 +1,16 @@
 extends "res://client/hub_service_panel.gd"
 ## Blacksmith (docs/ui/hub_layout_spec.md §2): pick a source (one of the class cards = what it wears, or the shared
-## Storage), pick a piece in the grid, then Refine / Upgrade / Upgrade tier / Repair it (or Repair all of a card).
+## Storage), pick a piece in the grid, then Refine / Tier up / Repair it (or Repair all of a card).
 ## The right side shows the item details, every action's cost and its chance / result (Refine: success chance and
-## the level a failure falls to; Upgrade: a new substat row or a boost, attempts used), and the status line says the
-## outcome. Commands (logic/commands.gd): refine {item, level}, upgrade {item, count}, repair {item},
-## repair_all {card}. upgrade_tier / enhance are refused by the rules ("not_configured", Boss 2026-10-17): the
-## Upgrade tier button stays visible, disabled, with that reason.
+## the level a failure falls to; Tier up: the level-15 piece it becomes, the card level it needs, the gold), and the
+## status line says the outcome. Commands (logic/commands.gd): refine {item, level}, tier_up {item, card}, repair {item},
+## repair_all {card}. Tier up (Boss 2026-11-16, logic/tier_up.gd) replaced the old substat Upgrade; the button takes its
+## place. A refused tier up stays visible, disabled, with the reason. enhance / upgrade_tier stay refused ("not_configured").
 
 const CardDeck := preload("res://logic/card_deck.gd")
 const Refine := preload("res://logic/refine.gd")
-const Upgrade := preload("res://logic/upgrade.gd")
+const TierUp := preload("res://logic/tier_up.gd")
+const ItemAssets := preload("res://client/item_assets.gd")
 const Repair := preload("res://logic/repair.gd")
 const Camp := preload("res://logic/camp.gd")
 const ItemText := preload("res://client/item_text.gd")
@@ -25,8 +26,8 @@ var _details: HubItemDetails
 var _odds: Label
 var _buttons: GridContainer
 var _refine: Button
-var _upgrade: Button
-var _tier: Button
+var _tier_up: Button
+var _tier_icon: TextureRect  ## the piece a tier up makes (shown beside the Tier up line)
 var _repair: Button
 
 
@@ -51,12 +52,17 @@ func build() -> void:
 	_odds.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_odds.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	body.add_child(_odds)
+	_tier_icon = TextureRect.new()
+	_tier_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_tier_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_tier_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tier_icon.visible = false
+	body.add_child(_tier_icon)
 	_buttons = GridContainer.new()
 	_buttons.columns = 3
 	body.add_child(_buttons)
 	_refine = _action(CardTokens.t("refine"), _on_refine)
-	_upgrade = _action(CardTokens.t("upgrade"), _on_upgrade)
-	_tier = _action(CardTokens.t("upgrade_tier"), func() -> void: say(CardTokens.error_text("not_configured")))
+	_tier_up = _action(CardTokens.t("upgrade_tier"), _on_tier_up)
 	_repair = _action(CardTokens.t("repair"), _on_repair)
 	_repair_all = _action(CardTokens.t("repair_all"), _on_repair_all)
 	if source.is_empty():
@@ -127,12 +133,16 @@ func layout_body(area: Vector2) -> void:
 	_buttons.position = Vector2(rx, area.y - buttons_h)
 	_buttons.size = Vector2(rw, buttons_h)
 	CardTokens.flow_gap(_buttons, CardTokens.CHAR_GAP * 0.75, s)
-	for b in [_refine, _upgrade, _tier, _repair, _repair_all]:
+	for b in [_refine, _tier_up, _repair, _repair_all]:
 		b.custom_minimum_size = Vector2(0.0, button_h)
 		CarvedLook.plate_button(b, s)
 	HubItemDetails.fit_buttons(_buttons, s, 3)
+	var odds_h := maxf(area.y - buttons_h - detail_h - gap, 0.0)
+	var icon_side := minf(button_h * 1.2, odds_h)
 	_odds.position = Vector2(rx, detail_h + gap * 0.5)
-	_odds.size = Vector2(rw, maxf(area.y - buttons_h - detail_h - gap, 0.0))
+	_odds.size = Vector2(maxf(rw - icon_side - gap * 0.5, 0.0), odds_h)
+	_tier_icon.position = Vector2(rx + rw - icon_side, detail_h + gap * 0.5)
+	_tier_icon.size = Vector2(icon_side, icon_side)
 	CardTokens.hub_text(_odds, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
 
 
@@ -166,12 +176,13 @@ func refresh() -> void:
 	if item == null:
 		_details.show_empty(CardTokens.t("smith_pick"), "", CardTokens.t("smith_none") if source == "storage" else "", "")
 		_odds.text = ""
-		for b in [_refine, _upgrade, _tier, _repair]:
+		for b in [_refine, _tier_up, _repair]:
 			b.disabled = true
+		_tier_icon.visible = false
 		return
 	_details.show_item(item, rules)
 	var refine_offer: Dictionary = Refine.quote(item, rules, camp)
-	var upgrade_offer: Dictionary = Upgrade.quote(item, rules, camp)
+	var tier_offer: Dictionary = TierUp.quote(p, rules, item, source if source != "storage" else "")
 	var repair_cost: Dictionary = Repair.quote(item, camp, Camp.repair_discount(p, camp))
 	var lines: Array[String] = []
 	if refine_offer.get("ok", false):
@@ -182,12 +193,7 @@ func refresh() -> void:
 		lines.append(line)
 	else:
 		lines.append("%s: %s" % [CardTokens.t("refine"), CardTokens.error_text(str(refine_offer.get("reason", "")))])
-	if upgrade_offer.get("ok", false):
-		var what := CardTokens.t("smith_upgrade_add") if upgrade_offer["add_row"] else CardTokens.t("smith_upgrade_boost")
-		lines.append(CardTokens.t("smith_upgrade_line") % [HubItemDetails.cost_text(upgrade_offer["cost"], camp), what, int(upgrade_offer["used"]), int(upgrade_offer["max"])])
-	else:
-		lines.append("%s: %s" % [CardTokens.t("upgrade"), CardTokens.error_text(str(upgrade_offer.get("reason", "")))])
-	lines.append("%s: %s" % [CardTokens.t("upgrade_tier"), CardTokens.error_text("not_configured")])
+	lines.append(_tier_up_line(p, rules, item, tier_offer))
 	if str(repair_cost["kind"]) == "none":
 		lines.append("%s: %s" % [CardTokens.t("repair"), CardTokens.t("like_new")])
 	else:
@@ -195,9 +201,8 @@ func refresh() -> void:
 	_odds.text = "\n".join(lines)
 	_details.set_cost("")
 	_refine.disabled = not refine_offer.get("ok", false) and str(refine_offer.get("reason", "")) in ["invalid_item", "max_level", "not_configured"]
-	_upgrade.disabled = not upgrade_offer.get("ok", false) and str(upgrade_offer.get("reason", "")) in ["invalid_item", "max_level", "not_configured"]
-	_tier.disabled = true
-	_tier.tooltip_text = CardTokens.error_text("not_configured")
+	_tier_up.disabled = not tier_offer.get("ok", false)
+	_tier_up.tooltip_text = "" if tier_offer.get("ok", false) else CardTokens.error_text(str(tier_offer.get("reason", "")))
 	_repair.disabled = str(repair_cost["kind"]) == "none"
 
 
@@ -222,18 +227,36 @@ func _on_refine() -> void:
 		say((CardTokens.t("refined_ok") if info.get("success", true) else CardTokens.t("refine_failed")) % int(info.get("level", 0)))
 
 
-func _on_upgrade() -> void:
+func _on_tier_up() -> void:
 	var item = _selected_item()
 	if item == null:
 		return
-	var result := await run({"type": "upgrade", "item": item.id, "count": item.upgrade_count})
+	var request := {"type": "tier_up", "item": item.id}
+	if source != "storage":
+		request["card"] = source
+	var name_before := HubItemDetails.item_name(item, GameState.item_rules)
+	var result := await run(request)
 	if result.get("ok", false):
-		var info: Dictionary = result.get("result", {})
-		var stat := str(ItemText.STAT_LABELS.get(str(info.get("stat", "")), info.get("stat", "")))
-		if info.get("added_row", false):
-			say(CardTokens.t("upgraded_add") % stat)
-		else:
-			say(CardTokens.t("upgraded_boost") % [stat, HubItemDetails.num(float(info.get("bonus", 0.0)))])
+		selected = str(result.get("result", {}).get("item", selected))
+		say(CardTokens.t("tiered_up") % name_before)
+		refresh()
+
+
+## The Tier up line under the details: "Tier up: <piece> · 2500 gold / Requires card level 15 (now N)" (or why not).
+## Also shows the piece's icon. Strings in client/card_tokens.gd; numbers come from logic/tier_up.gd quote (data/items/tier_up.json).
+func _tier_up_line(p, rules, _item, offer: Dictionary) -> String:
+	var target := str(offer.get("target", ""))
+	_tier_icon.visible = not target.is_empty()
+	if target.is_empty():
+		return "%s: %s" % [CardTokens.t("upgrade_tier"), CardTokens.error_text(str(offer.get("reason", "")))]
+	var card := str(offer.get("card", ""))
+	var race := CardDeck.gear_race(p.card_deck, card) if not card.is_empty() else ""
+	_tier_icon.texture = ItemAssets.icon_for_id(target, rules.catalog, race, false)
+	var line := CardTokens.t("tier_up_line") % [str(rules.catalog.entry(target).get("name", target)), HubItemDetails.cost_text({"gold": int(offer["cost"])}, GameState.camp_data)]
+	line += "\n" + CardTokens.t("tier_up_req") % [int(offer["need_level"]), int(offer["card_level"])]
+	if not offer.get("ok", false):
+		line += "\n" + CardTokens.error_text(str(offer.get("reason", "")))
+	return line
 
 
 func _on_repair() -> void:
