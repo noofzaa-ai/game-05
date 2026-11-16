@@ -2,7 +2,7 @@
   "version": 1,
   "price": 1000,
   "equipment_tier": 0,
-  "boss_item_tier": 0,
+  "boss_item_tier": "random",
   "include_catalog": false,
   "include_materials": false,
   "sell": {
@@ -16,5 +16,5 @@
   },
   "catalog_items": [],
   "boss_items": true,
-  "_boss_shop": "Boss 2026-11-16 (design/gdd/boss-loot.md 2 Shop): the stock is only boss set pieces, each for `price` of its boss's coin (data/loot/boss_loot.json price_coins / coin); the old race gold stock is removed. Relics are never sold. Selling for gold is unchanged."
+  "_boss_shop": "Boss 2026-11-16 (design/gdd/boss-loot.md 2 Shop): the stock is only boss set pieces, each for `price` of its boss's coin (data/loot/boss_loot.json price_coins / coin); the old race gold stock is removed. Relics are never sold. boss_item_tier \"random\": a bought piece rolls its tier from that boss's shop_tier_weights (data/loot/boss_loot.json). Selling for gold is unchanged."
 }

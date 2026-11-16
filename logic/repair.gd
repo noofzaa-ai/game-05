@@ -1,7 +1,6 @@
 extends RefCounted
 ## Repairing worn equipment at camp. Keeping an item in shape is cheap: gold and a little ore per
-## point restored. Letting it wear down to nothing is expensive: a much higher gold price and several
-## kinds of material. Both scale with the item's tier and are reduced by the workbench's discount.
+## point restored. Letting it wear down to nothing is expensive: a much higher price, in gold only (Boss 2026-11-16). Both scale with the item's tier and are reduced by the workbench's discount.
 ## EXTENDING: a new repair rule (a repair kit item, free repairs on a quest) is another function here.
 
 const CampData := preload("res://logic/camp_data.gd")

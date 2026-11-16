@@ -99,9 +99,7 @@
 		},
 		"broken": {
 			"gold_per_point": 4.0,
-			"materials_per_point": {
-				"ore": 0.1
-			}
+			"materials_per_point": {}
 		},
 		"tier_multiplier": [
 			1.0,

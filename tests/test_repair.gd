@@ -30,6 +30,19 @@ func run(ctx) -> void:
 	ctx.check("repair command on a worn-out weapon succeeds", result.get("ok", false))
 	ctx.check("weapon back to full durability", weapon.durability == weapon.max_durability)
 
+	# Boss 2026-11-16: a broken item is repairable with gold only (no ore in the stash).
+	var g := F.make()
+	g["profile"].stash.gold = 500000
+	g["profile"].stash.remove_material("ore", g["profile"].stash.material_count("ore"))
+	var gl = g["profile"].loadout_of("greatsword")
+	for i in 5:
+		Wear.death(gl, g["rules"])
+	var gw = gl.item_at("weapon")
+	var gq := Repair.quote(gw, g["camp"])
+	ctx.check("broken quote asks gold only", gq["kind"] == "broken" and int(gq["gold"]) > 0 and gq["materials"].is_empty())
+	var gr := Commands.apply(g, {"type": "repair", "item": gw.id}, F.rng())
+	ctx.check("broken item repaired with gold only, no ore in stash", gr.get("ok", false) and gw.durability == gw.max_durability and g["profile"].stash.material_count("ore") == 0)
+
 	# A partly worn piece (normal repair) still works and costs ore.
 	var shirt = loadout.item_at("shirt")
 	shirt.durability = 40.0
@@ -56,7 +69,7 @@ func run(ctx) -> void:
 	ctx.check("no gold, no ore -> cannot_afford", not result.get("ok", true) and str(result.get("error", "")) == "cannot_afford")
 	var missing := Repair.missing(quote, p.stash)
 	ctx.check("missing gold reported", int(missing["gold"]) == int(quote["gold"]))
-	ctx.check("missing ore reported", int(missing["materials"].get("ore", 0)) == int(quote["materials"].get("ore", 0)) and int(quote["materials"].get("ore", 0)) > 0)
+	ctx.check("broken quote needs no materials, so none missing", missing["materials"].is_empty() and quote["materials"].is_empty())
 	p.stash.gold = 999999
 	p.stash.add_material("ore", 999)
 	missing = Repair.missing(quote, p.stash)

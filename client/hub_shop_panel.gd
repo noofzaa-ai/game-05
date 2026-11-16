@@ -178,7 +178,7 @@ func _refresh_buy(p) -> void:
 		var piece = preload("res://logic/item.gd").new()
 		piece.item_id = str(chosen["id"])
 		piece.slot = str(chosen.get("slot", ""))
-		piece.tier = int(Shop.config().get("boss_item_tier" if boss else "equipment_tier", 0))
+		piece.tier = 0 if boss else int(Shop.config().get("equipment_tier", 0))  # boss pieces roll their tier at purchase
 		_details.cell.show_item(piece, GameState.item_rules, "")
 	if short:
 		CardTokens.hub_text(_details.subs, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_BAD, s, 0, "medium")

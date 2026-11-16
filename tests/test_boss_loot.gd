@@ -27,6 +27,7 @@ func run(ctx) -> void:
 	_ac3_set_steps(ctx)
 	_ac4_sockets(ctx)
 	_ac5_shop(ctx)
+	_shop_random_tier(ctx)
 	_ac6_lost_run(ctx)
 	_ac7_online(ctx)
 	_edges(ctx)
@@ -233,6 +234,34 @@ func _ac4_sockets(ctx) -> void:
 	away["location"] = "stage"
 	r = Commands.apply(away, {"type": "relic_unsocket", "item": "legend-1"}, F.rng())
 	ctx.check("AC4 sockets change only at camp", not r.ok)
+
+
+## Boss 2026-11-16: a bought piece rolls its tier from the boss table (was fixed tier 0); one coin type, 500 per piece.
+func _shop_random_tier(ctx) -> void:
+	var tiers := {}
+	var coins_ok := true
+	var gold_ok := true
+	var same_seed_ok := true
+	for seed_value in range(1, 61):
+		var f := F.make()
+		var p = f.profile
+		p.stash.add_material(COIN, 500)
+		var gold: int = p.stash.gold
+		var r: Dictionary = Commands.apply(f, {"type": "shop_buy", "sku": "boss:boss_goblin_chief_ring"}, F.rng(seed_value))
+		if not r.ok:
+			coins_ok = false
+			continue
+		coins_ok = coins_ok and p.stash.material_count(COIN) == 0 and int(r.get("price", 500)) == 500
+		gold_ok = gold_ok and p.stash.gold == gold
+		var piece = boss_items(p)[-1]
+		tiers[int(piece.tier)] = true
+		var g := F.make()
+		g.profile.stash.add_material(COIN, 500)
+		Commands.apply(g, {"type": "shop_buy", "sku": "boss:boss_goblin_chief_ring"}, F.rng(seed_value))
+		same_seed_ok = same_seed_ok and int(boss_items(g.profile)[-1].tier) == int(piece.tier)
+	ctx.check("shop: 60 seeded buys cover more than one tier %s" % [tiers.keys()], tiers.size() > 1)
+	ctx.check("shop: a random-tier buy spends exactly 500 coins and no gold", coins_ok and gold_ok)
+	ctx.check("shop: the tier is deterministic from the command rng", same_seed_ok)
 
 
 func _ac5_shop(ctx) -> void:

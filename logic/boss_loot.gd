@@ -295,8 +295,20 @@ static func summary_from_dict(d: Dictionary) -> Dictionary:
 
 # --- shop --------------------------------------------------------------------------------------------------------
 
+## The tier a bought piece of boss `zone_id` rolls (Boss 2026-11-16): one rng draw over that boss's shop_tier_weights.
+## Returns -1 when the boss has no usable table.
+static func shop_tier(rules, zone_id: String, rng: RandomNumberGenerator) -> int:
+	var weights: Array = boss(zone_id).get("shop_tier_weights", [])
+	var total := 0.0
+	for weight in weights:
+		total += maxf(0.0, float(weight))
+	if total <= 0.0:
+		return -1
+	return mini(_roll_tier(weights, rng), rules.tiers.size() - 1)
+
+
 ## Shop offers for every boss set piece: {"sku": "boss:<item_id>", "id", "kind": "item", "name", "slot", "price",
-## "currency": coin material id, "boss": zone id}. Relics are never offered.
+## "currency": coin material id, "boss": zone id, "random_tier": true}. Relics are never offered.
 static func shop_offers(rules) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var bosses: Dictionary = data().get("bosses", {})
@@ -310,5 +322,5 @@ static func shop_offers(rules) -> Array[Dictionary]:
 		for item_id in set_pieces(rules, str(entry.get("set", ""))):
 			var item: Dictionary = rules.catalog.entry(item_id)
 			out.append({"sku": "boss:" + item_id, "id": item_id, "kind": "item", "name": str(item.get("name", item_id)), "slot": str(item.get("slot", "")),
-				"price": price, "currency": str(entry["coin"]), "boss": str(zone_id)})
+				"price": price, "currency": str(entry["coin"]), "boss": str(zone_id), "random_tier": true})
 	return out

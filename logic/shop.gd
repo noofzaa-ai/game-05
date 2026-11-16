@@ -44,7 +44,10 @@ static func buy(profile, rules, camp, sku: String, rng: RandomNumberGenerator) -
 		if profile.stash.add_material(product.id, 1) != 1: return {"ok": false, "reason": "stash_full"}
 	else:
 		if profile.stash.free_slots() < 1: return {"ok": false, "reason": "stash_full"}
-		var tier := int(config().get("boss_item_tier" if currency != "gold" else "equipment_tier", config().get("equipment_tier", -1)))
+		var tier := int(config().get("equipment_tier", -1))
+		if currency != "gold":  # Boss 2026-11-16: a boss piece rolls its tier from the boss table (server rng)
+			var mode = config().get("boss_item_tier", "random")
+			tier = preload("res://logic/boss_loot.gd").shop_tier(rules, str(product.get("boss", "")), rng) if str(mode) == "random" else int(mode)
 		if tier < 0 or tier >= rules.tiers.size(): return {"ok": false, "reason": "not_configured"}
 		var used := {}
 		for item in profile.stash.items + profile.vault.items: used[item.id] = true

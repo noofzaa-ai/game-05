@@ -880,7 +880,7 @@ const STRINGS := {
 	"shop_buy_coins": ["ซื้อ (%d เหรียญ)", "Buy (%d coins)"],
 	"shop_need_coins": ["ต้องใช้ %d เหรียญ (มี %d)", "Need %d coins (have %d)"],
 	"shop_need_gold": ["ต้องใช้ %d ทอง (มี %d)", "Need %d gold (have %d)"],
-	"shop_boss_piece": ["ชิ้นเซ็ตบอส · ช่องเรลิก 1 ช่อง", "Boss set piece  ·  1 Relic socket"],
+	"shop_boss_piece": ["ชิ้นเซ็ตบอส · เกรดสุ่ม · ช่องเรลิก 1 ช่อง", "Boss set piece  ·  random tier  ·  1 Relic socket"],
 	"relic_empty": ["ช่องเรลิก: ว่าง", "Relic socket: empty"],
 	"relic_in": ["เรลิก: %s", "Relic: %s"],
 	"relic_socket_btn": ["ใส่เรลิก", "Socket"],
