@@ -186,12 +186,13 @@ func show_item(item, rules) -> void:
 	var tier_id := str(rules.tiers[clampi(item.tier, 0, rules.tiers.size() - 1)]["id"])
 	sub.text = "%s  ·  %s  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), "◆".repeat(item.tier + 1)]
 	if rules.catalog.req_level(item.item_id) > 1 and not item.id.begins_with("starter-"):  # Boss 2026-11-16: level-15 gear
-		sub.text += "  ·  " + CardTokens.t("req_level_line") % rules.catalog.req_level(item.item_id)
+		sub.text = "%s  ·  %s  ·  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), CardTokens.t("req_level_line") % rules.catalog.req_level(item.item_id)]  # no diamonds here: the line would be cut
 	var factor: float = rules.durability_factor(item.durability_ratio())
 	var main: float = item.main_value(rules) * factor
 	var refine_part: float = item.base_value(rules) * float(rules.refine.get("bonus_per_level", 0.0)) * float(item.refine_level) * factor
 	var stat_label := str(ItemText.STAT_LABELS.get(item.main_stat, item.main_stat))
-	main_line.text = "%s  %s" % [stat_label, num(main)] + ("  " + CardTokens.t("refine_share") % num(refine_part) if refine_part > 0.0 else "")
+	var level_mul: float = rules.catalog.main_stat_mul(item.item_id, item.id)
+	main_line.text = "%s  %s" % [stat_label, num(main)] + ("  " + CardTokens.t("main_mul") % num(level_mul) if level_mul != 1.0 else "") + ("  " + CardTokens.t("refine_share") % num(refine_part) if refine_part > 0.0 else "")
 	var lines: Array[String] = []
 	for n in item.substats.size():
 		lines.append(ItemText.substat_text(item, rules, n))

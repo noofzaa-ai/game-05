@@ -24,6 +24,7 @@ var _grid: GridContainer
 var _cells: Array = []
 var _details: HubItemDetails
 var _odds: Label
+var _odds_scroll: ScrollContainer  ## the lines under the details scroll when they do not fit (phone): they never run into the buttons
 var _buttons: GridContainer
 var _refine: Button
 var _tier_up: Button
@@ -51,7 +52,12 @@ func build() -> void:
 	_odds = CardTokens.label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, 1.0, 0, "medium")
 	_odds.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_odds.vertical_alignment = VERTICAL_ALIGNMENT_TOP
-	body.add_child(_odds)
+	_odds_scroll = ScrollContainer.new()
+	_odds_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_odds_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+	_odds_scroll.clip_contents = true
+	body.add_child(_odds_scroll)
+	_odds_scroll.add_child(_odds)
 	_tier_icon = TextureRect.new()
 	_tier_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_tier_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -59,7 +65,7 @@ func build() -> void:
 	_tier_icon.visible = false
 	body.add_child(_tier_icon)
 	_buttons = GridContainer.new()
-	_buttons.columns = 3
+	_buttons.columns = 2
 	body.add_child(_buttons)
 	_refine = _action(CardTokens.t("refine"), _on_refine)
 	_tier_up = _action(CardTokens.t("upgrade_tier"), _on_tier_up)
@@ -136,11 +142,14 @@ func layout_body(area: Vector2) -> void:
 	for b in [_refine, _tier_up, _repair, _repair_all]:
 		b.custom_minimum_size = Vector2(0.0, button_h)
 		CarvedLook.plate_button(b, s)
-	HubItemDetails.fit_buttons(_buttons, s, 3)
+	HubItemDetails.fit_buttons(_buttons, s, 2)
 	var odds_h := maxf(area.y - buttons_h - detail_h - gap, 0.0)
 	var icon_side := minf(button_h * 1.2, odds_h)
-	_odds.position = Vector2(rx, detail_h + gap * 0.5)
-	_odds.size = Vector2(maxf(rw - icon_side - gap * 0.5, 0.0), odds_h)
+	var odds_w := maxf(rw - icon_side - gap * 0.5, 0.0)
+	_odds_scroll.position = Vector2(rx, detail_h + gap * 0.5)
+	_odds_scroll.size = Vector2(odds_w, odds_h)
+	_odds.custom_minimum_size = Vector2(odds_w, 0.0)
+	_odds.size = Vector2(odds_w, 0.0)
 	_tier_icon.position = Vector2(rx + rw - icon_side, detail_h + gap * 0.5)
 	_tier_icon.size = Vector2(icon_side, icon_side)
 	CardTokens.hub_text(_odds, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
@@ -217,16 +226,6 @@ func _selected_item():
 
 
 # ------------------------------------------------------------------ commands (rules in logic/commands.gd)
-func _on_refine() -> void:
-	var item = _selected_item()
-	if item == null:
-		return
-	var result := await run({"type": "refine", "item": item.id, "level": item.refine_level})
-	if result.get("ok", false):
-		var info: Dictionary = result.get("result", {})
-		say((CardTokens.t("refined_ok") if info.get("success", true) else CardTokens.t("refine_failed")) % int(info.get("level", 0)))
-
-
 func _on_tier_up() -> void:
 	var item = _selected_item()
 	if item == null:
@@ -234,29 +233,56 @@ func _on_tier_up() -> void:
 	var request := {"type": "tier_up", "item": item.id}
 	if source != "storage":
 		request["card"] = source
+	var old_id: String = item.id
 	var name_before := HubItemDetails.item_name(item, GameState.item_rules)
 	var result := await run(request)
 	if result.get("ok", false):
-		selected = str(result.get("result", {}).get("item", selected))
+		# The online reply has no "result" (it is the reloaded profile): find the new piece by its id (tier-up-<old id>[-n]).
+		var base: String = TierUp.NEW_ID_PREFIX + old_id.trim_prefix("starter-")
+		var p = _profile()
+		if p != null:
+			for piece in p.stash.items + p.worn_items():
+				if str(piece.id) == base or str(piece.id).begins_with(base + "-"):
+					selected = piece.id
 		say(CardTokens.t("tiered_up") % name_before)
 		refresh()
 
 
-## The Tier up line under the details: "Tier up: <piece> · 2500 gold / Requires card level 15 (now N)" (or why not).
+## The Tier up line under the details, kept short (phone): "Tier up: <piece> · 2500 gold · main x1.5" then why not / what is needed.
 ## Also shows the piece's icon. Strings in client/card_tokens.gd; numbers come from logic/tier_up.gd quote (data/items/tier_up.json).
 func _tier_up_line(p, rules, _item, offer: Dictionary) -> String:
 	var target := str(offer.get("target", ""))
-	_tier_icon.visible = not target.is_empty()
-	if target.is_empty():
-		return "%s: %s" % [CardTokens.t("upgrade_tier"), CardTokens.error_text(str(offer.get("reason", "")))]
+	var reason := str(offer.get("reason", ""))
+	_tier_icon.visible = not target.is_empty() and reason != "already_level"
+	if target.is_empty() or reason == "already_level":
+		return "%s: %s" % [CardTokens.t("upgrade_tier"), CardTokens.error_text(reason)]
 	var card := str(offer.get("card", ""))
 	var race := CardDeck.gear_race(p.card_deck, card) if not card.is_empty() else ""
 	_tier_icon.texture = ItemAssets.icon_for_id(target, rules.catalog, race, false)
+	var mul := float(offer.get("main_mul", 1.0))
 	var line := CardTokens.t("tier_up_line") % [str(rules.catalog.entry(target).get("name", target)), HubItemDetails.cost_text({"gold": int(offer["cost"])}, GameState.camp_data)]
-	line += "\n" + CardTokens.t("tier_up_req") % [int(offer["need_level"]), int(offer["card_level"])]
-	if not offer.get("ok", false):
-		line += "\n" + CardTokens.error_text(str(offer.get("reason", "")))
+	if mul != 1.0:
+		line += "  ·  " + CardTokens.t("main_mul") % HubItemDetails.num(mul)
+	if reason == "card_level_too_low" or offer.get("ok", false):
+		line += "
+" + CardTokens.t("tier_up_req") % [int(offer["need_level"]), int(offer["card_level"])]
+	elif not reason.is_empty():
+		line += "
+" + CardTokens.error_text(reason)
 	return line
+
+
+func _on_refine() -> void:
+	var item = _selected_item()
+	if item == null:
+		return
+	var before: int = item.refine_level
+	var result := await run({"type": "refine", "item": item.id, "level": item.refine_level})
+	if result.get("ok", false):
+		# Online there is no "result" in the reply: read the outcome from the reloaded piece (same id after a refine).
+		var after = _selected_item()
+		var level: int = after.refine_level if after != null else before
+		say((CardTokens.t("refined_ok") if level > before else CardTokens.t("refine_failed")) % level)
 
 
 func _on_repair() -> void:

@@ -31,7 +31,7 @@ func main_value(rules: ItemRules) -> float:
 func base_value(rules: ItemRules) -> float:
 	var kind := str(rules.catalog.entry(item_id).get("armor_class",""))
 	var multiplier := float(rules.armor.get("class_base_multipliers",{}).get(kind,{}).get(main_stat,1.0))
-	return rules.main_base(main_stat,tier)*multiplier
+	return rules.main_base(main_stat,tier)*multiplier*rules.catalog.main_stat_mul(item_id, id)  ## x level_stat_mul for a non-starter level-15 piece (tier-up)
 
 
 func substat_value(index: int, rules: ItemRules) -> float:

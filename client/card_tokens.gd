@@ -806,11 +806,13 @@ const STRINGS := {
 	"err_not_eligible": ["ชิ้นนี้เลื่อนขั้นไม่ได้", "This piece can't be tiered up"],
 	"err_no_card": ["เลือกการ์ดที่จะใช้ชิ้นนี้ก่อน", "Pick the card this piece is for"],
 	"err_not_enough_gold": ["ทองไม่พอ", "Not enough gold"],
+	"err_already_level": ["เลเวล 15 แล้ว", "Already level 15"],
 	"err_deprecated": ["ฟีเจอร์นี้ถูกแทนที่แล้ว", "That feature was replaced"],
 	# hub service panels (Blacksmith, Storage)
 	"gold": ["ทอง", "Gold"],
 	"upgrade_tier": ["เลื่อนขั้น", "Tier up"],  # the Blacksmith button (Boss 2026-11-16 replaced the substat Upgrade)
 	"tier_up_line": ["เลื่อนขั้น: %s · %s", "Tier up: %s  ·  %s"],
+	"main_mul": ["ค่าหลัก x%s", "main x%s"],
 	"tier_up_req": ["ต้องเลเวลการ์ด %d (ตอนนี้ %d)", "Requires card level %d (now %d)"],
 	"tiered_up": ["เลื่อนขั้นแล้ว: %s", "Tiered up: %s"],
 	"repair_all": ["ซ่อมทั้งหมด", "Repair all"],

@@ -7,11 +7,14 @@ extends RefCounted
 
 const CATALOG_PATH := "res://data/items/catalog.json"
 const SETS_PATH := "res://data/items/sets.json"
+const TIER_UP_PATH := "res://data/items/tier_up.json"
+const STARTER_ID_PREFIX := "starter-"  ## instance ids of the starter kit: level-1 pieces, main stat x1.0
 
 var items: Dictionary = {}  ## item_id -> {"asset_id", "name", "slot", "weapon_type", "set", "drop_level"}
 var sets: Dictionary = {}  ## set id -> {"name", "bonuses": [{"pieces", "stat", "value"}] by pieces, fewest first}
 var starter_armor_sets: Array[String] = []
 var relics: Dictionary = {}  ## boss Relics (design/gdd/boss-loot.md 2): relic id -> {"name", "boss", "icon_path", "text", "effects"}
+var level_stat_mul: Dictionary = {}  ## req_level (as text) -> main stat multiplier of a NON-starter piece of that level (data/items/tier_up.json, PO placeholder)
 var errors: Array[String] = []
 
 
@@ -22,7 +25,10 @@ static func load_default(known_slots: Array, known_stats: Array) -> RefCounted:
 	for id in set_data.get("starter_armor_sets", []):
 		catalog.starter_armor_sets.append(str(id))
 	catalog.parse(item_data.get("items", {}), set_data.get("sets", {}), known_slots, known_stats)
-	catalog.relics = (item_data.get("relics", {}) as Dictionary).duplicate(true) if item_data.get("relics") is Dictionary else {}
+	var tier_up := _read(TIER_UP_PATH, catalog)
+	for key in tier_up.get("level_stat_mul", {}):
+		catalog.level_stat_mul[str(key)] = float(tier_up["level_stat_mul"][key])
+	catalog.relics = (item_data.get("relics") as Dictionary).duplicate(true) if item_data.get("relics") is Dictionary else {}
 	return catalog
 
 
@@ -108,6 +114,14 @@ func set_counts(item_ids: Array) -> Dictionary:
 		if not set_id.is_empty():
 			counts[set_id] = int(counts.get(set_id, 0)) + 1
 	return counts
+
+
+## The main stat multiplier of a piece (Boss/PO 2026-11-16 tier-up): a starter piece (instance id "starter-...") is x1.0; any
+## other piece of a catalog item with a req_level gets level_stat_mul[req_level] (1.0 when the level has no entry).
+func main_stat_mul(item_id: String, instance_id: String) -> float:
+	if instance_id.begins_with(STARTER_ID_PREFIX):
+		return 1.0
+	return float(level_stat_mul.get(str(req_level(item_id)), 1.0))
 
 
 ## The race gear set of `item_id` ({} for a generic set or none).

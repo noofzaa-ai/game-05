@@ -22,6 +22,7 @@ func run(ctx) -> void:
 	rng.seed = 1117
 	_data(ctx, rules)
 	_matrix(ctx, rules, camp, cosmetics, rng)
+	_main_stat(ctx, rules, camp, cosmetics, rng)
 	_gate_and_gold(ctx, rules, camp, cosmetics, rng)
 	_raceless(ctx, rules, camp, cosmetics, rng)
 	_worn_and_race_change(ctx, rules, camp, cosmetics, rng)
@@ -100,6 +101,40 @@ func _matrix(ctx, rules, camp, cosmetics, rng: RandomNumberGenerator) -> void:
 	ctx.check("tier-up: lv15 item for 4 tiers x 5 slots x 4 classes x 4 races, tier/durability/refine/substats kept, gold exact (%d cases) %s" % [count, first_bad], all_ok and count >= 4 * 4 * 4 * 5 - 4 * 4)
 
 
+## PO placeholder (data/items/tier_up.json level_stat_mul): a non-starter level-15 piece has its MAIN stat x1.5, a starter x1.0.
+func _main_stat(ctx, rules, camp, cosmetics, rng: RandomNumberGenerator) -> void:
+	var mul := float(rules.catalog.level_stat_mul.get("15", 0.0))
+	ctx.check("tier-up: level_stat_mul for level 15 is 1.5 in the data", is_equal_approx(mul, 1.5))
+	var ok := true
+	var subs_same := true
+	for card in CLASSES:
+		for slot in SLOTS:
+			for tier in 4:
+				var p = _prep(rules, camp, rng)
+				var piece = _starter_piece(rules, "starter-m-%s-%s-%d" % [card, slot, tier], slot, tier, card, CardDeck.starter_race(card))
+				p.stash.add_item(piece)
+				var before: float = piece.main_value(rules)
+				var totals_before: Dictionary = piece.stat_totals(rules)
+				var subs_before: Array = []
+				for n in piece.substats.size():
+					subs_before.append(piece.substat_value(n, rules))
+				var res: Dictionary = Commands.apply(_state(p, rules, camp, cosmetics), {"type": "tier_up", "item": piece.id, "card": card}, rng)
+				var after: float = piece.main_value(rules)
+				ok = ok and res.get("ok", false) and absf(after - before * mul) < 0.0001 and before > 0.0
+				for n in piece.substats.size():
+					subs_same = subs_same and is_equal_approx(piece.substat_value(n, rules), subs_before[n])
+	ctx.check("tier-up: the computed main stat becomes x1.5 for every class x slot (weapon and armour) x tier", ok)
+	ctx.check("tier-up: substats are not scaled by the level multiplier", subs_same)
+	var fresh = Profile.new_player(rules, camp, rng)
+	var starter = fresh.loadout_of("longbow").item_at("weapon", 0)
+	var plain = ItemSystem.create_item(rules, "starter-plain", "weapon", starter.tier, rng, "", starter.item_id)
+	var drop = ItemSystem.create_item(rules, "drop-plain", "weapon", starter.tier, rng, "", starter.item_id)
+	ctx.check("level multiplier: a starter piece stays x1.0, the same catalog item as a drop is x1.5", is_equal_approx(plain.main_value(rules), starter.main_value(rules)) and is_equal_approx(drop.main_value(rules), plain.main_value(rules) * 1.5))
+	var shield = fresh.loadout_of("sword_shield").item_at("offhand", 0)
+	var shield_drop = ItemSystem.create_item(rules, "drop-shield", "offhand", 0, rng, "", shield.item_id)
+	ctx.check("level multiplier: a level-1 catalog item (shield) is never scaled", is_equal_approx(shield_drop.main_value(rules), shield.main_value(rules)))
+
+
 func _gate_and_gold(ctx, rules, camp, cosmetics, rng: RandomNumberGenerator) -> void:
 	var p = _prep(rules, camp, rng, 14, COST)
 	var state := _state(p, rules, camp, cosmetics)
@@ -118,7 +153,7 @@ func _gate_and_gold(ctx, rules, camp, cosmetics, rng: RandomNumberGenerator) -> 
 	ctx.check("tier-up: card level 15 and 2500 gold is accepted, gold goes to 0", ok.get("ok", false) and p.stash.gold == 0 and piece.item_id == "armour_magic_shirt" and piece.tier == 2)
 	ctx.check("tier-up: the piece is now level 15 (starter exemption gone): a level-14 card could not wear it", Profile.slot_problem("magic", piece, rules, 14) == "level_too_low")
 	var again: Dictionary = Commands.apply(state, {"type": "tier_up", "item": piece.id, "card": "magic"}, rng)
-	ctx.check("tier-up: a level-15 piece cannot be tiered up again (not_eligible)", again.get("error", "") == "not_eligible")
+	ctx.check("tier-up: a level-15 piece cannot be tiered up again (already_level)", again.get("error", "") == "already_level")
 	var no_card: Dictionary = Commands.apply(state, {"type": "tier_up", "item": "nope"}, rng)
 	ctx.check("tier-up: unknown item is refused (item_not_owned)", no_card.get("error", "") == "item_not_owned")
 
@@ -175,7 +210,7 @@ func _ineligible(ctx, rules, camp, cosmetics, rng: RandomNumberGenerator) -> voi
 	ctx.check("tier-up: a destroyed piece is not eligible", Commands.apply(state, {"type": "tier_up", "item": "starter-gone", "card": "magic"}, rng).get("error", "") == "item_not_owned" or not TierUp.quote(p, rules, gone, "magic")["ok"])
 	var dropped = ItemSystem.create_item(rules, "drop-1", "shirt", 1, rng, "", "armour_magic_shirt")
 	p.stash.add_item(dropped)
-	ctx.check("tier-up: a non-starter level-15 piece is not eligible", Commands.apply(state, {"type": "tier_up", "item": "drop-1", "card": "magic"}, rng).get("error", "") == "not_eligible")
+	ctx.check("tier-up: a non-starter level-15 piece is not eligible", Commands.apply(state, {"type": "tier_up", "item": "drop-1", "card": "magic"}, rng).get("error", "") == "already_level")
 	var vault_piece = _starter_piece(rules, "starter-vault", "pants", 1, "magic", "human")
 	p.vault.capacity = 4
 	p.vault.items.append(vault_piece)
@@ -225,5 +260,8 @@ func _runner(ctx, rules, camp, rng: RandomNumberGenerator) -> void:
 			online_item = entry
 	var off_item = offline.stash.items.filter(func(i): return i.id.begins_with("tier-up-"))
 	ctx.check("tier-up: online (runner) and offline (Commands) give the same piece and gold", direct.get("ok", false) and not off_item.is_empty() and online_item == off_item[0].to_dict() and int(online.profile.stash.gold) == offline.stash.gold and offline.stash.gold == 2500)
+	var online_loaded = Profile.from_dict(online.profile, runner.rules, runner.camp)
+	var online_piece = online_loaded.stash.items.filter(func(i): return i.id.begins_with("tier-up-"))
+	ctx.check("tier-up: online and offline computed main stat agree (x1.5 of the starter)", not online_piece.is_empty() and not off_item.is_empty() and is_equal_approx(online_piece[0].main_value(runner.rules), off_item[0].main_value(runner.rules)) and is_equal_approx(online_piece[0].main_value(runner.rules), piece.main_value(runner.rules) * 1.5))
 	var old := runner.execute({"v": 1, "state": saved.duplicate(true), "seed": "abcdef012345678", "name": "", "command": {"type": "upgrade", "item": "starter-run", "count": 0}})
 	ctx.check("tier-up: the runner answers the old upgrade with deprecated", not old.get("ok", true) and old.get("error", "") == "deprecated")

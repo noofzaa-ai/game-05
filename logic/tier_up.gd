@@ -6,7 +6,7 @@ extends RefCounted
 ## level, enhancement level, substats, upgrade counter, socketed relic. The instance id changes (no "starter-" prefix,
 ## so the card-level gate of the equip command now applies to the piece).
 ##
-## Reasons: not_configured, not_eligible, no_card, wrong_weapon_family, wrong_armour_class, slot_closed,
+## Reasons: not_configured, not_eligible, already_level (the piece is already level 15), no_card, wrong_weapon_family, wrong_armour_class, slot_closed,
 ## card_level_too_low, not_enough_gold. (stash_full never happens: the piece is changed in place, it takes no slot.)
 const Profile := preload("res://logic/profile.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
@@ -42,7 +42,7 @@ static func piece_level(item, rules) -> int:
 ## {"ok", "reason", "card", "target" (catalog id or ""), "cost" (gold), "need_level", "card_level"}; ok = may be done now.
 ## "reason" is "" when ok. The UI shows target/need_level/card_level/cost even when it is refused.
 static func quote(p, rules, item, card_hint: String = "") -> Dictionary:
-	var out := {"ok": false, "reason": "not_eligible", "card": "", "target": "", "cost": 0, "need_level": 0, "card_level": 0}
+	var out := {"ok": false, "reason": "not_eligible", "card": "", "target": "", "cost": 0, "need_level": 0, "card_level": 0, "main_mul": 1.0}
 	var cfg := config()
 	if cfg.is_empty() or not bool(cfg.get("enabled", false)) or not cfg.get("paths") is Dictionary:
 		out["reason"] = "not_configured"
@@ -63,12 +63,14 @@ static func quote(p, rules, item, card_hint: String = "") -> Dictionary:
 		return out
 	out["target"] = target
 	out["need_level"] = rules.catalog.req_level(target)
+	out["main_mul"] = float(rules.catalog.level_stat_mul.get(str(out["need_level"]), 1.0))  ## the main stat gain shown to the player
 	var problem := Profile.slot_problem(card, item, rules)  # the piece must be one this card can wear at all
 	if not problem.is_empty():
 		out["reason"] = problem
 		return out
 	if piece_level(item, rules) >= int(out["need_level"]):
-		return out  # already the level-15 piece (or higher)
+		out["reason"] = "already_level"  # already the level-15 piece (or higher): the UI says just that
+		return out
 	if int(out["card_level"]) < int(out["need_level"]):
 		out["reason"] = "card_level_too_low"
 		return out
