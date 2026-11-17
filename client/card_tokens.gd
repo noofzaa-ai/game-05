@@ -763,6 +763,16 @@ const STRINGS := {
 	"req_lv_short": ["เลเวล %d", "Lv %d"],
 	"req_level_line": ["ต้องเลเวล %d", "Requires level %d"],
 	"err_weapon_required": ["ต้องถืออาวุธไว้เสมอ", "A weapon must stay equipped"],
+	"equip_need_level": ["สวมไม่ได้: ต้องเลเวลการ์ด %d (ตอนนี้ %d)", "Can't wear: needs card level %d (now %d)"],
+	"unequip_weapon_note": ["ถอดไม่ได้: สวมอาวุธชิ้นอื่นเพื่อเปลี่ยนแทน", "Equip another weapon to replace it"],
+	"shop_bulk_white": ["ขายขาวทั้งหมด", "Sell all White"],
+	"shop_bulk_blue": ["ขายน้ำเงินทั้งหมด", "Sell all Blue"],
+	"shop_bulk_both": ["ขายขาว+น้ำเงิน", "Sell White + Blue"],
+	"shop_bulk_line": ["%s · %d ชิ้น · %d ทอง", "%s · %d items · %d gold"],
+	"shop_bulk_sure": ["แตะอีกครั้งเพื่อขาย %d ชิ้น (%d ทอง)", "Tap again: sell %d items (%d gold)"],
+	"shop_bulk_none": ["ไม่มี", "None"],
+	"shop_bulk_sold": ["ขาย %d ชิ้น ได้ %d ทอง", "Sold %d items for %d gold"],
+	"shop_bulk_hint": ["ไม่รวมของที่สวมอยู่ ของที่ฝังเรลิก ชุดบอส และของเริ่มต้น", "Worn, relic-socketed, boss and starter pieces are never sold"],
 	"err_reskill_required": ["ต้องรีเซ็ตสกิลก่อนเปลี่ยนอาวุธ", "Reset the skills before changing weapon family"],
 	"err_bag_full": ["คลังเต็ม", "Storage is full"],
 	"err_invalid_slot": ["ใส่ช่องนี้ไม่ได้", "That doesn't fit there"],
@@ -957,6 +967,29 @@ static func item_level(item, catalog) -> int:
 	if item == null or catalog == null or str(item.id).begins_with("starter-"):
 		return 1
 	return catalog.req_level(str(item.item_id))
+
+
+## Why Equip is off for a stash piece (pure): {"key": string key of t() or "" when wearable, "args": format args}.
+## level_too_low carries (needed level, card level); every other wear problem uses its err_<problem> text.
+static func equip_block(problem: String, need_level: int = 0, card_level: int = 0) -> Dictionary:
+	if problem.is_empty():
+		return {"key": "", "args": []}
+	if problem == "level_too_low":
+		return {"key": "equip_need_level", "args": [need_level, card_level]}
+	return {"key": "err_" + problem, "args": []}
+
+
+static func equip_block_text(problem: String, need_level: int = 0, card_level: int = 0) -> String:
+	var block := equip_block(problem, need_level, card_level)
+	if str(block["key"]).is_empty():
+		return ""
+	var args: Array = block["args"]
+	return error_text(problem) if args.is_empty() else t(str(block["key"])) % args
+
+
+## True when the Unequip button of a worn piece in `slot_id` is off (a card always holds a weapon: swap instead).
+static func unequip_blocked(slot_id: String) -> bool:
+	return not preload("res://logic/profile.gd").unequip_problem(slot_id).is_empty()
 
 
 ## "Lv 15" / "เลเวล 15" for any piece; "" for no piece.

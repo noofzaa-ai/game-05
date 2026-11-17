@@ -377,6 +377,22 @@ func fill_compare(item, old, rules) -> void:
 		shown += 1
 
 
+## A one-line reason beside the buttons (why one is off): red, first in the "vs worn" row, which then keeps only the stats.
+func set_note(text: String, replace_compare: bool = false) -> void:
+	if text.is_empty() or compare == null:
+		return
+	if replace_compare:  # the "vs worn" row has no room beside a reason (844x390): the reason takes the row
+		for child in compare.get_children():
+			compare.remove_child(child)
+			child.queue_free()
+	var note := CardTokens.label(text, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_BAD, s, 0, "medium")
+	note.name = "Note"
+	note.clip_text = true
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	note.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	compare.add_child(note)
+
+
 func clear_actions() -> void:
 	for box in [actions, compare]:
 		for child in box.get_children():

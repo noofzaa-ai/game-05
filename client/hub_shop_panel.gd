@@ -15,6 +15,8 @@ extends "res://client/hub_service_panel.gd"
 const Shop := preload("res://logic/shop.gd")
 const HubLook := preload("res://client/hub_look.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
+## Bulk sale buttons: key -> [label token, rules.tiers ids]. white = normal, blue = rare (logic/shop.gd batch_sellable).
+const BULK := {"white": ["shop_bulk_white", ["normal"]], "blue": ["shop_bulk_blue", ["rare"]], "both": ["shop_bulk_both", ["normal", "rare"]]}
 
 var tab := "buy"  ## buy | sell
 var selected := ""  ## item id (sell) or sku (buy)
@@ -30,6 +32,10 @@ var _details: HubItemDetails
 var _mats_title: Label
 var _mats: HFlowContainer
 var _coins: HBoxContainer  ## the boss coins the player has (buy tab)
+var _bulk_row: HBoxContainer  ## Sell tab: "Sell all White / Blue / White + Blue" (Boss 2026-11-17)
+var _bulk_buttons := {}  ## BULK key -> Button
+var _bulk_hint: Label
+var bulk_pending := ""  ## the BULK key waiting for its second press (the one-step confirm)
 var _tile_w := 0.0  ## a stock tile: half the list width (two columns)
 
 
@@ -61,6 +67,16 @@ func build() -> void:
 	body.add_child(_empty)
 	_details = HubItemDetails.new()
 	body.add_child(_details)
+	_bulk_row = HBoxContainer.new()
+	body.add_child(_bulk_row)
+	for key in BULK:
+		var bb := plate("", _bulk_pressed.bind(key))
+		_bulk_row.add_child(bb)
+		_bulk_buttons[key] = bb
+	_bulk_hint = CardTokens.label(CardTokens.t("shop_bulk_hint"), CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_SUBTEXT, 1.0, 0, "medium")
+	_bulk_hint.clip_text = true
+	_bulk_hint.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	body.add_child(_bulk_hint)
 	_mats_title = CardTokens.label(CardTokens.t("shop_materials"), CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, 1.0)
 	body.add_child(_mats_title)
 	_mats = HFlowContainer.new()
@@ -70,11 +86,13 @@ func build() -> void:
 func select_tab(id: String) -> void:
 	tab = id
 	selected = ""
+	bulk_pending = ""
 	marked.clear()
 	refresh()
 
 
 func select_item(id: String) -> void:
+	bulk_pending = ""
 	selected = id
 	refresh()
 
@@ -111,7 +129,16 @@ func layout_body(area: Vector2) -> void:
 	var detail_h := area.y * CardTokens.SHOP_DETAIL_H
 	_details.position = Vector2(rx, 0.0)
 	_details.layout_box(rw, detail_h, button_h, s, false)
-	_mats_title.position = Vector2(rx, detail_h + gap * 0.5)
+	_bulk_row.position = Vector2(rx, detail_h + gap * 0.5)
+	_bulk_row.size = Vector2(rw, row_h)
+	CardTokens.gap(_bulk_row, 6.0, s)
+	for key in _bulk_buttons:
+		(_bulk_buttons[key] as Button).custom_minimum_size = Vector2(0.0, row_h)
+		(_bulk_buttons[key] as Button).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_bulk_hint.position = Vector2(rx, _bulk_row.position.y + row_h)
+	_bulk_hint.size = Vector2(rw, CardTokens.FONT_CHAR_SLOT * 1.5 * s)
+	CardTokens.hub_text(_bulk_hint, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_SUBTEXT, s, 0, "medium")
+	_mats_title.position = Vector2(rx, _bulk_hint.position.y + _bulk_hint.size.y)
 	_mats_title.size = Vector2(rw, CardTokens.FONT_CHAR_LINE * 1.6 * s)
 	CardTokens.hub_text(_mats_title, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_INK, s)
 	_mats.position = Vector2(rx, _mats_title.position.y + _mats_title.size.y)
@@ -132,6 +159,8 @@ func refresh() -> void:
 	_stock_scroll.visible = not selling
 	_mats_title.visible = selling
 	_mats.visible = selling
+	_bulk_row.visible = selling
+	_bulk_hint.visible = selling
 	_coins.visible = not selling
 	if selling:
 		_refresh_sell(p)
@@ -311,7 +340,50 @@ func _refresh_sell(p) -> void:
 		_details.add_action(CardTokens.t("shop_unmark") if marked.has(item.id) else CardTokens.t("shop_mark"), _toggle_mark.bind(item.id))
 	if not marked.is_empty():
 		_details.add_action(CardTokens.t("shop_sell_marked") % [marked.size(), _marked_total(p)], _sell_marked)
+	_refresh_bulk(p)
 	_fill_materials(p)
+
+
+## The bulk buttons: the label (with the count and gold of what it would sell), off when nothing qualifies; the pressed
+## one shows the confirm text until the second press (or any other tap).
+func _refresh_bulk(p) -> void:
+	for key in BULK:
+		var b: Button = _bulk_buttons[key]
+		var plan := bulk_plan(p, str(key))
+		var armed: bool = bulk_pending == key and int(plan["count"]) > 0
+		if bulk_pending == key and not armed:
+			bulk_pending = ""
+		b.disabled = int(plan["count"]) < 1
+		var name := CardTokens.t(str(BULK[key][0]))
+		b.text = CardTokens.t("shop_bulk_sure") % [int(plan["count"]), int(plan["total"])] if armed else (CardTokens.t("shop_bulk_line") % [name, int(plan["count"]), int(plan["total"])] if int(plan["count"]) > 0 else "%s · %s" % [name, CardTokens.t("shop_bulk_none")])
+		b.tooltip_text = CardTokens.t("shop_bulk_hint")
+		CarvedLook.chip_button(b, s, armed, not armed)
+		var w := b.size.x if b.size.x > 0.0 else b.custom_minimum_size.x
+		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_SLOT, maxf(w - 16.0 * s, 1.0), CardTokens.HUB_BAD if armed else (CardTokens.HUB_TAB_IDLE if b.disabled else CardTokens.HUB_INK), s, 0, "medium")
+
+
+## What `key` would sell (logic/shop.gd batch_sellable): {"entries", "count", "total", "ids"}.
+func bulk_plan(p, key: String) -> Dictionary:
+	return Shop.batch_sellable(p, GameState.item_rules, BULK[key][1])
+
+
+func _bulk_pressed(key: String) -> void:
+	var p = _profile()
+	var plan := bulk_plan(p, key)
+	if int(plan["count"]) < 1:
+		return
+	if bulk_pending != key:  # first press: the button turns into "Tap again: sell N items (G gold)"
+		bulk_pending = key
+		refresh()
+		return
+	bulk_pending = ""
+	var result := await run({"type": "shop_sell_batch", "entries": plan["entries"], "expected_price": int(plan["total"])})
+	if result.get("ok", false):
+		marked.clear()
+		selected = ""
+		var done: Dictionary = result.get("result", {})
+		say(CardTokens.t("shop_bulk_sold") % [int(done.get("items", plan["count"])), int(done.get("price", plan["total"]))])
+		refresh()
 
 
 func _fill_materials(p) -> void:

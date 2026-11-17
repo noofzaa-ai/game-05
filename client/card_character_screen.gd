@@ -747,6 +747,10 @@ func refresh() -> void:
 	_refresh_detail(p, rules, worn, selected_item, fits_count, wearable.is_empty() and not p.stash.items.is_empty())
 
 
+func _equip_block_text(p, item, rules, problem: String) -> String:
+	return CardTokens.equip_block_text(problem, CardTokens.item_level(item, rules.catalog), CardProgress.level_of(_deck, card))
+
+
 func _can_wear(item, rules) -> bool:
 	return _profile().wear_problem(card, item, rules).is_empty()
 
@@ -800,10 +804,17 @@ func _refresh_detail(p, rules, worn, stash_item, fits_count: int, none_for_class
 	if from_stash:
 		var problem: String = p.wear_problem(card, item, rules)
 		var wear := _detail.add_action(CardTokens.t("equip"), _equip.bind(item.id, item.slot))
-		wear.tooltip_text = CardTokens.error_text(problem) if not problem.is_empty() else ""
 		wear.disabled = not problem.is_empty()
+		if not problem.is_empty():  # say WHY (Boss 2026-11-17: a greyed Equip with no reason): beside the buttons + tooltip
+			var why := _equip_block_text(p, item, rules, problem)
+			wear.tooltip_text = why
+			_detail.set_note(why, true)
 	else:
-		_detail.add_action(CardTokens.t("unequip"), _unequip.bind(item.slot, slot_index))
+		var off := _detail.add_action(CardTokens.t("unequip"), _unequip.bind(item.slot, slot_index))
+		if CardTokens.unequip_blocked(item.slot):  # a card always holds a weapon: swap by wearing another one
+			off.disabled = true
+			off.tooltip_text = CardTokens.t("unequip_weapon_note")
+			_detail.set_note(CardTokens.t("unequip_weapon_note"), false)
 	var refine_button := _detail.add_action(CardTokens.t("refine"), _refine.bind(item.id, item.refine_level))
 	refine_button.disabled = not refine_offer.get("ok", false) and str(refine_offer.get("reason", "")) in ["invalid_item", "max_level"]
 	var repair_button := _detail.add_action(CardTokens.t("repair"), _repair.bind(item.id))
@@ -824,7 +835,10 @@ func _on_slot_activated(key: String) -> void:
 	var c: SlotCell = _slots[key]
 	_sel_slot = key
 	_sel_item = ""
-	if c.item != null:
+	if c.item != null and CardTokens.unequip_blocked(c.slot_id):
+		_say(CardTokens.t("unequip_weapon_note"))  # no refused command: tell how to swap
+		refresh()
+	elif c.item != null:
 		_unequip(c.slot_id, c.index)
 	else:
 		refresh()
@@ -914,6 +928,12 @@ func _set_filter(id: String) -> void:
 
 # ================================================================== commands (rules in logic/commands.gd)
 func _equip(item_id: String, slot_id: String) -> void:
+	var piece = _find_stash(_profile(), item_id)
+	if piece != null:
+		var problem: String = _profile().wear_problem(card, piece, GameState.item_rules)
+		if not problem.is_empty():  # double-tap on a piece this card can't wear: the reason, not a bare refusal
+			_say(_equip_block_text(_profile(), piece, GameState.item_rules, problem))
+			return
 	var index := int(_sel_slot.split(":")[1]) if _sel_slot.begins_with(slot_id + ":") else 0
 	var request := {"type": "equip", "item": item_id, "source": "stash", "card": card}
 	if index > 0:

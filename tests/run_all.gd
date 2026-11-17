@@ -102,6 +102,7 @@ const TEST_FILES := [
 	"res://tests/test_ui_import_budget.gd",
 	"res://tests/test_ui_tokens.gd",
 	"res://tests/test_ui_fixes_1117.gd",
+	"res://tests/test_equip_sell_fixes_1117.gd",
 	"res://tests/test_fonts.gd",
 	"res://tests/test_title_backdrop.gd",
 ]

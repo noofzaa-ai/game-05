@@ -142,8 +142,9 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				if not (p.equip_from_stash(at, index, card) if source == "stash" else trip.equip_from_bag(at, index)):
 					return _error("invalid_slot")
 			elif kind == "unequip":
-				if command.slot == "weapon":
-					return _error("weapon_required")  # a card always holds a weapon
+				var unequip_problem: String = p.unequip_problem(str(command.slot))
+				if not unequip_problem.is_empty():
+					return _error(unequip_problem)  # weapon_required: a card always holds a weapon (equip another to swap)
 				if source == "bag" and not card.is_empty() and card != p.lead_card():
 					return _error("not_available_here")
 				if p.loadout_of(card).item_at(command["slot"], index) == null:

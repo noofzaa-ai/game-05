@@ -122,6 +122,32 @@ static func sell_material(profile, camp, id: String, count: int, expected_price:
 	return {"ok": true, "material": id, "count": count, "price": price}
 
 
+## Bulk sale by rarity (Boss 2026-11-17): the stash pieces of the tiers `tier_ids` (rules.tiers ids, "normal" = white, "rare" =
+## blue) that are safe to sell in one go. Never included: a piece with a socketed Relic, a boss set piece, a destroyed or
+## unpriced piece, a starter piece (kept for the tier-up path). Worn pieces are not in the stash, so they are never listed.
+## (There is no favourite/lock mark in the game yet; add the check here when there is.)
+## Returns {"entries": [{"kind": "item", "id"}] (the shop_sell_batch entries, at most 64), "count", "total" (gold), "ids"}.
+static func batch_sellable(profile, rules, tier_ids: Array) -> Dictionary:
+	var BossLoot = preload("res://logic/boss_loot.gd")
+	var entries: Array = []
+	var ids: Array = []
+	var total := 0
+	for piece in profile.stash.items:
+		if entries.size() >= 64:
+			break
+		if piece.tier < 0 or piece.tier >= rules.tiers.size() or not tier_ids.has(str(rules.tiers[piece.tier]["id"])):
+			continue
+		if piece.destroyed or not piece.relic.is_empty() or BossLoot.is_boss_piece(rules, piece) or str(piece.id).begins_with("starter-"):
+			continue
+		var price := item_sell_price(piece, rules)
+		if price < 1:
+			continue
+		entries.append({"kind": "item", "id": piece.id})
+		ids.append(piece.id)
+		total += price
+	return {"entries": entries, "count": entries.size(), "total": total, "ids": ids}
+
+
 ## Validate the entire batch before changing any item, material or Gold.
 static func sell_batch(profile, rules, camp, entries: Array, expected_price: int) -> Dictionary:
 	if entries.is_empty() or entries.size() > 64: return {"ok": false, "reason": "invalid_command"}

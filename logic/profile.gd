@@ -194,6 +194,12 @@ static func slot_problem(card: String, item: Item, item_rules: ItemRules = null,
 	return ""
 
 
+## "weapon_required" when a piece of `slot_id` can never be taken off on its own (a card always holds a weapon: it is
+## replaced by equipping another one), else "". The unequip command and the Equipment tab share this rule.
+static func unequip_problem(slot_id: String) -> String:
+	return "weapon_required" if slot_id == "weapon" else ""
+
+
 const ARMOUR_SLOTS: Array[String] = ["shirt", "pants", "armband", "shoes"]
 
 
