@@ -150,9 +150,9 @@ func _on(trigger: String, skill: String, event: Dictionary) -> void:
 				at = _position_of(target)
 				follow = target
 			else:
-				at = Vector3(aim.x, caster.y, aim.z) - dir * float(spec.get("back", 0.0))
+				at = anchor_point("target", caster, aim, aim, float(spec.get("back", 0.0)))
 		"point":
-			at = event.get("pos", aim)
+			at = anchor_point("point", caster, aim, event.get("pos", aim))
 		_:
 			if bool(spec.get("follow", false)):
 				follow = player
@@ -164,6 +164,21 @@ func _on(trigger: String, skill: String, event: Dictionary) -> void:
 		_pending.append({"wait": wait, "args": args})
 	else:
 		_spawn(args)
+
+
+## Where a class skill's effect is drawn, as a pure function (tests lock it against the damage centre the sim uses,
+## logic/class_skills/engine.gd): "caster" = the caster's feet (circle / arc / pull_circle / leap_slam all damage
+## around the caster's own position at release), "target" = the aimed enemy's position pulled `back` metres toward the
+## caster (a shot's flight ends on the target), "point" = the ground point the sim computed (delayed circle).
+static func anchor_point(kind: String, caster: Vector3, aim: Vector3, point: Vector3, back: float = 0.0) -> Vector3:
+	match kind:
+		"target":
+			var flat := Vector3(aim.x - caster.x, 0.0, aim.z - caster.z)
+			var dir := flat.normalized() if flat.length() > 0.01 else Vector3.FORWARD
+			return Vector3(aim.x, caster.y, aim.z) - dir * back
+		"point":
+			return point
+	return caster
 
 
 func _spawn(args: Dictionary) -> void:

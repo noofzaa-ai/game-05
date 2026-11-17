@@ -16,6 +16,7 @@ const GROUND_MODES: Array[String] = ["ring", "crack", "stain", "glyph"]  ## inde
 const BURST_STYLES: Array[String] = ["streak", "puff", "mote"]  ## index = shader style
 const BURST_DIRS: Array[String] = ["up", "down", "forward", "back", "none"]
 const BILLBOARDS: Array[String] = ["ground", "camera", "y", "axis"]  ## index = shader billboard (0 = as placed, 3 = turns round its own long axis)
+const TARGET_PREFIXES: Array[String] = ["hit/", "skill_hit/", "skill_struck/", "area_burst/", "skill_burst/", "shot_end/", "status/", "skill_gem/"]  ## keys whose context is a struck target or a burst point, not the attacker
 const ANCHORS: Array[String] = ["at", "feet", "chest", "hitbox", "end"]
 const MAX_BURST := 32  ## particles one burst mesh holds
 ## Keys the stage plays for things that are not moves (every one must exist in the data).
@@ -105,6 +106,28 @@ func has(key: String) -> bool:
 
 func layers(key: String) -> Array:
 	return actions.get(key, [])
+
+
+## Where a ground/area layer of action `key` lands on the floor, as the viewer sees it (Boss 2026-11-17: cracks
+## appeared in front of the caster, not under the monsters). Pure, so tests can lock it over the whole library:
+##   "target"  keys played for a struck target or a burst point (hit/, skill_hit/, skill_struck/, area_burst/, skill_burst/,
+##             shot_end/, status/): the context's feet / at are that target or area centre
+##   "caster"  keys played for the attacker (swing/, windup/, land/, skill_cast/ ...) with anchor feet: under the caster
+##   "front_of_caster"  the same keys with anchor hitbox / at / end (or any forward offset): a point ahead of the caster,
+##             which is where the damage lands only by luck: ground marks must not use it
+static func ground_frame(key: String, layer: Dictionary) -> String:
+	var raw = layer.get("offset")
+	var shifted := typeof(raw) == TYPE_ARRAY and ((raw as Array).size() >= 1 and absf(float(raw[0])) > 0.001 or (raw as Array).size() >= 3 and absf(float(raw[2])) > 0.001)
+	var anchor := str(layer.get("anchor", "at"))
+	var target_key := false
+	for prefix in TARGET_PREFIXES:
+		if key.begins_with(prefix):
+			target_key = true
+	if target_key:
+		return "front_of_caster" if shifted else "target"
+	if anchor == "feet" and not shifted:
+		return "caster"
+	return "front_of_caster"
 
 
 ## The kind of a move id ("hammer_run_heavy" -> "run_heavy"), or "" for monsters' own moves.
