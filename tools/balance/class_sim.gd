@@ -91,10 +91,13 @@ func _init() -> void:
 		wave_taken.resize(13)
 		wave_taken.fill(0.0)
 		var loot_total := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0}
+		var kinds_total := {}
 		for s in range(first, first + seeds):
 			var result := play(scenario["classes"], 1000 + s * 17)
 			for field in loot_total:
 				loot_total[field] += int(result["loot"][field])
+			for kind in result["loot"]["kinds"]:
+				kinds_total[kind] = int(kinds_total.get(kind, 0)) + int(result["loot"]["kinds"][kind])
 			if result["won"]:
 				wins += 1
 				clear_ticks += int(result["ticks"])
@@ -126,6 +129,9 @@ func _init() -> void:
 		print("%-19s | %3d%% | %5.1f / %2d    | %7s | %9.0f | %9.0f | %6.2f | %4.1f | %d" % [scenario["name"], 100 * wins / seeds, float(waves_total) / seeds, waves_min,
 			("%.0f" % (clear_ticks / 60.0 / wins)) if wins > 0 else "-", dealt / seeds, taken / seeds, float(deaths) / seeds, float(ults) / seeds, timeouts])
 		print("  loot per run: drops %.1f gold %.0f items %.2f (lost, bag full: %.2f) materials %.1f" % [float(loot_total["drops"]) / seeds, float(loot_total["gold"]) / seeds, float(loot_total["items"]) / seeds, float(loot_total["lost_items"]) / seeds, float(loot_total["materials"]) / seeds])
+		var kind_names := kinds_total.keys()
+		kind_names.sort()
+		print("  dropped pieces (id@tier: per run): %s" % [", ".join(kind_names.map(func(k): return "%s %.2f" % [k, float(kinds_total[k]) / seeds]))])
 		print("  taken per wave 1..12: %s" % [", ".join(range(1, 13).map(func(w): return "%.0f" % (wave_taken[w] / seeds)))])
 	print("")
 	print("member (per run avg)              | weapon dmg | skill dmg | casts | dmg taken | kills | deaths | ults | gauge-full s | attacking% | walking% | casting%")
@@ -281,7 +287,7 @@ func play(classes: Array, seed: int) -> Dictionary:
 			members[id]["per_skill"][str(skill)] = {"dmg": 0.0, "casts": 0, "ticks": 0, "hits": 0}
 		members[id]["race"] = str(sim.fighters[id].race_state.get("race", ""))
 	var waves := 1
-	var loot_seen := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0}  ## "loot" events: what reached a run bag
+	var loot_seen := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0, "kinds": {}}  ## "loot" events: what reached a run bag
 	var wave_taken := []
 	wave_taken.resize(13)
 	wave_taken.fill(0.0)
@@ -374,6 +380,9 @@ func play(classes: Array, seed: int) -> Dictionary:
 					loot_seen["drops"] += 1
 					loot_seen["gold"] += int(event["gold"])
 					loot_seen["items"] += event["items"].size()
+					for it in event["items"]:  # which pieces dropped: item_id@tier (gear-level cap check)
+						var kind := "%s@%d" % [it["item_id"], int(it["tier"])]
+						loot_seen["kinds"][kind] = int(loot_seen["kinds"].get(kind, 0)) + 1
 					loot_seen["lost_items"] += int(event["lost_items"])  # dropped but the run bag was full
 					for material in event["materials"]:
 						loot_seen["materials"] += int(event["materials"][material])
