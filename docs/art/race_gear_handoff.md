@@ -1,5 +1,7 @@
 # Race gear: art handoff for the Studio team
 
+> **Boss revision 2026-11-17 (newest): the outfit follows the CLASS, the race only changes the head.** `{race}` in the armour paths below is the class's own starter race (sword_shield=human, greatsword=viking, longbow=elf, magic=runeborn), never the wearing card's race. See design/gdd/race-gear-sets.md.
+>
 > **Boss revision 2026-11-16 (read first, supersedes section 1 below).** Armour is now CLASS-bound and the level-15 generation: the Boss generates **4 class armour sets (one per class) x 4 slots at level 15** and **16 race weapons** himself. Armour keeps one look per race (the race is picked by the wearing card), so the art count is still 4 races x 4 classes x 4 slots = 64 meshes + 64 icons, but the items are `armour_<class>_<slot>` (16 catalog items), not 64 race items. Exact ids and paths:
 >
 > | Item id | Mesh (`{race}` = human, viking, elf, runeborn) | Icon |

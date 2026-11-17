@@ -11,6 +11,7 @@ const EMPTY_LOOKS := {} # The Studio body supplies the base; old garments use an
 const BODY_SLOTS: Array[String] = ["shirt", "armband", "pants", "shoes"]  ## no hat slot (Boss 2026-11-13)
 
 const CosmeticOptions := preload("res://logic/cosmetic_options.gd")
+const CardDeck := preload("res://logic/card_deck.gd")
 
 static var _by_id: Dictionary = {}
 static var _cosmetics: RefCounted
@@ -67,12 +68,25 @@ static func with_race(text: String, race: String) -> String:
 	return text.replace("{race}", race if not race.is_empty() else DEFAULT_RACE)
 
 
+## The race whose outfit a piece of CLASS armour shows (Boss 2026-11-17: "the outfit follows the class; the race only changes the head").
+## A Viking card on Great Sword and an Elf card on Great Sword wear the same Great Sword outfit (the delivered outfit of the class's
+## own race: Great Sword = the Viking files); only the head differs. Anything that is not class armour keeps `race`.
+static func outfit_race(info: Dictionary, race: String) -> String:
+	var asset_id := str(info.get("asset_id", ""))
+	if not asset_id.begins_with("armour_"):
+		return race
+	var rest := asset_id.trim_prefix("armour_")
+	var cut := rest.rfind("_")
+	var class_race := CardDeck.starter_race(rest.substr(0, cut)) if cut > 0 else ""
+	return class_race if not class_race.is_empty() else race
+
+
 ## The level-15 look of a class armour piece (Boss 2026-11-16, art/armor/race_shared/<race>_<slot>_lv15.glb, split by
 ## tools/items/split_race_outfits_lv15.py): the file for the wearing card's race, "" for anything that is not class armour.
 static func lv15_path(info: Dictionary, race: String, icon: bool = false) -> String:
 	if not str(info.get("asset_id", "")).begins_with("armour_") or str(info.get("slot", "")).is_empty():
 		return ""
-	var look := with_race("{race}", race)
+	var look := with_race("{race}", outfit_race(info, race))
 	var folder := "res://art/armor/race_shared/"
 	return folder + ("icon-%s_%s_lv15.png" % [look, info["slot"]] if icon else "%s_%s_lv15.glb" % [look, info["slot"]])
 
@@ -92,6 +106,7 @@ static func lv15_weapon(path_text: String) -> String:
 
 
 static func armor_file(info: Dictionary, race: String = "", starter: bool = false) -> String:
+	race = outfit_race(info, race)  # class armour: the class's outfit, whatever the card's race
 	if not starter:
 		var lv15 := lv15_path(info, race)
 		if not lv15.is_empty() and ResourceLoader.exists(lv15):
@@ -115,6 +130,7 @@ static func icon_for_id(item_id: String, catalog, race: String = "", starter: bo
 	if catalog == null or item_id.is_empty():
 		return null
 	var info: Dictionary = catalog.entry(item_id)
+	race = outfit_race(info, race)
 	if not starter:
 		var lv15_icon := lv15_path(info, race, true)
 		if not lv15_icon.is_empty() and ResourceLoader.exists(lv15_icon): return load(lv15_icon) as Texture2D

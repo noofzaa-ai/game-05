@@ -66,7 +66,7 @@ func _matrix(ctx, rules) -> void:
 				lv15.items[slot] = l
 				var si := ItemAssets.icon(s, catalog, race)
 				var li := ItemAssets.icon(l, catalog, race)
-				var race_mark := ("icon-%s_" % race) if slot in ARMOUR else ("race_%s/" % race)
+				var race_mark := ("icon-%s_" % Deck.starter_race(cls)) if slot in ARMOUR else ("race_%s/" % race)  # armour follows the CLASS (Boss 2026-11-17), weapons the race
 				if si == null or li == null:
 					icon_bad.append("%s: null icon (L1 %s, L15 %s)" % [slot, _path(si), _path(li)])
 				elif si.resource_path == li.resource_path:
@@ -81,9 +81,9 @@ func _matrix(ctx, rules) -> void:
 			var b: Dictionary = ItemAssets.looks(lv15, catalog, style, race)
 			var look_bad: Array = []
 			for slot in ARMOUR:
-				if a[slot] != SHARED + "%s_%s.glb" % [race, slot]:
+				if a[slot] != SHARED + "%s_%s.glb" % [Deck.starter_race(cls), slot]:
 					look_bad.append("L1 %s=%s" % [slot, a[slot]])
-				if b[slot] != SHARED + "%s_%s_lv15.glb" % [race, slot]:
+				if b[slot] != SHARED + "%s_%s_lv15.glb" % [Deck.starter_race(cls), slot]:
 					look_bad.append("L15 %s=%s" % [slot, b[slot]])
 			if a["weapon"]["path"] != "res://art/weapons/race_%s/%s.glb" % [race, cls]:
 				look_bad.append("L1 weapon=%s" % a["weapon"]["path"])
@@ -107,6 +107,21 @@ func _matrix(ctx, rules) -> void:
 				var after = m[key]["path"] if key in ["weapon", "offhand"] else m[key]
 				changed = changed and m != a and before != after
 			ctx.check("item look %s %s: equipping a different piece in any slot changes the looks" % [race, cls], changed)
+
+
+	# Boss 2026-11-17: the outfit follows the CLASS, the race only changes the head. Same class armour piece, any race of the card:
+	# the same level-1 file and the same level-15 file (the class's own outfit: sword_shield=human, greatsword=viking, longbow=elf, magic=runeborn).
+	for cls in CLASSES:
+		for slot in ARMOUR:
+			var info: Dictionary = catalog.entry("armour_%s_%s" % [cls, slot])
+			var starter_files := {}
+			var lv15_files := {}
+			for race in RACES:
+				starter_files[ItemAssets.armor_file(info, race, true)] = true
+				lv15_files[ItemAssets.armor_file(info, race, false)] = true
+			var own := Deck.starter_race(cls)
+			ctx.check("outfit follows the class: %s %s is one file for every race (L1 %s, L15 %s)" % [cls, slot, starter_files.keys(), lv15_files.keys()],
+				starter_files.size() == 1 and lv15_files.size() == 1 and starter_files.has(SHARED + "%s_%s.glb" % [own, slot]) and lv15_files.has(SHARED + "%s_%s_lv15.glb" % [own, slot]))
 
 
 # ------------------------------------------------------------------ 2. the UI call sites
@@ -162,7 +177,8 @@ func _call_sites(ctx, tree: SceneTree, rules) -> void:
 			report.append("%s %s!=%s" % [key, _path(c.icon_texture), _path(want)])
 	ctx.check("gear_panel: worn slot icons use the lead card's race like hub_item_cell %s" % [report], slot_icon_ok)
 	var doll_armor: Dictionary = gp.doll.model._armor_wanted if gp.doll != null and gp.doll.model != null else {}
-	ctx.check("paper_doll (gear_panel): the doll wears the elf starter shirt (%s)" % doll_armor.get("shirt", ""), doll_armor.get("shirt", "") == SHARED + "elf_shirt.glb")
+	# The lead card is Sword & Shield with an ELF race: the outfit is the CLASS's (human files), only the head is the elf's (Boss 2026-11-17).
+	ctx.check("paper_doll (gear_panel): an elf Sword & Shield card wears the class (human) starter shirt (%s)" % doll_armor.get("shirt", ""), doll_armor.get("shirt", "") == SHARED + "human_shirt.glb")
 	gp.queue_free()
 
 	# hub_shop_panel.gd: an item offer tile's icon (the bought piece is not a starter piece)
@@ -212,7 +228,7 @@ func _call_sites(ctx, tree: SceneTree, rules) -> void:
 	var ch = hub._character
 	var model = ch._portrait.model
 	ctx.check("card portrait %s: starts in the %s starter shirt (%s)" % [card, race, model._armor_wanted.get("shirt", "") if model != null else "no model"],
-		model != null and model._armor_wanted.get("shirt", "") == SHARED + "%s_shirt.glb" % race)
+		model != null and model._armor_wanted.get("shirt", "") == SHARED + "%s_shirt.glb" % Deck.starter_race(card))
 	var gs_shirt = _piece(rules, "drop-gs-shirt", "shirt", "armour_greatsword_shirt")
 	var gs_weapon = _piece(rules, "drop-gs-weapon", "weapon", "race_%s_greatsword_weapon" % race)
 	p.stash.items.append(gs_shirt)
@@ -228,7 +244,7 @@ func _call_sites(ctx, tree: SceneTree, rules) -> void:
 	await tree.process_frame
 	ctx.check("card portrait %s: equip succeeded (shirt + weapon worn)" % card, p.loadout_of(card).item_at("shirt", 0) == gs_shirt and p.loadout_of(card).item_at("weapon", 0) == gs_weapon)
 	ctx.check("card portrait %s: after equipping, the portrait wears the %s L15 shirt (%s)" % [card, race, model._armor_wanted.get("shirt", "")],
-		model._armor_wanted.get("shirt", "") == SHARED + "%s_shirt_lv15.glb" % race)
+		model._armor_wanted.get("shirt", "") == SHARED + "%s_shirt_lv15.glb" % Deck.starter_race(card))
 	ctx.check("card portrait %s: after equipping, the portrait holds the L15 weapon (%s)" % [card, model._race_weapon_wanted],
 		model._race_weapon_wanted == "res://art/weapons/race_%s/greatsword_lv15.glb" % race)
 	hub.queue_free()
