@@ -27,6 +27,10 @@ for _r in RACES:
     TARGETS[(_r, "shield")] = "weapons/race_%s/icon-shield.png" % _r
     for _c in RACE_WEAPONS:
         TARGETS[(_r, _c)] = "weapons/race_%s/icon-%s.png" % (_r, _c)
+    TARGETS[(_r, "sword_lv15")] = "weapons/race_%s/icon-sword_shield_lv15.png" % _r
+    TARGETS[(_r, "shield_lv15")] = "weapons/race_%s/icon-shield_lv15.png" % _r
+    for _c in RACE_WEAPONS:
+        TARGETS[(_r, _c + "_lv15")] = "weapons/race_%s/icon-%s_lv15.png" % (_r, _c)
 
 
 def grid(rows, cols, cell, names, title, label_w=120, scale=1.0):
@@ -123,7 +127,8 @@ def make_icons():
         raw = os.path.join(OUT, "iconraw-%s_%s.png" % (race, piece))
         if not os.path.exists(raw):
             continue
-        icon = _icon(raw, piece in ("sword", "greatsword", "magic"), piece == "magic", LV15 and piece == "armband_lv15")
+        base = piece[:-5] if piece.endswith("_lv15") else piece
+        icon = _icon(raw, base in ("sword", "greatsword", "magic"), base == "magic", LV15 and piece == "armband_lv15")
         if icon is None:
             continue
         icon.save(os.path.join(OUT, "icon-%s_%s.png" % (race, piece)))

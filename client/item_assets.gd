@@ -70,6 +70,19 @@ static func lv15_path(info: Dictionary, race: String, icon: bool = false) -> Str
 
 
 ## `starter`: the starter white kit (instance ids "starter-...") keeps the old starter look.
+## The level-15 look of a race weapon or race shield file (Boss delivery 2026-11-17, tools/items/split_race_weapons_lv15.py):
+## res://art/weapons/race_<race>/<name>.glb -> <name>_lv15.glb (icon-<name>.png -> icon-<name>_lv15.png), "" if it is no race
+## weapon path or the file does not exist (the caller keeps the interim MID file).
+static func lv15_weapon(path_text: String) -> String:
+	if not path_text.begins_with("res://art/weapons/race_") or path_text.contains("_lv15"):
+		return ""
+	var dot := path_text.rfind(".")
+	if dot < 0:
+		return ""
+	var candidate := path_text.substr(0, dot) + "_lv15" + path_text.substr(dot)
+	return candidate if ResourceLoader.exists(candidate) else ""
+
+
 static func armor_file(info: Dictionary, race: String = "", starter: bool = false) -> String:
 	if not starter:
 		var lv15 := lv15_path(info, race)
@@ -98,6 +111,9 @@ static func icon_for_id(item_id: String, catalog, race: String = "", starter: bo
 		var lv15_icon := lv15_path(info, race, true)
 		if not lv15_icon.is_empty() and ResourceLoader.exists(lv15_icon): return load(lv15_icon) as Texture2D
 	var native_icon := with_race(str(info.get("icon_path","")), race)
+	if not starter:
+		var lv15_weapon_icon := lv15_weapon(native_icon)  # race weapons and shields: the level-15 icon
+		if not lv15_weapon_icon.is_empty(): return load(lv15_weapon_icon) as Texture2D
 	if not native_icon.is_empty() and ResourceLoader.exists(native_icon): return load(native_icon) as Texture2D
 	for fallback_icon in chain(with_race(str(info.get("fallback_icon_path", "")), race)):  # race gear before the Studio icon lands (docs/art/race_gear_handoff.md)
 		if ResourceLoader.exists(fallback_icon): return load(fallback_icon) as Texture2D
@@ -179,7 +195,8 @@ static func looks(loadout, catalog, style: String, race: String = "") -> Diction
 	if weapon != null and not weapon.destroyed and weapon.weapon_type == style:
 		var asset_id: String = catalog.entry(weapon.item_id).get("asset_id", "")
 		var own := str(catalog.entry(weapon.item_id).get("asset_path", ""))  # a race weapon's Studio file, when it exists
-		result["weapon"]["path"] = own if own.begins_with("res://art/weapons/") and ResourceLoader.exists(own) else path(asset_id)
+		var own_lv15 := lv15_weapon(own) if not str(weapon.id).begins_with("starter-") else ""  # starter pieces keep the old look
+		result["weapon"]["path"] = own_lv15 if not own_lv15.is_empty() else (own if own.begins_with("res://art/weapons/") and ResourceLoader.exists(own) else path(asset_id))
 		result["refine"]["weapon"] = weapon.refine_level
 	for slot_id in BODY_SLOTS:
 		var item = loadout.item_at(slot_id, 0)
@@ -204,6 +221,9 @@ static func looks(loadout, catalog, style: String, race: String = "") -> Diction
 			shield_file = path(str(info.get("asset_id", "")))
 		if not shield_file.is_empty() and not ResourceLoader.exists(shield_file):
 			shield_file = ""
+		var shield_lv15 := lv15_weapon(shield_file) if not str(shield.id).begins_with("starter-") else ""
+		if not shield_lv15.is_empty():
+			shield_file = shield_lv15
 		result["offhand"] = {"item_id": shield.item_id, "asset_id": str(info.get("asset_id", "")), "procedural": bool(info.get("procedural", false)), "path": shield_file, "refine_level": shield.refine_level}
 		result["refine"]["offhand"] = shield.refine_level
 	else:

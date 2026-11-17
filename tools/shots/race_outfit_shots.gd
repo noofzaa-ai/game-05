@@ -54,6 +54,8 @@ func run() -> void:
 	elif OS.get_environment("ZORX_ONLY") == "weapons":
 		await _weapon_shots()
 		await _icons()
+	elif OS.get_environment("ZORX_ONLY") == "wcompare":
+		await _weapon_compare()
 	elif OS.get_environment("ZORX_ONLY") == "sil":
 		await _silhouettes()
 	elif OS.get_environment("ZORX_ONLY") == "compare":
@@ -208,15 +210,18 @@ func _icons() -> void:
 	model.dress({"class": "sword_shield", "weapon": {"path": "", "family": "", "style": ""}})
 	var jobs := []
 	var lv15 := OS.get_environment("ZORX_LV15") == "1"  # the level-15 armour only (files <race>_<slot>_lv15.glb, raw frames ..._lv15.png)
+	var lv15_weapons := lv15 and OS.get_environment("ZORX_WEAPONS") == "1"  # ZORX_LV15=1 ZORX_WEAPONS=1: the level-15 weapons and shields
+	var suffix := "_lv15" if lv15_weapons else ""
 	for race in RACES:
-		for slot in SLOTS:
-			jobs.append([race, slot, "armour", "res://art/armor/race_shared/%s_%s%s.glb" % [race, slot, "_lv15" if lv15 else ""]])
-		if lv15:
+		if not lv15_weapons:
+			for slot in SLOTS:
+				jobs.append([race, slot, "armour", "res://art/armor/race_shared/%s_%s%s.glb" % [race, slot, "_lv15" if lv15 else ""]])
+		if lv15 and not lv15_weapons:
 			continue
-		jobs.append([race, "sword", "sword", "res://art/weapons/race_%s/sword_shield.glb" % race])
-		jobs.append([race, "shield", "shield", "res://art/weapons/race_%s/shield.glb" % race])
+		jobs.append([race, "sword", "sword", "res://art/weapons/race_%s/sword_shield%s.glb" % [race, suffix]])
+		jobs.append([race, "shield", "shield", "res://art/weapons/race_%s/shield%s.glb" % [race, suffix]])
 		for cls in RACE_WEAPONS:
-			jobs.append([race, cls, cls, "res://art/weapons/race_%s/%s.glb" % [race, cls]])
+			jobs.append([race, cls, cls, "res://art/weapons/race_%s/%s%s.glb" % [race, cls, suffix]])
 	for job in jobs:
 		var looks := {"offhand": {}, "weapon": {"path": "", "family": "", "style": ""}}
 		for s in SLOTS:
@@ -503,5 +508,66 @@ func _silhouettes() -> void:
 				cam.position = center + (basis * (view[1] as Vector3)) * 2.0
 				cam.look_at(center, basis * Vector3.UP)
 				await _save(vp, "sil/%s_%s_%s_%s.png" % [tag, race, look, view[0]])
+	vp.queue_free()
+	await _frames(2)
+
+
+## Level-15 race weapons against the level-1 ones, in the hand (ZORX_ONLY=wcompare): per class and race the class starter weapon
+## ("start", the class gear's own), the interim MID race file ("mid") and the level-15 file ("lv15"), idle front, run side,
+## idle side and a skill frame. build/race_outfits/wcompare/<class>_<race>_<look>_<pose>.png (300x400); sheets: tools/shots/weapon_sheet.py
+func _weapon_compare() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT + "wcompare"))
+	var stage := _stage(Vector2i(300, 400))
+	var vp: SubViewport = stage["vp"]
+	var cam: Camera3D = stage["cam"]
+	cam.fov = 40.0
+	var model = CharacterModel.new()
+	model.ink_outline = OS.get_environment("ZORX_NOOUTLINE") != "1"
+	vp.add_child(model)
+	model.load_model()
+	var files := {"sword_shield": "sword_shield", "greatsword": "greatsword", "longbow": "longbow", "magic": "magic"}
+	var families := {"sword_shield": "blade", "greatsword": "greatsword", "longbow": "longbow", "magic": "magic"}
+	var skill := {"sword_shield": ["slash", 0.45], "greatsword": ["gs_slash_3", 0.82], "longbow": ["lb_draw_arrow", 0.9], "magic": ["mg_spell_1h_cast_spell_01", 0.58]}
+	for cls in CLASSES:
+		if not OS.get_environment("ZORX_CLASS").is_empty() and OS.get_environment("ZORX_CLASS") != cls:
+			continue
+		model.dress({"class": cls})
+		for race in RACES:
+			if not OS.get_environment("ZORX_RACE").is_empty() and OS.get_environment("ZORX_RACE") != race:
+				continue
+			for look in ["start", "mid", "lv15"]:
+				var looks := {}
+				for slot in SLOTS:
+					looks[slot] = ""
+				var suffix := "_lv15" if look == "lv15" else ""
+				var family: String = families[cls]
+				if look == "start":
+					looks["weapon"] = {"path": "", "family": family, "style": family}
+					looks["offhand"] = {}
+				else:
+					looks["weapon"] = {"path": "res://art/weapons/race_%s/%s%s.glb" % [race, files[cls], suffix], "family": family, "style": family}
+					if cls == "sword_shield":
+						looks["offhand"] = {"item_id": "race_%s_shield" % race, "asset_id": "procedural_round_shield", "procedural": true,
+							"path": "res://art/weapons/race_%s/shield%s.glb" % [race, suffix], "refine_level": 0}
+				# clear the previous race weapon first and let its nodes free: dressing a race file over another one in the same frame
+				# names the new meshes "@MeshInstance3D@n" (the old ones still hold the name), the class weapon then stays visible
+				model.dress({"weapon": {"path": "", "family": family, "style": family}, "offhand": {}})
+				await _frames(3)
+				model.dress(looks)
+				await _frames(2)
+				var lib = model._library
+				for pose in [["idle_front", "idle", 30.0], ["idle_side", "idle", 100.0], ["run_side", "run", 100.0], ["skill", "skill", 30.0]]:
+					model.clear_class_skill_frame()
+					model.set_pose("run" if pose[1] == "run" else "idle", 1.0 if pose[1] == "run" else 0.0, 4.0 if pose[1] == "run" else 0.0, true, Vector2(0.0, 1.0), false, "", "", family)
+					if pose[1] == "skill":
+						var clip: String = skill[cls][0]
+						model.show_class_skill_frame({"clip": clip, "time": minf(float(skill[cls][1]), lib.length(clip))})
+					for i in 40:
+						model.apply_pose(0.1)
+					model.rotation.y = deg_to_rad(pose[2])
+					cam.position = Vector3(0.0, 1.0, 2.2)
+					cam.look_at(Vector3(0.0, 0.68, 0.0))
+					await _save(vp, "wcompare/%s_%s_%s_%s.png" % [cls, race, look, pose[0]])
+				model.clear_class_skill_frame()
 	vp.queue_free()
 	await _frames(2)
