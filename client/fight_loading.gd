@@ -127,7 +127,7 @@ static func battle_paths() -> Array[String]:
 	for dir in DirAccess.get_directories_at(StatusVfx.ROOT):  # status loops (fighter_view prewarms them all)
 		_add_path(paths, StatusVfx.scene_path(dir))
 	var combat = CombatDataLoader.load_default()
-	var journey_id: String = GameState.WAVE_JOURNEY if GameState.auto_battle else GameState.DEFAULT_JOURNEY
+	var journey_id: String = GameState.fight_journey() if GameState.auto_battle else GameState.DEFAULT_JOURNEY
 	var data = JourneyData.load_by_id(journey_id, combat.enemies.keys())
 	for map_id in data.combat_maps:  # the first fight is on one of these (the art scene of each map)
 		_add_path(paths, str(MapLoader.load_by_id(str(map_id)).art_scene))
@@ -192,7 +192,7 @@ func _begin_build() -> void:
 	await _next_drawn_frame()
 	if not is_inside_tree():
 		return
-	if not GameState.start_journey():
+	if not GameState.start_journey(GameState.fight_journey() if GameState.auto_battle else GameState.DEFAULT_JOURNEY):
 		_fail(CardTokens.t("change_failed"))
 		return
 	if GameState.account_session != null:

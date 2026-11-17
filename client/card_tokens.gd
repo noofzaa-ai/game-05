@@ -1416,10 +1416,11 @@ static func hub_glow(color: Color, spread: float, radius: float, s: float) -> St
 
 
 ## The display name of the stage FIGHT starts (data file), "" when missing.
-static func stage_name() -> String:
-	if not FileAccess.file_exists(HUB_STAGE_FILE):
+static func stage_name(journey_id: String = "") -> String:
+	var path := HUB_STAGE_FILE if journey_id.is_empty() else "res://data/journeys/%s.json" % journey_id
+	if not FileAccess.file_exists(path):
 		return ""
-	var parsed = JSON.parse_string(FileAccess.get_file_as_string(HUB_STAGE_FILE))
+	var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
 	return str(parsed.get("name", "")) if parsed is Dictionary else ""
 
 

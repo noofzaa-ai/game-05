@@ -52,11 +52,13 @@ const CARD_DECK_SCENE := "res://scenes/card_deck_screen.tscn"
 const STAGE_SCENE := "res://scenes/stage.tscn"
 const JOURNEY_SCENE := "res://scenes/journey.tscn"
 const DEFAULT_JOURNEY := "ink_road"
+const WorldZones := preload("res://logic/world_zones.gd")
 const WAVE_JOURNEY := "goblin_waves"  ## what the default journey becomes in the auto-battler: one fight, 12 waves
 const DEFAULT_MAP := "goblin_base_gate"
 
 var mode: Mode = Mode.PVE
 var selected_map_id := DEFAULT_MAP
+var selected_zone := ""  ## world-map pick (zone id) FIGHT starts; per session, empty = the furthest open zone
 
 var item_rules  ## the equipment rules (data/items/rules.json)
 var camp_data  ## the camp rules (data/camp/camp.json)
@@ -123,9 +125,19 @@ func go_card_deck() -> void:
 
 ## Starts a 12-stage journey (data/journeys/<id>.json) with a fresh run bag and opens the path screen.
 ## `seed` 0 = a random journey. Returns false if the data is broken.
+## The journey FIGHT starts: the zone picked on the world map (an open one), else the furthest open zone, else goblin.
+func fight_journey() -> String:
+	var pick := selected_zone
+	if pick.is_empty() and profile != null:
+		pick = str(WorldZones.current_zone(profile).get("id", ""))
+	var id := WorldZones.start_journey_for(profile, pick)
+	return id if not id.is_empty() else WAVE_JOURNEY
+
+
 func start_journey(journey_id: String = DEFAULT_JOURNEY, seed: int = 0) -> bool:
 	if account_session != null:
-		if journey_id != DEFAULT_JOURNEY or _solo_connecting: return false
+		# squad rooms host goblin_waves only (server/rooms/manager.gd); another zone cannot start online yet
+		if (journey_id != DEFAULT_JOURNEY and journey_id != WAVE_JOURNEY) or _solo_connecting: return false
 		_solo_connecting = true
 		_start_solo.call_deferred()
 		return true
@@ -133,6 +145,8 @@ func start_journey(journey_id: String = DEFAULT_JOURNEY, seed: int = 0) -> bool:
 		return false
 	if auto_battle and journey_id == DEFAULT_JOURNEY:
 		journey_id = WAVE_JOURNEY
+	if preload("res://logic/world_zones.gd").journey_problem(profile, journey_id) != "":
+		return false  # offline authority: a locked zone's journey never starts
 	var combat = CombatDataLoader.load_default()
 	var data = JourneyData.load_by_id(journey_id, combat.enemies.keys())
 	if not data.is_valid():

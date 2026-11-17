@@ -1495,7 +1495,7 @@ func _refresh_all() -> void:
 	_fight.disabled = no_fight
 	_fight_glow.visible = false  # carved target: no glow
 	_fight_art.material = CardTokens.grey_material() if no_fight else null
-	_stage_label.text = CardTokens.t("fight_need") if no_fight else CardTokens.stage_name()
+	_stage_label.text = CardTokens.t("fight_need") if no_fight else stage_text()
 	if _online_button != null:
 		_online_button.visible = online_open()
 	if _mode == "editor":
@@ -1656,6 +1656,20 @@ func open_service(service: String) -> void:
 			_show_soon(service)
 
 
+## The strip over FIGHT: the picked zone's journey name and wave count (its data/journeys name).
+func stage_text() -> String:
+	var name := CardTokens.stage_name(GameState.fight_journey())
+	return name if not name.is_empty() else CardTokens.stage_name()
+
+
+## The strip follows the map pick (and refits its text).
+func _on_map_closed() -> void:
+	if _stage_label == null:
+		return
+	_stage_label.text = CardTokens.t("fight_need") if _fight.disabled else stage_text()
+	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.CARVED_FONT_STAGE, _stage_label.size.x, CardTokens.HUB_CREAM, _s)
+
+
 ## The world map (client/hub_world_map_panel.gd), built once like the service panels.
 func open_world_map() -> void:
 	if not _panels.has("map"):
@@ -1665,6 +1679,7 @@ func open_world_map() -> void:
 		panel.send = _send
 		add_child(panel)
 		move_child(panel, _toast.get_index())
+		panel.closed.connect(_on_map_closed)
 		_panels["map"] = panel
 	_panels["map"].open()
 

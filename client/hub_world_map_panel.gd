@@ -5,6 +5,7 @@ extends "res://client/hub_service_panel.gd"
 ## opens. Display only: which zone is open comes from the server-set boss flags in the profile.
 
 const Zones := preload("res://logic/world_zones.gd")
+const ZoneQuests := preload("res://logic/zone_quests.gd")
 
 var selected := ""
 var _map_frame: Panel
@@ -55,7 +56,7 @@ func build() -> void:
 
 func open() -> void:
 	if selected.is_empty():
-		selected = str(Zones.current_zone(_profile()).get("id", ""))
+		selected = GameState.selected_zone if not GameState.selected_zone.is_empty() else str(Zones.current_zone(_profile()).get("id", ""))
 	super.open()
 
 
@@ -118,7 +119,14 @@ func refresh() -> void:
 			for i in list.size():
 				if str(list[i].id) == selected and i > 0:
 					before = _boss_name(list[i - 1])
-			lines.append(CardTokens.t("map_locked") % before)
+			if ZoneQuests.has_quest(selected):  # Boss 2026-11-17: a zone with an unlock quest lists its steps
+				var q := ZoneQuests.quest(selected)
+				var th: bool = CardTokens.language == "th"
+				lines.append(str(q.get("name_th" if th else "name_en", "")))
+				for step in ZoneQuests.progress(p, selected):
+					lines.append(("[x] " if step.done else "[ ] ") + str(step.get("text_th" if th else "text_en", "")))
+			else:
+				lines.append(CardTokens.t("map_locked") % before)
 		_:
 			lines.append(CardTokens.t("map_soon"))
 	_info.text = "\n".join(lines)
@@ -127,9 +135,18 @@ func refresh() -> void:
 
 
 func _go_pressed() -> void:
-	# One playable zone today (the goblin base): Go closes the map back to FIGHT. With more zones this picks the
-	# journey FIGHT starts.
+	# Go picks the zone FIGHT starts (an open one only; Go is hidden otherwise) and closes back to the hub.
+	if not choose_selected():
+		return
 	close()
+
+
+## Makes the selected zone the one FIGHT starts. False for a locked / coming-soon zone (nothing changes).
+func choose_selected() -> bool:
+	if Zones.start_journey_for(_profile(), selected).is_empty() or Zones.zone(selected).is_empty():
+		return false
+	GameState.selected_zone = selected
+	return true
 
 
 const MARKER_FONT_DESK := 0.9  ## zone marker text: FONT_CHAR_LINE times this (then at least FONT_MIN on screen)

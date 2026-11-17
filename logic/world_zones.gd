@@ -82,6 +82,22 @@ static func current_zone(profile) -> Dictionary:
 	return best
 
 
+## The journey FIGHT starts for the zone picked on the map (Boss 2026-11-17: the map is part of the start flow).
+## An empty or unknown pick means the first zone (the goblin base); a known zone that is not OPEN returns ""
+## (locked / coming soon zones cannot start). Pure: the pick itself is client state, the server never trusts it
+## beyond running the journey it hosts.
+static func start_journey_for(profile, selected_zone: String) -> String:
+	var list := zones()
+	if list.is_empty():
+		return ""
+	var z := zone(selected_zone)
+	if z.is_empty():
+		z = list[0]
+	if state(profile, str(z.get("id", ""))) != OPEN:
+		return ""
+	return str(z.get("journey", ""))
+
+
 ## Server run-end hook: the first time a run of a zone's journey clears its last wave (the boss), mark the boss
 ## beaten. Returns true when this call set it.
 static func on_battle_result(profile, journey_id: String, cleared_wave: int, wave_total: int) -> bool:
