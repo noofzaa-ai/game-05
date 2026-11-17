@@ -4,6 +4,28 @@ extends RefCounted
 ## this file owns the numbers it is fed with, the mask path and the pure maths the tests check against.
 const MATERIAL_PREFIX := "Level 15 | Original Armor"  ## the atlas material of art/armor/race_shared/<race>_<slot>_lv15.glb
 const MASK_PATH := "res://art/armor/race_shared/race_wardrobe_atlas_lv15_metal.png"
+## The level-15 weapon materials (delivery sword_shield / greatsword / longbow / magic _weapons_lv15.glb) -> their metal mask
+## (tools/items/build_lv15_weapon_metal_masks.py). Matched by name prefix; the old mid / starter weapons ("... | Original PBR")
+## and the shield's leather straps are not listed, so they never get it.
+const WEAPON_MASKS := {
+	"Sword and Shield Lv15 | Original Colors": "res://art/weapons/race_shared/weapon_metal_lv15_sword_shield.png",
+	"Human Shield Lv15 | Turquoise & Gold": "res://art/weapons/race_shared/weapon_metal_lv15_shield_front.png",
+	"Greatswords Lv15 | Original Colors": "res://art/weapons/race_shared/weapon_metal_lv15_greatsword.png",
+	"Bow | Original Colors": "res://art/weapons/race_shared/weapon_metal_lv15_longbow.png",
+	"Staff | Original Colors": "res://art/weapons/race_shared/weapon_metal_lv15_magic.png",
+}
+## Weapons get a MORE restrained version of the armour look (Boss 2026-11-17: "a little metal reflection"): small accents on
+## blades, guards, edges, gems and gold trim; no whitening.
+const WEAPON_PARAMS := {
+	"metal_core": 0.90,
+	"metal_halo": 0.82,
+	"metal_halo_strength": 0.15,
+	"metal_lift": 0.93,
+	"metal_line_strength": 0.25,
+	"metal_rim_strength": 0.35,
+	"metal_stud_base": 0.22,
+	"metal_glint_mix": 0.45,
+}
 const OPTION := "metal_glint"  ## client/graphics_options.gd boolean (device quality switch)
 ## Shader uniforms (name -> value), set on every lv15 material.
 const PARAMS := {
@@ -29,8 +51,32 @@ const PARAMS := {
 }
 
 
-static func is_metal_material(material_name: String) -> bool:
+static func is_armor_material(material_name: String) -> bool:
 	return material_name.begins_with(MATERIAL_PREFIX)
+
+
+static func weapon_key(material_name: String) -> String:
+	for key in WEAPON_MASKS:
+		if material_name.begins_with(key):
+			return key
+	return ""
+
+
+static func is_weapon_material(material_name: String) -> bool:
+	return not weapon_key(material_name).is_empty()
+
+
+## Armour or lv15 weapon: the materials that get the glint.
+static func is_metal_material(material_name: String) -> bool:
+	return is_armor_material(material_name) or is_weapon_material(material_name)
+
+
+## The mask file for a material name, "" for any other material.
+static func mask_path(material_name: String) -> String:
+	if is_armor_material(material_name):
+		return MASK_PATH
+	var key := weapon_key(material_name)
+	return str(WEAPON_MASKS[key]) if not key.is_empty() else ""
 
 
 static func _smooth(edge0: float, edge1: float, x: float) -> float:
@@ -82,4 +128,7 @@ static func apply(material: ShaderMaterial, mask: Texture2D) -> bool:
 	material.set_shader_parameter("metal_mask", mask)
 	for key in PARAMS:
 		material.set_shader_parameter(key, PARAMS[key])
+	if is_weapon_material(material.resource_name):
+		for key in WEAPON_PARAMS:
+			material.set_shader_parameter(key, WEAPON_PARAMS[key])
 	return true

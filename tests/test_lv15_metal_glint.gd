@@ -65,6 +65,34 @@ func run(ctx) -> void:
 	ctx.check("the toon shader declares every metal uniform %s" % [missing], missing.is_empty() and shader_text.contains("uniform bool use_metal") and shader_text.contains("uniform sampler2D metal_mask"))
 	ctx.check("graphics switch metal_glint exists, on by default", Options._values.has(MetalGlint.OPTION) and Options._valid(MetalGlint.OPTION, false))
 
+	# level-15 weapons (Boss 2026-11-17): same glint, more restrained, only the lv15 weapon materials
+	var weapon_names := ["Sword and Shield Lv15 | Original Colors", "Greatswords Lv15 | Original Colors", "Bow | Original Colors", "Staff | Original Colors", "Human Shield Lv15 | Turquoise & Gold"]
+	for weapon_name in weapon_names:
+		ctx.check("lv15 weapon material gets the glint: %s" % weapon_name, MetalGlint.is_weapon_material(weapon_name) and MetalGlint.is_metal_material(weapon_name) and not MetalGlint.is_armor_material(weapon_name))
+		var weapon_mask_path := MetalGlint.mask_path(weapon_name)
+		var weapon_image := Image.load_from_file(ProjectSettings.globalize_path(weapon_mask_path)) if not weapon_mask_path.is_empty() else null
+		ctx.check("weapon mask for %s: exists, RGB, small, loadable" % weapon_name, weapon_image != null and not weapon_image.is_empty() and weapon_image.get_format() == Image.FORMAT_RGB8 and maxi(weapon_image.get_width(), weapon_image.get_height()) <= 1024 and FileAccess.file_exists(weapon_mask_path + ".import") and load(weapon_mask_path) is Texture2D)
+		if weapon_image != null and not weapon_image.is_empty():
+			var weapon_lit := 0
+			for y in weapon_image.get_height():
+				for x in weapon_image.get_width():
+					if weapon_image.get_pixel(x, y).r > 0.5:
+						weapon_lit += 1
+			var weapon_share := float(weapon_lit) / float(weapon_image.get_width() * weapon_image.get_height())
+			ctx.check("weapon mask %s covers 2-60%% of its texture (%.1f%%)" % [weapon_name, weapon_share * 100.0], weapon_share >= 0.02 and weapon_share <= 0.60)
+	for old_name in ["Greatswords | Original PBR", "Sword & Shield | Original PBR.001", "Longbows | Original PBR", "Magic Staves | Original PBR", "Magic Staves | Original PBR.001", "Shield | Leather arm straps", "Level 15 | Original Armour"]:
+		ctx.check("not an lv15 weapon / armour material: %s" % old_name, not MetalGlint.is_metal_material(old_name) and MetalGlint.mask_path(old_name).is_empty())
+	var weapon := ShaderMaterial.new()
+	weapon.resource_name = "Greatswords Lv15 | Original Colors"
+	var weapon_mask := load(MetalGlint.mask_path(weapon.resource_name)) as Texture2D
+	ctx.check("apply puts the weapon look on an lv15 weapon material", MetalGlint.apply(weapon, weapon_mask) and weapon.get_shader_parameter("use_metal") == true)
+	var armour_look := ShaderMaterial.new()
+	armour_look.resource_name = "Level 15 | Original Armor.001"
+	MetalGlint.apply(armour_look, mask)
+	ctx.check("weapon glint is more restrained than the armour's", float(weapon.get_shader_parameter("metal_glint_mix")) < float(armour_look.get_shader_parameter("metal_glint_mix")) and float(weapon.get_shader_parameter("metal_lift")) > float(armour_look.get_shader_parameter("metal_lift")) and float(weapon.get_shader_parameter("metal_halo_strength")) < float(armour_look.get_shader_parameter("metal_halo_strength")) and float(weapon.get_shader_parameter("metal_glint_mix")) <= 0.5)
+	ctx.check("the armour keeps its own numbers", float(armour_look.get_shader_parameter("metal_glint_mix")) == float(MetalGlint.PARAMS["metal_glint_mix"]))
+	ctx.check("apply refuses the leather straps and old weapons", not MetalGlint.apply(ShaderMaterial.new(), weapon_mask))
+
 	# real model: lv15 piece gets the glint, the class suit does not
 	var lv15 := "res://art/armor/race_shared/human_shirt_lv15.glb"
 	if not ResourceLoader.exists(lv15):

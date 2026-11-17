@@ -622,13 +622,15 @@ static func _paint_ground(texture: Texture2D) -> Color:
 	return _paint_grounds[key]
 
 
-static var _metal_mask_texture: Texture2D
+static var _metal_masks: Dictionary = {}
 
 
-static func _metal_mask() -> Texture2D:
-	if _metal_mask_texture == null and ResourceLoader.exists(MetalGlint.MASK_PATH):
-		_metal_mask_texture = load(MetalGlint.MASK_PATH) as Texture2D
-	return _metal_mask_texture
+static func _metal_mask(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	if not _metal_masks.has(path) and ResourceLoader.exists(path):
+		_metal_masks[path] = load(path) as Texture2D
+	return _metal_masks.get(path)
 
 
 func _prepare_meshes() -> void:
@@ -685,7 +687,7 @@ func _prepare_meshes() -> void:
 			if card_ink:
 				material.set_shader_parameter("card_ink", true)
 			if MetalGlint.is_metal_material(material.resource_name) and Options.enabled(MetalGlint.OPTION):
-				MetalGlint.apply(material, _metal_mask())  # level-15 race armour: ink-style metal glints, nothing else
+				MetalGlint.apply(material, _metal_mask(MetalGlint.mask_path(material.resource_name)))  # level-15 armour and weapons only
 			mesh.set_surface_override_material(surface, material)
 			_toon.append(material)
 		if mesh.has_meta("no_ink_hull"):
