@@ -174,6 +174,8 @@ func _refresh_buy(p) -> void:
 	var boss := currency != "gold"
 	_details.show_empty(str(chosen["name"]), CardTokens.slot_name(str(chosen.get("slot", ""))) if chosen.has("slot") else "", _price_text(price, currency),
 		_need_text(price, have, currency) if short else (CardTokens.t("shop_boss_piece") if boss else ""))
+	_details.cost.visible = boss  # the random-tier note stays on screen when short of coins too (the need line takes the line above)
+	_details.set_cost(CardTokens.t("shop_tier_random") if boss else "")
 	if str(chosen.get("kind", "")) == "item":  # a preview of the piece as bought (icon + tier pips)
 		var piece = preload("res://logic/item.gd").new()
 		piece.item_id = str(chosen["id"])
@@ -199,7 +201,7 @@ func _offer_tile(offer: Dictionary, p) -> Button:
 	b.focus_mode = Control.FOCUS_ALL
 	b.custom_minimum_size = Vector2(maxf(_tile_w, CardTokens.TAILOR_CHIP.x * s), CardTokens.tap(CardTokens.TAILOR_CHIP.y * 1.4, phone) * s)
 	b.clip_contents = true
-	b.tooltip_text = "%s  ·  %s" % [str(offer["name"]), _price_text(price, currency)]
+	b.tooltip_text = "%s  ·  %s" % [str(offer["name"]), _price_text(price, currency)] + ("  ·  " + CardTokens.t("shop_tier_random") if currency != "gold" else "")
 	CarvedLook.chip_button(b, s)
 	var on := str(offer["sku"]) == selected
 	var pad := 8.0 * s
@@ -231,6 +233,14 @@ func _offer_tile(offer: Dictionary, p) -> Button:
 	tag.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(tag)
+	if currency != "gold":  # a boss piece rolls its tier when bought (data/items/shop.json boss_item_tier "random")
+		var roll := CardTokens.label(CardTokens.t("shop_tier_random_short"), CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_SUBTEXT, s, 0, "medium")
+		roll.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		roll.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		roll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		roll.clip_text = true
+		roll.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		row.add_child(roll)
 	if str(offer.get("kind", "")) == "item" and GameState.item_rules.catalog.req_level(str(offer.get("id", ""))) > 1:  # level chip (Boss 2026-11-16)
 		var level := CardTokens.label(CardTokens.t("req_lv_short") % GameState.item_rules.catalog.req_level(str(offer["id"])), CardTokens.FONT_CHAR_LINE, CardTokens.HUB_SUBTEXT, s, 0, "medium")
 		level.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
