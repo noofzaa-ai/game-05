@@ -3,24 +3,22 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cxd1fbl4lj0y4"
-path.s3tc="res://.godot/imported/goblin_chief_goblin_chief_albedo.jpg-cb259ead728afe401cfa5a1c3fd5df9e.s3tc.ctex"
-path.etc2="res://.godot/imported/goblin_chief_goblin_chief_albedo.jpg-cb259ead728afe401cfa5a1c3fd5df9e.etc2.ctex"
+path="res://.godot/imported/goblin_chief_goblin_chief_albedo.jpg-cb259ead728afe401cfa5a1c3fd5df9e.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "bcea0d6e1c9e83c3114d5f6cdd0067f8"
+"md5": "99d9eb89af6b9b918901b804fac3ebe4"
 }
 
 [deps]
 
 source_file="res://art/monsters/goblin_chief/goblin_chief_goblin_chief_albedo.jpg"
-dest_files=["res://.godot/imported/goblin_chief_goblin_chief_albedo.jpg-cb259ead728afe401cfa5a1c3fd5df9e.s3tc.ctex", "res://.godot/imported/goblin_chief_goblin_chief_albedo.jpg-cb259ead728afe401cfa5a1c3fd5df9e.etc2.ctex"]
+dest_files=["res://.godot/imported/goblin_chief_goblin_chief_albedo.jpg-cb259ead728afe401cfa5a1c3fd5df9e.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -42,4 +40,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

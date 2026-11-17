@@ -5,7 +5,8 @@ extends SceneTree
 ## connected piece of the mesh, so pieces never crack against each other; each piece takes LOD `base` (the fused body, over
 ## 2,000 triangles), LOD `acc` (pieces of 100-1,999 triangles: armour, weapons) or stays as it is (smaller bits: eyes, teeth, studs).
 ## LOD 0 = half the triangles, 1 = a quarter, -1 = untouched.
-##   godot --headless --path . --script res://tools/monsters/simplify_monster.gd -- goblin_chief --base=0 --acc=1 [--small=100] [--out=res://dir/x.glb]
+##   godot --headless --path . --script res://tools/monsters/simplify_monster.gd -- goblin_chief --base=0 --acc=1 [--small=100] [--in=res://original.glb] [--out=res://dir/x.glb]
+## then: python tools/monsters/prune_glb.py x.glb  (drops the replaced mesh data Godot keeps in the file)
 ## Embedded textures are re-written as JPEG (quality 0.9) and shrunk to 1024 px if larger.
 
 const Rig := preload("res://tools/monsters/rig_common.gd")
@@ -18,6 +19,7 @@ func _init() -> void:
 	var small := 100
 	var big := 2000
 	var out_path := ""
+	var in_path := ""
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--base="):
 			base_lod = int(arg.substr(7))
@@ -25,11 +27,15 @@ func _init() -> void:
 			acc_lod = int(arg.substr(6))
 		elif arg.begins_with("--small="):
 			small = int(arg.substr(8))
+		elif arg.begins_with("--in="):
+			in_path = arg.substr(5)
 		elif arg.begins_with("--out="):
 			out_path = arg.substr(6)
 		else:
 			monster = arg
 	var source := "res://art/monsters/%s/%s.glb" % [monster, monster]
+	if in_path != "":
+		source = in_path
 	if out_path == "":
 		out_path = source
 	var state := GLTFState.new()
@@ -98,9 +104,9 @@ static func _simplify(arrays: Array, rests: Array, base_lod: int, acc_lod: int, 
 	var pieces := {}  # root -> triangle indices
 	for t in indices.size() / 3:
 		var root: Vector3i = find.call(key.call(positions[indices[t * 3]]))
-		if not pieces.has(root):
-			pieces[root] = PackedInt32Array()
-		(pieces[root] as PackedInt32Array).append_array(PackedInt32Array([indices[t * 3], indices[t * 3 + 1], indices[t * 3 + 2]]))
+		var list: PackedInt32Array = pieces.get(root, PackedInt32Array())
+		list.append_array(PackedInt32Array([indices[t * 3], indices[t * 3 + 1], indices[t * 3 + 2]]))
+		pieces[root] = list
 	var order := pieces.keys()
 	var importer := ImporterMesh.new()
 	for root in order:

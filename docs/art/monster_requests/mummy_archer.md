@@ -62,6 +62,11 @@ New clips this monster needs: none. (A later "reload from the quiver" or "collap
 - Budget: body at most 3,500 triangles, whole file (body + bow + arrow) at most 4,500 triangles (v2 ships 2,132 after the rigger's simplification: body 1,620, bow 450; the source mummy was 3,242 + the player's 900-triangle bow). One material, one
   albedo atlas of at most 1024x1024 (the pilot shrinks to 512 and ships it as lossy WebP, 40 KB instead of 298 KB lossless: the delivered file will be re-compressed, but do not send 4096 maps), no normal or
   metallic map needed, no extra textures, no vertex colours, no blendshapes. Ink outline and toon shading come from the game: keep the albedo flat-lit, no baked shadows.
+- HARD LIMIT (Boss 2026-11-17): every monster model, goblins and mummies alike, has at most 5,000 triangles in total (body + weapon + arrow); aim for 4,500 so the rigger has room.
+- Flat painted colour texture ONLY (Boss/PO 2026-11-17): one albedo, no PBR, no normal, roughness or metallic maps, and NO baked ink, dark outlines or baked shadows in the texture. The game draws the ink outline itself at render time
+  (`client/fighter_view.gd` builds an outline shell per monster, skinned to the same bones, width capped 1-2 px by `draw_style.gd`; the goblin textures contain no painted outlines either).
+- Big simple shapes: the outline shell doubles every small piece and turns clutter into black smudges. Model bandages as a FEW LARGE readable wraps, not many tiny strips or loose bits; no thin spikes, no details under about 5 px at phone size;
+  closed meshes with no internal faces.
 - Separate parts for anything the game might hide or tint (hood, quiver, mask) are welcome but must be skinned too.
 - Do not deliver props, kits or scenes in the same file as the character (section 8).
 
@@ -76,10 +81,11 @@ Moves (pilot, 60 ticks per second, natural clip speed 1.0): shot startup 46 / ac
 ## 7. Acceptance checklist (the rigger tests these)
 1. Joints: all 102 donor joints present with donor names, only the declared extras added. (tests/test_monster_rig.gd)
 2. Library: exactly `idle run shoot volley hit death`, every bone a clip animates exists in the monster, valid marks, run does not drift. (tests)
-3. Budgets: triangles <= 4,500 (hard 6,000), file <= 450 KB (v2: 224 KB), library <= 200 KB (v2: 172 KB), body one material, atlas <= 1024, joints <= 110; import settings: lossy texture, no tangents/LODs/shadow meshes. (tests)
+3. Budgets: triangles <= 4,500 (Boss hard limit 5,000 for every monster), file <= 450 KB (v2: 224 KB), library <= 200 KB (v2: 172 KB), body one material, atlas <= 1024, joints <= 110; import settings: lossy texture, no tangents/LODs/shadow meshes. (tests)
 4. Windowed Godot strips of idle, run, shoot, volley, hit, death, viewed from front-3/4, side and back: no limb through the body, no shoulder or hip collapse,
    no stretched triangles, no bandage or arrow detached, feet near the floor (a gap of more than about 5% of the height or a sunk foot is a failure), the bow stays in the left fist
    through all clips, the arrow shows only while drawing.
+5b. Outline check: each monster rendered with the real ink outline (windowed, `tools/monsters/goblin_shots.gd` pattern) at fight-camera size and phone size (844x390); the rigger looks for smudging and reports it.
 5. In the game camera (practice field): the arrow leaves at the right moment and hits where the aim is. (tools/monsters/mummy_archer_fire_shot.gd)
 
 ## 8. What the 2026-11-17 deliveries tell us

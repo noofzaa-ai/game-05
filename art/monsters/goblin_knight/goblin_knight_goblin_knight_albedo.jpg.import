@@ -3,24 +3,22 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dn4mmtaty5qh5"
-path.s3tc="res://.godot/imported/goblin_knight_goblin_knight_albedo.jpg-8a336a2289b4a895387237b42605b816.s3tc.ctex"
-path.etc2="res://.godot/imported/goblin_knight_goblin_knight_albedo.jpg-8a336a2289b4a895387237b42605b816.etc2.ctex"
+path="res://.godot/imported/goblin_knight_goblin_knight_albedo.jpg-8a336a2289b4a895387237b42605b816.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "307f7f3a4cd31592e600b1080df41d4f"
+"md5": "2a3067305ad28fbc68d709a3df9e7ea7"
 }
 
 [deps]
 
 source_file="res://art/monsters/goblin_knight/goblin_knight_goblin_knight_albedo.jpg"
-dest_files=["res://.godot/imported/goblin_knight_goblin_knight_albedo.jpg-8a336a2289b4a895387237b42605b816.s3tc.ctex", "res://.godot/imported/goblin_knight_goblin_knight_albedo.jpg-8a336a2289b4a895387237b42605b816.etc2.ctex"]
+dest_files=["res://.godot/imported/goblin_knight_goblin_knight_albedo.jpg-8a336a2289b4a895387237b42605b816.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

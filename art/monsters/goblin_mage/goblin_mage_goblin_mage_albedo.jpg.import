@@ -3,24 +3,22 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://x0g7pkuqhevh"
-path.s3tc="res://.godot/imported/goblin_mage_goblin_mage_albedo.jpg-a6555ffc4e8d4d8a41fff74b064dc612.s3tc.ctex"
-path.etc2="res://.godot/imported/goblin_mage_goblin_mage_albedo.jpg-a6555ffc4e8d4d8a41fff74b064dc612.etc2.ctex"
+path="res://.godot/imported/goblin_mage_goblin_mage_albedo.jpg-a6555ffc4e8d4d8a41fff74b064dc612.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "79c48a71d8122d448b881106a34208e2"
+"md5": "7cbaf6678f56aa3b2aacb348b2d96f68"
 }
 
 [deps]
 
 source_file="res://art/monsters/goblin_mage/goblin_mage_goblin_mage_albedo.jpg"
-dest_files=["res://.godot/imported/goblin_mage_goblin_mage_albedo.jpg-a6555ffc4e8d4d8a41fff74b064dc612.s3tc.ctex", "res://.godot/imported/goblin_mage_goblin_mage_albedo.jpg-a6555ffc4e8d4d8a41fff74b064dc612.etc2.ctex"]
+dest_files=["res://.godot/imported/goblin_mage_goblin_mage_albedo.jpg-a6555ffc4e8d4d8a41fff74b064dc612.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0

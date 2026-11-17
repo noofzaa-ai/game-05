@@ -3,24 +3,22 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bhbfki6obh5jo"
-path.s3tc="res://.godot/imported/goblin_archer_goblin_archer_albedo.jpg-6ceeb2718277940433eaa380c0190a09.s3tc.ctex"
-path.etc2="res://.godot/imported/goblin_archer_goblin_archer_albedo.jpg-6ceeb2718277940433eaa380c0190a09.etc2.ctex"
+path="res://.godot/imported/goblin_archer_goblin_archer_albedo.jpg-6ceeb2718277940433eaa380c0190a09.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
-"md5": "234dd9909dfd5492181a879b8118dff4"
+"md5": "6397a96958c3532a9fb1bc4f8e36a805"
 }
 
 [deps]
 
 source_file="res://art/monsters/goblin_archer/goblin_archer_goblin_archer_albedo.jpg"
-dest_files=["res://.godot/imported/goblin_archer_goblin_archer_albedo.jpg-6ceeb2718277940433eaa380c0190a09.s3tc.ctex", "res://.godot/imported/goblin_archer_goblin_archer_albedo.jpg-6ceeb2718277940433eaa380c0190a09.etc2.ctex"]
+dest_files=["res://.godot/imported/goblin_archer_goblin_archer_albedo.jpg-6ceeb2718277940433eaa380c0190a09.ctex"]
 
 [params]
 
-compress/mode=2
+compress/mode=1
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
