@@ -240,3 +240,6 @@ Recommendation: A if the catalog already has a goblin-looking set (check `data/i
 
 **Q5. Relics.** `logic/relics.gd` and `Run.relic_loot` already give boss collectibles in the old flow. Fold them into the boss drop (a 4th reward kind) or leave them out of wave mode (default: left out)?
 Recommendation: leave out until Boss confirms relics stay in the auto-battler.
+
+## 12. Gear drops follow the unlocked map (Boss 2026-11-17)
+Gear that drops is limited by what the player has unlocked, in every map: while the Sand Pyramid (gear level 15) is not open, the goblin map drops only level-1 gear; once it is open, both maps can drop levels 1 and 15; a zone with gear level 25 later adds 25 (data/world/gear_levels.json, logic/gear_levels.gd). Level-1 drops are catalog pieces with the instance id prefix `starter-drop-`. Computed on the authority per player profile (offline sim, journey chest, rooms, party). Boss loot (coins, Goblin Chief set, relics) is unchanged.
