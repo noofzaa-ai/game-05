@@ -358,8 +358,9 @@ func _refresh_bulk(p) -> void:
 		b.text = CardTokens.t("shop_bulk_sure") % [int(plan["count"]), int(plan["total"])] if armed else (CardTokens.t("shop_bulk_line") % [name, int(plan["count"]), int(plan["total"])] if int(plan["count"]) > 0 else "%s · %s" % [name, CardTokens.t("shop_bulk_none")])
 		b.tooltip_text = CardTokens.t("shop_bulk_hint")
 		CarvedLook.chip_button(b, s, armed, not armed)
-		var w := b.size.x if b.size.x > 0.0 else b.custom_minimum_size.x
-		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_SLOT, maxf(w - 16.0 * s, 1.0), CardTokens.HUB_BAD if armed else (CardTokens.HUB_TAB_IDLE if b.disabled else CardTokens.HUB_INK), s, 0, "medium")
+		var w := maxf((_bulk_row.size.x - 12.0 * s) / float(BULK.size()), 40.0)  # a third of the row, minus the plate's caps
+		var ink: Color = CardTokens.HUB_BAD if armed else CardTokens.HUB_INK
+		CardTokens.hub_fit(b, b.text, CardTokens.FONT_CHAR_SLOT, maxf(w - 30.0 * s, 1.0), ink, s, 0, "medium")
 
 
 ## What `key` would sell (logic/shop.gd batch_sellable): {"entries", "count", "total", "ids"}.
