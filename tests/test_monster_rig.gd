@@ -18,7 +18,12 @@ const CLIPS := ["death", "hit", "idle", "run", "shoot", "volley"]
 const EXTRA_JOINTS := ["bandage_upper_L", "bandage_upper_R", "bandage_lower_L", "bandage_lower_R"]
 const LIBRARY_BUDGET := 200 * 1024  ## 6 clips on the 102-joint rig (pilot 195 KB, key tolerance 1.0 degree: 172 KB)
 const MONSTER_BUDGET := 450 * 1024  ## goblin_archer.glb is 560904 bytes
-const TRIANGLE_BUDGET := 4500  ## the request sheet's target (hard limit 6,000); the shipped monster is about 2,100 (simplified)
+const TRIANGLE_BUDGET := 4500  ## the request sheet's target for a NEW monster; the shipped archer is about 2,100 (simplified)
+const MONSTER_TRIANGLE_LIMIT := 5000  ## Boss 2026-11-17: HARD limit for every monster model (goblins and mummies alike)
+const MONSTER_FILE_LIMIT := 450 * 1024  ## the model (without its embedded textures) and each texture
+const MONSTER_JOINT_LIMIT := 110
+const MONSTER_TEXTURE_LIMIT := 1024
+const MONSTER_ROOT := "res://art/monsters"
 
 
 func run(ctx) -> void:
@@ -113,6 +118,84 @@ func run(ctx) -> void:
 			ctx.check("the body is one surface with one material", mesh.mesh.get_surface_count() == 1)
 	ctx.check("the albedo atlas is at most 1024 (%d)" % texture_size, texture_size > 0 and texture_size <= 1024)
 	scene.free()
+	_check_every_monster(ctx)
+
+
+## Every monster model under art/monsters/** (found by walking the folder: a new monster is covered without editing this test),
+## read from the source .glb: triangles <= 5,000, joints <= 110, ONE material on the skinned body, every texture <= 1024 px,
+## the model without its embedded textures <= 450 KB and each texture <= 450 KB.
+func _check_every_monster(ctx) -> void:
+	var files := _glb_files(MONSTER_ROOT)
+	files.sort()
+	ctx.check("the monster folder holds models to check (%d)" % files.size(), files.size() >= 6)
+	for path: String in files:
+		var info := _glb_info(path)
+		var label := path.trim_prefix(MONSTER_ROOT + "/")
+		ctx.check("%s: %d triangles (hard limit %d)" % [label, info.triangles, MONSTER_TRIANGLE_LIMIT], info.triangles <= MONSTER_TRIANGLE_LIMIT)
+		ctx.check("%s: %d joints (limit %d)" % [label, info.joints, MONSTER_JOINT_LIMIT], info.joints <= MONSTER_JOINT_LIMIT)
+		ctx.check("%s: the skinned body has one material (%d)" % [label, info.body_materials], info.body_materials <= 1)
+		ctx.check("%s: textures at most %d px (largest %d)" % [label, MONSTER_TEXTURE_LIMIT, info.max_texture], info.max_texture <= MONSTER_TEXTURE_LIMIT)
+		ctx.check("%s: model without textures %d bytes (limit %d)" % [label, info.model_bytes, MONSTER_FILE_LIMIT], info.model_bytes <= MONSTER_FILE_LIMIT)
+		ctx.check("%s: biggest texture %d bytes (limit %d)" % [label, info.max_texture_bytes, MONSTER_FILE_LIMIT], info.max_texture_bytes <= MONSTER_FILE_LIMIT)
+
+
+static func _glb_files(dir_path: String) -> Array:
+	var out := []
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return out
+	for sub in dir.get_directories():
+		out.append_array(_glb_files(dir_path.path_join(sub)))
+	for file in dir.get_files():
+		if file.ends_with(".glb"):
+			out.append(dir_path.path_join(file))
+	return out
+
+
+## Facts of a source .glb, from its JSON chunk (no import needed): triangles, joints of the biggest skin, materials of the skinned meshes,
+## texture sizes (embedded images and the loose image files next to it) and the model's own bytes without the embedded images.
+static func _glb_info(path: String) -> Dictionary:
+	var bytes := FileAccess.get_file_as_bytes(path)
+	var json_length := bytes.decode_u32(12)
+	var gltf: Dictionary = JSON.parse_string(bytes.slice(20, 20 + json_length).get_string_from_utf8())
+	var info := {"triangles": 0, "joints": 0, "body_materials": 0, "max_texture": 0, "max_texture_bytes": 0, "model_bytes": bytes.size()}
+	var accessors: Array = gltf.get("accessors", [])
+	var body_triangles := 0  # the skinned mesh with the most triangles is the body; its primitives must share one material
+	for mesh in gltf.get("meshes", []):
+		var materials := {}
+		var mesh_triangles := 0
+		var skinned := false
+		for primitive in mesh["primitives"]:
+			var count := int(accessors[int(primitive["indices"])]["count"]) / 3 if primitive.has("indices") else int(accessors[int(primitive["attributes"]["POSITION"])]["count"]) / 3
+			info.triangles += count
+			mesh_triangles += count
+			skinned = skinned or primitive["attributes"].has("JOINTS_0")
+			materials[int(primitive.get("material", -1))] = true
+		if skinned and mesh_triangles > body_triangles:
+			body_triangles = mesh_triangles
+			info.body_materials = materials.size()
+	for skin in gltf.get("skins", []):
+		info.joints = maxi(info.joints, (skin["joints"] as Array).size())
+	var views: Array = gltf.get("bufferViews", [])
+	for image in gltf.get("images", []):
+		if image.has("bufferView"):
+			var size := int(views[int(image["bufferView"])]["byteLength"])
+			info.model_bytes -= size
+			info.max_texture_bytes = maxi(info.max_texture_bytes, size)
+			var picture := Image.new()
+			var start := int(views[int(image["bufferView"])].get("byteOffset", 0))
+			var data := bytes.slice(20 + json_length + 8 + start, 20 + json_length + 8 + start + size)
+			var loaded := picture.load_jpg_from_buffer(data) if str(image.get("mimeType", "")) == "image/jpeg" else picture.load_png_from_buffer(data)
+			if loaded == OK:
+				info.max_texture = maxi(info.max_texture, maxi(picture.get_width(), picture.get_height()))
+	var folder := path.get_base_dir()
+	for file in DirAccess.get_files_at(folder):
+		if file.get_extension() in ["jpg", "jpeg", "png", "webp"] and file.begins_with(path.get_file().get_basename()):
+			var loose := Image.load_from_file(folder.path_join(file))
+			if loose != null:
+				info.max_texture = maxi(info.max_texture, maxi(loose.get_width(), loose.get_height()))
+			info.max_texture_bytes = maxi(info.max_texture_bytes, FileAccess.get_file_as_bytes(folder.path_join(file)).size())
+	return info
 
 
 func _joint_names(path: String) -> Array:
