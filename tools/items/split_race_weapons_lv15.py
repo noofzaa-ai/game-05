@@ -10,21 +10,23 @@ Outputs (like tools/items/split_race_outfits.py WEAPON_DELIVERIES, names with _l
   art/weapons/race_<race>/sword_shield_lv15.glb, shield_lv15.glb, greatsword_lv15.glb, longbow_lv15.glb, magic_lv15.glb
   node renamed "Weapon_<Race> | Sword" / "| Shield" / "| Sword" (greatsword) / "| Bow" / "| Staff" (the labels the client reads)
   art/weapons/race_shared/<delivery>_lv15_<n>.jpg  every texture once, referenced externally (only the textures a file uses)
-Pure glTF surgery (helpers from tools/characters/split_studio05_hair.py): accessors are copied byte for byte, then the SIZE
-CORRECTION below may move the vertices; the script re-reads each output and fails loudly if the rig differs from the Studio
-class bodies, if the joints / weights / UVs / indices / material differ from the source, or if the weapon is bound to other
-bones than the matching MID-tier file (the weighted joints must be the same: RightHand, LeftHand or LeftForeArm).
+Pure glTF surgery (helpers from tools/characters/split_studio05_hair.py): accessors are copied byte for byte (a documented GRIP
+SHIFT below may move the vertices of one file); the script re-reads each output and fails loudly if the rig differs from the
+Studio class bodies, if the joints / weights / UVs / indices / material differ from the source, or if the weapon is bound to
+other bones than the matching MID-tier file (the weighted joints must be the same: RightHand, LeftHand or LeftForeArm).
 
-SIZE CORRECTION (Boss: the level-15 weapons must be as big as the level-1 weapons). The level-1 weapon the game shows is the
-class's own starter weapon (the "| Sword", "| Shield", "| Bow", "| Staff" pieces of art/characters/studio05/v1111/outfits/
-armor_<class>.glb); its length along the main axis is the reference (CLASS_GEAR). The delivered Lv15 weapons are as long as
-the interim MID race files (ratio 1.00) but shorter than the class weapons (sword 0.60, shield 0.73, greatsword 0.94, bow 0.88,
-staff 0.84), so SIZE[(race, file)] = factor = reference length / delivered length, a uniform
-scale about the grip point (the point of the weapon axis nearest to the holding joint; for the shield about the closest point
-to the LeftForeArm joint) applied to POSITION (min / max updated), NORMAL unchanged. `--measure` prints the ratios of length,
-width, thickness and grip position against the MID file of the same race and piece and the table to paste into SIZE.
+SIZE (Boss 2026-11-17): the level-1 weapon a player sees is the MID race weapon (starter-* pieces use the race weapon ids and
+the MID files), and the delivered Lv15 weapons are exactly as long as the MID files (ratio 1.00 in every race and piece), so
+nothing is scaled; widths and thicknesses stay as the Studio delivered them. `--measure` prints the ratios.
+
+GRIP SHIFT: the weapon must be held at the same place as its MID file. Grip position = where the holding joint (RightHand,
+LeftHand, LeftForeArm) projects on the weapon's main axis, as a fraction of the length from the low end (axis direction taken
+from the MID file). Where the Lv15 file differs from the MID file by more than 5% of the length (the staff: 0.44 against
+0.22), the whole weapon is moved along its main axis, about the hand joint, until the grip fraction equals the MID file's:
+GRIP_SHIFT[(race, file)] = the move in units of the weapon length (built by `--measure`, frozen below). Only POSITION (with its
+min / max) changes; joints, weights, UVs, indices, material and rig stay byte-identical.
 Run: python -I tools/items/split_race_weapons_lv15.py            (from the repo root)
-     python -I tools/items/split_race_weapons_lv15.py --measure   (print the size ratios)
+     python -I tools/items/split_race_weapons_lv15.py --measure   (print the ratios and the GRIP_SHIFT table)
 """
 import json
 import os
@@ -46,34 +48,14 @@ DELIVERIES = {
     "longbow_weapons_lv15.glb": ("longbow_weapons_lv15", {"Bow": ("Bow", "longbow_lv15.glb", "longbow.glb", "LeftHand")}),
     "magic_weapons_lv15.glb": ("magic_weapons_lv15", {"Staff": ("Staff", "magic_lv15.glb", "magic.glb", "RightHand")}),
 }
-# the class starter weapons (level 1): file in art/characters/studio05/v1111/outfits/ and the label that marks the piece
-CLASS_GEAR = {"sword_shield_lv15.glb": ("armor_sword_shield.glb", "| Sword"), "shield_lv15.glb": ("armor_sword_shield.glb", "| Shield"),
-              "greatsword_lv15.glb": ("armor_greatsword.glb", "| Sword"), "longbow_lv15.glb": ("armor_longbow.glb", "| Bow"),
-              "magic_lv15.glb": ("armor_magic.glb", "| Staff")}
-# SIZE[(race, file)] = uniform scale about the grip point; built by --measure (see the docstring)
-SIZE = {
-    ('human', 'sword_shield_lv15.glb'): 1.68,
-    ('human', 'shield_lv15.glb'): 1.376,
-    ('viking', 'sword_shield_lv15.glb'): 1.672,
-    ('viking', 'shield_lv15.glb'): 1.612,
-    ('elf', 'sword_shield_lv15.glb'): 1.664,
-    ('elf', 'shield_lv15.glb'): 1.362,
-    ('runeborn', 'sword_shield_lv15.glb'): 1.662,
-    ('runeborn', 'shield_lv15.glb'): 1.387,
-    ('human', 'greatsword_lv15.glb'): 1.067,
-    ('viking', 'greatsword_lv15.glb'): 1.071,
-    ('elf', 'greatsword_lv15.glb'): 1.063,
-    ('runeborn', 'greatsword_lv15.glb'): 1.066,
-    ('human', 'longbow_lv15.glb'): 1.132,
-    ('viking', 'longbow_lv15.glb'): 1.102,
-    ('elf', 'longbow_lv15.glb'): 1.103,
-    ('runeborn', 'longbow_lv15.glb'): 1.103,
-    ('human', 'magic_lv15.glb'): 1.189,
-    ('viking', 'magic_lv15.glb'): 1.171,
-    ('elf', 'magic_lv15.glb'): 1.173,
-    ('runeborn', 'magic_lv15.glb'): 1.187,
+GRIP_SHIFT = {
+    ('human', 'magic_lv15.glb'): 0.215,
+    ('viking', 'magic_lv15.glb'): 0.224,
+    ('elf', 'magic_lv15.glb'): 0.222,
+    ('runeborn', 'magic_lv15.glb'): 0.215,
 }
-TOLERANCE = 0.03
+GRIP_TOLERANCE = 0.05
+LENGTH_TOLERANCE = 0.03
 
 
 def _acc(js, binary, index):
@@ -126,56 +108,34 @@ def bound_joints(js, binary, name):
     return {names[k] for k in np.unique(joints) if weights[joints == k].sum() > 0.05 * total}
 
 
-def main_axis(pos):
-    centre = pos.mean(0)
-    vals, vecs = np.linalg.eigh(np.cov((pos - centre).T))
-    return centre, vecs
-
-
-def shape(js, binary, name, hold):
+def shape(js, binary, name, hold, ref_axis=None):
     """Length (along the main axis), width, thickness, the grip point on the axis as a fraction of the length from the low end,
-    and the distance of the holding joint from the axis; all in the skeleton's bind units."""
+    the distance of the holding joint from the axis, and the axis itself (flipped to point the way of `ref_axis`); all in the
+    skeleton's bind units."""
     pos, _, _ = mesh_arrays(js, binary, name)
     _, jpos = joint_info(js)
-    centre, vecs = main_axis(pos)
+    centre = pos.mean(0)
+    vecs = np.linalg.eigh(np.cov((pos - centre).T))[1]
     axis = vecs[:, 2]
+    if ref_axis is not None and float(axis @ ref_axis) < 0:
+        axis = -axis
     proj = (pos - centre) @ axis
     length = float(proj.max() - proj.min())
     w = (pos - centre) @ vecs[:, 1]
     t = (pos - centre) @ vecs[:, 0]
     gt = float((jpos[hold] - centre) @ axis)
     return {"length": length, "width": float(w.max() - w.min()), "thickness": float(t.max() - t.min()),
-            "grip": (gt - float(proj.min())) / length, "off": float(np.linalg.norm((jpos[hold] - centre) - gt * axis))}
+            "grip": (gt - float(proj.min())) / length, "off": float(np.linalg.norm((jpos[hold] - centre) - gt * axis)), "axis": axis}
 
 
-def class_length(out_file):
-    """Length of the class starter weapon (main axis of all its pieces together) for the Lv15 file `out_file`."""
-    gear, kind = CLASS_GEAR[out_file]
-    js, binary = glb.read_glb(os.path.join(ROOT, "art", "characters", "studio05", "v1111", "outfits", gear))
-    pos = np.concatenate([mesh_arrays(js, binary, n["name"])[0] for n in js["nodes"] if "mesh" in n and kind in n["name"]])
-    centre, vecs = main_axis(pos)
-    proj = (pos - centre) @ vecs[:, 2]
-    return float(proj.max() - proj.min())
-
-
-def grip_point(js, binary, name, hold):
-    """The point of the weapon's main axis nearest to the holding joint."""
-    pos, _, _ = mesh_arrays(js, binary, name)
-    _, jpos = joint_info(js)
-    centre, vecs = main_axis(pos)
-    axis = vecs[:, 2]
-    return centre + axis * float((jpos[hold] - centre) @ axis)
-
-
-def scale_about(js, binary, name, factor, point):
+def translate(js, binary, name, offset):
     node = [n for n in js["nodes"] if n.get("name") == name][0]
     for prim in js["meshes"][node["mesh"]]["primitives"]:
         acc = js["accessors"][prim["attributes"]["POSITION"]]
         view = js["bufferViews"][acc["bufferView"]]
         start = view.get("byteOffset", 0) + acc.get("byteOffset", 0)
         assert view.get("byteStride", 0) in (0, 12)
-        values = np.frombuffer(bytes(binary[start: start + 12 * acc["count"]]), dtype="<f4").reshape(-1, 3).astype(np.float64)
-        values = point + (values - point) * factor
+        values = np.frombuffer(bytes(binary[start: start + 12 * acc["count"]]), dtype="<f4").reshape(-1, 3).astype(np.float64) + offset
         binary[start: start + 12 * acc["count"]] = values.astype("<f4").tobytes()
         acc["min"], acc["max"] = [float(x) for x in values.min(0)], [float(x) for x in values.max(0)]
 
@@ -261,19 +221,18 @@ def main():
                 folder = os.path.join(ROOT, "art", "weapons", "race_" + race)
                 mj, mb = glb.read_glb(os.path.join(folder, mid_file))
                 mid_label = list(glb.meshed(mj))[0]
-                new = shape(part, part_bin, label, hold)
                 old = shape(mj, mb, mid_label, hold)
+                new = shape(part, part_bin, label, hold, old["axis"])
                 if measure:
-                    print("    %-9s %-22s length %.3f vs %.3f = %.3f  width %.3f  thick %.3f  grip at %.2f vs %.2f  off-axis %.3f vs %.3f"
+                    print("    %-9s %-22s length %.3f vs %.3f = %.3f  width %.3f  thick %.3f  grip %.2f vs MID %.2f  off-axis %.3f vs %.3f"
                           % (race, out_file, new["length"], old["length"], new["length"] / old["length"], new["width"] / old["width"],
                              new["thickness"] / old["thickness"], new["grip"], old["grip"], new["off"], old["off"]))
-                    print("              class starter weapon length %.3f: Lv15 is %.3f of it (MID %.3f)" % (
-                        class_length(out_file), new["length"] / class_length(out_file), old["length"] / class_length(out_file)))
-                    table[(race, out_file)] = round(float(class_length(out_file) / new["length"]), 3)
+                    if abs(new["grip"] - old["grip"]) > GRIP_TOLERANCE:
+                        table[(race, out_file)] = round(float(new["grip"] - old["grip"]), 3)
                 part_bin = bytearray(part_bin)
-                factor = SIZE.get((race, out_file), 1.0)
-                if factor != 1.0:
-                    scale_about(part, part_bin, label, factor, grip_point(part, part_bin, label, hold))
+                shift = GRIP_SHIFT.get((race, out_file), 0.0)
+                if shift:
+                    translate(part, part_bin, label, new["axis"] * shift * new["length"])
                 out = os.path.join(folder, out_file)
                 glb.write_glb(out, part, bytes(part_bin))
                 nj, nb = glb.read_glb(out)
@@ -282,19 +241,19 @@ def main():
                 assert attribute_hash(nj, nb, label) == attribute_hash(js, binary, keep), "joints / weights / UVs / indices / material changed"
                 assert bound_joints(nj, nb, label) == bound_joints(mj, mb, mid_label), "%s is bound to %s, the MID file to %s" % (
                     out_file, bound_joints(nj, nb, label), bound_joints(mj, mb, mid_label))
-                if factor == 1.0:
+                if not shift:
                     assert glb.mesh_hash(nj, nb, glb.meshed(nj)[label]) == glb.mesh_hash(js, binary, glb.meshed(js)[keep])
+                final = shape(nj, nb, label, hold, old["axis"])
+                assert abs(final["length"] / old["length"] - 1.0) <= LENGTH_TOLERANCE, "%s: length %.3f of the MID file" % (out_file, final["length"] / old["length"])
+                if not measure:
+                    assert abs(final["grip"] - old["grip"]) <= GRIP_TOLERANCE, "%s: grip %.2f, MID %.2f" % (out_file, final["grip"], old["grip"])
                 total += os.path.getsize(out)
-                final = shape(nj, nb, label, hold)
-                reference = class_length(out_file)
-                if SIZE:
-                    assert abs(final["length"] / reference - 1.0) <= TOLERANCE, "%s: %.3f of the class weapon" % (out_file, final["length"] / reference)
-                print("  %-34s %8d bytes  length %.3f = %.3f of the class weapon (MID file %.3f)  bound to %s" % (
-                    os.path.relpath(out, ROOT), os.path.getsize(out), final["length"], final["length"] / reference, old["length"],
-                    sorted(bound_joints(nj, nb, label))))
+                print("  %-34s %8d bytes  length %.3f = %.3f of the MID file, grip %.2f (MID %.2f)%s  bound to %s" % (
+                    os.path.relpath(out, ROOT), os.path.getsize(out), final["length"], final["length"] / old["length"], final["grip"], old["grip"],
+                    " [shifted %.3f of the length]" % shift if shift else "", sorted(bound_joints(nj, nb, label))))
     print("weapons: %d bytes of GLB" % total)
     if measure:
-        print("SIZE = {")
+        print("GRIP_SHIFT = {")
         for k, v in table.items():
             print("    %r: %r," % (k, v))
         print("}")

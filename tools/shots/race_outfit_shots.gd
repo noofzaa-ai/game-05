@@ -535,7 +535,7 @@ func _weapon_compare() -> void:
 		for race in RACES:
 			if not OS.get_environment("ZORX_RACE").is_empty() and OS.get_environment("ZORX_RACE") != race:
 				continue
-			for look in ["start", "mid", "lv15"]:
+			for look in ["mid", "lv15"]:
 				var looks := {}
 				for slot in SLOTS:
 					looks[slot] = ""

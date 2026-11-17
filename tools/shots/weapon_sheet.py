@@ -1,6 +1,6 @@
 """Review sheets for the level-15 race weapons (frames made by tools/shots/race_outfit_shots.gd ZORX_ONLY=wcompare).
 Run: python -I tools/shots/weapon_sheet.py <out folder>
-Writes <out>/weapons_<class>_<race>.png: a row each for the class starter weapon (level 1), the interim MID race file and the
+Writes <out>/weapons_<class>_<race>.png: a row each for the interim MID race file (what a level-1 card shows) and the
 level-15 file; columns idle front, idle side, run side, skill frame.
 """
 import os
@@ -12,7 +12,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC = os.path.join(ROOT, "build", "race_outfits", "wcompare")
 CLASSES = ["sword_shield", "greatsword", "longbow", "magic"]
 RACES = ["human", "viking", "elf", "runeborn"]
-LOOKS = [("start", "lv1 class weapon"), ("mid", "MID race file"), ("lv15", "lv15")]
+LOOKS = [("mid", "MID (lv1)"), ("lv15", "lv15")]
 POSES = ["idle_front", "idle_side", "run_side", "skill"]
 
 

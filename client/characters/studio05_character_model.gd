@@ -1116,6 +1116,10 @@ func _wear_race_weapon() -> void:
 		_meshes.erase(mesh)
 		_gear_meshes.erase(mesh)
 		_retired.append(mesh.mesh)
+		# Leave the tree NOW: a node that is only queued to free still holds its name, so a race file dressed over another in
+		# the same frame got auto-named meshes ("@MeshInstance3D@19"), weapon_kind() read "" and the class weapon stayed visible.
+		if mesh.get_parent() != null:
+			mesh.get_parent().remove_child(mesh)
 		mesh.queue_free()
 	_race_weapon_meshes.clear()
 	var pieces: Array[MeshInstance3D] = []

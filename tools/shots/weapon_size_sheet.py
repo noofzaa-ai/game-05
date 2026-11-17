@@ -1,5 +1,5 @@
 """Size-overlay sheet of the level-15 race weapons against the level-1 ones, from the bind-pose vertices of the GLB files (no render):
-class starter weapon (red), interim MID race file (green), level-15 file (blue), three views (side z-y, front x-y, top x-z),
+interim MID race file = the level-1 weapon (red), level-15 file (blue), three views (side z-y, front x-y, top x-z),
 one sheet per race x piece. Run: python -I tools/shots/weapon_size_sheet.py <out folder>
 """
 import os
@@ -18,7 +18,7 @@ RACES = ["human", "viking", "elf", "runeborn"]
 FILES = {"sword_shield": "| Sword", "shield": "| Shield", "greatsword": "| Sword", "longbow": "| Bow", "magic": "| Staff"}
 GEAR = {"sword_shield": "armor_sword_shield", "shield": "armor_sword_shield", "greatsword": "armor_greatsword", "longbow": "armor_longbow", "magic": "armor_magic"}
 VIEWS = [("side (z, y)", 2, 1), ("front (x, y)", 0, 1), ("top (x, z)", 0, 2)]
-COLORS = {"class": (220, 60, 60), "mid": (60, 170, 80), "lv15": (60, 90, 230)}
+COLORS = {"mid": (220, 60, 60), "lv15": (60, 90, 230)}
 
 
 def verts(path, kind=None):
@@ -33,8 +33,7 @@ def main():
     size = 420
     for piece, kind in FILES.items():
         for race in RACES:
-            sets = {"class": verts(os.path.join(ROOT, "art", "characters", "studio05", "v1111", "outfits", GEAR[piece] + ".glb"), kind),
-                    "mid": verts(os.path.join(ROOT, "art", "weapons", "race_" + race, piece + ".glb")),
+            sets = {"mid": verts(os.path.join(ROOT, "art", "weapons", "race_" + race, piece + ".glb")),
                     "lv15": verts(os.path.join(ROOT, "art", "weapons", "race_" + race, piece + "_lv15.glb"))}
             sheet = Image.new("RGB", (3 * size, size + 22), (236, 232, 222))
             d = ImageDraw.Draw(sheet)
@@ -49,7 +48,7 @@ def main():
                         px = k * size + 15 + (x - lo[0]) * scale
                         py = 22 + size - 15 - (y - lo[1]) * scale
                         d.ellipse([px - 1.2, py - 1.2, px + 1.2, py + 1.2], fill=COLORS[name])
-            d.text((3 * size - 330, 4), "red: lv1 class weapon  green: MID file  blue: lv15", fill=(20, 20, 20))
+            d.text((3 * size - 330, 4), "red: MID (level 1)  blue: lv15", fill=(20, 20, 20))
             sheet.save(os.path.join(out, "size_%s_%s.png" % (piece, race)))
     print("size sheets in", out)
 

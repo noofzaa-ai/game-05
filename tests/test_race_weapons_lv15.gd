@@ -2,15 +2,17 @@ extends RefCounted
 ## Level-15 race weapons (Boss delivery 2026-11-17, tools/items/split_race_weapons_lv15.py): the race weapon items
 ## (race_<race>_<class>_weapon, req_level 15) and race shields show art/weapons/race_<race>/<file>_lv15.glb (icons
 ## icon-<file>_lv15.png) when they are not starter pieces (instance ids "starter-..."), the MID file is the fallback, and every
-## level-15 weapon is as long as the level-1 weapon the game shows (the class gear's own) within 3%.
+## level-15 weapon is as long as the level-1 weapon the game shows (the MID race file, which starter pieces use) within 3% and is
+## held at the same place along its axis (the holding joint's position on the axis, within 5% of the length).
 const ItemAssets := preload("res://client/item_assets.gd")
 const ItemSystem := preload("res://logic/item_system.gd")
 const RACES := ["human", "viking", "elf", "runeborn"]
 const FILES := ["sword_shield", "shield", "greatsword", "longbow", "magic"]
 const CLASSES := ["sword_shield", "greatsword", "longbow", "magic"]
-const GEAR := {"sword_shield": ["armor_sword_shield", "| Sword"], "shield": ["armor_sword_shield", "| Shield"], "greatsword": ["armor_greatsword", "| Sword"],
-	"longbow": ["armor_longbow", "| Bow"], "magic": ["armor_magic", "| Staff"]}
+const HOLD := {"sword_shield": "mixamorig_RightHand", "shield": "mixamorig_LeftForeArm", "greatsword": "mixamorig_RightHand",
+	"longbow": "mixamorig_LeftHand", "magic": "mixamorig_RightHand"}
 const TOLERANCE := 0.03
+const GRIP_TOLERANCE := 0.05
 
 
 class _Loadout:
@@ -66,13 +68,20 @@ func _chain(ctx, rules, catalog) -> void:
 		and ItemAssets.lv15_weapon("res://art/armor/race_shared/human_shirt.glb").is_empty() and ItemAssets.lv15_weapon("res://art/weapons/race_human/greatsword_lv15.glb").is_empty())
 
 
-## Length along the main axis of all vertices of `pieces` (power iteration on the covariance), bind-pose mesh space.
-func _length(pieces: Array) -> float:
+## {"length", "grip", "axis"} of a weapon scene: the main axis of all its vertices (power iteration on the covariance, bind-pose mesh
+## space, pointing like `ref_axis` when given), the length along it, and where the holding bone projects on it as a fraction of the
+## length from the low end.
+func _shape(root: Node, hold: String, ref_axis: Vector3 = Vector3.ZERO) -> Dictionary:
 	var pts := PackedVector3Array()
-	for m in pieces:
+	for m in root.find_children("*", "MeshInstance3D", true, false):
 		pts.append_array((m as MeshInstance3D).mesh.get_faces())
-	if pts.size() < 10:
-		return 0.0
+	# the holding joint in the vertices' space: the origin of the inverse of the skin's bind pose of that bone
+	var joint := Vector3.ZERO
+	for m in root.find_children("*", "MeshInstance3D", true, false):
+		var skin: Skin = (m as MeshInstance3D).skin
+		for i in skin.get_bind_count():
+			if skin.get_bind_name(i) == hold:
+				joint = skin.get_bind_pose(i).affine_inverse().origin
 	var centre := Vector3.ZERO
 	for p in pts:
 		centre += p
@@ -84,32 +93,34 @@ func _length(pieces: Array) -> float:
 			var d: Vector3 = p - centre
 			next += d * d.dot(axis)
 		axis = next.normalized()
+	if ref_axis != Vector3.ZERO and axis.dot(ref_axis) < 0.0:
+		axis = -axis
 	var lo := 1e9
 	var hi := -1e9
 	for p in pts:
 		var t: float = (p - centre).dot(axis)
 		lo = minf(lo, t)
 		hi = maxf(hi, t)
-	return hi - lo
+	return {"length": hi - lo, "grip": ((joint - centre).dot(axis) - lo) / (hi - lo), "axis": axis}
 
 
 func _size(ctx) -> void:
-	var worst := 0.0
+	var worst_length := 0.0
+	var worst_grip := 0.0
 	var worst_name := ""
 	for file in FILES:
-		var reference_root: Node = (load("res://art/characters/studio05/v1111/outfits/%s.glb" % GEAR[file][0]) as PackedScene).instantiate()
-		var reference := []
-		for m in reference_root.find_children("*", "MeshInstance3D", true, false):
-			if str(m.name).contains(GEAR[file][1]):
-				reference.append(m)
-		var reference_length := _length(reference)
 		for race in RACES:
+			var mid_root: Node = (load("res://art/weapons/race_%s/%s.glb" % [race, file]) as PackedScene).instantiate()
+			var mid := _shape(mid_root, HOLD[file])
 			var root: Node = (load("res://art/weapons/race_%s/%s_lv15.glb" % [race, file]) as PackedScene).instantiate()
-			var length := _length(root.find_children("*", "MeshInstance3D", true, false))
-			var off := absf(length / maxf(reference_length, 0.0001) - 1.0)
-			if off > worst:
-				worst = off
-				worst_name = "%s %s %.3f/%.3f" % [race, file, length, reference_length]
+			var now := _shape(root, HOLD[file], mid["axis"])
+			var off_length := absf(float(now["length"]) / maxf(float(mid["length"]), 0.0001) - 1.0)
+			var off_grip := absf(float(now["grip"]) - float(mid["grip"]))
+			if off_length > worst_length or off_grip > worst_grip:
+				worst_name = "%s %s length %.3f/%.3f grip %.2f/%.2f" % [race, file, now["length"], mid["length"], now["grip"], mid["grip"]]
+			worst_length = maxf(worst_length, off_length)
+			worst_grip = maxf(worst_grip, off_grip)
+			mid_root.free()
 			root.free()
-		reference_root.free()
-	ctx.check("lv15 weapons: every lv15 weapon is as long as the level-1 class weapon within %d%% (worst %.1f%%: %s)" % [int(TOLERANCE * 100), worst * 100.0, worst_name], worst <= TOLERANCE)
+	ctx.check("lv15 weapons: every lv15 weapon is as long as the MID (level-1) file within %d%% (worst %.1f%%) and held at the same place within %d%% of its length (worst %.1f%%; last worst: %s)" % [
+		int(TOLERANCE * 100), worst_length * 100.0, int(GRIP_TOLERANCE * 100), worst_grip * 100.0, worst_name], worst_length <= TOLERANCE and worst_grip <= GRIP_TOLERANCE)
