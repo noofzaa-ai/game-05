@@ -125,6 +125,26 @@ static func level1_forged(item, rules) -> bool:
 	return e.is_empty() or bool(e.get("no_drop", false))
 
 
+## Profile load repair (called from Profile.from_dict before the gear purge): every stash / vault / worn piece for which
+## level1_forged() is true loses the prefix (so the level gate and x1.0 rule no longer exempt it) and is logged. Deterministic
+## and idempotent. Returns the number repaired. RESIDUAL RISK: a level-15 piece that carries the prefix but is a normal
+## droppable catalog id cannot be told from a real level-1 drop by id alone. Online the profile lives on the server (a client
+## cannot edit it); an offline save is the player's own.
+static func repair_forged(p, rules) -> int:
+	var lists: Array = [p.stash.items, p.vault.items] + p.worn_lists()
+	var fixed := 0
+	for list in lists:
+		for item in list:
+			if level1_forged(item, rules):
+				item.id = str(item.id).trim_prefix(LEVEL1_PREFIX)
+				if item.id.is_empty():
+					item.id = "repaired-%d" % fixed
+				fixed += 1
+	if fixed > 0:
+		print("gear_levels: repaired %d forged starter-drop- pieces" % fixed)
+	return fixed
+
+
 ## Data check (tests): every zone has a valid gear level and the levels ascend with the zone order.
 static func problems() -> Array:
 	var out: Array = []

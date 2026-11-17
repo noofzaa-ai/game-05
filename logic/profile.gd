@@ -570,6 +570,7 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 		p.migrations = d["migrations"].duplicate(true)
 	if d.get("migrations_log") is Dictionary:
 		p.migrations_log = preload("res://logic/gear_purge.gd").clean_log(d["migrations_log"])
+	preload("res://logic/gear_levels.gd").repair_forged(p, item_rules)  # Boss 2026-11-17: a crafted starter-drop- id on a never-droppable piece loses its level exemption
 	preload("res://logic/gear_purge.gd").purge(p, item_rules)
 	return p
 

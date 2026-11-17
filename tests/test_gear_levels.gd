@@ -151,6 +151,14 @@ func _forgery(ctx, f: Dictionary) -> void:
 	for kind in ["grant", "create_item", "add_item", "set_item_id"]:
 		refused = refused and not Commands.apply(state, {"type": kind, "item": "starter-drop-x", "id": "starter-drop-x"}, F.rng(1)).get("ok", false)
 	ctx.check("forgery: no command can create an item or set an instance id", refused)
+	var prof = Profile.new_player(rules, f.camp, F.rng(8))
+	prof.stash.add_item(crafted)
+	var ok_drop = ItemSystem.create_item(rules, GL.LEVEL1_PREFIX + "real", "shirt", 0, F.rng(4), "", "armour_longbow_shirt")
+	prof.stash.add_item(ok_drop)
+	var reloaded = Profile.from_dict(prof.to_dict(), rules, f.camp)
+	var ids: Array = reloaded.stash.items.map(func(i): return str(i.id))
+	ctx.check("forgery: profile load strips the prefix of a forged piece, keeps a real level-1 drop %s" % [ids], ids.has("evil") and not ids.has(GL.LEVEL1_PREFIX + "evil") and ids.has(GL.LEVEL1_PREFIX + "real"))
+	ctx.check("forgery: the repair is idempotent", GL.repair_forged(reloaded, rules) == 0)
 	var after = RaceDrops.convert_piece(rules, ItemSystem.create_item(rules, "starter-kit-keep", "shirt", 0, F.rng(1), "", "armour_longbow_shirt"), [], RaceDrops.WAVE, 3, 15)
 	ctx.check("forgery: fit never re-stamps or changes an existing starter piece", after.id == "starter-kit-keep")
 
