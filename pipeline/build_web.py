@@ -27,6 +27,7 @@ def arguments():
     parser.add_argument('--godot-bin', default=os.environ.get('GODOT_BIN', ''), help='Godot executable, or set GODOT_BIN')
     parser.add_argument('--timeout', type=int, default=600, help='Timeout in seconds per Godot step (default: 600)')
     parser.add_argument('--max-file-mb', type=float, default=15, help='Reject files at/above this MiB size; 0 disables the artifact-host limit')
+    parser.add_argument('--no-sw', action='store_true', help='Kill-switch build: play.html unregisters the service worker instead of registering it')
     args = parser.parse_args()
     if args.timeout <= 0 or not math.isfinite(args.max_file_mb) or args.max_file_mb < 0:
         parser.error('timeout must be positive and max-file-mb must be finite and nonnegative')
@@ -92,6 +93,27 @@ def publish(source, name, suffix, destination):
             shutil.copyfileobj(stream, packed)
     return dict(file=filename, bytes=(destination / filename).stat().st_size,
                 raw_bytes=source.stat().st_size, hash=short_hash)
+
+
+PWA_FILES = ('icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png', 'offline.html')
+
+
+def write_pwa(stage, build_id):
+    """PWA files (Add to Home Screen): static icons and offline page copied from tools/web/pwa/, the manifest, and
+    sw.js stamped with the build id. The worker caches none of the game (see tools/web/pwa/sw.js)."""
+    source = ROOT / 'tools/web/pwa'
+    for name in PWA_FILES:
+        shutil.copyfile(source / name, stage / name)
+    manifest = dict(
+        id='/', name='ZORX', short_name='ZORX', description='ZORX - Squad of Four Races',
+        start_url='/?source=pwa', scope='/', display='fullscreen', display_override=['fullscreen', 'standalone'],
+        orientation='landscape', background_color='#1b2333', theme_color='#15171a', lang='th',
+        icons=[dict(src='icon-192.png', sizes='192x192', type='image/png', purpose='any'),
+               dict(src='icon-512.png', sizes='512x512', type='image/png', purpose='any'),
+               dict(src='icon-maskable-512.png', sizes='512x512', type='image/png', purpose='maskable')])
+    (stage / 'manifest.webmanifest').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+    worker = (source / 'sw.js').read_text(encoding='utf-8').replace('__BUILD_ID__', build_id)
+    (stage / 'sw.js').write_text(worker, encoding='utf-8')
 
 
 def package(stage, args):
@@ -162,12 +184,13 @@ def package(stage, args):
     safe_base = json.dumps(args.pack_base, ensure_ascii=True)[1:-1].replace("'", '\\u0027').replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
     substitutions = {**page_files, '__GODOT_CONFIG__': json.dumps(config, separators=(',', ':')),
                      '__SIZE_MB__': str(math.ceil(download / MIB)), '__BUILD_DATE__': built,
-                     '__BUILD_ID__': build_id, '__PACK_BASE__': safe_base,
+                     '__BUILD_ID__': build_id, '__SW_ENABLED__': '0' if args.no_sw else '1', '__PACK_BASE__': safe_base,
                      '__SOURCE_DATE__': metadata['source_date'],
                      '__COMMIT__': metadata['short_commit'] + (' + local changes' if metadata['dirty'] else '')}
     # One pass: user-supplied text cannot become a second template placeholder.
     page = re.sub('|'.join(map(re.escape, substitutions)), lambda m: substitutions[m[0]], page)
     (stage / 'play.html').write_text(page, encoding='utf-8')
+    write_pwa(stage, build_id)
     for filename in ('index.html', 'index.pck', 'index.wasm'):
         (stage / filename).unlink()
     shutil.rmtree(split)
