@@ -167,6 +167,8 @@ static func from_dict(d: Dictionary, rules: ItemRules, camp_data: CampData, play
 	trip.bag = Inventory.from_dict(d["bag"], trip.bag._stack_sizes)
 	if trip.bag == null:
 		return null
+	if player.gear_purge_fresh:  # profile purged on this load: a bag saved before it loses its level-15 drops too (logic/gear_purge.gd)
+		preload("res://logic/gear_purge.gd").purge_bag(player, trip.bag, rules)
 	# A run bag saved before the legacy items were removed (Boss 2026-11-13): its pieces become race pieces of the first
 	# squad card's race (logic/legacy_items.gd; no flag needed, a converted piece is never converted again).
 	var LegacyItems = preload("res://logic/legacy_items.gd")

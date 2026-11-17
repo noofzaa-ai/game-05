@@ -1,0 +1,124 @@
+{
+ "_about": "Mixed inventory with no migrations key (an old save): 3 level-15 drops (purged on load), a tier-up piece, a starter piece and a boss ring (kept). Cards at level 3.",
+ "_remove": [
+  "migrations",
+  "migrations_log"
+ ],
+ "tutorial": {
+  "version": 1,
+  "step": "done",
+  "tour_done": true,
+  "unlock_seen": true
+ },
+ "unlocks": {
+  "magic_runeborn": true,
+  "boss_goblin_base": true
+ },
+ "stash": {
+  "gold": "5000",
+  "items": [
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "drop-lv15-a",
+    "slot": "weapon",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "ATK",
+    "weapon_type": "greatsword",
+    "item_id": "race_viking_greatsword_weapon",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "drop-lv15-b",
+    "slot": "shirt",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "DEF",
+    "weapon_type": "",
+    "item_id": "armour_magic_shirt",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "drop-lv15-c",
+    "slot": "pants",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "HP",
+    "weapon_type": "",
+    "item_id": "armour_longbow_pants",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "tier-up-paid",
+    "slot": "shoes",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "DEF",
+    "weapon_type": "",
+    "item_id": "armour_greatsword_shoes",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "starter-spare",
+    "slot": "armband",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "DEF",
+    "weapon_type": "",
+    "item_id": "armour_longbow_armband",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   },
+   {
+    "v": 1,
+    "stat_scale": 2,
+    "id": "boss-ring",
+    "slot": "ring",
+    "tier": 1,
+    "level": 0,
+    "upgrade_count": 0,
+    "refine_level": 0,
+    "main_stat": "ATK",
+    "weapon_type": "",
+    "item_id": "boss_goblin_chief_ring",
+    "substats": [],
+    "destroyed": false,
+    "durability": "0000000000005940",
+    "max_durability": "0000000000005940"
+   }
+  ]
+ }
+}

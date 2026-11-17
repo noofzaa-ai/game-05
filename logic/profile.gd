@@ -59,6 +59,10 @@ const STARTER_KIT_VERSION := 3
 var beta_kit_version := 0
 ## 2 = the old per-run skill tree was turned into card levels (logic/skill_tree.gd migrate_old_builds, skill-tree.md 5).
 var tree_migration_version := 0
+## One-time migration flags {id: true} and their compact removal logs (logic/gear_purge.gd). A missing key = not run yet.
+var migrations: Dictionary = {}
+var migrations_log: Dictionary = {}
+var gear_purge_fresh := false  ## runtime only: the purge ran during THIS load (Run.from_dict then also purges the saved run bag)
 var bonus_stash_slots := 0
 ## One class card per class, each customised on its own, plus the squad of the next fight (logic/card_deck.gd).
 var card_deck: Dictionary = preload("res://logic/card_deck.gd").initial(preload("res://logic/cosmetic_options.gd").load_default())
@@ -94,6 +98,7 @@ static func new_player(item_rules: ItemRules, camp: CampData, rng: RandomNumberG
 	profile.ensure_starter_shields(item_rules)
 	profile.armor_migration_version = 2
 	profile.legacy_item_version = preload("res://logic/legacy_items.gd").VERSION  # a new player owns no legacy item
+	profile.migrations[preload("res://logic/gear_purge.gd").KEY] = true  # a new player owns no old level-15 drop: never purged later
 	profile.tree_migration_version = 2  # a new player has no old tree to convert
 	profile.tutorial = {"version": 1, "step": "", "tour_done": false, "unlock_seen": false}  # tutorial.md 2: a new account
 	profile.unlocks = {preload("res://logic/unlocks.gd").flag(): false}
@@ -463,7 +468,7 @@ func to_dict() -> Dictionary:
 		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
-		"armor_migration_version": armor_migration_version, "legacy_item_version": legacy_item_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots,
+		"armor_migration_version": armor_migration_version, "legacy_item_version": legacy_item_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots, "migrations": migrations.duplicate(true), "migrations_log": migrations_log.duplicate(true),
 		"card_deck": card_deck.duplicate(true), "tutorial": tutorial.duplicate(true), "unlocks": unlocks.duplicate(true)}
 
 
@@ -560,6 +565,12 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	if p.tree_migration_version < 2:  # once: old per-run tree points become card levels (skill-tree.md 5)
 		preload("res://logic/skill_tree.gd").migrate_old_builds(old_builds, p.card_deck)
 		p.tree_migration_version = 2
+	# Boss 2026-11-17: level-15 gear already dropped is purged once (logic/gear_purge.gd). Last, so refilled starters are sound.
+	if d.get("migrations") is Dictionary:
+		p.migrations = d["migrations"].duplicate(true)
+	if d.get("migrations_log") is Dictionary:
+		p.migrations_log = preload("res://logic/gear_purge.gd").clean_log(d["migrations_log"])
+	preload("res://logic/gear_purge.gd").purge(p, item_rules)
 	return p
 
 
