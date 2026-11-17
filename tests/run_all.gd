@@ -76,6 +76,7 @@ const TEST_FILES := [
 	"res://tests/test_item_catalog.gd",
 	"res://tests/test_combat.gd",
 	"res://tests/test_effects.gd",
+	"res://tests/test_monster_rig.gd",
 	"res://tests/test_monsters.gd",
 	"res://tests/test_projectiles.gd",
 	"res://tests/test_vfx.gd",
@@ -96,6 +97,7 @@ const TEST_FILES := [
 	"res://tests/test_pack_loader.gd",
 	"res://tests/test_ui_import_budget.gd",
 	"res://tests/test_ui_tokens.gd",
+	"res://tests/test_ui_fixes_1117.gd",
 	"res://tests/test_fonts.gd",
 	"res://tests/test_title_backdrop.gd",
 ]
