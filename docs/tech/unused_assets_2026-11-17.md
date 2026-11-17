@@ -13,7 +13,6 @@ the real script, not estimated.
 | 88cb6f8 (= a39980d art, before lv15) | 9.59 | 6.50 | 14.46 | 6.35 | 3.68 | 4.02+0.64 | 13.41 | 1.56+2.08 | 2.46+2.81 | 45.50 | 22.76 | 68.26 |
 | 0569f74 / f8cb6f6 (lv15 armour) | 9.59 | 6.50 | 14.46 | 8.82 | 3.68 | 4.02+0.64 | 13.41 | 1.56+2.08 | 2.46+2.81 | 47.97 | 22.32 | 70.29 |
 | 3c5602f (lv15 weapons) | 9.59 | 6.51 | 14.46 | 8.84 | **21.80** | 4.02+0.64 | 13.41 | 1.56+2.08 | 2.46+2.81 | 66.12 | 22.32 | 88.44 |
-| after this cleanup (scratch build) | 9.59 | 6.49 | 11.97 | 8.84 | 21.80 | 4.02+0.64 | **3.40** | 1.56+2.08 | 2.25+2.58 | 63.62 | 11.87 | 75.49 |
 
 (Boss's "4x -> 6x" is the `weapons` pack: 3.68 -> 21.80 = 5.9x, +18.1 MiB; "another +20" is the same jump. The whole
 first load went 45.5 -> 66.1 MiB, +45%.)
@@ -68,55 +67,42 @@ class armour GLBs and the MID race weapons are still used (starter look and leve
 Per source folder the pack is dominated by: `art/weapons/race_shared` 17.6 MB, `art/characters/studio05` 14.5,
 `art/vfx/class_skills` 12.2, `art/armor/race_shared` 8.9 (raw, before this cleanup).
 
-## 3. Proven unused and deleted (shipped, nothing references them)
+## 3. Result of the unused-file hunt: almost nothing is safely deletable
 
-Method (`tools/assets/unused_assets.py`, listing from `tools/web/pack_files.gd` = every entry of the real exported pack):
-reachability from project.godot, every script/scene/data file under client/ logic/ scenes/ data/ addons/, the export
-include list, `ext_resource` paths (relative ones too), `uid://` ids, `.import` params, binary `.res/.scn` strings, glb
-`uri` entries (percent-decoded), and the dynamic names: `{race}`/`%s` templates against data/races, the `_lv15` variants
-of `client/item_assets.gd`, `class_skill/<id>` and status VFX scenes, folder prefixes. Tests, tools and docs are NOT
-roots. 1,201 shipped files had no direct reference; the ones loaded by name at run time (hub UI art
-`card_tokens.gd` prefixes `card_frame_`, `hub_icon_`, `hub_sys_`, `frame_`, `window_`, `icon_`, `scene/<class>_far|mid|near`)
-were checked by hand and kept. The rest are loose textures that sit next to a GLB which already EMBEDS the same image
-(checked in the GLB json: `bufferView` images, no `uri`), left over from the VFX/character deliveries.
+The finder (`tools/assets/unused_assets.py`, with `tools/web/pack_files.gd` listing every entry of the real exported
+pack) first reported 1,107 shipped files nobody names: 1,088 loose `effect_* phase N.png` frames beside the VFX
+`effect.glb`, 20 outfit/hair `*_texture_pbr_20250901*` textures, a race head overlay png and two painted leaf pngs.
+I deleted them, and the full suite passed except for status VFX and race head checks; a windowed fight then logged
+"Failed loading resource ... armor_sword_shield.glb". **All of these are loaded**: Godot's glb importer stores the
+extracted textures as external references inside the imported `.scn` (the `.import` and the GLB itself never name
+them), so a file reference graph cannot see them. Everything was restored (commits b1762a6 then 88f1292 and the next
+one); the windowed fight shows the squad, goblins, VFX and HUD and the log has no missing-resource lines.
+Lesson recorded: do not delete a texture sitting next to a GLB without reimporting and loading the GLB; the unit tests
+do NOT catch a missing outfit texture (the outfit failure only showed in a real run). No guard test was added for that
+reason (a "loose texture" rule would be wrong).
 
-| Group | files (+.import) | pack cost | why unused | risk |
-|---|---|---|---|---|
-| `art/vfx/class_skills/*/effect_* phase N.png` | 904 (+904) | ~9.2 MB raw | the 16 skill `effect.glb` embed all frames; the `.tscn` loads only effect.glb + effect_player.gd | none: glb has no `uri`, tests + windowed shot |
-| `art/vfx/status/*/effect_* phase N*.png` | 184 (+184) | ~2.1 MB raw | same, 11 status loops | none |
-| `art/characters/studio05/v1111/{outfits,hair}/*_texture_pbr_20250901*.jpg|png` | 20 (+20) | ~3.9 MB raw | outfit/hair GLBs embed their textures | none: GLBs unchanged |
-| `.../v1111/race/race_heads_Viking War Paint and Right Temple Tattoo.png` | 1 (+1) | 0.02 MB | `race_heads.glb` embeds it | none |
-| `art/maps/verdant_reach/props/{bush,oak}_painted_leaves.png` | 2 (+2) | 0.3 MB | no GLB/script names them | low |
+What was really removed:
+- 66 tracked `.import` files whose source is gone (`art/skills/**`, `art/skill_system/**`): repo only, no download gain.
+- `art/props/goblin_base/meshes/drum.res` is excluded from the web export (98 KB raw; map builder output no scene uses;
+  file kept). The same for `mummy_kit.glb` was dropped on PO's order: all mummy/pyramid assets are KEEP (mummy map planned).
 
-Result: 1,107 files (+1,107 `.import`), 17.05 MB on disk, first load -2.50 MiB (characters), battle download -10.45 MiB
-(vfx 13.41 -> 3.40, stages -0.2), total per device 88.44 -> 75.49 MiB (-12.95).
-Also removed from git: 66 tracked `.import` files whose source is gone (`art/skills/**`, `art/skill_system/**`; the import
-step had already deleted them from the working tree).
+Measured after (real script, scratch copy): 88.44 -> 85.67 MiB total (-2.8 incl. the 3 wrongly deleted groups, so the
+true cleanup saving is under 0.1 MiB). Do not quote -13 MiB.
 
-Added to `export_presets.cfg` exclude (kept in the repo, not shipped): `art/props/mummy_tomb/mummy_kit.glb` (146 KB; the
-Blender arena tool `tools/blender/prepare_mummy_kit.py` needs it, the game never loads it) and
-`art/props/goblin_base/meshes/drum.res` (98 KB; map builder output no scene uses).
+Verified unused-nothing list (kept): race_shared starter files (fallback chain), MID race weapons (level-1 look), old
+class armour GLBs (class starter outfit), `art/ui/**` by-name art (`card_tokens.gd` prefixes), audio (all in data/audio),
+fonts, shaders. Ash Steel armour, mid-tier armour and 4K textures: none exist in the shipped set.
 
-## 4. Kept on purpose
+## 4. Needs a decision (not changed)
 
-- `art/armor/race_shared/<race>_<slot>.glb` + icons (interim starter files): used as the fallback chain for `starter-*`
-  pieces and when a lv15 file is missing. MID race weapons: still the level-1 look. Old class armour GLBs
-  (`v1111/outfits/armor_<class>.glb`): the class starter outfit. All referenced.
-- `art/ui/**` dynamic-name art (see 3), `art/weapons/blade.glb`, `art/ui/diamond.svg` (tiny, weak evidence).
-- Audio: every `.ogg` is named in data/audio. No fonts or shaders were unreferenced.
+1. lv15 atlas encoding (section 5): the only large saving available.
+2. `weapons` pack (21.8 MiB) is `boot` stage: every player downloads all lv15 weapon textures before the card screen,
+   although a new player owns no level-15 weapon. A) re-encode (saves ~15 MiB), B) move lv15 weapons to the background
+   `battle` stage, C) both.
+3. Loose monster textures in `art/monsters/` look duplicated but, by the lesson above, are probably referenced by the
+   imported scenes: left alone (also monster-rigger's area).
 
-## 5. Probably unused, needs a decision (not deleted)
-
-1. Loose monster textures in `art/monsters/` (`goblin_{archer,chief,knight,mage}_*_albedo.jpg`, `goblin_goblin_albedo.jpg`,
-   `mummy_texture_pbr_20250901*.png`: 8 files, about 2.9 MB in the monsters packs per device). The same kind of embedded
-   duplicate as above, but `art/monsters` belongs to monster-rigger's current work. Options: A) monster-rigger deletes
-   them in their next commit (recommended), B) I delete them after their pilot lands, C) leave.
-2. Race outfit / weapon atlases at lv15 (see 6): decide lossy or not.
-3. `weapons` pack (21.8 MiB) is `boot` stage: every player downloads all lv15 weapon textures before the card screen,
-   although a new player owns no level-15 weapon. Options: A) re-encode (6, saves ~15 MiB), B) move lv15 weapons to the
-   background (`battle`) stage, C) both.
-
-## 6. Size reductions that are not deletions (numbers only, import settings NOT changed)
+## 5. Size reductions that are not deletions (numbers only, import settings NOT changed)
 
 lv15 atlases are lossless WebP today. Measured with libwebp (the encoder Godot uses) against the lossless pixels:
 
@@ -128,22 +114,14 @@ lv15 atlases are lossless WebP today. Measured with libwebp (the encoder Godot u
 | greatsword_weapons_lv15_0 | 2.6 MB | 0.38 | 0.55 | 1.1 | 7 | n/a | n/a |
 | race_wardrobe_atlas_lv15 | 4.1 MB | 0.49 | 0.74 | 1.5 | 12 | +0.07/+0.07/-0.01 | 1.8 |
 
-Setting those 5 files to Lossy 0.92 would take them from 18.9 MB to about 3.5 MB: **about -15 MiB on the first load**
-(66 -> ~51 MiB after the cleanup; with q85 -16.5 MiB). The mean colour bias is under 0.2 of 255 and the hue deviation under
-2 of 256, so the earlier "colour shift" is not from libwebp at q0.92; it needs a windowed before/after shot of the
-lv15 set to be sure (the previous test may have used the default q0.7 and mipmaps). The metal masks (5 weapon PNG +
-1 armour PNG, 1.5 + 0.4 MB) are NOT worth it: lossy gives p99.9 errors of 40+ on a mask the shader thresholds, and the
-saving is only about 1.3 MB: keep lossless.
-Other options: 2048 -> 1024 `size_limit` (like the MID atlases) is -75% but visibly softer on the staff/bow detail
-(not measured on screen); VRAM compression would double the packs (s3tc + etc2) for no download gain.
-Decision for the Boss: lossy q0.92 for the 5 lv15 atlases (recommended, after a windowed colour check I can run), or keep.
+Lossy 0.92 for these 5 files: 18.9 MB -> about 3.5 MB, **about -15 MiB on the first load** (85.7 -> ~70 MiB total; q85
+-16.5). Mean colour bias under 0.2 of 255, hue deviation under 2 of 256, so the earlier "colour shift" is not libwebp at
+q0.92; a windowed before/after of the lv15 set is still needed (the earlier test may have used the default q0.7).
+Metal masks (5 weapon PNG + 1 armour PNG, 1.9 MB): keep lossless (p99.9 error 40+ on a thresholded mask, saving ~1.3 MB).
+`size_limit` 2048 -> 1024 is -75% but softer (not measured on screen). VRAM compression would double the packs.
 
-## 7. Guard against regrowth
+## 6. Tools
 
-`tests/test_unused_assets.gd` fails when a new file appears in the shipped art folders that nothing references (loose
-`effect_* phase N.png` next to a GLB, `*_texture_pbr_*` next to a character GLB), with an allowlist for the documented
-by-name art. Run `python tools/assets/unused_assets.py --shipped <pack_files.tsv>` for the full report.
-
-## 8. Verification
-
-(see the end of this file, filled in after the deletion commit)
+`python tools/assets/unused_assets.py --shipped <tsv>` (reference graph, report only; treat its output as candidates, see 3).
+`godot --headless --path . --script res://tools/web/pack_files.gd -- <index.pck> tools/web/pack_layout.json <out.tsv>`
+lists every file of an exported pack with size and pack (export first with `--export-release Web`).
