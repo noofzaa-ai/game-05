@@ -125,3 +125,21 @@ Metal masks (5 weapon PNG + 1 armour PNG, 1.9 MB): keep lossless (p99.9 error 40
 `python tools/assets/unused_assets.py --shipped <tsv>` (reference graph, report only; treat its output as candidates, see 3).
 `godot --headless --path . --script res://tools/web/pack_files.gd -- <index.pck> tools/web/pack_layout.json <out.tsv>`
 lists every file of an exported pack with size and pack (export first with `--export-release Web`).
+
+## 7. Boss/PO decision applied: lv15 atlases lossy 0.92 (2026-11-17)
+
+The 4 weapon atlases and the armour atlas (`*_weapons_lv15_0.jpg`, `race_wardrobe_atlas_lv15.jpg`) are now
+`compress/mode=1`, `lossy_quality=0.92` (metal masks stay lossless). Atlas bytes in the pack: ss 3.46 -> 0.61 MB,
+greatsword 2.99 -> 0.59, longbow 4.38 -> 0.85, magic 4.36 -> 0.86, armour 4.33 -> 0.85 (18.5 -> 3.8 MB).
+Colour check (windowed, same camera, before/after): armour lv15 for all 4 races (72 shots: desktop, phone, close-ups,
+440 px card) and race_outfit_shots `wcompare` (128 shots: every class x race, MID and lv15 weapon, idle/run/skill).
+Mean RGB difference of figure pixels 0.03 (worst image 0.6, that one is a blink); mean-colour shift in metal, gold and
+dark regions at or under the run-to-run noise (0.04 to 0.9 of 255); lv15 weapon diff amplified 16x shows no banding or
+blocks; the only differing pixels are eye blinks. 0.95 was not needed.
+Web build (real script, scratch copy): first load 66.12 -> 51.25 MiB, battle 22.32 -> 22.25, total 88.44 -> 73.49 MiB
+(weapons pack 21.80 -> 10.23, items 8.84 -> 5.53).
+Option 2 (lv15 weapons to a background pack) would need: a `weapons_lv15` pack in `tools/web/pack_layout.json` with
+`stage: battle`, `art/weapons/race_*/*_lv15.glb` and `race_shared/*_lv15*` split out of `weapons`; the loader
+(`client/pack_fetcher.gd`) already waits for battle packs before FIGHT, and `client/item_assets.gd` already falls back to
+the MID file when `ResourceLoader.exists` is false, so the look would show MID until the pack lands and then change
+(re-dress after the fetch signal); the Equipment screen icons are in `items`/`weapons` and must stay boot.
