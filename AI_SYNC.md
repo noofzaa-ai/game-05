@@ -193,3 +193,4 @@
 - 2026-11-16 PO: staging 3f81502 (web) + 46e03fb (rooms/profiles): goblin base 9 waves, world map (11 zones, boss flags), Magic unlock on the Chief; verified live (map, 9-wave run ~3 min)
 - 2026-11-16 PO: staging release boss loot v1 (Goblin Chief set/relic/coin, coin shop 500, relic socket UI, icons), repair 0-durability fix, refine 250, UI label fixes
 - 2026-11-16 gameplay-programmer: equipment TIER-UP replaces the substat Upgrade (command `tier_up`, logic/tier_up.gd, data/items/tier_up.json 2500 gold flat, Blacksmith button; `upgrade` -> deprecated, equipment_tuning upgrade.enabled=false, logic/upgrade.gd removed); tests/test_tier_up.gd
+- 2026-11-17 gameplay-programmer: one-time level-15 gear PURGE (Boss order): logic/gear_purge.gd, hooked at the end of Profile.from_dict (profile.migrations.gear_purge_lv15_v1 + migrations_log, cap 200), keeps starter-*/tier-up-*; tests/test_gear_purge.gd, fixture lv15_drops_bag; not pushed
