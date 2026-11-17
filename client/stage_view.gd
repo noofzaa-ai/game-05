@@ -483,6 +483,7 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 		view.monster_tint = definition["model_tint"]
 		view.monster_standin_clips = definition["standin_clips"]
 		view.monster_nock_mesh = definition["nock_mesh"]
+		view.monster_hips_scale = float(definition.get("hips_scale", 1.0))
 	add_child(view)
 	_views[id] = view
 	if is_player and party_status_shown(_session.is_coop(), _is_auto_fight()):

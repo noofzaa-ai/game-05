@@ -2,39 +2,83 @@ extends SceneTree
 ## Builds a monster clip library (skeleton-only .glb + .json of marks) out of the player's longbow clips.
 ## Only the clips a bow monster needs are copied, each baked at 30 fps and key-reduced; the player's files are only read.
 ##   godot --headless --path . --script res://tools/monsters/build_clip_library.gd
-## Outputs:
-##   art/animations/monster_clips_bow.glb/.json        shared library, the player's proportions (any bow monster)
-##   art/animations/monster_clips_bow_short.glb/.json  pilot: the same clips with the Hips travel rescaled for legs at LEG_SCALE
+##   godot --headless --path . --script res://tools/monsters/build_clip_library.gd -- bow [sword_shield greatsword magic] [--out=res://dir/] [--tol=0.35]
+## Output: art/animations/monster_clips_<stance>.glb + .json (the player's proportions). Leg proportions of a monster are NOT baked in:
+## the monster's data field hips_scale rescales the Hips translation at runtime (client/animation_set.gd).
 ## Then re-import (godot --headless --path . --import).
 
 const Rig := preload("res://tools/monsters/rig_common.gd")
 
-const LEG_SCALE := 0.75  ## the short-legs pilot variant (must match build_mummy_archer.gd)
-## clip name -> segments [donor clip, from, to, speed] played one after the other (speed 2 = twice as fast).
-## shoot  = the player's own two-part shot (class_skills.json heartseeker: lb_draw_arrow then lb_aim_recoil, released at 0.18 s of the recoil).
-## volley = the same with a slow draw, so it reads as the telegraphed move.
-const CLIPS := {
-	"idle": {"segs": [["lb_idle_01", 0.0, 5.1, 1.0]], "loop": true},
-	"run": {"segs": [["lb_run_forward", 0.0, 0.8833333, 1.0]], "loop": true, "strip_travel": true},  ## the donor's run drifts 0.947 rig units forward through the Hips: stripped, the speed goes to the marks
-	"shoot": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.35], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
-	"volley": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.0], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
-	"hit": {"segs": [["lb_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
-	"death": {"segs": [["lb_death_forward_01", 0.0, 3.1833, 1.0]], "loop": false},
+## Libraries, one per weapon stance (a monster loads ONE: its own idle/run/hit/death + the attacks of its stance).
+## Each is a skeleton-only glb named monster_clips_<stance>.glb with a .json of marks next to it.
+## Clip entries: clip name -> {"segs": [[donor clip, from, to, speed]...] played one after the other (speed 2 = twice as fast)}.
+## Only "bow" is shipped today (art/animations). The others are measured (sizes in docs/art/monster_requests/mummy_archer.md) and are
+## built when the first monster of that stance exists: check the clip choices with the animator before shipping.
+## bow shoot  = the player's own two-part shot (class_skills.json heartseeker: lb_draw_arrow then lb_aim_recoil, released at 0.18 s of the recoil).
+## bow volley = the same with a slow draw, so it reads as the telegraphed move.
+const LIBRARIES := {
+	"bow": {"donor": "res://art/characters/studio05/split/body_longbow.glb", "clips": {
+		"idle": {"segs": [["lb_idle_01", 0.0, 5.1, 1.0]], "loop": true},
+		"run": {"segs": [["lb_run_forward", 0.0, 0.8833333, 1.0]], "loop": true, "strip_travel": true},  ## the donor's run drifts 0.947 rig units forward through the Hips: stripped, the speed goes to the marks
+		"shoot": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.35], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
+		"volley": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.0], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
+		"hit": {"segs": [["lb_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
+		"death": {"segs": [["lb_death_forward_01", 0.0, 3.1833, 1.0]], "loop": false},
+	}},
+	"sword_shield": {"donor": "res://art/characters/studio05/split/body_sword_shield.glb", "clips": {
+		"idle": {"segs": [["idle_4", 0.0, 6.375, 1.0]], "loop": true},
+		"run": {"segs": [["run_2", 0.0, 1.375, 1.0]], "loop": true, "strip_travel": true},
+		"attack_1": {"segs": [["attack_2", 0.0, 1.6, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.7, "strike_src": 0.9},
+		"attack_2": {"segs": [["slash", 0.0, 1.6, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.7, "strike_src": 0.9},
+		"hit": {"segs": [["impact", 0.0, 0.62, 1.0]], "loop": false},
+		"death": {"segs": [["death", 0.0, 3.0, 1.0]], "loop": false},
+	}},
+	"greatsword": {"donor": "res://art/characters/studio05/split/body_greatsword.glb", "clips": {
+		"idle": {"segs": [["gs_idle", 0.0, 2.0166, 1.0]], "loop": true},
+		"run": {"segs": [["gs_run", 0.0, 0.7333, 1.0]], "loop": true, "strip_travel": true},
+		"attack_1": {"segs": [["gs_attack", 0.0, 1.2, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.5, "strike_src": 0.7},
+		"attack_2": {"segs": [["gs_slash", 0.0, 1.28, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.5, "strike_src": 0.7},
+		"hit": {"segs": [["gs_impact", 0.0, 0.62, 1.0]], "loop": false},
+		"death": {"segs": [["gs_death", 0.0, 2.4166, 1.0]], "loop": false},
+	}},
+	"magic": {"donor": "res://art/characters/studio05/split/body_magic.glb", "clips": {
+		"idle": {"segs": [["mg_lite_idle", 0.0, 1.8833, 1.0]], "loop": true},
+		"run": {"segs": [["mg_lite_run_forward", 0.0, 0.75, 1.0]], "loop": true, "strip_travel": true},
+		"cast": {"segs": [["mg_lite_1h_magic_attack_01", 0.0, 2.3, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.1, "strike_src": 1.3},
+		"cast_aoe": {"segs": [["mg_lite_2h_magic_area_attack_02", 0.0, 3.2666, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.6, "strike_src": 1.9},
+		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
+		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
+	}},
 }
 ## Optional sway tracks for the loose-bandage bones of a mummy (name -> parent donor bone). A monster without them ignores the tracks.
 const EXTRA_BONES := {"bandage_upper_L": "mixamorig_LeftArm", "bandage_upper_R": "mixamorig_RightArm", "bandage_lower_L": "mixamorig_LeftForeArm", "bandage_lower_R": "mixamorig_RightForeArm"}
 
 
 func _init() -> void:
+	var args := OS.get_cmdline_user_args()  ## [stance...] [--out=res://dir/] [--tol=<degrees>]
+	var out_dir := "res://art/animations/"
+	var stances := []
+	for arg in args:
+		if arg.begins_with("--out="):
+			out_dir = arg.substr(6)
+		elif arg.begins_with("--tol="):
+			Rig.rot_tol = deg_to_rad(float(arg.substr(6)))
+		else:
+			stances.append(arg)
+	if stances.is_empty():
+		stances = ["bow"]
 	var donor := Rig.load_donor()
 	var src_skeleton := Rig.donor_skeleton(donor)
-	var player := Rig.donor_player(donor)
-	_build("monster_clips_bow", donor, src_skeleton, player, 1.0)
-	_build("monster_clips_bow_short", donor, src_skeleton, player, LEG_SCALE)
+	DirAccess.make_dir_recursive_absolute(out_dir)
+	for stance in stances:
+		var spec: Dictionary = LIBRARIES[stance]
+		var stance_donor := (load(spec["donor"]) as PackedScene).instantiate()
+		_build("monster_clips_" + stance, out_dir, spec["clips"], src_skeleton, Rig.donor_player(stance_donor))
+		stance_donor.free()
 	quit()
 
 
-func _build(file_name: String, donor: Node, src_skeleton: Skeleton3D, player: AnimationPlayer, hips_scale: float) -> void:
+func _build(file_name: String, out_dir: String, clips: Dictionary, src_skeleton: Skeleton3D, player: AnimationPlayer) -> void:
 	var root := Node3D.new()
 	root.name = "monster_clips"
 	var rig := Node3D.new()
@@ -76,8 +120,8 @@ func _build(file_name: String, donor: Node, src_skeleton: Skeleton3D, player: An
 	var library := AnimationLibrary.new()
 	var marks := {}
 	var bones_used := {}
-	for clip in CLIPS:
-		var built := _compose(clip, CLIPS[clip], player, hips_scale)
+	for clip in clips:
+		var built := _compose(clip, clips[clip], player)
 		var animation: Animation = built["animation"]
 		library.add_animation(clip, animation)
 		marks[clip] = built["marks"]
@@ -90,12 +134,12 @@ func _build(file_name: String, donor: Node, src_skeleton: Skeleton3D, player: An
 	var document := GLTFDocument.new()
 	var err := document.append_from_scene(root, state)
 	if err == OK:
-		err = document.write_to_filesystem(state, "res://art/animations/%s.glb" % file_name)
+		err = document.write_to_filesystem(state, out_dir + file_name + ".glb")
 	if err == OK:
-		Rig.minify_glb("res://art/animations/%s.glb" % file_name)
+		Rig.minify_glb(out_dir + file_name + ".glb")
 	print(file_name, ": export err=", err, " bones animated=", bones_used.size())
 	var json_text := JSON.stringify(marks, "  ")
-	var file := FileAccess.open("res://art/animations/%s.json" % file_name, FileAccess.WRITE)
+	var file := FileAccess.open(out_dir + file_name + ".json", FileAccess.WRITE)
 	file.store_string(json_text + "\n")
 	file.close()
 	root.free()
@@ -108,7 +152,7 @@ static func _wanted(bone: String) -> bool:
 
 
 ## One clip: the segments baked at 30 fps in order; Hips travel scaled; the optional tail sway added to idle/run.
-func _compose(clip: String, spec: Dictionary, player: AnimationPlayer, hips_scale: float) -> Dictionary:
+func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictionary:
 	var segs: Array = spec["segs"]
 	var starts := []
 	var total := 0.0
@@ -154,10 +198,10 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer, hips_scal
 			rot_t.append(time)
 			rot_v.append(anim.rotation_track_interpolate(tr["rot"], src_time))
 			if has_pos:
-				pos_v.append((anim.position_track_interpolate(tr["pos"], src_time) as Vector3) * hips_scale)
+				pos_v.append((anim.position_track_interpolate(tr["pos"], src_time) as Vector3))
 		if has_pos and spec.get("strip_travel", false):
 			var drift: float = (pos_v[-1] as Vector3).z - (pos_v[0] as Vector3).z
-			travel = drift / hips_scale
+			travel = drift
 			for i in pos_v.size():
 				var v: Vector3 = pos_v[i]
 				v.z -= drift * float(rot_t[i]) / total

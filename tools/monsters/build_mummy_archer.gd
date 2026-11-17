@@ -2,8 +2,8 @@ extends SceneTree
 ## Pilot: the existing mummy mesh (art/monsters/mummy/mummy.glb, its own 28-bone rig) re-bound to the shared 102-joint
 ## studio05 rig, plus the player's longbow, string and a nocked arrow (all skinned to the same rig).
 ##   godot --headless --path . --script res://tools/monsters/build_mummy_archer.gd
-## Writes art/monsters/mummy_archer/mummy_archer.glb (shared clip library proportions: big head only) and
-## mummy_archer_short.glb (big head + legs at LEG_SCALE, for art/animations/monster_clips_bow_short.glb).
+## Writes art/monsters/mummy_archer/mummy_archer.glb (shared clip library proportions: big head only). `-- --legs=0.75 --name=x --out=res://dir/`
+## builds a short-legs TEST variant (play it with hips_scale 0.75 on the same library; not shipped).
 ## The player's files are only read. Re-import afterwards (godot --headless --path . --import).
 ##
 ## How the mummy mesh is put on the donor rig (no donor joint is removed):
@@ -17,10 +17,10 @@ extends SceneTree
 const Rig := preload("res://tools/monsters/rig_common.gd")
 const MUMMY := "res://art/monsters/mummy/mummy.glb"
 const ALBEDO := "res://art/monsters/mummy/mummy_texture_pbr_20250901.png"
-const OUT_DIR := "res://art/monsters/mummy_archer/"
-const LEG_SCALE := 0.75
+var out_dir := "res://art/monsters/mummy_archer/"
 const HEAD_SCALE := 1.3
 const TEXTURE_SIZE := 512
+const SIMPLIFY := true  ## body and bow take the first LOD of the importer's mesh simplifier (about half the triangles), vertices compacted
 
 const MAP := {
 	"root": "Root", "hips": "mixamorig_Hips", "spine": "mixamorig_Spine", "chest": "mixamorig_Spine2", "neck": "mixamorig_Neck", "head": "mixamorig_Head",
@@ -41,8 +41,16 @@ const SWING := {"clavicle.L": "upper_arm.L", "upper_arm.L": "forearm.L", "forear
 
 
 func _init() -> void:
-	_build("mummy_archer", 1.0)
-	_build("mummy_archer_short", LEG_SCALE)
+	var legs := 1.0
+	var file_name := "mummy_archer"
+	for arg in OS.get_cmdline_user_args():  ## [--legs=0.75] [--name=mummy_archer_short] [--out=res://dir/]  (a short-legs TEST variant: not shipped)
+		if arg.begins_with("--legs="):
+			legs = float(arg.substr(7))
+		elif arg.begins_with("--name="):
+			file_name = arg.substr(7)
+		elif arg.begins_with("--out="):
+			out_dir = arg.substr(6)
+	_build(file_name, legs)
 	quit()
 
 
@@ -198,7 +206,12 @@ func _build(file_name: String, leg_scale: float) -> void:
 		new_skin.add_named_bind(names[i], (new_global[names[i]] as Transform3D).affine_inverse())
 
 	# ---- the meshes
+	var bone_rests := []
+	for i in skeleton.get_bone_count():
+		bone_rests.append(new_global[names[i]])
 	var mummy_surface := _surface(final_pos, final_n, arrays[Mesh.ARRAY_TEX_UV], infl, name_to_index, arrays[Mesh.ARRAY_INDEX])
+	if SIMPLIFY:
+		mummy_surface = _simplify(mummy_surface, bone_rests)
 	var mummy_mesh := ArrayMesh.new()
 	mummy_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mummy_surface)
 	var texture_image := Image.load_from_file(ALBEDO)
@@ -219,7 +232,11 @@ func _build(file_name: String, leg_scale: float) -> void:
 	_add_mesh(skeleton, "Monster_MummyArcher_Body", mummy_mesh, new_skin)
 
 	# the player's longbow and string (weighted to the donor rig) moved to the new rest pose
-	var armor := (load(Rig.DONOR_ARMOR) as PackedScene).instantiate()
+	# read straight from the file: its textures are embedded (the importer's extracted copies are not kept in the repo)
+	var armor_state := GLTFState.new()
+	var armor_doc := GLTFDocument.new()
+	armor_doc.append_from_file(ProjectSettings.globalize_path(Rig.DONOR_ARMOR), armor_state)
+	var armor := armor_doc.generate_scene(armor_state)
 	var armor_sk := Rig.donor_skeleton(armor)
 	var armor_global := _globals(armor_sk)
 	for piece in [["L 01 | Bow", "Monster_MummyArcher_Bow", Color(0.32, 0.2, 0.1)], ["L 17 | Bow string", "Monster_MummyArcher_BowString", Color(0.85, 0.8, 0.65)]]:
@@ -242,6 +259,8 @@ func _build(file_name: String, leg_scale: float) -> void:
 				if w <= 0.0:
 					continue
 				var bname := String(mi.skin.get_bind_name(ab[v * aper + k]))
+				if bname == "":  # a skin read straight from the file binds by bone index
+					bname = armor_sk.get_bone_name(mi.skin.get_bind_bone(ab[v * aper + k]))
 				var gd: Transform3D = armor_global[armor_sk.find_bone(bname)]
 				var rest_pos: Vector3 = gd * (mi.skin.get_bind_pose(ab[v * aper + k]) * av[v])
 				var move: Transform3D = (new_global[bname] as Transform3D) * (donor_global[donor_index[bname]] as Transform3D).affine_inverse()
@@ -254,7 +273,10 @@ func _build(file_name: String, leg_scale: float) -> void:
 			out_n.append(n.normalized())
 			out_infl.append(list)
 		var piece_mesh := ArrayMesh.new()
-		piece_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, _surface(out_v, out_n, a[Mesh.ARRAY_TEX_UV], out_infl, name_to_index, a[Mesh.ARRAY_INDEX]))
+		var piece_surface := _surface(out_v, out_n, a[Mesh.ARRAY_TEX_UV], out_infl, name_to_index, a[Mesh.ARRAY_INDEX])
+		if SIMPLIFY and piece[1] == "Monster_MummyArcher_Bow":
+			piece_surface = _simplify(piece_surface, bone_rests)
+		piece_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, piece_surface)
 		var flat := StandardMaterial3D.new()
 		flat.albedo_color = piece[2]
 		flat.roughness = 0.85
@@ -284,17 +306,17 @@ func _build(file_name: String, leg_scale: float) -> void:
 	for child in skeleton.get_children():
 		var m := (child as MeshInstance3D).mesh
 		tris += (m.surface_get_arrays(0)[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
-	DirAccess.make_dir_recursive_absolute(OUT_DIR)
+	DirAccess.make_dir_recursive_absolute(out_dir)
 	var state := GLTFState.new()
 	var document := GLTFDocument.new()
 	document.image_format = "JPEG"
 	document.lossy_quality = 0.8
 	var err := document.append_from_scene(root, state)
 	if err == OK:
-		err = document.write_to_filesystem(state, OUT_DIR + file_name + ".glb")
+		err = document.write_to_filesystem(state, out_dir + file_name + ".glb")
 	if err == OK:
-		Rig.minify_glb(OUT_DIR + file_name + ".glb")
-	print(file_name, ": export err=", err, " tris=", tris, " joints=", skeleton.get_bone_count(), " body bounds y=", _max_y(final_pos), " bytes=", FileAccess.get_file_as_bytes(OUT_DIR + file_name + ".glb").size())
+		Rig.minify_glb(out_dir + file_name + ".glb")
+	print(file_name, ": export err=", err, " tris=", tris, " joints=", skeleton.get_bone_count(), " body bounds y=", _max_y(final_pos), " bytes=", FileAccess.get_file_as_bytes(out_dir + file_name + ".glb").size())
 	root.free()
 	donor.free()
 	mummy_root.free()
@@ -361,6 +383,48 @@ static func _surface(pos: PackedVector3Array, nor: PackedVector3Array, uv: Varia
 	arrays[Mesh.ARRAY_WEIGHTS] = weights
 	arrays[Mesh.ARRAY_INDEX] = index
 	return arrays
+
+
+## The importer's quadric simplifier (the one that makes mesh LODs, aware of normals, UV seams and skinning): the first LOD's
+## triangles kept, the vertices nothing uses dropped. Keeps the skin weights of the surviving vertices.
+static func _simplify(arrays: Array, bone_rests: Array) -> Array:
+	var importer := ImporterMesh.new()
+	importer.add_surface(Mesh.PRIMITIVE_TRIANGLES, arrays, [], {}, null, "s")
+	importer.generate_lods(25.0, 25.0, bone_rests)
+	if importer.get_surface_lod_count(0) == 0:
+		return arrays
+	var kept: PackedInt32Array = importer.get_surface_lod_indices(0, 0)
+	var remap := {}
+	var order := []
+	for index in kept:
+		if not remap.has(index):
+			remap[index] = order.size()
+			order.append(index)
+	var out := []
+	out.resize(Mesh.ARRAY_MAX)
+	for slot in [Mesh.ARRAY_VERTEX, Mesh.ARRAY_NORMAL, Mesh.ARRAY_TEX_UV]:
+		if arrays[slot] == null:
+			continue
+		var source = arrays[slot]
+		var packed = source.duplicate()
+		packed.resize(order.size())
+		for i in order.size():
+			packed[i] = source[order[i]]
+		out[slot] = packed
+	var bones := PackedInt32Array()
+	var weights := PackedFloat32Array()
+	for index in order:
+		for k in 4:
+			bones.append((arrays[Mesh.ARRAY_BONES] as PackedInt32Array)[index * 4 + k])
+			weights.append((arrays[Mesh.ARRAY_WEIGHTS] as PackedFloat32Array)[index * 4 + k])
+	out[Mesh.ARRAY_BONES] = bones
+	out[Mesh.ARRAY_WEIGHTS] = weights
+	var indices := PackedInt32Array()
+	for index in kept:
+		indices.append(remap[index])
+	out[Mesh.ARRAY_INDEX] = indices
+	print("  simplified ", (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3, " -> ", indices.size() / 3, " triangles, vertices ", (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).size(), " -> ", order.size())
+	return out
 
 
 static func _add_mesh(skeleton: Skeleton3D, name: String, mesh: ArrayMesh, skin: Skin) -> void:

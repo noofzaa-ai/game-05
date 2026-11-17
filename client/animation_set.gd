@@ -84,9 +84,13 @@ func attack_time(clip: String, phase: String, amount: float) -> float:
 	return 0.0
 
 
+const HIPS_BONE := "mixamorig_Hips"
+
 ## The bones the clip moves, with their values at `time` (seconds; wrapped for looping clips):
 ## {bone name: {"rotation": Quaternion, "position": Vector3 (only for bones with a position track)}}.
-func sample(clip: String, time: float, bone_prefix: String = "") -> Dictionary:
+## `hips_scale` (monster data "hips_scale", default 1.0) multiplies the Hips translation, so a monster with
+## shorter or longer legs than the player's rig keeps its feet on the floor with the SAME shared clip library.
+func sample(clip: String, time: float, bone_prefix: String = "", hips_scale: float = 1.0) -> Dictionary:
 	var entry: Dictionary = _clips[clip]
 	var animation: Animation = entry["animation"]
 	var total := animation.length
@@ -99,7 +103,10 @@ func sample(clip: String, time: float, bone_prefix: String = "") -> Dictionary:
 		if not bone_prefix.is_empty() and not str(bone).begins_with(bone_prefix): continue
 		if not pose.has(bone):
 			pose[bone] = {}
-		pose[bone]["position"] = animation.position_track_interpolate(entry["position"][bone], time)
+		var position: Vector3 = animation.position_track_interpolate(entry["position"][bone], time)
+		if hips_scale != 1.0 and bone == HIPS_BONE:
+			position *= hips_scale
+		pose[bone]["position"] = position
 	return pose
 
 

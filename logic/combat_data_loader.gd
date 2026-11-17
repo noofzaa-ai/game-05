@@ -818,6 +818,10 @@ static func _parse_enemies(root: Dictionary, data: CombatData) -> void:
 		var run_clip_speed := float(raw.get("run_clip_speed", 0.0))
 		if run_clip_speed < 0.0:
 			data.errors.append("%s.run_clip_speed must not be negative (0 = use the default monster run reference)" % label)
+		var hips_scale := float(raw.get("hips_scale", 1.0))
+		if hips_scale < 0.4 or hips_scale > 2.5:
+			data.errors.append("%s.hips_scale must be between 0.4 and 2.5 (1 = the shared clip library's leg length)" % label)
+			hips_scale = 1.0
 		data.enemies[str(id)] = {
 			"role": str(raw.get("role", "")),
 			"style": style,
@@ -830,6 +834,7 @@ static func _parse_enemies(root: Dictionary, data: CombatData) -> void:
 			"model_tint": Color(float(tint[0]), float(tint[1]), float(tint[2])),
 			"look": look_label,  ## which entry of "looks" is drawn ("" = the plain fields)
 			"standin_clips": standin_clips,  ## move id -> clip played while the set lacks the move's own clip
+			"hips_scale": hips_scale,  ## multiplies the Hips translation of the (shared) clip library: legs shorter (<1) or longer (>1) than the player rig's
 			"nock_mesh": str(raw.get("nock_mesh", "")),  ## a model mesh shown only while a firing move winds up
 			"clips": clips,
 			"stats": data.full_stats(stats),

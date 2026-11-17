@@ -65,6 +65,7 @@ var monster_tint := Color.WHITE
 var monster_standin_clips: Dictionary = {}
 ## A mesh of the model (by name) shown only while a firing move winds up: the archer's nocked arrow.
 var monster_nock_mesh := ""
+var monster_hips_scale := 1.0  ## leg-proportion factor for the shared clip library (combat.json hips_scale)
 ## Show a floating health bar above the head (enemies; the player has the HUD).
 var show_health_bar := false
 ## The bar's look, resolved from data by client/enemy_bars.gd (frame shape, colours, the notch mark).
@@ -575,9 +576,9 @@ func _apply_clip() -> void:
 	if _anim_clip == "" or _skeleton == null:
 		return
 	_skeleton.reset_bone_poses()
-	var pose: Dictionary = _anim.sample(_anim_clip, _anim_time)
+	var pose: Dictionary = _anim.sample(_anim_clip, _anim_time, "", monster_hips_scale)
 	if _blend < 1.0 and _from_clip != "" and _anim.has_clip(_from_clip):
-		pose = _blend_poses(_anim.sample(_from_clip, _from_time), pose, _blend)
+		pose = _blend_poses(_anim.sample(_from_clip, _from_time, "", monster_hips_scale), pose, _blend)
 	for bone in pose:
 		var index: int = _bones.get(bone, -1)
 		if index < 0:

@@ -5,8 +5,8 @@ extends RefCounted
 const DONOR := "res://art/characters/studio05/split/body_longbow.glb"
 const DONOR_ARMOR := "res://art/characters/studio05/v1111/outfits/armor_longbow.glb"
 const FPS := 30.0
-const ROT_TOL := deg_to_rad(0.35)  ## a key within this angle of the interpolation of its neighbours is dropped
-const POS_TOL := 0.0005  ## metres (rig units)
+static var rot_tol := deg_to_rad(0.35)  ## a key within this angle of the interpolation of its neighbours is dropped
+static var pos_tol := 0.0005  ## metres (rig units)
 
 
 static func load_donor() -> Node:
@@ -64,12 +64,12 @@ static func reduce_keys(times: Array, values: Array, is_rotation: bool) -> Array
 			var w: float = (times[mid] - times[start]) / (times[end] - times[start])
 			if is_rotation:
 				var q: Quaternion = (values[start] as Quaternion).slerp(values[end], w)
-				if q.angle_to(values[mid]) > ROT_TOL:
+				if q.angle_to(values[mid]) > rot_tol:
 					ok = false
 					break
 			else:
 				var p: Vector3 = (values[start] as Vector3).lerp(values[end], w)
-				if p.distance_to(values[mid]) > POS_TOL:
+				if p.distance_to(values[mid]) > pos_tol:
 					ok = false
 					break
 		if not ok:

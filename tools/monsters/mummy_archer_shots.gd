@@ -5,9 +5,9 @@ extends SceneTree
 ##   godot --path . --script res://tools/monsters/mummy_archer_shots.gd -- <out_dir>
 
 const MODEL := "res://art/monsters/mummy_archer/mummy_archer.glb"
-const MODEL_SHORT := "res://art/monsters/mummy_archer/mummy_archer_short.glb"
+## a short-legs TEST model: godot --headless --path . --script res://tools/monsters/build_mummy_archer.gd -- --legs=0.75 --name=mummy_archer_short --out=res://build/monster_probe/
+const MODEL_SHORT := "res://build/monster_probe/mummy_archer_short.glb"
 const LIB := "res://art/animations/monster_clips_bow.glb"
-const LIB_SHORT := "res://art/animations/monster_clips_bow_short.glb"
 const CROP := Vector2i(380, 520)
 
 var _stage: Node
@@ -49,17 +49,18 @@ func _initialize() -> void:
 	await _strip(view, out, "run_back", 6, view.monster_animation().length("run"), spot, "back")
 	view.queue_free()
 
-	# short legs on the library made for the player's legs (the hips float) and on the rescaled one (feet on the ground)
-	var wrong := _view(MODEL_SHORT, LIB, 1.8 * 0.93, spot)
-	await _frames(5)
-	await _strip(wrong, out, "short_legs_shared_library_run", 6, 0.88, spot, "three_quarter", "run")
-	await _strip(wrong, out, "short_legs_shared_library_idle", 4, 3.0, spot, "three_quarter", "idle")
-	wrong.queue_free()
-	var right := _view(MODEL_SHORT, LIB_SHORT, 1.8 * 0.93, spot)
-	await _frames(5)
-	await _strip(right, out, "short_legs_own_library_run", 6, 0.88, spot, "three_quarter", "run")
-	await _strip(right, out, "short_legs_own_library_idle", 4, 3.0, spot, "three_quarter", "idle")
-	await _strip(right, out, "short_legs_own_library_shoot", 7, right.monster_animation().length("shoot"), spot, "three_quarter", "shoot")
+	# short legs (x0.75) on the shared library: the hips float without hips_scale, feet on the floor with it
+	if ResourceLoader.exists(MODEL_SHORT):
+		var wrong := _view(MODEL_SHORT, LIB, 1.8 * 0.93, spot)
+		await _frames(5)
+		await _strip(wrong, out, "short_legs_hips_scale_1_run", 6, 0.88, spot, "three_quarter", "run")
+		await _strip(wrong, out, "short_legs_hips_scale_1_idle", 4, 3.0, spot, "three_quarter", "idle")
+		wrong.queue_free()
+		var right := _view(MODEL_SHORT, LIB, 1.8 * 0.93, spot, 0.75)
+		await _frames(5)
+		await _strip(right, out, "short_legs_hips_scale_075_run", 6, 0.88, spot, "three_quarter", "run")
+		await _strip(right, out, "short_legs_hips_scale_075_idle", 4, 3.0, spot, "three_quarter", "idle")
+		await _strip(right, out, "short_legs_hips_scale_075_shoot", 7, right.monster_animation().length("shoot"), spot, "three_quarter", "shoot")
 	quit()
 
 
@@ -68,7 +69,7 @@ func _frames(n: int) -> void:
 		await process_frame
 
 
-func _view(model: String, library: String, height: float, spot: Vector3) -> Node3D:
+func _view(model: String, library: String, height: float, spot: Vector3, hips_scale := 1.0) -> Node3D:
 	var definition: Dictionary = _stage.get("_session")._sim.combat.enemies["goblin_archer"]
 	var view := Node3D.new()
 	view.set_script(load("res://client/fighter_view.gd"))
@@ -78,6 +79,7 @@ func _view(model: String, library: String, height: float, spot: Vector3) -> Node
 	view.monster_animations_path = library
 	view.monster_clips = {}
 	view.monster_nock_mesh = "arrow"
+	view.monster_hips_scale = hips_scale
 	view.monster_tint = Color.WHITE
 	view.ink_outline = true
 	_stage.add_child(view)
