@@ -6,6 +6,7 @@ extends SceneTree
 
 const TEST_FILES := [
 	"res://tests/test_beta_cleanup.gd",
+	"res://tests/test_asset_size.gd",
 	"res://tests/test_snapshot_cache.gd",
 	"res://tests/test_feedback_panel.gd",
 	"res://tests/test_party_online.gd",
@@ -25,6 +26,7 @@ const TEST_FILES := [
 	"res://tests/test_tutorial_ui.gd",
 	"res://tests/test_event_stream.gd",
 	"res://tests/test_world_zones.gd",
+	"res://tests/test_mummy_pyramid.gd",
 	"res://tests/test_boss_loot.gd",
 	"res://tests/test_tier_up.gd",
 	"res://tests/test_localstack_fixtures.gd",

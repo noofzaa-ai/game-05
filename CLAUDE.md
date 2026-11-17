@@ -16,6 +16,9 @@ repo นี้มีหลายฝั่ง/หลาย AI ทำพร้อ�
 ## ทดสอบ (ต้องผ่านทั้งหมดก่อนบอกว่างานเสร็จ)
 `godot --headless --path . --script res://tests/run_all.gd` (godot อยู่ใน WinGet packages ถ้า PATH ยังไม่รู้จัก ใช้ไฟล์ `Godot_v*_console.exe`; บน Mac ใช้ `/Applications/Godot.app/Contents/MacOS/Godot`)
 - หลังเพิ่ม/เปลี่ยนไฟล์โมเดลหรือภาพ รัน `godot --headless --path . --import` ก่อนหนึ่งครั้ง
+- **ขนาดดาวน์โหลด (Boss สั่ง 2026-11-17):** กฎอยู่ที่ `.claude/rules/asset-size.md` ห้าม import พื้นผิวสีแบบ lossless (`compress/mode=0`) ตรวจโดย `tests/test_asset_size.gd`
+- เหตุการณ์: เกียร์ lv15 ทำให้โหลดครั้งแรกบนเว็บโต 45.5 -> 66.1 MiB (+20 MB) เพราะ atlas 5 ไฟล์ import แบบ lossless ไม่มีใครวัด
+- ทุกงานที่เพิ่มหรือเปลี่ยนแอสเซ็ต ต้องรายงานส่วนต่างขนาดแพ็กเว็บ (first load/total เป็น MiB ก่อน-หลัง) ไว้ในรายงาน
 - รันด้วยตัวจับเวลา (ตัวรันทดสอบเคยค้างเมื่อไฟล์ทดสอบเสีย) และดู stderr ด้วย
 - ตรวจภาพจริงได้โดยรัน Godot แบบมีหน้าต่าง (ไม่ใส่ --headless) ด้วยสคริปต์ที่บันทึก viewport เป็น PNG
 
