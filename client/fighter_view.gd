@@ -238,6 +238,7 @@ func _process(delta: float) -> void:
 		_fade(delta)
 		return
 	_clock += delta
+	_face_camera()
 	if interpolate and _sim_seen:
 		position = display_position(_sim_prev, _sim_now, Engine.get_physics_interpolation_fraction())
 	_flash = maxf(0.0, _flash - delta)
@@ -693,12 +694,21 @@ func _build_health_bar() -> void:
 	_build_bar_mark(mark, outline_color, frame_color)
 
 
-## One unshaded, billboarded, depth-free material for a bar part. `priority` orders back/frame/fill.
+## Turns the whole floating bar to the camera as one piece (fill, frame and cap keep their layout at any camera yaw).
+func _face_camera() -> void:
+	if _bar_root == null or not _bar_root.visible or not is_inside_tree():
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera != null:
+		_bar_root.global_basis = camera.global_basis
+
+
+## One unshaded, depth-free material for a bar part (it faces the camera through its root). `priority` orders back/frame/fill.
 func _bar_material(color: Color, priority: int) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	material.billboard_keep_scale = true
+	# No per-quad billboard: each quad would turn on its own while the offsets (fill anchor, cap) stay in world axes, so the
+	# fill slid out of its frame when the camera turned. The whole bar root faces the camera instead (_face_camera).
 	material.albedo_color = color
 	material.render_priority = priority
 	material.no_depth_test = true

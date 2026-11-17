@@ -126,7 +126,9 @@ func _accept_metadata(state:Dictionary)->void:
  if profile==null or ownership:
   var decoded=Profile.from_dict(profiles[_player_id],rules,camp)
   if decoded==null:_net_note("profile_decode_failed",{"tick":state.tick});return
-  if profile==null:profile=decoded
+  if profile==null:
+   adopt_cards(decoded,card_source,profiles[_player_id],rules)  # the snapshot has no cards (see online_session.card_source)
+   profile=decoded
   else:copy_fields(decoded,profile,["stash","vault","loadout","camp_level","facility_levels","farm","appearance","name","created","beta_kit_version","diamonds", "mall_owned", "bonus_stash_slots"])
   var trip=Run.from_dict(state.meta.run,rules,camp,profile)
   if trip==null:_net_note("run_decode_failed",{"tick":state.tick});return

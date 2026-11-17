@@ -86,6 +86,26 @@ func run(ctx) -> void:
 	var low_color: Color = view._bar_fill_material.albedo_color
 	var base_color: Color = view.bar_style["fill"]
 	ctx.check("a near-dead goblin bar leaves its base fill colour (low-HP warning)", not low_color.is_equal_approx(base_color))
+	# 7. The bar stays in one piece when the camera turns (Boss 2026-11-17: the fill slid out of its frame): seen from the
+	#    camera, the fill's left edge sits at -BAR_WIDTH/2 and the frame is centred on the bar, at every camera yaw.
+	var camera := Camera3D.new()
+	ctx.root.add_child(camera)
+	camera.current = true
+	camera.global_position = Vector3(0.0, 8.0, 8.0)
+	view.global_position = Vector3(2.0, 0.0, -3.0)
+	var worst := 0.0
+	for yaw in [0.0, 45.0, 90.0, 135.0, 180.0, 270.0]:
+		camera.rotation_degrees = Vector3(-50.0, yaw, 0.0)
+		view._face_camera()
+		var to_camera: Transform3D = camera.global_transform.affine_inverse()
+		var fill_left: Vector3 = to_camera * (view._bar_fill.global_transform * Vector3(0.0, 0.0, 0.0))
+		var root_centre: Vector3 = to_camera * view._bar_root.global_position
+		var frame_centre: Vector3 = to_camera * view._bar_frame.global_position
+		worst = maxf(worst, absf((fill_left.x - root_centre.x) + FighterView.BAR_WIDTH * 0.5))
+		worst = maxf(worst, absf(fill_left.y - root_centre.y))
+		worst = maxf(worst, (frame_centre - root_centre).length())
+	ctx.check("the floating bar keeps fill and frame aligned at every camera yaw (worst error %.4f m)" % worst, worst < 0.001)
+	camera.queue_free()
 	view.queue_free()
 	await ctx.process_frame
 

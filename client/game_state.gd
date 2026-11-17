@@ -297,6 +297,7 @@ func attach_online_room(service, ticket: Dictionary):
 	if account_session == null: return null
 	var session_script = load("res://client/session/netfox_session.gd")
 	remote_session = session_script.new(null, item_rules, camp_data, loot_data)
+	remote_session.card_source = account_session.profile  # the room snapshot carries no cards (online_session.card_source)
 	remote_session.party_left.connect(_online_party_left)
 	remote_session.state_ready.connect(_online_stage_ready)
 	remote_session.stage_changed.connect(_online_stage_ready)

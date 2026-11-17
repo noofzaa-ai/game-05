@@ -13,6 +13,10 @@ const ULTS := "res://logic/race_ultimates.gd"
 const RACE_CONDITIONS: Array[String] = ["enemies_near", "boss_near", "elite_near", "self_hurt", "boss_telegraph", "ally_hurt"]
 const ATTACKED_RADIUS := 3.0  ## an enemy this close to an ally counts as attacking it
 const BACKLINE: Array[String] = ["magic", "longbow"]
+## Skill kinds that ClassSkills.cast refuses ("no_target") without a choice "point". A race condition gives none by
+## itself, so _race_point adds one; before, Starfall's boss_near rule was picked, refused, and picked again every tick:
+## the Magic card froze for the whole boss fight (Boss bug 2026-11-17, tests/test_skill_point_choice.gd).
+const POINT_KINDS: Array[String] = ["delayed_circle", "leap_slam", "remote_circle"]
 
 
 ## The ready skill to cast now (lowest priority number first, then slot order) -> {"skill", "choice"}, or {}.
@@ -69,6 +73,8 @@ static func matches(sim, id: int, skill: String, rule: Dictionary, target: int) 
 	if RACE_CONDITIONS.has(kind):
 		if load(PILOT).use_matches(sim, id, rule):
 			out = {"target": target}
+			if POINT_KINDS.has(str(SkillData.load_default().skill(skill).get("kind", ""))):
+				out = _race_point(sim, id, rule, target)  # a point skill (Starfall on boss_near) needs a point, or the cast is refused
 	else:
 		match kind:
 			"target_within":
@@ -186,6 +192,21 @@ static func matches(sim, id: int, skill: String, rule: Dictionary, target: int) 
 		if matches(sim, id, skill, extra, target).is_empty():
 			return {}
 	return out
+
+
+## The choice for a point skill picked by a race condition: boss_near / elite_near / boss_telegraph aim at the nearest
+## boss (elite) inside the rule's radius, any other condition at the pilot's target. {} when there is no enemy to aim
+## at (the skill is then not picked, instead of being refused by the cast).
+static func _race_point(sim, id: int, rule: Dictionary, target: int) -> Dictionary:
+	var kind := str(rule.get("if", ""))
+	var aim := target if _enemy(sim, id, target) else -1
+	if kind in ["boss_near", "elite_near", "boss_telegraph"]:
+		var radius := float(rule.get("radius", 4.0 if kind == "boss_telegraph" else 5.0))
+		var wanted: Callable = (func(e): return Skills.is_elite(sim.fighters[e])) if kind == "elite_near" else (func(e): return Skills.is_boss(sim.fighters[e]))
+		aim = _closest_of(sim, id, _enemies(sim, id).filter(func(e): return wanted.call(e) and _d(sim, id, e) <= radius))
+	if aim < 0:
+		return {}
+	return {"target": aim, "point": sim.bodies[aim].position}
 
 
 ## The `peel` enemy (GDD 3.2 S1): the enemy nearest the most-hurt other ally that stands within ATTACKED_RADIUS of that

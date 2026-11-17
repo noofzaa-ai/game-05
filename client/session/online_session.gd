@@ -58,6 +58,23 @@ var close_history: Array = []
 var input_trace=preload("res://client/session/input_trace.gd").new()
 var _collision_map_id := ""
 var _collision_world: SimWorld
+## The signed-in account's profile (GameState.attach_online_room). The room snapshot's own profile
+## (server/rooms/snapshot_cache.gd profile()) carries no card_deck / card_gear, so a profile decoded from it alone
+## rebuilds the cards from scratch: starter races and looks, levels 1, and a starter kit that skips every starter
+## id the stash still holds, leaving body slots EMPTY (Boss 2026-11-17: a hero with no shoes / no shirt in battle).
+var card_source = null
+
+## Gives `target` (a profile decoded from a room snapshot) the cards of `source` when the snapshot `raw` has none.
+static func adopt_cards(target, source, raw: Dictionary, item_rules) -> void:
+	if target == null or source == null or raw.has("card_deck") or raw.has("card_gear"):
+		return
+	target.card_deck = source.card_deck.duplicate(true)
+	var gear := {}
+	for card in source.card_gear:
+		var worn = source.card_gear[card].get("loadout")
+		var copy = preload("res://logic/loadout.gd").from_dict(worn.to_dict(), item_rules) if worn != null else null
+		gear[card] = {"loadout": copy if copy != null else worn}
+	target.card_gear = gear
 
 func _init(player = null, item_rules = null, camp_data = null, loot_data = null) -> void:
 	super(player, item_rules, camp_data, loot_data)
