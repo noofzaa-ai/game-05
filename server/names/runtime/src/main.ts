@@ -115,7 +115,7 @@ var nameClaim: nkruntime.RpcFunction = function(ctx, _logger, nk, payload): stri
 
 function protectNameCollections(objects: {collection?: string}[]): void {
     for (var i = 0; i < objects.length; i++) {
-        if (objects[i].collection === GUEST_BUDGET || objects[i].collection === SECURITY_EVENTS || objects[i].collection === ADMIN_METRICS || objects[i].collection === PLAZA_REGISTRY || objects[i].collection === FEEDBACK_COLLECTION || objects[i].collection === FEEDBACK_QUOTA || objects[i].collection === PRESENCE_COLLECTION || objects[i].collection === ADMIN_AUDIT || objects[i].collection === NAME_REGISTRY || objects[i].collection === CHARACTER_COLLECTION || objects[i].collection === PROFILE_COLLECTION || objects[i].collection === RPC_BUDGET_COLLECTION || objects[i].collection === ROOM_COLLECTION || objects[i].collection === TICKET_COLLECTION) {
+        if (objects[i].collection === GUEST_BUDGET || objects[i].collection === SECURITY_EVENTS || objects[i].collection === ADMIN_METRICS || objects[i].collection === "zorx_plaza_v1" || objects[i].collection === FEEDBACK_COLLECTION || objects[i].collection === FEEDBACK_QUOTA || objects[i].collection === PRESENCE_COLLECTION || objects[i].collection === ADMIN_AUDIT || objects[i].collection === NAME_REGISTRY || objects[i].collection === CHARACTER_COLLECTION || objects[i].collection === PROFILE_COLLECTION || objects[i].collection === RPC_BUDGET_COLLECTION || objects[i].collection === ROOM_COLLECTION || objects[i].collection === TICKET_COLLECTION) {
             throw {code: 7, message: "Authoritative name storage is server-only"};
         }
     }
@@ -159,8 +159,6 @@ var InitModule: nkruntime.InitModule = function(ctx, logger, nk, initializer): v
     initializer.registerRpc("zorx_room_cancel_v1", roomCancelGateway);
     initializer.registerRpc("zorx_room_resume_v1", roomResumeGateway);
     initializer.registerRpc("zorx_social_v1", socialGateway);
-    initializer.registerRpc("zorx_plaza_v1", plazaDiscover);
-    initializer.registerMatch("zorx_plaza", {matchInit:plazaInit,matchJoinAttempt:plazaJoinAttempt,matchJoin:plazaJoin,matchLeave:plazaLeave,matchLoop:plazaLoop,matchTerminate:plazaTerminate,matchSignal:plazaSignal});
     initializer.registerRpc("zorx_online_status_v1", onlineStatusGateway);
     initializer.registerRpc("zorx_maintenance_admin_v1", maintenanceAdmin);
     initializer.registerRpc("zorx_admin_v1", adminGateway);

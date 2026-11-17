@@ -42,11 +42,6 @@ func _select(screen: Vector2) -> void:
 	var resident = hub._adventurer
 	if is_instance_valid(resident) and resident.offer_ready:
 		candidates.append({"id":"companion:"+resident.offer_seed,"name":resident.entry.name,"position":resident.body.position,"match":""})
-	for child in hub.get_children():
-		if child.get_script() != null and child.get_script().resource_path == "res://client/online/plaza_client.gd":
-			for uid in child.actors:
-				var actor: Dictionary = child.actors[uid]
-				candidates.append({"id":uid,"name":child.descriptions.get(uid,{}).get("name","Player"),"position":actor.model.global_position,"match":child.match_id})
 	var best := {};var distance := 52.0
 	for candidate in candidates:
 		var at: Vector3 = candidate.position

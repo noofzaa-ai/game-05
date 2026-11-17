@@ -22,7 +22,6 @@
     "src/admin.ts",
     "src/feedback.ts",
     "src/diagnostics.ts",
-    "src/plaza.ts",
     "src/admin_metrics.ts",
     "src/security_events.ts"
   ]

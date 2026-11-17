@@ -234,6 +234,6 @@ func _call_sites(ctx, tree: SceneTree, rules) -> void:
 	hub.queue_free()
 	await tree.process_frame
 
-	# stage_view.gd loot popups / battle looks and online/plaza_client.gd need a running stage or a plaza socket: not built here.
+	# stage_view.gd loot popups / battle looks need a running stage: not built here.
 	# The loot popups and stage looks now go through ItemAssets.card_race (checked above); the plaza payload carries no card deck.
 	gs.profile = saved_profile
