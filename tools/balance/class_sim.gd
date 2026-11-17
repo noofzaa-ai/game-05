@@ -35,6 +35,7 @@ var combat
 var no_skills := false  ## "noskills": detach the skill-build skills (measurement only, to see what they add)
 var gear_tier := -1  ## "gear=N": every card also wears a tier-N piece in each open slot (0 normal .. 3 legendary); measurement only
 var card_level := 1  ## "level=L": every card is level L and spends its points greedily down its class, race and combo nodes
+var journey_id := "goblin_waves"  ## "journey=mummy_waves": measure another wave journey (data/journeys/<id>.json) with the same pilots
 var power_override := {}  ## "power1=X" / "power2=X" ...: wave_power_by_squad[N-1] for this measurement only (sweeps without editing data)
 
 
@@ -52,6 +53,8 @@ func _init() -> void:
 			seeds = int(arg.substr(6))
 		elif arg.begins_with("first="):
 			first = int(arg.substr(6))
+		elif arg.begins_with("journey="):
+			journey_id = arg.substr(8)
 		elif arg.begins_with("only="):
 			only = arg.substr(5)
 		elif arg.begins_with("gear="):
@@ -223,7 +226,7 @@ func _progress(profile, r: RandomNumberGenerator) -> void:
 
 ## One fight of the wave journey with these classes (1 = solo). Returns totals and one entry per member.
 func play(classes: Array, seed: int) -> Dictionary:
-	var data = JourneyData.load_by_id("goblin_waves", combat.enemies.keys())
+	var data = JourneyData.load_by_id(journey_id, combat.enemies.keys())
 	for size in power_override:
 		if size >= 1 and size <= data.wave_power_by_squad.size():
 			data.wave_power_by_squad[size - 1] = float(power_override[size])

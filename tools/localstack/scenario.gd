@@ -3,7 +3,7 @@ extends SceneTree
 ## a fresh device account signs in, tools/localstack/fixture.py puts it into fixtures/<name>.json, the game re-reads
 ## its profile from the server and opens the screen asked for. Then it stays open (play/click by hand), or takes a
 ## screenshot and quits.
-##   godot --path . --script res://tools/localstack/scenario.gd -- --fixture unlock_ceremony [--open hub|map|character:<class>|storage|shop|blacksmith|tailor|fight] [--size 1280x720] [--shot OUT.png] [--wait 2] [--lang th|en]
+##   godot --path . --script res://tools/localstack/scenario.gd -- --fixture unlock_ceremony [--open hub|map|character:<class>|storage|shop|blacksmith|tailor|fight] [--size 1280x720] [--shot OUT.png] [--wait 2] [--lang th|en] [--journey mummy_waves]
 ## The local client key is read from build/localstack/state.json (throwaway, local only).
 
 var fixture := "new_player"
@@ -11,6 +11,7 @@ var open := "hub"
 var size := Vector2i(1280, 720)
 var shot := ""
 var wait_s := 2.0
+var journey := ""  ## --journey <id>: after the fixture, play that wave journey on the LOCAL session (offline, fresh starter profile): the online rooms only run goblin_waves
 
 
 func _initialize() -> void:
@@ -26,6 +27,7 @@ func run() -> void:
 			"--size": size = Vector2i(int(args[i + 1].split("x")[0]), int(args[i + 1].split("x")[1]))
 			"--shot": shot = args[i + 1]
 			"--wait": wait_s = float(args[i + 1])
+			"--journey": journey = args[i + 1]
 			"--lang": load("res://client/card_tokens.gd").language = args[i + 1]
 	root.size = size
 	DisplayServer.window_set_size(size)
@@ -47,6 +49,20 @@ func run() -> void:
 		return fail("fixture %s failed" % fixture)
 	await gs.account_session.refresh_account()
 	gs.profile = gs.account_session.profile
+	if not journey.is_empty():  # dev: e.g. the Sand Pyramid (still "coming soon" on the map) on the local session
+		gs.account_session = null
+		gs.session = null
+		gs.profile = null
+		gs.ensure_profile()
+		if not gs.start_journey(journey):
+			return fail("start_journey %s failed" % journey)
+		await create_timer(wait_s).timeout
+		print("SCENARIO_READY journey=%s (local session)" % journey)
+		if not shot.is_empty():
+			await RenderingServer.frame_post_draw
+			root.get_texture().get_image().save_png(shot)
+			quit()
+		return
 	change_scene_to_file(gs.CARD_DECK_SCENE)
 	await create_timer(1.5).timeout
 	var hub = current_scene

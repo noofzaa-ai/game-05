@@ -1,0 +1,4 @@
+{"_about": "Goblin Chief beaten (so the world map has gone past zone 1) and a level-5 squad. The Sand Pyramid zone is STILL 'coming soon' on the map on purpose (data/world/zones.json: journey is empty, dev_journey = mummy_waves). To play the pyramid waves use `scenario.gd -- --fixture mummy_zone_open --journey mummy_waves` (a local, offline run: see scenario.gd) or tools/maps/mummy_dev_run.gd.",
+ "card_deck": {"cards": {"sword_shield": {"race": "human", "progress": {"level": 5, "xp": 0}}, "greatsword": {"race": "viking", "progress": {"level": 5, "xp": 0}}, "longbow": {"race": "elf", "progress": {"level": 5, "xp": 0}}, "magic": {"race": "runeborn", "progress": {"level": 5, "xp": 0}}}, "squad": ["sword_shield", "greatsword", "longbow"]},
+ "tutorial": {"version": 1, "step": "done", "tour_done": true, "unlock_seen": true},
+ "unlocks": {"magic_runeborn": true, "boss_goblin_base": true}}

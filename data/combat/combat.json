@@ -60,13 +60,15 @@
 		"goblin_chief": {"ground_light": "goblin_chief_jab", "ground_heavy": "goblin_chief_lunge", "air_light": "goblin_chief_jab", "special": "goblin_chief_lunge"},
 		"goblin_archer": {"ground_light": "goblin_archer_shot", "ground_heavy": "goblin_archer_shot", "air_light": "goblin_archer_shot", "special": "goblin_archer_volley"},
 		"goblin_mage": {"ground_light": "goblin_mage_bolt", "ground_heavy": "goblin_mage_blink", "air_light": "goblin_mage_bolt", "special": "goblin_mage_hex"},
-		"goblin_knight": {"ground_light": "goblin_knight_cleave", "ground_heavy": "goblin_knight_overhead", "air_light": "goblin_knight_cleave", "special": "goblin_knight_overhead"}
+		"goblin_knight": {"ground_light": "goblin_knight_cleave", "ground_heavy": "goblin_knight_overhead", "air_light": "goblin_knight_cleave", "special": "goblin_knight_overhead"},
+		"mummy_archer": {"ground_light": "mummy_archer_shot", "ground_heavy": "mummy_archer_shot", "air_light": "mummy_archer_shot", "special": "mummy_archer_volley"}
 	},
 
 	"_ranged_comment": "RANGED ATTACKS (logic/projectiles.gd). A move fires through its 'spawns' list: {projectile: id | area: id | blink: meters, frame: move frame (default = its startup, the strike), offset: [forward, up, side (+ = the shooter's right)] from the feet in meters, measured on the clip's release frame (2026-10-12: archer arrow tip at frame 34 of shoot / 44 of volley, mage crystal at frame 30 of cast, where the staff has thrust forward), angle: degrees off the facing}. A move with spawns hits only through them (melee: true to also swing). Damage, guard, dodge and effects are the melee rules with the move's power. PROJECTILES: look = how the client draws it (arrow, bolt), speed m/s, range m it flies, radius m, pierce = extra targets it passes through, gravity m/s2 down and lift = m/s up at release (an arrow's slight arc), homing = degrees per second it turns toward its target (0 = none, weak = 30-60), walls = stops at walls and the floor, aim_cone = it aims straight at the nearest opponent within this many degrees of the facing (free aim; otherwise straight ahead). It can be guarded from the front (unless the move ignores_guard) and i-frames let it fly through. AREAS: a circle marked on the ground at the opponent the caster faces (within range and aim_cone), radius m, delay = ticks of warning before it goes off (at least 20; the circle fills up meanwhile), active = ticks it hurts (each opponent once), height m it reaches up, guardable (false: step out or dodge).",
 
 	"projectiles": {
 		"goblin_arrow": {"look": "arrow", "speed": 16.0, "range": 13.0, "radius": 0.15, "pierce": 0, "gravity": 3.0, "lift": 0.9, "homing": 0.0, "walls": true, "aim_cone": 30},
+		"mummy_arrow": {"look": "arrow", "speed": 16.0, "range": 13.0, "radius": 0.15, "pierce": 0, "gravity": 3.0, "lift": 0.9, "homing": 0.0, "walls": true, "aim_cone": 30},
 		"goblin_bolt": {"look": "bolt", "speed": 8.5, "range": 11.0, "radius": 0.28, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 45.0, "walls": true, "aim_cone": 40},
 		"player_jade_arrow": {
 			"look": "jade_arrow",
@@ -202,6 +204,22 @@
 			"hit_offset": [1.7, 1.1, 0.0], "hit_size": [2.3, 1.6, 2.3],
 			"knockback": 8.0, "launch": 0.0, "hitstun": 26, "hitstop": 7, "telegraph": true,
 			"effects": [{"id": "wound", "chance": 70}]
+		},
+		"mummy_archer_shot": {
+			"startup": 46, "active": 4, "recovery": 28, "power": 0.85,
+			"hit_offset": [0.5, 0.7, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 2.5, "launch": 0.0, "hitstun": 14, "hitstop": 3, "telegraph": false,
+			"spawns": [{"projectile": "mummy_arrow", "frame": 46, "offset": [0.70, 1.15, 0.14]}]
+		},
+		"mummy_archer_volley": {
+			"startup": 62, "active": 4, "recovery": 34, "power": 0.8, "cooldown": 420,
+			"hit_offset": [0.5, 0.7, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 2.0, "launch": 0.0, "hitstun": 12, "hitstop": 3, "telegraph": true,
+			"spawns": [
+				{"projectile": "mummy_arrow", "frame": 62, "offset": [0.70, 1.15, 0.14], "angle": -14},
+				{"projectile": "mummy_arrow", "frame": 62, "offset": [0.70, 1.15, 0.14]},
+				{"projectile": "mummy_arrow", "frame": 62, "offset": [0.70, 1.15, 0.14], "angle": 14}
+			]
 		}
 	},
 
@@ -241,6 +259,35 @@
 				"retreat_ticks": 0,
 				"flee_hp": 0
 			}
+		},
+		"mummy_archer": {
+			"role": "Mummy Archer (PLACEHOLDER numbers, mummy map): a bandaged archer that keeps its distance and shoots. One arrow after a draw; a rarer slow draw fires a 3-arrow volley that warns ('!'). Close in: it backs away but cannot fight up close.",
+			"_design": "PLACEHOLDER (level-designer 2026-11-17): the Goblin Archer's numbers x1.5 on HP/ATK/DEF like the mummy is to the goblin (Boss 2026-10-21), MOVESPD 0, cooldowns 80-130 (goblin archer 100-160). Model, clip library and move timings from the monster-rigger pilot (art/monsters/mummy_archer, art/animations/monster_clips_bow.glb/.json, docs/art/monster_requests/mummy_archer.md); the model is still the mummy stand-in mesh. Needs Boss/combat review of the numbers.",
+			"style": "mummy_archer",
+			"color": [0.72, 0.67, 0.54],
+			"model": "res://art/monsters/mummy_archer/mummy_archer.glb",
+			"animations": "res://art/animations/monster_clips_bow.glb",
+			"clips": {"mummy_archer_shot": "shoot", "mummy_archer_volley": "volley"},
+			"nock_mesh": "arrow",
+			"model_height": 1.8,
+			"body_height": 1.8,
+			"run_clip_speed": 1.069,
+			"stats": {"HP": 33, "ATK": 14, "DEF": 30, "MOVESPD": 0, "CRIRATE": 0},
+			"poise": 0,
+			"ai": {"attack_range": 11.0, "cooldown_min": 80, "cooldown_max": 130, "attack_input": "light", "wait_range": 7.0, "skill_chance": 25, "keep_range": 7.0, "retreat_range": 4.0, "strafe": 0.45, "flee_hp": 0.3, "flee_ticks": 60}
+		},
+		"mummy_boss_placeholder": {
+			"role": "PLACEHOLDER BOSS of the pyramid (Boss has not designed it): a scaled-up, darker-gold Mummy, same moves. NOT the Mummy Pharaoh; do not read lore into it.",
+			"_design": "PLACEHOLDER (level-designer 2026-11-17): the mummy 1.35x bigger and tinted gold, tougher (HP x3.3, DEF x1.3, poise 70, EFFECT_RES 30) but with the mummy's own fists moves, same speed. The journey adds boss hp_mult/poise_mult on top. Replace with the real boss when the Boss has designed it.",
+			"style": "fists",
+			"color": [0.78, 0.62, 0.25],
+			"model": "res://art/monsters/mummy/mummy.glb",
+			"model_tint": [0.95, 0.78, 0.42],
+			"model_height": 2.43,
+			"body_height": 2.43,
+			"stats": {"HP": 150, "ATK": 17, "DEF": 58, "MOVESPD": 5, "ATKSPD": 40, "CRIRATE": 0, "EFFECT_RES": 30},
+			"poise": 70,
+			"ai": {"attack_range": 1.7, "cooldown_min": 60, "cooldown_max": 100, "attack_input": "light", "wait_range": 3.6, "skill_chance": 0, "retreat_ticks": 0, "flee_hp": 0}
 		},
 		"dummy_grunt": {
 			"role": "Grunt: walks up and jabs. Beat it with combos.",

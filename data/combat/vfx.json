@@ -259,6 +259,8 @@
 		"swing/magic_ultimate": {"layers": []},
 		"swing/goblin_archer_shot": {"layers": []},
 		"swing/goblin_archer_volley": {"layers": []},
+		"swing/mummy_archer_shot": {"layers": []},
+		"swing/mummy_archer_volley": {"layers": []},
 		"swing/goblin_mage_bolt": {"layers": []},
 		"swing/goblin_mage_hex": {"layers": []},
 		"swing/goblin_mage_blink": {"layers": []},
@@ -267,6 +269,12 @@
 		]},
 		"windup/goblin_archer_volley": {"layers": [
 			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.35, 0.65, 0.0], "size": [0.2, 0.7], "spikes": 6, "seconds": 0.45, "color": "#ffd27a", "ink": 0.2}
+		]},
+		"windup/mummy_archer_shot": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.5, 1.0, 0.0], "size": [0.15, 0.45], "spikes": 4, "seconds": 0.35, "color": "#fff1c4", "ink": 0.2}
+		]},
+		"windup/mummy_archer_volley": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.5, 1.0, 0.0], "size": [0.2, 0.7], "spikes": 6, "seconds": 0.45, "color": "#ffd27a", "ink": 0.2}
 		]},
 		"windup/goblin_mage_bolt": {"layers": [
 			{"type": "sprite", "mode": "glow", "anchor": "feet", "offset": [0.45, 0.85, 0.1], "size": [0.2, 0.6], "seconds": 0.45, "color": "#b866ff"}
@@ -307,6 +315,9 @@
 		]},
 		"hit/goblin_mage_bolt": {"layers": [
 			{"type": "sprite", "mode": "glow", "size": [0.6, 1.4], "seconds": 0.22, "color": "#b866ff"}
+		]},
+		"hit/mummy_archer_shot": {"layers": [
+			{"type": "sprite", "mode": "splat", "size": [0.3, 0.8], "seconds": 0.2, "color": "crit", "ink": 0.6}
 		]},
 		"hit/goblin_archer_shot": {"layers": [
 			{"type": "sprite", "mode": "splat", "size": [0.3, 0.8], "seconds": 0.2, "color": "crit", "ink": 0.6}

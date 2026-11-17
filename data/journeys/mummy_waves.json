@@ -1,0 +1,311 @@
+{
+ "version": 1,
+ "id": "mummy_waves",
+ "name": "Pyramid · 9 Waves",
+ "_design": "PLACEHOLDER-NUMBERS journey of the Mummy Pyramid zone (level-designer 2026-11-17), built as DATA the same way as goblin_waves.json (same schema, wave_mode: ONE fight of 9 waves on one 16x9 board picked from arena_maps by seed, the boss is wave 9, wave_heal_fraction is the rest between waves). Boss 2026-11-17: the mummies live ONLY here, no goblin in this file and no mummy in goblin_waves (tests/test_journey_families.gd derives the families from the data). MONSTER MIX: wave 1 mummies only; wave 2 introduces the mummy archer; 3-8 mix 2-3 mummies with 1-3 archers (levels 2-4); wave 9 is a PLACEHOLDER boss ('mummy_boss_placeholder', a scaled-up gold mummy: the Boss has NOT designed the pyramid boss) with mummies and a wave-2 archer pair. The mummy is 1.5x the goblin (Boss 2026-10-21) so counts are lower than the goblin ramp. Camp/treasure/challenge fields are kept for schema parity (the 12-stage road mode is off); camp_map/boss_map are the rest and throne chambers. Powers and wave_power_by_squad are tuned with tools/balance/class_sim.gd journey=mummy_waves, see _tuning.",
+ "stage_count": 9,
+ "choices": 3,
+ "first_camp_stages": [
+  4,
+  5
+ ],
+ "last_camp_stage": 8,
+ "camp_heal_fraction": 1,
+ "camp_banks_bag": true,
+ "node_weights": {
+  "combat": 6,
+  "challenge": 3,
+  "treasure": 1
+ },
+ "combat_maps": [
+  "mummy_pyramid_gate",
+  "mummy_pyramid_hall"
+ ],
+ "boss_map": "mummy_pyramid_pharaoh",
+ "camp_map": "mummy_pyramid_rest",
+ "arena_maps": [
+  "mummy_pyramid_gate",
+  "mummy_pyramid_hall",
+  "mummy_pyramid_sanctum"
+ ],
+ "boss": {
+  "hp_mult": 1.7,
+  "poise_mult": 2,
+  "label": "BOSS"
+ },
+ "challenge_reward": {
+  "table": "brute",
+  "level_bonus": 2,
+  "rolls": 2
+ },
+ "treasure": {
+  "min_tier": "rare",
+  "tier_weights": {
+   "rare": 70,
+   "epic": 25,
+   "legendary": 5
+  }
+ },
+ "stages": [
+  {
+   "level": 1,
+   "power": 0.5,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 3
+    }
+   ],
+   "challenge": {}
+  },
+  {
+   "level": 1,
+   "power": 0.65,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 3
+    },
+    {
+     "type": "mummy_archer",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 2,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 3
+     },
+     {
+      "type": "mummy_archer",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "level": 2,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 3
+    },
+    {
+     "type": "mummy_archer",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 3,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 3
+     },
+     {
+      "type": "mummy_archer",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "level": 2,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 2
+    },
+    {
+     "type": "mummy_archer",
+     "count": 2
+    }
+   ],
+   "challenge": {
+    "level": 3,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 3
+     },
+     {
+      "type": "mummy_archer",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "level": 3,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 3
+    },
+    {
+     "type": "mummy_archer",
+     "count": 2
+    }
+   ],
+   "challenge": {
+    "level": 4,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 3
+     },
+     {
+      "type": "mummy_archer",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "level": 3,
+   "power": 0.72,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 3
+    },
+    {
+     "type": "mummy_archer",
+     "count": 2
+    }
+   ],
+   "challenge": {
+    "level": 4,
+    "power": 0.7,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 4
+     },
+     {
+      "type": "mummy_archer",
+      "count": 2
+     }
+    ]
+   }
+  },
+  {
+   "level": 4,
+   "power": 0.66,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 3
+    },
+    {
+     "type": "mummy_archer",
+     "count": 2
+    }
+   ],
+   "challenge": {
+    "level": 5,
+    "power": 0.64,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 3
+     },
+     {
+      "type": "mummy_archer",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "level": 4,
+   "power": 0.66,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 3
+    },
+    {
+     "type": "mummy_archer",
+     "count": 3
+    }
+   ],
+   "challenge": {
+    "level": 5,
+    "power": 0.61,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 4
+     },
+     {
+      "type": "mummy_archer",
+      "count": 3
+     }
+    ]
+   }
+  },
+  {
+   "level": 4,
+   "power": 1.09,
+   "enemies": [
+    {
+     "type": "mummy_boss_placeholder",
+     "count": 1,
+     "boss": true
+    },
+    {
+     "type": "mummy",
+     "count": 2
+    },
+    {
+     "type": "mummy_archer",
+     "count": 1,
+     "level": 2,
+     "wave": 2
+    },
+    {
+     "type": "mummy_archer",
+     "count": 1,
+     "level": 2,
+     "wave": 2
+    }
+   ],
+   "waves": {
+    "_design": "PLACEHOLDER boss wave: the archer pair arrives as wave 2 when the boss drops below boss_hp_below of its HP (or the field is clear), like the Goblin Chief's.",
+    "boss_hp_below": 0.35
+   },
+   "challenge": {}
+  }
+ ],
+ "blurb": "ด่านเดียว 9 เวฟ ปิดท้ายด้วยบอสชั่วคราว (ยังไม่ได้ออกแบบ)",
+ "world_region": "pyramid",
+ "wave_mode": true,
+ "wave_count_scale": 1.5,
+ "wave_heal_fraction": 0.4,
+ "corpse_clear_seconds": 3,
+ "wave_power_scale": 1.26,
+ "wave_power_by_squad": [
+  0.78,
+  0.925,
+  2.01,
+  2.3,
+  2.6,
+  2.9
+ ],
+ "loot_by_squad": [
+  0.33,
+  0.67,
+  1
+ ],
+ "_tuning": "PLACEHOLDER until the Boss plays (level-designer 2026-11-17, tools/balance/class_sim.gd journey=mummy_waves only=starter:squad, 60 seeds = 4 x 15, starter squad lv1 starter gear, wave_power_by_squad unchanged from goblin_waves): boss power 1.15 -> 55%, 1.09 -> 81% (chosen, target ~82%), 1.05 -> 93%, 0.95 -> 98%. Damage taken per wave 1..9 at 1.09: 46 56 139 106 175 188 183 227 611; every loss comes at the boss. Solo/duo not measured."
+}

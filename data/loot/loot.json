@@ -55,6 +55,8 @@
 
 	"by_enemy": {
 		"mummy": "grunt",
+		"mummy_archer": "goblin",
+		"mummy_boss_placeholder": "brute",
 		"dummy_grunt": "grunt",
 		"goblin": "goblin",
 		"goblin_chief": "brute",
