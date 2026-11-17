@@ -318,7 +318,7 @@ func _open_goblin_chest(id: int) -> bool:
 			var item = journey.treasure_item(reward_rng)
 			item.id = "wave-chest-%d-%d-%d" % [_seed, wave, player]
 			var RaceDrops = load("res://logic/race_drops.gd")  # race gear share of the chest (design/gdd/race-gear-sets.md 3.12)
-			item = RaceDrops.convert_piece(journey.item_rules, item, RaceDrops.picks_for(trip), RaceDrops.CHEST, wave)
+			item = RaceDrops.convert_piece(journey.item_rules, item, RaceDrops.picks_for(trip), RaceDrops.CHEST, wave, load("res://logic/gear_levels.gd").unlocked_level(trip.profile))  # each player own unlocked gear level
 			trip.loot_into_bag({"gold": 0, "materials": {}, "items": [item]})
 	journey.treasure_pending = false
 	status = "active"

@@ -51,6 +51,7 @@ const TEST_FILES := [
 	"res://tests/test_starter_kit.gd",
 	"res://tests/test_race_sets.gd",
 	"res://tests/test_race_drops.gd",
+	"res://tests/test_gear_levels.gd",
 	"res://tests/test_race_gear_v2.gd",
 	"res://tests/test_race_gear_lv15_look.gd",
 	"res://tests/test_race_weapons_lv15.gd",

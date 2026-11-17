@@ -1,0 +1,9 @@
+{
+ "_comment": "Gear drops follow what the PLAYER has unlocked (Boss 2026-11-17: gear that drops by level is tied to the world map; if the mummy map is not open yet the game must not drop level-15 gear, it only fills the bag). `zones`: zone id (data/world/zones.json) -> the gear level (catalog req_level) that zone opens up. Unlocked gear level of a profile = the highest value among the zones that are OPEN for it (logic/world_zones.gd state: boss beaten + quest); level 1 is always allowed. The cap applies to EVERY map: while the pyramid is closed, the goblin map drops only level-1 gear; once it is open, goblin and mummy maps both drop levels 1 and 15, and so on. A zone with no entry here (or a bad value) counts as level 1, never as permissive. Level-1 drops are the same catalog pieces with the instance id prefix 'starter-drop-' (they wear at any card level, main stat x1.0, can tier up into the level-15 piece). `level_weights`: gear level (as text) -> weight when a drop picks among the allowed levels; missing = 1 (equal); raise a number to favour that level. PLACEHOLDERS the Boss can change here without code.",
+ "version": 1,
+ "zones": {
+  "goblin_base": 1,
+  "pyramid": 15
+ },
+ "level_weights": {}
+}

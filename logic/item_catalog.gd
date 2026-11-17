@@ -121,7 +121,18 @@ func set_counts(item_ids: Array) -> Dictionary:
 func main_stat_mul(item_id: String, instance_id: String) -> float:
 	if instance_id.begins_with(STARTER_ID_PREFIX):
 		return 1.0
-	return float(level_stat_mul.get(str(req_level(item_id)), 1.0))
+	return level_mul(req_level(item_id))
+
+
+## The main stat multiplier of gear level `level`: its own tier_up.json key, else the multiplier of the nearest LOWER key
+## (a new level 25 with no number yet counts as the level-15 value, never silently x1.0), else 1.0 below every key.
+func level_mul(level: int) -> float:
+	var best := -1
+	for key in level_stat_mul:
+		var k := int(str(key))
+		if k <= level and k > best:
+			best = k
+	return float(level_stat_mul[str(best)]) if best >= 0 else 1.0
 
 
 ## The race gear set of `item_id` ({} for a generic set or none).

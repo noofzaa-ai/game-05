@@ -63,7 +63,7 @@ static func quote(p, rules, item, card_hint: String = "") -> Dictionary:
 		return out
 	out["target"] = target
 	out["need_level"] = rules.catalog.req_level(target)
-	out["main_mul"] = float(rules.catalog.level_stat_mul.get(str(out["need_level"]), 1.0))  ## the main stat gain shown to the player
+	out["main_mul"] = rules.catalog.level_mul(int(out["need_level"]))  ## the main stat gain shown to the player
 	var problem := Profile.slot_problem(card, item, rules)  # the piece must be one this card can wear at all
 	if not problem.is_empty():
 		out["reason"] = problem

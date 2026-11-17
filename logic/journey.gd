@@ -182,7 +182,7 @@ func treasure_drop(what: String, trip = null, factor: float = -1.0) -> Dictionar
 	var item = treasure_item(_rng_for(what, completed + 1))
 	# Race gear (design/gdd/race-gear-sets.md 3.12): a chest piece may become a race piece of a squad card.
 	var RaceDrops = load("res://logic/race_drops.gd")
-	item = RaceDrops.convert_piece(item_rules, item, RaceDrops.picks_for(run if trip == null else trip), RaceDrops.CHEST, waves_cleared if data.wave_mode else completed + 1)
+	item = RaceDrops.convert_piece(item_rules, item, RaceDrops.picks_for(run if trip == null else trip), RaceDrops.CHEST, waves_cleared if data.wave_mode else completed + 1, load("res://logic/gear_levels.gd").unlocked_level((run if trip == null else trip).profile))
 	var pays := _rng_for(what + "-pays", completed + 1).randf() < (loot_factor() if factor < 0.0 else factor)
 	return {"gold": 0, "materials": {}, "items": [item] if pays else []}
 

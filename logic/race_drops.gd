@@ -13,6 +13,7 @@ extends RefCounted
 const ItemSystem := preload("res://logic/item_system.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
 const RaceData := preload("res://logic/race_data.gd")
+const GearLevels := preload("res://logic/gear_levels.gd")
 const PATH := "res://data/loot/race_drops.json"
 
 const WAVE := "wave"
@@ -65,7 +66,13 @@ static func picks_for(run) -> Array:
 
 ## `item` turned into a race piece with the share for (source, wave, its tier), else `item` unchanged.
 ## The new piece keeps the id, slot and tier (unless downgraded); its stats are rolled again for the race catalog item.
-static func convert_piece(rules, item, picks: Array, source: String, wave: int):
+## `cap` = the profile unlocked gear level (logic/gear_levels.gd; default 1 = the safe low value): the result never needs
+## more than that level (level 1 = the same piece with a "starter-drop-" instance id).
+static func convert_piece(rules, item, picks: Array, source: String, wave: int, cap: int = 1):
+	return GearLevels.fit(rules, _convert(rules, item, picks, source, wave), cap)
+
+
+static func _convert(rules, item, picks: Array, source: String, wave: int):
 	if item == null or picks.is_empty() or not data().get("slots", []).has(item.slot):
 		return item
 	var tier := clampi(int(item.tier), 0, rules.tiers.size() - 1)
@@ -94,5 +101,5 @@ static func convert_piece(rules, item, picks: Array, source: String, wave: int):
 
 
 ## Every item of `items` through convert_piece() (same order, same count).
-static func apply(rules, items: Array, picks: Array, source: String, wave: int) -> Array:
-	return items.map(func(item): return convert_piece(rules, item, picks, source, wave))
+static func apply(rules, items: Array, picks: Array, source: String, wave: int, cap: int = 1) -> Array:
+	return items.map(func(item): return convert_piece(rules, item, picks, source, wave, cap))

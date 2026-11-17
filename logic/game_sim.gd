@@ -464,7 +464,7 @@ func _give_drop(target_id: int, killer_id: int) -> void:
 	# the boss's own drops use the boss shares (the only gold race source). Own RNG: the sim stream is unchanged.
 	var RaceDrops = load("res://logic/race_drops.gd")
 	var source: String = RaceDrops.BOSS if RaceDrops.is_boss_type(dead.enemy_type) else RaceDrops.WAVE
-	drop["items"] = RaceDrops.apply(item_rules, drop["items"], RaceDrops.picks_for(runs[killer_id]), source, reward_wave if reward_wave > 0 else _waves_released + 1)
+	drop["items"] = RaceDrops.apply(item_rules, drop["items"], RaceDrops.picks_for(runs[killer_id]), source, reward_wave if reward_wave > 0 else _waves_released + 1, load("res://logic/gear_levels.gd").unlocked_level(runs[killer_id].profile))  # gear level cap: the killer own unlocked maps
 	var stored: Dictionary = runs[killer_id].loot_into_bag(drop)
 	var item_summaries: Array[Dictionary] = []
 	for item in stored["items"]:

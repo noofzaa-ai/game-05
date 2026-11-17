@@ -137,7 +137,7 @@ static func batch_sellable(profile, rules, tier_ids: Array) -> Dictionary:
 			break
 		if piece.tier < 0 or piece.tier >= rules.tiers.size() or not tier_ids.has(str(rules.tiers[piece.tier]["id"])):
 			continue
-		if piece.destroyed or not piece.relic.is_empty() or BossLoot.is_boss_piece(rules, piece) or str(piece.id).begins_with("starter-"):
+		if piece.destroyed or not piece.relic.is_empty() or BossLoot.is_boss_piece(rules, piece) or (str(piece.id).begins_with("starter-") and not str(piece.id).begins_with("starter-drop-")):  # the real starter kit stays; level-1 drops (logic/gear_levels.gd) sell
 			continue
 		var price := item_sell_price(piece, rules)
 		if price < 1:

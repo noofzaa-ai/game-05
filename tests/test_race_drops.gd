@@ -117,7 +117,7 @@ func _race_from_squad(ctx, rules, picks: Array) -> void:
 	var even := seen.size() == 3 and seen.values().all(func(n): return absf(float(n) / float(total) - 1.0 / 3.0) < 0.05)
 	ctx.check("race drops: race and class come only from the squad, about evenly per card (%s)" % str(seen), ok and even)
 	ctx.check("race drops: a run with no squad card converts nothing", RaceDrops.picks_for(null).is_empty()
-		and RaceDrops.convert_piece(rules, piece(rules, 7, LEGENDARY, "shirt"), [], RaceDrops.BOSS, 12).to_dict() == piece(rules, 7, LEGENDARY, "shirt").to_dict())
+		and RaceDrops.convert_piece(rules, piece(rules, 7, LEGENDARY, "shirt"), [], RaceDrops.BOSS, 12, 15).to_dict() == preload("res://logic/gear_levels.gd").fit(rules, piece(rules, 7, LEGENDARY, "shirt"), 15).to_dict())  # no race change; only the gear level cap (logic/gear_levels.gd) may touch it
 	var again = RaceDrops.convert_piece(rules, piece(rules, 12345, LEGENDARY, "shirt"), picks, RaceDrops.BOSS, 12)
 	var twice = RaceDrops.convert_piece(rules, piece(rules, 12345, LEGENDARY, "shirt"), picks, RaceDrops.BOSS, 12)
 	ctx.check("race drops: same item id gives the same race piece and stats", again.item_id == twice.item_id and again.to_dict() == twice.to_dict())
