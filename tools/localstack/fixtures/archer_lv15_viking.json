@@ -1,0 +1,147 @@
+{
+ "_about": "Longbow card = viking, level-15 class armour + race weapon worn (tier-up ids survive the purge). Archer look test.",
+ "card_deck": {
+  "cards": {
+   "sword_shield": {
+    "race": "human",
+    "progress": {
+     "level": 10,
+     "xp": 0
+    }
+   },
+   "greatsword": {
+    "race": "viking",
+    "progress": {
+     "level": 10,
+     "xp": 0
+    }
+   },
+   "longbow": {
+    "race": "viking",
+    "progress": {
+     "level": 15,
+     "xp": 0
+    }
+   },
+   "magic": {
+    "race": "runeborn",
+    "progress": {
+     "level": 10,
+     "xp": 0
+    }
+   }
+  },
+  "squad": [
+   "sword_shield",
+   "greatsword",
+   "longbow"
+  ]
+ },
+ "tutorial": {
+  "version": 1,
+  "step": "done",
+  "tour_done": true,
+  "unlock_seen": true
+ },
+ "unlocks": {
+  "magic_runeborn": true,
+  "boss_goblin_base": true
+ },
+ "stash": {
+  "gold": "500000"
+ },
+ "card_gear": {
+  "longbow": {
+   "loadout": {
+    "v": 1,
+    "equipped": {
+     "weapon:0": {
+      "v": 1,
+      "stat_scale": 2,
+      "id": "tier-up-w",
+      "slot": "weapon",
+      "tier": 1,
+      "level": 0,
+      "upgrade_count": 0,
+      "refine_level": 0,
+      "main_stat": "ATK",
+      "weapon_type": "longbow",
+      "item_id": "race_viking_longbow_weapon",
+      "substats": [],
+      "destroyed": false,
+      "durability": "0000000000005940",
+      "max_durability": "0000000000005940"
+     },
+     "shirt:0": {
+      "v": 1,
+      "stat_scale": 2,
+      "id": "tier-up-shirt",
+      "slot": "shirt",
+      "tier": 1,
+      "level": 0,
+      "upgrade_count": 0,
+      "refine_level": 0,
+      "main_stat": "DEF",
+      "weapon_type": "",
+      "item_id": "armour_longbow_shirt",
+      "substats": [],
+      "destroyed": false,
+      "durability": "0000000000005940",
+      "max_durability": "0000000000005940"
+     },
+     "pants:0": {
+      "v": 1,
+      "stat_scale": 2,
+      "id": "tier-up-pants",
+      "slot": "pants",
+      "tier": 1,
+      "level": 0,
+      "upgrade_count": 0,
+      "refine_level": 0,
+      "main_stat": "HP",
+      "weapon_type": "",
+      "item_id": "armour_longbow_pants",
+      "substats": [],
+      "destroyed": false,
+      "durability": "0000000000005940",
+      "max_durability": "0000000000005940"
+     },
+     "armband:0": {
+      "v": 1,
+      "stat_scale": 2,
+      "id": "tier-up-armband",
+      "slot": "armband",
+      "tier": 1,
+      "level": 0,
+      "upgrade_count": 0,
+      "refine_level": 0,
+      "main_stat": "DEF",
+      "weapon_type": "",
+      "item_id": "armour_longbow_armband",
+      "substats": [],
+      "destroyed": false,
+      "durability": "0000000000005940",
+      "max_durability": "0000000000005940"
+     },
+     "shoes:0": {
+      "v": 1,
+      "stat_scale": 2,
+      "id": "tier-up-shoes",
+      "slot": "shoes",
+      "tier": 1,
+      "level": 0,
+      "upgrade_count": 0,
+      "refine_level": 0,
+      "main_stat": "DEF",
+      "weapon_type": "",
+      "item_id": "armour_longbow_shoes",
+      "substats": [],
+      "destroyed": false,
+      "durability": "0000000000005940",
+      "max_durability": "0000000000005940"
+     }
+    }
+   }
+  }
+ }
+}

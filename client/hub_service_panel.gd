@@ -227,7 +227,8 @@ func place_grid(grid: GridContainer, rect: Rect2) -> void:
 
 ## Fills `grid` with `items` (at least `min_cells` cells, whole rows). `cells` is the pool of HubItemCell nodes;
 ## a tap calls on_tap(item), a double-tap / right-click on_activate(item).
-func fill_grid(grid: GridContainer, cells: Array, items: Array, min_cells: int, selected_id: String, on_tap: Callable, on_activate: Callable = Callable()) -> void:
+## `race`: the gear race of the card whose pieces these are (icons), "" = the lead card's.
+func fill_grid(grid: GridContainer, cells: Array, items: Array, min_cells: int, selected_id: String, on_tap: Callable, on_activate: Callable = Callable(), race: String = "") -> void:
 	var rules = GameState.item_rules
 	var columns := maxi(grid.columns, 1)
 	var count := maxi(items.size(), min_cells)
@@ -251,6 +252,7 @@ func fill_grid(grid: GridContainer, cells: Array, items: Array, min_cells: int, 
 		c.custom_minimum_size = Vector2(cell_size, cell_size)
 		var item = items[n] if n < items.size() else null
 		c.slot_id = item.slot if item != null else ""
+		c.card_race = race
 		c.show_item(item, rules, "")
 		c.selected = item != null and item.id == selected_id
 		c.fits = false

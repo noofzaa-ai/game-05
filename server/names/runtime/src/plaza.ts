@@ -22,6 +22,9 @@ var plazaDiscover: nkruntime.RpcFunction = function(ctx, logger, nk, payload) {
         return nameResult("rate_limited");
     },ctx,logger,nk,payload);
 };
+// Only each card's race (class -> race) goes out: the client needs it to pick the race armour/weapon files; the rest of the deck stays private.
+function plazaRaces(deck:any):{[cls:string]:string}{var out:{[cls:string]:string}={};var cards=deck&&deck.cards?deck.cards:{};Object.keys(cards).forEach(function(k){var r=cards[k]&&cards[k].race;if(typeof r==='string'&&r.length<=24){out[k]=r;}});return out;}
+
 var plazaInit: nkruntime.MatchInitFunction<PlazaState> = function(){return {state:{players:{},empty:0},tickRate:5,label:PLAZA_LABEL};};
 
 var plazaJoinAttempt: nkruntime.MatchJoinAttemptFunction<PlazaState> = function(ctx,_logger,nk,_dispatcher,_tick,state,presence){
@@ -36,7 +39,7 @@ var plazaJoin: nkruntime.MatchJoinFunction<PlazaState> = function(_ctx,_logger,n
             if(Object.keys(state.players).length>=24||state.players[p.userId]){_dispatcher.matchKick([p]);return;}
             var player=roomProfile(nk,p.userId);if(!player){return;}
             // Project only visible gear/appearance; never expose stash/vault/currency/receipts.
-            state.players[p.userId]={presence:p,id:p.userId,name:player.name,loadout:player.state.profile.loadout,appearance:player.state.profile.appearance,x:0,z:-13,fx:0,fz:-1,speed:0,tick:tick,visible:false,chatTokens:3,chatTick:tick};
+            state.players[p.userId]={presence:p,id:p.userId,name:player.name,loadout:player.state.profile.loadout,appearance:player.state.profile.appearance,races:plazaRaces(player.state.profile.card_deck),x:0,z:-13,fx:0,fz:-1,speed:0,tick:tick,visible:false,chatTokens:3,chatTick:tick};
         });return {state:state};
     };
 
@@ -80,7 +83,7 @@ var plazaLoop: nkruntime.MatchLoopFunction<PlazaState> = function(_ctx,_logger,n
             var a=state.players[id];return {id:a.id,name:a.name,x:a.x,z:a.z,fx:a.fx,fz:a.fz,speed:a.speed};
         });
         // Full appearance only once per second; 5Hz movement snapshots stay compact.
-        if(tick%5===0){actors.forEach(function(a:any){a.loadout=state.players[a.id].loadout;a.appearance=state.players[a.id].appearance;});}
+        if(tick%5===0){actors.forEach(function(a:any){a.loadout=state.players[a.id].loadout;a.appearance=state.players[a.id].appearance;a.races=state.players[a.id].races;});}
         if(ids.length){dispatcher.broadcastMessage(2,JSON.stringify({v:1,actors:actors}),null,null,false);}
         return {state:state};
     };

@@ -21,6 +21,7 @@ var fits := false
 var selected := false
 var low := false  ## worn down (stats reduced)
 var card_level := -1  ## level of the card this cell is viewed for (-1: the lead card), for the details level tag warning
+var card_race := ""  ## gear race of the card this cell is viewed for ("" = the lead card's): which race's icon it shows
 var s := 1.0
 var _tile: TextureRect  ## the leather tile, its own canvas item behind the cell (not mixed with the glyph draws)
 
@@ -43,8 +44,11 @@ func show_item(p_item, rules, empty_caption: String) -> void:
 	tooltip_text = ""
 	queue_redraw()
 
-## The race whose look class armour shows in the icon (Boss 2026-11-16): the lead card's race, "" outside a game.
+## The race whose look class armour shows in the icon (Boss 2026-11-16): `card_race` when the owner names the viewed
+## card's race, else the lead card's race, "" outside a game.
 func _look_race() -> String:
+	if not card_race.is_empty():
+		return card_race
 	var state := get_node_or_null("/root/GameState")
 	if state == null or state.get("profile") == null:
 		return ""

@@ -139,7 +139,7 @@ func refresh() -> void:
 		var id: String = picked.get(part, {}).get("id", "")
 		for choice_id in _buttons[part]:
 			_buttons[part][choice_id].set_pressed_no_signal(choice_id == id)
-	doll.dress(profile.loadout, profile.loadout.weapon_style(combat.styles.keys()), rules.catalog, preview)
+	doll.dress(profile.loadout, profile.loadout.weapon_style(combat.styles.keys()), rules.catalog, preview, ItemAssets.card_race(profile))
 
 
 ## The id picked for `part` now (its default if nothing was picked).

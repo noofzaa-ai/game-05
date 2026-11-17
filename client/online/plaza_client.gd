@@ -158,7 +158,7 @@ func _snapshot(message) -> void:
 				model.queue_free()
 				continue
 			var style: String = loadout.weapon_style(hub._combat.styles.keys())
-			var looks := ItemAssets.looks(loadout, GameState.item_rules.catalog, style)
+			var looks := ItemAssets.looks(loadout, GameState.item_rules.catalog, style, _gear_race(description, style))
 			looks["appearance"] = ItemAssets.appearance(description.get("appearance", {}))
 			model.dress(looks)
 			var label := preload("res://client/character_foot_name.gd").new()
@@ -173,7 +173,7 @@ func _snapshot(message) -> void:
 				var worn = Loadout.from_dict(entry.loadout, GameState.item_rules)
 				if worn != null:
 					actor.style = worn.weapon_style(hub._combat.styles.keys())
-					var looks := ItemAssets.looks(worn, GameState.item_rules.catalog, actor.style)
+					var looks := ItemAssets.looks(worn, GameState.item_rules.catalog, actor.style, _gear_race(entry, actor.style))
 					looks["appearance"] = ItemAssets.appearance(entry.get("appearance", {}))
 					actor.model.dress(looks)
 					actor["look_signature"] = signature
@@ -215,3 +215,11 @@ func _fit_status() -> void:
 	status.size = Vector2(maxf(1.0, logical.x - 32.0 * scale), 30.0 * scale)
 	status.add_theme_font_size_override("font_size", maxi(12, roundi(16.0 * scale)))
 	status.add_theme_constant_override("outline_size", maxi(2, roundi(3.0 * scale)))
+
+
+## The race of the remote player's card of this class (plaza payload `races`: class -> race); "" = unknown (old server).
+static func _gear_race(entry: Dictionary, style: String) -> String:
+	var races = entry.get("races", {})
+	if not races is Dictionary or not races.has(style):
+		return ""
+	return str(races[style])

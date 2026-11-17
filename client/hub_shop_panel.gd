@@ -236,7 +236,7 @@ func _offer_tile(offer: Dictionary, p) -> Button:
 	var pad := 8.0 * s
 	var h := b.custom_minimum_size.y
 	var icon_px := h - pad * 2.0
-	var picture := _icon_rect(ItemAssets.icon_for_id(str(offer.get("id", "")), GameState.item_rules.catalog) if str(offer.get("kind", "")) == "item" else null, icon_px)
+	var picture := _icon_rect(ItemAssets.icon_for_id(str(offer.get("id", "")), GameState.item_rules.catalog, ItemAssets.card_race(p)) if str(offer.get("kind", "")) == "item" else null, icon_px)
 	picture.position = Vector2(pad, pad)
 	picture.size = Vector2(icon_px, icon_px)
 	b.add_child(picture)

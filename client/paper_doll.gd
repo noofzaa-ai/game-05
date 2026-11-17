@@ -91,13 +91,14 @@ func _build_scene() -> void:
 ## art/weapons/<style>.glb); `catalog` (ItemCatalog) finds the worn items' own models. `appearance` is
 ## the player's own looks (Profile.appearance).
 ## EXTENDING: the glow of high tiers goes here.
-func dress(loadout, style: String, catalog = null, appearance: Dictionary = {}) -> void:
+func dress(loadout, style: String, catalog = null, appearance: Dictionary = {}, race: String = "") -> void:
 	_style = style
 	if model != null:
 		model.equipment_rest = true
 		model.set_pose("idle", 0.0, 0.0, true, Vector2(0.0, 1.0), false, "", "", style)  # UI uses the native {weapon}_idle clip
 		# Submit one complete appearance: equipment dressing must not reset the chosen looks.
-		var looks: Dictionary = ItemAssets.looks(loadout, catalog, style) if catalog != null else {"weapon": {"style": style, "family": style, "path": ""}}
+		# `race`: the wearing card's gear race (ItemAssets.card_race), "" = the default race.
+		var looks: Dictionary = ItemAssets.looks(loadout, catalog, style, race) if catalog != null else {"weapon": {"style": style, "family": style, "path": ""}}
 		looks["appearance"] = ItemAssets.appearance(appearance)
 		model.dress(looks)
 		_fit_camera.call_deferred()

@@ -193,7 +193,9 @@ func refresh() -> void:
 	if item == null and not items.is_empty():
 		item = items[0]
 		selected = item.id
-	fill_grid(_grid, _cells, items, _grid.columns * 2, selected, func(piece) -> void: select_item(piece.id))
+	var race := CardDeck.gear_race(p.card_deck, source) if source != "storage" else ""  # a card's worn pieces show that card's race
+	fill_grid(_grid, _cells, items, _grid.columns * 2, selected, func(piece) -> void: select_item(piece.id), Callable(), race)
+	_details.cell.card_race = race
 	var rules = GameState.item_rules
 	var camp = GameState.camp_data
 	if item == null:

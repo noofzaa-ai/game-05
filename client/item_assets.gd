@@ -55,6 +55,14 @@ static func chain(field: String) -> PackedStringArray:
 const DEFAULT_RACE := "human"
 
 
+## The race whose look a card's gear shows (logic/card_deck.gd gear_race): `card` of `profile`, "" = the lead card;
+## "" without a profile (the default race then applies).
+static func card_race(profile, card: String = "") -> String:
+	if profile == null or not "card_deck" in profile:
+		return ""
+	return preload("res://logic/card_deck.gd").gear_race(profile.card_deck, card if not card.is_empty() else str(profile.lead_card()))
+
+
 static func with_race(text: String, race: String) -> String:
 	return text.replace("{race}", race if not race.is_empty() else DEFAULT_RACE)
 

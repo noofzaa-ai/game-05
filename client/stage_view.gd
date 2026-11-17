@@ -547,7 +547,8 @@ func _player_looks(id: int = -1) -> Dictionary:
 		looks = {"appearance": ItemAssets.appearance(own)}
 	else:
 		var loadout = trip.loadout()
-		looks = ItemAssets.looks(loadout, GameState.item_rules.catalog, loadout.weapon_style(_combat_data.styles.keys()))
+		var trip_card := str(trip.card_id) if "card_id" in trip else ""  # a squad member wears its own card's gear: that card's race
+		looks = ItemAssets.looks(loadout, GameState.item_rules.catalog, loadout.weapon_style(_combat_data.styles.keys()), ItemAssets.card_race(owner, trip_card))
 		looks["appearance"] = ItemAssets.appearance(own)
 	if _squad_room() and not _session.card_of(id).is_empty() and owner != null:
 		var card: String = _session.card_of(id)
@@ -614,7 +615,7 @@ func _show_loot(event: Dictionary) -> void:
 		var color: Color = InkUi.rarity_color(tier["color"], true)
 		var level_id := str(item.get("item_id", ""))
 		var level: int = GameState.item_rules.catalog.req_level(level_id)
-		_loot_line(at, line, "%s ×1" % label + (" · " + CardTokens.t("req_lv_short") % level if level > 1 else ""), color, ItemAssets.icon_for_id(str(item.get("item_id", "")), GameState.item_rules.catalog))
+		_loot_line(at, line, "%s ×1" % label + (" · " + CardTokens.t("req_lv_short") % level if level > 1 else ""), color, ItemAssets.icon_for_id(str(item.get("item_id", "")), GameState.item_rules.catalog, ItemAssets.card_race(_session.profile_for(_local_player_id))))
 		line += 1
 	# Pickups use A-style floating icons only; do not duplicate them in a boxed feed.
 	if int(event["lost_items"]) > 0 or not event["lost_materials"].is_empty():
@@ -1555,7 +1556,7 @@ func _on_chest_opened() -> void:
 		var tier: Dictionary = GameState.item_rules.tiers[int(item.tier)]
 		var label := str(GameState.item_rules.catalog.entry(str(item.item_id)).get("name", str(item.slot).capitalize()))
 		var color: Color = InkUi.rarity_color(tier["color"], true)
-		_loot_line(at,loot_line,"%s ×1" % label,color,ItemAssets.icon_for_id(str(item.item_id),GameState.item_rules.catalog))
+		_loot_line(at,loot_line,"%s ×1" % label,color,ItemAssets.icon_for_id(str(item.item_id),GameState.item_rules.catalog,ItemAssets.card_race(_session.profile_for(_local_player_id)),str(item.id).begins_with("starter-")))
 		loot_line += 1
 	if not reward.get("lost_items", []).is_empty():
 		_hud.add_loot("BAG FULL: the treasure was left behind", InkUi.LOOT_PROBLEM)

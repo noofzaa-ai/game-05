@@ -89,6 +89,7 @@ var _strip: Panel
 var _stat_keys: Array = []
 var _stat_values: Array = []
 var _slots := {}  ## "slot:index" -> SlotCell
+var _portrait_worn := ""  ## the worn pieces the portrait was last dressed in (refresh re-dresses it on a change)
 var _divider: Panel
 var _detail: HubItemDetails
 var _store_title: Label
@@ -688,11 +689,19 @@ func refresh() -> void:
 	if selected_item == null:
 		_sel_item = ""
 	var sel_slot_id := _sel_slot.split(":")[0] if not _sel_slot.is_empty() else ""
+	var race := CardDeck.gear_race(p.card_deck, card)  # icons show the VIEWED card's race (not the lead card's)
+	_detail.cell.card_race = race
+	# the portrait wears what this card wears: re-dress it when the worn pieces change (equip, unequip, tier up)
+	var worn_now := str(worn.items().map(func(piece): return [piece.slot, piece.id, piece.item_id, piece.refine_level]))
+	if worn_now != _portrait_worn:
+		_portrait_worn = worn_now
+		_portrait.refresh_gear()
 	# paper-doll
 	for key in _slots:
 		var c: SlotCell = _slots[key]
 		var open: bool = rules.slot_open_for(c.slot_id, card) and not rules.slot(c.slot_id).is_empty()
 		c.locked = not open
+		c.card_race = race
 		c.card_level = CardProgress.level_of(_deck, card)
 		c.show_item(worn.item_at(c.slot_id, c.index) if open else null, rules, CardTokens.t("slot_locked") if not open else CardTokens.slot_name(c.slot_id))
 		c.selected = key == _sel_slot and _sel_item.is_empty()
@@ -730,6 +739,7 @@ func refresh() -> void:
 		var item = shown[n] if n < shown.size() else null
 		c.slot_id = item.slot if item != null else ""
 		c.card_level = CardProgress.level_of(_deck, card)
+		c.card_race = race
 		c.show_item(item, rules, "")
 		c.selected = item != null and item.id == _sel_item
 		c.fits = item != null and _sel_item.is_empty() and item.slot == sel_slot_id and _can_wear(item, rules)

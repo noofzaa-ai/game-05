@@ -124,6 +124,12 @@ func set_look(look: Dictionary) -> void:
 		_dress()
 
 
+## The card's worn gear changed (equip, unequip, tier up): dress the model again from the profile.
+func refresh_gear() -> void:
+	if viewport != null:
+		_dress()
+
+
 ## The pointer is over the card: the character turns a little toward it (`pointer` 0..1 across the window).
 func set_hover(on: bool, pointer: Vector2 = Vector2(0.5, 0.5)) -> void:
 	_turn_target = (pointer.x - 0.5) * 2.0 * CardTokens.PORTRAIT_HOVER_TURN if on else 0.0

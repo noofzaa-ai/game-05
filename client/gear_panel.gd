@@ -463,7 +463,7 @@ func refresh() -> void:
 		_show_item(cell, item)
 		if item == null:
 			cell.icon_shape = ItemIcon.shape_for(cell.slot_id)
-	doll.dress(profile.loadout, profile.loadout.weapon_style(combat.styles.keys()), rules.catalog, profile.appearance)
+	doll.dress(profile.loadout, profile.loadout.weapon_style(combat.styles.keys()), rules.catalog, profile.appearance, ItemAssets.card_race(profile))
 	var bag = store()
 	_capacity.text = TEXT["capacity"] % [bag.slots_used(), bag.capacity]
 	if bag.free_slots() <= 0:
@@ -475,7 +475,7 @@ func refresh() -> void:
 
 func _show_item(cell: Control, item) -> void:
 	cell.item = item
-	cell.icon_texture = ItemAssets.icon(item, rules.catalog)
+	cell.icon_texture = ItemAssets.icon(item, rules.catalog, ItemAssets.card_race(profile))  # the lead card's race (its loadout is shown)
 	if item == null:
 		cell.tier = -1
 		cell.level = 0
