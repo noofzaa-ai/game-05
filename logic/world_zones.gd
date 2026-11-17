@@ -5,6 +5,7 @@ extends RefCounted
 ## a boss flag (on_battle_result, from the run's end on the authority). No nodes, no client code.
 
 const PATH := "res://data/world/zones.json"
+const ZoneQuests := preload("res://logic/zone_quests.gd")
 const OPEN := "open"
 const LOCKED := "locked"
 const SOON := "coming_soon"
@@ -59,10 +60,17 @@ static func state(profile, zone_id: String) -> String:
 			continue
 		if str(list[i].get("journey", "")).is_empty():
 			return SOON
-		if i == 0 or boss_beaten(profile, str(list[i - 1].get("id", ""))):
+		if (i == 0 or boss_beaten(profile, str(list[i - 1].get("id", "")))) and ZoneQuests.met(profile, zone_id):
 			return OPEN
 		return LOCKED
 	return LOCKED
+
+
+## "" when a journey may be started with this profile; "zone_locked" when it is the journey of a zone that is not
+## OPEN. Journeys no zone lists (ink_road, the dev_journey of a coming-soon zone) are not gated here.
+static func journey_problem(profile, journey_id: String) -> String:
+	var z := zone_of_journey(journey_id)
+	return "" if z.is_empty() or state(profile, str(z.get("id", ""))) == OPEN else "zone_locked"
 
 
 ## The furthest open zone (where the player is headed): the default pick on the map.

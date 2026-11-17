@@ -49,7 +49,7 @@ func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, c
 		if p == null: continue
 		if (lobby or profiles.size() > 1 or capacity > 1) and not preload("res://logic/tutorial.gd").past(p, "battle_tip"): return failure("tutorial")
 		if not lobby:
-			var fight_problem: String = preload("res://logic/commands.gd").fight_problem(p)
+			var fight_problem: String = preload("res://logic/commands.gd").fight_problem(p, squad_journey.id)
 			if not fight_problem.is_empty(): return failure(fight_problem)
 	if RegEx.create_from_string("^[a-z0-9-]{8,64}$").search(id) == null: return failure("invalid_payload")
 	if rooms.has(id): return failure("room_exists")

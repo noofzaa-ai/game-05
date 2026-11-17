@@ -1,0 +1,15 @@
+{
+ "_comment": "Zone unlock quests (Boss 2026-11-17: 'a quest that unlocks the mummy map: character level 15'). Key = zone id from zones.json. A zone with an entry opens only when EVERY step is met (plus the old rule: the zone before it has its boss beaten). Step types: boss_beaten {zone} and card_level {min, count: how many cards must be at least that level}. Text placeholders: {cur} {target}. All numbers and texts are PLACEHOLDERS the Boss can change here without code. To add the next zone's quest, add another key.",
+ "version": 1,
+ "quests": {
+  "pyramid": {
+   "id": "quest_pyramid",
+   "name_th": "สู่ผืนทราย", "name_en": "Into the Sand",
+   "desc_th": "ฟาโรห์รออยู่ในพีระมิด ต้องแกร่งพอก่อนเข้าไป", "desc_en": "The Pharaoh waits inside the pyramid. Grow strong enough before you enter.",
+   "steps": [
+    {"type": "boss_beaten", "zone": "goblin_base", "text_th": "ล้มหัวหน้าก็อบลิน", "text_en": "Defeat the Goblin Chief"},
+    {"type": "card_level", "min": 15, "count": 1, "text_th": "การ์ดเลเวล {target}: เลเวลสูงสุดตอนนี้ Lv {cur}/{target}", "text_en": "Reach card level {target}: best card Lv {cur}/{target}"}
+   ]
+  }
+ }
+}

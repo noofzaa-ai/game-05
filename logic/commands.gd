@@ -274,7 +274,9 @@ static func squad_problem(p, squad: Array) -> String:
 
 ## tutorial.md 2 fight-start guard (the one that matters against modified clients): "" when the profile's squad may
 ## fight, else "no_squad" (empty), "locked" or "no_race". Every authority that starts a fight calls it.
-static func fight_problem(p) -> String:
+static func fight_problem(p, journey_id: String = "") -> String:
+	if preload("res://logic/world_zones.gd").journey_problem(p, journey_id) != "":
+		return "zone_locked"  # a locked zone's journey cannot be started by a crafted request
 	var squad: Array = p.card_deck.get("squad", [])
 	if squad.is_empty():
 		return "no_squad"
