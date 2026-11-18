@@ -1,0 +1,11 @@
+{
+	"version": 1,
+	"_comment": "Baked daiyooo-vfx effects for monster moves (client/monster_vfx.gd; display only, the rules never read this). Key = '<event>/<id>': 'area_placed/<area id>' plays at the ground area the rules just marked (scaled by the area radius / ref_radius, started at 'seek' seconds so the clip's own burst lands when the area detonates), 'attack_started/<move id>' plays on the attacker (follow = stays on it), 'projectile_fired/<projectile id>' plays at the shot's release point turned along its flight (face; forward/lift = metres to move the asset origin along the flight / up, for a bundle whose own flight starts off its origin), 'wave_arrived/<enemy type>' plays under every monster of the wave that brings that type (boss_scale for the bosses, scale for the rest). vfx = the bundle folder under res://art/vfx/monster/ (effect.tscn + effect.glb + recipe.json from the daiyooo-vfx MCP). speed = playback rate. The Mummy High Wizard's kit (combat-designer 2026-11-18): golden bolt, curse circle, starfall marks, sandstorm, and the summoning circles its escorts rise from.",
+	"effects": {
+		"projectile_fired/hw_bolt": {"vfx": "hw_bolt", "speed": 1.45, "scale": 1.5, "face": true, "forward": 2.4, "lift": -1.4},
+		"area_placed/hw_curse": {"vfx": "hw_curse", "seek": 0.4, "ref_radius": 2.0},
+		"area_placed/hw_star": {"vfx": "hw_starfall", "seek": 0.0, "speed": 1.5, "ref_radius": 2.0},
+		"attack_started/mummy_hw_sandstorm": {"vfx": "hw_sandstorm", "follow": true, "speed": 1.3, "scale": 1.25},
+		"wave_arrived/mummy_high_wizard": {"vfx": "hw_summon", "seek": 0.3, "scale": 0.8, "boss_scale": 1.5}
+	}
+}

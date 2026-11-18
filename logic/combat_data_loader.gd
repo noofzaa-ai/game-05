@@ -733,6 +733,22 @@ static func _parse_enemies(root: Dictionary, data: CombatData) -> void:
 			data.errors.append("%s.ai.skill_chance must be between 0 and 100" % label)
 		elif skill_chance > 0 and data.styles.has(style) and not data.styles[style].has("special"):
 			data.errors.append("%s.ai.skill_chance needs a style with a special skill" % label)
+		# ai.skills (optional, Boss 2026-11-18 option a): several specials, each its own move and cooldown, tried in
+		# list order when the monster attacks: [{"move": id, "chance": percent}]. Empty = the style's one special.
+		var skills: Array = []
+		for entry in ai.get("skills", []) if typeof(ai.get("skills", [])) == TYPE_ARRAY else []:
+			var skill_move := str(entry.get("move", "")) if typeof(entry) == TYPE_DICTIONARY else ""
+			var chance := int(entry.get("chance", 0)) if typeof(entry) == TYPE_DICTIONARY else 0
+			if not data.moves.has(skill_move):
+				data.errors.append("%s.ai.skills move '%s' is not a known move" % [label, skill_move])
+			elif int(data.moves[skill_move].get("cooldown", 0)) <= 0:
+				data.errors.append("%s.ai.skills move '%s' needs a cooldown" % [label, skill_move])
+			elif chance < 1 or chance > 100:
+				data.errors.append("%s.ai.skills '%s' chance must be 1-100" % [label, skill_move])
+			else:
+				skills.append({"move": skill_move, "chance": chance})
+		if typeof(ai.get("skills", [])) != TYPE_ARRAY:
+			data.errors.append("%s.ai.skills must be a list" % label)
 		var poise := float(raw.get("poise", 0.0))
 		if poise < 0.0:
 			data.errors.append("%s.poise must not be negative" % label)
@@ -847,6 +863,7 @@ static func _parse_enemies(root: Dictionary, data: CombatData) -> void:
 				"cooldown_min": cooldown_min,
 				"cooldown_max": cooldown_max,
 				"skill_chance": skill_chance,
+				"skills": skills,
 				"retreat_ticks": maxi(retreat_ticks, 0),
 				"flee_hp": clampf(flee_hp, 0.0, 0.99),
 				"flee_ticks": maxi(flee_ticks, 0),

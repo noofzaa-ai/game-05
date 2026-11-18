@@ -63,6 +63,7 @@ const CHEST_PROMPT := "Open"  ## by the treasure chest: a button (tap / click; E
 const CHEST_AHEAD := 2.6  ## metres in front of the player the treasure chest drops
 
 var _boss_id := -1  ## the journey boss fighter (-1: none), for the HUD boss bar
+var _boss_ids: Array[int] = []  ## every journey boss shown (the mummy finale is a pair: the bar moves to the one still standing)
 var _enemy_bars  ## client/enemy_bars.gd: the data-driven enemy health-bar styles for this map
 var _map_id := ""  ## the current map's id and atmosphere, to resolve each enemy bar's look
 var _map_atmosphere := "golden"
@@ -82,6 +83,7 @@ var _rig: Node
 var _effects: Node3D
 var _ranged: ProjectileView
 var _class_vfx  ## client/skills/class_skill_vfx.gd: the 16 class skill effects (class_skill/<id>)
+var _monster_vfx  ## client/monster_vfx.gd: baked monster move effects (data/combat/monster_vfx.json)
 var _hud: CanvasLayer
 var _event_trigger: Node
 var _party_hud
@@ -242,6 +244,7 @@ func _physics_frame(_delta: float) -> void:
 	work_started=_work_mark("remote_views_events",work_started)
 	_ranged.handle_events(_session.events, _color_of)
 	_class_vfx.handle_events(_session.events)
+	_monster_vfx.handle_events(_session.events)
 	_ranged.show_state(_session)
 	Audio.handle_events(_session.events, _session, _local_player_id)
 	work_started=_work_mark("projectiles_audio",work_started)
@@ -370,7 +373,8 @@ func _build_atmosphere(style: String = "golden") -> void:
 func _build_stage(map) -> void:
 	StageProps.build(self, map.props, _ink_style)  # (a map's art_scene arrives as a prop, see stage_props.gd)
 	var GoblinGround := preload("res://client/goblin_ground.gd")
-	for solid in ([] if GoblinGround.dressed(map) else map.solids):  # (dressed maps: the art covers every solid)
+	var pyramid_island: bool = map.camera_style == "arena" and preload("res://client/arena_props.gd").is_pyramid_island(self)
+	for solid in ([] if GoblinGround.dressed(map) or pyramid_island else map.solids):  # (dressed maps: the art covers every solid)
 		var box: AABB = solid["box"]
 		var mesh := MeshInstance3D.new()
 		var box_mesh := BoxMesh.new()
@@ -392,6 +396,9 @@ func _build_stage(map) -> void:
 		if GoblinGround.dressed(map):  # a goblin camp: the kit of its own art scene, re-placed around a dirt yard
 			arena_props.hide_scene(self)  # (hidden, not freed: the kit meshes are read from it)
 			arena_props.build_camp(self, self, map, str(map.id))
+		elif pyramid_island:  # a mummy board: its art scene is the island top, add the goblin island's rock underside
+			arena_props.hide_scene(self)
+			arena_props.add_pyramid_island(self, map)
 		else:
 			arena_props.hide_scene(self)
 			arena_props.add_island(self, map)
@@ -459,6 +466,7 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 		if is_boss and _boss_id != id:
 			_add_boss_label(_views[id])
 			_boss_id = id
+			_boss_ids.append(id)
 		return
 	var view := Node3D.new()
 	view.set_script(load("res://client/fighter_view.gd"))
@@ -497,6 +505,7 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 	if is_boss:
 		_add_boss_label(view)
 		_boss_id = id
+		_boss_ids.append(id)
 	view.interpolate = not _session.has_method("presentation_position")  # online: the session places it
 	view.show_state(_session.bodies[id], _session.fighters[id], _combat_data)
 
@@ -516,6 +525,12 @@ func _is_auto_fight() -> bool:
 ## The HUD's boss bar follows the journey boss while it lives.
 func _show_boss_bar() -> void:
 	var boss: Fighter = _session.fighters.get(_boss_id) if _boss_id >= 0 else null
+	if boss == null or not boss.is_alive():
+		for other in _boss_ids:  # a boss pair: the bar follows the one still standing
+			if _session.fighters.has(other) and _session.fighters[other].is_alive():
+				_boss_id = other
+				boss = _session.fighters[other]
+				break
 	if boss == null or not boss.is_alive():
 		_hud.set_boss("", 0.0)
 		return
@@ -677,6 +692,10 @@ func _build_effects_and_hud() -> void:
 	_class_vfx.session = _session
 	_class_vfx.views = _views
 	add_child(_class_vfx)
+	_monster_vfx = preload("res://client/monster_vfx.gd").new()
+	_monster_vfx.session = _session
+	_monster_vfx.views = _views
+	add_child(_monster_vfx)
 	_prewarm_effects()
 	_effects.rig = _rig
 	_hud = Hud.new()
@@ -709,6 +728,19 @@ func _build_effects_and_hud() -> void:
 	add_child(_perf)
 
 
+## The monster types this fight can bring: every type of the journey's stages (wave mode queues them all), else the field.
+func _monster_types_ahead() -> Array:
+	var types := {}
+	if _journey != null:
+		for stage in _journey.data.stages:
+			for enemy in stage.get("enemies", []):
+				types[str(enemy["type"])] = true
+	for id in _session.fighters:
+		if _session.fighters[id].team == "enemy":
+			types[str(_session.fighters[id].enemy_type)] = true
+	return types.keys()
+
+
 ## Compiles every effect in data/combat/vfx.json (and the damage number font) during loading instead
 ## of on its first use (the web build has no shader cache, so each first use froze the game).
 ## Drawn under the floor, where nobody sees it.
@@ -717,6 +749,7 @@ func _prewarm_effects() -> void:
 	_effects.prewarm(hidden)
 	_ranged.prewarm(hidden)
 	_class_vfx.prewarm(_class_vfx.skills_on_field(_session).keys(), hidden, _class_vfx.skills_on_field(_session))  # GLB effects: built and drawn once now
+	_monster_vfx.prewarm(_monster_vfx.vfx_for_types(_monster_types_ahead(), _combat_data), hidden)
 	# The weapon swing trail's material compiles on its first draw (a hitch on the web): draw one now.
 	var trail := preload("res://client/vfx/blade_trail.gd").new()
 	add_child(trail)

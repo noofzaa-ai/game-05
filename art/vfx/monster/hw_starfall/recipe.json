@@ -1,0 +1,359 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "Starfall Shower",
+  "duration": 3.4,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.282,
+    "exposure": 1.082,
+    "toneGuard": 0.85
+  },
+  "layers": [
+    {
+      "id": "1aff76bc-6132-4c3c-916f-1e952ae741b4",
+      "type": "wave",
+      "name": "วงเขตฝนดาว",
+      "enabled": true,
+      "seed": 713,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "ring",
+      "width": 0.03,
+      "motion": "pulse",
+      "start": 0,
+      "duration": 3.2,
+      "size": 1,
+      "spread": 3.6,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.563,
+      "opacity": 0.35,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "aa61eff0-b911-4eac-b7fb-cb98530c70bf",
+      "type": "beam",
+      "name": "ริ้วดาวตก A",
+      "enabled": true,
+      "seed": 5101,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "star_streak",
+      "motion": "rain",
+      "start": 0.2,
+      "duration": 2.8,
+      "size": 1.7,
+      "spread": 3.2,
+      "rise": 6.5,
+      "speed": 1,
+      "energy": 1.079,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "7776e28d-2fb9-453a-8761-acd9d383873a",
+      "type": "sparks",
+      "name": "หัวดาวเรือง A",
+      "enabled": true,
+      "seed": 5101,
+      "color": "#ffe1a6",
+      "secondary": "#ffffff",
+      "style": "glint",
+      "motion": "rain",
+      "start": 0.2,
+      "duration": 2.8,
+      "size": 0.42,
+      "spread": 3.2,
+      "rise": 6.5,
+      "speed": 1,
+      "energy": 1.22,
+      "opacity": 1,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "0d916de6-87d4-4fbe-9d9c-931f5349462a",
+      "type": "flash",
+      "name": "แสงดาวกระทบพื้น A",
+      "enabled": true,
+      "seed": 5101,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "starburst",
+      "motion": "land",
+      "start": 0.2,
+      "duration": 2.8,
+      "size": 1.5,
+      "spread": 3.2,
+      "rise": 0.6,
+      "speed": 1,
+      "energy": 1.032,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 8,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "afe58a8b-8536-46aa-ab09-4396f74fb47f",
+      "type": "beam",
+      "name": "วงกระแทกดาว A",
+      "enabled": true,
+      "seed": 5101,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "ground_ring",
+      "motion": "land",
+      "start": 0.2,
+      "duration": 2.8,
+      "size": 1.05,
+      "spread": 3.2,
+      "rise": 1,
+      "speed": 1,
+      "energy": 0.845,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b255ce18-e520-4966-b3bd-ecfe936da01f",
+      "type": "sparks",
+      "name": "ประกายดาวแตก A",
+      "enabled": true,
+      "seed": 5101,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "cross",
+      "motion": "land",
+      "start": 0.2,
+      "duration": 2.8,
+      "size": 0.075,
+      "spread": 3.2,
+      "rise": 0.8,
+      "speed": 1,
+      "energy": 1.126,
+      "opacity": 1,
+      "scale": 1,
+      "count": 48,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "78819443-04a0-4777-b2c4-87ac0ae27667",
+      "type": "beam",
+      "name": "ริ้วดาวตก B",
+      "enabled": true,
+      "seed": 5203,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "star_streak",
+      "motion": "rain",
+      "start": 0.55,
+      "duration": 2.7,
+      "size": 1.7,
+      "spread": 2.9,
+      "rise": 6.5,
+      "speed": 1,
+      "energy": 1.079,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 9,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "3ba2b04f-73dc-435a-9c83-d0d3e6bcbdb3",
+      "type": "sparks",
+      "name": "หัวดาวเรือง B",
+      "enabled": true,
+      "seed": 5203,
+      "color": "#ffe1a6",
+      "secondary": "#ffffff",
+      "style": "glint",
+      "motion": "rain",
+      "start": 0.55,
+      "duration": 2.7,
+      "size": 0.42,
+      "spread": 2.9,
+      "rise": 6.5,
+      "speed": 1,
+      "energy": 1.22,
+      "opacity": 1,
+      "scale": 1,
+      "count": 9,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b1589cb0-9708-49fe-b6f4-68f57d89eff6",
+      "type": "flash",
+      "name": "แสงดาวกระทบพื้น B",
+      "enabled": true,
+      "seed": 5203,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "starburst",
+      "motion": "land",
+      "start": 0.55,
+      "duration": 2.7,
+      "size": 1.5,
+      "spread": 2.9,
+      "rise": 0.6,
+      "speed": 1,
+      "energy": 1.032,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 8,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "bead7b7e-07aa-4a44-b41c-376818d6a1ac",
+      "type": "beam",
+      "name": "วงกระแทกดาว B",
+      "enabled": true,
+      "seed": 5203,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "ground_ring",
+      "motion": "land",
+      "start": 0.55,
+      "duration": 2.7,
+      "size": 1.05,
+      "spread": 2.9,
+      "rise": 1,
+      "speed": 1,
+      "energy": 0.845,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 9,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "79cf7bad-a30f-4ccb-b4ff-7bff7bc911ea",
+      "type": "sparks",
+      "name": "ประกายดาวแตก B",
+      "enabled": true,
+      "seed": 5203,
+      "color": "#dda500",
+      "secondary": "#ffecc8",
+      "style": "cross",
+      "motion": "land",
+      "start": 0.55,
+      "duration": 2.7,
+      "size": 0.075,
+      "spread": 2.9,
+      "rise": 0.8,
+      "speed": 1,
+      "energy": 1.126,
+      "opacity": 1,
+      "scale": 1,
+      "count": 36,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

@@ -106,6 +106,7 @@ func add_enemy(id: int, spawn: Vector3, enemy_type: String, level: int = 1) -> S
 	brain.cooldown_min = definition["ai"]["cooldown_min"]
 	brain.cooldown_max = definition["ai"]["cooldown_max"]
 	brain.skill_chance = definition["ai"]["skill_chance"]
+	brain.skills = definition["ai"].get("skills", []).duplicate(true)
 	brain.retreat_ticks = definition["ai"]["retreat_ticks"]
 	brain.flee_hp = definition["ai"]["flee_hp"]
 	brain.flee_ticks = definition["ai"]["flee_ticks"]

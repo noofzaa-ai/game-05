@@ -61,7 +61,12 @@
 		"goblin_archer": {"ground_light": "goblin_archer_shot", "ground_heavy": "goblin_archer_shot", "air_light": "goblin_archer_shot", "special": "goblin_archer_volley"},
 		"goblin_mage": {"ground_light": "goblin_mage_bolt", "ground_heavy": "goblin_mage_blink", "air_light": "goblin_mage_bolt", "special": "goblin_mage_hex"},
 		"goblin_knight": {"ground_light": "goblin_knight_cleave", "ground_heavy": "goblin_knight_overhead", "air_light": "goblin_knight_cleave", "special": "goblin_knight_overhead"},
-		"mummy_archer": {"ground_light": "mummy_archer_shot", "ground_heavy": "mummy_archer_shot", "air_light": "mummy_archer_shot", "special": "mummy_archer_volley"}
+		"mummy_archer": {"ground_light": "mummy_archer_shot", "ground_heavy": "mummy_archer_shot", "air_light": "mummy_archer_shot", "special": "mummy_archer_volley"},
+		"mummy": {"ground_light": "mummy_strike", "ground_heavy": "mummy_grasp", "air_light": "mummy_strike", "special": "mummy_grasp"},
+		"mummy_knight": {"ground_light": "mummy_knight_cleave", "ground_heavy": "mummy_knight_bash", "air_light": "mummy_knight_cleave", "special": "mummy_knight_bash"},
+		"mummy_mage": {"ground_light": "mummy_mage_bolt", "ground_heavy": "mummy_mage_blink", "air_light": "mummy_mage_bolt", "special": "mummy_mage_curse"},
+		"mummy_boss": {"ground_light": "mummy_boss_combo", "ground_heavy": "mummy_boss_nova", "air_light": "mummy_boss_combo", "special": "mummy_boss_nova"},
+		"mummy_high_wizard": {"ground_light": "mummy_hw_bolt", "ground_heavy": "mummy_hw_sandstorm", "air_light": "mummy_hw_bolt", "special": "mummy_hw_starfall"}
 	},
 
 	"_ranged_comment": "RANGED ATTACKS (logic/projectiles.gd). A move fires through its 'spawns' list: {projectile: id | area: id | blink: meters, frame: move frame (default = its startup, the strike), offset: [forward, up, side (+ = the shooter's right)] from the feet in meters, measured on the clip's release frame (2026-10-12: archer arrow tip at frame 34 of shoot / 44 of volley, mage crystal at frame 30 of cast, where the staff has thrust forward), angle: degrees off the facing}. A move with spawns hits only through them (melee: true to also swing). Damage, guard, dodge and effects are the melee rules with the move's power. PROJECTILES: look = how the client draws it (arrow, bolt), speed m/s, range m it flies, radius m, pierce = extra targets it passes through, gravity m/s2 down and lift = m/s up at release (an arrow's slight arc), homing = degrees per second it turns toward its target (0 = none, weak = 30-60), walls = stops at walls and the floor, aim_cone = it aims straight at the nearest opponent within this many degrees of the facing (free aim; otherwise straight ahead). It can be guarded from the front (unless the move ignores_guard) and i-frames let it fly through. AREAS: a circle marked on the ground at the opponent the caster faces (within range and aim_cone), radius m, delay = ticks of warning before it goes off (at least 20; the circle fills up meanwhile), active = ticks it hurts (each opponent once), height m it reaches up, guardable (false: step out or dodge).",
@@ -70,6 +75,9 @@
 		"goblin_arrow": {"look": "arrow", "speed": 16.0, "range": 13.0, "radius": 0.15, "pierce": 0, "gravity": 3.0, "lift": 0.9, "homing": 0.0, "walls": true, "aim_cone": 30},
 		"mummy_arrow": {"look": "arrow", "speed": 16.0, "range": 13.0, "radius": 0.15, "pierce": 0, "gravity": 3.0, "lift": 0.9, "homing": 0.0, "walls": true, "aim_cone": 30},
 		"goblin_bolt": {"look": "bolt", "speed": 8.5, "range": 11.0, "radius": 0.28, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 45.0, "walls": true, "aim_cone": 40},
+		"mummy_scarab": {"look": "bolt", "speed": 8.5, "range": 11.0, "radius": 0.28, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 45.0, "walls": true, "aim_cone": 40},
+		"hw_bolt": {"look": "gold_bolt", "speed": 10.0, "range": 12.0, "radius": 0.35, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 40.0, "walls": true, "aim_cone": 40},
+		"pharaoh_sand_crescent": {"look": "bolt", "speed": 11.0, "range": 4.5, "radius": 0.45, "pierce": 2, "gravity": 0.0, "lift": 0.0, "homing": 0.0, "walls": true, "aim_cone": 30},
 		"player_jade_arrow": {
 			"look": "jade_arrow",
 			"speed": 5,
@@ -97,7 +105,10 @@
 	},
 
 	"areas": {
-		"goblin_hex": {"look": "hex_circle", "radius": 1.6, "delay": 66, "active": 3, "height": 2.2, "range": 9.0, "aim_cone": 70, "guardable": false}
+		"goblin_hex": {"look": "hex_circle", "radius": 1.6, "delay": 66, "active": 3, "height": 2.2, "range": 9.0, "aim_cone": 70, "guardable": false},
+		"mummy_curse": {"look": "hex_circle", "radius": 1.6, "delay": 66, "active": 3, "height": 2.2, "range": 9.0, "aim_cone": 70, "guardable": false},
+		"hw_curse": {"look": "curse_mark", "radius": 2.0, "delay": 66, "active": 3, "height": 3.0, "range": 12.0, "aim_cone": 90, "guardable": false},
+		"hw_star": {"look": "star_mark", "radius": 1.5, "delay": 54, "active": 3, "height": 3.0, "range": 12.0, "aim_cone": 120, "guardable": false}
 	},
 
 	"moves": {
@@ -220,6 +231,84 @@
 				{"projectile": "mummy_arrow", "frame": 62, "offset": [0.70, 1.15, 0.14]},
 				{"projectile": "mummy_arrow", "frame": 62, "offset": [0.70, 1.15, 0.14], "angle": 14}
 			]
+		},
+		"mummy_strike": {
+			"startup": 10, "active": 4, "recovery": 16, "power": 0.75,
+			"hit_offset": [0.95, 0.9, 0.0], "hit_size": [1.4, 1.2, 1.4],
+			"knockback": 2.5, "launch": 0.0, "hitstun": 12, "hitstop": 3
+		},
+		"mummy_grasp": {
+			"startup": 30, "active": 10, "recovery": 34, "power": 2.0, "cooldown": 360,
+			"hit_offset": [1.2, 0.9, 0.0], "hit_size": [1.6, 1.2, 1.6],
+			"knockback": 4.0, "launch": 0.0, "hitstun": 22, "hitstop": 6, "telegraph": true,
+			"effects": [{"id": "curse", "chance": 50}]
+		},
+		"mummy_knight_cleave": {
+			"startup": 26, "active": 6, "recovery": 32, "power": 1.6, "telegraph": true,
+			"hit_offset": [1.6, 1.0, 0.0], "hit_size": [2.5, 1.6, 2.8],
+			"knockback": 6.0, "launch": 0.0, "hitstun": 22, "hitstop": 6
+		},
+		"mummy_knight_bash": {
+			"startup": 34, "active": 6, "recovery": 40, "power": 2.4, "cooldown": 360, "telegraph": true,
+			"hit_offset": [1.3, 1.0, 0.0], "hit_size": [1.8, 1.6, 1.8],
+			"knockback": 9.0, "launch": 0.0, "hitstun": 30, "hitstop": 8, "advance": 8.0,
+			"effects": [{"id": "stun", "chance": 35}]
+		},
+		"mummy_mage_bolt": {
+			"startup": 28, "active": 2, "recovery": 26, "power": 0.85,
+			"hit_offset": [0.5, 0.9, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 3.0, "launch": 0.0, "hitstun": 16, "hitstop": 4,
+			"spawns": [{"projectile": "mummy_scarab", "frame": 28, "offset": [0.9, 1.3, -0.2]}]
+		},
+		"mummy_mage_curse": {
+			"startup": 30, "active": 2, "recovery": 36, "power": 2.0, "cooldown": 300,
+			"hit_offset": [0.5, 0.9, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 5.0, "launch": 4.0, "hitstun": 26, "hitstop": 6, "telegraph": true,
+			"spawns": [{"area": "mummy_curse"}],
+			"effects": [{"id": "curse", "chance": 70}]
+		},
+		"mummy_mage_blink": {
+			"startup": 8, "active": 2, "recovery": 18, "power": 0.0, "invuln_from": 6, "invuln_to": 12,
+			"hit_offset": [0.5, 0.9, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 0.0, "launch": 0.0, "hitstun": 0, "hitstop": 0,
+			"spawns": [{"blink": -4.0, "frame": 8}]
+		},
+		"mummy_boss_combo": {
+			"startup": 14, "active": 5, "recovery": 28, "power": 0.55, "melee": true,
+			"hit_offset": [1.5, 1.1, 0.0], "hit_size": [2.2, 1.6, 2.2],
+			"knockback": 3.0, "launch": 0.0, "hitstun": 16, "hitstop": 4,
+			"spawns": [{"projectile": "pharaoh_sand_crescent", "frame": 26, "offset": [0.9, 1.0, 0.0]}]
+		},
+		"mummy_boss_nova": {
+			"startup": 40, "active": 5, "recovery": 40, "power": 1.5, "cooldown": 300, "telegraph": true,
+			"hit_offset": [0.0, 1.1, 0.0], "hit_size": [5.0, 2.2, 5.0],
+			"knockback": 8.0, "launch": 3.0, "hitstun": 26, "hitstop": 7,
+			"effects": [{"id": "curse", "chance": 70}]
+		},
+		"mummy_hw_bolt": {
+			"startup": 40, "active": 4, "recovery": 40, "power": 0.9,
+			"hit_offset": [0.5, 1.5, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 3.5, "launch": 0.0, "hitstun": 16, "hitstop": 4,
+			"spawns": [{"projectile": "hw_bolt", "frame": 40, "offset": [1.0, 2.2, -0.3]}]
+		},
+		"mummy_hw_curse": {
+			"startup": 72, "active": 6, "recovery": 54, "power": 1.4, "cooldown": 240, "telegraph": true,
+			"hit_offset": [0.5, 1.5, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 5.0, "launch": 3.0, "hitstun": 24, "hitstop": 6,
+			"spawns": [{"area": "hw_curse", "frame": 72}],
+			"effects": [{"id": "curse", "chance": 60}]
+		},
+		"mummy_hw_starfall": {
+			"startup": 96, "active": 30, "recovery": 60, "power": 1.1, "cooldown": 480, "telegraph": true,
+			"hit_offset": [0.5, 1.5, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 6.0, "launch": 4.0, "hitstun": 26, "hitstop": 6,
+			"spawns": [{"area": "hw_star", "frame": 96}, {"area": "hw_star", "frame": 110}, {"area": "hw_star", "frame": 124}]
+		},
+		"mummy_hw_sandstorm": {
+			"startup": 70, "active": 48, "recovery": 40, "power": 1.5, "telegraph": true,
+			"hit_offset": [0.0, 1.5, 0.0], "hit_size": [6.0, 3.0, 6.0],
+			"knockback": 10.0, "launch": 2.0, "hitstun": 28, "hitstop": 7,
+			"effects": [{"id": "slow", "chance": 60}]
 		}
 	},
 
@@ -229,15 +318,17 @@
 
 	"enemies": {
 		"mummy": {
-			"role": "Mummy: regular melee undead. Core combat stats and movement/attack speed tuned to1.5x the normal Goblin baseline; unarmed strikes, no retreat or ranged skill.",
-			"_design": "Boss2026-10-21: base combat stats1.5x normal Goblin at the same level. HP450/ATK150/DEF45;MOVESPD32 gives1.32x base walk versus Goblin0.88x (=1.5x). ATKSPD50 gives1.5x move-frame speed;AI cooldowns40–73ticks from Goblin60–110 divided by1.5 (integer rounding). Zero CRIRATE/poise stay zero. Fists moves remain provisional; exact hit damage/DPS also depends on move power,timing and target DEF. Rig1.80m,bespoke clips and separate map pending.",
-			"style": "fists",
+			"role": "Mummy: the Pyramid's basic melee undead (the goblin's twin). It shambles straight in and claws; it glows before a telegraphed grave grasp that can curse you (DEF and healing down). Undead: it never hops back or flees. Dodge the grasp.",
+			"_design": "Boss2026-10-21: base combat stats1.5x normal Goblin at the same level. HP 45/ATK 15/DEF 45 (HP SCALE 100: /10 on 2026-11-13); MOVESPD32 gives1.32x base walk versus Goblin0.88x (=1.5x). ATKSPD50 gives1.5x move-frame speed;AI cooldowns40–73ticks from Goblin60–110 divided by1.5 (integer rounding). Zero CRIRATE/poise stay zero. combat-designer 2026-11-17: its own moves mirror the goblin's one to one (mummy_strike = goblin_jab frames/power, mummy_grasp = goblin_lunge frames/power/cooldown with curse 50% instead of wound 50%), so the ATKSPD 50 makes it swing 1.5x as fast as the goblin, as the Boss ruled. skill_chance 25 like the goblin. No retreat/flee (undead identity; the goblin's hop-back and flee are dropped). model = the old stand-in until the new model (character-artist, same path or mummy_base) lands; the first existing entry of looks wins.",
+			"style": "mummy",
 			"color": [
 				0.72,
 				0.67,
 				0.54
 			],
 			"model": "res://art/monsters/mummy/mummy.glb",
+			"looks": [{"model": "res://art/monsters/mummy_base/mummy_base.glb", "clips": {"mummy_strike": "attack_1", "mummy_grasp": "attack_2"}}],
+			"clips": {"mummy_strike": "attack_1", "mummy_grasp": "attack_2"},
 			"model_height": 1.8,
 			"body_height": 1.8,
 			"stats": {
@@ -250,15 +341,60 @@
 			},
 			"poise": 0,
 			"ai": {
-				"attack_range": 1.3,
+				"attack_range": 1.6,
 				"cooldown_min": 40,
 				"cooldown_max": 73,
 				"attack_input": "light",
-				"wait_range": 3.2,
-				"skill_chance": 0,
+				"wait_range": 3.4,
+				"skill_chance": 25,
 				"retreat_ticks": 0,
 				"flee_hp": 0
 			}
+		},
+		"mummy_knight": {
+			"role": "Mummy Knight: a tomb guard in a bronze helm, round shield on the left arm, a heavy khopesh in the right (the goblin knight's twin). Slow and armoured, poise 140: light hits do not stagger it; it never backs off. Each blow is wound up ('!'): a wide khopesh cleave, and a shield bash that steps forward and can stun. Dodge through or step back, then punish the recovery.",
+			"_design": "combat-designer 2026-11-17: the goblin knight x1.5 on HP/ATK/DEF (the mummy/goblin zone step, Boss 2026-10-21): HP 165 / ATK 18 / DEF 120; poise 140 and EFFECT_RES 30 unchanged; MOVESPD -48 -> -36 (+12 like the archer twin, 2.4 m/s vs 1.98). Moves mirror one to one: cleave = goblin_knight_cleave frames/power 1.6; the bash replaces the overhead (34/6/40 frames vs 42/5/46, power 2.4 vs 3.0, advance 8, stun 35% instead of sunder 100%, cooldown 360). Stand-in model = the mummy mesh tinted bronze until art/monsters/mummy_knight/mummy_knight.glb lands (looks).",
+			"style": "mummy_knight",
+			"color": [0.55, 0.47, 0.3],
+			"model": "res://art/monsters/mummy/mummy.glb",
+			"model_tint": [0.82, 0.7, 0.5],
+			"looks": [{"model": "res://art/monsters/mummy_knight/mummy_knight.glb", "clips": {"mummy_knight_cleave": "attack_1", "mummy_knight_bash": "attack_2"}}],
+			"clips": {"mummy_knight_cleave": "attack_1", "mummy_knight_bash": "attack_2"},
+			"model_height": 2.0,
+			"body_height": 1.9,
+			"stats": {"HP": 165, "ATK": 18, "DEF": 120, "MOVESPD": -36, "CRIRATE": 0, "EFFECT_RES": 30},
+			"poise": 140,
+			"ai": {"attack_range": 3.2, "cooldown_min": 90, "cooldown_max": 150, "attack_input": "light", "wait_range": 4.2, "skill_chance": 35}
+		},
+		"mummy_mage": {
+			"role": "Mummy Mage: a bandaged priest with a scarab staff (the goblin mage's twin). Keeps away, throws slow homing scarab bolts and marks the ground where you stand with a curse circle: it fills, then bursts and curses (DEF and healing down). Keep moving; it dissolves into sand and reappears behind when you reach it.",
+			"_design": "combat-designer 2026-11-17: the goblin mage x1.5 on HP/ATK/DEF: HP 36 / ATK 16.5 / DEF 38; EFFECT_RES 20 and the whole AI (keep 7.5, retreat 4.5, escape blink 2.6 m every 360 ticks, cooldowns 110-170, skill 45) unchanged; MOVESPD -18 -> -6 (+12 like the archer twin). Moves mirror one to one: scarab bolt = goblin_mage_bolt (projectile mummy_scarab = goblin_bolt numbers), curse circle = goblin_mage_hex (area mummy_curse = goblin_hex numbers) with curse 70% instead of slow 70%, sand step = goblin_mage_blink. The client draws them with the goblin's bolt/hex_circle looks until sand looks exist (client/projectile_view.gd LOOKS). A real blink clip needs a new keyframed clip (docs/art/monster_requests/mummy_mage.md): Boss decision.",
+			"style": "mummy_mage",
+			"color": [0.6, 0.5, 0.35],
+			"model": "res://art/monsters/mummy/mummy.glb",
+			"model_tint": [0.78, 0.72, 0.95],
+			"looks": [{"model": "res://art/monsters/mummy_mage/mummy_mage.glb", "clips": {"mummy_mage_bolt": "cast", "mummy_mage_curse": "cast_aoe", "mummy_mage_blink": "blink"}}],
+			"clips": {"mummy_mage_bolt": "cast", "mummy_mage_curse": "cast_aoe", "mummy_mage_blink": "blink"},
+			"model_height": 1.9,
+			"body_height": 1.75,
+			"stats": {"HP": 36, "ATK": 16.5, "DEF": 38, "MOVESPD": -6, "CRIRATE": 0, "EFFECT_RES": 20},
+			"poise": 0,
+			"ai": {"attack_range": 10.0, "cooldown_min": 110, "cooldown_max": 170, "attack_input": "light", "wait_range": 7.5, "skill_chance": 45, "keep_range": 7.5, "retreat_range": 4.5, "strafe": 0.35, "escape_input": "heavy", "escape_range": 2.6, "escape_cooldown": 360, "flee_hp": 0.25, "flee_ticks": 60}
+		},
+		"mummy_boss": {
+			"role": "Mummy Pharaoh: the Pyramid's boss (the Goblin Chief's twin), crowned, 2.6 m, a gold khopesh. It stands its ground: a two-cut khopesh combo whose second cut throws a short sand crescent that passes through up to three fighters, and a telegraphed sand-curse nova all around it (DODGE out or through it). At low health it calls a mummy archer and a mummy mage (wave 2 of its wave).",
+			"_design": "combat-designer 2026-11-17: the Goblin Chief x1.5 on HP/ATK/DEF: HP 225 / ATK 18.8 / DEF 90; poise 60 and EFFECT_RES 30 unchanged; MOVESPD -15 -> -3 (+12 like the archer twin). Moves mirror the Chief's two: combo (light) = melee cut + sand crescent at frame 26, power 0.55 each (1.1 if both land vs the Chief's jab 0.8; the crescent misses a fighter who steps aside), nova (special) = a 5 x 5 m box on itself, power 1.5 vs the lunge's 2.1 because it can hit the whole squad, curse 70% vs wound 70%, cooldown 300 like the lunge. skill_chance 35, attack_range 2.9 (Chief 2.7). The journey adds boss hp_mult/poise_mult on top. Stand-in = the mummy mesh tinted gold until art/monsters/mummy_boss/mummy_boss.glb lands (looks).",
+			"style": "mummy_boss",
+			"color": [0.78, 0.62, 0.25],
+			"model": "res://art/monsters/mummy/mummy.glb",
+			"model_tint": [0.95, 0.78, 0.42],
+			"looks": [{"model": "res://art/monsters/mummy_boss/mummy_boss.glb", "clips": {"mummy_boss_combo": "attack_1", "mummy_boss_nova": "attack_2"}}],
+			"clips": {"mummy_boss_combo": "attack_1", "mummy_boss_nova": "attack_2"},
+			"model_height": 2.6,
+			"body_height": 2.3,
+			"stats": {"HP": 225, "ATK": 18.8, "DEF": 90, "MOVESPD": -3, "CRIRATE": 0, "EFFECT_RES": 30},
+			"poise": 60,
+			"ai": {"attack_range": 2.9, "cooldown_min": 70, "cooldown_max": 120, "attack_input": "light", "wait_range": 4.4, "skill_chance": 35}
 		},
 		"mummy_archer": {
 			"role": "Mummy Archer (PLACEHOLDER numbers, mummy map): a bandaged archer that keeps its distance and shoots. One arrow after a draw; a rarer slow draw fires a 3-arrow volley that warns ('!'). Close in: it backs away but cannot fight up close.",
@@ -276,18 +412,23 @@
 			"poise": 0,
 			"ai": {"attack_range": 11.0, "cooldown_min": 80, "cooldown_max": 130, "attack_input": "light", "wait_range": 7.0, "skill_chance": 25, "keep_range": 7.0, "retreat_range": 4.0, "strafe": 0.45, "flee_hp": 0.3, "flee_ticks": 60}
 		},
-		"mummy_boss_placeholder": {
-			"role": "PLACEHOLDER BOSS of the pyramid (Boss has not designed it): a scaled-up, darker-gold Mummy, same moves. NOT the Mummy Pharaoh; do not read lore into it.",
-			"_design": "PLACEHOLDER (level-designer 2026-11-17): the mummy 1.35x bigger and tinted gold, tougher (HP x3.3, DEF x1.3, poise 70, EFFECT_RES 30) but with the mummy's own fists moves, same speed. The journey adds boss hp_mult/poise_mult on top. Replace with the real boss when the Boss has designed it.",
-			"style": "fists",
+		"mummy_high_wizard": {
+			"role": "Mummy High Wizard: the BIG boss of the Pyramid (3.4 m pharaoh-mage with a serpent staff), fought together with the Mummy Pharaoh (mummy_boss) in the wave-9 finale; the escorts rise from summoning circles as it arrives. It holds its ground at range and never stops casting: homing golden BOLTS, a purple-gold CURSE CIRCLE under a fighter (fills, then bursts: curse = DEF and healing down), a STARFALL where three falling-star marks chase the nearest fighter one after another, and when anyone steps within 4 m a SANDSTORM whirls around it, hurling everyone in 3 m away and slowing them. Every big blow is marked on the ground first: step out of the circles, never stand next to it.",
+			"_design": "combat-designer 2026-11-18 (Boss 2026-11-17: the boss pair; VERY powerful, spectacular, brutal; Boss 2026-11-18 option a: ai.skills). Four moves: light = mummy_hw_bolt (clip cast, homing projectile hw_bolt), ai.skills = mummy_hw_starfall (clip starfall, cooldown 480, 35% when ready) then mummy_hw_curse (clip cast_aoe, cooldown 240, 45% when ready), escape = heavy mummy_hw_sandstorm (clip sandstorm, escape_range 4.0, every 300 ticks). The summon clip/VFX is visual only (client/monster_vfx.gd, as its wave arrives). Stats vs the Pharaoh (HP 225 / ATK 18.8 / DEF 90): HP 300, ATK 20, DEF 80, poise 120, EFFECT_RES 40, MOVESPD -24 (slow and huge); retreat_range 0 = it never backs away. Timings follow art/animations/monster_clips_wizard_boss.json marks (bolt windup 0.95 s -> 40, curse 1.75 s -> 72, starfall 2.3 s -> 96, sandstorm 1.875 s -> 70). Numbers measured with tools/balance/class_sim.gd, see data/journeys/mummy_waves.json _tuning_boss_pair.",
+			"style": "mummy_high_wizard",
 			"color": [0.78, 0.62, 0.25],
 			"model": "res://art/monsters/mummy/mummy.glb",
 			"model_tint": [0.95, 0.78, 0.42],
-			"model_height": 2.43,
-			"body_height": 2.43,
-			"stats": {"HP": 150, "ATK": 17, "DEF": 58, "MOVESPD": 5, "ATKSPD": 40, "CRIRATE": 0, "EFFECT_RES": 30},
-			"poise": 70,
-			"ai": {"attack_range": 1.7, "cooldown_min": 60, "cooldown_max": 100, "attack_input": "light", "wait_range": 3.6, "skill_chance": 0, "retreat_ticks": 0, "flee_hp": 0}
+			"looks": [{"model": "res://art/monsters/mummy_high_wizard/mummy_high_wizard.glb", "animations": "res://art/animations/monster_clips_wizard_boss.glb", "clips": {"mummy_hw_bolt": "cast", "mummy_hw_curse": "cast_aoe", "mummy_hw_starfall": "starfall", "mummy_hw_sandstorm": "sandstorm"}}],
+			"animations": "res://art/animations/monster_clips_wizard_boss.glb",
+			"clips": {"mummy_hw_bolt": "cast", "mummy_hw_curse": "cast_aoe", "mummy_hw_starfall": "starfall", "mummy_hw_sandstorm": "sandstorm"},
+			"model_height": 3.4,
+			"body_height": 3.0,
+			"run_clip_speed": 1.195,
+			"hips_scale": 1.0,
+			"stats": {"HP": 300, "ATK": 20, "DEF": 80, "MOVESPD": -24, "CRIRATE": 0, "EFFECT_RES": 40},
+			"poise": 120,
+			"ai": {"attack_range": 11.0, "cooldown_min": 100, "cooldown_max": 150, "attack_input": "light", "wait_range": 7.0, "skill_chance": 0, "skills": [{"move": "mummy_hw_starfall", "chance": 35}, {"move": "mummy_hw_curse", "chance": 45}], "keep_range": 7.0, "retreat_range": 0.0, "strafe": 0.2, "escape_input": "heavy", "escape_range": 4.0, "escape_cooldown": 300}
 		},
 		"dummy_grunt": {
 			"role": "Grunt: walks up and jabs. Beat it with combos.",

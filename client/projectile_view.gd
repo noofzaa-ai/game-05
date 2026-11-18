@@ -17,7 +17,10 @@ const LOOKS := {
 	"jade_arrow": {"color": Color("63d9b7")},
 	"arrow": {"color": Color(0.95, 0.9, 0.75), "length": 0.8, "model": "res://art/monsters/goblin_archer/arrow.glb", "model_scale": 1.25},
 	"bolt": {"color": Color(0.72, 0.4, 1.0), "size": 0.15},
+	"gold_bolt": {"color": Color(1.0, 0.76, 0.22), "core": Color(1.0, 0.95, 0.72), "size": 0.2},  ## Mummy High Wizard's bolt (Boss 2026-11-18: gold, pharaoh theme)
 	"hex_circle": {"color": Color(0.78, 0.36, 1.0)},
+	"curse_mark": {"color": Color(0.66, 0.22, 1.0)},  ## Mummy High Wizard's curse circle (+ art/vfx/monster/hw_curse)
+	"star_mark": {"color": Color(1.0, 0.78, 0.25)},  ## Mummy High Wizard's starfall marks (+ art/vfx/monster/hw_starfall)
 }
 const TRAIL_GLOWS := 6  ## fading glows behind a magic bolt
 const AREA_LIFT := 0.05  ## the circle floats this much above the ground (no flicker with the floor)
@@ -35,6 +38,9 @@ var _arrow_material: StandardMaterial3D
 var _streak_material: StandardMaterial3D
 var _glow_material: Material  ## additive glow, or its ink-wash version (client/vfx/ink_vfx.gd) when the drawn style is on
 var _core_material: StandardMaterial3D
+var _gold_glow_material: Material  ## the gold bolt's own glow (same recipe as _glow_material)
+var _gold_core_material: StandardMaterial3D
+var _gold_sphere: SphereMesh
 var _quad: QuadMesh
 var _sphere: SphereMesh
 
@@ -110,7 +116,7 @@ func handle_events(events: Array, color_of: Callable) -> void:
 ## circle shader compile then and not at the first shot (the web build has no shader cache).
 func prewarm(hidden: Vector3) -> void:
 	var nodes: Array[Node3D] = []
-	for look in ["arrow", "bolt"]:
+	for look in ["arrow", "bolt", "gold_bolt"]:
 		var shot := _build_shot(look)
 		_place_shot(shot, hidden, Vector3(5.0, 0.0, 0.0))
 		nodes.append(shot)
@@ -130,7 +136,7 @@ func live_count() -> int:
 
 func _look_of_shot(event: Dictionary) -> String:
 	var node: Node3D = _shots.get(int(event["shot"]))
-	return str(node.get_meta("look")) if node != null else ("bolt" if "bolt" in str(event["projectile"]) else "arrow")
+	return str(node.get_meta("look")) if node != null else ("gold_bolt" if str(event["projectile"]).begins_with("hw_") else ("bolt" if "bolt" in str(event["projectile"]) else "arrow"))
 
 
 func _build_shot(look: String) -> Node3D:
@@ -141,15 +147,16 @@ func _build_shot(look: String) -> Node3D:
 		var arrow:=preload("res://client/characters/bow_visual.gd").make_arrow()
 		arrow.rotation.y=PI
 		root.add_child(arrow)
-	elif look == "bolt":
+	elif look == "bolt" or look == "gold_bolt":
+		var gold: bool = look == "gold_bolt"
 		var core := MeshInstance3D.new()
-		core.mesh = _sphere
-		core.material_override = _core_material
+		core.mesh = _gold_sphere if gold else _sphere
+		core.material_override = _gold_core_material if gold else _core_material
 		core.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(core)
 		var glow := MeshInstance3D.new()
 		glow.mesh = _quad
-		glow.material_override = _glow_material
+		glow.material_override = _gold_glow_material if gold else _glow_material
 		glow.scale = Vector3.ONE * 0.75
 		glow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(glow)
@@ -157,7 +164,7 @@ func _build_shot(look: String) -> Node3D:
 		for i in TRAIL_GLOWS:
 			var mote := MeshInstance3D.new()
 			mote.mesh = _quad
-			mote.material_override = _glow_material
+			mote.material_override = _gold_glow_material if gold else _glow_material
 			mote.top_level = true
 			mote.scale = Vector3.ONE * lerpf(0.55, 0.12, float(i) / float(TRAIL_GLOWS))
 			mote.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -254,9 +261,16 @@ func _build_resources() -> void:
 	radial.width = 64
 	radial.height = 64
 	_glow_material.albedo_texture = radial
+	var gold_glow := _glow_material.duplicate() as StandardMaterial3D  # same recipe, gold tint (still the plain material here)
+	gold_glow.albedo_color = LOOKS["gold_bolt"]["color"]
+	_gold_glow_material = gold_glow
 	if InkVfx.enabled():
 		_glow_material = InkVfx.material_for(_glow_material)  # mix-blended ink blot instead of additive light
+		_gold_glow_material = InkVfx.material_for(gold_glow)
 		_streak_material.blend_mode = BaseMaterial3D.BLEND_MODE_MIX
+	_gold_core_material = StandardMaterial3D.new()
+	_gold_core_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_gold_core_material.albedo_color = LOOKS["gold_bolt"]["core"]
 	_quad = QuadMesh.new()
 	_quad.size = Vector2.ONE
 	_sphere = SphereMesh.new()
@@ -264,6 +278,11 @@ func _build_resources() -> void:
 	_sphere.height = LOOKS["bolt"]["size"] * 2.0
 	_sphere.radial_segments = 12
 	_sphere.rings = 6
+	_gold_sphere = SphereMesh.new()
+	_gold_sphere.radius = LOOKS["gold_bolt"]["size"]
+	_gold_sphere.height = LOOKS["gold_bolt"]["size"] * 2.0
+	_gold_sphere.radial_segments = 12
+	_gold_sphere.rings = 6
 	_arrow_mesh = _make_arrow(float(LOOKS["arrow"]["length"]))
 	var arrow_path: String = LOOKS["arrow"]["model"]
 	if ResourceLoader.exists(arrow_path):

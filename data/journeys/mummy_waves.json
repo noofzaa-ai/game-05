@@ -2,7 +2,7 @@
  "version": 1,
  "id": "mummy_waves",
  "name": "Pyramid · 9 Waves",
- "_design": "PLACEHOLDER-NUMBERS journey of the Mummy Pyramid zone (level-designer 2026-11-17), built as DATA the same way as goblin_waves.json (same schema, wave_mode: ONE fight of 9 waves on one 16x9 board picked from arena_maps by seed, the boss is wave 9, wave_heal_fraction is the rest between waves). Boss 2026-11-17: the mummies live ONLY here, no goblin in this file and no mummy in goblin_waves (tests/test_journey_families.gd derives the families from the data). MONSTER MIX: wave 1 mummies only; wave 2 introduces the mummy archer; 3-8 mix 2-3 mummies with 1-3 archers (levels 2-4); wave 9 is a PLACEHOLDER boss ('mummy_boss_placeholder', a scaled-up gold mummy: the Boss has NOT designed the pyramid boss) with mummies and a wave-2 archer pair. The mummy is 1.5x the goblin (Boss 2026-10-21) so counts are lower than the goblin ramp. Camp/treasure/challenge fields are kept for schema parity (the 12-stage road mode is off); camp_map/boss_map are the rest and throne chambers. Powers and wave_power_by_squad are tuned with tools/balance/class_sim.gd journey=mummy_waves, see _tuning.",
+ "_design": "Journey of the Mummy Pyramid zone (level-designer 2026-11-17, rebuilt by the combat-designer 2026-11-17 for the full mummy family). Same schema as goblin_waves.json (wave_mode: ONE fight of 9 waves on one 16x9 board picked from arena_maps by seed, the boss is wave 9, wave_heal_fraction is the rest between waves). Boss 2026-11-17: the mummies live ONLY here, no goblin in this file and no mummy in goblin_waves (tests/test_journey_families.gd derives the families from the data). MONSTER MIX: the goblin journey's 9 waves one to one with each goblin swapped for its mummy twin (goblin -> mummy, goblin_archer -> mummy_archer, goblin_knight -> mummy_knight, goblin_mage -> mummy_mage, goblin_chief -> mummy_boss, the Mummy Pharaoh), same counts and levels, except the debut order (PO 2026-11-17: grunts, archers, knights, mages): w1 mummies, w2 the archer, w3 the knight, w4 the mage (the goblin's w3/w4 swapped), w5-w8 mixes, w9 the BOSS PAIR (Boss 2026-11-17): the Mummy High Wizard (mummy_high_wizard, the big 3.4 m pharaoh-mage) and the Mummy Pharaoh (mummy_boss, the 'mini pharaoh'), both boss: true, with 2 mummies (x1.5 = 3) that rise from summoning circles as the pair arrives (client/monster_vfx.gd). The level-2 archer + mage escorts were dropped (combat-designer 2026-11-18, see _tuning_boss_pair): in wave mode every monster of a stage arrives together (the stage 'waves'/'wave' fields only work on the old road), so they did not 'rise when hurt' anyway, and the pair alone keeps the bosses the threat. The mummy family is the goblin family x1.5 on HP/ATK/DEF (Boss 2026-10-21 ratio, the zone step), so the difficulty is set by stage power and wave_power_by_squad, see _tuning. Camp/treasure/challenge fields are kept for schema parity (the 12-stage road mode is off; logic/journey_data.gd still requires boss_map, so it names an arena board; there is no camp map since the throne/rest maps were removed 2026-11-18).",
  "stage_count": 9,
  "choices": 3,
  "first_camp_stages": [
@@ -21,8 +21,7 @@
   "mummy_pyramid_gate",
   "mummy_pyramid_hall"
  ],
- "boss_map": "mummy_pyramid_pharaoh",
- "camp_map": "mummy_pyramid_rest",
+ "boss_map": "mummy_pyramid_gate",
  "arena_maps": [
   "mummy_pyramid_gate",
   "mummy_pyramid_hall",
@@ -53,7 +52,7 @@
    "enemies": [
     {
      "type": "mummy",
-     "count": 3
+     "count": 4
     }
    ],
    "challenge": {}
@@ -64,7 +63,7 @@
    "enemies": [
     {
      "type": "mummy",
-     "count": 3
+     "count": 4
     },
     {
      "type": "mummy_archer",
@@ -77,11 +76,11 @@
     "enemies": [
      {
       "type": "mummy",
-      "count": 3
+      "count": 4
      },
      {
       "type": "mummy_archer",
-      "count": 2
+      "count": 1
      }
     ]
    }
@@ -92,10 +91,42 @@
    "enemies": [
     {
      "type": "mummy",
-     "count": 3
+     "count": 2
     },
     {
-     "type": "mummy_archer",
+     "type": "mummy_knight",
+     "count": 1
+    }
+   ],
+   "challenge": {
+    "level": 3,
+    "power": 0.75,
+    "enemies": [
+     {
+      "type": "mummy",
+      "count": 2
+     },
+     {
+      "type": "mummy_knight",
+      "count": 1
+     },
+     {
+      "type": "mummy_archer",
+      "count": 1
+     }
+    ]
+   }
+  },
+  {
+   "level": 2,
+   "power": 0.7,
+   "enemies": [
+    {
+     "type": "mummy",
+     "count": 4
+    },
+    {
+     "type": "mummy_mage",
      "count": 1
     }
    ],
@@ -109,35 +140,11 @@
      },
      {
       "type": "mummy_archer",
-      "count": 2
-     }
-    ]
-   }
-  },
-  {
-   "level": 2,
-   "power": 0.7,
-   "enemies": [
-    {
-     "type": "mummy",
-     "count": 2
-    },
-    {
-     "type": "mummy_archer",
-     "count": 2
-    }
-   ],
-   "challenge": {
-    "level": 3,
-    "power": 0.75,
-    "enemies": [
-     {
-      "type": "mummy",
-      "count": 3
+      "count": 1
      },
      {
-      "type": "mummy_archer",
-      "count": 2
+      "type": "mummy_mage",
+      "count": 1
      }
     ]
    }
@@ -148,24 +155,36 @@
    "enemies": [
     {
      "type": "mummy",
-     "count": 3
+     "count": 2
     },
     {
-     "type": "mummy_archer",
-     "count": 2
+     "type": "mummy_knight",
+     "count": 1
+    },
+    {
+     "type": "mummy_mage",
+     "count": 1
     }
    ],
    "challenge": {
     "level": 4,
-    "power": 0.75,
+    "power": 0.7,
     "enemies": [
      {
       "type": "mummy",
-      "count": 3
+      "count": 2
+     },
+     {
+      "type": "mummy_knight",
+      "count": 1
      },
      {
       "type": "mummy_archer",
-      "count": 3
+      "count": 1
+     },
+     {
+      "type": "mummy_mage",
+      "count": 1
      }
     ]
    }
@@ -176,11 +195,15 @@
    "enemies": [
     {
      "type": "mummy",
-     "count": 3
+     "count": 2
+    },
+    {
+     "type": "mummy_knight",
+     "count": 1
     },
     {
      "type": "mummy_archer",
-     "count": 2
+     "count": 1
     }
    ],
    "challenge": {
@@ -189,11 +212,19 @@
     "enemies": [
      {
       "type": "mummy",
-      "count": 4
+      "count": 2
+     },
+     {
+      "type": "mummy_knight",
+      "count": 1
      },
      {
       "type": "mummy_archer",
-      "count": 2
+      "count": 1
+     },
+     {
+      "type": "mummy_mage",
+      "count": 1
      }
     ]
    }
@@ -204,11 +235,15 @@
    "enemies": [
     {
      "type": "mummy",
-     "count": 3
+     "count": 2
     },
     {
-     "type": "mummy_archer",
-     "count": 2
+     "type": "mummy_knight",
+     "count": 1
+    },
+    {
+     "type": "mummy_mage",
+     "count": 1
     }
    ],
    "challenge": {
@@ -217,11 +252,19 @@
     "enemies": [
      {
       "type": "mummy",
-      "count": 3
+      "count": 2
+     },
+     {
+      "type": "mummy_knight",
+      "count": 1
      },
      {
       "type": "mummy_archer",
-      "count": 3
+      "count": 1
+     },
+     {
+      "type": "mummy_mage",
+      "count": 1
      }
     ]
    }
@@ -232,11 +275,19 @@
    "enemies": [
     {
      "type": "mummy",
-     "count": 3
+     "count": 2
+    },
+    {
+     "type": "mummy_knight",
+     "count": 1
     },
     {
      "type": "mummy_archer",
-     "count": 3
+     "count": 1
+    },
+    {
+     "type": "mummy_mage",
+     "count": 1
     }
    ],
    "challenge": {
@@ -245,49 +296,46 @@
     "enemies": [
      {
       "type": "mummy",
-      "count": 4
+      "count": 3
+     },
+     {
+      "type": "mummy_knight",
+      "count": 1
      },
      {
       "type": "mummy_archer",
-      "count": 3
+      "count": 1
+     },
+     {
+      "type": "mummy_mage",
+      "count": 1
      }
     ]
    }
   },
   {
    "level": 4,
-   "power": 1.09,
+   "power": 1.04,
    "enemies": [
     {
-     "type": "mummy_boss_placeholder",
+     "type": "mummy_boss",
+     "count": 1,
+     "boss": true
+    },
+    {
+     "type": "mummy_high_wizard",
      "count": 1,
      "boss": true
     },
     {
      "type": "mummy",
      "count": 2
-    },
-    {
-     "type": "mummy_archer",
-     "count": 1,
-     "level": 2,
-     "wave": 2
-    },
-    {
-     "type": "mummy_archer",
-     "count": 1,
-     "level": 2,
-     "wave": 2
     }
    ],
-   "waves": {
-    "_design": "PLACEHOLDER boss wave: the archer pair arrives as wave 2 when the boss drops below boss_hp_below of its HP (or the field is clear), like the Goblin Chief's.",
-    "boss_hp_below": 0.35
-   },
    "challenge": {}
   }
  ],
- "blurb": "ด่านเดียว 9 เวฟ ปิดท้ายด้วยบอสชั่วคราว (ยังไม่ได้ออกแบบ)",
+ "blurb": "ด่านเดียว 9 เวฟ ปิดท้ายด้วยจอมเวทฟาโรห์และฟาโรห์มัมมี่",
  "world_region": "pyramid",
  "wave_mode": true,
  "wave_count_scale": 1.5,
@@ -307,5 +355,6 @@
   0.67,
   1
  ],
- "_tuning": "PLACEHOLDER until the Boss plays (level-designer 2026-11-17, tools/balance/class_sim.gd journey=mummy_waves only=starter:squad, 60 seeds = 4 x 15, starter squad lv1 starter gear, wave_power_by_squad unchanged from goblin_waves): boss power 1.15 -> 55%, 1.09 -> 81% (chosen, target ~82%), 1.05 -> 93%, 0.95 -> 98%. Damage taken per wave 1..9 at 1.09: 46 56 139 106 175 188 183 227 611; every loss comes at the boss. Solo/duo not measured."
+ "_tuning": "PLACEHOLDER until the Boss plays (level-designer 2026-11-17, tools/balance/class_sim.gd journey=mummy_waves only=starter:squad, 60 seeds = 4 x 15, starter squad lv1 starter gear, wave_power_by_squad unchanged from goblin_waves): boss power 1.15 -> 55%, 1.09 -> 81% (chosen, target ~82%), 1.05 -> 93%, 0.95 -> 98%. Damage taken per wave 1..9 at 1.09: 46 56 139 106 175 188 183 227 611; every loss comes at the boss. Solo/duo not measured.",
+ "_tuning_boss_pair": "combat-designer 2026-11-18, tools/balance/class_sim.gd journey=mummy_waves only=starter:squad. REFERENCE SQUAD for zone 2 = the starter squad at card level 5 with tier-1 gear (level=5 gear=1; PO default: a squad that has farmed the goblin zone; the goblin journey's reference is level 1 starter gear at ~82-88%). Before (Pharaoh alone, power 1.15, archer+mage escorts): 80% at level 5/tier 1. Pair + all escorts at 1.15: 0% (every run wiped at w9). Pair + 2 mummies + archer + mage: power 0.6 -> 88% (24 seeds), 0.66 -> 77% (48), 0.7 -> 63% (48), 0.8 -> 42% (24). Pair + 2 mummies only: 0.66 -> 78% (60, CHOSEN), 0.7 -> 73% (60), 0.74 -> 71% (48), 0.8 -> 67% (48). At 0.66: damage taken per wave 1..9 = 38 58 166 111 286 246 300 306 639 (the pair is the peak, 2x any plain wave); every loss is at w9. W9 damage by move (12 seeds at 0.7, per run): wizard curse ~280, starfall ~140, sandstorm ~15 (it fires ~1 per run), Pharaoh combo ~120 + nova ~40, mummies ~90: the High Wizard is the main threat. Other squads at 0.66: level 10/tier 1 starter squad 89%, magic squad 100%; level 1 starter gear: starter squad 0% (wiped at waves 4-7, BEFORE the boss: the mummy family is 1.5x the goblin, unchanged here) and magic squad 47%. Solo/duo not measured. Boss 2026-11-18 option a (ai.skills): the Wizard now bolts (light) and rolls starfall then curse each on its own cooldown (curse 240), so the curse no longer spams; at 0.66 that was 100%, so the finale power was re-swept: 0.85 -> 97%, 1.0 -> 86%, 1.03 -> 82% (60), 1.04 -> 82% (60, CHOSEN), 1.06 -> 72% (60), 1.1 -> 60%, 1.2 -> 40%. At 1.04: w9 taken 901 (3x any plain wave); level 15/tier 1 squad 93% (Boss: players reach the pyramid with level 15 cards); goblin_waves re-measured unchanged at 88% (starter, level 1). The earlier 78% at 0.66 was the 3-move kit. Placeholder until the Boss plays."
 }

@@ -1,4 +1,4 @@
-extends SceneTree
+﻿extends SceneTree
 ## Builds a monster clip library (skeleton-only .glb + .json of marks) out of the player's longbow clips.
 ## Only the clips a bow monster needs are copied, each baked at 30 fps and key-reduced; the player's files are only read.
 ##   godot --headless --path . --script res://tools/monsters/build_clip_library.gd
@@ -25,27 +25,66 @@ const LIBRARIES := {
 		"hit": {"segs": [["lb_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
 		"death": {"segs": [["lb_death_forward_01", 0.0, 3.1833, 1.0]], "loop": false},
 	}},
+	## sword_shield (v1 shipped 2026-11-17: mummy + mummy_knight). Picked from contact sheets of the donor clips
+	## (tools/monsters/donor_clip_sheet.gd): only clips whose Hips stay in place (attack, attack_2, attack_3 lunge 0.8-1.1 rig units).
+	## attack_1 = slash: sword drawn back over the shoulder by 1.26 s, diagonal cut 1.40-1.70 s (hand speed peak 1.53 s).
+	## attack_2 = attack_4: sword raised overhead by 1.27 s, held, chopped down 1.52-1.76 s (the telegraphed overhead).
+	## death = the stagger, the sword raised, the fall lands at 4.38 s (the first 3.0 s never reached the floor): 0.4-4.6 s at 1.4x.
 	"sword_shield": {"donor": "res://art/characters/studio05/split/body_sword_shield.glb", "clips": {
 		"idle": {"segs": [["idle_4", 0.0, 6.375, 1.0]], "loop": true},
-		"run": {"segs": [["run_2", 0.0, 1.375, 1.0]], "loop": true, "strip_travel": true},
-		"attack_1": {"segs": [["attack_2", 0.0, 1.6, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.7, "strike_src": 0.9},
-		"attack_2": {"segs": [["slash", 0.0, 1.6, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.7, "strike_src": 0.9},
+		"run": {"segs": [["run", 0.0, 1.7916, 1.0]], "loop": true, "strip_travel": true},  ## not run_2: that one runs BACKWARD (-0.74 rig units)
+		"attack_1": {"segs": [["slash", 0.35, 2.3, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.4, "strike_src": 1.7},
+		"attack_2": {"segs": [["attack_4", 0.15, 2.4, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.52, "strike_src": 1.76},
 		"hit": {"segs": [["impact", 0.0, 0.62, 1.0]], "loop": false},
-		"death": {"segs": [["death", 0.0, 3.0, 1.0]], "loop": false},
+		"death": {"segs": [["death", 0.4, 4.6, 1.4]], "loop": false},
 	}},
+	## greatsword (v1 shipped 2026-11-17: mummy_boss, the Pharaoh; mirrors goblin_chief's quick chop + telegraphed leaping lunge).
+	## attack_1 = gs_slash: raised 0.29-0.57 s, diagonal cut 0.60-0.86 s. attack_2 = gs_jump_attack: the leap, slam at about 1.07 s;
+	## the donor travels 0.97 rig units forward (about 5 m on a 2.6 m boss): `pin_travel` keeps 15% of it (a short lunge) so the
+	## boss lands near its hit box. attack_3 = gs_high_spin_attack (the whirl, travel pinned to 0). death = gs_death (lands by 1.6 s).
 	"greatsword": {"donor": "res://art/characters/studio05/split/body_greatsword.glb", "clips": {
 		"idle": {"segs": [["gs_idle", 0.0, 2.0166, 1.0]], "loop": true},
-		"run": {"segs": [["gs_run", 0.0, 0.7333, 1.0]], "loop": true, "strip_travel": true},
-		"attack_1": {"segs": [["gs_attack", 0.0, 1.2, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.5, "strike_src": 0.7},
-		"attack_2": {"segs": [["gs_slash", 0.0, 1.28, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.5, "strike_src": 0.7},
+		"run": {"segs": [["gs_run_2", 0.0, 0.6166, 1.0]], "loop": true, "strip_travel": true},  ## not gs_run: that one runs BACKWARD
+		"attack_1": {"segs": [["gs_slash", 0.0, 1.28, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.6, "strike_src": 0.86},
+		"attack_2": {"segs": [["gs_jump_attack", 0.0, 2.18, 1.0]], "loop": false, "pin_travel": 0.15, "release_in_seg": 0, "release_src": 0.97, "strike_src": 1.17},
+		"attack_3": {"segs": [["gs_high_spin_attack", 0.0, 1.88, 1.0]], "loop": false, "pin_travel": 0.0, "release_in_seg": 0, "release_src": 0.84, "strike_src": 1.26},
 		"hit": {"segs": [["gs_impact", 0.0, 0.62, 1.0]], "loop": false},
 		"death": {"segs": [["gs_death", 0.0, 2.4166, 1.0]], "loop": false},
 	}},
+	## magic (v1 shipped 2026-11-17: mummy_mage; mirrors goblin_mage cast / cast_aoe / blink).
+	## cast = mg_lite_1h_magic_attack_01: staff swept back, thrust forward at 1.0 s (hand speed peak 0.80 s).
+	## cast_aoe = mg_lite_2h_magic_area_attack_02: gathers, arms flung wide at 1.8-2.2 s. blink = mg_spell_1h_cast_spell_01 at 2x:
+	## the staff raised overhead (0.76-1.01 s) then lowered, short like the goblin mage's blink (0.47 s).
 	"magic": {"donor": "res://art/characters/studio05/split/body_magic.glb", "clips": {
 		"idle": {"segs": [["mg_lite_idle", 0.0, 1.8833, 1.0]], "loop": true},
 		"run": {"segs": [["mg_lite_run_forward", 0.0, 0.75, 1.0]], "loop": true, "strip_travel": true},
-		"cast": {"segs": [["mg_lite_1h_magic_attack_01", 0.0, 2.3, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.1, "strike_src": 1.3},
-		"cast_aoe": {"segs": [["mg_lite_2h_magic_area_attack_02", 0.0, 3.2666, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.6, "strike_src": 1.9},
+		"cast": {"segs": [["mg_lite_1h_magic_attack_01", 0.0, 2.1, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.95, "strike_src": 1.15},
+		"cast_aoe": {"segs": [["mg_lite_2h_magic_area_attack_02", 0.0, 3.0, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.75, "strike_src": 2.1},
+		"blink": {"segs": [["mg_spell_1h_cast_spell_01", 0.2, 1.4, 2.0]], "loop": false, "release_in_seg": 0, "release_src": 0.76, "strike_src": 0.9},
+		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
+		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
+	}},
+	## wizard_boss (2026-11-18: mummy_high_wizard, the Boss's own model). Base = the magic donor; the first five clips are copied, the
+	## last three are NEW keyframed clips: a donor cast with an ADDITIVE keyed layer ("add": bone -> [[time s, rx, ry, rz degrees]...], eased,
+	## multiplied onto the donor rotation in the parent's space; "hover": Hips height keys, rig units) so the boss rises, flings its arms and spins.
+	## cast = mg_lite_1h_magic_attack_01 (the bolt). cast_aoe = mg_lite_2h_magic_area_attack_02 (the big ground cast).
+	"wizard_boss": {"donor": "res://art/characters/studio05/split/body_magic.glb", "clips": {
+		"idle": {"segs": [["mg_lite_idle", 0.0, 1.8833, 1.0]], "loop": true},
+		"run": {"segs": [["mg_lite_run_forward", 0.0, 0.75, 1.0]], "loop": true, "strip_travel": true},
+		"cast": {"segs": [["mg_lite_1h_magic_attack_01", 0.0, 2.1, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.95, "strike_src": 1.15},
+		"cast_aoe": {"segs": [["mg_lite_2h_magic_area_attack_02", 0.0, 3.0, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.75, "strike_src": 2.1},
+		"summon": {"segs": [["mg_spell_2h_cast_spell_01", 0.0, 2.18, 0.8]], "loop": false, "release_in_seg": 0, "release_src": 1.0, "strike_src": 1.4,
+			"add": {"mixamorig_Spine": [[0.0, 0, 0, 0], [0.9, -14, 0, 0], [1.6, -14, 0, 0], [2.7, 0, 0, 0]],
+				"mixamorig_Spine2": [[0.0, 0, 0, 0], [0.9, -12, 0, 0], [1.6, -12, 0, 0], [2.7, 0, 0, 0]],
+				"mixamorig_Head": [[0.0, 0, 0, 0], [0.9, -16, 0, 0], [1.6, -16, 0, 0], [2.7, 0, 0, 0]]},
+			"hover": [[0.0, 0.0], [1.0, 0.0], [1.5, 0.09], [2.2, 0.09], [2.7, 0.0]]},
+		"starfall": {"segs": [["mg_spell_2h_magic_attack_03", 0.0, 4.32, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 2.3, "strike_src": 3.0,
+			"add": {"mixamorig_Spine": [[0.0, 0, 0, 0], [1.5, -12, 0, 0], [2.6, -12, 0, 0], [3.4, 6, 0, 0], [4.32, 0, 0, 0]],
+				"mixamorig_Head": [[0.0, 0, 0, 0], [1.5, -22, 0, 0], [2.6, -22, 0, 0], [3.4, 8, 0, 0], [4.32, 0, 0, 0]]},
+			"hover": [[0.0, 0.0], [1.2, 0.0], [1.9, 0.16], [3.0, 0.16], [3.7, 0.0], [4.32, 0.0]]},
+		"sandstorm": {"segs": [["mg_spell_2h_magic_attack_02", 0.0, 2.65, 0.8]], "loop": false, "release_in_seg": 0, "release_src": 1.5, "strike_src": 2.2,
+			"add": {"mixamorig_Hips": [[0.0, 0, 0, 0], [0.9, 0, 0, 0], [1.4, 0, 120, 0], [2.4, 0, 560, 0], [3.0, 0, 720, 0], [3.3, 0, 720, 0]]},
+			"hover": [[0.0, 0.0], [1.0, 0.0], [1.5, 0.06], [2.6, 0.06], [3.3, 0.0]]},
 		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
 		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
 	}},
@@ -196,9 +235,15 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 			var anim: Animation = player.get_animation(segs[s][0])
 			var tr: Dictionary = tracks_per_seg[s][bone]
 			rot_t.append(time)
-			rot_v.append(anim.rotation_track_interpolate(tr["rot"], src_time))
+			var q: Quaternion = anim.rotation_track_interpolate(tr["rot"], src_time)
+			if spec.has("add") and (spec["add"] as Dictionary).has(bone):
+				q = _layer(spec["add"][bone], time) * q
+			rot_v.append(q)
 			if has_pos:
-				pos_v.append((anim.position_track_interpolate(tr["pos"], src_time) as Vector3))
+				var pv: Vector3 = anim.position_track_interpolate(tr["pos"], src_time)
+				if spec.has("hover") and bone == "mixamorig_Hips":
+					pv.y += _ease_keys(spec["hover"], time)
+				pos_v.append(pv)
 		if has_pos and spec.get("strip_travel", false):
 			var drift: float = (pos_v[-1] as Vector3).z - (pos_v[0] as Vector3).z
 			travel = drift
@@ -206,6 +251,13 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 				var v: Vector3 = pos_v[i]
 				v.z -= drift * float(rot_t[i]) / total
 				pos_v[i] = v
+		if has_pos and spec.has("pin_travel"):
+			# an attack that lunges far: the Hips' ground travel (x, z) is cut to the kept fraction, height untouched
+			var keep := float(spec["pin_travel"])
+			var start: Vector3 = pos_v[0]
+			for i in pos_v.size():
+				var v: Vector3 = pos_v[i]
+				pos_v[i] = Vector3(start.x + (v.x - start.x) * keep, v.y, start.z + (v.z - start.z) * keep)
 		var rot_reduced := Rig.reduce_keys(rot_t, rot_v, true)
 		var path := NodePath("rig/Skeleton3D:" + bone)
 		var rt := out.add_track(Animation.TYPE_ROTATION_3D)
@@ -235,6 +287,27 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 		meta["windup_end"] = snappedf(seg_start + (float(spec["release_src"]) - from) / speed, 0.0001)
 		meta["strike_end"] = snappedf(seg_start + (float(spec["strike_src"]) - from) / speed, 0.0001)
 	return {"animation": out, "marks": meta}
+
+
+## Eased value of keys [[t, v]...] at time t (smoothstep between keys, held outside).
+static func _ease_keys(keys: Array, t: float) -> float:
+	if t <= float(keys[0][0]):
+		return float(keys[0][1])
+	for i in range(1, keys.size()):
+		if t <= float(keys[i][0]):
+			var a: float = keys[i - 1][0]
+			var b: float = keys[i][0]
+			var w := smoothstep(0.0, 1.0, (t - a) / maxf(b - a, 0.0001))
+			return lerpf(float(keys[i - 1][1]), float(keys[i][1]), w)
+	return float(keys[-1][1])
+
+
+## The additive rotation of a layer at time t: keys [[t, rx, ry, rz degrees]...], each component eased.
+static func _layer(keys: Array, t: float) -> Quaternion:
+	var c := []
+	for k in 3:
+		c.append(_ease_keys(keys.map(func(key): return [key[0], key[k + 1]]), t))
+	return Quaternion.from_euler(Vector3(deg_to_rad(c[0]), deg_to_rad(c[1]), deg_to_rad(c[2])))
 
 
 ## The tail sways with a wave running down its three bones (a new, monster-only track set).

@@ -64,8 +64,8 @@ func run(ctx) -> void:
 	var mgr = Manager.new()
 	ctx.check("manager: squad room journey id is goblin_waves (the gate sees the zone)", mgr.squad_journey.id == "goblin_waves")
 	Zones._cache = saved
-	ctx.check("shipped data: the pyramid is not playable (dev_journey only), goblin open", Zones.state(locked, "pyramid") == Zones.SOON and Zones.state(locked, "goblin_base") == Zones.OPEN)
-	ctx.check("dev fixture path: a dev_journey is not gated", Zones.journey_problem(Profile.new_player(f.rules, f.camp, F.rng(9)), "mummy_waves") == "")
+	ctx.check("shipped data: the pyramid is locked until the quest is done, goblin open", Zones.state(Profile.new_player(f.rules, f.camp, F.rng(9)), "pyramid") == Zones.LOCKED and Zones.state(locked, "goblin_base") == Zones.OPEN)
+	ctx.check("a new player cannot start the mummy journey (zone locked)", Zones.journey_problem(Profile.new_player(f.rules, f.camp, F.rng(9)), "mummy_waves") == "zone_locked")
 
 
 func _count_quest(ctx, f) -> bool:

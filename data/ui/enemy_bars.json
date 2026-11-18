@@ -31,6 +31,34 @@
 			}
 		},
 
+		"mummy": {
+			"_doc": "Pyramid mummy family (combat-designer 2026-11-17, mirrors the goblin style): a crude bandage-wrapped frame in dry linen/sand, a dusty ochre-to-ember fill (not the player's red, not the goblin moss), no notch mark on the grunts. Reads on the warm sand floor because of the dark back plate.",
+			"frame_shape": "crude",
+			"frame": [0.62, 0.54, 0.38, 1.0],
+			"back": [0.08, 0.06, 0.04, 0.86],
+			"fill": [0.78, 0.62, 0.30, 1.0],
+			"fill_low": [0.80, 0.36, 0.16, 1.0],
+			"trail": [0.34, 0.20, 0.08, 1.0],
+			"outline": [0.04, 0.03, 0.02, 1.0],
+			"low_flash": [0.98, 0.62, 0.22, 1.0],
+			"mark": "none",
+			"elite": {
+				"_doc": "Mummy knight: a studded bronze frame and the double notch, like the goblin elite.",
+				"frame_shape": "studded",
+				"frame": [0.66, 0.48, 0.22, 1.0],
+				"fill": [0.72, 0.56, 0.26, 1.0],
+				"mark": "fang_double"
+			},
+			"boss": {
+				"_doc": "The Mummy Pharaoh and the HUD boss bar on a pyramid map: the richest frame in bright pharaoh gold, a deep ochre fill, the skull mark.",
+				"frame_shape": "chief",
+				"frame": [0.86, 0.68, 0.26, 1.0],
+				"fill": [0.70, 0.50, 0.20, 1.0],
+				"fill_low": [0.84, 0.34, 0.14, 1.0],
+				"mark": "skull"
+			}
+		},
+
 		"brass": {
 			"_doc": "The default for every other map: the plain Night Brass family. Frame and low-HP colours come from the InkUi tokens (null), the fill is the HUD HP red, so unthemed maps keep the current look and a chosen theme still drives it.",
 			"frame_shape": "plain",
@@ -54,7 +82,10 @@
 	"_tiers_doc": "Which bar tier an enemy type uses (base look if unlisted). Keeps elite/boss framing data-driven and out of fighter_view.",
 	"tiers": {
 		"goblin_knight": "elite",
-		"goblin_chief": "boss"
+		"goblin_chief": "boss",
+		"mummy_knight": "elite",
+		"mummy_boss": "boss",
+		"mummy_high_wizard": "boss"
 	},
 
 	"by_map": {
@@ -64,7 +95,10 @@
 		"sunward_valley": "goblin",
 		"goblin_arena_a": "goblin",
 		"goblin_arena_b": "goblin",
-		"goblin_rest_camp": "goblin"
+		"goblin_rest_camp": "goblin",
+		"mummy_pyramid_gate": "mummy",
+		"mummy_pyramid_hall": "mummy",
+		"mummy_pyramid_sanctum": "mummy"
 	},
 
 	"by_atmosphere": {

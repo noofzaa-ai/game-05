@@ -15,6 +15,7 @@ const SkillData := preload("res://logic/class_skills/skill_data.gd")
 ## body's stain): the rules' area for these is the caster's own position.
 const CASTER_CENTRED := [
 	"swing/run_heavy", "swing/brute_roar", "land/air_heavy", "windup/ultimate", "windup/goblin_mage_hex",
+	"windup/mummy_mage_curse", "windup/mummy_boss_nova", "swing/mummy_boss_nova",  # the mage's cast glyph; the Pharaoh's nova is a box on itself
 	"skill_cast/riposte", "skill_cast/lightning_strike", "skill_cast/frost_armor",
 	"guard_break", "knockdown", "death", "loot", "rest",
 ]

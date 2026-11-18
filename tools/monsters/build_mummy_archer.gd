@@ -1,5 +1,5 @@
 extends SceneTree
-## Pilot: the existing mummy mesh (art/monsters/mummy/mummy.glb, its own 28-bone rig) re-bound to the shared 102-joint
+## Pilot: the existing mummy mesh (the stand-in, now tools/monsters/standin/mummy_standin.glb, its own 28-bone rig) re-bound to the shared 102-joint
 ## studio05 rig, plus the player's longbow, string and a nocked arrow (all skinned to the same rig).
 ##   godot --headless --path . --script res://tools/monsters/build_mummy_archer.gd
 ## Writes art/monsters/mummy_archer/mummy_archer.glb (shared clip library proportions: big head only). `-- --legs=0.75 --name=x --out=res://dir/`
@@ -15,8 +15,7 @@ extends SceneTree
 ##  5. the donor bow / string (weighted to the donor rig) are moved with the rig the same way (rest-to-rest linear blend skinning).
 
 const Rig := preload("res://tools/monsters/rig_common.gd")
-const MUMMY := "res://art/monsters/mummy/mummy.glb"
-const ALBEDO := "res://art/monsters/mummy/mummy_texture_pbr_20250901.png"
+const ALBEDO := Rig.STANDIN_ALBEDO  ## the stand-in source lives in tools/monsters/standin (art/monsters/mummy/mummy.glb is now the rebuilt mummy)
 var out_dir := "res://art/monsters/mummy_archer/"
 const HEAD_SCALE := 1.3
 const TEXTURE_SIZE := 512
@@ -63,7 +62,7 @@ func _build(file_name: String, leg_scale: float) -> void:
 		donor_index[donor_sk.get_bone_name(i)] = i
 
 	# ---- the mummy
-	var mummy_root := (load(MUMMY) as PackedScene).instantiate()
+	var mummy_root := Rig.load_gltf(Rig.STANDIN)
 	var m_sk := mummy_root.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
 	var m_mesh := mummy_root.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
 	var m_global := _globals(m_sk)

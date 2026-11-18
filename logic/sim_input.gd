@@ -16,6 +16,7 @@ var special := false  ## true only on the tick the special skill button was pres
 var ultimate := false  ## true only on the tick the ultimate button was pressed
 var skill_slot := -1  ## 0..3, -1 = no cast; server resolves all skill/Gem data.
 var aim_distance := 8.0  ## metres along bounded aim direction, never a client hit position.
+var special_move := ""  ## monster AI only (server-side, never encoded): with `special`, which of its ai.skills moves to start
 
 static func wire_size() -> int:
 	return 7  ## with the skill slot and aim distance (class skills)
@@ -38,6 +39,7 @@ func duplicate_input() -> RefCounted:
 	copy.ultimate = ultimate
 	copy.skill_slot = skill_slot
 	copy.aim_distance = aim_distance
+	copy.special_move = special_move
 	return copy
 
 

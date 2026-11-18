@@ -1,0 +1,50 @@
+{
+  "id": "mummy_boss",
+  "model": "res://art/monsters/mummy_boss/mummy_boss.glb",
+  "model_height": 2.6,
+  "animations": "res://art/animations/monster_clips_greatsword.glb",
+  "stance": "greatsword",
+  "clips": [
+    "attack_1",
+    "attack_2",
+    "attack_3",
+    "death",
+    "hit",
+    "idle",
+    "run"
+  ],
+  "move_clips": {
+    "attack_1": "the quick chop",
+    "attack_2": "the leaping slam (telegraphed)",
+    "attack_3": "the whirl"
+  },
+  "run_clip_speed": 1.275,
+  "hips_scale": 1.0,
+  "sockets": {
+    "Monster_MummyBoss_Khopesh": "mixamorig_RightHand",
+    "Monster_MummyBoss_Nemes": "mixamorig_Head",
+    "Monster_MummyBoss_Mask": "mixamorig_Head",
+    "Monster_MummyBoss_Eyes": "mixamorig_Head",
+    "Monster_MummyBoss_Collar": "mixamorig_Spine2"
+  },
+  "meshes": {
+    "Monster_MummyBoss_Body": 1620,
+    "Monster_MummyBoss_Khopesh": 120,
+    "Monster_MummyBoss_Nemes": 516,
+    "Monster_MummyBoss_Mask": 120,
+    "Monster_MummyBoss_Eyes": 24,
+    "Monster_MummyBoss_Collar": 180
+  },
+  "triangles": 2580,
+  "joints": 106,
+  "extra_joints": [
+    "bandage_upper_L",
+    "bandage_upper_R",
+    "bandage_lower_L",
+    "bandage_lower_R"
+  ],
+  "rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
+  "texture": "one 512x512 albedo (stand-in bandage atlas, tinted), lossy",
+  "built_by": "tools/monsters/build_mummy_family.gd",
+  "request_sheet": "docs/art/monster_requests/mummy_boss.md"
+}

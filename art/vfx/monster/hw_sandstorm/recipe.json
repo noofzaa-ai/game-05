@@ -1,0 +1,172 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "Pharaoh Sandstorm",
+  "duration": 4.5,
+  "seed": 811,
+  "settings": {
+    "bloom": 0.434,
+    "exposure": 1.281
+  },
+  "layers": [
+    {
+      "id": "42554287-039c-4b5f-9294-28060a720851",
+      "type": "beam",
+      "name": "กรวยพายุ",
+      "enabled": true,
+      "seed": 713,
+      "color": "#ffc283",
+      "secondary": "#ffead7",
+      "style": "cyclone",
+      "motion": "cyclone",
+      "start": 0,
+      "duration": 3.4,
+      "size": 2.8,
+      "spread": 0,
+      "rise": 4,
+      "speed": 1,
+      "energy": 0.454,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 2,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "0d6b2cfb-a42a-4584-a44a-84786a4db7e0",
+      "type": "debris",
+      "name": "ใบไม้ถูกพายุยก",
+      "enabled": true,
+      "seed": 850,
+      "color": "#cb7030",
+      "secondary": "#ffceb3",
+      "style": "leaf",
+      "motion": "cyclone",
+      "start": 0,
+      "duration": 3.4,
+      "size": 0.12,
+      "spread": 2.4,
+      "rise": 4,
+      "speed": 1,
+      "energy": 0.083,
+      "opacity": 1,
+      "scale": 1,
+      "count": 90,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "ac2cf160-307e-44b3-9c4e-05e1e56939e2",
+      "type": "debris",
+      "name": "เศษหินวนขึ้น",
+      "enabled": true,
+      "seed": 987,
+      "color": "#80766c",
+      "secondary": "#c9b8a3",
+      "style": "rock",
+      "motion": "cyclone",
+      "start": 0,
+      "duration": 3.4,
+      "size": 0.08,
+      "spread": 2.3,
+      "rise": 3.5,
+      "speed": 1,
+      "energy": 0.083,
+      "opacity": 1,
+      "scale": 1,
+      "count": 48,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "5f219479-d561-4c83-bb9f-84b0ca5149ad",
+      "type": "smoke",
+      "name": "หมอกฝุ่นในพายุ",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#ffc283",
+      "secondary": "#ffead7",
+      "style": "wisps",
+      "motion": "cyclone",
+      "start": 0,
+      "duration": 3.4,
+      "size": 1.1,
+      "spread": 2.2,
+      "rise": 4,
+      "speed": 1,
+      "energy": 0.083,
+      "opacity": 0.25,
+      "scale": 1,
+      "count": 88,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b243676c-d0b2-4a7e-bf4a-cc9f7ef85afc",
+      "type": "wave",
+      "name": "ฝุ่นกระแทกตอนสลาย",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#ffc283",
+      "secondary": "#ffead7",
+      "style": "splash",
+      "width": 0.035,
+      "motion": "burst",
+      "start": 3,
+      "duration": 1.2,
+      "size": 1,
+      "spread": 4,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.302,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

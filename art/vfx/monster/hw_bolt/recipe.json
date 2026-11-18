@@ -1,0 +1,357 @@
+{
+  "type": "attack",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "Pharaoh Gold Bolt",
+  "duration": 1.6,
+  "seed": 3821,
+  "settings": {
+    "bloom": 0.282,
+    "exposure": 1.082
+  },
+  "layers": [
+    {
+      "id": "4fff67b4-144c-488a-8c10-0884f2064abf",
+      "type": "flash",
+      "name": "muzzle glow",
+      "enabled": true,
+      "seed": 713,
+      "color": "#ffe299",
+      "secondary": "#ffffff",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0,
+      "duration": 0.16,
+      "size": 0.9,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.314,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b4f43cc8-e357-46e2-9663-b4976df1aee8",
+      "type": "flash",
+      "name": "muzzle star",
+      "enabled": true,
+      "seed": 850,
+      "color": "#fdc512",
+      "secondary": "#ffedc3",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0.03,
+      "duration": 0.13,
+      "size": 1.2,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.22,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c10b0074-f1f1-4736-8f61-4356f5ddb33e",
+      "type": "beam",
+      "name": "tail",
+      "enabled": true,
+      "seed": 987,
+      "color": "#8e6500",
+      "secondary": "#14a89a",
+      "style": "tail_tatters",
+      "motion": "shot",
+      "start": 0.05,
+      "duration": 1,
+      "size": 1.25,
+      "spread": 4.6,
+      "rise": 2.8,
+      "speed": 1,
+      "energy": 0.282,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "22b27240-ec46-477f-9bac-6108d3b29495",
+      "type": "beam",
+      "name": "body",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#ab7b00",
+      "secondary": "#d6a000",
+      "style": "bolt_body",
+      "motion": "shot",
+      "start": 0.05,
+      "duration": 1,
+      "size": 1,
+      "spread": 4.6,
+      "rise": 2.2,
+      "speed": 1,
+      "energy": 0.188,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "94d2d0be-cb3f-4847-9b4b-9e34b0b172e1",
+      "type": "beam",
+      "name": "head",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#fdeed0",
+      "secondary": "#ffffff",
+      "style": "bolt_spindle",
+      "motion": "shot",
+      "start": 0.05,
+      "duration": 1,
+      "size": 0.5,
+      "spread": 4.6,
+      "rise": 0.85,
+      "speed": 1,
+      "energy": 0.875,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "0424cdfd-8c07-4f92-b902-961206f88d03",
+      "type": "sparks",
+      "name": "drops",
+      "enabled": true,
+      "seed": 1398,
+      "color": "#dea600",
+      "secondary": "#fde2a1",
+      "style": "drop",
+      "motion": "trail",
+      "start": 0.05,
+      "duration": 1,
+      "size": 0.08,
+      "spread": 4.6,
+      "rise": 0.4,
+      "speed": 1.2,
+      "energy": 0.751,
+      "opacity": 1,
+      "scale": 1,
+      "count": 18,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "57238ea7-3db1-45f9-bb4c-f37a49cb0400",
+      "type": "sparks",
+      "name": "glints",
+      "enabled": true,
+      "seed": 1535,
+      "color": "#fac53f",
+      "secondary": "#ffedc5",
+      "style": "glint",
+      "motion": "trail",
+      "start": 0.05,
+      "duration": 1,
+      "size": 0.08,
+      "spread": 4.6,
+      "rise": 0.5,
+      "speed": 1.2,
+      "energy": 1.032,
+      "opacity": 1,
+      "scale": 1,
+      "count": 14,
+      "position": [
+        0,
+        1,
+        -1.6
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b7b1dfca-8a12-484a-ab42-53296a6e9298",
+      "type": "flash",
+      "name": "impact glow",
+      "enabled": true,
+      "seed": 1672,
+      "color": "#f7be18",
+      "secondary": "#ffedc5",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0.82,
+      "duration": 0.3,
+      "size": 1.5,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.314,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "8b0b7bd2-b976-42b7-9ecd-bb7b3f818f81",
+      "type": "flash",
+      "name": "impact halo",
+      "enabled": true,
+      "seed": 1809,
+      "color": "#eab100",
+      "secondary": "#ffedc7",
+      "style": "halo",
+      "motion": "burst",
+      "start": 0.84,
+      "duration": 0.35,
+      "size": 1.8,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.314,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.75,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "4bdab9b6-be34-4847-a36e-fc4a7ffbadf7",
+      "type": "sparks",
+      "name": "impact sparks",
+      "enabled": true,
+      "seed": 1946,
+      "color": "#ffde94",
+      "secondary": "#efe3c2",
+      "style": "glint",
+      "motion": "burst",
+      "start": 0.82,
+      "duration": 0.6,
+      "size": 0.06,
+      "spread": 1.3,
+      "rise": 1.1,
+      "speed": 1.2,
+      "energy": 0.938,
+      "opacity": 1,
+      "scale": 1,
+      "count": 26,
+      "position": [
+        0,
+        0.75,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "c3b2dfd2-47d5-42bf-90de-8b7bf298257d",
+      "type": "smoke",
+      "name": "impact smoke",
+      "enabled": true,
+      "seed": 2083,
+      "color": "#a7812d",
+      "secondary": "#edd196",
+      "style": "cloud",
+      "motion": "burst",
+      "start": 0.85,
+      "duration": 0.7,
+      "size": 0.4,
+      "spread": 0.7,
+      "rise": 0.5,
+      "speed": 1,
+      "energy": 0.095,
+      "opacity": 0.22,
+      "scale": 1,
+      "count": 7,
+      "position": [
+        0,
+        0.8,
+        3
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

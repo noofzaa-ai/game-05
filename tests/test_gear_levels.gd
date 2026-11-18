@@ -34,13 +34,14 @@ func run(ctx) -> void:
 	p.unlocks["boss_goblin_base"] = true
 	for id in p.card_deck["cards"].keys():
 		p.card_deck["cards"][id]["progress"] = {"level": 15, "xp": 0}
+	_pyramid_playable(false)  # shipped data now gives the pyramid its journey; take it away for the coming-soon case
 	ctx.check("gear levels: pyramid still coming-soon (no journey) -> unlocked level 1", GL.unlocked_level(p) == 1)
 	_pyramid_playable(true)  # the pyramid gets its journey: it is OPEN for this profile
 	ctx.check("gear levels: pyramid open -> unlocked level 15", GL.unlocked_level(p) == 15)
 	p.unlocks["boss_goblin_base"] = false
 	ctx.check("gear levels: pyramid quest unmet (boss not beaten) -> 1", GL.unlocked_level(p) == 1)
 	p.unlocks["boss_goblin_base"] = true
-	_pyramid_playable(false)
+	_pyramid_playable(true)  # back to the shipped state
 	_fake_catalog_level25(ctx, rules)
 	_counts(ctx, rules)
 	_level1_piece(ctx, f)

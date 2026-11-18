@@ -343,6 +343,24 @@ static func build_camp(parent: Node3D, scene_root: Node, map, variant: String = 
 	return camp
 
 
+## ---- Pyramid island (Boss 2026-11-17: the mummy boards are floating islands like the goblin camp) ----
+## The mummy wave boards (tools/maps/build_mummy_pyramid.gd) carry their whole island top in their own art scene (painted
+## floor + masonry fascia, enclosure walls, tomb kit), marked by the scene root's meta "floating_island". The client only
+## adds what the goblin camp island gets here: the rock underside under the same board + margin footprint.
+
+static func is_pyramid_island(scene_root: Node) -> bool:
+	var art := scene_root.find_child("ArtScene", false, false)
+	return art != null and bool(art.get_meta("floating_island", false))
+
+
+static func add_pyramid_island(parent: Node3D, map) -> Node3D:
+	var island := Node3D.new()
+	island.name = "PyramidIsland"
+	_add_underside(island, float(map.half_width) + MARGIN_X, float(map.half_depth) + MARGIN_Z)
+	parent.add_child(island)
+	return island
+
+
 static func _add_underside(parent: Node3D, w: float, d: float) -> void:
 	var rock := _material(ROCK)
 	var dark := _material(ROCK_DARK)

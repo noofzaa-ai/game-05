@@ -24,9 +24,20 @@ const MONSTER_FILE_LIMIT := 450 * 1024  ## the model (without its embedded textu
 const MONSTER_JOINT_LIMIT := 110
 const MONSTER_TEXTURE_LIMIT := 1024
 const MONSTER_ROOT := "res://art/monsters"
-## The old melee mummy stand-in (3 PBR maps, 1.8 MB) is the only exemption, for its texture bytes only; it goes when the mummy_base model of
-## docs/art/monster_requests/mummy_base.md arrives. Nothing else may be added here.
-const LEGACY_TEXTURE_BYTES := ["mummy/mummy.glb"]
+## The old melee mummy stand-in (3 PBR maps, 1.8 MB) was the only exemption; since 2026-11-17 art/monsters/mummy/mummy.glb is the
+## rebuilt mummy (tools/monsters/build_mummy_family.gd) and the stand-in source lives in tools/monsters/standin. No exemption is left.
+const LEGACY_TEXTURE_BYTES := []
+## The mummy family (Boss 2026-11-17: the mummies at the goblins' level): id -> [stance library, its clips, model_height, gear meshes].
+const FAMILY := {
+	"mummy": ["sword_shield", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 1.8, ["Monster_Mummy_Body", "Monster_Mummy_Blade"]],
+	"mummy_knight": ["sword_shield", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 2.0, ["Monster_MummyKnight_Body", "Monster_MummyKnight_Shield", "Monster_MummyKnight_Khopesh", "Monster_MummyKnight_Helmet"]],
+	"mummy_mage": ["magic", ["blink", "cast", "cast_aoe", "death", "hit", "idle", "run"], 1.9, ["Monster_MummyMage_Body", "Monster_MummyMage_Staff", "Monster_MummyMage_StaffCrystal", "Monster_MummyMage_Hood"]],
+	"mummy_high_wizard": ["wizard_boss", ["cast", "cast_aoe", "death", "hit", "idle", "run", "sandstorm", "starfall", "summon"], 3.4, ["Monster_MummyHighWizard_Body"]],
+	"mummy_boss": ["greatsword", ["attack_1", "attack_2", "attack_3", "death", "hit", "idle", "run"], 2.6, ["Monster_MummyBoss_Body", "Monster_MummyBoss_Khopesh", "Monster_MummyBoss_Nemes", "Monster_MummyBoss_Mask", "Monster_MummyBoss_Eyes", "Monster_MummyBoss_Collar"]],
+}
+## The Boss's own boss model (2026-11-18): the library has 9 clips incl. 3 new keyframed specials, so it gets a bigger budget (278 KB at 1.0 degree).
+const LIBRARY_BUDGET_BY_STANCE := {"wizard_boss": 300 * 1024}
+const STANCE_LIBRARY_BUDGET := 230 * 1024  ## source .glb of one stance library (7 clips at key tolerance 1.0 degree: 153-207 KB)
 
 
 func run(ctx) -> void:
@@ -122,6 +133,87 @@ func run(ctx) -> void:
 	ctx.check("the albedo atlas is at most 1024 (%d)" % texture_size, texture_size > 0 and texture_size <= 1024)
 	scene.free()
 	_check_every_monster(ctx)
+	_check_family(ctx, donor_joints)
+
+
+## The mummy family acceptance checklist (docs/art/monster_requests/mummy_base.md section 7): every donor joint kept, only the four
+## bandage joints added, the stance library holds its clips with valid marks and they move the bones, the run stays in place,
+## triangles under the hard limit, the gear present, weights normalised, the sheet's model_height, lossy import settings.
+func _check_family(ctx, donor_joints: Array) -> void:
+	for id: String in FAMILY:
+		var spec: Array = FAMILY[id]
+		var path := "res://art/animations/monster_clips_%s.glb" % spec[0]
+		var library := AnimationSet.load_file(path)
+		ctx.check("%s: its %s library loads" % [id, spec[0]], library != null)
+		if library == null:
+			continue
+		var names: Array = library.clip_names()
+		names.sort()
+		ctx.check("%s: the library holds exactly %s (%s)" % [id, spec[1], names], names == spec[1])
+		var marks: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path.get_basename() + ".json"))
+		var marks_ok := true
+		for clip in spec[1]:
+			var entry: Dictionary = marks.get(clip, {})
+			marks_ok = marks_ok and absf(float(entry.get("length", 0.0)) - library.length(clip)) < 0.03
+			if not clip in ["idle", "run", "hit", "death"]:
+				var windup := float(entry.get("windup_end", -1.0))
+				var strike := float(entry.get("strike_end", -1.0))
+				marks_ok = marks_ok and windup > 0.0 and windup < strike and strike < float(entry["length"])
+		ctx.check("%s: every clip's length matches, every attack winds up before it strikes before it ends" % id, marks_ok)
+		ctx.check("%s: idle and run loop, death does not" % id, library.is_looping("idle") and library.is_looping("run") and not library.is_looping("death"))
+		ctx.check("%s: the run clip runs forward (travel %.3f rig units/s) and stays in place (drift %.3f)" % [id, float(marks["run"].get("travel_per_second", 0.0)), _hips_drift(path, "run")],
+			float(marks["run"].get("travel_per_second", 0.0)) > 0.3 and absf(_hips_drift(path, "run")) < 0.02)
+		var moving := true
+		for clip in spec[1]:
+			var a: Dictionary = library.sample(clip, 0.0)
+			var b: Dictionary = library.sample(clip, library.length(clip) * 0.5)
+			moving = moving and a.has("mixamorig_RightArm") and a["mixamorig_RightArm"]["rotation"] != b["mixamorig_RightArm"]["rotation"]
+		ctx.check("%s: every clip plays (the right arm moves between its start and its middle)" % id, moving)
+		ctx.check("%s: the library file is within budget (%d bytes)" % [id, FileAccess.get_file_as_bytes(path).size()], FileAccess.get_file_as_bytes(path).size() <= int(LIBRARY_BUDGET_BY_STANCE.get(spec[0], STANCE_LIBRARY_BUDGET)))
+
+		var model := "res://art/monsters/%s/%s.glb" % [id, id]
+		var joints := _joint_names(model)
+		ctx.check("%s: keeps all 102 donor joints" % id, _missing(donor_joints, joints).is_empty())
+		ctx.check("%s: adds only the bandage joints %s" % [id, _missing(joints, donor_joints)], _sorted(_missing(joints, donor_joints)) == _sorted(EXTRA_JOINTS))
+		ctx.check("%s: has every joint its library animates" % id, _missing(_animated_bones(path), joints).is_empty())
+		var scene := (load(model) as PackedScene).instantiate()
+		var meshes := scene.find_children("*", "MeshInstance3D", true, false)
+		var mesh_names := meshes.map(func(m): return str(m.name))
+		var triangles := 0
+		var weights_ok := true
+		var skinned := true
+		for mesh in meshes:
+			skinned = skinned and mesh.skin != null
+			for s in mesh.mesh.get_surface_count():
+				var arrays: Array = mesh.mesh.surface_get_arrays(s)
+				triangles += (arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
+				var weights: PackedFloat32Array = arrays[Mesh.ARRAY_WEIGHTS]
+				weights_ok = weights_ok and weights.size() > 0 and weights.size() % 4 == 0
+				for i in range(0, weights.size(), 4):
+					weights_ok = weights_ok and absf(weights[i] + weights[i + 1] + weights[i + 2] + weights[i + 3] - 1.0) < 0.01
+		ctx.check("%s: %d triangles (hard limit %d)" % [id, triangles, MONSTER_TRIANGLE_LIMIT], triangles <= MONSTER_TRIANGLE_LIMIT)
+		ctx.check("%s: carries %s (has %s)" % [id, spec[3], mesh_names], spec[3].all(func(n): return n in mesh_names))
+		ctx.check("%s: every mesh is skinned to the rig, every vertex at most 4 normalised influences" % id, skinned and weights_ok)
+		scene.free()
+		if id == "mummy_high_wizard":
+			var boss_h := float(JSON.parse_string(FileAccess.get_file_as_string("res://art/monsters/mummy_boss/mummy_boss.json")).get("model_height", 0.0))
+			ctx.check("mummy_high_wizard: visibly larger than mummy_boss (%.1f vs %.1f m)" % [float(spec[2]), boss_h], float(spec[2]) >= boss_h * 1.25)
+			var enemy: Dictionary = CombatDataLoader.parse(FileAccess.get_file_as_string("res://data/combat/combat.json")).enemies.get("mummy_high_wizard", {})
+			ctx.check("mummy_high_wizard: its combat.json entry loads, with the wizard model, library and the model_height of its sheet", not enemy.is_empty() and absf(float(enemy.get("model_height", 0.0)) - float(spec[2])) < 0.001 and str(enemy.get("animations", "")) == path)
+			var shipped := true
+			for clip in ["summon", "starfall", "sandstorm"]:
+				shipped = shipped and library.has_clip(clip) and library.length(clip) > 2.0
+			ctx.check("mummy_high_wizard: the three new keyframed specials are in the library and differ from their donor start (the hips rise)", shipped and library.sample("starfall", 2.4)["mixamorig_Hips"]["position"].y > library.sample("starfall", 0.0)["mixamorig_Hips"]["position"].y + 0.05)
+		var sheet: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(model.get_basename() + ".json"))
+		ctx.check("%s: its sheet gives model_height %.1f and the %s library" % [id, spec[2], spec[0]], absf(float(sheet.get("model_height", 0.0)) - float(spec[2])) < 0.001 and str(sheet.get("animations", "")) == path)
+		var model_import := FileAccess.get_file_as_string(model + ".import")
+		ctx.check("%s: imported without tangents, LODs or shadow meshes" % id, model_import.contains("meshes/ensure_tangents=false") and model_import.contains("meshes/generate_lods=false") and model_import.contains("meshes/create_shadow_meshes=false"))
+		var lossy := true
+		for file in DirAccess.get_files_at(model.get_base_dir()):
+			if file.ends_with(".jpg.import"):
+				var text := FileAccess.get_file_as_string(model.get_base_dir().path_join(file))
+				lossy = lossy and text.contains("compress/mode=1") and text.contains("detect_3d/compress_to=0")
+		ctx.check("%s: its textures are imported lossy, never switched to VRAM" % id, lossy)
 
 
 ## Every monster model under art/monsters/** (found by walking the folder: a new monster is covered without editing this test),

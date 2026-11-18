@@ -561,7 +561,12 @@ static func _update_idle(id: int, fighter: Fighter, body: SimBody, input: SimInp
 			fighter.gauge -= float(move["gauge_cost"])
 			_start_move(id, fighter, style["ultimate"], events)
 			return SimInput.new()
-	if input.special and body.grounded and style.has("special") and fighter.cooldowns.get(style["special"], 0) <= 0:
+	# A monster with several skills (ai.skills) names the one it starts; each keeps its own cooldown.
+	if input.special and input.special_move != "" and body.grounded and data.moves.has(input.special_move) and fighter.cooldowns.get(input.special_move, 0) <= 0:
+		if _start_attack(id, fighter, input.special_move, data, events):
+			fighter.cooldowns[input.special_move] = int(data.moves[input.special_move]["cooldown"])
+			return SimInput.new()
+	elif input.special and body.grounded and style.has("special") and fighter.cooldowns.get(style["special"], 0) <= 0:
 		if _start_attack(id, fighter, style["special"], data, events):
 			fighter.cooldowns[style["special"]] = int(data.moves[style["special"]]["cooldown"])
 			return SimInput.new()

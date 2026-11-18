@@ -21,7 +21,7 @@ func run(ctx) -> void:
 	var f := F.make()
 	var p = Profile.new_player(f.rules, f.camp, F.rng(5))
 	ctx.check("a new player: zone 1 open", Zones.state(p, "goblin_base") == Zones.OPEN)
-	ctx.check("a zone without a journey is coming soon", Zones.state(p, "pyramid") == Zones.SOON)
+	ctx.check("a zone without a journey is coming soon", Zones.state(p, "orc_camp") == Zones.SOON)
 	ctx.check("the current zone of a new player is zone 1", str(Zones.current_zone(p).get("id", "")) == "goblin_base")
 	ctx.check("another journey marks nothing", not Zones.on_battle_result(p, "ink_road", 12, 12))
 	ctx.check("wave 8 of 9 does not beat the boss", not Zones.on_battle_result(p, "goblin_waves", 8, 9) and not Zones.boss_beaten(p, "goblin_base"))

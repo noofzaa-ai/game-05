@@ -1,0 +1,26 @@
+{
+  "mummy_pyramid_gate": {
+    "cover": 2,
+    "draw_surfaces": 5,
+    "lights": 4,
+    "mesh_bytes": 379361,
+    "scene_bytes": 2611,
+    "triangles": 24245
+  },
+  "mummy_pyramid_hall": {
+    "cover": 2,
+    "draw_surfaces": 5,
+    "lights": 4,
+    "mesh_bytes": 311128,
+    "scene_bytes": 2614,
+    "triangles": 22120
+  },
+  "mummy_pyramid_sanctum": {
+    "cover": 2,
+    "draw_surfaces": 5,
+    "lights": 4,
+    "mesh_bytes": 373613,
+    "scene_bytes": 2624,
+    "triangles": 25031
+  }
+}

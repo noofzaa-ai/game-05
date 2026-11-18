@@ -333,6 +333,7 @@ func _populate_waves(sim: GameSim, map, first_enemy_id: int) -> Array[int]:
 		var power := float(fight.get("power", 1.0)) * squad_power
 		var entries: Array = []
 		var placed := 0
+		var bosses_placed := 0  ## a boss pair (mummy_waves wave 9): each next boss stands further back (boss_spot)
 		for enemy in fight.get("enemies", []):
 			var is_boss := bool(enemy.get("boss", false))
 			var count := int(enemy["count"]) if is_boss else int(ceil(float(enemy["count"]) * data.wave_count_scale))
@@ -341,7 +342,8 @@ func _populate_waves(sim: GameSim, map, first_enemy_id: int) -> Array[int]:
 				var row := placed / spots.size()
 				spot += Vector3(-0.8 * float(row), 0.0, (0.9 if row % 2 == 0 else -0.9) * float(row))
 				if is_boss:
-					spot = Vector3(5.2, 0.05, 0.0)
+					spot = boss_spot(map, bosses_placed)
+					bosses_placed += 1
 				var hp_scale := power * (float(data.boss.get("hp_mult", 1.0)) if is_boss else 1.0)
 				var entry := {"id": next_id, "position": spot, "type": str(enemy["type"]), "level": int(enemy.get("level", fight["level"])), "hp_scale": hp_scale, "atk_scale": power}
 				if is_boss:
@@ -361,6 +363,25 @@ func _populate_waves(sim: GameSim, map, first_enemy_id: int) -> Array[int]:
 		else:
 			sim.queue_wave(entries)
 	return []
+
+
+const BOSS_SPOT := Vector3(5.2, 0.05, 0.0)  ## where a wave-mode boss stands
+const BOSS_STEP := 1.4  ## each further boss of the same wave stands this much further back (+x, away from the squad)
+
+
+## The spot of the `index`-th boss of a wave (Boss 2026-11-18: the mummy pair must not share one spot): BOSS_SPOT, then
+## BOSS_STEP further back each, kept inside the board (a body's width from the edge) and moved sideways off any solid.
+static func boss_spot(map, index: int) -> Vector3:
+	var spot := BOSS_SPOT + Vector3(BOSS_STEP * float(index), 0.0, 0.0)
+	spot.x = minf(spot.x, float(map.half_width) - 0.6)
+	if index == 0:
+		return spot
+	for side in [0.0, 1.4, -1.4, 2.8, -2.8]:
+		var at := spot + Vector3(0.0, 0.0, side)
+		var body := AABB(Vector3(at.x - 0.4, at.y + 0.05, at.z - 0.4), Vector3(0.8, 1.8, 0.8))
+		if absf(at.z) <= float(map.half_depth) - 0.6 and not map.solids.any(func(solid): return (solid["box"] as AABB).intersects(body)):
+			return at
+	return spot
 
 
 ## How dangerous a fight is: the sum over its monsters of HP x ATK (after level and power), divided by

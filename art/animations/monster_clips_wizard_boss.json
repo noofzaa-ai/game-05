@@ -1,0 +1,49 @@
+{
+  "cast": {
+    "length": 2.1,
+    "loop": false,
+    "strike_end": 1.15,
+    "windup_end": 0.95
+  },
+  "cast_aoe": {
+    "length": 3.0,
+    "loop": false,
+    "strike_end": 2.1,
+    "windup_end": 1.75
+  },
+  "death": {
+    "length": 3.6333,
+    "loop": false
+  },
+  "hit": {
+    "length": 0.62,
+    "loop": false
+  },
+  "idle": {
+    "length": 1.8833,
+    "loop": true
+  },
+  "run": {
+    "length": 0.75,
+    "loop": true,
+    "travel_per_second": 1.195
+  },
+  "sandstorm": {
+    "length": 3.3125,
+    "loop": false,
+    "strike_end": 2.75,
+    "windup_end": 1.875
+  },
+  "starfall": {
+    "length": 4.32,
+    "loop": false,
+    "strike_end": 3.0,
+    "windup_end": 2.3
+  },
+  "summon": {
+    "length": 2.725,
+    "loop": false,
+    "strike_end": 1.75,
+    "windup_end": 1.25
+  }
+}

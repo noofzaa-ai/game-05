@@ -13,6 +13,18 @@
 			"first_kill_min_tier": "rare",
 			"price_coins": 500,
 			"shop_tier_weights": [0, 70, 22, 8]
+		},
+		"pyramid": {
+			"enemy": "mummy_high_wizard",
+			"set": "boss_mummy_high_wizard",
+			"coin": "coin_mummy_high_wizard",
+			"relic": "relic_mummy_high_wizard",
+			"coins_per_kill": 1,
+			"piece_chance": 0.25,
+			"relic_chance": 0.01,
+			"first_kill_min_tier": "rare",
+			"price_coins": 500,
+			"shop_tier_weights": [0, 70, 22, 8]
 		}
 	}
 }

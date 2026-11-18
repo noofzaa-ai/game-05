@@ -79,6 +79,30 @@
 				0.3,
 				0.2
 			]
+		},
+		"coin_mummy_high_wizard": {
+			"name": "Mummy High Wizard Coin",
+			"name_th": "เหรียญจอมเวทมัมมี่",
+			"stack": 99,
+			"sellable": false,
+			"icon_path": "res://art/items/boss/mummy_high_wizard/coin.png",
+			"color": [
+				0.9,
+				0.7,
+				0.2
+			]
+		},
+		"relic_mummy_high_wizard": {
+			"name": "Mummy High Wizard's Relic",
+			"name_th": "เรลิกจอมเวทมัมมี่",
+			"stack": 99,
+			"sellable": false,
+			"icon_path": "res://art/items/boss/mummy_high_wizard/relic.png",
+			"color": [
+				0.2,
+				0.55,
+				0.85
+			]
 		}
 	},
 	"bag": {

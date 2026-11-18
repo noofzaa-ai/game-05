@@ -297,12 +297,98 @@
 			{"type": "trail", "shape": "arc", "radius": 1.5, "width": 0.6, "from": 80, "to": -10, "rise": [1.6, 0.2], "tilt": 88, "seconds": 0.22, "sweep": 0.4, "tail": 0.8, "color": "#e8e4dc", "ink": 0.6},
 			{"type": "shake", "strength": 0.25, "seconds": 0.25}
 		]},
+		"swing/mummy_strike": {"layers": [
+			{"type": "trail", "shape": "arc", "radius": 1.0, "width": 0.22, "from": 60, "to": -40, "rise": [1.1, 0.8], "tilt": 20, "seconds": 0.16, "sweep": 0.4, "tail": 0.7, "color": "#d8c7a2", "ink": 0.45}
+		]},
+		"windup/mummy_grasp": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.5, 1.3], "seconds": 0.45, "color": "#c9a24a"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 6, "speed": 1.0, "spread": 50, "dir": "up", "gravity": -0.4, "drag": 2, "size": 0.45, "seconds": 0.5, "color": "#cdb27a", "ink": 0.3}
+		]},
+		"swing/mummy_grasp": {"layers": [
+			{"type": "trail", "shape": "thrust", "radius": 1.0, "width": 0.26, "from": -0.6, "to": 1.6, "rise": [1.0, 0.85], "lanes": 2, "lane_gap": 0.4, "seconds": 0.24, "sweep": 0.3, "tail": 0.85, "color": "#d8c7a2", "ink": 0.5},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 6, "speed": 1.8, "spread": 30, "dir": "back", "lift": 20, "gravity": 0.5, "drag": 3, "size": 0.45, "seconds": 0.45, "color": "#cdb27a", "ink": 0.25}
+		]},
+		"windup/mummy_knight_cleave": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [-0.3, 1.5, 0.0], "size": [0.2, 0.8], "spikes": 4, "seconds": 0.4, "color": "#ffe2a0", "ink": 0.2}
+		]},
+		"swing/mummy_knight_cleave": {"layers": [
+			{"type": "trail", "shape": "arc", "radius": 1.7, "width": 0.55, "from": 100, "to": -95, "rise": [1.3, 0.8], "tilt": 8, "seconds": 0.24, "sweep": 0.5, "tail": 0.75, "color": "#e6c27a", "ink": 0.55}
+		]},
+		"windup/mummy_knight_bash": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.3, 1.2, -0.3], "size": [0.3, 1.1], "spikes": 6, "seconds": 0.55, "color": "#ffe2a0", "ink": 0.2},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 6, "speed": 1.4, "spread": 30, "dir": "back", "lift": 15, "gravity": 0.5, "drag": 3, "size": 0.5, "seconds": 0.5, "color": "#cdb27a", "ink": 0.3}
+		]},
+		"swing/mummy_knight_bash": {"layers": [
+			{"type": "sprite", "mode": "ring", "anchor": "feet", "offset": [1.2, 1.0, 0.0], "size": [0.3, 1.6], "seconds": 0.22, "color": "#c08a3e", "ink": 0.4},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 8, "speed": 2.2, "spread": 30, "dir": "back", "lift": 15, "gravity": 0.5, "drag": 3, "size": 0.55, "seconds": 0.5, "color": "#cdb27a", "ink": 0.25},
+			{"type": "shake", "strength": 0.2, "seconds": 0.22}
+		]},
+		"hit/mummy_knight_bash": {"layers": [
+			{"type": "sprite", "mode": "star", "size": [0.6, 1.8], "spikes": 8, "seconds": 0.22, "color": "#ffd27a", "ink": 0.3},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 10, "speed": 2.6, "spread": 80, "dir": "up", "gravity": 2, "drag": 3, "size": 0.5, "seconds": 0.6, "color": "#cdb27a", "ink": 0.3}
+		]},
+		"swing/mummy_mage_bolt": {"layers": []},
+		"swing/mummy_mage_curse": {"layers": []},
+		"swing/mummy_mage_blink": {"layers": [
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 12, "speed": 1.6, "spread": 70, "dir": "up", "gravity": -0.3, "drag": 2, "size": 0.5, "seconds": 0.6, "color": "#cdb27a", "ink": 0.35}
+		]},
+		"windup/mummy_mage_bolt": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "feet", "offset": [0.45, 1.5, 0.1], "size": [0.2, 0.6], "seconds": 0.45, "color": "#e8c35a"}
+		]},
+		"windup/mummy_mage_curse": {"layers": [
+			{"type": "sprite", "mode": "swirl", "anchor": "feet", "offset": [0.0, 1.4, 0.0], "size": [0.4, 1.1], "spin": 260, "seconds": 0.5, "color": "#e8c35a", "ink": 0.3},
+			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [0.6, 1.4], "seconds": 0.5, "color": "#c9a24a", "ink": 0.4}
+		]},
+		"hit/mummy_mage_bolt": {"layers": [
+			{"type": "sprite", "mode": "glow", "size": [0.6, 1.4], "seconds": 0.22, "color": "#e8c35a"}
+		]},
+		"swing/mummy_boss_combo": {"layers": [
+			{"type": "trail", "shape": "arc", "radius": 1.8, "width": 0.5, "from": 95, "to": -80, "rise": [1.6, 1.0], "tilt": 10, "seconds": 0.2, "sweep": 0.45, "tail": 0.75, "color": "#f0c860", "ink": 0.45},
+			{"type": "trail", "shape": "arc", "radius": 1.7, "width": 0.45, "from": -80, "to": 90, "rise": [1.0, 1.4], "tilt": -10, "delay": 0.2, "seconds": 0.2, "sweep": 0.45, "tail": 0.75, "color": "#f0c860", "ink": 0.45}
+		]},
+		"windup/mummy_boss_nova": {"layers": [
+			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [1.0, 5.0], "seconds": 0.66, "color": "#c9a24a", "ink": 0.4},
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.8, 2.2], "seconds": 0.66, "color": "#f0c860"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 12, "speed": 1.0, "spread": 80, "dir": "up", "gravity": -0.6, "drag": 2, "size": 0.6, "seconds": 0.66, "color": "#cdb27a", "ink": 0.3}
+		]},
+		"swing/mummy_boss_nova": {"layers": [
+			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.8, 5.2], "seconds": 0.45, "color": "#e6c27a", "ink": 0.35},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 24, "speed": 4.5, "spread": 90, "dir": "none", "drag": 2.5, "size": 0.7, "seconds": 0.8, "color": "#cdb27a", "ink": 0.25},
+			{"type": "shake", "strength": 0.3, "seconds": 0.3}
+		]},
+		"windup/mummy_hw_bolt": {"layers": []},
+		"swing/mummy_hw_bolt": {"layers": []},
+		"windup/mummy_hw_curse": {"layers": []},
+		"swing/mummy_hw_curse": {"layers": []},
+		"windup/mummy_hw_starfall": {"layers": [
+			{"type": "shake", "strength": 0.08, "seconds": 1.4}
+		]},
+		"swing/mummy_hw_starfall": {"layers": []},
+		"windup/mummy_hw_sandstorm": {"layers": []},
+		"swing/mummy_hw_sandstorm": {"layers": [
+			{"type": "shake", "strength": 0.25, "seconds": 0.6}
+		]},
+		"area_burst/curse_mark": {"layers": [
+			{"type": "shake", "strength": 0.15, "seconds": 0.2}
+		]},
+		"area_burst/star_mark": {"layers": [
+			{"type": "shake", "strength": 0.2, "seconds": 0.2}
+		]},
 		"shot/arrow": {"layers": [
 			{"type": "burst", "style": "streak", "anchor": "at", "count": 4, "speed": 2.5, "spread": 25, "dir": "forward", "drag": 6, "size": 0.12, "streak": 0.2, "seconds": 0.18, "color": "#fff1c4", "ink": 0.2}
 		]},
 		"shot/bolt": {"layers": [
 			{"type": "sprite", "mode": "glow", "anchor": "at", "size": [0.3, 0.9], "seconds": 0.2, "color": "#b866ff"},
 			{"type": "burst", "style": "mote", "anchor": "at", "count": 6, "speed": 1.5, "spread": 60, "dir": "forward", "drag": 4, "size": 0.12, "seconds": 0.35, "color": "#d9a8ff"}
+		]},
+		"shot/gold_bolt": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "at", "size": [0.3, 0.9], "seconds": 0.2, "color": "#ffc23a"},
+			{"type": "burst", "style": "mote", "anchor": "at", "count": 6, "speed": 1.5, "spread": 60, "dir": "forward", "drag": 4, "size": 0.12, "seconds": 0.35, "color": "#ffe08a"}
+		]},
+		"shot_end/gold_bolt": {"layers": [
+			{"type": "sprite", "mode": "ring", "anchor": "at", "size": [0.2, 1.1], "seconds": 0.28, "color": "#ffd25a", "ink": 0.2},
+			{"type": "sprite", "mode": "glow", "anchor": "at", "size": [0.6, 1.3], "seconds": 0.22, "color": "#ffc23a"},
+			{"type": "burst", "style": "mote", "anchor": "at", "count": 12, "speed": 2.4, "spread": 180, "dir": "none", "drag": 3, "size": 0.12, "seconds": 0.5, "color": "#ffeaa8"}
 		]},
 		"shot_end/arrow": {"layers": [
 			{"type": "burst", "style": "streak", "anchor": "at", "count": 6, "speed": 2.2, "spread": 70, "dir": "up", "gravity": 6, "drag": 3, "size": 0.1, "streak": 0.15, "seconds": 0.3, "color": "#d8c7a2", "ink": 0.4},

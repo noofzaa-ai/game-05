@@ -61,6 +61,71 @@
    "asset_path": "",
    "icon_path": "res://art/items/boss/goblin_chief/back.png"
   },
+  "boss_mummy_high_wizard_necklace": {
+   "asset_id": "",
+   "name": "Scarab Amulet of the High Wizard",
+   "name_th": "เครื่องรางด้วงสการับจอมเวทมัมมี่",
+   "slot": "necklace",
+   "set": "boss_mummy_high_wizard",
+   "boss": "pyramid",
+   "no_drop": true,
+   "drop_level": 15,
+   "req_level": 15,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/mummy_high_wizard/necklace.png"
+  },
+  "boss_mummy_high_wizard_earring": {
+   "asset_id": "",
+   "name": "High Wizard's Ankh Earring",
+   "name_th": "ต่างหูอังค์จอมเวทมัมมี่",
+   "slot": "earring",
+   "set": "boss_mummy_high_wizard",
+   "boss": "pyramid",
+   "no_drop": true,
+   "drop_level": 15,
+   "req_level": 15,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/mummy_high_wizard/earring.png"
+  },
+  "boss_mummy_high_wizard_bracelet": {
+   "asset_id": "",
+   "name": "High Wizard's Wrapped Bracelet",
+   "name_th": "กำไลผ้าพันจอมเวทมัมมี่",
+   "slot": "bracelet",
+   "set": "boss_mummy_high_wizard",
+   "boss": "pyramid",
+   "no_drop": true,
+   "drop_level": 15,
+   "req_level": 15,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/mummy_high_wizard/bracelet.png"
+  },
+  "boss_mummy_high_wizard_ring": {
+   "asset_id": "",
+   "name": "High Wizard's Cobra Ring",
+   "name_th": "แหวนงูจงอางจอมเวทมัมมี่",
+   "slot": "ring",
+   "set": "boss_mummy_high_wizard",
+   "boss": "pyramid",
+   "no_drop": true,
+   "drop_level": 15,
+   "req_level": 15,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/mummy_high_wizard/ring.png"
+  },
+  "boss_mummy_high_wizard_back": {
+   "asset_id": "",
+   "name": "Tattered Royal Ankh Cloak",
+   "name_th": "ผ้าคลุมหลวงอังค์ขาดวิ่น",
+   "slot": "back",
+   "set": "boss_mummy_high_wizard",
+   "boss": "pyramid",
+   "no_drop": true,
+   "drop_level": 15,
+   "req_level": 15,
+   "asset_path": "",
+   "icon_path": "res://art/items/boss/mummy_high_wizard/back.png"
+  },
   "armour_sword_shield_shirt": {
    "asset_id": "armour_sword_shield_shirt",
    "name": "Sword & Shield Tunic",
@@ -588,6 +653,25 @@
  },
  "_comment": "Game items made from the model team's assets (art/items/item_manifest.json). The key is the item_id the game and saves use; asset_id finds the model. slot is the game's slot, weapon_type the combat style, set a set id in sets.json, drop_level the lowest monster level that drops it. tools/items/build_catalog.py adds new assets and never changes entries already here.",
  "relics": {
+  "relic_mummy_high_wizard": {
+   "name": "Mummy High Wizard's Relic",
+   "name_th": "เรลิกจอมเวทมัมมี่",
+   "boss": "pyramid",
+   "icon_path": "res://art/items/boss/mummy_high_wizard/relic.png",
+   "text": "ATK +8%, crit damage +10.",
+   "effects": [
+    {
+     "type": "stat_mod",
+     "stat": "ATK",
+     "mul": 0.08
+    },
+    {
+     "type": "stat_mod",
+     "stat": "CRIDMG",
+     "add": 10.0
+    }
+   ]
+  },
   "relic_goblin_chief": {
    "name": "Goblin Chief's Relic",
    "name_th": "เรลิกหัวหน้าก็อบลิน",

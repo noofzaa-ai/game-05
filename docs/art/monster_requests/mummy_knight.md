@@ -51,3 +51,9 @@ Whole-body scale, bigger head or hands, longer or shorter arms: free. Shorter or
 - A character in the A-pose of section 5: one body mesh + weapon objects separately; textures at most 1024; flat colour only. Name files by content (`mummy_knight.glb`), never `modular_assets`.
 - Tell the rigger which parts hang loose (cloth, bandage) so extra joints can be named before modelling.
 - Deliver a turntable or front/side/back render with the file so a missing part is seen before rigging.
+
+## 9. Status 2026-11-17: BUILT (placeholder look, character-artist)
+Built by `tools/monsters/build_mummy_family.gd` (no new mesh delivery yet): the stand-in mummy mesh (now `tools/monsters/standin/`, not shipped) re-bound to the shared rig, 102 donor joints + `bandage_upper_L/R`, `bandage_lower_L/R` (106), simplified body 1,620 triangles, one 512 px tinted albedo shipped as lossy JPEG/WebP import, no tangents/LODs/shadow meshes. Gear is procedural, posed on the player's own weapon of the stance and weighted 100% to its holding joint. Checked by `tests/test_monster_rig.gd` (family section) and windowed shots `tools/monsters/mummy_family_shots.gd` -> `build/mummy_shots/`. A real model per sections 3-5 still replaces it later through the same builder.
+- Files: `art/monsters/mummy_knight/mummy_knight.glb` + `.json` + albedo. 2,268 triangles (body 1,620, `_Shield` 132 on mixamorig_LeftForeArm, `_Khopesh` 120 on mixamorig_RightHand, `_Helmet` 396 on mixamorig_Head), 219 KB; shoulders x1.16, head x1.22, darker bandages; bronze + teal.
+- Library `monster_clips_sword_shield` (shared with mummy): attack_1 = side cut (slash), attack_2 = telegraphed overhead (attack_4, raised 1.0 s, chop 1.37-1.61). run_clip_speed 0.51.
+- Data for the combat-designer: model_height 2.0, clips {<cleave>: attack_1, <overhead>: attack_2}.

@@ -1,0 +1,44 @@
+{
+  "id": "mummy_knight",
+  "model": "res://art/monsters/mummy_knight/mummy_knight.glb",
+  "model_height": 2.0,
+  "animations": "res://art/animations/monster_clips_sword_shield.glb",
+  "stance": "sword_shield",
+  "clips": [
+    "attack_1",
+    "attack_2",
+    "death",
+    "hit",
+    "idle",
+    "run"
+  ],
+  "move_clips": {
+    "attack_1": "the side cut",
+    "attack_2": "the telegraphed overhead"
+  },
+  "run_clip_speed": 0.51,
+  "hips_scale": 1.0,
+  "sockets": {
+    "Monster_MummyKnight_Shield": "mixamorig_LeftForeArm",
+    "Monster_MummyKnight_Khopesh": "mixamorig_RightHand",
+    "Monster_MummyKnight_Helmet": "mixamorig_Head"
+  },
+  "meshes": {
+    "Monster_MummyKnight_Body": 1620,
+    "Monster_MummyKnight_Shield": 132,
+    "Monster_MummyKnight_Khopesh": 120,
+    "Monster_MummyKnight_Helmet": 396
+  },
+  "triangles": 2268,
+  "joints": 106,
+  "extra_joints": [
+    "bandage_upper_L",
+    "bandage_upper_R",
+    "bandage_lower_L",
+    "bandage_lower_R"
+  ],
+  "rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
+  "texture": "one 512x512 albedo (stand-in bandage atlas, tinted), lossy",
+  "built_by": "tools/monsters/build_mummy_family.gd",
+  "request_sheet": "docs/art/monster_requests/mummy_knight.md"
+}

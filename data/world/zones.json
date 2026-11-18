@@ -1,12 +1,12 @@
 {
- "_comment": "(dev_journey = a built journey that is NOT yet playable: the zone stays coming-soon (journey empty) until the Boss approves it; run it with tools/maps/mummy_dev_run.gd.) World map zones (Boss 2026-11-16: boss-farming game; a big map split into zones, one 9-wave run per zone with its boss at wave 9, the first boss kill opens the next zone, each boss drops its own set). pos = zone marker centre on art/ui/world_map/archipelago.png as a fraction of the image (1672x941). journey = data/journeys/<id>.json, empty = not built yet (shown, never playable). order = unlock order: a zone opens when the zone before it has had its boss beaten once (profile.unlocks.zones, server-set).",
+ "_comment": "(Boss 2026-11-18: the Sand Pyramid is wired to the world map and its quest, journey = mummy_waves. A dev_journey, when a zone has one, is a built journey that is NOT yet playable.) World map zones (Boss 2026-11-16: boss-farming game; a big map split into zones, one 9-wave run per zone with its boss at wave 9, the first boss kill opens the next zone, each boss drops its own set). pos = zone marker centre on art/ui/world_map/archipelago.png as a fraction of the image (1672x941). journey = data/journeys/<id>.json, empty = not built yet (shown, never playable). order = unlock order: a zone opens when the zone before it has had its boss beaten once (profile.unlocks.zones, server-set).",
  "version": 1,
  "image": "res://art/ui/world_map/archipelago.png",
  "image_size": [1672, 941],
  "home": {"name_th": "ท่าเรือ", "name_en": "Harbour", "pos": [0.47, 0.84]},
  "zones": [
   {"id": "goblin_base", "order": 1, "journey": "goblin_waves", "name_th": "ฐานก็อบลิน", "name_en": "Goblin Base", "boss_th": "หัวหน้าก็อบลิน", "boss_en": "Goblin Chief", "pos": [0.17, 0.63]},
-  {"id": "pyramid", "order": 2, "journey": "", "dev_journey": "mummy_waves", "name_th": "พีระมิดทราย", "name_en": "Sand Pyramid", "boss_th": "ฟาโรห์มัมมี่", "boss_en": "Mummy Pharaoh", "pos": [0.53, 0.57]},
+  {"id": "pyramid", "order": 2, "journey": "mummy_waves", "name_th": "พีระมิดทราย", "name_en": "Sand Pyramid", "boss_th": "จอมเวทฟาโรห์", "boss_en": "Mummy High Wizard", "pos": [0.53, 0.57]},
   {"id": "orc_camp", "order": 3, "journey": "", "name_th": "ค่ายออร์ค", "name_en": "Orc Camp", "boss_th": "แม่ทัพออร์ค", "boss_en": "Orc Warlord", "pos": [0.42, 0.33]},
   {"id": "elder_tree", "order": 4, "journey": "", "name_th": "ป่าต้นไม้ยักษ์", "name_en": "Elder Grove", "boss_th": "ผู้พิทักษ์พฤกษา", "boss_en": "Grove Warden", "pos": [0.16, 0.37]},
   {"id": "swamp", "order": 5, "journey": "", "name_th": "หนองพิษ", "name_en": "Rot Marsh", "boss_th": "ราชาหนอง", "boss_en": "Marsh King", "pos": [0.73, 0.80]},

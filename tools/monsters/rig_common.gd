@@ -9,8 +9,34 @@ static var rot_tol := deg_to_rad(0.35)  ## a key within this angle of the interp
 static var pos_tol := 0.0005  ## metres (rig units)
 
 
+## The 2026-10-21 mummy stand-in (own 28-bone rig, 3,242 triangles): the SOURCE mesh of every mummy model. Kept out of the game
+## (tools/monsters/standin has a .gdignore: not imported, not exported) since art/monsters/mummy/mummy.glb is now the rebuilt mummy.
+const STANDIN := "res://tools/monsters/standin/mummy_standin.glb"
+const STANDIN_ALBEDO := "res://tools/monsters/standin/mummy_texture_pbr_20250901.png"
+
+
 static func load_donor() -> Node:
 	return (load(DONOR) as PackedScene).instantiate()
+
+
+## A .glb read straight from the file (no import). Skin binds read this way carry bone indices only: their names are filled in
+## from the skeleton so code can look joints up by name as on an imported scene.
+static func load_gltf(path: String) -> Node:
+	var state := GLTFState.new()
+	var document := GLTFDocument.new()
+	document.append_from_file(ProjectSettings.globalize_path(path), state)
+	var root := document.generate_scene(state)
+	for mesh in root.find_children("*", "MeshInstance3D", true, false):
+		var instance := mesh as MeshInstance3D
+		if instance.skin == null:
+			continue
+		var skeleton := instance.get_node_or_null(instance.skeleton) as Skeleton3D
+		if skeleton == null:
+			skeleton = root.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+		for i in instance.skin.get_bind_count():
+			if String(instance.skin.get_bind_name(i)) == "":
+				instance.skin.set_bind_name(i, skeleton.get_bone_name(instance.skin.get_bind_bone(i)))
+	return root
 
 
 static func donor_skeleton(root: Node) -> Skeleton3D:

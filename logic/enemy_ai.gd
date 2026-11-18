@@ -44,6 +44,7 @@ var cooldown_min := 50
 var cooldown_max := 90
 var cooldown := 30
 var skill_chance := 0  ## percent: how often it uses its special skill (a buff or debuff) instead of its normal attack
+var skills: Array = []  ## ai.skills: [{"move", "chance"}] several specials, each with its own cooldown (empty = skill_chance + the style's special)
 var retreat_ticks := 0  ## after an attack ends (or is cut short) it backs away from the player this long
 var flee_hp := 0.0  ## below this fraction of its health it runs away (0 = never)
 var flee_ticks := 0  ## for this long
@@ -316,6 +317,15 @@ func _wait(input: SimInput, offset: Vector3) -> void:
 
 
 func _press_attack(input: SimInput, fighter: Fighter, rng: RandomNumberGenerator) -> void:
+	# Several skills (ai.skills): tried in list order, each ready one rolls its own chance; none = the normal attack.
+	if not skills.is_empty():
+		for skill in skills:
+			if int(fighter.cooldowns.get(str(skill["move"]), 0)) <= 0 and rng.randi_range(1, 100) <= int(skill["chance"]):
+				input.special = true
+				input.special_move = str(skill["move"])
+				return
+		_press(input, attack_input)
+		return
 	# A monster has at most one skill with a cooldown, so an empty cooldown list means it is ready.
 	if skill_chance > 0 and fighter.cooldowns.is_empty() and rng.randi_range(1, 100) <= skill_chance:
 		input.special = true

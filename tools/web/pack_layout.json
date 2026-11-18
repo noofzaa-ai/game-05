@@ -39,7 +39,8 @@
       "include": [
         "res://art/animations/",
         "res://art/vfx/class_skills/",
-        "res://art/vfx/status/"
+        "res://art/vfx/status/",
+        "res://art/vfx/monster/"
       ]
     },
     {

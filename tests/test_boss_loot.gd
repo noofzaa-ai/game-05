@@ -22,6 +22,7 @@ const SET := "boss_goblin_chief"
 
 func run(ctx) -> void:
 	_data(ctx)
+	_boss_set_parity(ctx)
 	_ac1_drop_rates(ctx)
 	_ac2_first_kill(ctx)
 	_ac3_set_steps(ctx)
@@ -31,6 +32,48 @@ func run(ctx) -> void:
 	_ac6_lost_run(ctx)
 	_ac7_online(ctx)
 	_edges(ctx)
+
+## Every zone boss set (goblin_base + pyramid, Boss 2026-11-18 mummy order) follows the same rules: 5 slots, ids
+## boss_<boss>_<slot>, no_drop, an icon file that exists, kind boss with 2/4/6 stat_mod steps and the same tier_mul, a coin
+## and a relic that are unsellable camp materials with existing icons, and the pyramid pieces are level-15 gear.
+func _boss_set_parity(ctx) -> void:
+	var f := F.make()
+	var slots := ["back", "bracelet", "earring", "necklace", "ring"]
+	var bosses := {
+		"goblin_base": {"set": "boss_goblin_chief", "dir": "goblin_chief", "coin": "coin_goblin_chief", "relic": "relic_goblin_chief", "req": 1},
+		"pyramid": {"set": "boss_mummy_high_wizard", "dir": "mummy_high_wizard", "coin": "coin_mummy_high_wizard", "relic": "relic_mummy_high_wizard", "req": 15},
+	}
+	var raw_items: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/items/catalog.json")).get("items", {})  # name_th is not kept by the loader
+	var goblin_set: Dictionary = f.rules.catalog.sets["boss_goblin_chief"]
+	for zone in bosses:
+		var b: Dictionary = bosses[zone]
+		var tag := "boss set %s" % b["set"]
+		var pieces := BossLoot.set_pieces(f.rules, b["set"])
+		ctx.check("%s: exactly the 5 accessory slots, ids boss_%s_<slot>" % [tag, b["dir"]], pieces == slots.map(func(sl): return "boss_%s_%s" % [b["dir"], sl]))
+		var good := true
+		for id in pieces:
+			var e: Dictionary = f.rules.catalog.entry(id)
+			var icon := "res://art/items/boss/%s/%s.png" % [b["dir"], str(e.slot)]
+			good = good and bool(e.no_drop) and str(e.boss) == zone and str(e.icon_path) == icon and FileAccess.file_exists(icon) 				and not str(e.name).is_empty() and not str(raw_items.get(id, {}).get("name_th", "")).is_empty() 				and f.rules.catalog.req_level(id) == int(b["req"]) and int(e.drop_level) == int(b["req"])
+		ctx.check("%s: no_drop, boss=%s, English+Thai names, icon files exist, req_level/drop_level %d" % [tag, zone, int(b["req"])], good)
+		var set_def: Dictionary = f.rules.catalog.sets.get(b["set"], {})
+		var steps: Array = set_def.get("steps", [])
+		ctx.check("%s: kind boss, boss=%s, tier_mul like the goblin set" % [tag, zone], str(set_def.get("kind", "")) == "boss" and str(set_def.get("boss", "")) == zone and set_def.get("tier_mul", {}) == goblin_set.get("tier_mul", {}))
+		ctx.check("%s: steps at 2/4/6 pieces, one stat_mod (mul > 0) each" % tag, steps.size() == 3 and steps.map(func(st): return int(st.pieces)) == [2, 4, 6] 			and steps.all(func(st): return st.effects.size() == 1 and str(st.effects[0].type) == "stat_mod" and float(st.effects[0].get("mul", 0.0)) > 0.0 and not str(st.text).is_empty()))
+		for id in [b["coin"], b["relic"]]:
+			var m: Dictionary = f.camp.materials.get(id, {})
+			ctx.check("%s: %s is an unsellable camp material with an icon file" % [tag, id], not m.is_empty() and not m.sellable and FileAccess.file_exists(str(m.icon_path)) and str(m.icon_path).contains("/" + str(b["dir"]) + "/"))
+		var relic: Dictionary = f.rules.catalog.relics.get(b["relic"], {})
+		ctx.check("%s: relic has name/name_th/text, stat_mod effects, boss=%s, icon file" % [tag, zone], not relic.is_empty() and str(relic.boss) == zone and not relic.effects.is_empty() 			and relic.effects.all(func(e): return str(e.type) == "stat_mod") and FileAccess.file_exists(str(relic.icon_path)) and not str(relic.get("name_th", "")).is_empty())
+	# Pyramid: the boss_loot.json entry (added by the loot owner) must name exactly these ids.
+	var entry: Dictionary = BossLoot.boss("pyramid")
+	ctx.check("boss set pyramid: boss_loot.json entry names the mummy set, coin and relic", entry.get("set", "") == "boss_mummy_high_wizard" and entry.get("coin", "") == "coin_mummy_high_wizard" and entry.get("relic", "") == "relic_mummy_high_wizard")
+	# Level-15 gear: a non-starter pyramid piece has the level-15 main stat multiplier, a goblin piece has none.
+	var mummy_item = ItemSystem.create_item(f.rules, "bp-mm", "ring", 1, F.rng(5), "", "boss_mummy_high_wizard_ring")
+	var goblin_item = ItemSystem.create_item(f.rules, "bp-gb", "ring", 1, F.rng(5), "", "boss_goblin_chief_ring")
+	ctx.check("boss set pyramid: pieces are real catalog items of their slot and the level-15 main stat is x%s of the goblin one" % [f.rules.catalog.level_mul(15)],
+		mummy_item != null and mummy_item.item_id == "boss_mummy_high_wizard_ring" and goblin_item != null and absf(mummy_item.main_value(f.rules) / goblin_item.main_value(f.rules) - f.rules.catalog.level_mul(15)) < 0.001)
+
 
 
 static func wave_journey(f: Dictionary, p, seed_value: int = 77):
@@ -271,8 +314,10 @@ func _ac5_shop(ctx) -> void:
 	var offers := Shop.stock(f.rules, f.camp)
 	var ids: Array = offers.map(func(o): return str(o.id))
 	ids.sort()
-	ctx.check("AC5 the shop lists only the 5 boss pieces %s" % [ids], ids == BossLoot.set_pieces(f.rules, SET))
-	ctx.check("AC5 each costs 500 Goblin Chief coins", offers.all(func(o): return int(o.price) == 500 and str(o.currency) == COIN))
+	var all_pieces: Array = BossLoot.set_pieces(f.rules, SET) + BossLoot.set_pieces(f.rules, "boss_mummy_high_wizard")
+	all_pieces.sort()
+	ctx.check("AC5 the shop lists only the boss pieces (5 per boss: goblin + mummy) %s" % [ids], ids == all_pieces)
+	ctx.check("AC5 each costs 500 coins of its own boss (Goblin Chief / Mummy High Wizard)", offers.all(func(o): return int(o.price) == 500 and str(o.currency) == (COIN if str(o.id).begins_with("boss_goblin_chief_") else "coin_mummy_high_wizard")))
 	ctx.check("AC5 relics are never sold", not ids.has(RELIC) and offers.all(func(o): return o.kind == "item"))
 	var gold_before: int = p.stash.gold
 	p.stash.add_material(COIN, 499)

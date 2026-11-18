@@ -5,6 +5,8 @@
 
 	"_tuning": "LOOT x1.5 (Boss 2026-11-12: target = HALF of the old one-drop-per-living-fighter amount; for the starter squad on goblin_waves that is ~10 items / ~1500 gold / ~128 materials per full 12-wave run; measured before this pass with one drop per kill: 6.4 / 1010 / 83, 20 seeds of tools/balance/class_sim.gd). Every table was scaled by the same factors, structure unchanged: item chance x1.56 (goblin 0.06->0.095, charger 0.22->0.34, brute 0.45->0.70, grunt 0.10->0.155); gold range x1.5 (goblin [4,10]->[6,15], charger [15,33]->[23,50], brute [38,75]->[57,113], grunt [6,15]->[9,23]); material chances x1.54 (brute ore chance kept at 0.75 and its count raised [3,6]->[5,9] instead, since 0.75x1.54 > 1). gold_per_level and tier_weights unchanged, so the tier mix is unchanged. Expected-value model per full run (67 goblin-table kills, 9 knights, 1 Chief): items 6.45 -> 10.1, materials 75.5 -> 116.9 (x1.55, measured-equivalent ~128), gold x1.5 (~1515). Side effects: solo runs scale by the same x1.5 (solo always got one drop per kill), and the old road mode's challenge_reward (2 brute rolls) also grows x1.5.",
 
+	"_mummy_family": "Pyramid (combat-designer 2026-11-17): each mummy uses its goblin twin's table (archer/mage -> goblin, knight -> charger, Pharaoh -> brute) except the base mummy, which keeps the richer grunt table it was registered with (item 0.155 vs 0.095, gold 9-23 vs 6-15): the zone-2 loot step. The zone's boss is the Mummy High Wizard (Boss 2026-11-18; the pair clears with wave 9, which sets unlocks.boss_pyramid); its boss_loot.json entry (zone pyramid) names the High Wizard's set/coin/relic ids (items added by the item agent).",
+
 	"gold_per_level": 0.12,
 
 	"tier_weights": [
@@ -56,7 +58,10 @@
 	"by_enemy": {
 		"mummy": "grunt",
 		"mummy_archer": "goblin",
-		"mummy_boss_placeholder": "brute",
+		"mummy_knight": "charger",
+		"mummy_mage": "goblin",
+		"mummy_boss": "brute",
+		"mummy_high_wizard": "brute",
 		"dummy_grunt": "grunt",
 		"goblin": "goblin",
 		"goblin_chief": "brute",

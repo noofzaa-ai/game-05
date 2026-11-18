@@ -53,6 +53,57 @@
       ],
       "bonuses": []
     },
+    "boss_mummy_high_wizard": {
+      "name": "Mummy High Wizard's Regalia",
+      "name_th": "ชุดจอมเวทมัมมี่",
+      "kind": "boss",
+      "boss": "pyramid",
+      "tier_mul": {
+        "normal": 0.75,
+        "rare": 1.0,
+        "epic": 1.25,
+        "legendary": 1.5
+      },
+      "steps": [
+        {
+          "pieces": 2,
+          "name": "Curse of the Sands",
+          "text": "ATK +6%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "ATK",
+              "mul": 0.06
+            }
+          ]
+        },
+        {
+          "pieces": 4,
+          "name": "Wrappings of the Tomb",
+          "text": "Max HP +10%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "HP",
+              "mul": 0.1
+            }
+          ]
+        },
+        {
+          "pieces": 6,
+          "name": "Pharaoh's Wrath",
+          "text": "ATK +8%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "ATK",
+              "mul": 0.08
+            }
+          ]
+        }
+      ],
+      "bonuses": []
+    },
     "race_human": {
       "name": "Human Banner Gear",
       "name_th": "ชุดธงศึกมนุษย์",

@@ -1,0 +1,46 @@
+{
+  "id": "mummy_mage",
+  "model": "res://art/monsters/mummy_mage/mummy_mage.glb",
+  "model_height": 1.9,
+  "animations": "res://art/animations/monster_clips_magic.glb",
+  "stance": "magic",
+  "clips": [
+    "blink",
+    "cast",
+    "cast_aoe",
+    "death",
+    "hit",
+    "idle",
+    "run"
+  ],
+  "move_clips": {
+    "cast": "the bolt",
+    "cast_aoe": "the ground mark",
+    "blink": "the escape"
+  },
+  "run_clip_speed": 1.195,
+  "hips_scale": 1.0,
+  "sockets": {
+    "Monster_MummyMage_Staff": "mixamorig_RightHand",
+    "Monster_MummyMage_StaffCrystal": "mixamorig_RightHand",
+    "Monster_MummyMage_Hood": "mixamorig_Head"
+  },
+  "meshes": {
+    "Monster_MummyMage_Body": 1620,
+    "Monster_MummyMage_Staff": 112,
+    "Monster_MummyMage_StaffCrystal": 12,
+    "Monster_MummyMage_Hood": 532
+  },
+  "triangles": 2276,
+  "joints": 106,
+  "extra_joints": [
+    "bandage_upper_L",
+    "bandage_upper_R",
+    "bandage_lower_L",
+    "bandage_lower_R"
+  ],
+  "rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
+  "texture": "one 512x512 albedo (stand-in bandage atlas, tinted), lossy",
+  "built_by": "tools/monsters/build_mummy_family.gd",
+  "request_sheet": "docs/art/monster_requests/mummy_mage.md"
+}

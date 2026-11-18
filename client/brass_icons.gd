@@ -72,6 +72,7 @@ const ALIASES := {
 	"pve": "weapon", "pvp": "enemies", "customize": "look", "fists": "weapon",
 	# Boss loot materials (data/camp/camp.json; their painted icon is icon_path): coin -> gold, relic -> ultimate.
 	"coin_goblin_chief": "gold", "relic_goblin_chief": "ultimate",
+	"coin_mummy_high_wizard": "gold", "relic_mummy_high_wizard": "ultimate",
 	"wood": "material", "stone": "ore",  # repair materials (camp.json) drawn with the existing material / ore icons
 }
 
