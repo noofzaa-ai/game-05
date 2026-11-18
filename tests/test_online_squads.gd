@@ -557,7 +557,7 @@ func _ghost_enemies(ctx):
 			room.tick(); view_into(c, room); c.apply_entities(c._sim, c.server_state); c._sim.events.clear(); stage.call("_update_remote_views")
 			if not stage.get("_views").has(victim): gone_after = tick; break
 		ctx.check("squad room bugs: a killed monster's view goes within the corpse delay + 2 ticks (%d)" % gone_after, gone_after >= 0 and gone_after <= room.CLEAR_DELAY_TICKS + 2)
-	ctx.check("squad room bugs: the old Lag report / Graphics buttons hide in squad rooms", not preload("res://client/network_status.gd").shows_old_buttons(c) and preload("res://client/network_status.gd").shows_old_buttons(null))
+	ctx.check("squad room bugs: the old Graphics button hides in squad rooms (the Lag report stays, Boss 2026-11-18)", not preload("res://client/network_status.gd").shows_old_buttons(c) and preload("res://client/network_status.gd").shows_old_buttons(null))
 	ctx.check("squad room bugs: the old party roster / communicate row hide in a squad fight", preload("res://client/party_hud.gd").squad_fight(c))
 	stage.queue_free()
 	await ctx.process_frame

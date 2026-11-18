@@ -54,8 +54,19 @@ func build() -> void:
 	body.add_child(_go)
 
 
+signal fight_requested(zone_id: String)  ## Go on an OPEN zone (Boss 2026-11-18: the hub starts the fight)
+
+
+## Opens on the last picked zone (GameState.selected_zone), else the furthest open one.
 func open() -> void:
-	if selected.is_empty():
+	open_on("")
+
+
+## Opens on `zone_id` (the hub quest tracker: the quest's zone), or on the last pick when "".
+func open_on(zone_id: String) -> void:
+	if not zone_id.is_empty() and not Zones.zone(zone_id).is_empty():
+		selected = zone_id
+	else:
 		selected = GameState.selected_zone if not GameState.selected_zone.is_empty() else str(Zones.current_zone(_profile()).get("id", ""))
 	super.open()
 
@@ -135,10 +146,12 @@ func refresh() -> void:
 
 
 func _go_pressed() -> void:
-	# Go picks the zone FIGHT starts (an open one only; Go is hidden otherwise) and closes back to the hub.
+	# Go (Boss 2026-11-18): picks the zone (an open one only; Go is hidden otherwise), closes the map and asks the hub
+	# to start the fight there (the hub's one start path: _start_fight / FightLoading with its busy guard).
 	if not choose_selected():
 		return
 	close()
+	fight_requested.emit(selected)
 
 
 ## Makes the selected zone the one FIGHT starts. False for a locked / coming-soon zone (nothing changes).

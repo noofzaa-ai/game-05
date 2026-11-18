@@ -29,6 +29,8 @@ const TEST_FILES := [
 	"res://tests/test_world_zones.gd",
 	"res://tests/test_zone_quests.gd",
 	"res://tests/test_worldmap_start.gd",
+	"res://tests/test_hub_quest_tracker.gd",
+	"res://tests/test_hub_quests_panel.gd",
 	"res://tests/test_mummy_pyramid.gd",
 	"res://tests/test_boss_loot.gd",
 	"res://tests/test_tier_up.gd",

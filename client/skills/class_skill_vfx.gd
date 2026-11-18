@@ -91,14 +91,19 @@ func prewarm(skills: Array, hidden: Vector3, copies: Dictionary = {}) -> void:
 
 
 ## The class skill ids carried by the fighters of `session` (to prewarm only what this fight can cast).
+## An online room's client copy has no skill_state (the wire sends only the live cast, logic/net/skill_net.gd), so a
+## player fighter without it falls back to its class's 4 skills by weapon style (tech-artist 2026-11-18: online solo
+## fights prewarmed nothing and built each effect on its first cast, 120-220 ms native, far more on the web).
 static func skills_on_field(sim_session) -> Dictionary:
 	var count := {}
 	for id in sim_session.fighters:
 		var fighter = sim_session.fighters[id]
 		var state = fighter.get("skill_state")
-		if state is Dictionary:
-			for skill in state.get("skills", []):
-				count[str(skill)] = int(count.get(str(skill), 0)) + 1
+		var skills: Array = state.get("skills", []) if state is Dictionary else []
+		if skills.is_empty() and str(fighter.get("team")) == "player":
+			skills = SkillData.load_default().class_skills(SkillData.class_for_style(str(fighter.get("style"))))
+		for skill in skills:
+			count[str(skill)] = int(count.get(str(skill), 0)) + 1
 	return count
 
 

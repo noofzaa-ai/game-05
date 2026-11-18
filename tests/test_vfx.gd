@@ -183,6 +183,15 @@ func _check_class_skill_vfx(ctx) -> void:
 			missing.append(id)
 	ctx.check("every class skill vfx key resolves to an effect scene %s" % [missing], missing.is_empty())
 	ctx.check("a non class-skill key resolves to nothing", ClassVfx.scene_path("skill_cast/fireball") == "")
+	# An online room's fighters carry no skill_state (only the live cast is on the wire): the prewarm list falls back
+	# to the class skills of each player fighter's weapon style, so an online solo fight prewarms too (2026-11-18).
+	var online_field := {"fighters": {
+		1: {"team": "player", "style": "blade", "skill_state": {}},
+		2: {"team": "player", "style": "longbow", "skill_state": {}},
+		5: {"team": "enemy", "style": "goblin", "skill_state": {}}}}
+	var on_field: Dictionary = ClassVfx.skills_on_field(online_field)
+	ctx.check("online fighters without skill_state still list their class skills %s" % [on_field.keys()],
+		on_field.has("shield_rush") and on_field.has("heartseeker_shot") and on_field.size() == 8)
 	var vfx = ClassVfx.new()
 	vfx.session = _FakeSession.new()
 	ctx.root.add_child(vfx)

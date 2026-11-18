@@ -351,6 +351,18 @@ const CARVED_BADGE_CARD := 0.16  ## card race badge edge, of the card width
 const CARVED_BADGE_CARD_AT := Vector2(0.105, 0.17)
 const CARVED_SYNERGY_BADGE := 36.0
 const HUB_DECK_PHONE_SAFE_X := 0.0  ## the hub's own extra phone inset (the target uses the full width); the device safe area still applies
+## Hub quest tracker (Boss 2026-11-18): a parchment inset under the side menu, left of the squad tray, above the
+## synergy ribbon (sizes at 1080, like the rest of the hub)
+const HUB_QUEST_GAP := 14.0  ## clear of the menu, the tray and the synergy ribbon
+const HUB_QUEST_MIN := Vector2(300.0, 96.0)  ## less room than this: the tracker hides (it never overlaps)
+const HUB_QUEST_MAX_W := 760.0
+const HUB_QUEST_PAD := 22.0
+const HUB_QUEST_CHEVRON := 44.0
+const HUB_QUEST_SCREEN_MIN := 12.0  ## tracker text never under this many window px (a phone shrinks the hub to ~0.54)
+const FONT_HUB_QUEST_LINE := 23
+const FONT_HUB_QUEST_ROW_TITLE := 30  ## a quest's name on the Quests panel row
+const HUB_STAGE_CHEVRON := 0.5  ## the "tap me" chevron on the stage strip over FIGHT, of the strip height
+const HUB_STAGE_HOVER := Color(1.12, 1.08, 0.98)  ## the stage strip under the pointer (it is a button to the map)
 
 
 static func carved(art_name: String) -> Texture2D:
@@ -730,6 +742,18 @@ const STRINGS := {
 	"map_locked": ["ล้ม%sก่อนเพื่อเปิดโซนนี้", "Beat the %s to open this zone"],
 	"map_soon": ["เร็วๆ นี้", "Coming soon"],
 	"map_open": ["แผนที่", "Map"],
+	"map_pick_tip": ["แตะเพื่อเปิดแผนที่โลกและเลือกโซน", "Tap to open the world map and pick a zone"],
+	# hub quest tracker (Boss 2026-11-18): the next zone's unlock quest, texts from data/world/zone_quests.json
+	"quest_track_title": ["%s  ·  เปิด%s", "%s  ·  opens %s"],
+	"quest_mark_done": ["[x] ", "[x] "],
+	"quest_mark_todo": ["[ ] ", "[ ] "],
+	"quest_track_tip": ["แตะเพื่อดูบนแผนที่โลก", "Tap to see it on the world map"],
+	# Quests panel (Boss 2026-11-18): every zone unlock quest, from data/world/zone_quests.json
+	"quest_state_pending": ["กำลังทำ", "In progress"],
+	"quest_state_done": ["สำเร็จแล้ว", "Done"],
+	"quest_opens": ["เปิดโซน: %s", "Opens: %s"],
+	"quest_none": ["ยังไม่มีเควสต์ตอนนี้", "No quests right now"],
+	"quest_list_hint": ["แตะเควสต์เพื่อดูโซนบนแผนที่โลก", "Tap a quest to see its zone on the world map"],
 	"svc_locked_line": ["ทำเควสต์ 3 เพื่อปลดล็อก", "Quest 3 to unlock"],
 	"soon_body": ["ส่วนนี้ยังไม่เปิด", "This service is not open yet."],
 	"close": ["ปิด", "Close"],
@@ -1178,6 +1202,11 @@ static func hub_safe_x(screen: Vector2, s: float, device_px: float = 0.0) -> flo
 
 
 ## A tap size (unscaled px): at least HUB_TAP_MIN_PHONE on a phone.
+## An exact font size in canvas px (after a fitting loop chose it).
+static func set_font_px(control: Control, px: int) -> void:
+	control.add_theme_font_size_override("font_size", maxi(px, 1))
+
+
 static func tap(size: float, phone: bool) -> float:
 	return maxf(size, HUB_TAP_MIN_PHONE) if phone else size
 

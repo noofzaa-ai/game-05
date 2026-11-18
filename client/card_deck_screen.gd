@@ -24,6 +24,7 @@ const HubBlacksmithPanel := preload("res://client/hub_blacksmith_panel.gd")
 const HubStoragePanel := preload("res://client/hub_storage_panel.gd")
 const HubTailorPanel := preload("res://client/hub_tailor_panel.gd")
 const HubShopPanel := preload("res://client/hub_shop_panel.gd")
+const HubQuestsPanel := preload("res://client/hub_quests_panel.gd")  ## the side menu's Quests (Boss 2026-11-18)
 const ItemAssets := preload("res://client/item_assets.gd")
 const CampScreen := preload("res://client/camp_screen.gd")
 const GraphicsPanel := preload("res://client/graphics_panel.gd")
@@ -39,6 +40,7 @@ const TutorialMarks := preload("res://client/tutorial_marks.gd")  ## tutorial.md
 const TutorialOverlay := preload("res://client/tutorial_overlay.gd")
 const Unlocks := preload("res://logic/unlocks.gd")
 const Tutorial := preload("res://logic/tutorial.gd")
+const HubQuestTracker := preload("res://client/hub_quest_tracker.gd")  ## the next zone's unlock quest (Boss 2026-11-18)
 
 signal card_selected(class_id: String)
 signal look_changed(class_id: String, part: String, choice: String)  ## part: hair|outfit|eye_color|skin|makeup
@@ -112,6 +114,10 @@ var _service_layer: Control
 var _service_open := ""
 var _character: CardCharacterScreen  ## the card character screen (spec §4), over the hub
 var _panels := {}  ## service id -> the open-able service panel (hub_service_panel.gd), built on first use
+var _quest_tracker: HubQuestTracker  ## bottom left: the next zone's unlock quest; tap = the world map on that zone
+var _stage_chevron: TextureRect  ## the carved chevron on the stage strip: it is a button (to the world map)
+## Test seam: the quest tracker reads GameState.profile even when the hub is not wired to the game (auto_wire false).
+var tracker_reads_profile := false
 
 var _editor_layer: Control
 var _editor_back: Button
@@ -1133,7 +1139,7 @@ func _build_deck_layer() -> void:
 	_fight.name = "FightButton"  # tutorial target
 	_fight.focus_mode = Control.FOCUS_ALL
 	_fight.tooltip_text = CardTokens.t("fight")
-	_fight.pressed.connect(func() -> void: fight_pressed.emit())
+	_fight.pressed.connect(_on_fight_button)  # Boss 2026-11-18: FIGHT opens the world map; its Go starts the fight
 	_fight.button_down.connect(func() -> void: _fight_art.modulate = CardTokens.HUB_PRESSED)
 	_fight.button_up.connect(func() -> void: _fight_art.modulate = CardTokens.HUB_WHITE)
 	_deck_layer.add_child(_fight)
@@ -1158,9 +1164,24 @@ func _build_deck_layer() -> void:
 	_map_button.name = "MapButton"
 	_map_button.flat = true
 	_map_button.focus_mode = Control.FOCUS_ALL
-	_map_button.tooltip_text = CardTokens.t("svc_map")
+	_map_button.tooltip_text = CardTokens.t("map_pick_tip")
 	_map_button.pressed.connect(open_world_map)
+	# it looks like a button: a carved chevron at the strip's right end, brighter under the pointer, darker pressed
+	_stage_chevron = CardTokens.carved_rect(CardTokens.CARVED_ICON_PREFIX + "next", true)
+	_deck_layer.add_child(_stage_chevron)
+	_map_button.mouse_entered.connect(func() -> void: _tint_stage(CardTokens.HUB_STAGE_HOVER))
+	_map_button.mouse_exited.connect(func() -> void: _tint_stage(CardTokens.HUB_WHITE))
+	_map_button.button_down.connect(func() -> void: _tint_stage(CardTokens.HUB_PRESSED))
+	_map_button.button_up.connect(func() -> void: _tint_stage(CardTokens.HUB_WHITE))
 	_deck_layer.add_child(_map_button)
+	_quest_tracker = HubQuestTracker.new()
+	_quest_tracker.pressed.connect(func() -> void: open_world_map(_quest_tracker.zone_id))
+	_deck_layer.add_child(_quest_tracker)
+
+
+func _tint_stage(tint: Color) -> void:
+	_stage_strip.modulate = tint
+	_stage_chevron.modulate = tint
 
 
 ## Online squad rooms entry (design/gdd/online-squads.md chunk 5): opens the existing online room panel (create a
@@ -1396,11 +1417,16 @@ func _layout() -> void:
 	var stage_h := CardTokens.CARVED_STAGE_H * s
 	_stage_strip.size = Vector2(stage_w, stage_h)
 	_stage_strip.position = Vector2(fight_x + (fight_w - stage_w) * 0.5, _fight.position.y + fight_h * CardTokens.CARVED_STAGE_DROP - stage_h * 0.5)
-	_stage_label.size = Vector2(stage_w * 0.86, stage_h)
+	var chev := stage_h * CardTokens.HUB_STAGE_CHEVRON
+	_stage_chevron.size = Vector2(chev * 0.7, chev)
+	_stage_chevron.position = _stage_strip.position + Vector2(stage_w * 0.93 - _stage_chevron.size.x, (stage_h - chev) * 0.5)
+	_stage_label.size = Vector2(stage_w * 0.86 - _stage_chevron.size.x * 1.2, stage_h)
 	_stage_label.position = _stage_strip.position + Vector2(stage_w * 0.07, 0.0)
 	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.CARVED_FONT_STAGE, _stage_label.size.x, CardTokens.HUB_CREAM, s)
-	_map_button.position = _stage_strip.position
-	_map_button.size = _stage_strip.size
+	# the tap area: the strip, at least a phone tap target tall, never down over FIGHT's face more than its own height
+	var tap_h := maxf(stage_h, CardTokens.tap(0.0, _phone) * s * 0.6)
+	_map_button.position = _stage_strip.position - Vector2(0.0, (tap_h - stage_h) * 0.5)
+	_map_button.size = Vector2(stage_w, tap_h)
 	# the squad: three small carved medallions in a row (no board), the synergy ribbon right under them, the group
 	# centred where the tray used to sit and kept left of FIGHT
 	var medal := CardTokens.HUB_TRAY_MEDAL * s
@@ -1420,10 +1446,44 @@ func _layout() -> void:
 		slot.size = Vector2(medal, medal)
 		slot.position = Vector2((medal + medal_gap) * i, 0.0)
 	CardTokens.panel(_synergy, CardTokens.clear_style())
+	_layout_quest_tracker(side, gap)
 	_refresh_squad_bar()
 	_layout_editor()
 	_layout_toast()
 	_layout_service()
+
+
+## The quest tracker: bottom left, under the last side-menu entry, left of the squad medallions and above the synergy
+## ribbon (it never overlaps the tray, FIGHT or the stage strip; with too little room it hides).
+func _layout_quest_tracker(side: float, _gap: float) -> void:
+	if _quest_tracker == null:
+		return
+	var s := _s
+	var g := CardTokens.HUB_QUEST_GAP * s
+	var top: float = (_menu[-1].position.y + _menu[-1].size.y + g) if not _menu.is_empty() else size.y * 0.66
+	var left := side + CardTokens.HUB_MENU_X * s * 0.5
+	var right := minf(_bar.position.x - g, _stage_strip.position.x - g)
+	var bottom := _synergy.position.y - g * 0.5
+	var w := minf(right - left, CardTokens.HUB_QUEST_MAX_W * s)
+	_quest_tracker.place_in(Rect2(left, top, maxf(w, 0.0), maxf(bottom - top, 0.0)), s, _screen_k())
+	_refresh_quest_tracker()
+
+
+## Window pixels per canvas unit (the canvas_items stretch shrinks the whole hub on a phone).
+func _screen_k() -> float:
+	var win := get_viewport() as Window if is_inside_tree() else null
+	if win == null or DisplayServer.get_name() == "headless" or win != get_tree().root or win.size.y < 100:  # (no real window to measure)
+		return 1.0
+	var canvas_h := win.get_visible_rect().size.y
+	return float(win.size.y) / canvas_h / maxf(DisplayServer.screen_get_scale(), 1.0) if canvas_h > 0.0 else 1.0
+
+
+## Redraws the quest tracker from the profile (after every profile sync, map close and layout).
+func _refresh_quest_tracker() -> void:
+	if _quest_tracker == null:
+		return
+	var p = GameState.profile if (auto_wire or tracker_reads_profile) else null
+	_quest_tracker.show_for(p)
 
 
 ## The device's own safe area (notch / rounded corners) as a side inset, in this control's pixels.
@@ -1496,6 +1556,7 @@ func _refresh_all() -> void:
 	_fight_glow.visible = false  # carved target: no glow
 	_fight_art.material = CardTokens.grey_material() if no_fight else null
 	_stage_label.text = CardTokens.t("fight_need") if no_fight else stage_text()
+	_refresh_quest_tracker()  # card levels / boss flags arrive with the same profile sync
 	if _online_button != null:
 		_online_button.visible = online_open()
 	if _mode == "editor":
@@ -1652,6 +1713,11 @@ func open_service(service: String) -> void:
 			var squad := _squad()
 			var id := str(squad[0]) if not squad.is_empty() else (str(_class_ids[0]) if not _class_ids.is_empty() else "")
 			open_tailor(id)
+		"quests":  # Boss 2026-11-18: the zone quests (during the tutorial: still the "coming soon" panel)
+			if HubQuestTracker.tutorial_done(GameState.profile if (auto_wire or tracker_reads_profile) else null):
+				_service_panel(service).open()
+			else:
+				_show_soon(service)
 		_:
 			_show_soon(service)
 
@@ -1668,10 +1734,43 @@ func _on_map_closed() -> void:
 		return
 	_stage_label.text = CardTokens.t("fight_need") if _fight.disabled else stage_text()
 	CardTokens.hub_fit(_stage_label, _stage_label.text, CardTokens.CARVED_FONT_STAGE, _stage_label.size.x, CardTokens.HUB_CREAM, _s)
+	_refresh_quest_tracker()
 
 
-## The world map (client/hub_world_map_panel.gd), built once like the service panels.
-func open_world_map() -> void:
+## FIGHT (Boss 2026-11-18): opens the world map; the fight starts from the zone's Go there (fight_requested). While the
+## tutorial spotlights FIGHT itself (its `fight` step, or the lost-first-fight tip) FIGHT starts the fight directly:
+## the tutorial overlay only lets the spotlit button through, so the map's Go could not be pressed, and a new player
+## has only the goblin zone anyway.
+func _on_fight_button() -> void:
+	if _fight.disabled:
+		return
+	if fight_skips_map():
+		fight_pressed.emit()
+	else:
+		open_world_map()
+
+
+## The map's Go on an open zone: the same start as FIGHT used (fight_pressed -> _start_fight, its busy guard). The map
+## can also be opened from the stage strip or the quest tracker, so a squad FIGHT would refuse is refused here too.
+func _on_map_go(_zone: String) -> void:
+	_on_map_closed()
+	if _fight.disabled:
+		toast(CardTokens.t("fight_need"))
+		return
+	fight_pressed.emit()
+
+
+## True while FIGHT starts the fight without the world map (the tutorial's FIGHT steps, see _on_fight_button).
+func fight_skips_map() -> bool:
+	if tutorial != null and str(tutorial.step) in ["fight", "lost_tip"]:
+		return true
+	var p = GameState.profile if auto_wire else null
+	return p != null and "tutorial" in p and p.tutorial is Dictionary and not Tutorial.past(p, "fight")
+
+
+## The world map (client/hub_world_map_panel.gd), built once like the service panels; on `zone_id` when given (the
+## quest tracker), else on the last pick.
+func open_world_map(zone_id: String = "") -> void:
 	if not _panels.has("map"):
 		var panel: Control = preload("res://client/hub_world_map_panel.gd").new()
 		panel.visible = false
@@ -1680,8 +1779,9 @@ func open_world_map() -> void:
 		add_child(panel)
 		move_child(panel, _toast.get_index())
 		panel.closed.connect(_on_map_closed)
+		panel.fight_requested.connect(_on_map_go)
 		_panels["map"] = panel
-	_panels["map"].open()
+	_panels["map"].open_on(zone_id)
 
 
 ## The Blacksmith / Storage panel (built once, over the hub and the character screen, under the toast).
@@ -1692,6 +1792,11 @@ func _service_panel(service: String) -> Control:
 			"blacksmith": panel = HubBlacksmithPanel.new()
 			"tailor": panel = HubTailorPanel.new()
 			"shop": panel = HubShopPanel.new()
+			"quests":
+				panel = HubQuestsPanel.new()
+				panel.zone_requested.connect(func(zone: String) -> void:
+					panel.close()
+					open_world_map(zone))
 			_: panel = HubStoragePanel.new()
 		panel.visible = false
 		panel.reduced_motion = reduced_motion

@@ -3,7 +3,7 @@ extends SceneTree
 ## a fresh device account signs in, tools/localstack/fixture.py puts it into fixtures/<name>.json, the game re-reads
 ## its profile from the server and opens the screen asked for. Then it stays open (play/click by hand), or takes a
 ## screenshot and quits.
-##   godot --path . --script res://tools/localstack/scenario.gd -- --fixture unlock_ceremony [--open hub|map|character:<class>|storage|shop|blacksmith|tailor|fight] [--size 1280x720] [--shot OUT.png] [--wait 2] [--lang th|en] [--journey mummy_waves]
+##   godot --path . --script res://tools/localstack/scenario.gd -- --fixture unlock_ceremony [--open hub|map|character:<class>|storage|shop|blacksmith|tailor|quests|fight|fight_button|go|quest] [--size 1280x720] [--shot OUT.png] [--wait 2] [--lang th|en] [--journey mummy_waves]
 ## The local client key is read from build/localstack/state.json (throwaway, local only).
 
 var fixture := "new_player"
@@ -69,8 +69,15 @@ func run() -> void:
 	match open.split(":")[0]:
 		"map": hub.open_world_map()
 		"character": hub.open_character(open.split(":")[1] if open.contains(":") else "sword_shield")
-		"storage", "shop", "blacksmith", "tailor": hub.open_service(open)
-		"fight": hub._start_fight()
+		"storage", "shop", "blacksmith", "tailor", "quests": hub.open_service(open)
+		"fight": hub._start_fight()  # (dev: the start path itself, no map)
+		"fight_button": hub._fight.pressed.emit()  # Boss 2026-11-18: FIGHT opens the world map
+		"go":  # FIGHT, then the picked zone's Go on the map (starts the fight)
+			hub._fight.pressed.emit()
+			await create_timer(1.0).timeout
+			if hub._panels.has("map") and hub._panels["map"].visible:
+				hub._panels["map"]._go.pressed.emit()
+		"quest": hub._quest_tracker.pressed.emit()  # the hub quest tracker: the map on the quest's zone
 	await create_timer(wait_s).timeout
 	print("SCENARIO_READY fixture=%s open=%s tutorial=%s" % [fixture, open, gs.profile.tutorial])
 	if not shot.is_empty():
