@@ -124,12 +124,21 @@ func _accept_metadata(state:Dictionary)->void:
  saved=bool(state.meta.get("cloud_saved",false))
  var profiles:Dictionary=state.meta.profiles
  if profile==null or ownership:
-  var decoded=Profile.from_dict(profiles[_player_id],rules,camp)
-  if decoded==null:_net_note("profile_decode_failed",{"tick":state.tick});return
-  if profile==null:
-   adopt_cards(decoded,card_source,profiles[_player_id],rules)  # the snapshot has no cards (see online_session.card_source)
-   profile=decoded
-  else:copy_fields(decoded,profile,["stash","vault","loadout","camp_level","facility_levels","farm","appearance","name","created","beta_kit_version","diamonds", "mall_owned", "bonus_stash_slots"])
+  # A run-only change (the loot bag moves every few seconds in a fight) needs no profile rebuild at all; a profile change
+  # that only touches the worn gear / stash / vault decodes just those (runtime/netfox/profile_patch.gd).
+  var profile_changed:bool=profile==null or previous_meta.get("profiles",{}).get(_player_id)!=profiles[_player_id]
+  var cost_started:=Time.get_ticks_usec()
+  if profile!=null and profile_changed and preload("res://runtime/netfox/profile_patch.gd").apply(profile,previous_meta.get("profiles",{}).get(_player_id,{}),profiles[_player_id],rules,camp):
+   preload("res://client/lag_cost.gd").note_profile(Time.get_ticks_usec()-cost_started,true)
+  elif profile==null or profile_changed:
+   var decoded=Profile.from_dict(profiles[_player_id],rules,camp)
+   if decoded==null:_net_note("profile_decode_failed",{"tick":state.tick});return
+   if profile==null:
+    adopt_cards(decoded,card_source,profiles[_player_id],rules)  # the snapshot has no cards (see online_session.card_source)
+    profile=decoded
+   else:copy_fields(decoded,profile,["stash","vault","loadout","camp_level","facility_levels","farm","appearance","name","created","beta_kit_version","diamonds", "mall_owned", "bonus_stash_slots"])
+   preload("res://client/lag_cost.gd").note_profile(Time.get_ticks_usec()-cost_started,false)
+  else:preload("res://client/lag_cost.gd").note_profile(0,true)
   var trip=Run.from_dict(state.meta.run,rules,camp,profile)
   if trip==null:_net_note("run_decode_failed",{"tick":state.tick});return
   run=trip

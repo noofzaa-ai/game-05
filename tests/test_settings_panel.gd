@@ -15,12 +15,19 @@ func _frames(ctx, count: int) -> void:
 
 
 func run(ctx) -> void:
-	var saved := Options.snapshot()
+	# Put the player's file back exactly (set_value would mark every option as the player's choice).
+	var had_config := FileAccess.file_exists(Options.PATH)
+	var config_text := FileAccess.get_file_as_string(Options.PATH) if had_config else ""
 	_check_words(ctx)
 	await _check_overlay(ctx, Vector2(1920, 1080))
 	await _check_overlay(ctx, Vector2(844, 390))
-	for key in saved:
-		Options.set_value(key, saved[key])
+	if had_config:
+		var file := FileAccess.open(Options.PATH, FileAccess.WRITE)
+		file.store_string(config_text)
+		file.close()
+	else:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(Options.PATH))
+	Options.reload_settings()
 
 
 func _check_words(ctx) -> void:

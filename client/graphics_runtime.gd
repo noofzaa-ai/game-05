@@ -1,5 +1,7 @@
 extends Node
 ## Applies once when settings change / scene nodes arrive; no scene scan per frame.
+## Reads the APPLIED values (graphics_options.gd effective/enabled): phone defaults, the player's choices and the
+## slow-device cuts (shadows, MSAA) all arrive through Options.revision.
 const Options := preload("res://client/graphics_options.gd")
 var _revision := -1
 var _lights: Array[WeakRef] = []
@@ -41,7 +43,7 @@ func _process(_delta: float) -> void:
 func _apply_all() -> void:
 	_revision = Options.revision
 	get_viewport().scaling_3d_scale = float(Options.value("render_scale"))
-	var aa := int(Options.value("antialiasing"))
+	var aa := int(Options.effective("antialiasing"))  # (a slow device drops it unless the player picked it)
 	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if aa == 0 else (Viewport.MSAA_2X if aa == 2 else Viewport.MSAA_4X)
 	_lights = _lights.filter(func(ref: WeakRef): return is_instance_valid(ref.get_ref()))
 	_environments = _environments.filter(func(ref: WeakRef): return is_instance_valid(ref.get_ref()))

@@ -8,6 +8,7 @@ const TELEGRAPH_SHADER := preload("res://client/vfx/attack_telegraph.gdshader")
 const TELEGRAPH_LIFT := 0.05  ## the ground warning floats this much above the floor (no flicker)
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 const CameraRig := preload("res://client/camera_rig.gd")
+const LagCost := preload("res://client/lag_cost.gd")
 const DrawStyle := preload("res://client/draw_style/draw_style.gd")
 const CameraTrigger := preload("res://client/camera_trigger.gd")
 const Effects := preload("res://client/effects.gd")
@@ -237,6 +238,7 @@ func _physics_frame(_delta: float) -> void:
 	if _session.has_method("advance_controls"):_session.advance_controls(frame,_delta)
 	else:_session.step(frame)
 	work_started=_work_mark("controls_predict",work_started)
+	_flush_pending_views()
 	if _session.has_method("is_remote"): _update_remote_views()
 	_retire_gone_views()
 	_update_heal_numbers()
@@ -440,6 +442,7 @@ func _retire_view(id: int, view) -> void:  # (untyped: the timer may hand over a
 		return
 	_views.erase(id)
 	_retired[id] = true
+	_pending_views.erase(id)
 	_fighter_colors.erase(id)
 	_heal_samples.erase(id)
 	for quads in [_telegraph_views, _hitbox_views]:
@@ -458,6 +461,12 @@ func _retire_view(id: int, view) -> void:  # (untyped: the timer may hand over a
 func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 	if _retired.has(id) and not (_session.fighters.has(id) and _session.fighters[id].is_alive()):
 		return  # a corpse that already faded out (an online snapshot may still list it for a moment)
+	if _pending_views.has(id):
+		_pending_views[id]["boss"] = bool(_pending_views[id]["boss"]) or is_boss  # (queued already: keep the boss mark)
+		return
+	if _session.fighters[id].team != "player" and _scene_presented and _view_build_over_budget():
+		_pending_views[id] = {"type": enemy_type, "boss": is_boss}  # built a few frames later, see _flush_pending_views
+		return
 	_retired.erase(id)
 	if _views.has(id):
 		# Online, the snapshot (_update_remote_views) usually builds a new enemy's view before its wave_arrived event
@@ -468,6 +477,8 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 			_boss_id = id
 			_boss_ids.append(id)
 		return
+	var build_started := Time.get_ticks_usec()
+	var nodes_before := Performance.get_monitor(Performance.OBJECT_NODE_COUNT)
 	var view := Node3D.new()
 	view.set_script(load("res://client/fighter_view.gd"))
 	var is_player: bool = _session.fighters[id].team == "player"
@@ -508,6 +519,48 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 		_boss_ids.append(id)
 	view.interpolate = not _session.has_method("presentation_position")  # online: the session places it
 	view.show_state(_session.bodies[id], _session.fighters[id], _combat_data)
+	var spent := Time.get_ticks_usec() - build_started
+	_view_build_us_frame += spent
+	LagCost.note_view_build(spent, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT) - nodes_before))
+
+
+## A wave arrival builds ~9 enemy views (~150 nodes, 35-44 ms native, 5-10x on a phone) in one frame. Spread them:
+## after VIEW_BUILD_BUDGET_US of building in one rendered frame the rest wait for the next frames (the sim keeps
+## running; they appear a few frames later, nearest the player first). The first view of a frame is always built.
+const VIEW_BUILD_BUDGET_US := 6000
+var _pending_views: Dictionary = {}  ## fighter id -> {"type", "boss"}: enemy views waiting for a frame with budget left
+var _view_build_frame := -1
+var _view_build_us_frame := 0
+
+
+func _view_build_over_budget() -> bool:
+	var frame := Engine.get_process_frames()
+	if frame != _view_build_frame:
+		_view_build_frame = frame
+		_view_build_us_frame = 0
+	return _view_build_us_frame >= VIEW_BUILD_BUDGET_US
+
+
+## Builds the queued enemy views that fit this frame's budget (nearest the player first); drops those that left the sim.
+func _flush_pending_views() -> void:
+	if _pending_views.is_empty():
+		return
+	var ids: Array = _pending_views.keys()
+	var origin: Vector3 = _session.bodies[_local_player_id].position if _session.bodies.has(_local_player_id) else Vector3.ZERO
+	ids.sort_custom(func(a, b): return _view_distance(a, origin) < _view_distance(b, origin))
+	for id in ids:
+		var entry: Dictionary = _pending_views[id]
+		if not _session.fighters.has(id) or not _session.bodies.has(id) or not _session.fighters[id].is_alive():
+			_pending_views.erase(id)  # gone (or already dead) before its view was needed
+			continue
+		if _view_build_over_budget():
+			return
+		_pending_views.erase(id)
+		_add_fighter_view(id, str(entry["type"]), bool(entry["boss"]))
+
+
+func _view_distance(id, origin: Vector3) -> float:
+	return _session.bodies[id].position.distance_squared_to(origin) if _session.bodies.has(id) else INF
 
 
 ## Whether our squad fighters get the overhead "name  HP / max" tag. In a local auto-battle the squad
@@ -750,6 +803,12 @@ func _prewarm_effects() -> void:
 	_ranged.prewarm(hidden)
 	_class_vfx.prewarm(_class_vfx.skills_on_field(_session).keys(), hidden, _class_vfx.skills_on_field(_session))  # GLB effects: built and drawn once now
 	_monster_vfx.prewarm(_monster_vfx.vfx_for_types(_monster_types_ahead(), _combat_data), hidden)
+	for type in _monster_types_ahead():  # the first view of a new type loaded its model + clips inside the wave frame (a 25 ms build): cache them now
+		var definition: Dictionary = _combat_data.enemies.get(str(type), {})
+		for key in ["model", "animations"]:
+			if str(definition.get(key, "")) != "" and ResourceLoader.exists(str(definition[key])): load(str(definition[key]))
+		if str(definition.get("animations", "")) != "":  # (the parsed clip set is cached by path too)
+			preload("res://client/animation_set.gd").load_file(str(definition["animations"]))
 	# The weapon swing trail's material compiles on its first draw (a hitch on the web): draw one now.
 	var trail := preload("res://client/vfx/blade_trail.gd").new()
 	add_child(trail)
@@ -839,12 +898,12 @@ func _handle_events() -> void:
 				_play_move(_vfx.swing_key(str(event["move"])), int(event["player"]))
 			"hit":
 				var target_id: int = event["target"]
-				_views[target_id].flash()
+				if _views.has(target_id): _views[target_id].flash()  # (a view still queued by _flush_pending_views has none yet)
 				_play_hit(event)
 				_spawn_damage_number(_session.bodies[target_id].position, event["damage"], event["crit"], false, target_id==_local_player_id)
 			"blocked":
 				var guard_id: int = event["target"]
-				_views[guard_id].flash()
+				if _views.has(guard_id): _views[guard_id].flash()
 				var guard_feet: Vector3 = _session.bodies[guard_id].position
 				_effects.play("block", _fighter_context(guard_id, Effects.context(event["pos"], guard_feet, -Vector2(event["dir"]), _vfx.palette.get("block", Color.SKY_BLUE))))
 				_spawn_damage_number(guard_feet, event["damage"], false, true, guard_id==_local_player_id)

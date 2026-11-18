@@ -128,7 +128,7 @@ static func _row(column: VBoxContainer, row: Array, s: float, phone: bool) -> Bu
 
 ## Shows which plate holds the saved value: a check mark, the display face and the dark ring (shape, not colour).
 static func _mark(chips: Array[Button], key: String, words: Array, s: float) -> void:
-	var current: Variant = Options.value(key)
+	var current: Variant = Options.effective(key)  # what is applied (phone default, slow-device cut or the player's pick)
 	for index in chips.size():
 		var b := chips[index]
 		var value: Variant = b.get_meta("value")

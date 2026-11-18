@@ -36,13 +36,16 @@ static func restore(sim,id:int,bytes:PackedByteArray)->bool:
  var value:=inspect(bytes,id)
  if value.is_empty():return false
  # Validate the entire schema before mutating either object; no partial restore.
- if not _same_shape(Codec.fields(sim.bodies[id]),value.body):return false
- if not _same_shape(Codec.fields(sim.fighters[id],EXCLUDED),value.fighter):return false
+ # The expected shapes depend only on `id` (not on the context target): build them once, not once per context row
+ # (each Codec.fields() allocates a ~60-key dictionary; a 9-fighter wave did 20 of them per restore).
+ var body_shape:=Codec.fields(sim.bodies[id]);var fighter_shape:=Codec.fields(sim.fighters[id],EXCLUDED)
+ if not _same_shape(body_shape,value.body):return false
+ if not _same_shape(fighter_shape,value.fighter):return false
  for target in value.context:
   if typeof(target)!=TYPE_INT or target==id:return false
   var row=value.context[target]
   if not row is Dictionary or row.size()!=2 or not row.get("body") is Dictionary or not row.get("fighter") is Dictionary:return false
-  if not _same_shape(Codec.fields(sim.bodies[id]),row.body) or not _same_shape(Codec.fields(sim.fighters[id],EXCLUDED),row.fighter):return false
+  if not _same_shape(body_shape,row.body) or not _same_shape(fighter_shape,row.fighter):return false
  if not value.skills.is_empty():return false
  # Context is combat-only: no stash, profile, bag, credentials or persistence state.
  for target in value.context:

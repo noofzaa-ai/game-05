@@ -12,7 +12,12 @@ var _reconcile_us := 0
 var _packets := 0
 var _replay_ticks := 0
 
+var _marks = null  ## stage_view's static perf_marks (loaded lazily: stage_view preloads the network status that preloads this)
 func sample(session) -> void:
+	if _marks == null:
+		var stage = load("res://client/stage_view.gd")
+		_marks = stage.get("perf_marks") if stage != null else {}
+	preload("res://client/lag_cost.gd").sample(session, _marks if _marks is Dictionary else {})
 	var now := Time.get_ticks_usec()
 	if _last_us > 0:
 		var second := int(now / 1000000)

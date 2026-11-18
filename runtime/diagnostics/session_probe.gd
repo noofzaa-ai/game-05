@@ -76,7 +76,8 @@ func report()->Dictionary:
  var runtime=Engine.get_main_loop().get_root()
  var client=recorder.export_data()
  client["context"]=_context.duplicate(true)
- client["graphics"]=preload("res://client/graphics_options.gd").snapshot()
+ client["graphics"]=preload("res://client/graphics_options.gd").report()  # saved values + preset/device_class/slow_device/chosen/applied
+ client["cost"]=preload("res://client/lag_cost.gd").export()
  client["render"]={"viewport":[runtime.size.x,runtime.size.y],"draw_calls":Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),"primitives":Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)}
  var ref={"room":str(session.admission.get("room","")),"player":session.player_id(),"epoch":session.scene_epoch(),"key":"room/player/epoch/input_tick"}
  return {"v":2,"reference":ref,"build":build,"client":client,"worker":worker.duplicate(true),"worker_capture_age_ms":Time.get_ticks_msec()-worker_capture_at if worker_capture_at>=0 else null,"worker_capture_status":"received" if worker_capture_at>=begin else "cached" if worker_capture_at>=0 else "unavailable","clock_contract":"timestamps are independent per process; never subtract client and worker timestamps; app RTT includes scheduling, receipt and after_tick RTT are measured on client","last_trigger":_last_trigger,"thresholds":{"client_gap_ms":100,"worker_gap_ms":100,"snapshot_gap_ms":500,"correction_m":.25,"outbound_bytes":65536,"interpolation_starvation_ms":300,"worker_step_ms":25},"sampling":{"values_ms":250,"held_input_ticks":12,"action_inputs":"all","scope":"30s or explicit bounded ring cap; oldest details may be removed with marker when encoding"}}

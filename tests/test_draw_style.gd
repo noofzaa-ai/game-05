@@ -134,6 +134,7 @@ func run(ctx) -> void:
 		file.close()
 	else:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(Options.PATH))
+	Options.reload_settings()  # (forget the choices set_value marked during the checks)
 
 
 ## PO 2026-11-15: the slow-device verdict is made once when a battle loads, from a remembered earlier battle (or a

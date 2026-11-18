@@ -11,8 +11,11 @@ extends Node
 ##              and VFX draw after it.
 ## Slow devices (PO 2026-11-15): decided ONCE when a battle loads (begin_battle), never changed mid-battle. A device is
 ## slow when it renders in software, or when an earlier battle on it ran below SLOW_FPS (median over the fight,
-## remembered in DEVICE_PATH). A slow device gets no screen pass and no hero ink hulls (the stage materials stay).
+## remembered in DEVICE_PATH). A slow device gets no screen pass and no hero ink hulls (the stage materials stay), and
+## (Boss 2026-11-18) no sun shadow and no MSAA unless the player picked them (graphics_options.gd SLOW_OFF).
 ## Picking "On" again in the graphics panel forgets the verdict.
+## Phones (Boss 2026-11-18): the automatic phone default is "lite" without hero ink hulls (the same light look a slow
+## device gets); a player who picks "Lite" or "On" in the panel gets exactly that mode.
 ## The graphics setting `drawn_style` (client/graphics_options.gd): "on" = materials + screen pass, "lite" = materials
 ## only, "off" = the old look. Debug overrides: web URL `?style=` / native `-- --style=` with on|lite|off, or the
 ## prototype ids ink_a (= lite), ink_b (screen only), ink_c (= on). Presentation only: never touches logic/.
@@ -26,7 +29,7 @@ const MODES := ["off", "lite", "on", "ink_b"]
 const ALIASES := {"ink_a": "lite", "ink_c": "on"}
 const DRAWN_KEYS := ["drawn_off", "drawn_lite", "drawn_on"]  ## panel words, in the order of Options.DRAWN_STYLES
 const SCREEN_SCALE := 0.5  ## the only render scale the screen pass runs at (the shipped default)
-const SLOW_FPS := 22.0  ## a battle whose median frame rate is below this marks the device slow for the next battles
+const SLOW_FPS := 30.0  ## a battle whose median frame rate is below this marks the device slow for the next battles (Boss 2026-11-18: was 22)
 const SLOW_MIN_SECONDS := 20.0  ## a verdict needs at least this much measured fight
 const SLOW_WARMUP := 3.0  ## seconds after the stage opens before measuring (loading hitches are not "slow")
 const DEVICE_PATH := "user://device_speed.cfg"  ## the remembered verdict (device-local, like graphics.cfg)
@@ -140,7 +143,7 @@ static func hero_ink() -> bool:
 	var m := mode()
 	if not _override.is_empty():
 		return m == "on" or m == "lite"  # (a debug override measures the look as asked)
-	return (m == "on" or m == "lite") and not is_slow_device()
+	return (m == "on" or m == "lite") and not is_slow_device() and not Options.phone_auto("drawn_style")
 
 
 ## Decides once, as a battle loads (stage_view._ready, before any fighter view is built), whether this device is slow.
@@ -148,8 +151,9 @@ static func hero_ink() -> bool:
 static func begin_battle() -> void:
 	_decided = true
 	slow_device = _software_renderer() or _remembered_slow()
+	Options.set_slow(slow_device)  # (graphics_runtime.gd: shadows and MSAA off unless the player picked them)
 	if slow_device:
-		print("draw_style: slow device (remembered or software renderer): no screen pass, no hero ink this battle")
+		print("draw_style: slow device (remembered or software renderer): no screen pass, no hero ink, no shadow/MSAA this battle")
 
 
 static func is_slow_device() -> bool:
@@ -188,6 +192,8 @@ static func forget_slow() -> void:
 	if FileAccess.file_exists(DEVICE_PATH):
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(DEVICE_PATH))
 	_decided = false
+	slow_device = false
+	Options.set_slow(false)
 
 
 ## Sets a studio05 hero model (before load_model) to the battle ink look.
