@@ -25,11 +25,29 @@ var journey_data = preload("res://logic/journey_data.gd").load_by_id("ink_road",
 var squad_rooms := OS.get_environment("ZORX_SQUAD_ROOMS") == "1"
 var squad_journey = preload("res://logic/journey_data.gd").load_by_id("goblin_waves", combat.enemies.keys())
 
+var _zone_journeys := {}  ## journey id -> JourneyData, loaded lazily for every zone journey in data/world/zones.json
+
+## The wave journey a squad room may host: any zone journey of data/world/zones.json that loads validly. "" or the
+## default id gives goblin_waves; unknown or broken ids return null (refused as invalid_journey).
+func zone_journey(journey_id: String):
+	if journey_id.is_empty() or journey_id == squad_journey.id: return squad_journey
+	if _zone_journeys.has(journey_id): return _zone_journeys[journey_id]
+	var found = null
+	if not preload("res://logic/world_zones.gd").zone_of_journey(journey_id).is_empty():
+		var data = preload("res://logic/journey_data.gd").load_by_id(journey_id, combat.enemies.keys())
+		if data.errors.is_empty() and data.wave_mode: found = data
+	_zone_journeys[journey_id] = found
+	return found
+
 func ready() -> bool:
 	return rules.errors.is_empty() and camp.errors.is_empty() and combat.is_valid() and loot.is_valid() and journey_data.errors.is_empty() and squad_journey.errors.is_empty()
 
-func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, capacity: int = 4, farm_map: String = "") -> Dictionary:
+func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, capacity: int = 4, farm_map: String = "", journey_id: String = "") -> Dictionary:
 	if not ready(): return failure("not_configured")
+	var wave_journey = squad_journey
+	if squad_rooms and farm_map.is_empty():
+		wave_journey = zone_journey(journey_id)
+		if wave_journey == null: return failure("invalid_journey")
 	if not lobby:
 		for entry in profiles:
 			if not entry is Dictionary or not entry.get("profile") is Dictionary: return failure("invalid_payload")
@@ -49,13 +67,13 @@ func create(id: String, seed_value: int, profiles: Array, lobby: bool = false, c
 		if p == null: continue
 		if (lobby or profiles.size() > 1 or capacity > 1) and not preload("res://logic/tutorial.gd").past(p, "battle_tip"): return failure("tutorial")
 		if not lobby:
-			var fight_problem: String = preload("res://logic/commands.gd").fight_problem(p, squad_journey.id)
+			var fight_problem: String = preload("res://logic/commands.gd").fight_problem(p, wave_journey.id)
 			if not fight_problem.is_empty(): return failure(fight_problem)
 	if RegEx.create_from_string("^[a-z0-9-]{8,64}$").search(id) == null: return failure("invalid_payload")
 	if rooms.has(id): return failure("room_exists")
 	if rooms.size() >= MAX_ROOMS: return failure("worker_full")
 	var squads: bool = squad_rooms and farm_map.is_empty()
-	var content = squad_journey if squads else journey_data
+	var content = wave_journey if squads else journey_data
 	var fixed_maps: Array = []
 	if farm_map == "mummy_ascent":
 		if profiles.size() != 1 or capacity != 1 or lobby: return failure("invalid_map")

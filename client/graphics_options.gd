@@ -8,14 +8,18 @@ extends RefCounted
 ## and always wins over the device default; a value never picked follows the device class.
 ## Slow device (draw_style.gd begin_battle, a remembered battle median below SLOW_FPS): shadows and MSAA are off too
 ## (SLOW_OFF), unless the player chose them.
+## Frame cap (Boss 2026-11-19, the iPhone ran 20-30 fps while charging, with stalls that grew as it warmed up): a phone
+## renders at most PHONE_DEFAULTS.frame_cap (30) frames a second (Engine.max_fps, applied by client/graphics_runtime.gd). The fight's
+## rules do not depend on it: physics and netfox tick at their own fixed 60 Hz and catch up (2 ticks per 30 fps frame).
 const PATH := "user://graphics.cfg"
 const PRESET_VERSION := 4  ## 4: only the player's choices count as fixed (CHOSEN_KEY); older files are migrated
 const CHOSEN_KEY := "chosen"  ## [graphics] chosen = the option ids the player picked (the rest follow the device)
 const SCALES := [0.5, 0.75, 1.0]
 const DESKTOP_DEFAULTS := {"ultimate_vfx": true, "combat_vfx": true, "ultimate_camera": true,
 	"outline": true, "metal_glint": true, "shadows": true, "decorative_lights": true, "fog": true, "glow": true,
-	"render_scale": 0.5, "antialiasing": 2, "drawn_style": "on"}
-const PHONE_DEFAULTS := {"shadows": false, "antialiasing": 0, "drawn_style": "lite"}  ## over DESKTOP_DEFAULTS
+	"render_scale": 0.5, "antialiasing": 2, "drawn_style": "on", "frame_cap": 0}
+const PHONE_DEFAULTS := {"shadows": false, "antialiasing": 0, "drawn_style": "lite", "frame_cap": 30}  ## over DESKTOP_DEFAULTS
+const FRAME_CAPS := [30, 0]  ## frames per second; 0 = unlimited (the display's own rate)
 const SLOW_OFF := {"shadows": false, "antialiasing": 0}  ## a slow device, for the options the player did not pick
 ## A phone: a mobile platform whose screen's short side is under this many CSS pixels, or whose screen is at least
 ## as wide as client/card_tokens.gd PHONE_ASPECT (2.0, a phone in landscape). Tablets keep the desktop defaults.
@@ -75,9 +79,12 @@ static func clear_choice(key: String) -> void:
 	revision += 1
 	_save()
 
+## The options the graphics panel shows (frame_cap has no panel row yet: it is only in the lag report).
 static func snapshot() -> Dictionary:
 	_load_once()
-	return _values.duplicate()
+	var shown := _values.duplicate()
+	shown.erase("frame_cap")
+	return shown
 
 ## Tests / tools: pretend this device class ("phone", "desktop", "" = detect). Reloads the saved file.
 static func force_device(device: String) -> void:
@@ -145,7 +152,8 @@ static func report() -> Dictionary:
 	section["device_class"] = device_class()
 	section["slow_device"] = _slow
 	section["chosen"] = _chosen.duplicate()
-	section["applied"] = {"shadows": enabled("shadows"), "antialiasing": int(effective("antialiasing")), "drawn_style": str(effective("drawn_style"))}
+	section["applied"] = {"shadows": enabled("shadows"), "antialiasing": int(effective("antialiasing")), "drawn_style": str(effective("drawn_style")),
+		"frame_cap": int(effective("frame_cap")), "max_fps": Engine.max_fps}
 	return section
 
 static func _valid(key: String, candidate: Variant) -> bool:
@@ -153,6 +161,7 @@ static func _valid(key: String, candidate: Variant) -> bool:
 	if key == "render_scale": return candidate is float and candidate in SCALES
 	if key == "antialiasing": return candidate is int and candidate in [0, 2, 4]
 	if key == "drawn_style": return candidate is String and candidate in DRAWN_STYLES
+	if key == "frame_cap": return candidate is int and candidate in FRAME_CAPS
 	return candidate is bool
 
 static func _save() -> void:

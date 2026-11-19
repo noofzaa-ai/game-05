@@ -80,7 +80,7 @@ func bind_redeemed(sid:int,result:Dictionary)->void:
 	if not result.get("ok", false): peer.ws.close(1008, "ticket invalid"); return
 	var id: String = result.room
 	if not bindings.has(id):
-		bindings[id] = {"fence": result.fence, "capacity": int(result.capacity), "companions": result.get("companions", []).duplicate(true), "pending_companion": result.get("pending_companion"), "camp": result.get("camp", false), "diagnostic":result.get("diagnostic",false), "farm_map": result.get("farm_map", ""), "member_fences": {}, "leaving": {}, "seed": result.seed, "profiles": {}, "peers": {}, "offline": {}, "created": Time.get_ticks_msec(), "renewed": Time.get_ticks_msec(), "renewing": false, "started": false, "starting": false, "finishing": false, "saved": false, "room_obj": null}
+		bindings[id] = {"fence": result.fence, "capacity": int(result.capacity), "companions": result.get("companions", []).duplicate(true), "pending_companion": result.get("pending_companion"), "camp": result.get("camp", false), "diagnostic":result.get("diagnostic",false), "farm_map": result.get("farm_map", ""), "journey": str(result.get("journey", "")), "member_fences": {}, "leaving": {}, "seed": result.seed, "profiles": {}, "peers": {}, "offline": {}, "created": Time.get_ticks_msec(), "renewed": Time.get_ticks_msec(), "renewing": false, "started": false, "starting": false, "finishing": false, "saved": false, "room_obj": null}
 	var binding: Dictionary = bindings[id]
 	if binding.fence != result.fence or binding.saved: peer.ws.close(1008, "room closed"); return
 	var slot := int(result.slot)
@@ -109,7 +109,7 @@ func _start_room(id: String) -> void:
 		var companion = preload("res://logic/companions/roster.gd").make_profile(str(entry.id), manager.rules, manager.camp, str(entry.seed).hex_to_int() if entry.has("seed") else str(binding.seed).hex_to_int() + int(entry.slot))
 		if companion == null: binding.starting = false; _finish(id, true); return
 		profiles.append({"id": int(entry.slot), "profile": companion.to_dict()})
-	var created: Dictionary = manager.create(id, str(binding.seed).hex_to_int(), profiles, binding.camp, binding.capacity, str(binding.get("farm_map", "")))
+	var created: Dictionary = manager.create(id, str(binding.seed).hex_to_int(), profiles, binding.camp, binding.capacity, str(binding.get("farm_map", "")), str(binding.get("journey", "")))
 	if not created.get("ok", false):
 		printerr("ROOM_START_REJECT ", JSON.stringify({"room":id,"error":created.get("error","unknown"),"diagnostic":binding.get("diagnostic",false)}))
 		binding.starting = false

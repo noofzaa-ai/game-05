@@ -136,10 +136,13 @@ func fight_journey() -> String:
 
 func start_journey(journey_id: String = DEFAULT_JOURNEY, seed: int = 0) -> bool:
 	if account_session != null:
-		# squad rooms host goblin_waves only (server/rooms/manager.gd); another zone cannot start online yet
-		if (journey_id != DEFAULT_JOURNEY and journey_id != WAVE_JOURNEY) or _solo_connecting: return false
+		# squad rooms host any zone wave journey (server/rooms/manager.gd authorises it per profile); ink_road maps to the default
+		if _solo_connecting: return false
+		if journey_id == DEFAULT_JOURNEY: journey_id = WAVE_JOURNEY
+		if journey_id != WAVE_JOURNEY and preload("res://logic/world_zones.gd").zone_of_journey(journey_id).is_empty(): return false
+		if preload("res://logic/world_zones.gd").journey_problem(profile, journey_id) != "": return false  # the server re-checks
 		_solo_connecting = true
-		_start_solo.call_deferred()
+		_start_solo.call_deferred("", journey_id)
 		return true
 	if not ensure_profile():
 		return false
@@ -386,7 +389,7 @@ func _refresh_account() -> void:
 				driver.refresh()
 	else: online_error = "ยังโหลดข้อมูลล่าสุดไม่ได้ กรุณาเชื่อมต่อใหม่"
 
-func _start_solo(farm_map: String = "") -> void:
+func _start_solo(farm_map: String = "", journey_id: String = "") -> void:
 	_solo_generation+=1
 	var request_generation:=_solo_generation
 	_solo_started_at=Time.get_ticks_msec()
@@ -395,7 +398,7 @@ func _start_solo(farm_map: String = "") -> void:
 	online_error = ""
 	var account = get_node("/root/Online")
 	var rooms = preload("res://client/online/room_client.gd").new()
-	var result: Dictionary = await rooms.create(account, 1, false, farm_map, false)
+	var result: Dictionary = await rooms.create(account, 1, false, farm_map, false, "", "", journey_id)
 	if not _solo_current(request_generation,result,account):return
 	if result.get("error")=="in_match":
 		solo_phase="ปลดห้องทดลองเก่า"
@@ -403,13 +406,14 @@ func _start_solo(farm_map: String = "") -> void:
 		if request_generation!=_solo_generation:return
 		if released.get("ok",false):
 			solo_phase="ขอเปิดห้องใหม่"
-			result=await rooms.create(account,1,false,farm_map,false)
+			result=await rooms.create(account,1,false,farm_map,false,"","",journey_id)
 			if not _solo_current(request_generation,result,account):return
 	if not result.get("ok", false) and result.get("error") == "in_match":
 		result = await rooms.resume(account)
 		if not _solo_current(request_generation,result,account):return
 	if not result.get("ok", false):
-		online_error = "เริ่ม Journey ไม่ได้: " + str(result.get("error", "unavailable"))
+		var code := str(result.get("error", "unavailable"))
+		online_error = preload("res://client/card_tokens.gd").t("zone_" + code) if code in ["zone_locked", "invalid_journey"] else "เริ่ม Journey ไม่ได้: " + code
 	elif attach_online_room(account, result) == null:
 		online_error = "เชื่อมต่อห้องไม่ได้ กรุณาลองกลับห้องเดิม"
 	_solo_connecting = false

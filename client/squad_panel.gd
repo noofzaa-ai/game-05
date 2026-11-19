@@ -2,7 +2,8 @@ extends CanvasLayer
 ## The squad's info in an auto-battle fight (Boss 2026-11-10): one small leather card plate per fighter at the bottom
 ## of the screen in the approved hub look (Boss 2026-11-12): the class emblem medallion (cut from the class card frame
 ## art), the order number and class name on parchment, the race ultimate gauge (a strip in the race colour; a pulsing
-## race-coloured ring round the card while it is full) and the health bar with "hp / max". Nobody steers: a card (tap,
+## race-coloured ring round the card while it is full), the health bar with "hp / max" and under it a thin stamina strip
+## (Fighter.energy / max_energy(); blinks red under SQUAD_HUD_STA_LOW, Boss 2026-11-19). Nobody steers: a card (tap,
 ## click or key 1-3) picks which fighter the camera follows (cream ring); the same card again = automatic camera. A skill cast pops its name on a leather pill
 ## above the caster's card; a race ultimate shows a bigger banner (race badge, "ULTIMATE", the name) above that.
 ## Display only: the gauge is read from Fighter.gauge / race_state (the same data tools/balance/class_sim.gd reads).
@@ -48,6 +49,18 @@ func _process(delta: float) -> void:
 	for card in _cards.values():
 		if card.has("ult_ring") and card["ult_ring"].visible:
 			card["ult_ring"].modulate.a = alpha
+		if card.has("sta_fill"):
+			card["sta_fill"].self_modulate = stamina_tint(bool(card["sta_low"]), _clock, reduced_motion)
+
+
+## The stamina fill's tint: plain when there is enough; under SQUAD_HUD_STA_LOW it blinks red (the old HUD's
+## "not enough stamina" blink), or stays red with reduced motion. The fill is white-based so the tint is the colour.
+static func stamina_tint(low: bool, clock: float, steady: bool) -> Color:
+	if not low:
+		return CardTokens.SQUAD_HUD_STA
+	if steady or int(clock * CardTokens.SQUAD_HUD_STA_BLINK_HZ * 2.0) % 2 == 0:
+		return CardTokens.SQUAD_HUD_STA_EMPTY
+	return CardTokens.SQUAD_HUD_STA
 
 
 ## `classes`: fighter id -> class id (data/classes), for the card titles and emblems.
@@ -99,6 +112,7 @@ func update_from(fighters: Dictionary, local_id: int, combat_data) -> void:
 		card["hp_text"].text = hp_text(fighter.hp, fighter.max_hp())
 		_show_gauge(card, fighter, gauge_max, ults_on)
 		var alive := fighter.is_alive()
+		_show_stamina(card, fighter, alive)
 		if alive != card["alive"]:
 			card["alive"] = alive
 			card["panel"].modulate = CardTokens.HUB_WHITE if alive else CardTokens.SQUAD_HUD_DEAD
@@ -137,6 +151,29 @@ func _show_gauge(card: Dictionary, fighter: Fighter, gauge_max: float, ults_on: 
 		var color: Color = card["race_color"].lerp(CardTokens.HUB_CREAM, CardTokens.SQUAD_HUD_ULT_FULL_LIFT) if full else card["race_color"]
 		CardTokens.panel(card["ult_fill"], CardTokens.flat(color, color, 0.0, CardTokens.SQUAD_HUD_ULT_H * 0.5, 1.0))
 		card["ult_ring"].visible = full
+
+
+## The stamina strip under the HP bar (Boss 2026-11-19): fill = Fighter.energy / max_energy(), always shown while the
+## fighter stands; hidden on a fallen card. Display only: the rules spend and refill energy (logic/combat.gd).
+func _show_stamina(card: Dictionary, fighter: Fighter, alive: bool) -> void:
+	card["sta_back"].visible = alive
+	var ratio := clampf(fighter.energy / maxf(fighter.max_energy(), 1.0), 0.0, 1.0)
+	card["sta_ratio"] = ratio
+	card["sta_fill"].size.x = card["bar_width"] * ratio
+	card["sta_fill"].visible = ratio > 0.0
+	var low: bool = alive and ratio < CardTokens.SQUAD_HUD_STA_LOW
+	if low != card["sta_low"]:
+		card["sta_low"] = low
+		var back: Color = CardTokens.SQUAD_HUD_STA_EMPTY_BACK if low else CardTokens.SQUAD_HUD_STA_BACK
+		CardTokens.panel(card["sta_back"], CardTokens.flat(back, CardTokens.HUB_LEATHER_EDGE, 1.0, CardTokens.SQUAD_HUD_STA_H * 0.5, 1.0))
+	card["sta_fill"].self_modulate = stamina_tint(card["sta_low"], _clock, reduced_motion)
+
+
+## The ratio the stamina strip shows for fighter `id` (tests and screenshots); -1 when the strip is hidden.
+func stamina_shown(id: int) -> float:
+	if not _cards.has(id) or not _cards[id].has("sta_back") or not _cards[id]["sta_back"].visible:
+		return -1.0
+	return _cards[id]["sta_fill"].size.x / maxf(_cards[id]["bar_width"], 1.0) if _cards[id]["sta_fill"].visible else 0.0
 
 
 ## The ratio the gauge strip shows for fighter `id` (tests and screenshots); -1 when the strip is hidden.
@@ -347,6 +384,11 @@ func _rebuild() -> void:
 		ult_back.visible = false
 		var ult_fill := _plain(ult_back)
 		ult_fill.visible = false
+		var sta_back := _plain(paper)
+		CardTokens.panel(sta_back, CardTokens.flat(CardTokens.SQUAD_HUD_STA_BACK, CardTokens.HUB_LEATHER_EDGE, 1.0, CardTokens.SQUAD_HUD_STA_H * 0.5, 1.0))
+		var sta_fill := _plain(sta_back)
+		CardTokens.panel(sta_fill, CardTokens.flat(CardTokens.HUB_WHITE, CardTokens.HUB_WHITE, 0.0, CardTokens.SQUAD_HUD_STA_H * 0.5, 1.0))  # tinted by self_modulate
+		sta_fill.self_modulate = CardTokens.SQUAD_HUD_STA
 		var down := CardTokens.label(HubLook.t("squad_down"), CardTokens.FONT_SQUAD_HUD_NAME, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
 		down.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		down.visible = false
@@ -372,6 +414,7 @@ func _rebuild() -> void:
 		var ult_name := CardTokens.label("", CardTokens.FONT_SQUAD_HUD_ULT_CALLOUT, CardTokens.HUB_CREAM, 1.0, CardTokens.OUTLINE_HUB, "display", CardTokens.HUB_OUTLINE)
 		banner.add_child(ult_name)
 		_cards[id] = {"panel": panel, "emblem": emblem, "paper": paper, "name": name_label, "hp_back": hp_back, "hp_fill": hp_fill, "hp_text": hp_label,
+			"sta_back": sta_back, "sta_fill": sta_fill, "sta_low": false, "sta_ratio": 1.0,
 			"ult_back": ult_back, "ult_fill": ult_fill, "ult_ring": ult_ring, "race": "", "race_color": CardTokens.HUB_GOLD_EDGE, "full": null,
 			"ult_banner": banner, "ult_badge": badge, "ult_tag": tag, "ult_name": ult_name,
 			"ring": ring, "down": down, "callout": pill, "callout_label": callout, "bar_width": 100.0, "alive": true}
@@ -410,16 +453,21 @@ func _place() -> void:
 		var inner := 8.0
 		var name_label: Label = card["name"]
 		name_label.position = Vector2(inner, 2.0)
-		name_label.size = Vector2(paper.size.x - inner * 2.0, paper.size.y * 0.5 - 2.0)
+		name_label.size = Vector2(paper.size.x - inner * 2.0, (paper.size.y - CardTokens.SQUAD_HUD_STA_ROOM * factor) * 0.5 - 2.0)
 		CardTokens.hub_fit(name_label, name_label.text, CardTokens.FONT_SQUAD_HUD_NAME, name_label.size.x, CardTokens.HUB_INK, 1.0)
 		var bar_width := paper.size.x - inner * 2.0
 		card["bar_width"] = bar_width
 		var bar_h := CardTokens.SQUAD_HUD_BAR_H
-		card["hp_back"].position = Vector2(inner, paper.size.y - bar_h - 6.0)
+		var sta_h := CardTokens.SQUAD_HUD_STA_H
+		card["sta_back"].position = Vector2(inner, paper.size.y - sta_h - CardTokens.SQUAD_HUD_STA_PAD)
+		card["sta_back"].size = Vector2(bar_width, sta_h)
+		card["sta_fill"].position = Vector2.ZERO
+		card["sta_fill"].size = Vector2(bar_width * float(card["sta_ratio"]), sta_h)
+		card["hp_back"].position = Vector2(inner, card["sta_back"].position.y - CardTokens.SQUAD_HUD_STA_GAP - bar_h)
 		card["hp_back"].size = Vector2(bar_width, bar_h)
 		card["hp_fill"].size = Vector2(bar_width, bar_h)
-		card["hp_text"].position = Vector2(0.0, -3.0)
-		card["hp_text"].size = Vector2(bar_width, bar_h + 6.0)
+		card["hp_text"].position = Vector2(0.0, -2.0)  # centred on the bar; ends at the stamina strip's top
+		card["hp_text"].size = Vector2(bar_width, bar_h + 4.0)
 		var ult_h := CardTokens.SQUAD_HUD_ULT_H
 		card["ult_back"].position = Vector2(inner, card["hp_back"].position.y - ult_h - 3.0)
 		card["ult_back"].size = Vector2(bar_width, ult_h)

@@ -361,6 +361,27 @@ const HUB_QUEST_CHEVRON := 44.0
 const HUB_QUEST_SCREEN_MIN := 12.0  ## tracker text never under this many window px (a phone shrinks the hub to ~0.54)
 const FONT_HUB_QUEST_LINE := 23
 const FONT_HUB_QUEST_ROW_TITLE := 30  ## a quest's name on the Quests panel row
+## Hub card level (Boss 2026-11-19): which of the three looks shows each card's level on the My Cards hub.
+## 0 = off, 1 = the bottom plate split ("SQUAD 1" left, "Lv 10" right, ink on the parchment), 2 = a dark carved tab
+## hanging under the bottom plate (the squad tray's number tab), 3 = a small carved medallion seal on the bottom
+## plate's right end. A dev switch: env ZORX_HUB_LEVEL_STYLE=0..3 overrides it.
+const HUB_LEVEL_STYLE_DEFAULT := 2  # Boss 2026-11-19 picked option 2 (hanging carved tab)
+static var hub_level_style := HUB_LEVEL_STYLE_DEFAULT if OS.get_environment("ZORX_HUB_LEVEL_STYLE").is_empty() else clampi(int(OS.get_environment("ZORX_HUB_LEVEL_STYLE")), 0, 3)
+const HUB_LEVEL_SCREEN_MIN := 12.0  ## the level never under this many window px (same rule as the quest tracker)
+## 1: plate split. The plate's flat face (x from / to, of the card width): the level takes what its text needs on the
+## right, a dot, and the squad text gets the rest on the left.
+const HUB_LEVEL_PLATE_FACE := Vector2(0.25, 0.79)
+const HUB_LEVEL_PLATE_GAP := 0.6  ## dot box width, of the text px
+## 2: hanging tab (art/ui/hub_carved/stage_pill.png 3-sliced), centred under the bottom plate, cream "Lv N".
+const HUB_LEVEL_TAB_H := 0.068  ## of the card height (grows on phones so the text stays >= 12 window px)
+const HUB_LEVEL_TAB_RISE := 0.35  ## share of the tab over the card's bottom rail (the rest hangs below the card)
+const HUB_LEVEL_TAB_PAD := 0.75  ## side padding, of the tab height
+const CARVED_FONT_LEVEL_TAB := 24
+## 3: medallion seal (art/ui/hub_carved/medallion.png, the side menu's) on the right end of the bottom plate.
+const HUB_LEVEL_MEDAL := 0.155  ## diameter, of the card width
+const HUB_LEVEL_MEDAL_AT := Vector2(0.84, 0.925)  ## centre, of the card size (its top stays on the frame, under the window)
+const HUB_LEVEL_MEDAL_TEXT := 0.62  ## the number box, of the diameter
+const CARVED_FONT_LEVEL_MEDAL := 30
 const HUB_STAGE_CHEVRON := 0.5  ## the "tap me" chevron on the stage strip over FIGHT, of the strip height
 const HUB_STAGE_HOVER := Color(1.12, 1.08, 0.98)  ## the stage strip under the pointer (it is a button to the map)
 
@@ -724,6 +745,8 @@ const STRINGS := {
 	"hub_hint": ["แตะการ์ดเพื่อเปิดตัวละคร · แตะป้ายล่างเพื่อลงทัพ", "Tap a card to open its character  ·  Tap its bottom plate to add or remove it from the squad"],
 	"squad_n": ["ทัพ %d", "SQUAD %d"],
 	"squad_add": ["+ ลงทัพ", "+ SQUAD"],
+	"hub_level": ["Lv %d", "Lv %d"],  ## the card's level on the hub card (style 1 plate, style 2 tab)
+	"hub_level_full": ["เลเวล %d", "Level %d"],  ## the card's tooltip line
 	"locked": ["ล็อก", "LOCKED"],
 	"locked_toast": ["ทำเควสต์ให้เสร็จเพื่อปลดล็อก %s", "Finish the quests to unlock %s"],
 	"tray_add": ["เพิ่มการ์ด", "Add a card"],
@@ -977,6 +1000,8 @@ const STRINGS := {
 	"gfx_combat_vfx": ["เอฟเฟกต์ต่อสู้ / ริ้วอาวุธ", "Combat effects / trails"],
 	"gfx_ult_camera": ["กล้องอัลติ", "Ultimate camera"],
 	"gfx_note": ["จำค่าบนอุปกรณ์นี้ · เกมยังดำเนินต่อ", "Saved on this device · the game keeps running"],
+	"zone_zone_locked": ["โซนนี้ยังไม่เปิด ทำเควสต์และโค่นบอสโซนก่อนหน้าก่อน", "This zone is still locked: finish its quest and beat the previous boss"],
+	"zone_invalid_journey": ["ไม่พบด่านนี้บนเซิร์ฟเวอร์ ลองอัปเดตเกม", "The server doesn't know this stage, try updating the game"],
 }
 
 
@@ -1519,7 +1544,7 @@ const FONT_SUMMARY_STAGE := 34
 const FONT_SUMMARY_LINE := 26
 const FONT_SUMMARY_BUTTON := 34
 ## Battle HUD squad cards (client/squad_panel.gd), in the stage's logical pixels (1280x720 base).
-const SQUAD_HUD_CARD := Vector2(280.0, 74.0)
+const SQUAD_HUD_CARD := Vector2(280.0, 80.0)  ## 74 + SQUAD_HUD_STA_ROOM (stamina strip, Boss 2026-11-19)
 const SQUAD_HUD_MARGIN := 10.0
 const SQUAD_HUD_GAP := 10.0
 const SQUAD_HUD_EMBLEM := 62.0
@@ -1550,6 +1575,20 @@ const SQUAD_HUD_ULT_CALLOUT_SECONDS := 1.2
 const SQUAD_HUD_ULT_POP := 1.25  ## the banner pops in from this scale (none with reduced motion)
 const FONT_SQUAD_HUD_ULT_CALLOUT := 30
 const FONT_SQUAD_HUD_ULT_TAG := 16  ## the small "ULTIMATE" word over the name
+## --- Stamina strip on the squad card (ux-ui 2026-11-19, Boss request): a thin strip under the HP bar, always shown
+## while the fighter stands, fill = Fighter.energy / max_energy(). Thinner than the ult strip (8); 6 so it stays
+## >= 3 window px on a 844x390 phone (stage scale 0.54). The card grew by SQUAD_HUD_STA_ROOM so the name, the ult
+## strip and the HP bar keep their places; the strip takes the room under the HP bar.
+const SQUAD_HUD_STA_H := 6.0
+const SQUAD_HUD_STA_GAP := 2.0  ## between the HP bar and the strip
+const SQUAD_HUD_STA_PAD := 4.0  ## under the strip, to the parchment edge
+const SQUAD_HUD_STA_ROOM := 6.0  ## how much the card grew for the strip (SQUAD_HUD_CARD.y was 74)
+const SQUAD_HUD_STA := Color("4FB7A6")  ## calm sea-teal (the InkUi.STAMINA family, lifted to read on the dark back)
+const SQUAD_HUD_STA_BACK := Color("2A140C")  ## empty strip (the leather edge, like the ult strip)
+const SQUAD_HUD_STA_LOW := 0.15  ## under this share the strip warns (the old HUD's "not enough stamina" blink)
+const SQUAD_HUD_STA_EMPTY := Color("F0453A")  ## warning fill (InkUi.STAMINA_BLINK family)
+const SQUAD_HUD_STA_EMPTY_BACK := Color("7A1C14")  ## warning back: the strip reads red even when the fill is a sliver
+const SQUAD_HUD_STA_BLINK_HZ := 3.0  ## warning blinks per second (steady red with reduced motion)
 ## The class emblem medallion on each card frame (card_frame_<class>.png, 640x960): its region in art px.
 const CARD_FRAME_EMBLEM := Rect2(496.0, 14.0, 118.0, 118.0)
 ## Battle HUD trip panel and banners (client/hud.gd, auto-battle look).

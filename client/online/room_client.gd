@@ -3,7 +3,7 @@ extends RefCounted
 const Account := preload("res://client/online/account_status.gd")
 var last_room := ""
 
-func create(account, capacity: int = 2, camp: bool = false, farm_map: String = "", diagnostic: bool = false, companion: String = "", companion_seed: String = "") -> Dictionary:
+func create(account, capacity: int = 2, camp: bool = false, farm_map: String = "", diagnostic: bool = false, companion: String = "", companion_seed: String = "", journey: String = "") -> Dictionary:
 	var payload := {"v": 1, "capacity": capacity}
 	if not companion.is_empty():
 		payload.companion = companion
@@ -11,6 +11,7 @@ func create(account, capacity: int = 2, camp: bool = false, farm_map: String = "
 	if diagnostic: payload.diagnostic = true
 	if camp: payload.camp = true
 	if not farm_map.is_empty(): payload.farm_map = farm_map
+	if not journey.is_empty() and journey != "goblin_waves": payload.journey = journey  # old workers/Nakama ignore nothing: only sent for other zones
 	return await _call(account, "zorx_room_create_v1", payload)
 
 func join(account, room: String, invite: String = "") -> Dictionary:

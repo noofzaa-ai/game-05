@@ -126,8 +126,8 @@ func death() -> Dictionary:
 
 
 ## Brings the bag back to camp: gold and whatever fits (materials, then equipment) move to the
-## stash. Anything that does not fit stays in the bag for the player to sort out. A run that ended in
-## death has already secured its loot in the stash.
+## stash; gear that does not fit grows the stash (summary "stash_grown") instead of staying in the unsaved bag. A run
+## that ended in death has already secured its loot in the stash.
 ## Returns {"gold": int, "materials": {id: count}, "items": int, "left_items": int, "left_materials": {id: count}}.
 func return_to_camp() -> Dictionary:
 	var summary := {"gold": bag.gold, "materials": {}, "items": 0, "left_items": 0, "left_materials": {}}
@@ -138,9 +138,17 @@ func return_to_camp() -> Dictionary:
 		bag.remove_material(str(id), moved)
 		if moved > 0:
 			summary["materials"][id] = moved
-	while not bag.items.is_empty() and profile.stash.free_slots() >= 1:
-		profile.stash.add_item(bag.take_item(0))
+	# QA 2026-11-19 (Boss: drops after a win were missing from Storage): the bag is never saved with the profile, so
+	# whatever stayed in it when the room closed was lost. Earned gear is never lost (as death() and BossLoot.grant):
+	# the stash grows to hold it, and the growth is kept as bonus slots so a capacity refresh cannot shrink it again.
+	while not bag.items.is_empty():
+		profile.stash.items.append(bag.take_item(0))
 		summary["items"] += 1
+	var grown: int = maxi(0, profile.stash.slots_used() - profile.stash.capacity)
+	if grown > 0:
+		profile.stash.capacity += grown
+		profile.bonus_stash_slots = mini(1000, profile.bonus_stash_slots + grown)
+	summary["stash_grown"] = grown
 	summary["left_items"] = bag.items.size()
 	summary["left_materials"] = bag.materials.duplicate()
 	return summary

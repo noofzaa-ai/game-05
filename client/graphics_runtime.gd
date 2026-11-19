@@ -6,6 +6,7 @@ const Options := preload("res://client/graphics_options.gd")
 var _revision := -1
 var _lights: Array[WeakRef] = []
 var _environments: Array[WeakRef] = []
+var _applied_cap := -1  ## the Engine.max_fps this node last set (-1: none yet)
 
 func _ready() -> void:
 	Options.snapshot()
@@ -45,10 +46,23 @@ func _apply_all() -> void:
 	get_viewport().scaling_3d_scale = float(Options.value("render_scale"))
 	var aa := int(Options.effective("antialiasing"))  # (a slow device drops it unless the player picked it)
 	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if aa == 0 else (Viewport.MSAA_2X if aa == 2 else Viewport.MSAA_4X)
+	_apply_frame_cap(int(Options.effective("frame_cap")))
 	_lights = _lights.filter(func(ref: WeakRef): return is_instance_valid(ref.get_ref()))
 	_environments = _environments.filter(func(ref: WeakRef): return is_instance_valid(ref.get_ref()))
 	for ref in _lights: _apply_light(ref.get_ref())
 	for ref in _environments: _apply_environment(ref.get_ref())
+
+## The render frame cap (graphics_options.gd frame_cap: 30 on a phone, 0 = unlimited). Only the drawing slows down:
+## physics (60 Hz, up to 8 steps a frame) and netfox (its own 60 Hz clock, up to 8 ticks a frame) catch up, so the
+## fight's rules, the input ticks and the network rate are the same at any cap. A cap set by someone else (a perf tool
+## or walk.gd --fps) is left alone.
+func _apply_frame_cap(cap: int) -> void:
+	if _applied_cap >= 0 and Engine.max_fps != _applied_cap:
+		return  # someone else set Engine.max_fps after us: theirs wins
+	if _applied_cap < 0 and Engine.max_fps != 0:
+		return  # already set before this node started (command line / tool)
+	Engine.max_fps = maxi(0, cap)
+	_applied_cap = Engine.max_fps
 
 func _apply_light(light: Light3D) -> void:
 	light.shadow_enabled = bool(light.get_meta("graphics_base_shadow")) and Options.enabled("shadows")

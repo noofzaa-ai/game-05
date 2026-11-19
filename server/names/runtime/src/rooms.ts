@@ -58,7 +58,7 @@ var companionDiscover:nkruntime.RpcFunction=function(ctx,_logger,nk,payload){
 var companionDiscoverGateway:nkruntime.RpcFunction=function(ctx,logger,nk,payload){return rpcDispatch("zorx_companion_v1",companionDiscover,ctx,logger,nk,payload);};
 var roomCreate: nkruntime.RpcFunction = function(ctx, _logger, nk, payload) {
     var uid = nameUser(ctx); var p = roomPayload(payload);
-    if (!p || (Object.keys(p).some(function(k) {return ["v", "capacity", "camp", "farm_map", "diagnostic", "companion", "companion_seed"].indexOf(k) < 0;}) || (p.camp !== undefined && p.camp !== true) || (p.farm_map !== undefined && (typeof p.farm_map !== "string" || !/^[a-z0-9_]{1,64}$/.test(p.farm_map) || p.capacity !== 1 || p.camp === true))) || typeof p.capacity !== "number" || p.capacity < 1 || p.capacity > 4 || p.capacity !== Math.floor(p.capacity)) { return nameResult("invalid_payload"); }
+    if (!p || (Object.keys(p).some(function(k) {return ["v", "capacity", "camp", "farm_map", "journey", "diagnostic", "companion", "companion_seed"].indexOf(k) < 0;}) || (p.journey !== undefined && (typeof p.journey !== "string" || !/^[a-z0-9_]{1,64}$/.test(p.journey) || p.farm_map !== undefined || p.diagnostic !== undefined)) || (p.camp !== undefined && p.camp !== true) || (p.farm_map !== undefined && (typeof p.farm_map !== "string" || !/^[a-z0-9_]{1,64}$/.test(p.farm_map) || p.capacity !== 1 || p.camp === true))) || typeof p.capacity !== "number" || p.capacity < 1 || p.capacity > 4 || p.capacity !== Math.floor(p.capacity)) { return nameResult("invalid_payload"); }
     if (p.companion !== undefined && (p.companion !== "arun" || p.camp !== true || p.capacity < 2 || p.diagnostic !== undefined || p.farm_map !== undefined)) {return nameResult("invalid_payload");}
     if (p.farm_map && /^mummy_/.test(p.farm_map) && (p.farm_map !== "mummy_ascent" || uid !== "76f7165a-18c4-4300-9c0d-9996173c6ae9" || p.capacity !== 1 || p.camp === true)) { return nameResult("forbidden"); }
     if (p.diagnostic !== undefined && (p.diagnostic !== true || p.capacity !== 1 || p.camp === true || p.farm_map !== undefined)) {return nameResult("invalid_payload");}
@@ -73,7 +73,7 @@ var roomCreate: nkruntime.RpcFunction = function(ctx, _logger, nk, payload) {
         var memberFences: {[key: string]: string} = {}; memberFences[uid] = nk.uuidv4().replace(/-/g, "");
         var offer=p.companion?companionOffer(nk,uid):null;
         if(offer && p.companion_seed !== offer.value.seed)return nameResult("companion_changed");
-        var room = {v: 1, diagnostic: p.diagnostic === true, farm_map: p.farm_map || "", camp: p.camp === true, companions: p.companion ? [{id:p.companion,slot:p.capacity,seed:offer!.value.seed}] : [], member_fences: memberFences, owner: uid, capacity: p.capacity, members: members, invite_hash: nk.sha256Hash(invite), fence: fence,
+        var room = {v: 1, diagnostic: p.diagnostic === true, farm_map: p.farm_map || "", journey: p.journey || "", camp: p.camp === true, companions: p.companion ? [{id:p.companion,slot:p.capacity,seed:offer!.value.seed}] : [], member_fences: memberFences, owner: uid, capacity: p.capacity, members: members, invite_hash: nk.sha256Hash(invite), fence: fence,
             worker: allocation.worker.id, url: allocation.worker.url, seed: nk.uuidv4().replace(/-/g, "").slice(0, 15), started: false, closed: false, expires: Date.now() + 60000};
         player.state.active_room = {id: id, fence: fence, expires: room.expires, started: false};
         var creationWrites=[allocation.write, roomPut(ROOM_COLLECTION, id, SYSTEM_OWNER, room, "*"), roomPut(PROFILE_COLLECTION, PROFILE_KEY, uid, player.state, player.object.version)];
@@ -148,7 +148,7 @@ var roomBackend: nkruntime.RpcFunction = function(ctx, _logger, nk, payload) {
             if (!room.process) { room.process = p.process; claim.push(roomPut(ROOM_COLLECTION, p.room, SYSTEM_OWNER, room, row.version)); }
             nk.multiUpdate(null, claim, [{collection: TICKET_COLLECTION, key: ticket.key, userId: SYSTEM_OWNER, version: ticket.version}], null, false);
             var profile = JSON.parse(JSON.stringify(player.state.profile)); profile.name = player.name; profile.created = true;
-            return JSON.stringify({v: 1, ok: true, room: p.room, slot: ticket.value.slot, capacity: room.capacity, companions: room.companions || [], pending_companion: room.pending_companion || null, diagnostic: room.diagnostic === true, farm_map: room.farm_map || "", camp: room.camp === true, member_fence: (room.member_fences || {})[ticket.value.uid] || "", started: room.started, seed: room.seed, fence: room.fence, profile: profile});
+            return JSON.stringify({v: 1, ok: true, room: p.room, slot: ticket.value.slot, capacity: room.capacity, companions: room.companions || [], pending_companion: room.pending_companion || null, diagnostic: room.diagnostic === true, farm_map: room.farm_map || "", journey: room.journey || "", camp: room.camp === true, member_fence: (room.member_fences || {})[ticket.value.uid] || "", started: room.started, seed: room.seed, fence: room.fence, profile: profile});
         }
         if (p.fence !== room.fence || ["camp", "start", "heartbeat", "finish", "member_leave", "companion_accept"].indexOf(p.op) < 0) { return nameResult("unauthorized"); }
         if(p.op==="companion_accept"){

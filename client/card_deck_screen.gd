@@ -12,6 +12,7 @@ extends Control
 
 const CardTokens := preload("res://client/card_tokens.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
+const CardProgress := preload("res://logic/card_progress.gd")  ## each hub card's level (Boss 2026-11-19)
 const CardPortrait := preload("res://client/card_portrait.gd")
 const TILT_SHADER := preload("res://client/card_tilt.gdshader")
 const TILT_SHEEN_SHADER := preload("res://client/card_tilt_sheen.gdshader")
@@ -499,6 +500,13 @@ class HubCard extends Control:
 	var _name: Label
 	const LOCKED_RIBBON_FILL := 0.86  ## share of the ribbon text box the locked hint may fill
 	var _squad_label: Label
+	# The card's level (Boss 2026-11-19), one of three looks (CardTokens.hub_level_style); hidden while locked.
+	var level := 0  ## 0 = not shown
+	var screen_k := 1.0  ## window px per canvas px (a phone shrinks the hub): the level text stays >= 12 window px
+	var level_box: Control  ## the drawn level piece (tab, medallion or the plate's right box), for tests
+	var level_label: Label
+	var _level_rule: Label  ## style 1: the ink dot between SQUAD and the level
+	var _level_art: Control  ## style 2: the carved tab, style 3: the medallion
 	var _lock: Label
 	var _mark: Control  ## tutorial.md 5: padlock (locked) or "?" (no race) medallion over the race badge
 	var _focus: Panel
@@ -581,6 +589,7 @@ class HubCard extends Control:
 		add_child(_lock)
 		_squad_label = CardTokens.hub_label("", CardTokens.FONT_HUB_SQUAD, CardTokens.HUB_INK, 1.0, 0, "medium")
 		add_child(_squad_label)
+		_build_level()
 		squad_button = Button.new()
 		squad_button.focus_mode = Control.FOCUS_ALL
 		squad_button.pressed.connect(func() -> void: squad_toggled.emit())
@@ -601,7 +610,43 @@ class HubCard extends Control:
 		portrait.set_hover(on)
 		portrait.set_render_mode(CardPortrait.Mode.LIVE)  # hub cards always live (Boss 2026-11-13)
 
-	func apply(look: Dictionary, p_in_squad: bool, p_number: int, p_locked: bool, p_race: String = "") -> void:
+	## The level piece for the current style (built once; the style is a dev switch read at build time).
+	func _build_level() -> void:
+		var style: int = CardTokens.hub_level_style
+		if style <= 0:
+			return
+		level_box = Control.new()
+		level_box.name = "Level"
+		level_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(level_box)
+		if style == 2:
+			_level_art = CarvedStrip.new(CardTokens.CARVED_STAGE, CardTokens.CARVED_STAGE_CAP)
+			level_box.add_child(_level_art)
+		elif style == 3:
+			_level_art = CardTokens.carved_rect(CardTokens.CARVED_MEDALLION)
+			level_box.add_child(_level_art)
+		elif style == 1:
+			_level_rule = CardTokens.hub_label("·", CardTokens.CARVED_FONT_CARD_PLATE, CardTokens.HUB_INK, 1.0)
+			add_child(_level_rule)
+		if _level_art != null:
+			_level_art.use_parent_material = true  # tilts with the card (the warp material is set on level_box)
+		var cream := style == 2
+		level_label = CardTokens.hub_label("", CardTokens.CARVED_FONT_CARD_PLATE, CardTokens.HUB_CREAM if cream else CardTokens.HUB_INK, 1.0, CardTokens.OUTLINE_HUB if cream else 0)
+		level_label.name = "LevelLabel"
+		level_label.use_parent_material = true
+		level_box.add_child(level_label)
+
+	## The text the level piece shows (number only on the medallion; "Lv N" elsewhere).
+	func level_text() -> String:
+		if level <= 0:
+			return ""
+		return str(level) if CardTokens.hub_level_style == 3 else CardTokens.t("hub_level") % level
+
+	func level_shown() -> bool:
+		return level_box != null and level_box.visible
+
+	func apply(look: Dictionary, p_in_squad: bool, p_number: int, p_locked: bool, p_race: String = "", p_level: int = 0) -> void:
+		level = p_level
 		race = p_race
 		in_squad = p_in_squad
 		number = p_number
@@ -629,6 +674,7 @@ class HubCard extends Control:
 			add_child(_mark)
 		_squad_label.text = "" if locked else (CardTokens.t("squad_n") % number if in_squad else CardTokens.t("squad_add"))
 		squad_button.tooltip_text = CardTokens.t("remove_from_squad" if in_squad else "add_to_squad")
+		tooltip_text = "" if locked or level <= 0 else CardTokens.t("hub_level_full") % level
 		squad_button.visible = not locked
 		layout(size.x, s, phone)
 
@@ -669,6 +715,7 @@ class HubCard extends Control:
 		_squad_label.position = Vector2(sr.position.x * w, sr.position.y * h)
 		_squad_label.size = Vector2(sr.size.x * w, sr.size.y * h)
 		CardTokens.hub_fit(_squad_label, _squad_label.text, CardTokens.CARVED_FONT_CARD_PLATE, _squad_label.size.x, CardTokens.HUB_INK, unit)
+		_layout_level(w, h, unit)
 		_lock.position = Vector2(0.0, CardTokens.HUB_CARD_LOCK_Y * h - 30.0 * unit)
 		_lock.size = Vector2(w, 60.0 * unit)
 		CardTokens.hub_text(_lock, CardTokens.FONT_HUB_LOCKED, CardTokens.HUB_CREAM, unit, CardTokens.OUTLINE_HUB)
@@ -680,6 +727,88 @@ class HubCard extends Control:
 		_focus.position = Vector2(-4.0, -4.0) * s
 		_focus.size = size + Vector2(8.0, 8.0) * s
 		CardTokens.panel(_focus, CardTokens.hub_focus(s, CardTokens.HUB_RADIUS))
+
+	## How far the level piece reaches below the card (the hub row keeps that much room under it).
+	func level_hang() -> float:
+		return maxf(0.0, level_box.position.y + level_box.size.y - size.y) if level_shown() else 0.0
+
+	## Canvas px of the level text: the style's size at this card's scale, never under 12 window px.
+	func _level_px(size_1080: int, unit: float) -> int:
+		return maxi(int(round(size_1080 * unit)), int(ceil(CardTokens.HUB_LEVEL_SCREEN_MIN / maxf(screen_k, 0.01))))
+
+	## Places the level piece of the current style (and, for the plate split, moves the squad text left).
+	func _layout_level(w: float, h: float, unit: float) -> void:
+		if level_box == null:
+			return
+		var style: int = CardTokens.hub_level_style
+		var show := not locked and level > 0
+		level_box.visible = show
+		if _level_rule != null:
+			_level_rule.visible = show
+		if not show:
+			return
+		var text := level_text()
+		level_label.text = text
+		var font: Font = CardTokens.display_font()
+		if style == 1:
+			# the bottom plate split: "SQUAD 1  ·  Lv 10", both ink on the parchment, the level box sized to its text
+			var sr := CardTokens.HUB_CARD_SQUAD
+			var face := CardTokens.HUB_LEVEL_PLATE_FACE
+			# one size for both halves: shrink together until "SQUAD 1 · Lv 10" fits the plate face. Floor: 12 window px
+			# on desktop; on a phone the plate is too narrow even for FONT_MIN canvas px (~9 window px): the known
+			# weakness of this style (see the report / tests).
+			var floor_px := mini(CardTokens.FONT_MIN, _level_px(1, 0.0))
+			var px := maxi(int(round(CardTokens.CARVED_FONT_CARD_PLATE * unit)), floor_px)
+			while px > floor_px and font.get_string_size(_squad_label.text + " · " + text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x > (face.y - face.x) * w:
+				px -= 1
+			var text_w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x + 2.0
+			var right := face.y * w
+			var y := sr.position.y * h
+			var ph := sr.size.y * h
+			level_box.position = Vector2(right - text_w, y)
+			level_box.size = Vector2(text_w, ph)
+			level_label.position = Vector2.ZERO
+			level_label.size = level_box.size
+			CardTokens.hub_text(level_label, 1, CardTokens.HUB_INK, 1.0)
+			CardTokens.set_font_px(level_label, px)
+			var dot := px * CardTokens.HUB_LEVEL_PLATE_GAP
+			_level_rule.position = Vector2(level_box.position.x - dot, y)
+			_level_rule.size = Vector2(dot, ph)
+			CardTokens.hub_text(_level_rule, 1, CardTokens.HUB_INK, 1.0)
+			CardTokens.set_font_px(_level_rule, px)
+			var left := face.x * w
+			_squad_label.position = Vector2(left, y)
+			_squad_label.size = Vector2(maxf(_level_rule.position.x - left, 1.0), ph)
+			CardTokens.hub_text(_squad_label, 1, CardTokens.HUB_INK, 1.0)
+			CardTokens.set_font_px(_squad_label, px)
+		elif style == 2:
+			# a dark carved tab hanging from the bottom rail, centred under the plate: cream "Lv 10" with an outline
+			var px := _level_px(CardTokens.CARVED_FONT_LEVEL_TAB, unit)
+			var tab_h := maxf(CardTokens.HUB_LEVEL_TAB_H * h, px * 1.45)
+			var text_w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+			var tab_w := text_w + tab_h * CardTokens.HUB_LEVEL_TAB_PAD * 2.0
+			var hang := tab_h * (1.0 - CardTokens.HUB_LEVEL_TAB_RISE)  # the hub row makes room for it (level_hang)
+			level_box.size = Vector2(tab_w, tab_h)
+			level_box.position = Vector2((w - tab_w) * 0.5, h + hang - tab_h)
+			_level_art.position = Vector2.ZERO
+			_level_art.size = level_box.size
+			level_label.position = Vector2.ZERO
+			level_label.size = level_box.size
+			CardTokens.hub_text(level_label, 1, CardTokens.HUB_CREAM, s, CardTokens.OUTLINE_HUB)  # outline at the hub scale
+			CardTokens.set_font_px(level_label, px)
+		elif style == 3:
+			# a small carved medallion seal on the plate's right end, ink number on its parchment face
+			var px := _level_px(CardTokens.CARVED_FONT_LEVEL_MEDAL, unit)
+			var widest := font.get_string_size("88", HORIZONTAL_ALIGNMENT_LEFT, -1, px).x
+			var d := maxf(CardTokens.HUB_LEVEL_MEDAL * w, maxf(widest, px) / CardTokens.HUB_LEVEL_MEDAL_TEXT)
+			level_box.size = Vector2(d, d)
+			level_box.position = Vector2(CardTokens.HUB_LEVEL_MEDAL_AT.x * w, CardTokens.HUB_LEVEL_MEDAL_AT.y * h) - level_box.size * 0.5
+			_level_art.position = Vector2.ZERO
+			_level_art.size = level_box.size
+			level_label.position = Vector2.ZERO
+			level_label.size = level_box.size
+			CardTokens.hub_text(level_label, 1, CardTokens.HUB_INK, 1.0)
+			CardTokens.set_font_px(level_label, px)
 
 	func set_selected(_on: bool) -> void:
 		pass
@@ -743,8 +872,9 @@ class HubCard extends Control:
 			_clip_mat = ShaderMaterial.new()
 			_clip_mat.shader = TILT_CLIP_SHADER
 		var mat: ShaderMaterial = _tilt_mat if on else null
-		for node in [_glow, _mask, _name, _race_badge, _lock, _squad_label, squad_button, _focus]:
-			node.material = mat
+		for node in [_glow, _mask, _name, _race_badge, _lock, _squad_label, squad_button, _focus, level_box, _level_rule]:
+			if node != null:
+				node.material = mat
 		# While tilted the mask draws its own flat window (warped) and the content clips itself in the shader.
 		_mask.clip_children = CanvasItem.CLIP_CHILDREN_DISABLED if on else CanvasItem.CLIP_CHILDREN_ONLY
 		var clip: ShaderMaterial = _clip_mat if on else null
@@ -1374,10 +1504,14 @@ func _layout() -> void:
 		var card: HubCard = _cards.get(id)
 		if card == null:
 			continue
+		card.screen_k = _screen_k()
 		card.layout(card_w, s, _phone)
 		card.base_position = Vector2(start_x + float(index) * (card_w + gap), pad)
 		card.position = card.base_position
 		index += 1
+	_row_base_h = card_h + pad * 2.0
+	_row_pad = pad
+	_fit_row_hang()
 	# hint: a parchment ribbon centred under the card row
 	var hint_w := minf(CardTokens.CARVED_HINT_W * s, size.x - row_left - side)
 	var hint_h := CardTokens.CARVED_HINT_H * s
@@ -1451,6 +1585,22 @@ func _layout() -> void:
 	_layout_editor()
 	_layout_toast()
 	_layout_service()
+
+
+var _row_base_h := 0.0
+var _row_pad := 0.0
+
+
+## A level tab hanging under the cards (level style 2) needs more room in the clipped card row than its pad.
+func _fit_row_hang() -> void:
+	if _row_scroll == null or _row_base_h <= 0.0:
+		return
+	var hang := 0.0
+	for card in _cards.values():
+		hang = maxf(hang, card.level_hang())
+	var extra := maxf(0.0, hang - _row_pad + CardTokens.HUB_CARD_FOCUS_LIFT * _s)
+	_row_scroll.size.y = _row_base_h + extra
+	_row.custom_minimum_size.y = _row_base_h + extra
 
 
 ## The quest tracker: bottom left, under the last side-menu entry, left of the squad medallions and above the synergy
@@ -1547,9 +1697,11 @@ func _refresh_all() -> void:
 		if card == null:
 			continue
 		var at := squad.find(id)
-		card.apply(CardDeck.look_of(_deck, id), at >= 0, at + 1, locked_classes.has(id), CardDeck.race_of(_deck, id))
+		card.screen_k = _screen_k()
+		card.apply(CardDeck.look_of(_deck, id), at >= 0, at + 1, locked_classes.has(id), CardDeck.race_of(_deck, id), CardProgress.level_of(_deck, id))
 		if at >= 0 and squad.size() <= 1:
 			card.squad_button.tooltip_text = CardTokens.t("squad_need_one")
+	_fit_row_hang()
 	_refresh_squad_bar()
 	var no_fight := squad.is_empty() or not fight_ready()
 	_fight.disabled = no_fight
