@@ -7,18 +7,16 @@
   "clips": [
     "attack_1",
     "attack_2",
-    "attack_3",
     "death",
     "hit",
     "idle",
     "run"
   ],
   "move_clips": {
-    "attack_1": "the quick chop",
-    "attack_2": "the leaping slam (telegraphed)",
-    "attack_3": "the whirl"
+    "attack_1": "the two-cut combo",
+    "attack_2": "the leaping nova slam (in place)"
   },
-  "run_clip_speed": 1.275,
+  "run_clip_speed": 1.076,
   "hips_scale": 1.0,
   "sockets": {
     "Monster_MummyBoss_Khopesh": "mixamorig_RightHand",

@@ -10,7 +10,8 @@ const FOLDER := "res://data/races/"
 const RULES_FILE := "rules.json"
 const EFFECTS_FILE := "res://data/combat/effects.json"
 const CLASS_FOLDER := "res://data/classes/"
-const STAT_NAMES := preload("res://logic/combat_data_loader.gd").STAT_NAMES
+const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
+const STAT_NAMES := CombatDataLoader.STAT_NAMES
 ## Fields a skill_mod may carry (3.6 #3); Blood Rite's `min_hp` is the "cannot cast below" gate.
 const SKILL_MOD_FIELDS: Array[String] = ["type", "damage_mul", "cooldown_mul", "radius_mul", "crit_add", "hp_cost", "min_hp"]
 const HEAL_SOURCES: Array[String] = ["max_hp", "damage", "source_max_hp"]
@@ -346,7 +347,7 @@ func _check_event(where: String, event) -> void:
 
 
 func _check_stat(where: String, stat) -> void:
-	if not STAT_NAMES.has(str(stat)) and not rules.get("vocabulary", {}).get("pseudo_stats", []).has(str(stat)):
+	if not CombatDataLoader.is_stat_name(stat) and not rules.get("vocabulary", {}).get("pseudo_stats", []).has(str(stat)):
 		errors.append("%s: unknown stat '%s'" % [where, stat])
 
 

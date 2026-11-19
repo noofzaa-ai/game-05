@@ -77,6 +77,27 @@ func run() -> void:
 			await create_timer(1.0).timeout
 			if hub._panels.has("map") and hub._panels["map"].visible:
 				hub._panels["map"]._go.pressed.emit()
+		"go_pyramid":  # FIGHT -> map -> select the Sand Pyramid -> Go (the ONLINE room path; needs the card level 15 + goblin boss fixture)
+			hub._fight.pressed.emit()
+			await create_timer(1.0).timeout
+			if hub._panels.has("map") and hub._panels["map"].visible:
+				hub._panels["map"].select_zone("pyramid")
+				await create_timer(0.5).timeout
+				print("PYRAMID state go_visible=%s" % hub._panels["map"]._go.visible)
+				hub._panels["map"]._go.pressed.emit()
+		"go_goblin":  # FIGHT -> map -> select the Goblin Base -> Go (the default zone, online room path)
+			hub._fight.pressed.emit()
+			await create_timer(1.0).timeout
+			if hub._panels.has("map") and hub._panels["map"].visible:
+				hub._panels["map"].select_zone("goblin_base")
+				await create_timer(0.5).timeout
+				hub._panels["map"]._go.pressed.emit()
+		"forge_pyramid":  # dev: a crafted request for the pyramid, skipping the client's own zone check (the server must refuse a locked profile)
+			gs._start_solo.call_deferred("", "mummy_waves")
+			for i in 20:
+				await create_timer(1.0).timeout
+				if gs.remote_session != null and gs.remote_session._terminal: break
+			print("FORGE online_error=[%s] remote=%s err=%s" % [gs.online_error, gs.remote_session != null, str(gs.remote_session.error) if gs.remote_session != null else ""])
 		"quest": hub._quest_tracker.pressed.emit()  # the hub quest tracker: the map on the quest's zone
 	await create_timer(wait_s).timeout
 	print("SCENARIO_READY fixture=%s open=%s tutorial=%s" % [fixture, open, gs.profile.tutorial])

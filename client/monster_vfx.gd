@@ -20,10 +20,27 @@ var _packed: Dictionary = {}  ## vfx -> PackedScene (or null when missing)
 var _pool: Dictionary = {}  ## vfx -> idle instances
 var _slim_clip: Dictionary = {}  ## vfx -> slimmed Animation
 var _live: Array = []  ## {node, vfx, age, length, follow}
+## The violent light-and-scatter looks of every race ultimate, class skill and big monster move (client/vfx/violent_vfx.gd,
+## Boss 2026-11-19). It reads the same sim events as this node; made only when "violence".level is not "current".
+var violent: Node
 
 
 func _init() -> void:
 	spec = load_spec()
+
+
+func _ready() -> void:
+	if preload("res://client/vfx/violence.gd").level() == "current":
+		return
+	violent = preload("res://client/vfx/violent_vfx.gd").new()
+	violent.session = session
+	var stage := get_parent()
+	if stage != null:
+		violent.map_id = str(stage.get("_map_id")) if stage.get("_map_id") != null else ""
+		for sibling in stage.get_children():
+			if sibling.get_script() == preload("res://client/effects.gd"):
+				violent.effects = sibling
+	add_child(violent)
 
 
 static func load_spec() -> Dictionary:
@@ -75,6 +92,8 @@ func prewarm(vfx_ids: Array, hidden: Vector3) -> void:
 func handle_events(events: Array) -> void:
 	if not GraphicsOptions.enabled("combat_vfx"):
 		return
+	if violent != null:
+		violent.handle_events(events)
 	for event in events:
 		match str(event.get("type", "")):
 			"area_placed":

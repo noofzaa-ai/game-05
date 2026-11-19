@@ -23,10 +23,60 @@ const RULE_NUMBERS: Array[String] = [
 	"jump_energy", "guard_energy_per_power", "poise_damage_per_power", "poise_regen_delay_ticks",
 	"enemy_max_attackers", "attack_assist_range", "run_attack_min_ticks", "run_attack_grace_ticks",
 ]
-const STAT_NAMES: Array[String] = [
+const BASE_STAT_NAMES: Array[String] = [
 	"HP", "ATK", "DEF", "ATKSPD", "MOVESPD", "CRIRATE", "CRIDMG", "EFFECT_ACC", "EFFECT_RES",
 	"HPREGEN", "STAREGEN", "ULTREGEN", "STAMINA",
 ]
+## Per-group status accuracy/resistance (Boss 2026-11-19). Valid stat ids everywhere; default 0, so rules.default_stats need not list them.
+const GROUP_STAT_NAMES: Array[String] = ["CTRL_ACC", "CTRL_RES", "DOT_ACC", "DOT_RES", "DEBUFF_ACC", "DEBUFF_RES"]
+const STAT_NAMES: Array[String] = BASE_STAT_NAMES + GROUP_STAT_NAMES
+const GROUP_PREFIX := {"control": "CTRL", "dot": "DOT", "debuff": "DEBUFF"}
+static var _shipped_derived: Dictionary = {}  ## derived per-effect stat ids of the shipped effects.json (cache)
+
+
+## "control" (control != ""), "dot" (dot_power > 0) or "debuff" for a debuff definition; "" for a buff.
+static func group_of_definition(definition: Dictionary) -> String:
+	if str(definition.get("kind", "debuff")) == "buff":
+		return ""
+	if str(definition.get("control", "")) != "":
+		return "control"
+	if float(definition.get("dot_power", 0.0)) > 0.0:
+		return "dot"
+	return "debuff"
+
+
+## Boss 2026-11-19: the per-effect accuracy/resistance stat id, derived by name: group prefix + effect id upper-cased + _ACC / _RES
+## (CTRL_STUN_RES, DOT_BURN_ACC, DEBUFF_SLOW_RES ...). `suffix` is "ACC" or "RES".
+static func effect_stat_id(group: String, effect_id: String, suffix: String) -> String:
+	return "%s_%s_%s" % [GROUP_PREFIX[group], effect_id.to_upper(), suffix]
+
+
+## Every derived stat id of the debuffs in `effects` ({id -> definition or raw dict}) as a set {stat id: true}.
+static func derived_stat_set(effects: Dictionary) -> Dictionary:
+	var result := {}
+	for id in effects:
+		if typeof(effects[id]) != TYPE_DICTIONARY:
+			continue
+		var group := group_of_definition(effects[id])
+		if group == "":
+			continue
+		for suffix in ["ACC", "RES"]:
+			result[effect_stat_id(group, str(id), suffix)] = true
+	return result
+
+
+## True for a real stat id: the base/group stats, or a derived per-effect id of an effect in `effects` (default: the shipped effects.json).
+static func is_stat_name(stat, effects: Dictionary = {}) -> bool:
+	var name := str(stat)
+	if STAT_NAMES.has(name):
+		return true
+	if not effects.is_empty():
+		return derived_stat_set(effects).has(name)
+	if _shipped_derived.is_empty() and FileAccess.file_exists(EFFECTS_PATH):
+		var json := JSON.new()
+		if json.parse(FileAccess.get_file_as_string(EFFECTS_PATH)) == OK and typeof(json.data) == TYPE_DICTIONARY and typeof(json.data.get("effects")) == TYPE_DICTIONARY:
+			_shipped_derived = derived_stat_set(json.data["effects"])
+	return _shipped_derived.has(name)
 
 ## The moves every weapon has (the template names in weapons.json) and which style entry each fills.
 const TEMPLATE_KEYS: Array[String] = ["light_1", "light_2", "light_3", "heavy", "air", "air_heavy", "run_light", "run_heavy", "special", "ultimate"]
@@ -109,7 +159,7 @@ static func _parse_rules(root: Dictionary, data: CombatData) -> void:
 		data.errors.append("rules.dodge_invulnerable_ticks cannot be longer than dodge_ticks")
 	var defaults: Dictionary = rules.get("default_stats", {}) if typeof(rules.get("default_stats")) == TYPE_DICTIONARY else {}
 	var clean_defaults := {}
-	for stat in STAT_NAMES:
+	for stat in BASE_STAT_NAMES:
 		if not defaults.has(stat):
 			data.errors.append("rules.default_stats.%s is missing" % stat)
 		clean_defaults[stat] = float(defaults.get(stat, 0.0))
@@ -182,7 +232,7 @@ static func _parse_effects(text: String, data: CombatData) -> void:
 		var stats := {}
 		var raw_stats: Dictionary = raw.get("stats", {}) if typeof(raw.get("stats")) == TYPE_DICTIONARY else {}
 		for stat in raw_stats:
-			if not STAT_NAMES.has(str(stat)) and not EFFECT_STATS.has(str(stat)):
+			if not is_stat_name(stat, effects) and not EFFECT_STATS.has(str(stat)):
 				data.errors.append("%s.stats.%s is not a known stat" % [label, stat])
 			elif typeof(raw_stats[stat]) != TYPE_DICTIONARY:
 				data.errors.append("%s.stats.%s must be {add, mul}" % [label, stat])
@@ -718,7 +768,7 @@ static func _parse_enemies(root: Dictionary, data: CombatData) -> void:
 			data.errors.append("%s.style '%s' is not a known style" % [label, style])
 		var stats: Dictionary = raw.get("stats", {}) if typeof(raw.get("stats")) == TYPE_DICTIONARY else {}
 		for stat in stats:
-			if not STAT_NAMES.has(str(stat)):
+			if not is_stat_name(stat, data.effects):
 				data.errors.append("%s.stats.%s is not a known stat" % [label, stat])
 		var ai: Dictionary = raw.get("ai", {}) if typeof(raw.get("ai")) == TYPE_DICTIONARY else {}
 		var cooldown_min := int(ai.get("cooldown_min", 60))

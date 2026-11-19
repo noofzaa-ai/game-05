@@ -19,6 +19,7 @@ Both need a window. The measure script writes `user://graphics.cfg`: delete it a
 | Effect nodes per hit | pooled; prewarmed at load (Effects.prewarm, presenter.warm_build, telegraph quad) |
 | Class skill VFX (art/vfx/class_skills, daiyooo-vfx GLB) | <= 300 draw calls per effect instance; pooled + prewarmed (client/skills/class_skill_vfx.gd). MET 2026-11-13: worst is arcane_orb ~97 per copy, crater_leap ~77 (was 2264) |
 | Status VFX (art/vfx/status, daiyooo-vfx GLB) | <= 40 draws per instance, at most 3 per fighter (head + feet + immune ring); slimmed like class skill VFX, prewarmed once (client/status_vfx.gd). No status may tint the body. MET 2026-11-14: 1-16 draws per look (sleep 16, burn 11), worst fighter ~27 |
+| Violent skill looks (client/vfx/violence.gd + violent_vfx.gd, data/combat/vfx.json "violence" + violent/*; shipped at L3 2026-11-19 on every race ultimate, class skill and mummy boss move) | per blow <= 13 drawn layers full / <= 9 phone, <= 32 particles per burst, no ground decals, flash <= 0.12 s and <= 0.16 alpha, at most 1 flash per 0.9 s, phones at most 3 violent blows a second; no new art files; pooled; prewarmed only for the active level. Boss wave: full <= +15% frame p50, phone variant <= +1-2 ms web. MET 2026-11-19 (below) |
 | Scene entry | no single frame over 1 s after the loading label (currently OPEN, see below) |
 
 ## Measured 2026-11-10 (native M1, GL Compatibility, 1920x912, MSAA 4x, glow, outline, scale 1.0)
@@ -228,3 +229,44 @@ when it renders in software or an earlier battle on it ran below 22 fps median o
 slow = no screen pass and no hero ink hulls for that whole battle. The battle's own median is only written for the next
 one. Graphics "On" forgets the verdict. Not tested on a real phone (OPEN).
 
+
+## Violent skill looks guide, measured 2026-11-19 (tech-artist)
+
+`tools/shots/vfx_violence_shots.gd -- --perf --level=<current|L1|L2|L3> [--device=phone --size=844x390]` (windowed, native
+Windows RTX 3070 Ti, gl_compatibility, vsync off, cap off, goblin island, fight frozen). Stress: every 1.2 s for 9.6 s, 3
+High Wizard stars (0.23 s apart) + 1 Arcane Orb burst + 1 Runebreaker slam, each with what the game shows today plus the
+violent layers. Two reps; mean shown. CPU frame p50 / p95 ms, GPU p50 ms, draw calls avg, live effect nodes max.
+
+| level | full 1280x720 | phone variant 844x390 |
+|---|---|---|
+| current | 5.09 / 7.84, gpu 1.41, 669 dc, 22 nodes | 4.58 / 6.75, gpu 1.16, 614 dc, 30 |
+| L1 | 5.49 / 8.28 (+8%), gpu 1.50, 701 dc, 55 | 4.84 / 7.31 (+0.26 ms), gpu 1.19, 643 dc, 55 |
+| L2 | 5.80 / 8.51 (+14%), gpu 1.56, 725 dc, 80 | 5.00 / 7.48 (+0.42 ms), gpu 1.21, 661 dc, 69 |
+| L3 | 6.03 / 8.76 (+18%), gpu 1.64, 743 dc, 106 | 5.08 / 7.58 (+0.50 ms), gpu 1.22, 668 dc, 82 |
+
+Each drawn layer is one draw call (a burst of up to 32 particles is one mesh); the cost is mostly CPU draw submission
+(~+0.012 ms per extra live node here). The web/phone estimate uses the ~6-8x CPU factor seen between this PC and the
+Boss's iPhone (perf_ab logs): phone L2 +0.42 ms native -> ~+2.5-3.4 ms on the iPhone in this 5-blows-per-1.2 s stress,
+~+0.8-1.2 ms for a normal fight (one guide blow at a time). Fill: smoke puffs are the only large alpha quads
+(phone sizes x0.75); measured GPU change on the phone variant <= 0.06 ms at 844x390.
+
+### Rollout at L3, boss wave, measured 2026-11-19 (tech-artist)
+
+The Boss chose the L3 light (no ground rings / scorch, no lighting dim, no hit-stop), rolled out to every race ultimate,
+class skill and the mummy bosses' big moves. Same harness, `--map=mummy` (pyramid hall, the High Wizard wave): every 1.0 s
+for 10 s, 3 stars + curse + Pharaoh nova + Runebreaker + repulse nova + crater leap + heartseeker (9 blows a second, 81 in
+all), each with today's bundle / layers; "current" is the same blows without the new look. Two reps, mean.
+
+| | frame p50 / p95 ms | GPU p50 ms | draw calls avg | live effect nodes max |
+|---|---|---|---|---|
+| full 1280x720, current | 6.00 / 7.93 | 1.84 | 744 | 16 |
+| full 1280x720, L3 | 6.75 / 8.94 (+12.4% / +12.7%) | 2.15 | 846 | 143 |
+| phone 844x390, current | 6.33 / 9.19 | 1.44 | 701 | 16 |
+| phone 844x390, L3, uncapped | (before the cap: +0.75 ms p50, 785 dc, 122 nodes) | | | |
+| phone 844x390, L3, 3 blows/s cap | 6.66 / 9.27 (+0.33 ms) | 1.46 | 739 | 59 |
+
+Full stays inside the +15% budget even at 9 blows a second. The phone variant is capped at 3 violent blows a second
+(client/vfx/violent_vfx.gd PHONE_BLOWS_PER_SECOND: in a boss wave the rest keep only their own bundle), so the phone adds
+~+0.33 ms native -> ~+2-2.6 ms on the Boss's iPhone in this worst case, ~+0.8-1.2 ms for one blow at a time. A normal
+fight is far below this stress. Web pack: no new art files (procedural layers); vfx.json grew ~70 KB of text in the core
+pack, the battle pack is unchanged.

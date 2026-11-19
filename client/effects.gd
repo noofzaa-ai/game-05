@@ -14,7 +14,12 @@ const TRAIL_SHADER := preload("res://client/vfx/vfx_trail.gdshader")
 const SPRITE_SHADER := preload("res://client/vfx/vfx_sprite.gdshader")
 const GROUND_SHADER := preload("res://client/vfx/vfx_ground.gdshader")
 const BURST_SHADER := preload("res://client/vfx/vfx_burst.gdshader")
+## Additive twins (same uniforms) for layers with "glow": true: the white-hot cores, rays and embers of the violent skill
+## looks (Boss 2026-11-19). They are never inked: the ink look stays on everything else.
+const SPRITE_ADD_SHADER := preload("res://client/vfx/vfx_sprite_add.gdshader")
+const BURST_ADD_SHADER := preload("res://client/vfx/vfx_burst_add.gdshader")
 const InkVfx := preload("res://client/vfx/ink_vfx.gd")
+const Violence := preload("res://client/vfx/violence.gd")
 const CHEST_HEIGHT := 1.1
 const GROUND_LIFT := 0.04  ## ground marks sit this far above the feet so they do not flicker with the floor
 const POOL_LIMIT := 48  ## spare nodes kept per layer type
@@ -88,9 +93,23 @@ func prewarm(hidden: Vector3) -> void:
 		return
 	var ctx := context(hidden, hidden, Vector2.RIGHT, Color.WHITE, {"follow": null})
 	for key in library.actions:
+		if not prewarm_wanted(str(key)):
+			continue
 		for layer in library.layers(key):
 			_play_layer(layer, ctx, true)
 		prewarmed_keys.append(key)
+
+
+## Prewarm draws every entry except the violent skill looks of the levels / device variant this battle cannot play
+## (client/vfx/violence.gd: one level is active; "current" plays none of them).
+static func prewarm_wanted(key: String) -> bool:
+	if not key.begins_with(VfxLibrary.VIOLENT_PREFIX):
+		return true
+	var lvl := Violence.level()
+	if lvl == "current":
+		return false
+	var tail := key.get_slice("/", 2)
+	return tail == lvl + ("_phone" if Violence.phone() else "")
 
 
 ## How many effect nodes are playing now (tests, the performance overlay).
@@ -123,6 +142,12 @@ func _process(delta: float) -> void:
 func _play_layer(layer: Dictionary, ctx: Dictionary, instant: bool) -> void:
 	var delay := 0.0 if instant else float(layer.get("delay", 0.0))
 	var strength := float(ctx.get("scale", 1.0)) if bool(layer.get("scale", false)) else 1.0
+	# Violent looks respect reduced motion: no shake, no zoom punch, a third of the screen flash.
+	var calm := bool(ctx.get("violent", false)) and not instant and Violence.reduced_motion()
+	if calm and str(layer["type"]) in ["shake", "punch"]:
+		return
+	if str(layer["type"]) == "flash" and not instant and not bool(ctx.get("flash", true)):
+		return  # (violent blows close together: one soft flash, never a flicker, client/vfx/violent_vfx.gd FLASH_GAP)
 	match str(layer["type"]):
 		"trail":
 			_trail(layer, ctx, delay)
@@ -144,6 +169,8 @@ func _play_layer(layer: Dictionary, ctx: Dictionary, instant: bool) -> void:
 					rig.punch(float(layer.get("degrees", 3.0)) * minf(strength, 1.5)))
 		"flash":
 			var color: Color = library.color_of(layer.get("color", [1, 1, 1, 0.4]), ctx["color"])
+			if calm:
+				color.a *= 0.33
 			_later(delay, func() -> void: screen_flash.emit(color, float(layer.get("seconds", 0.2))))
 
 
@@ -162,7 +189,7 @@ func _trail(layer: Dictionary, ctx: Dictionary, delay: float) -> void:
 
 
 func _sprite(layer: Dictionary, ctx: Dictionary, delay: float, strength: float) -> void:
-	var node := _take("sprite", SPRITE_SHADER)
+	var node := _take("sprite_add", SPRITE_ADD_SHADER) if bool(layer.get("glow", false)) else _take("sprite", SPRITE_SHADER)
 	var mode := str(layer["mode"])
 	var link := bool(layer.get("link", false))  # stretched from the action's point to ctx "end" (a lightning arc)
 	var tall := not link and (layer.has("height") or mode in ["beam", "ghost"])
@@ -202,7 +229,7 @@ func _ground(layer: Dictionary, ctx: Dictionary, delay: float, strength: float) 
 
 
 func _burst(layer: Dictionary, ctx: Dictionary, delay: float, strength: float) -> void:
-	var node := _take("burst", BURST_SHADER)
+	var node := _take("burst_add", BURST_ADD_SHADER) if bool(layer.get("glow", false)) else _take("burst", BURST_SHADER)
 	node.mesh = _burst_mesh
 	node.position = _point(layer, ctx, "at")
 	node.rotation = Vector3.ZERO
@@ -232,6 +259,10 @@ func _burst(layer: Dictionary, ctx: Dictionary, delay: float, strength: float) -
 	mat.set_shader_parameter("streak", float(layer.get("streak", 0.05)))
 	mat.set_shader_parameter("seconds", float(layer["seconds"]))
 	mat.set_shader_parameter("pull", CAMERA_PULL if _at_body(layer, "at") else 0.0)
+	# (debris lands on the fighters' floor; ring = a skirt leaving sideways along the ground)
+	mat.set_shader_parameter("floor_y", float(ctx["feet"].y) - node.position.y)
+	mat.set_shader_parameter("ring", 1.0 if dir_name == "ring" else 0.0)
+	mat.set_shader_parameter("lift", lift)
 	_add(node, layer, delay, {})
 
 
@@ -296,12 +327,12 @@ func _take(type: String, shader: Shader) -> MeshInstance3D:
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var mat := ShaderMaterial.new()
 	mat.shader = shader
-	mat.set_shader_parameter("drawn", _drawn)
+	mat.set_shader_parameter("drawn", 0.0 if type.ends_with("_add") else _drawn)  # (glowing light is never inked)
 	node.material_override = mat
 	node.set_meta("vfx_type", type)
-	if type == "burst":
+	if type.begins_with("burst"):
 		node.custom_aabb = AABB(Vector3(-12.0, -12.0, -12.0), Vector3(24.0, 24.0, 24.0))  # (the shader moves the sparks)
-	elif type == "sprite":
+	elif type.begins_with("sprite"):
 		node.extra_cull_margin = 4.0  # (billboards turn after culling)
 	add_child(node)
 	return node
@@ -326,7 +357,14 @@ func _later(delay: float, action: Callable) -> void:
 
 
 func _common_uniforms(mat: ShaderMaterial, layer: Dictionary, ctx: Dictionary, default_ink: float) -> void:
-	mat.set_shader_parameter("color", library.color_of(layer.get("color", "white"), ctx["color"]))
+	# "inked": false keeps a layer out of the ink-wash pass (soft smoke: the ink rim drew it as scribbled loops);
+	# additive (glow) nodes are never inked. Set on every play: pooled nodes are shared by layers.
+	if mat.shader != SPRITE_ADD_SHADER and mat.shader != BURST_ADD_SHADER:
+		mat.set_shader_parameter("drawn", _drawn if bool(layer.get("inked", true)) else 0.0)
+	var color_name = layer.get("color", "white")
+	var overrides: Dictionary = ctx.get("colors", {})  # (per-map debris / dust colours, violent looks)
+	var color: Color = overrides[color_name] if typeof(color_name) == TYPE_STRING and overrides.has(color_name) else library.color_of(color_name, ctx["color"])
+	mat.set_shader_parameter("color", color)
 	mat.set_shader_parameter("ink_color", library.palette["ink"])
 	mat.set_shader_parameter("ink", float(layer.get("ink", default_ink)))
 	mat.set_shader_parameter("opacity", float(layer.get("opacity", 1.0)))

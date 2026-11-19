@@ -414,7 +414,7 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	# Poise is armor against flinching: each hit wears it down and the target keeps doing what it
 	# was doing (a brute keeps swinging) until it is gone, then it staggers and the armor comes back.
 	var armored := false
-	var immune: bool = not killed and TreeMechanics.TreeEffects.control_immune(target)  # CONTROL_IMMUNE: no stagger, knockback or launch
+	var immune: bool = not killed and (TreeMechanics.TreeEffects.control_immune(target) or Effects.control_resist_immune(target))  # CONTROL_IMMUNE: no stagger, knockback or launch
 	# A race ultimate's wind-up is not staggered by hits (unbreakable poise, GDD races 3.10.3); stun/death still end it.
 	if immune:
 		armored = true

@@ -12,6 +12,8 @@
 		"dash": "#33ccff",
 		"dust": "#c7b799",
 		"rock": "#6b5440",
+		"grit": "#c7b799",
+		"smoke": "#d8c9aa",
 		"heal": "#5cf0c8",
 		"stun": "#ffe14a",
 		"shock": "#7ae8ff",
@@ -35,6 +37,15 @@
 		"chain_lightning": "lightning", "lightning_strike": "lightning", "blink_bolt": "lightning", "tesla_totem": "lightning",
 		"ground_slam": "earth", "riposte": "gold", "piercing_shot": "gold", "war_cry": "stun"
 	},
+
+
+
+
+
+
+
+
+	"violence": {"_comment": "Violent light-and-scatter looks (client/vfx/violence.gd + client/vfx/violent_vfx.gd; Boss 2026-11-19: L3 light approved, no ground rings/scorch, no dim, no hit-stop, rolled out to every race ultimate, class skill and the mummy bosses' big moves). level = the ONE token: current (off) | L1 | L2 | L3. presets = actions violent/<preset>/<level> and the lighter _phone twin (phones, slow devices). skills: key -> preset, color (= 'weapon' in its layers), scale (size and shake), on (release | impact for class skills; active | area | shot | wave for monsters), at (caster | target), ahead (metres along the facing). map_colors: debris / dust colours by map id prefix (the dark mummy floor needs light sand). summoners: enemy types whose arrival plays monster/summon. glow: true on a layer = additive light (never inked); inked: false = no ink pass (soft smoke).", "level": "L3", "presets": ["ult", "ult_aura", "skill", "shot", "aura", "boss"], "skills": {"race_ult/human_sword_shield": {"preset": "ult_aura", "color": "#ffd34a", "scale": 1.0}, "race_ult/human_greatsword": {"preset": "ult", "color": "#ff9a2a", "scale": 1.0}, "race_ult/human_longbow": {"preset": "ult", "color": "#fff07a", "scale": 1.0}, "race_ult/human_magic": {"preset": "ult_aura", "color": "#ffc8a0", "scale": 1.0}, "race_ult/human_default": {"preset": "ult_aura", "color": "#ffc23a", "scale": 0.85}, "race_ult/elf_sword_shield": {"preset": "ult_aura", "color": "#7dffb0", "scale": 1.0}, "race_ult/elf_greatsword": {"preset": "ult", "color": "#3fd96a", "scale": 1.0}, "race_ult/elf_longbow": {"preset": "ult", "color": "#b6ff6a", "scale": 1.0}, "race_ult/elf_magic": {"preset": "ult_aura", "color": "#6affd8", "scale": 1.0}, "race_ult/elf_default": {"preset": "ult_aura", "color": "#4fe07a", "scale": 0.85}, "race_ult/runeborn_sword_shield": {"preset": "ult_aura", "color": "#7ab8ff", "scale": 1.0}, "race_ult/runeborn_greatsword": {"preset": "ult", "color": "#3fe6ff", "scale": 1.0}, "race_ult/runeborn_longbow": {"preset": "ult", "color": "#b48cff", "scale": 1.0}, "race_ult/runeborn_magic": {"preset": "ult", "color": "#9a5cff", "scale": 1.0}, "race_ult/runeborn_default": {"preset": "ult_aura", "color": "#5ad0ff", "scale": 0.85}, "race_ult/viking_sword_shield": {"preset": "ult", "color": "#ff5a3a", "scale": 1.0}, "race_ult/viking_greatsword": {"preset": "ult", "color": "#ff2a2a", "scale": 1.0}, "race_ult/viking_longbow": {"preset": "ult", "color": "#ff8a4a", "scale": 1.0}, "race_ult/viking_magic": {"preset": "ult", "color": "#d81e5c", "scale": 1.0}, "race_ult/viking_default": {"preset": "ult", "color": "#e0302a", "scale": 0.85}, "class_skill/shield_rush": {"preset": "skill", "color": "#ffd36a", "on": "release", "at": "caster", "ahead": 1.6, "scale": 0.8}, "class_skill/iron_guard": {"preset": "aura", "color": "#9fd2ff", "on": "release", "at": "caster", "ahead": 0.0, "scale": 0.9}, "class_skill/intercept": {"preset": "skill", "color": "#7ab8ff", "on": "release", "at": "target", "ahead": 0.0, "scale": 0.8}, "class_skill/breaker_slam": {"preset": "skill", "color": "#ffb347", "on": "release", "at": "caster", "ahead": 0.8, "scale": 1.1}, "class_skill/reaping_arc": {"preset": "skill", "color": "#ff6a3a", "on": "release", "at": "caster", "ahead": 1.5, "scale": 0.95}, "class_skill/crater_leap": {"preset": "skill", "color": "#ff8a2a", "on": "release", "at": "caster", "ahead": 0.0, "scale": 1.2}, "class_skill/hook_sweep": {"preset": "skill", "color": "#e0a040", "on": "release", "at": "caster", "ahead": 0.0, "scale": 0.9}, "class_skill/battle_trance": {"preset": "aura", "color": "#ff4a3a", "on": "release", "at": "caster", "ahead": 0.0, "scale": 1.0}, "class_skill/heartseeker_shot": {"preset": "shot", "color": "#fff1a0", "on": "release", "at": "target", "ahead": 0.0, "scale": 1.0}, "class_skill/pinning_shot": {"preset": "shot", "color": "#c8ff9a", "on": "release", "at": "target", "ahead": 0.0, "scale": 0.9}, "class_skill/rapid_fire": {"preset": "shot", "color": "#ffe08a", "on": "release", "at": "target", "ahead": 0.0, "scale": 0.85}, "class_skill/vault_shot": {"preset": "shot", "color": "#9affd0", "on": "release", "at": "target", "ahead": 0.0, "scale": 0.9}, "class_skill/arcane_orb": {"preset": "skill", "color": "#8a7dff", "on": "impact", "at": "caster", "ahead": 0.0, "scale": 1.0}, "class_skill/repulse_nova": {"preset": "skill", "color": "#b07dff", "on": "release", "at": "caster", "ahead": 0.0, "scale": 1.05}, "class_skill/starfall": {"preset": "skill", "color": "#ffc23a", "on": "impact", "at": "caster", "ahead": 0.0, "scale": 0.9}, "class_skill/warding_veil": {"preset": "aura", "color": "#7affff", "on": "release", "at": "target", "ahead": 0.0, "scale": 0.9}, "monster/hw_star": {"preset": "boss", "color": "#ffc23a", "on": "area", "scale": 0.8}, "monster/hw_curse": {"preset": "boss", "color": "#b04aff", "on": "area", "scale": 1.0}, "monster/mummy_hw_sandstorm": {"preset": "boss", "color": "#ffcf7a", "on": "active", "scale": 1.1}, "monster/hw_bolt": {"preset": "shot", "color": "#ffc23a", "on": "shot", "scale": 1.0}, "monster/summon": {"preset": "aura", "color": "#ffd27a", "on": "wave", "scale": 1.2}, "monster/mummy_boss_nova": {"preset": "boss", "color": "#ffb020", "on": "active", "scale": 1.15}, "monster/pharaoh_sand_crescent": {"preset": "shot", "color": "#ffd27a", "on": "shot", "scale": 1.0}, "monster/mummy_knight_bash": {"preset": "shot", "color": "#ffe0a0", "on": "active", "scale": 1.0, "ahead": 1.2}, "monster/mummy_curse": {"preset": "shot", "color": "#9a5cff", "on": "area", "scale": 0.9}}, "summoners": ["mummy_high_wizard"], "map_colors": {"goblin": {"rock": "#6b5440", "grit": "#c7b799", "smoke": "#d8c9aa"}, "mummy": {"rock": "#d8c29a", "grit": "#f2e6c8", "smoke": "#efe3c6"}}},
 
 	"hit_rules": {
 		"damage_reference": 10,
@@ -777,6 +788,375 @@
 			{"type": "sprite", "mode": "star", "anchor": "chest", "size": [0.5, 2.4], "spikes": 6, "seconds": 0.35, "color": "#bfefff", "ink": 0.05},
 			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.4, 2.6], "seconds": 0.5, "color": "#9fe3ff", "ink": 0.05},
 			{"type": "burst", "style": "mote", "anchor": "feet", "count": 16, "speed": 2.0, "spread": 45, "dir": "up", "gravity": -1.0, "drag": 1.5, "size": 0.14, "seconds": 0.8, "color": "#e8fbff"}
-		]}
+		]},
+
+		"_violent_start": {"layers": []},
+		"violent/ult/L1": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.125, 3.25], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.5, 1.5], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 10, "size": [1.25, 4.5], "seconds": 0.22, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 10, "speed": 6.875, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 6, "dir": "ring", "lift": 12, "spread": 20, "speed": 5.0, "gravity": -0.4, "drag": 2.2, "size": 1.188, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 14, "speed": 11.25, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.081, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/ult/L1_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.125, 3.25], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.5, 1.5], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 6, "speed": 6.875, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 3, "dir": "ring", "lift": 12, "spread": 20, "speed": 5.0, "gravity": -0.4, "drag": 2.2, "size": 0.891, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 8, "speed": 11.25, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.081, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/ult/L2": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.406, 4.062], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.625, 1.875], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [1.562, 5.625], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 20, "speed": 7.686, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 10, "dir": "ring", "lift": 12, "spread": 20, "speed": 6.25, "gravity": -0.4, "drag": 2.2, "size": 1.484, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 7, "dir": "up", "spread": 35, "speed": 2.75, "gravity": -1.2, "drag": 1.6, "size": 1.719, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 24, "speed": 12.578, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 14, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.149, "seconds": 0.3, "scale": true},
+			{"type": "punch", "degrees": 3.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/ult/L2_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.406, 4.062], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.625, 1.875], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [1.562, 5.625], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 12, "speed": 7.686, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 5, "dir": "ring", "lift": 12, "spread": 20, "speed": 6.25, "gravity": -0.4, "drag": 2.2, "size": 1.113, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 2.75, "gravity": -1.2, "drag": 1.6, "size": 1.289, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 12, "speed": 12.578, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 6, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.149, "seconds": 0.3, "scale": true},
+			{"type": "punch", "degrees": 3.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/ult/L3": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.8, 5.2], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.8, 2.4], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [2.0, 7.2], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.75, 2.5], "height": 4.2, "seconds": 0.3, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 32, "speed": 8.696, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 24, "speed": 9.375, "spread": 75, "dir": "up", "gravity": 18, "drag": 0.6, "size": 0.14, "seconds": 2.4, "color": "grit"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 14, "dir": "ring", "lift": 12, "spread": 20, "speed": 8.0, "gravity": -0.4, "drag": 2.2, "size": 1.9, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 10, "dir": "up", "spread": 35, "speed": 2.75, "gravity": -1.2, "drag": 1.6, "size": 2.2, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 32, "speed": 14.23, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 24, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.253, "seconds": 0.4, "scale": true},
+			{"type": "punch", "degrees": 5.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"violent/ult/L3_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.8, 5.2], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.8, 2.4], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [2.0, 7.2], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.4, 2.0], "height": 3.6, "seconds": 0.3, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 18, "speed": 8.696, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 7, "dir": "ring", "lift": 12, "spread": 20, "speed": 8.0, "gravity": -0.4, "drag": 2.2, "size": 1.425, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 2.75, "gravity": -1.2, "drag": 1.6, "size": 1.65, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 16, "speed": 14.23, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 10, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.253, "seconds": 0.4, "scale": true},
+			{"type": "punch", "degrees": 5.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"violent/ult_aura/L1": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.54, 2.86], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.76, 2.2], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 5, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 0.99, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 14, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.86, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/ult_aura/L1_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.54, 2.86], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.76, 2.2], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 3, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 0.99, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 8, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.86, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/ult_aura/L2": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.848, 3.432], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [2.112, 2.64], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 7, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 1.188, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 22, "dir": "ring", "lift": 55, "spread": 40, "speed": 3.432, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 12, "dir": "up", "spread": 40, "speed": 1.2, "gravity": -1.0, "drag": 1.0, "size": 0.12, "seconds": 2.0, "delay": 0.25, "color": "#fff6dc"}
+		]},
+		"violent/ult_aura/L2_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.848, 3.432], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [2.112, 2.64], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 1.188, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 10, "dir": "ring", "lift": 55, "spread": 40, "speed": 3.432, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/ult_aura/L3": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [2.156, 4.004], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [2.464, 3.08], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 9, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 1.386, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 30, "dir": "ring", "lift": 55, "spread": 40, "speed": 4.004, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 18, "dir": "up", "spread": 40, "speed": 1.2, "gravity": -1.0, "drag": 1.0, "size": 0.12, "seconds": 2.0, "delay": 0.25, "color": "#fff6dc"}
+		]},
+		"violent/ult_aura/L3_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [2.156, 4.004], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [2.464, 3.08], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 5, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 1.386, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 14, "dir": "ring", "lift": 55, "spread": 40, "speed": 4.004, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/skill/L1": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.855, 2.47], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.38, 1.14], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 10, "size": [0.95, 3.42], "seconds": 0.22, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 10, "speed": 5.225, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 6, "dir": "ring", "lift": 12, "spread": 20, "speed": 3.8, "gravity": -0.4, "drag": 2.2, "size": 0.902, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 14, "speed": 8.55, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.056, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/skill/L1_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.855, 2.47], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.38, 1.14], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 6, "speed": 5.225, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 3, "dir": "ring", "lift": 12, "spread": 20, "speed": 3.8, "gravity": -0.4, "drag": 2.2, "size": 0.677, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 8, "speed": 8.55, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.056, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/skill/L2": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.069, 3.087], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.475, 1.425], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [1.188, 4.275], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 20, "speed": 5.842, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 10, "dir": "ring", "lift": 12, "spread": 20, "speed": 4.75, "gravity": -0.4, "drag": 2.2, "size": 1.128, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 7, "dir": "up", "spread": 35, "speed": 2.09, "gravity": -1.2, "drag": 1.6, "size": 1.306, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 24, "speed": 9.559, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 14, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.104, "seconds": 0.3, "scale": true},
+			{"type": "punch", "degrees": 3.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/skill/L2_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.069, 3.087], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.475, 1.425], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [1.188, 4.275], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 12, "speed": 5.842, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 5, "dir": "ring", "lift": 12, "spread": 20, "speed": 4.75, "gravity": -0.4, "drag": 2.2, "size": 0.846, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 2.09, "gravity": -1.2, "drag": 1.6, "size": 0.98, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 12, "speed": 9.559, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 6, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.104, "seconds": 0.3, "scale": true},
+			{"type": "punch", "degrees": 3.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/skill/L3": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.368, 3.952], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.608, 1.824], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [1.52, 5.472], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.33, 1.9], "height": 4.2, "seconds": 0.3, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 32, "speed": 6.609, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 24, "speed": 7.125, "spread": 75, "dir": "up", "gravity": 18, "drag": 0.6, "size": 0.14, "seconds": 2.4, "color": "grit"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 14, "dir": "ring", "lift": 12, "spread": 20, "speed": 6.08, "gravity": -0.4, "drag": 2.2, "size": 1.444, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 10, "dir": "up", "spread": 35, "speed": 2.09, "gravity": -1.2, "drag": 1.6, "size": 1.672, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 32, "speed": 10.815, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 24, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.176, "seconds": 0.4, "scale": true},
+			{"type": "punch", "degrees": 5.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"violent/skill/L3_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.368, 3.952], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.608, 1.824], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [1.52, 5.472], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.064, 1.52], "height": 3.6, "seconds": 0.3, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 18, "speed": 6.609, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 7, "dir": "ring", "lift": 12, "spread": 20, "speed": 6.08, "gravity": -0.4, "drag": 2.2, "size": 1.083, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 2.09, "gravity": -1.2, "drag": 1.6, "size": 1.254, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 16, "speed": 10.815, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 10, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.176, "seconds": 0.4, "scale": true},
+			{"type": "punch", "degrees": 5.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"violent/shot/L1": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.63, 1.82], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.28, 0.84], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 10, "size": [0.7, 2.52], "seconds": 0.22, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 10, "speed": 3.85, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 6, "dir": "ring", "lift": 12, "spread": 20, "speed": 2.8, "gravity": -0.4, "drag": 2.2, "size": 0.665, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 14, "speed": 6.3, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.039, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/shot/L1_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.63, 1.82], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.28, 0.84], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 6, "speed": 3.85, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 3, "dir": "ring", "lift": 12, "spread": 20, "speed": 2.8, "gravity": -0.4, "drag": 2.2, "size": 0.499, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 8, "speed": 6.3, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.039, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/shot/L2": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.787, 2.275], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.35, 1.05], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [0.875, 3.15], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 20, "speed": 4.304, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 10, "dir": "ring", "lift": 12, "spread": 20, "speed": 3.5, "gravity": -0.4, "drag": 2.2, "size": 0.831, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 7, "dir": "up", "spread": 35, "speed": 1.54, "gravity": -1.2, "drag": 1.6, "size": 0.963, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 24, "speed": 7.044, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 14, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.072, "seconds": 0.3, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/shot/L2_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.787, 2.275], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.35, 1.05], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [0.875, 3.15], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 12, "speed": 4.304, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 5, "dir": "ring", "lift": 12, "spread": 20, "speed": 3.5, "gravity": -0.4, "drag": 2.2, "size": 0.623, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 1.54, "gravity": -1.2, "drag": 1.6, "size": 0.722, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 12, "speed": 7.044, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 6, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.072, "seconds": 0.3, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/shot/L3": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.008, 2.912], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.448, 1.344], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [1.12, 4.032], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 32, "speed": 4.87, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 24, "speed": 5.25, "spread": 75, "dir": "up", "gravity": 18, "drag": 0.6, "size": 0.14, "seconds": 2.4, "color": "grit"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 14, "dir": "ring", "lift": 12, "spread": 20, "speed": 4.48, "gravity": -0.4, "drag": 2.2, "size": 1.064, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 10, "dir": "up", "spread": 35, "speed": 1.54, "gravity": -1.2, "drag": 1.6, "size": 1.232, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 32, "speed": 7.969, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 24, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.121, "seconds": 0.4, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"violent/shot/L3_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.008, 2.912], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.448, 1.344], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [1.12, 4.032], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 18, "speed": 4.87, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 7, "dir": "ring", "lift": 12, "spread": 20, "speed": 4.48, "gravity": -0.4, "drag": 2.2, "size": 0.798, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 1.54, "gravity": -1.2, "drag": 1.6, "size": 0.924, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 16, "speed": 7.969, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 10, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.121, "seconds": 0.4, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"violent/aura/L1": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.12, 2.08], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.28, 1.6], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 5, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 0.72, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 14, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.08, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/aura/L1_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.12, 2.08], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.28, 1.6], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 3, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 0.72, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 8, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.08, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/aura/L2": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.344, 2.496], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.536, 1.92], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 7, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 0.864, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 22, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.496, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 12, "dir": "up", "spread": 40, "speed": 1.2, "gravity": -1.0, "drag": 1.0, "size": 0.12, "seconds": 2.0, "delay": 0.25, "color": "#fff6dc"}
+		]},
+		"violent/aura/L2_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.344, 2.496], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.536, 1.92], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 0.864, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 10, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.496, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/aura/L3": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.568, 2.912], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.792, 2.24], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 9, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 1.008, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 30, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.912, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 18, "dir": "up", "spread": 40, "speed": 1.2, "gravity": -1.0, "drag": 1.0, "size": 0.12, "seconds": 2.0, "delay": 0.25, "color": "#fff6dc"}
+		]},
+		"violent/aura/L3_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.9, 0.0], "size": [1.568, 2.912], "seconds": 1.1, "opacity": 0.22, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.792, 2.24], "height": 3.0, "seconds": 1.4, "opacity": 0.35, "color": "weapon"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 5, "dir": "up", "spread": 35, "speed": 1.8, "gravity": -0.8, "drag": 1.0, "size": 1.008, "seconds": 2.0, "opacity": 0.4, "ink": 0.0, "color": "weapon", "inked": false},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.1, 0.0], "count": 14, "dir": "ring", "lift": 55, "spread": 40, "speed": 2.912, "gravity": -1.4, "drag": 1.6, "size": 0.3, "seconds": 2.4, "color": "weapon"}
+		]},
+		"violent/boss/L1": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.035, 2.99], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.46, 1.38], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 10, "size": [1.15, 4.14], "seconds": 0.22, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 10, "speed": 6.325, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 6, "dir": "ring", "lift": 12, "spread": 20, "speed": 4.6, "gravity": -0.4, "drag": 2.2, "size": 1.092, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 14, "speed": 10.35, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.07, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/boss/L1_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.035, 2.99], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.46, 1.38], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 6, "speed": 6.325, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.3, "seconds": 1.8, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 3, "dir": "ring", "lift": 12, "spread": 20, "speed": 4.6, "gravity": -0.4, "drag": 2.2, "size": 0.819, "seconds": 1.8, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 8, "speed": 10.35, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "shake", "strength": 0.07, "seconds": 0.22, "scale": true},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.08], "seconds": 0.08}
+		]},
+		"violent/boss/L2": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.294, 3.738], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.575, 1.725], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [1.438, 5.175], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 20, "speed": 7.072, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 10, "dir": "ring", "lift": 12, "spread": 20, "speed": 5.75, "gravity": -0.4, "drag": 2.2, "size": 1.366, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 7, "dir": "up", "spread": 35, "speed": 2.53, "gravity": -1.2, "drag": 1.6, "size": 1.581, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 24, "speed": 11.572, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 14, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.13, "seconds": 0.3, "scale": true},
+			{"type": "punch", "degrees": 3.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/boss/L2_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.294, 3.738], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.575, 1.725], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 14, "size": [1.438, 5.175], "seconds": 0.28, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 12, "speed": 7.072, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.319, "seconds": 2.4, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 5, "dir": "ring", "lift": 12, "spread": 20, "speed": 5.75, "gravity": -0.4, "drag": 2.2, "size": 1.024, "seconds": 2.4, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 2.53, "gravity": -1.2, "drag": 1.6, "size": 1.186, "seconds": 2.6, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 12, "speed": 11.572, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 6, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.13, "seconds": 0.3, "scale": true},
+			{"type": "punch", "degrees": 3.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.11], "seconds": 0.08}
+		]},
+		"violent/boss/L3": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.656, 4.784], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.736, 2.208], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [1.84, 6.624], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.61, 2.3], "height": 4.2, "seconds": 0.3, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 32, "speed": 8.001, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 24, "speed": 8.625, "spread": 75, "dir": "up", "gravity": 18, "drag": 0.6, "size": 0.14, "seconds": 2.4, "color": "grit"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 14, "dir": "ring", "lift": 12, "spread": 20, "speed": 7.36, "gravity": -0.4, "drag": 2.2, "size": 1.748, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 10, "dir": "up", "spread": 35, "speed": 2.53, "gravity": -1.2, "drag": 1.6, "size": 2.024, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 32, "speed": 13.092, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 24, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.22, "seconds": 0.4, "scale": true},
+			{"type": "punch", "degrees": 5.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"violent/boss/L3_phone": {"layers": [
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [1.656, 4.784], "seconds": 0.24, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "glow", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "size": [0.736, 2.208], "seconds": 0.16, "color": "#ffffff", "scale": true},
+			{"type": "sprite", "mode": "star", "glow": true, "anchor": "feet", "offset": [0.0, 0.7, 0.0], "spikes": 18, "size": [1.84, 6.624], "seconds": 0.34, "color": "weapon", "scale": true},
+			{"type": "sprite", "mode": "beam", "glow": true, "anchor": "feet", "billboard": "y", "size": [1.288, 1.84], "height": 3.6, "seconds": 0.3, "color": "weapon", "scale": true},
+			{"type": "burst", "style": "chunk", "anchor": "feet", "offset": [0.0, 0.3, 0.0], "count": 18, "speed": 8.001, "spread": 60, "dir": "up", "gravity": 16, "drag": 0.5, "size": 0.345, "seconds": 3.0, "color": "rock"},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.25, 0.0], "count": 7, "dir": "ring", "lift": 12, "spread": 20, "speed": 7.36, "gravity": -0.4, "drag": 2.2, "size": 1.311, "seconds": 3.0, "color": "smoke", "opacity": 0.8, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "smoke", "anchor": "feet", "offset": [0.0, 0.4, 0.0], "count": 4, "dir": "up", "spread": 35, "speed": 2.53, "gravity": -1.2, "drag": 1.6, "size": 1.518, "seconds": 3.4, "delay": 0.05, "color": "smoke", "opacity": 0.55, "ink": 0.0, "inked": false},
+			{"type": "burst", "style": "streak", "glow": true, "anchor": "feet", "offset": [0.0, 0.5, 0.0], "count": 16, "speed": 13.092, "spread": 75, "dir": "up", "gravity": 10, "drag": 1.6, "size": 0.06, "streak": 0.07, "seconds": 0.6, "color": "weapon"},
+			{"type": "burst", "style": "mote", "glow": true, "anchor": "feet", "offset": [0.0, 0.6, 0.0], "count": 10, "speed": 3.0, "spread": 70, "dir": "up", "gravity": -0.8, "drag": 1.2, "size": 0.12, "seconds": 1.4, "delay": 0.08, "color": "weapon"},
+			{"type": "shake", "strength": 0.22, "seconds": 0.4, "scale": true},
+			{"type": "punch", "degrees": 5.0},
+			{"type": "flash", "color": [1.0, 0.97, 0.9, 0.14], "seconds": 0.08}
+		]},
+		"_violent_end": {"layers": []}
 	}
 }

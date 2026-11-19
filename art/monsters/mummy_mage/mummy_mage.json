@@ -18,7 +18,7 @@
     "cast_aoe": "the ground mark",
     "blink": "the escape"
   },
-  "run_clip_speed": 1.195,
+  "run_clip_speed": 1.28,
   "hips_scale": 1.0,
   "sockets": {
     "Monster_MummyMage_Staff": "mixamorig_RightHand",

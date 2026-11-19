@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 ## Tests the combat effect data (data/combat/vfx.json) and its player (client/effects.gd): every
 ## action the rules can produce has a look, the data is valid, and the load-time prewarm draws
 ## every entry so the web build never compiles an effect shader mid-fight.
@@ -108,7 +108,7 @@ func _check_player(ctx, lib) -> void:
 	effects.library = lib
 	ctx.root.add_child(effects)
 	effects.prewarm(Vector3(0.0, -4.0, 0.0))
-	var all_keys: Array = lib.actions.keys()
+	var all_keys: Array = lib.actions.keys().filter(func(key) -> bool: return Effects.prewarm_wanted(str(key)))  # (violent looks: only the active level, tests/test_vfx_violence.gd)
 	var missed: Array = all_keys.filter(func(key) -> bool: return not key in effects.prewarmed_keys)
 	ctx.check("prewarm plays every vfx entry (%d entries) %s" % [all_keys.size(), missed], missed.is_empty() and effects.prewarmed_keys.size() == all_keys.size())
 	var drawn := effects.live_count()
@@ -122,7 +122,7 @@ func _check_player(ctx, lib) -> void:
 	for child in effects.get_children():
 		if child is MeshInstance3D:
 			shaders[((child as MeshInstance3D).material_override as ShaderMaterial).shader.resource_path] = true
-	ctx.check("prewarm uses all four effect shaders %s" % [shaders.keys()], shaders.size() == 4)
+	ctx.check("prewarm uses all four effect shaders (+ the 2 additive twins while violent looks are on) %s" % [shaders.keys()], shaders.size() == (6 if Effects.Violence.level() != "current" else 4))
 	ctx.check("unknown keys play nothing", not effects.play("swing/not_a_move", Effects.context(Vector3.ZERO, Vector3.ZERO, Vector2.RIGHT, Color.WHITE)))
 	await ctx.process_frame  # (one real frame: the renderer draws them)
 	var waited := 0.0  # then step the clock by hand past the longest effect
@@ -141,6 +141,8 @@ func _check_player(ctx, lib) -> void:
 func _drawn_layers(lib) -> int:
 	var count := 0
 	for key in lib.actions:
+		if not Effects.prewarm_wanted(str(key)):
+			continue
 		for layer in lib.layers(key):
 			match str(layer["type"]):
 				"trail", "sprite", "ground", "burst":

@@ -754,7 +754,7 @@ static func _push(sim, id: int, target_id: int, distance: float) -> void:
 ## Knockback `distance` m straight away from `center` (bosses/elites are not moved; walls stop it, 5.1).
 static func _push_from(sim, target_id: int, center: Vector3, distance: float) -> void:
 	var target = sim.fighters[target_id]
-	if is_elite(target) or not target.is_alive() or load(TREE).control_immune(target):  # CONTROL_IMMUNE: no knockback
+	if is_elite(target) or not target.is_alive() or load(TREE).control_immune(target) or load("res://logic/effects.gd").control_resist_immune(target):  # CONTROL_IMMUNE / CTRL_RES >= 100: no knockback
 		return
 	var body = sim.bodies[target_id]
 	var dir := _flat_dir(body.position - center)

@@ -29,11 +29,11 @@ const MONSTER_ROOT := "res://art/monsters"
 const LEGACY_TEXTURE_BYTES := []
 ## The mummy family (Boss 2026-11-17: the mummies at the goblins' level): id -> [stance library, its clips, model_height, gear meshes].
 const FAMILY := {
-	"mummy": ["sword_shield", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 1.8, ["Monster_Mummy_Body", "Monster_Mummy_Blade"]],
+	"mummy": ["mummy", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 1.8, ["Monster_Mummy_Body", "Monster_Mummy_Blade"]],
 	"mummy_knight": ["sword_shield", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 2.0, ["Monster_MummyKnight_Body", "Monster_MummyKnight_Shield", "Monster_MummyKnight_Khopesh", "Monster_MummyKnight_Helmet"]],
 	"mummy_mage": ["magic", ["blink", "cast", "cast_aoe", "death", "hit", "idle", "run"], 1.9, ["Monster_MummyMage_Body", "Monster_MummyMage_Staff", "Monster_MummyMage_StaffCrystal", "Monster_MummyMage_Hood"]],
 	"mummy_high_wizard": ["wizard_boss", ["cast", "cast_aoe", "death", "hit", "idle", "run", "sandstorm", "starfall", "summon"], 3.4, ["Monster_MummyHighWizard_Body"]],
-	"mummy_boss": ["greatsword", ["attack_1", "attack_2", "attack_3", "death", "hit", "idle", "run"], 2.6, ["Monster_MummyBoss_Body", "Monster_MummyBoss_Khopesh", "Monster_MummyBoss_Nemes", "Monster_MummyBoss_Mask", "Monster_MummyBoss_Eyes", "Monster_MummyBoss_Collar"]],
+	"mummy_boss": ["greatsword", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 2.6, ["Monster_MummyBoss_Body", "Monster_MummyBoss_Khopesh", "Monster_MummyBoss_Nemes", "Monster_MummyBoss_Mask", "Monster_MummyBoss_Eyes", "Monster_MummyBoss_Collar"]],
 }
 ## The Boss's own boss model (2026-11-18): the library has 9 clips incl. 3 new keyframed specials, so it gets a bigger budget (278 KB at 1.0 degree).
 const LIBRARY_BUDGET_BY_STANCE := {"wizard_boss": 300 * 1024}
@@ -134,6 +134,96 @@ func run(ctx) -> void:
 	scene.free()
 	_check_every_monster(ctx)
 	_check_family(ctx, donor_joints)
+	_check_fight_wiring(ctx)
+
+
+## Animator 2026-11-19 (Boss: "the mummies float and walk with their legs together"): what the FIGHT really loads for every mummy
+## (combat_data_loader resolves the first existing `looks` entry, which replaces the plain fields: a look without "animations"
+## left the model clip-less and the view fell back to the static hop). Every mummy type must resolve its own clip library, every
+## move its clip, and a run_clip_speed equal to its run clip's measured foot speed, played inside the view's 0.6-1.4x clamp at the
+## monster's real MOVESPD (so the planted foot does not slide). The goblins are untouched.
+func _check_fight_wiring(ctx) -> void:
+	var data = CombatDataLoader.parse(FileAccess.get_file_as_string("res://data/combat/combat.json"))
+	var expected := {"mummy": "mummy", "mummy_archer": "bow", "mummy_knight": "sword_shield", "mummy_mage": "magic", "mummy_boss": "greatsword", "mummy_high_wizard": "wizard_boss"}
+	for id: String in expected:
+		var e: Dictionary = data.enemies[id]
+		var path := "res://art/animations/monster_clips_%s.glb" % expected[id]
+		ctx.check("%s: the fight loads its own clip library %s (got '%s')" % [id, path, e["animations"]], e["animations"] == path)
+		var library := AnimationSet.load_file(path)
+		var missing := []
+		for move_id in e["clips"]:
+			if library == null or not library.has_clip(str(e["clips"][move_id])):
+				missing.append(move_id)
+		for clip in ["idle", "run", "hit", "death"]:
+			if library == null or not library.has_clip(clip):
+				missing.append(clip)
+		ctx.check("%s: every move and idle/run/hit/death has its clip in that library %s" % [id, missing], missing.is_empty())
+		var marks: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path.get_basename() + ".json"))
+		var travel := float(marks["run"].get("foot_speed", marks["run"].get("travel_per_second", 0.0)))
+		ctx.check("%s: run_clip_speed %.3f is set and equals the run clip's planted-foot speed %.3f (no foot slide)" % [id, float(e["run_clip_speed"]), travel],
+			float(e["run_clip_speed"]) > 0.0 and absf(float(e["run_clip_speed"]) - travel) < 0.002)
+		var fit := float(e["model_height"]) / _model_height(e["model"])
+		var speed := 3.8 * maxf(0.1, 1.0 + float(e["stats"]["MOVESPD"]) / 100.0)
+		var rate := speed / (float(e["run_clip_speed"]) * fit)
+		ctx.check("%s: its walk (%.2f m/s) plays the run at %.2fx, inside the view's 0.6-1.4x clamp (beyond it the feet slide)" % [id, speed, rate], rate >= 0.6 and rate <= 1.4)
+		if id != "mummy_high_wizard":
+			# hover is the wizard's alone: every other mummy keeps a foot on the floor through its whole run (no flight phase)
+			var lift := _run_max_lift(path, library)
+			ctx.check("%s: through its whole run the lower foot never leaves the floor (max lift %.3f rig units)" % [id, lift], lift < 0.006)
+	var goblin: Dictionary = data.enemies["goblin"]
+	ctx.check("goblins untouched: the goblin still plays its own library", goblin["animations"] == "res://art/animations/goblin.glb")
+
+
+## Highest the LOWER foot rises above its lowest point over one run loop (sampled every 1/30 s, rest-pose chain from the library's
+## own skeleton): 0 = always one foot on the floor; a running donor with a flight phase reaches about 0.03.
+func _run_max_lift(path: String, library: RefCounted) -> float:
+	var scene := (load(path) as PackedScene).instantiate()
+	var skeleton := scene.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	var length: float = library.length("run")
+	var lows := []
+	var t := 0.0
+	while t < length:
+		skeleton.reset_bone_poses()
+		var pose: Dictionary = library.sample("run", t)
+		for bone in pose:
+			var index := skeleton.find_bone(bone)
+			if index < 0:
+				continue
+			if pose[bone].has("rotation"):
+				skeleton.set_bone_pose_rotation(index, pose[bone]["rotation"])
+			if pose[bone].has("position"):
+				skeleton.set_bone_pose_position(index, pose[bone]["position"])
+		lows.append(minf(_chain(skeleton, "mixamorig_LeftFoot").y, _chain(skeleton, "mixamorig_RightFoot").y))
+		t += 1.0 / 30.0
+	scene.free()
+	return float(lows.max()) - float(lows.min())
+
+
+static func _chain(skeleton: Skeleton3D, bone: String) -> Vector3:
+	var i := skeleton.find_bone(bone)
+	var t := skeleton.get_bone_pose(i)
+	var p := skeleton.get_bone_parent(i)
+	while p >= 0:
+		t = skeleton.get_bone_pose(p) * t
+		p = skeleton.get_bone_parent(p)
+	return t.origin
+
+
+func _model_height(path: String) -> float:
+	var model := (load(path) as PackedScene).instantiate() as Node3D
+	var bounds := AABB()
+	var first := true
+	for mesh in model.find_children("*", "MeshInstance3D", true, false):
+		var to_model: Transform3D = mesh.transform
+		var parent: Node = mesh.get_parent()
+		while parent != model:
+			to_model = (parent as Node3D).transform * to_model
+			parent = parent.get_parent()
+		var box: AABB = to_model * (mesh as MeshInstance3D).get_aabb()
+		bounds = box if first else bounds.merge(box)
+		first = false
+	model.free()
+	return bounds.size.y
 
 
 ## The mummy family acceptance checklist (docs/art/monster_requests/mummy_base.md section 7): every donor joint kept, only the four

@@ -11,10 +11,45 @@ const Fighter := preload("res://logic/fighter.gd")
 const SimInput := preload("res://logic/sim_input.gd")
 
 const CONTROLS_THAT_STOP_ACTION: Array[String] = ["stun", "sleep"]
+## Boss 2026-11-19: accuracy/resistance are split in three summed layers. EFFECT_ACC / EFFECT_RES are the general pair
+## (all groups); <GROUP>_ACC / <GROUP>_RES (CTRL_, DOT_, DEBUFF_) the group layer; <GROUP>_<EFFECT>_ACC / _RES (CTRL_STUN_RES,
+## DOT_BURN_ACC ...) the per-effect layer, derived by name from the effect id (a new effect gets its keys for free).
+const GROUP_STATS := {"control": ["CTRL_ACC", "CTRL_RES"], "dot": ["DOT_ACC", "DOT_RES"], "debuff": ["DEBUFF_ACC", "DEBUFF_RES"]}
+const RESIST_IMMUNE_AT := 100.0  ## total resistance (all layers) at or above this: the effect never lands
+
+
+## Which group an effect definition belongs to: "control" (stun/shock/sleep), "dot" (dot_power > 0) or "debuff".
+static func group_of(definition: Dictionary) -> String:
+	if str(definition.get("control", "")) != "":
+		return "control"
+	if float(definition.get("dot_power", 0.0)) > 0.0:
+		return "dot"
+	return "debuff"
+
+
+## The per-effect stat id ("CTRL_STUN_RES"): `suffix` is "ACC" or "RES".
+static func effect_stat(group: String, effect_id: String, suffix: String) -> String:
+	return load("res://logic/combat_data_loader.gd").effect_stat_id(group, effect_id, suffix)
+
+
+## EFFECT_RES + group RES + per-effect RES of `fighter` against effect `effect_id`.
+static func resistance_total(fighter: Fighter, group: String, effect_id: String) -> float:
+	return fighter.stat("EFFECT_RES") + fighter.stat(GROUP_STATS[group][1]) + fighter.stat(effect_stat(group, effect_id, "RES"))
+
+
+## EFFECT_ACC + group ACC + per-effect ACC of `fighter` for effect `effect_id`.
+static func accuracy_total(fighter: Fighter, group: String, effect_id: String) -> float:
+	return fighter.stat("EFFECT_ACC") + fighter.stat(GROUP_STATS[group][0]) + fighter.stat(effect_stat(group, effect_id, "ACC"))
+
+
+## True if the fighter's control resistance (general + CTRL_RES group layer, NOT a per-effect CTRL_<EFFECT>_RES) makes it immune
+## to the physical control results (poise stagger, knockback, launch, class-skill pull) as well as to control effects.
+static func control_resist_immune(fighter: Fighter) -> bool:
+	return fighter.stat("EFFECT_RES") + fighter.stat("CTRL_RES") >= RESIST_IMMUNE_AT
 
 
 ## Applies one entry of a move's `effects` list from `source` to `target`. Returns true if it took hold.
-## A debuff's chance is moved by the source's EFFECT_ACC against the target's EFFECT_RES; a control
+## A debuff's chance is moved by the source's EFFECT_ACC+group ACC against the target's EFFECT_RES+group RES (resistance >= 100 = immune); a control
 ## effect cannot land while the target is still immune from the last one. Uses a random number only
 ## when the chance is neither certain nor impossible.
 static func apply(source_id: int, source: Fighter, target_id: int, target: Fighter, entry: Dictionary, data: CombatData, rng: RandomNumberGenerator, events: Array[Dictionary]) -> bool:
@@ -29,11 +64,16 @@ static func apply(source_id: int, source: Fighter, target_id: int, target: Fight
 		events.append({"type": "effect_resisted", "target": target_id, "effect": effect_id})
 		return false
 	var chance := float(entry["chance"])
+	var group := group_of(definition)
 	if definition["kind"] == "debuff" and source != target:
-		chance += source.stat("EFFECT_ACC") - target.stat("EFFECT_RES")
+		var resistance := resistance_total(target, group, effect_id)
+		if resistance >= RESIST_IMMUNE_AT:  # immune: never lands, however high the accuracy; no random number used
+			events.append({"type": "effect_resisted", "target": target_id, "effect": effect_id, "group": group})
+			return false
+		chance += accuracy_total(source, group, effect_id) - resistance
 	chance = clampf(chance, 0.0, 100.0)
 	if chance <= 0.0 or (chance < 100.0 and rng.randf() * 100.0 >= chance):
-		events.append({"type": "effect_resisted", "target": target_id, "effect": effect_id})
+		events.append({"type": "effect_resisted", "target": target_id, "effect": effect_id, "group": group})
 		return false
 	var duration: int = int(entry["duration"]) if int(entry["duration"]) > 0 else int(definition["duration"])
 	var instance: Dictionary = target.effects.get(effect_id, {"stacks": 0, "age": 0})

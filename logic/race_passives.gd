@@ -71,7 +71,7 @@ static func attach(fighter, run) -> void:
 		if entry["effect"]["type"] == "low_hp_scaling":
 			scaling.append(entry["effect"])
 		var effect: Dictionary = entry["effect"]
-		if effect["type"] == "stat_mod" and not RaceData.STAT_NAMES.has(str(effect["stat"])):
+		if effect["type"] == "stat_mod" and not preload("res://logic/combat_data_loader.gd").is_stat_name(effect["stat"]):
 			var mod: Dictionary = pseudo.get(str(effect["stat"]), {"add": 0.0, "mul": 0.0})
 			mod["add"] += float(effect.get("add", 0.0))
 			mod["mul"] += float(effect.get("mul", 0.0))
@@ -87,7 +87,7 @@ static func attach(fighter, run) -> void:
 static func apply_stats(fighter) -> void:
 	for entry in fighter.race_state.get("effects", []):
 		var effect: Dictionary = entry["effect"]
-		if effect["type"] != "stat_mod" or not RaceData.STAT_NAMES.has(str(effect["stat"])):
+		if effect["type"] != "stat_mod" or not preload("res://logic/combat_data_loader.gd").is_stat_name(effect["stat"]):
 			continue
 		var stat := str(effect["stat"])
 		fighter.stats[stat] = (float(fighter.stats.get(stat, 0.0)) + float(effect.get("add", 0.0))) * (1.0 + float(effect.get("mul", 0.0)))

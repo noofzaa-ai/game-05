@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 ## Builds a monster clip library (skeleton-only .glb + .json of marks) out of the player's longbow clips.
 ## Only the clips a bow monster needs are copied, each baked at 30 fps and key-reduced; the player's files are only read.
 ##   godot --headless --path . --script res://tools/monsters/build_clip_library.gd
@@ -12,56 +12,129 @@ const Rig := preload("res://tools/monsters/rig_common.gd")
 ## Libraries, one per weapon stance (a monster loads ONE: its own idle/run/hit/death + the attacks of its stance).
 ## Each is a skeleton-only glb named monster_clips_<stance>.glb with a .json of marks next to it.
 ## Clip entries: clip name -> {"segs": [[donor clip, from, to, speed]...] played one after the other (speed 2 = twice as fast)}.
-## Only "bow" is shipped today (art/animations). The others are measured (sizes in docs/art/monster_requests/mummy_archer.md) and are
-## built when the first monster of that stance exists: check the clip choices with the animator before shipping.
+## Shipped: bow (mummy_archer), mummy, sword_shield (mummy_knight), greatsword (mummy_boss), magic (mummy_mage), wizard_boss.
+## Clip choices checked by the animator 2026-11-19 (windowed shots: tools/monsters/mummy_anim_shots.gd).
 ## bow shoot  = the player's own two-part shot (class_skills.json heartseeker: lb_draw_arrow then lb_aim_recoil, released at 0.18 s of the recoil).
 ## bow volley = the same with a slow draw, so it reads as the telegraphed move.
 const LIBRARIES := {
 	"bow": {"donor": "res://art/characters/studio05/split/body_longbow.glb", "clips": {
 		"idle": {"segs": [["lb_idle_01", 0.0, 5.1, 1.0]], "loop": true},
-		"run": {"segs": [["lb_run_forward", 0.0, 0.8833333, 1.0]], "loop": true, "strip_travel": true},  ## the donor's run drifts 0.947 rig units forward through the Hips: stripped, the speed goes to the marks
+		## the donor's run drifts 0.947 rig units forward through the Hips: stripped, the speed goes to the marks. Baked at 1.15x
+		## (2026-11-19) so the archer's 3.8 m/s walk plays inside the view's 0.6-1.4x clamp (at 1.0x it hit the clamp: 6% foot slide).
+		## "floor": no flight phase (a mummy never leaves the ground); the trunk hunched 6 deg, the stride widened 20%.
+		"run": {"segs": [["lb_run_forward", 0.0, 0.8833333, 1.15]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.2, "mixamorig_RightUpLeg": 1.2},
+			"lean": {"mixamorig_Spine": [[0.0, 6, 0, 0]], "mixamorig_LeftUpLeg": [[0.0, 0, 0, 3]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -3]]}},
 		"shoot": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.35], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
 		"volley": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.0], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
 		"hit": {"segs": [["lb_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
 		"death": {"segs": [["lb_death_forward_01", 0.0, 3.1833, 1.0]], "loop": false},
 	}},
-	## sword_shield (v1 shipped 2026-11-17: mummy + mummy_knight). Picked from contact sheets of the donor clips
-	## (tools/monsters/donor_clip_sheet.gd): only clips whose Hips stay in place (attack, attack_2, attack_3 lunge 0.8-1.1 rig units).
-	## attack_1 = slash: sword drawn back over the shoulder by 1.26 s, diagonal cut 1.40-1.70 s (hand speed peak 1.53 s).
-	## attack_2 = attack_4: sword raised overhead by 1.27 s, held, chopped down 1.52-1.76 s (the telegraphed overhead).
-	## death = the stagger, the sword raised, the fall lands at 4.38 s (the first 3.0 s never reached the floor): 0.4-4.6 s at 1.4x.
-	"sword_shield": {"donor": "res://art/characters/studio05/split/body_sword_shield.glb", "clips": {
-		"idle": {"segs": [["idle_4", 0.0, 6.375, 1.0]], "loop": true},
-		"run": {"segs": [["run", 0.0, 1.7916, 1.0]], "loop": true, "strip_travel": true},  ## not run_2: that one runs BACKWARD (-0.74 rig units)
-		"attack_1": {"segs": [["slash", 0.35, 2.3, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.4, "strike_src": 1.7},
-		"attack_2": {"segs": [["attack_4", 0.15, 2.4, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.52, "strike_src": 1.76},
-		"hit": {"segs": [["impact", 0.0, 0.62, 1.0]], "loop": false},
-		"death": {"segs": [["death", 0.4, 4.6, 1.4]], "loop": false},
+	## ---- The mummy family (animator pass 2026-11-19, Boss: "the mummies float and walk with their legs together"). ----
+	## Layer keys (see _compose): "amp" scales a bone's swing away from rest (stride width), "calm" damps a donor swing toward rest
+	## (a stiff mummy arm), "lean" adds MODEL-space degrees [t, x, y, z] (x+ tips the spine forward / swings an arm back; y+ turns the
+	## left shoulder back; z+ tips the spine to the right / swings a limb to the left), "frac" = lean/hover key times are fractions of
+	## the clip (seamless loops), "ground" re-plants the feet after the layers ("floor" = one foot ALWAYS on the floor: no flight phase,
+	## a heavy grounded gait), a clip "donor" borrows from another player body (same 102-joint rig). The run's travel_per_second is
+	## then measured from the planted foot (foot_speed): combat.json run_clip_speed = that value, so the feet do not slide.
+	## Picked from contact sheets (tools/monsters/donor_clip_sheet.gd) and hand speed / foot height probes (clip_probe.gd,
+	## foot_contact_probe.gd, locomotion_probe.gd); every attack's windup_end / strike_end sits on the donor's hand-speed peak.
+	##
+	## mummy (the basic undead, MOVESPD +32 = 5.0 m/s, ATKSPD +50): the dead-man LURCH, own library (no longer shared with the knight).
+	## run = gs_run_2 (hunched forward run, arms already in front) + a wider stride (thighs x1.25), arm swing damped 70% and both arms
+	## raised to reach forward, the trunk hunched 12 deg and rolling 6 deg over the planted foot, the head lolled; floor-planted.
+	## attack_1 (mummy_strike 10/4/16) = gs_slash from 0.2 s: both hands raised 0.29-0.57 s, raked down 0.6-0.86 s.
+	## attack_2 (mummy_grasp 30/10/34) = gs_attack: arms drawn in, both hands thrust out 0.40-0.60 s (the grab), with a keyed lean back
+	## (anticipation) then a lunge forward and the arms lifted into the clutch.
+	## hit = gs_impact_2 at 1.5x (doubles over, staggers). death = gs_death_2 (knees buckle, collapses face down), travel kept 40%.
+	"mummy": {"donor": "res://art/characters/studio05/split/body_greatsword.glb", "clips": {
+		"idle": {"segs": [["gs_idle", 0.0, 2.0166, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, 10, 0, 0]], "mixamorig_Head": [[0.0, 8, 0, 10]],
+				"mixamorig_LeftArm": [[0.0, -50, 0, 0]], "mixamorig_RightArm": [[0.0, -45, 0, 0]],
+				"mixamorig_LeftForeArm": [[0.0, -12, 0, 0]], "mixamorig_RightForeArm": [[0.0, -12, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 4]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -4]]}},
+		"run": {"segs": [["gs_run_2", 0.0, 0.6166, 1.2]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.45, "mixamorig_RightUpLeg": 1.45, "mixamorig_LeftLeg": 1.15, "mixamorig_RightLeg": 1.15},
+			"calm": {"mixamorig_LeftArm": 0.7, "mixamorig_RightArm": 0.7, "mixamorig_LeftForeArm": 0.6, "mixamorig_RightForeArm": 0.6},
+			"lean": {"mixamorig_Spine": [[0.0, 12, 0, 4], [0.43, 12, 0, -6], [0.9, 12, 0, 6], [1.0, 12, 0, 4]],
+				"mixamorig_Head": [[0.0, 6, 0, 10], [0.5, 10, 0, 5], [1.0, 6, 0, 10]],
+				"mixamorig_LeftArm": [[0.0, -60, 0, 0]], "mixamorig_RightArm": [[0.0, -52, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 4]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -4]]}},
+		"attack_1": {"segs": [["gs_slash", 0.2, 1.28, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 0.6, "strike_src": 0.86,
+			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 0]], "mixamorig_Head": [[0.0, 6, 0, 8]]}},
+		"attack_2": {"segs": [["gs_attack", 0.0, 1.2, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 0.4, "strike_src": 0.6,
+			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 0], [0.32, -8, 0, 0], [0.45, 22, 0, 0], [0.65, 22, 0, 0], [1.2, 8, 0, 0]],
+				"mixamorig_Head": [[0.0, 6, 0, 8], [0.32, -6, 0, 4], [0.45, 8, 0, 0], [1.2, 6, 0, 8]],
+				"mixamorig_LeftArm": [[0.0, 0, 0, 0], [0.32, 20, 0, 0], [0.45, -35, 0, 0], [0.7, -35, 0, 0], [1.2, 0, 0, 0]],
+				"mixamorig_RightArm": [[0.0, 0, 0, 0], [0.32, 20, 0, 0], [0.45, -35, 0, 0], [0.7, -35, 0, 0], [1.2, 0, 0, 0]]}},
+		"hit": {"segs": [["gs_impact_2", 0.0, 1.0, 1.5]], "loop": false, "ground": true, "lean": {"mixamorig_Head": [[0.0, 6, 0, 8]]}},
+		"death": {"segs": [["gs_death_2", 0.0, 2.6, 1.0]], "loop": false, "pin_travel": 0.4},
 	}},
-	## greatsword (v1 shipped 2026-11-17: mummy_boss, the Pharaoh; mirrors goblin_chief's quick chop + telegraphed leaping lunge).
-	## attack_1 = gs_slash: raised 0.29-0.57 s, diagonal cut 0.60-0.86 s. attack_2 = gs_jump_attack: the leap, slam at about 1.07 s;
-	## the donor travels 0.97 rig units forward (about 5 m on a 2.6 m boss): `pin_travel` keeps 15% of it (a short lunge) so the
-	## boss lands near its hit box. attack_3 = gs_high_spin_attack (the whirl, travel pinned to 0). death = gs_death (lands by 1.6 s).
+	## sword_shield = mummy_knight only since 2026-11-19 (MOVESPD -36 = 2.4 m/s, no ATKSPD): the HEAVY STOMP.
+	## run = the sword_shield "run" (a slow high-knee march, 1.79 s) at 1.6x: knees lift high and every foot comes down planted
+	## (floor), wide stance (thighs out 6 deg), shield arm held still in front, trunk forward 8 deg rolling 5 deg over each stomp.
+	## attack_1 (mummy_knight_cleave 26/6/32) = slash from 0.8 s (the idle lead-in cut): blade drawn back over the shoulder
+	## 0.8-1.4 s, cut 1.4-1.7 s. attack_2 (mummy_knight_bash 34/6/40) = NEW keyed clip on idle_4: the trunk twists the shield
+	## back (0-0.55 s, held to 0.68 s), then drives it forward (0.68-0.8 s) with the arm thrust out, held, settles by 1.6 s.
+	"sword_shield": {"donor": "res://art/characters/studio05/split/body_sword_shield.glb", "clips": {
+		"idle": {"segs": [["idle_4", 0.0, 6.375, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, 4, 0, 0]], "mixamorig_LeftArm": [[0.0, -25, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 5]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -5]]}},
+		"run": {"segs": [["run", 0.0, 1.7916, 1.6]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.15, "mixamorig_RightUpLeg": 1.15, "mixamorig_LeftLeg": 1.1, "mixamorig_RightLeg": 1.1},
+			"calm": {"mixamorig_LeftArm": 0.8, "mixamorig_LeftForeArm": 0.8, "mixamorig_RightArm": 0.4},
+			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 5], [0.42, 8, 0, -5], [0.92, 8, 0, 5], [1.0, 8, 0, 5]],
+				"mixamorig_LeftArm": [[0.0, -30, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 6]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -6]]}},
+		"attack_1": {"segs": [["slash", 0.8, 2.6, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 1.4, "strike_src": 1.7,
+			"lean": {"mixamorig_Spine": [[0.0, 4, 0, 0]], "mixamorig_LeftArm": [[0.0, -20, 0, 0]]}},
+		"attack_2": {"segs": [["idle_4", 0.0, 1.6, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 0.68, "strike_src": 0.8,
+			"lean": {"mixamorig_Spine": [[0.0, 4, 0, 0], [0.55, -10, 32, 0], [0.68, -10, 32, 0], [0.78, 18, -22, 0], [0.95, 18, -22, 0], [1.6, 4, 0, 0]],
+				"mixamorig_LeftArm": [[0.0, -25, 0, 0], [0.55, -5, 0, 12], [0.68, -5, 0, 12], [0.78, -82, 0, -8], [0.95, -82, 0, -8], [1.6, -25, 0, 0]],
+				"mixamorig_LeftForeArm": [[0.0, 0, 0, 0], [0.55, -45, 0, 0], [0.68, -45, 0, 0], [0.78, -5, 0, 0], [1.6, 0, 0, 0]],
+				"mixamorig_RightArm": [[0.0, 0, 0, 0], [0.55, 10, 0, 0], [0.78, 20, 0, 0], [1.6, 0, 0, 0]],
+				"mixamorig_Head": [[0.0, 0, 0, 0], [0.55, 6, -12, 0], [0.78, 8, 12, 0], [1.6, 0, 0, 0]]}},
+		"hit": {"donor": "res://art/characters/studio05/split/body_greatsword.glb", "segs": [["gs_impact_2", 0.0, 1.0, 1.5]], "loop": false, "ground": true,
+			"lean": {"mixamorig_LeftArm": [[0.0, -20, 0, 0]]}},
+		"death": {"segs": [["death", 0.4, 4.6, 1.6]], "loop": false},
+	}},
+	## greatsword = mummy_boss, the Pharaoh (MOVESPD -3 = 3.7 m/s on a 2.6 m body): the REGAL STRIDE.
+	## run = gs_run_2 with the trunk pulled UPRIGHT (-10 deg against the donor's forward run), chin up, the khopesh arm held at the
+	## side (swing damped), a longer stride (thighs x1.15), always one foot planted, a slow 3 deg roll over each step.
+	## attack_1 (mummy_boss_combo 14/5/28, crescent at frame 26) = gs_slash_3 from 0.15 s: raised 0.2-0.5 s, first cut DOWN
+	## 0.73-0.87 s (the melee hit), second cut UP 1.0-1.1 s, which the move's recovery reaches at frame 26: the crescent leaves on it.
+	## attack_2 (mummy_boss_nova 40/5/40) = gs_jump_attack, travel pinned to 0 (the nova is a box around itself): crouch, leap,
+	## slam at 1.07 s (the burst). hit = gs_impact_2 at 1.5x. death = gs_death (falls back, lands by 1.6 s).
 	"greatsword": {"donor": "res://art/characters/studio05/split/body_greatsword.glb", "clips": {
-		"idle": {"segs": [["gs_idle", 0.0, 2.0166, 1.0]], "loop": true},
-		"run": {"segs": [["gs_run_2", 0.0, 0.6166, 1.0]], "loop": true, "strip_travel": true},  ## not gs_run: that one runs BACKWARD
-		"attack_1": {"segs": [["gs_slash", 0.0, 1.28, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.6, "strike_src": 0.86},
-		"attack_2": {"segs": [["gs_jump_attack", 0.0, 2.18, 1.0]], "loop": false, "pin_travel": 0.15, "release_in_seg": 0, "release_src": 0.97, "strike_src": 1.17},
-		"attack_3": {"segs": [["gs_high_spin_attack", 0.0, 1.88, 1.0]], "loop": false, "pin_travel": 0.0, "release_in_seg": 0, "release_src": 0.84, "strike_src": 1.26},
-		"hit": {"segs": [["gs_impact", 0.0, 0.62, 1.0]], "loop": false},
+		"idle": {"segs": [["gs_idle", 0.0, 2.0166, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, -5, 0, 0]], "mixamorig_Head": [[0.0, -6, 0, 0]]}},
+		"run": {"segs": [["gs_run_2", 0.0, 0.6166, 0.8]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.4, "mixamorig_RightUpLeg": 1.4, "mixamorig_LeftLeg": 1.1, "mixamorig_RightLeg": 1.1},
+			"calm": {"mixamorig_LeftArm": 0.6, "mixamorig_LeftForeArm": 0.5, "mixamorig_RightArm": 0.5, "mixamorig_RightForeArm": 0.4},
+			"lean": {"mixamorig_Spine": [[0.0, -10, 0, 2], [0.45, -10, 0, -3], [0.88, -10, 0, 3], [1.0, -10, 0, 2]],
+				"mixamorig_Head": [[0.0, -8, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 3]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -3]]}},
+		"attack_1": {"segs": [["gs_slash_3", 0.15, 1.8333, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 0.73, "strike_src": 0.87},
+		"attack_2": {"segs": [["gs_jump_attack", 0.0, 2.18, 1.0]], "loop": false, "pin_travel": 0.0, "release_in_seg": 0, "release_src": 0.97, "strike_src": 1.17},
+		"hit": {"segs": [["gs_impact_2", 0.0, 1.0, 1.5]], "loop": false, "ground": true},
 		"death": {"segs": [["gs_death", 0.0, 2.4166, 1.0]], "loop": false},
 	}},
-	## magic (v1 shipped 2026-11-17: mummy_mage; mirrors goblin_mage cast / cast_aoe / blink).
-	## cast = mg_lite_1h_magic_attack_01: staff swept back, thrust forward at 1.0 s (hand speed peak 0.80 s).
-	## cast_aoe = mg_lite_2h_magic_area_attack_02: gathers, arms flung wide at 1.8-2.2 s. blink = mg_spell_1h_cast_spell_01 at 2x:
-	## the staff raised overhead (0.76-1.01 s) then lowered, short like the goblin mage's blink (0.47 s).
+	## magic = mummy_mage (MOVESPD -6 = 3.6 m/s): the PRIEST'S SCURRY: mg_lite_run_forward floor-planted (no flight), hunched,
+	## head bowed, the free arm stiff and half raised; the staff arm untouched. cast / blink as before (marks on the hand peaks);
+	## cast_aoe trimmed to start at 0.5 s so the wind-up is not three times the strike + recovery. hit = the big recoil
+	## (mg_lite_react_large_from_front at 1.6x, travel kept 30%). death = mg_lite_react_death_backward.
 	"magic": {"donor": "res://art/characters/studio05/split/body_magic.glb", "clips": {
-		"idle": {"segs": [["mg_lite_idle", 0.0, 1.8833, 1.0]], "loop": true},
-		"run": {"segs": [["mg_lite_run_forward", 0.0, 0.75, 1.0]], "loop": true, "strip_travel": true},
+		"idle": {"segs": [["mg_lite_idle", 0.0, 1.8833, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 0]], "mixamorig_Head": [[0.0, 8, 0, -8]]}},
+		"run": {"segs": [["mg_lite_run_forward", 0.0, 0.75, 1.3]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.25, "mixamorig_RightUpLeg": 1.25},
+			"calm": {"mixamorig_LeftArm": 0.6, "mixamorig_LeftForeArm": 0.5},
+			"lean": {"mixamorig_Spine": [[0.0, 10, 0, 0]], "mixamorig_Head": [[0.0, 8, 0, -8]], "mixamorig_LeftArm": [[0.0, -35, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 3]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -3]]}},
 		"cast": {"segs": [["mg_lite_1h_magic_attack_01", 0.0, 2.1, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.95, "strike_src": 1.15},
-		"cast_aoe": {"segs": [["mg_lite_2h_magic_area_attack_02", 0.0, 3.0, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.75, "strike_src": 2.1},
+		"cast_aoe": {"segs": [["mg_lite_2h_magic_area_attack_02", 0.5, 3.2667, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.75, "strike_src": 2.1},
 		"blink": {"segs": [["mg_spell_1h_cast_spell_01", 0.2, 1.4, 2.0]], "loop": false, "release_in_seg": 0, "release_src": 0.76, "strike_src": 0.9},
-		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
+		"hit": {"segs": [["mg_lite_react_large_from_front", 0.0, 1.3833, 1.6]], "loop": false, "pin_travel": 0.3},
 		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
 	}},
 	## wizard_boss (2026-11-18: mummy_high_wizard, the Boss's own model). Base = the magic donor; the first five clips are copied, the
@@ -114,7 +187,24 @@ func _init() -> void:
 		var stance_donor := (load(spec["donor"]) as PackedScene).instantiate()
 		_build("monster_clips_" + stance, out_dir, spec["clips"], src_skeleton, Rig.donor_player(stance_donor))
 		stance_donor.free()
+	for d in _donors.values():
+		d.free()
+	donor.free()
 	quit()
+
+
+## Other donor bodies a clip borrows from ("donor" on a clip), loaded once.
+var _donors := {}
+var _rest_skeleton: Skeleton3D
+
+
+func _player_for(spec: Dictionary, fallback: AnimationPlayer) -> AnimationPlayer:
+	if not spec.has("donor"):
+		return fallback
+	var path: String = spec["donor"]
+	if not _donors.has(path):
+		_donors[path] = (load(path) as PackedScene).instantiate()
+	return Rig.donor_player(_donors[path])
 
 
 func _build(file_name: String, out_dir: String, clips: Dictionary, src_skeleton: Skeleton3D, player: AnimationPlayer) -> void:
@@ -124,6 +214,7 @@ func _build(file_name: String, out_dir: String, clips: Dictionary, src_skeleton:
 	rig.name = "rig"
 	root.add_child(rig)
 	var skeleton := Rig.copy_skeleton(src_skeleton)
+	_rest_skeleton = Rig.copy_skeleton(src_skeleton)
 	# The optional loose-bandage bones (a mummy's extra bones) hang from the arms.
 	for extra in EXTRA_BONES:
 		var index := skeleton.get_bone_count()
@@ -160,7 +251,7 @@ func _build(file_name: String, out_dir: String, clips: Dictionary, src_skeleton:
 	var marks := {}
 	var bones_used := {}
 	for clip in clips:
-		var built := _compose(clip, clips[clip], player)
+		var built := _compose(clip, clips[clip], _player_for(clips[clip], player))
 		var animation: Animation = built["animation"]
 		library.add_animation(clip, animation)
 		marks[clip] = built["marks"]
@@ -182,6 +273,7 @@ func _build(file_name: String, out_dir: String, clips: Dictionary, src_skeleton:
 	file.store_string(json_text + "\n")
 	file.close()
 	root.free()
+	_rest_skeleton.free()
 
 
 ## A monster gets the body, not the player's hair (secondary motion baked into the clips) or finger tracks
@@ -217,13 +309,18 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 		tracks_per_seg.append(Rig.clip_tracks(player.get_animation(seg[0])))
 	var bones: Array = tracks_per_seg[0].keys()
 	var travel := 0.0
+	var rot_of := {}  ## bone -> baked rotations (one per time)
+	var pos_of := {}  ## bone -> baked positions (bones with a position track)
+	var rot_t := times
 	for bone in bones:
 		if not _wanted(bone):
 			continue
 		var has_pos: bool = tracks_per_seg[0][bone]["pos"] >= 0
-		var rot_t := []
 		var rot_v := []
 		var pos_v := []
+		rot_of[bone] = rot_v
+		if has_pos:
+			pos_of[bone] = pos_v
 		for time in times:
 			var s := segs.size() - 1
 			for k in segs.size():
@@ -234,16 +331,58 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 			src_time = clampf(src_time, 0.0, player.get_animation(segs[s][0]).length)
 			var anim: Animation = player.get_animation(segs[s][0])
 			var tr: Dictionary = tracks_per_seg[s][bone]
-			rot_t.append(time)
 			var q: Quaternion = anim.rotation_track_interpolate(tr["rot"], src_time)
+			if spec.has("amp") and (spec["amp"] as Dictionary).has(bone):
+				# the swing away from the rest pose scaled (1.3 = a 30% wider stride, 0.5 = half the arm swing)
+				var rest := _rest_rotation(bone)
+				var delta := rest.inverse() * q
+				if delta.w < 0.0:
+					delta = -delta
+				var angle := delta.get_angle()
+				if angle > 0.0001:
+					q = rest * Quaternion(delta.get_axis().normalized(), angle * float(spec["amp"][bone]))
 			if spec.has("add") and (spec["add"] as Dictionary).has(bone):
 				q = _layer(spec["add"][bone], time) * q
+			if spec.has("calm") and (spec["calm"] as Dictionary).has(bone):
+				# swing damped toward the rest pose (1 = frozen at rest, 0 = the donor's own swing)
+				q = _rest_rotation(bone).slerp(q, 1.0 - float(spec["calm"][bone]))
+			if spec.has("lean") and (spec["lean"] as Dictionary).has(bone):
+				# MODEL-space layer: degrees about the model's own x (right), y (up), z (forward) axes at the bone's pivot,
+				# as if the parent stood in its rest pose: +x tips an upward bone forward and -x swings a hanging arm forward;
+				# +z tips an upward bone toward -x and swings a hanging limb toward +x (the LEFT side). "frac": key times are
+				# fractions of the clip (a loop whose keys repeat at 0 and 1 stays seamless at any baked speed).
+				var parent_rest := _parent_global_rest(bone)
+				var key_time: float = time / total if spec.get("frac", false) else time
+				q = parent_rest.inverse() * _layer(spec["lean"][bone], key_time) * parent_rest * q
 			rot_v.append(q)
 			if has_pos:
-				var pv: Vector3 = anim.position_track_interpolate(tr["pos"], src_time)
-				if spec.has("hover") and bone == "mixamorig_Hips":
-					pv.y += _ease_keys(spec["hover"], time)
-				pos_v.append(pv)
+				pos_v.append(anim.position_track_interpolate(tr["pos"], src_time))
+	# "ground": the layers above lengthen or bend the legs; the Hips height is moved so the lower foot stays exactly as high
+	# as the donor's own lower foot at that moment (planted feet stay planted, nothing sinks into or floats over the floor).
+	# "ground": "floor" keeps the lower foot ON the floor every frame (the donor's lowest foot height): a run loses its flight
+	# phase and becomes a heavy, always-grounded gait (nothing hangs in the air: the cure for a floating walk).
+	if typeof(spec.get("ground", false)) != TYPE_BOOL or spec.get("ground", false):
+		var donor_feet := _feet_low(player, segs, starts, times, tracks_per_seg)
+		var floor_y: float = donor_feet.min()
+		for i in times.size():
+			var low := _low_foot(rot_of, pos_of, i)
+			var v: Vector3 = pos_of["mixamorig_Hips"][i]
+			v.y += (floor_y if str(spec["ground"]) == "floor" else float(donor_feet[i])) - low
+			pos_of["mixamorig_Hips"][i] = v
+	if spec.has("hover") and pos_of.has("mixamorig_Hips"):
+		for i in times.size():
+			var v: Vector3 = pos_of["mixamorig_Hips"][i]
+			v.y += _ease_keys(spec["hover"], float(times[i]) / total if spec.get("frac", false) else float(times[i]))
+			pos_of["mixamorig_Hips"][i] = v
+	var foot_speed := 0.0
+	if spec.get("strip_travel", false):
+		foot_speed = _planted_foot_speed(rot_of, pos_of, times)
+	for bone in bones:
+		if not rot_of.has(bone):
+			continue
+		var has_pos: bool = pos_of.has(bone)
+		var rot_v: Array = rot_of[bone]
+		var pos_v: Array = pos_of.get(bone, [])
 		if has_pos and spec.get("strip_travel", false):
 			var drift: float = (pos_v[-1] as Vector3).z - (pos_v[0] as Vector3).z
 			travel = drift
@@ -275,6 +414,12 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 	var meta := {"length": snappedf(total, 0.0001), "loop": bool(spec["loop"])}
 	if travel != 0.0:
 		meta["travel_per_second"] = snappedf(travel / total, 0.001)  ## rig units per second at the donor's size
+	if foot_speed > 0.0:
+		## how fast the PLANTED foot slides back under the Hips (rig units/s at the donor's size): the ground speed at which the
+		## feet do not slide. Equals travel_per_second for an untouched donor; differs once a stride layer changes the legs.
+		meta["foot_speed"] = snappedf(foot_speed, 0.001)
+		if spec.has("amp") or spec.has("lean") or spec.has("ground"):
+			meta["travel_per_second"] = meta["foot_speed"]
 	var key_count := 0
 	for t in out.get_track_count():
 		key_count += out.track_get_key_count(t)
@@ -287,6 +432,100 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 		meta["windup_end"] = snappedf(seg_start + (float(spec["release_src"]) - from) / speed, 0.0001)
 		meta["strike_end"] = snappedf(seg_start + (float(spec["strike_src"]) - from) / speed, 0.0001)
 	return {"animation": out, "marks": meta}
+
+
+## Model-space position of `bone` at frame i of baked tracks (bones without a track keep their rest).
+func _fk(bone: String, rot_of: Dictionary, pos_of: Dictionary, i: int, hips_shift: Vector3 = Vector3.ZERO) -> Vector3:
+	var index := _rest_skeleton.find_bone(bone)
+	var chain := []
+	while index >= 0:
+		chain.push_front(index)
+		index = _rest_skeleton.get_bone_parent(index)
+	var t := Transform3D.IDENTITY
+	for b in chain:
+		var name := _rest_skeleton.get_bone_name(b)
+		var rest := _rest_skeleton.get_bone_rest(b)
+		var q: Quaternion = rot_of[name][i] if rot_of.has(name) else rest.basis.get_rotation_quaternion()
+		var p: Vector3 = pos_of[name][i] if pos_of.has(name) else rest.origin
+		if name == "mixamorig_Hips":
+			p += hips_shift
+		t = t * Transform3D(Basis(q), p)
+	return t.origin
+
+
+func _low_foot(rot_of: Dictionary, pos_of: Dictionary, i: int) -> float:
+	return minf(_fk("mixamorig_LeftFoot", rot_of, pos_of, i).y, _fk("mixamorig_RightFoot", rot_of, pos_of, i).y)
+
+
+## The donor's own lower-foot height per frame (the clip without any layer).
+func _feet_low(player: AnimationPlayer, segs: Array, starts: Array, times: Array, tracks_per_seg: Array) -> Array:
+	var raw_rot := {}
+	var raw_pos := {}
+	for bone in ["mixamorig_Hips", "mixamorig_LeftUpLeg", "mixamorig_LeftLeg", "mixamorig_LeftFoot", "mixamorig_RightUpLeg", "mixamorig_RightLeg", "mixamorig_RightFoot"]:
+		raw_rot[bone] = []
+		for time in times:
+			var s := segs.size() - 1
+			for k in segs.size():
+				if time < float(starts[k]) + (float(segs[k][2]) - float(segs[k][1])) / float(segs[k][3]) - 0.00001:
+					s = k
+					break
+			var anim: Animation = player.get_animation(segs[s][0])
+			var src_time := clampf(float(segs[s][1]) + (time - float(starts[s])) * float(segs[s][3]), 0.0, anim.length)
+			var tr: Dictionary = tracks_per_seg[s][bone]
+			raw_rot[bone].append(anim.rotation_track_interpolate(tr["rot"], src_time))
+			if tr["pos"] >= 0:
+				if not raw_pos.has(bone):
+					raw_pos[bone] = []
+				raw_pos[bone].append(anim.position_track_interpolate(tr["pos"], src_time))
+	var out := []
+	for i in times.size():
+		out.append(_low_foot(raw_rot, raw_pos, i))
+	return out
+
+
+## Speed (rig units/s) at which the planted foot slides backward once the Hips' forward drift is stripped: the ground speed the
+## clip shows without foot sliding. A foot counts as planted while it is the lower foot and within 1.5 cm (rig) of its lowest.
+func _planted_foot_speed(rot_of: Dictionary, pos_of: Dictionary, times: Array) -> float:
+	var n := times.size()
+	var total: float = times[-1]
+	var drift: float = (pos_of["mixamorig_Hips"][n - 1] as Vector3).z - (pos_of["mixamorig_Hips"][0] as Vector3).z
+	var feet := {"mixamorig_LeftFoot": [], "mixamorig_RightFoot": []}
+	for i in n:
+		var shift := Vector3(0, 0, -drift * float(times[i]) / total)
+		for foot in feet:
+			feet[foot].append(_fk(foot, rot_of, pos_of, i, shift))
+	var lowest := INF
+	for foot in feet:
+		for p in feet[foot]:
+			lowest = minf(lowest, (p as Vector3).y)
+	# the median backward speed of the lower foot (frames where it is on the ground): robust to the short moments of a
+	# floor-planted gait where the lower foot is still swinging (those slide whatever the speed; the shots show them)
+	var speeds := []
+	for i in range(1, n):
+		for foot in feet:
+			var a: Vector3 = feet[foot][i - 1]
+			var b: Vector3 = feet[foot][i]
+			var other: Vector3 = feet["mixamorig_RightFoot" if foot == "mixamorig_LeftFoot" else "mixamorig_LeftFoot"][i]
+			if b.y <= other.y and b.y < lowest + 0.015 and a.y < lowest + 0.015:
+				speeds.append(-(b.z - a.z) / (float(times[i]) - float(times[i - 1])))
+	if speeds.is_empty():
+		return 0.0
+	speeds.sort()
+	return float(speeds[speeds.size() / 2])
+
+
+func _rest_rotation(bone: String) -> Quaternion:
+	return _rest_skeleton.get_bone_rest(_rest_skeleton.find_bone(bone)).basis.get_rotation_quaternion()
+
+
+## The rest rotation of the bone's parent in model space (the chain of rest rotations from the root).
+func _parent_global_rest(bone: String) -> Quaternion:
+	var q := Quaternion.IDENTITY
+	var p := _rest_skeleton.get_bone_parent(_rest_skeleton.find_bone(bone))
+	while p >= 0:
+		q = _rest_skeleton.get_bone_rest(p).basis.get_rotation_quaternion() * q
+		p = _rest_skeleton.get_bone_parent(p)
+	return q
 
 
 ## Eased value of keys [[t, v]...] at time t (smoothstep between keys, held outside).

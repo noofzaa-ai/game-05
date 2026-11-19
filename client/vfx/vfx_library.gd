@@ -1,4 +1,4 @@
-extends RefCounted
+﻿extends RefCounted
 ## Reads data/combat/vfx.json: what every combat action LOOKS like. Pure data (no nodes), so it can
 ## be tested headless; client/effects.gd draws what this hands out. The rules never read this file.
 ## Also decides which effect keys an action plays (fallbacks from a move id to its kind to a default),
@@ -13,10 +13,15 @@ const LAYER_TYPES: Array[String] = ["trail", "sprite", "ground", "burst", "ghost
 const TRAIL_SHAPES: Array[String] = ["arc", "thrust", "ring"]
 const SPRITE_MODES: Array[String] = ["glow", "star", "splat", "ring", "beam", "swirl", "ghost", "cross", "bolt", "flame"]  ## index = shader mode
 const GROUND_MODES: Array[String] = ["ring", "crack", "stain", "glyph"]  ## index = shader mode
-const BURST_STYLES: Array[String] = ["streak", "puff", "mote"]  ## index = shader style
-const BURST_DIRS: Array[String] = ["up", "down", "forward", "back", "none"]
+const BURST_STYLES: Array[String] = ["streak", "puff", "mote", "chunk", "smoke"]  ## index = shader style
+## Violent skill looks (client/vfx/violence.gd): "violent/<skill>/<level>" and its "_phone" twin.
+const VIOLENT_PREFIX := "violent/"
+const VIOLENT_LEVELS: Array[String] = ["L1", "L2", "L3"]
+const MAX_VIOLENT_FLASH_SECONDS := 0.12  ## a violent screen flash is short and soft (Boss 2026-11-19: never a flicker)
+const MAX_VIOLENT_FLASH_ALPHA := 0.16
+const BURST_DIRS: Array[String] = ["up", "down", "forward", "back", "none", "ring"]  ## ring = sideways all round (lift = degrees above the ground)
 const BILLBOARDS: Array[String] = ["ground", "camera", "y", "axis"]  ## index = shader billboard (0 = as placed, 3 = turns round its own long axis)
-const TARGET_PREFIXES: Array[String] = ["hit/", "skill_hit/", "skill_struck/", "area_burst/", "skill_burst/", "shot_end/", "status/", "skill_gem/"]  ## keys whose context is a struck target or a burst point, not the attacker
+const TARGET_PREFIXES: Array[String] = ["hit/", "skill_hit/", "skill_struck/", "area_burst/", "skill_burst/", "shot_end/", "status/", "skill_gem/", "violent/"]  ## keys whose context is a struck target or a burst point, not the attacker
 const ANCHORS: Array[String] = ["at", "feet", "chest", "hitbox", "end"]
 const MAX_BURST := 32  ## particles one burst mesh holds
 ## Keys the stage plays for things that are not moves (every one must exist in the data).
@@ -93,7 +98,64 @@ static func parse(text: String):
 	for key in EVENT_KEYS:
 		if not lib.actions.has(key):
 			lib.errors.append("vfx: the action '%s' is missing" % key)
+	lib._check_violent()
 	return lib
+
+
+## The presets that have violent looks ("violent/<preset>/<level>").
+func violent_skills() -> Array[String]:
+	var found: Array[String] = []
+	for key in actions:
+		if str(key).begins_with(VIOLENT_PREFIX):
+			var skill := str(key).get_slice("/", 1)
+			if not skill in found:
+				found.append(skill)
+	return found
+
+
+## Every violent preset has all three levels, each with a phone twin that keeps the flash / shake / debris (and any ring)
+## but plays no more particles and no more layers than the full look. No violent look draws a ground decal (Boss
+## 2026-11-19: the rings and scorch were not pretty) and its screen flash stays short and soft (never a flicker).
+func _check_violent() -> void:
+	for skill in violent_skills():
+		for lvl in VIOLENT_LEVELS:
+			var full := "%s%s/%s" % [VIOLENT_PREFIX, skill, lvl]
+			var phone := full + "_phone"
+			if not actions.has(full) or not actions.has(phone):
+				errors.append("vfx: violent look '%s' needs both '%s' and '%s'" % [skill, full, phone])
+				continue
+			var a: Array = actions[full]
+			var b: Array = actions[phone]
+			if b.size() > a.size():
+				errors.append("vfx: '%s' has more layers than the full look" % phone)
+			if violent_particles(b) > violent_particles(a):
+				errors.append("vfx: '%s' has more particles than the full look" % phone)
+			for kind in ["shake", "flash"]:
+				if a.any(func(l): return str(l.get("type")) == kind) and not b.any(func(l): return str(l.get("type")) == kind):
+					errors.append("vfx: '%s' drops the %s" % [phone, kind])
+			if a.any(func(l): return str(l.get("style", "")) == "chunk") and not b.any(func(l): return str(l.get("style", "")) == "chunk"):
+				errors.append("vfx: '%s' drops the debris" % phone)
+			if a.any(func(l): return str(l.get("mode", "")) == "ring") and not b.any(func(l): return str(l.get("mode", "")) == "ring"):
+				errors.append("vfx: '%s' drops the shock ring" % phone)
+			for layer in a + b:
+				if str(layer.get("type")) == "ground":
+					errors.append("vfx: violent look '%s' draws a ground decal (none allowed)" % skill)
+				if str(layer.get("type")) == "flash":
+					var c = layer.get("color", [])
+					if float(layer.get("seconds", 1.0)) > MAX_VIOLENT_FLASH_SECONDS or (c is Array and c.size() > 3 and float(c[3]) > MAX_VIOLENT_FLASH_ALPHA):
+						errors.append("vfx: violent look '%s' has a flash that is too long or strong" % skill)
+
+
+## Particles one play of these layers puts on screen (burst counts; every other drawn layer counts 1).
+static func violent_particles(layers: Array) -> int:
+	var n := 0
+	for layer in layers:
+		match str(layer.get("type")):
+			"burst":
+				n += int(layer.get("count", 0))
+			"sprite", "ground", "trail":
+				n += 1
+	return n
 
 
 func is_valid() -> bool:
@@ -270,6 +332,8 @@ func _check_layer(key: String, index: int, layer: Dictionary) -> void:
 		errors.append("%s has an unknown anchor '%s'" % [where, layer["anchor"]])
 	if layer.has("color") and not _color_ok(layer["color"]):
 		errors.append("%s has an unknown color '%s'" % [where, layer["color"]])
+	if bool(layer.get("glow", false)) and not type in ["sprite", "burst"]:
+		errors.append("%s: only sprite and burst layers can glow (additive)" % where)
 	if type in ["trail", "sprite", "ground", "burst", "ghosts", "flash"] and float(layer.get("seconds", 0.0)) <= 0.0:
 		errors.append("%s needs seconds > 0" % where)
 	match type:

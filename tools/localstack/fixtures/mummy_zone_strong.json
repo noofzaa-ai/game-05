@@ -1,0 +1,50 @@
+{
+ "_about": "DEV: all cards level 60 so the squad can reach the Pyramid boss wave (wave 9): the Sand Pyramid zone quest (data/world/zone_quests.json) is done, so the zone is OPEN on the world map. Open it with `scenario.gd -- --fixture mummy_zone_open --open map`.",
+ "card_deck": {
+  "cards": {
+   "sword_shield": {
+    "race": "human",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   },
+   "greatsword": {
+    "race": "viking",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   },
+   "longbow": {
+    "race": "elf",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   },
+   "magic": {
+    "race": "runeborn",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   }
+  },
+  "squad": [
+   "sword_shield",
+   "greatsword",
+   "longbow"
+  ]
+ },
+ "tutorial": {
+  "version": 1,
+  "step": "done",
+  "tour_done": true,
+  "unlock_seen": true
+ },
+ "unlocks": {
+  "magic_runeborn": true,
+  "boss_goblin_base": true
+ }
+}

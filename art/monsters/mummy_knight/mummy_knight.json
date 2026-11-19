@@ -14,9 +14,9 @@
   ],
   "move_clips": {
     "attack_1": "the side cut",
-    "attack_2": "the telegraphed overhead"
+    "attack_2": "the shield bash (keyed)"
   },
-  "run_clip_speed": 0.51,
+  "run_clip_speed": 0.734,
   "hips_scale": 1.0,
   "sockets": {
     "Monster_MummyKnight_Shield": "mixamorig_LeftForeArm",

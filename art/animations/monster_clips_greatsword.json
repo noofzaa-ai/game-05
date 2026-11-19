@@ -1,9 +1,9 @@
 {
   "attack_1": {
-    "length": 1.28,
+    "length": 1.6833,
     "loop": false,
-    "strike_end": 0.86,
-    "windup_end": 0.6
+    "strike_end": 0.72,
+    "windup_end": 0.58
   },
   "attack_2": {
     "length": 2.18,
@@ -11,18 +11,12 @@
     "strike_end": 1.17,
     "windup_end": 0.97
   },
-  "attack_3": {
-    "length": 1.88,
-    "loop": false,
-    "strike_end": 1.26,
-    "windup_end": 0.84
-  },
   "death": {
     "length": 2.4166,
     "loop": false
   },
   "hit": {
-    "length": 0.62,
+    "length": 0.6667,
     "loop": false
   },
   "idle": {
@@ -30,8 +24,9 @@
     "loop": true
   },
   "run": {
-    "length": 0.6166,
+    "foot_speed": 1.076,
+    "length": 0.7708,
     "loop": true,
-    "travel_per_second": 1.275
+    "travel_per_second": 1.076
   }
 }

@@ -285,6 +285,10 @@ func _physics_process(_delta: float) -> void:
 func _process(delta: float) -> void:
 	if remote_session!=null and not remote_session.ready and remote_session._terminal:
 		online_error=preload("res://client/online/online_text.gd").message(remote_session.error)
+		# The room worker refuses a zone the server profile has not unlocked by closing the socket (no reason travels on
+		# the netfox transport); the rejoin then finds the room closed. Say what is likely wrong instead of "room closed".
+		if remote_session.error == "room_expired" and not _solo_journey.is_empty() and _solo_journey != WAVE_JOURNEY:
+			online_error=preload("res://client/card_tokens.gd").t("zone_zone_locked")
 		cancel_pending_solo(false)
 	if _solo_started_at>0 and Time.get_ticks_msec()-_solo_started_at>15000 and (_solo_connecting or (remote_session!=null and not remote_session.ready)):
 		online_error="เปิดห้องไม่สำเร็จภายใน 15 วินาที กดออกเดินทางเพื่อลองใหม่"
@@ -389,7 +393,10 @@ func _refresh_account() -> void:
 				driver.refresh()
 	else: online_error = "ยังโหลดข้อมูลล่าสุดไม่ได้ กรุณาเชื่อมต่อใหม่"
 
+var _solo_journey := ""  ## the zone journey the pending solo room asked for ("" = default goblin)
+
 func _start_solo(farm_map: String = "", journey_id: String = "") -> void:
+	_solo_journey = journey_id
 	_solo_generation+=1
 	var request_generation:=_solo_generation
 	_solo_started_at=Time.get_ticks_msec()

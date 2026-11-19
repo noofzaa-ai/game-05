@@ -33,6 +33,8 @@ func run(ctx) -> void:
 	_check_vfx(ctx, combat)
 	_check_duel(ctx, combat)
 	_check_finale(ctx, combat)
+	_check_boss_resistance(ctx, combat)
+	_check_boss_statuses(ctx, combat)
 	_check_skill_list(ctx)
 	_check_boss_spots(ctx, combat)
 	_check_zone(ctx)
@@ -117,9 +119,83 @@ func _check_duel(ctx, combat) -> void:
 func _check_finale(ctx, combat) -> void:
 	var data = JourneyData.load_by_id("mummy_waves", combat.enemies.keys())
 	var last: Dictionary = data.stages[-1]
-	ctx.check("finale power stays in the measured band 0.95-1.1 (1.04 = 82%% win, level 5 tier 1 starter squad): %.2f" % float(last["power"]), float(last["power"]) >= 0.95 and float(last["power"]) <= 1.1)
+	# Boss 2026-11-19 retune, round 2 (mummy ATK ~2x the original, HP near the original, ~70% win for the level-15 tier-1
+	# starter squad): finale 0.65 with squad power 1.68 = 71% (60 seeds); finale 0.75 with squad power 1.6 = 83% (60).
+	# The band is that sweep's useful range; outside it the finale is a wall or a walk-over.
+	ctx.check("finale power stays in the measured band 0.6-0.72 (0.65 = 71%% win, level 15 tier 1 starter squad): %.2f" % float(last["power"]), float(last["power"]) >= 0.6 and float(last["power"]) <= 0.72)
 	ctx.check("the boss pair comes with the escort mummies only (the ranged escorts were dropped for balance)", last["enemies"].all(func(e): return ["mummy_boss", "mummy_high_wizard", "mummy"].has(str(e["type"]))))
-	ctx.check("the tuning note records the measurement", str(JSON.parse_string(FileAccess.get_file_as_string("res://data/journeys/mummy_waves.json")).get("_tuning_boss_pair", "")).contains("1.04 -> 82%"))
+	ctx.check("the tuning note records the measurement", str(JSON.parse_string(FileAccess.get_file_as_string("res://data/journeys/mummy_waves.json")).get("_tuning_hard_hits_round2", "")).contains("1.68 -> 71.2%, CHOSEN"))
+
+
+## Boss 2026-11-19: every boss except the goblin family has CTRL_RES 100 (data/races/rules.json boss_types): no stun, shock,
+## sleep, stagger, knockback or launch. Debuffs and DoTs must still land (players' debuff builds), so their summed
+## resistance stays well under 100.
+func _check_boss_resistance(ctx, combat) -> void:
+	var Effects = load("res://logic/effects.gd")
+	var bosses: Array = load("res://logic/race_data.gd").load_default().rules.get("boss_types", [])
+	ctx.check("boss_types lists the two pyramid bosses %s" % [bosses], bosses.has("mummy_boss") and bosses.has("mummy_high_wizard"))
+	var world := SimWorld.new()
+	world.half_width = 8.0
+	world.half_depth = 4.5
+	var sim := GameSim.new(world, combat, RandomNumberGenerator.new())
+	sim.add_player(1, Vector3(-3.0, 0.05, 0.0))
+	var next := 2
+	for id in bosses:
+		if str(id).begins_with("goblin"):
+			continue  # Boss 2026-11-19: the goblin family is the exception
+		var stats: Dictionary = combat.enemies[id]["stats"]
+		ctx.check("boss %s has CTRL_RES >= 100 (%s)" % [id, stats.get("CTRL_RES", 0)], float(stats.get("CTRL_RES", 0.0)) >= 100.0)
+		sim.add_enemy(next, Vector3(3.0, 0.05, 0.0), str(id), 4)
+		var boss = sim.fighters[next]
+		ctx.check("boss %s: immune to the physical control results (stagger, knockback, launch)" % id, Effects.control_resist_immune(boss))
+		var events: Array[Dictionary] = []
+		var rng := RandomNumberGenerator.new()
+		var landed := false
+		for effect in ["stun", "shock", "sleep"]:
+			landed = landed or Effects.apply(1, sim.fighters[1], next, boss, {"id": effect, "chance": 100.0, "duration": 0}, combat, rng, events)
+		ctx.check("boss %s: a 100%% stun, shock or sleep never lands" % id, not landed)
+		var debuff: float = Effects.resistance_total(boss, "debuff", "slow")
+		var dot: float = Effects.resistance_total(boss, "dot", "burn")
+		ctx.check("boss %s: debuffs and DoTs can still land (resistance %.0f / %.0f < 60)" % [id, debuff, dot], debuff < 60.0 and dot < 60.0)
+		# (chance 200: the boss's EFFECT_RES is subtracted first, then the chance is clamped to 100 = certain)
+		ctx.check("boss %s: a sure slow still lands (not immune to debuffs)" % id, Effects.apply(1, sim.fighters[1], next, boss, {"id": "slow", "chance": 200.0, "duration": 0}, combat, rng, events))
+		next += 1
+
+
+## Boss 2026-11-19 ('the boss skills must inflict statuses on the player'): the statuses each boss move gives, control
+## only on big telegraphed moves at a chance under 100, and the hit order of the family (boss > knight > mage/archer > grunt).
+const BOSS_STATUSES := {
+	"mummy_hw_bolt": ["weaken", "bleed"], "mummy_hw_curse": ["curse", "exhaust"], "mummy_hw_starfall": ["burn", "shock"],
+	"mummy_hw_sandstorm": ["slow", "weaken"], "mummy_boss_combo": ["bleed"], "mummy_boss_nova": ["curse", "wound"],
+	"mummy_knight_bash": ["stun", "sunder"], "mummy_mage_curse": ["curse", "exhaust"], "mummy_grasp": ["curse", "bleed"],
+}
+
+
+func _check_boss_statuses(ctx, combat) -> void:
+	for move_id in BOSS_STATUSES:
+		var move: Dictionary = combat.moves[move_id]
+		var ids: Array = move["effects"].map(func(e): return str(e["id"]))
+		ctx.check("%s gives %s %s" % [move_id, BOSS_STATUSES[move_id], ids], BOSS_STATUSES[move_id].all(func(e): return ids.has(e)))
+	var control_ok := true
+	for move_id in combat.moves:
+		if not str(move_id).begins_with("mummy"):
+			continue
+		var move: Dictionary = combat.moves[move_id]
+		for entry in move["effects"]:
+			if str(combat.effects[str(entry["id"])].get("control", "")) != "":
+				control_ok = control_ok and bool(move["telegraph"]) and float(entry["chance"]) < 100.0
+	ctx.check("mummy control statuses (stun/shock/sleep) only on telegraphed moves, never certain", control_ok)
+	ctx.check("the sandstorm (a ring around the wizard) carries no control status", combat.moves["mummy_hw_sandstorm"]["effects"].all(func(e): return str(combat.effects[str(e["id"])].get("control", "")) == ""))
+	var atk := func(id: String) -> float: return float(combat.enemies[id]["stats"]["ATK"])
+	ctx.check("mummy family hit order: bosses > knight > mage, archer > grunt (%s)" % [["mummy_high_wizard", "mummy_boss", "mummy_knight", "mummy_mage", "mummy_archer", "mummy"].map(func(i): return atk.call(i))],
+		minf(atk.call("mummy_high_wizard"), atk.call("mummy_boss")) > atk.call("mummy_knight") and atk.call("mummy_knight") > maxf(atk.call("mummy_mage"), atk.call("mummy_archer")) and minf(atk.call("mummy_mage"), atk.call("mummy_archer")) >= atk.call("mummy"))
+	# Boss 2026-11-19 round 2: ATK about 2x the pre-change mummy values, HP back near them (round 1's HP /4 is gone).
+	var original := {"mummy": [15.0, 45.0], "mummy_archer": [14.0, 33.0], "mummy_mage": [16.5, 36.0], "mummy_knight": [18.0, 165.0], "mummy_boss": [18.8, 225.0], "mummy_high_wizard": [20.0, 300.0]}
+	for id in original:
+		var stats: Dictionary = combat.enemies[id]["stats"]
+		var atk_ratio: float = float(stats["ATK"]) / float(original[id][0])
+		var hp_ratio: float = float(stats["HP"]) / float(original[id][1])
+		ctx.check("round 2: %s ATK %.2fx the original (1.8-2.3x) and HP %.2fx (0.75-1.0x)" % [id, atk_ratio, hp_ratio], atk_ratio >= 1.8 and atk_ratio <= 2.3 and hp_ratio >= 0.75 and hp_ratio <= 1.0)
 
 
 ## ai.skills (Boss 2026-11-18 option a): the loader rejects a bad list; each skill keeps its own cooldown; a monster

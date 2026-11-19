@@ -1,0 +1,32 @@
+{
+  "attack_1": {
+    "length": 1.08,
+    "loop": false,
+    "strike_end": 0.66,
+    "windup_end": 0.4
+  },
+  "attack_2": {
+    "length": 1.2,
+    "loop": false,
+    "strike_end": 0.6,
+    "windup_end": 0.4
+  },
+  "death": {
+    "length": 2.6,
+    "loop": false
+  },
+  "hit": {
+    "length": 0.6667,
+    "loop": false
+  },
+  "idle": {
+    "length": 2.0166,
+    "loop": true
+  },
+  "run": {
+    "foot_speed": 1.539,
+    "length": 0.5138,
+    "loop": true,
+    "travel_per_second": 1.539
+  }
+}

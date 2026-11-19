@@ -12,9 +12,10 @@
     "loop": true
   },
   "run": {
-    "length": 0.8833,
+    "foot_speed": 1.262,
+    "length": 0.7681,
     "loop": true,
-    "travel_per_second": 1.069
+    "travel_per_second": 1.262
   },
   "shoot": {
     "length": 1.2833,

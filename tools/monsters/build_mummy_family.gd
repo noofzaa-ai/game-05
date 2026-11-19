@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 ## The mummy family on the shared 102-joint studio05 rig (the mummy archer's pipeline, tools/monsters/build_mummy_archer.gd):
 ## the stand-in mummy mesh (tools/monsters/standin) re-bound to the donor rig, given per-monster proportions, a tinted albedo
 ## and its own gear, every piece skinned to the same rig (no donor joint removed or merged; the four loose-bandage joints added).
@@ -32,12 +32,12 @@ const SHIELD_TOP := -1.0  ## which way the round top of the shield points along 
 ## width: shoulders/chest widened about the centre line (arms moved out, not thickened); head: head scale (archer 1.3);
 ## tint: multiplies the stand-in albedo; gear: pieces built below.
 const VARIANTS := {
-	"mummy": {"node": "Monster_Mummy", "height": 1.8, "stance": "sword_shield", "width": 1.0, "head": 1.3,
+	"mummy": {"node": "Monster_Mummy", "height": 1.8, "stance": "mummy", "width": 1.0, "head": 1.3,
 		"tint": Color(1.0, 1.0, 1.0), "gear": ["blade"],
-		"clips": {"attack_1": "the quick slash", "attack_2": "the overhead chop"}},
+		"clips": {"attack_1": "the two-handed rake", "attack_2": "the grave grasp (lunge and clutch)"}},
 	"mummy_knight": {"node": "Monster_MummyKnight", "height": 2.0, "stance": "sword_shield", "width": 1.16, "head": 1.22,
 		"tint": Color(0.84, 0.8, 0.74), "gear": ["shield", "khopesh", "helmet"],
-		"clips": {"attack_1": "the side cut", "attack_2": "the telegraphed overhead"}},
+		"clips": {"attack_1": "the side cut", "attack_2": "the shield bash (keyed)"}},
 	"mummy_mage": {"node": "Monster_MummyMage", "height": 1.9, "stance": "magic", "width": 0.94, "head": 1.3,
 		"tint": Color(0.86, 0.88, 0.9), "gear": ["staff", "hood"],
 		"clips": {"cast": "the bolt", "cast_aoe": "the ground mark", "blink": "the escape"}},
@@ -50,7 +50,7 @@ const VARIANTS := {
 		"clips": {"cast": "the bolt", "cast_aoe": "the big cast", "summon": "calls the mummies", "starfall": "the starfall", "sandstorm": "the sandstorm"}},
 	"mummy_boss": {"node": "Monster_MummyBoss", "height": 2.6, "stance": "greatsword", "width": 1.24, "head": 1.18,
 		"tint": Color(0.5, 0.62, 0.6), "gear": ["boss_khopesh", "nemes", "mask", "collar"],
-		"clips": {"attack_1": "the quick chop", "attack_2": "the leaping slam (telegraphed)", "attack_3": "the whirl"}},
+		"clips": {"attack_1": "the two-cut combo", "attack_2": "the leaping nova slam (in place)"}},
 }
 
 const MAP := {

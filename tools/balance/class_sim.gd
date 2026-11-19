@@ -2,6 +2,7 @@ extends SceneTree
 ## Class balance check (auto-battler): fixed-seed scripted fights of the goblin wave journey
 ## (data/journeys/goblin_waves.json) through the real rules, with logic/auto_pilot.gd driving our fighters.
 ##   godot --headless --path . --script res://tools/balance/class_sim.gd [-- seeds=8 only=solo,squad,greatsword]
+##   journey=mummy_waves level=15 gear=1 power3=1.8 stat:mummy:ATK=2.5 (measurement-only overrides, see _init)
 ## Scenarios: each class solo, the starter squad (logic/card_deck.gd STARTER_SQUAD), and each class x3
 ## (a measurement only: a real squad never repeats a class). Prints one table row per scenario and one
 ## row per class inside the squads: win rate, waves reached, time to clear, damage dealt/taken, deaths,
@@ -63,6 +64,15 @@ func _init() -> void:
 			card_level = int(arg.substr(6))
 		elif arg.begins_with("power") and arg.contains("="):
 			power_override[int(arg.substr(5, arg.find("=") - 5))] = float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("stat:") and arg.contains("="):
+			# "stat:mummy:ATK=2.5" multiplies the base ATK of every enemy whose id starts with "mummy" (measurement only,
+			# applied in argument order, so "stat:mummy:ATK=2 stat:mummy_boss:ATK=0.8" leaves the Pharaoh at 1.6x).
+			var parts := arg.substr(5, arg.find("=") - 5).split(":")
+			var factor := float(arg.substr(arg.find("=") + 1))
+			for enemy_id in combat.enemies:
+				if str(enemy_id).begins_with(parts[0]):
+					var stats: Dictionary = combat.enemies[enemy_id]["stats"]
+					stats[parts[1]] = float(stats.get(parts[1], 0.0)) * factor
 	var scenarios := []
 	for class_id in ["sword_shield", "greatsword", "longbow", "magic"]:
 		scenarios.append({"name": "solo " + class_id, "classes": [class_id], "kind": "solo"})
@@ -233,6 +243,15 @@ func _progress(profile, r: RandomNumberGenerator) -> void:
 ## One fight of the wave journey with these classes (1 = solo). Returns totals and one entry per member.
 func play(classes: Array, seed: int) -> Dictionary:
 	var data = JourneyData.load_by_id(journey_id, combat.enemies.keys())
+	for arg in OS.get_cmdline_user_args():  # "heal=0.6": wave_heal_fraction, "stage9=1.2": a stage's power (measurement only)
+		if arg.begins_with("heal="):
+			data.wave_heal_fraction = float(arg.substr(5))
+		elif arg.begins_with("stage") and arg.contains("="):
+			data.stages[int(arg.substr(5, arg.find("=") - 5)) - 1]["power"] = float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("count="):
+			data.wave_count_scale = float(arg.substr(6))
+		elif arg.begins_with("bosshp="):
+			data.boss["hp_mult"] = float(arg.substr(7))
 	for size in power_override:
 		if size >= 1 and size <= data.wave_power_by_squad.size():
 			data.wave_power_by_squad[size - 1] = float(power_override[size])

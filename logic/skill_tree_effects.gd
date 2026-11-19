@@ -171,7 +171,7 @@ static func _rebuild_derived(fighter) -> void:
 		var effect: Dictionary = entry["effect"]
 		if effect["type"] == "low_hp_scaling":
 			scaling.append(effect)
-		if effect["type"] == "stat_mod" and not RaceData.STAT_NAMES.has(str(effect["stat"])):
+		if effect["type"] == "stat_mod" and not preload("res://logic/combat_data_loader.gd").is_stat_name(effect["stat"]):
 			var mod: Dictionary = pseudo.get(str(effect["stat"]), {"add": 0.0, "mul": 0.0})
 			mod["add"] += float(effect.get("add", 0.0))
 			mod["mul"] += float(effect.get("mul", 0.0))

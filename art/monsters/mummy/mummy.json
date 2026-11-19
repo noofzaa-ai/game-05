@@ -2,8 +2,8 @@
   "id": "mummy",
   "model": "res://art/monsters/mummy/mummy.glb",
   "model_height": 1.8,
-  "animations": "res://art/animations/monster_clips_sword_shield.glb",
-  "stance": "sword_shield",
+  "animations": "res://art/animations/monster_clips_mummy.glb",
+  "stance": "mummy",
   "clips": [
     "attack_1",
     "attack_2",
@@ -13,10 +13,10 @@
     "run"
   ],
   "move_clips": {
-    "attack_1": "the quick slash",
-    "attack_2": "the overhead chop"
+    "attack_1": "the two-handed rake",
+    "attack_2": "the grave grasp (lunge and clutch)"
   },
-  "run_clip_speed": 0.51,
+  "run_clip_speed": 1.539,
   "hips_scale": 1.0,
   "sockets": {
     "Monster_Mummy_Blade": "mixamorig_RightHand"
