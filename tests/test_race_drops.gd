@@ -24,6 +24,7 @@ func run(ctx) -> void:
 	_gold_only_boss(ctx, f.rules, picks)
 	_race_from_squad(ctx, f.rules, picks)
 	_sim_boss_kill(ctx, f)
+	_random_everything(ctx, f.rules, picks)
 
 
 static func piece(rules, i: int, tier: int, slot: String = ""):
@@ -66,8 +67,8 @@ func _shares(ctx, rules, picks: Array) -> void:
 	var off_ok := true
 	for i in 200:
 		var shield = RaceDrops.convert_piece(rules, piece(rules, 70000 + i, RARE, "offhand"), picks, RaceDrops.WAVE, 5)
-		off_ok = off_ok and shield.item_id in ["race_viking_shield", "race_elf_shield"] and shield.slot == "offhand" and shield.tier == RARE
-	ctx.check("race drops: a dropped offhand becomes the race shield of a squad card's race", off_ok)
+		off_ok = off_ok and str(rules.catalog.entry(shield.item_id).get("race", "")) != "" and shield.item_id.ends_with("_shield") and shield.slot == "offhand" and shield.tier == RARE
+	ctx.check("race drops: a dropped offhand becomes a race shield (Boss 2026-11-20: random race, no longer the squad card race)", off_ok)
 
 
 func _gold_only_boss(ctx, rules, picks: Array) -> void:
@@ -99,6 +100,10 @@ func _gold_only_boss(ctx, rules, picks: Array) -> void:
 
 
 func _race_from_squad(ctx, rules, picks: Array) -> void:
+	_with_pick("squad", "squad", func(): _race_from_squad_body(ctx, rules, picks))  # Boss 2026-11-20: the squad-only rule is now the pick mode "squad"
+
+
+func _race_from_squad_body(ctx, rules, picks: Array) -> void:
 	var seen := {}
 	var ok := true
 	for i in 1500:
@@ -115,7 +120,7 @@ func _race_from_squad(ctx, rules, picks: Array) -> void:
 	for key in seen:
 		total += int(seen[key])
 	var even := seen.size() == 3 and seen.values().all(func(n): return absf(float(n) / float(total) - 1.0 / 3.0) < 0.05)
-	ctx.check("race drops: race and class come only from the squad, about evenly per card (%s)" % str(seen), ok and even)
+	ctx.check("race drops (pick mode squad): race and class come only from the squad, about evenly per card (%s)" % str(seen), ok and even)
 	ctx.check("race drops: a run with no squad card converts nothing", RaceDrops.picks_for(null).is_empty()
 		and RaceDrops.convert_piece(rules, piece(rules, 7, LEGENDARY, "shirt"), [], RaceDrops.BOSS, 12, 15).to_dict() == preload("res://logic/gear_levels.gd").fit(rules, piece(rules, 7, LEGENDARY, "shirt"), 15).to_dict())  # no race change; only the gear level cap (logic/gear_levels.gd) may touch it
 	var again = RaceDrops.convert_piece(rules, piece(rules, 12345, LEGENDARY, "shirt"), picks, RaceDrops.BOSS, 12)
@@ -147,3 +152,117 @@ func _sim_boss_kill(ctx, f: Dictionary) -> void:
 	var goblin_gold := goblin_items.filter(func(it): return int(it.tier) == LEGENDARY).size()
 	ctx.check("race drops (sim): every Chief and goblin piece is a race piece (%d of %d, %d of %d), no goblin gold, no generic gold from the boss"
 		% [boss_race, boss_items.size(), goblin_race, goblin_items.size()], boss_race == boss_items.size() and goblin_race == goblin_items.size() and goblin_gold == 0 and gold_generic == 0)
+
+
+## Runs `body` with the pick modes forced (the data cache is restored afterwards).
+static func _with_pick(race: String, klass: String, body: Callable) -> void:
+	var saved: Dictionary = RaceDrops.data()
+	var changed: Dictionary = saved.duplicate(true)
+	changed["pick"] = {"race": race, "class": klass}
+	RaceDrops._cached = changed
+	body.call()
+	RaceDrops._cached = saved
+
+
+## Boss 2026-11-20 "random everything": race and class of a dropped weapon, the race of a shield and the class of an armour
+## piece are uniform over everything the game has, independent of the squad.
+func _random_everything(ctx, rules, picks: Array) -> void:
+	var races := {}
+	var classes := {}
+	var shields := {}
+	var armour := {}
+	var bad := 0
+	var wcount := 0
+	for i in 4000:
+		for source in [RaceDrops.WAVE, RaceDrops.CHEST, RaceDrops.BOSS]:
+			if i % 3 != [RaceDrops.WAVE, RaceDrops.CHEST, RaceDrops.BOSS].find(source):
+				continue
+			var weapon = RaceDrops.convert_piece(rules, piece(rules, 200000 + i, RARE, "weapon"), picks, source, 5)
+			var e: Dictionary = rules.catalog.entry(weapon.item_id)
+			if weapon.slot != "weapon" or weapon.tier != RARE or e.is_empty() or str(e["race"]).is_empty() or str(e["class"]).is_empty():
+				bad += 1
+				continue
+			races[e["race"]] = int(races.get(e["race"], 0)) + 1
+			classes[e["class"]] = int(classes.get(e["class"], 0)) + 1
+			wcount += 1
+	for i in 4000:
+		var shield = RaceDrops.convert_piece(rules, piece(rules, 300000 + i, EPIC, "offhand"), picks, RaceDrops.WAVE, 5)
+		var armour_piece = RaceDrops.convert_piece(rules, piece(rules, 400000 + i, EPIC, "shirt"), picks, RaceDrops.WAVE, 5)
+		var se: Dictionary = rules.catalog.entry(shield.item_id)
+		if shield.slot != "offhand" or shield.tier != EPIC or str(se.get("race", "")).is_empty():
+			bad += 1
+		else:
+			shields[se["race"]] = int(shields.get(se["race"], 0)) + 1
+		var ae: Dictionary = rules.catalog.entry(armour_piece.item_id)
+		if armour_piece.slot != "shirt" or armour_piece.tier != EPIC or str(ae.get("class", "")).is_empty() or not str(armour_piece.item_id).begins_with("armour_"):
+			bad += 1
+		else:
+			armour[ae["class"]] = int(armour.get(ae["class"], 0)) + 1
+	var all_races: Array = preload("res://logic/race_data.gd").load_default().ids()
+	var all_classes: Array = Deck.classes()
+	ctx.check("random drops: every produced piece is in the catalog with its tier and slot kept (%d bad)" % bad, bad == 0)
+	ctx.check("random drops: weapon races uniform over all %d races (%s)" % [all_races.size(), str(races)], _uniform(races, all_races, wcount))
+	ctx.check("random drops: weapon classes uniform over all %d classes (%s)" % [all_classes.size(), str(classes)], _uniform(classes, all_classes, wcount))
+	ctx.check("random drops: shield races uniform (%s)" % str(shields), _uniform(shields, all_races, 4000))
+	ctx.check("random drops: armour class uniform, any class not only the squad (%s)" % str(armour), _uniform(armour, all_classes, 4000))
+	ctx.check("random drops: a magic weapon / magic armour can drop for a squad with no magic card", classes.has("magic") and armour.has("magic"))
+	var a = RaceDrops.convert_piece(rules, piece(rules, 777, EPIC, "weapon"), picks, RaceDrops.WAVE, 5)
+	var b = RaceDrops.convert_piece(rules, piece(rules, 777, EPIC, "weapon"), [], RaceDrops.WAVE, 5)
+	ctx.check("random drops: deterministic for the same item id", a.to_dict() == RaceDrops.convert_piece(rules, piece(rules, 777, EPIC, "weapon"), picks, RaceDrops.WAVE, 5).to_dict())
+	ctx.check("random drops: a run with no squad card still converts nothing", b.item_id == piece(rules, 777, EPIC, "weapon").item_id)
+	# wearable on a matching card, refused on a non-matching class
+	var Profile := preload("res://logic/profile.gd")
+	var wear_ok := true
+	var refuse_ok := true
+	var seen_refusal := false
+	for i in 300:
+		var w = RaceDrops.convert_piece(rules, piece(rules, 500000 + i, RARE, "weapon"), picks, RaceDrops.WAVE, 5)
+		var cls := str(rules.catalog.entry(w.item_id)["class"])
+		for card in all_classes:
+			var can: bool = Profile.card_can_wear(card, w, rules)
+			if card == cls:
+				wear_ok = wear_ok and can
+			elif not Profile.weapon_families(card).has(w.weapon_type):
+				refuse_ok = refuse_ok and not can
+				seen_refusal = true
+	ctx.check("random drops: a random-class weapon equips on a card of its class and is refused by a class that cannot hold that weapon", wear_ok and refuse_ok and seen_refusal)
+	# level cap unchanged: nothing needs more than the cap
+	var cap_ok := true
+	for i in 300:
+		var w = RaceDrops.convert_piece(rules, piece(rules, 600000 + i, EPIC, "weapon"), picks, RaceDrops.WAVE, 5, 1)
+		cap_ok = cap_ok and (str(w.id).begins_with("starter-drop-") or rules.catalog.req_level(w.item_id) <= 1)
+	ctx.check("random drops: the gear level cap still applies (cap 1 gives level-1 pieces)", cap_ok)
+	# boss accessories untouched
+	var acc_ok := true
+	for i in 200:
+		for slot in ["necklace", "ring", "earring", "bracelet", "back"]:
+			var raw = preload("res://logic/item_system.gd").create_item(rules, "acc-%d" % i, slot, EPIC, RandomNumberGenerator.new())
+			if raw == null:
+				continue
+			acc_ok = acc_ok and RaceDrops.convert_piece(rules, raw, picks, RaceDrops.BOSS, 12, 15).item_id == raw.item_id
+	ctx.check("random drops: accessories (necklace/ring/earring/bracelet/back) are not touched", acc_ok)
+	# squad mode = the old behaviour
+	var squad_seen := {}
+	var squad_ok := true
+	_with_pick("squad", "squad", func():
+		for i in 1500:
+			var item = RaceDrops.convert_piece(rules, piece(rules, 90000 + i, EPIC), picks, RaceDrops.BOSS, 12)
+			if item.slot != "weapon" or not is_race(rules, item):
+				continue
+			var entry: Dictionary = rules.catalog.entry(item.item_id)
+			var key := "%s:%s" % [entry["race"], entry["class"]]
+			squad_seen[key] = int(squad_seen.get(key, 0)) + 1
+			squad_ok = squad_ok and key in ["viking:sword_shield", "elf:greatsword", "elf:longbow"]
+		for i in 100:
+			var s = RaceDrops.convert_piece(rules, piece(rules, 70000 + i, RARE, "offhand"), picks, RaceDrops.WAVE, 5)
+			squad_ok = squad_ok and s.item_id in ["race_viking_shield", "race_elf_shield"])
+	ctx.check("random drops: pick mode 'squad' reproduces the old squad-only behaviour (%s)" % str(squad_seen), squad_ok and squad_seen.size() == 3)
+
+
+static func _uniform(counts: Dictionary, ids: Array, total: int) -> bool:
+	if counts.size() != ids.size():
+		return false
+	for id in ids:
+		if absf(float(counts.get(id, 0)) / float(total) - 1.0 / float(ids.size())) > 0.04:
+			return false
+	return true

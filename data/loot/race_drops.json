@@ -1,6 +1,11 @@
 {
 	"version": 2,
 	"_comment": "Race gear drops (design/gdd/race-gear-sets.md 3.12, design/gdd/drops-and-rewards.md 3.8; Boss 2026-11-13 'remove everything from the old item system'). Every catalog item is a race piece now, so every dropped piece in `slots` (a per-kill item of data/loot/loot.json, a wave chest) keeps its rolled tier and slot and BECOMES the piece of one squad card picked uniformly: that card's race and class (offhand: the card's race shield). Shares stay per (source, wave, tier) but are 1.0 (100%). Gold (legendary) race pieces come ONLY from the boss: a source with no share for a tier listed in `downgrade` gives the piece one tier lower instead (a wave/chest gold becomes purple, PO default 2026-11-13).",
+	"_pick_comment": "Boss 2026-11-20 'random everything'. pick.race / pick.class = how the race / class of the converted piece is drawn: 'uniform' = uniform over every race (data/races) / class (data/classes) regardless of the squad (a new race or class works with no code); 'squad' = the old rule (the race / class of one squad card, uniform). Weapon = race x class, offhand = race shield (race only), armour = class armour (class only, it has no race). Boss accessories (data/loot/boss_loot.json) are not affected. Weighted modes can be added later.",
+	"pick": {
+		"race": "uniform",
+		"class": "uniform"
+	},
 	"slots": [
 		"weapon",
 		"shirt",

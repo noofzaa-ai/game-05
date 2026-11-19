@@ -182,11 +182,11 @@ func _drops(ctx, rules) -> void:
 			var item = RaceDrops.convert_piece(rules, raw, picks, RaceDrops.WAVE, 3)
 			var entry: Dictionary = rules.catalog.entry(item.item_id)
 			if slot == "weapon":
-				weapon_ok = weapon_ok and item.item_id.begins_with("race_") and ["viking", "elf"].has(entry["race"]) and Profile.weapon_families(entry["class"]).has(item.weapon_type) and item.tier == tier
+				weapon_ok = weapon_ok and item.item_id.begins_with("race_") and not str(entry["race"]).is_empty() and Profile.weapon_families(entry["class"]).has(item.weapon_type) and item.tier == tier
 			elif slot == "offhand":
 				shield_ok = shield_ok and item.item_id.ends_with("_shield")
 			else:
-				armour_ok = armour_ok and item.item_id in ["armour_greatsword_" + slot, "armour_longbow_" + slot] and item.slot == slot and item.tier == tier and Profile.card_can_wear(entry["class"], item, rules)
-	ctx.check("race drops v2: the race share makes race weapons (squad card race + class), same tier", weapon_ok)
-	ctx.check("race drops v2: armour drops are the class armour of a squad card (no race), same slot and tier", armour_ok)
+				armour_ok = armour_ok and item.item_id == "armour_%s_%s" % [entry["class"], slot] and item.slot == slot and item.tier == tier and Profile.card_can_wear(entry["class"], item, rules)
+	ctx.check("race drops v2: the race share makes race weapons (Boss 2026-11-20: random race + class, not the squad card), same tier", weapon_ok)
+	ctx.check("race drops v2: armour drops are the class armour of a random class (Boss 2026-11-20, no race), same slot and tier", armour_ok)
 	ctx.check("race drops v2: the shield stays the race shield", shield_ok)

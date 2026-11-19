@@ -210,7 +210,7 @@ Rule-file check: ids in `fashion_pool` / `signature_items` must exist (loader va
 8. Fashion drops never include an owned id or `fashion_hat`; with a fully owned pool the roll yields a gear piece.
 9. Summary screen shows boss, chest, wave and fashion tiles with tier text + color, a better-than-worn marker, "Back to the cards" and "Equip now"; works with keyboard/gamepad; animation is skippable.
 10. Loot appears afterwards in the card screen's gear panel and can be equipped; fashion appears in the look editor.
-12. Race gear (3.8): over many seeds the race shares per source/tier match `data/loot/race_drops.json`; no wave/chest legendary is a race piece; every boss legendary in a race slot is one; races come only from the squad (tests/test_race_drops.gd).
+12. Race gear (3.8): over many seeds the race shares per source/tier match `data/loot/race_drops.json`; no wave/chest legendary is a race piece; every boss legendary in a race slot is one; Boss 2026-11-20: race and class are uniform random (pick block), not the squad (tests/test_race_drops.gd).
 11. Existing tests are unaffected (old-road mode and `loot.json` tables unchanged); full suite shows no new failures vs the baseline.
 
 ## 11. OPEN QUESTIONS (for the Boss, via PO)

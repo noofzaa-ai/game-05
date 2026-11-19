@@ -102,8 +102,16 @@ func _init() -> void:
 		wave_taken.fill(0.0)
 		var loot_total := {"drops": 0, "gold": 0, "items": 0, "materials": 0, "lost_items": 0}
 		var kinds_total := {}
+		var hp_sum := {"start": {}, "pre": {}, "min": {}, "n": {}, "low": {}}  ## per wave: summed fractions over the runs that reached it
 		for s in range(first, first + seeds):
 			var result := play(scenario["classes"], 1000 + s * 17)
+			for w in result["hp_start"]:
+				hp_sum["n"][w] = int(hp_sum["n"].get(w, 0)) + 1
+				hp_sum["start"][w] = float(hp_sum["start"].get(w, 0.0)) + float(result["hp_start"][w])
+				hp_sum["pre"][w] = float(hp_sum["pre"].get(w, 0.0)) + float(result["hp_pre"][w])
+				hp_sum["min"][w] = float(hp_sum["min"].get(w, 0.0)) + float(result["hp_min"].get(w, result["hp_start"][w]))
+				if float(result["hp_start"][w]) < 0.5:
+					hp_sum["low"][w] = int(hp_sum["low"].get(w, 0)) + 1
 			for field in loot_total:
 				loot_total[field] += int(result["loot"][field])
 			for kind in result["loot"]["kinds"]:
@@ -143,6 +151,27 @@ func _init() -> void:
 		kind_names.sort()
 		print("  dropped pieces (id@tier: per run): %s" % [", ".join(kind_names.map(func(k): return "%s %.2f" % [k, float(kinds_total[k]) / seeds]))])
 		print("  taken per wave 1..12: %s" % [", ".join(range(1, 13).map(func(w): return "%.0f" % (wave_taken[w] / seeds)))])
+		# Squad HP % per wave (runs that reached the wave): before the between-wave heal, at the start (after the heal),
+		# the lowest reached during the wave, and the share of runs starting the wave under 50% HP.
+		var hp_waves: Array = hp_sum["n"].keys()
+		hp_waves.sort()
+		var row := func(field: String) -> String:
+			return " ".join(hp_waves.map(func(w): return "%3.0f" % (100.0 * float(hp_sum[field][w]) / int(hp_sum["n"][w]))))
+		print("  HP%% wave           : %s" % [" ".join(hp_waves.map(func(w): return "w%-2d" % w))])
+		print("  HP%% before heal    : %s" % [row.call("pre")])
+		print("  HP%% at wave start  : %s" % [row.call("start")])
+		print("  HP%% lowest in wave : %s" % [row.call("min")])
+		print("  runs reaching wave : %s" % [" ".join(hp_waves.map(func(w): return "%3d" % int(hp_sum["n"][w])))])
+		print("  start < 50%% HP     : %s" % [" ".join(hp_waves.map(func(w): return "%3d" % int(hp_sum["low"].get(w, 0))))])
+		var mid := hp_waves.filter(func(w): return int(w) >= 2 and int(w) <= 8)
+		var mid_sum := 0.0
+		var mid_n := 0
+		for w in mid:
+			mid_sum += float(hp_sum["start"][w])
+			mid_n += int(hp_sum["n"][w])
+		print("  HP%% at start of waves 2-8, mean over runs: %.1f%%" % [100.0 * mid_sum / maxf(1.0, mid_n)])
+		# One machine-readable line so split runs (first=N) can be merged: sums, not means.
+		print("RAW|%s|wins=%d|seeds=%d|%s" % [scenario["name"], wins, seeds, "|".join(hp_waves.map(func(w): return "w%d:%d:%.4f:%.4f:%.4f:%d" % [w, int(hp_sum["n"][w]), float(hp_sum["pre"][w]), float(hp_sum["start"][w]), float(hp_sum["min"][w]), int(hp_sum["low"].get(w, 0))]))])
 	print("")
 	print("member (per run avg)              | weapon dmg | skill dmg | casts | dmg taken | kills | deaths | ults | gauge-full s | attacking% | walking% | casting%")
 	for key in per_class:
@@ -310,6 +339,15 @@ func play(classes: Array, seed: int) -> Dictionary:
 	var wave_taken := []
 	wave_taken.resize(13)
 	wave_taken.fill(0.0)
+	# "hp" (measurement only): squad HP fraction (sum of HP / sum of max HP, a fallen card counts 0) at each wave
+	# start, before and after the between-wave heal, and the lowest fraction reached during each wave.
+	var hp_start := {}
+	var hp_pre := {}
+	var hp_min := {}
+	var hp_last := _squad_hp_fraction(sim, ids)
+	hp_start[1] = hp_last
+	hp_pre[1] = hp_last
+	hp_min[1] = hp_last
 	var tick := 0
 	var gauge_max := float(combat.rules["ultimate_gauge_max"])
 	while tick < MAX_TICKS and sim.living_enemy_count() + sim.pending_wave_count() > 0:
@@ -395,6 +433,9 @@ func play(classes: Array, seed: int) -> Dictionary:
 						members[p]["last_ult"] = tick
 				"wave_arrived":
 					waves = int(event["wave"])
+					hp_pre[waves] = hp_last
+					hp_start[waves] = _squad_hp_fraction(sim, ids)
+					hp_min[waves] = hp_start[waves]
 				"loot":
 					loot_seen["drops"] += 1
 					loot_seen["gold"] += int(event["gold"])
@@ -405,6 +446,8 @@ func play(classes: Array, seed: int) -> Dictionary:
 					loot_seen["lost_items"] += int(event["lost_items"])  # dropped but the run bag was full
 					for material in event["materials"]:
 						loot_seen["materials"] += int(event["materials"][material])
+		hp_last = _squad_hp_fraction(sim, ids)
+		hp_min[waves] = minf(float(hp_min.get(waves, hp_last)), hp_last)
 		for id in ids:
 			var f: Fighter = sim.fighters[id]
 			if not f.is_alive() or f.incapacitated:
@@ -426,4 +469,17 @@ func play(classes: Array, seed: int) -> Dictionary:
 		if sim.fighters[id].is_alive() and not sim.fighters[id].incapacitated:
 			alive += 1
 	var cleared: bool = sim.living_enemy_count() + sim.pending_wave_count() == 0 and alive > 0
-	return {"won": cleared, "ticks": tick, "timeout": tick >= MAX_TICKS, "waves": 12 if cleared else waves, "members": members.values(), "wave_taken": wave_taken, "loot": loot_seen}
+	return {"won": cleared, "ticks": tick, "timeout": tick >= MAX_TICKS, "waves": 12 if cleared else waves, "members": members.values(), "wave_taken": wave_taken, "loot": loot_seen,
+		"hp_start": hp_start, "hp_pre": hp_pre, "hp_min": hp_min}
+
+
+## Squad HP fraction: sum of current HP over sum of max HP (a fallen or downed card counts 0 HP).
+func _squad_hp_fraction(sim, ids: Array) -> float:
+	var hp := 0.0
+	var full := 0.0
+	for id in ids:
+		var f: Fighter = sim.fighters[id]
+		full += f.max_hp()
+		if f.is_alive() and not f.incapacitated:
+			hp += maxf(0.0, f.hp)
+	return hp / maxf(1.0, full)

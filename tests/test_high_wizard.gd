@@ -122,7 +122,12 @@ func _check_finale(ctx, combat) -> void:
 	# Boss 2026-11-19 retune, round 2 (mummy ATK ~2x the original, HP near the original, ~70% win for the level-15 tier-1
 	# starter squad): finale 0.65 with squad power 1.68 = 71% (60 seeds); finale 0.75 with squad power 1.6 = 83% (60).
 	# The band is that sweep's useful range; outside it the finale is a wall or a walk-over.
-	ctx.check("finale power stays in the measured band 0.6-0.72 (0.65 = 71%% win, level 15 tier 1 starter squad): %.2f" % float(last["power"]), float(last["power"]) >= 0.6 and float(last["power"]) <= 0.72)
+	# Boss 2026-11-20 ('HP is full all the time'): between-wave heal 0.4 -> 0.0 with squad power 1.68 -> 1.38 and the
+	# finale kept at 0.65 = 71.7% (120 seeds), so the band below still holds.
+	ctx.check("finale power stays in the measured band 0.6-0.72 (0.65 = 71.7%% win with no wave heal and squad power 1.38, level 15 tier 1 starter squad): %.2f" % float(last["power"]), float(last["power"]) >= 0.6 and float(last["power"]) <= 0.72)
+	ctx.check("no between-wave heal in the pyramid (Boss 2026-11-20: the 40%% heal kept HP full at every wave start, 97%% mean): %.2f" % data.wave_heal_fraction, is_zero_approx(data.wave_heal_fraction))
+	ctx.check("squad-of-3 wave power stays in the measured band 1.3-1.45 with no wave heal (1.3 = 92%%, 1.38 = 72-74%%, 1.42 = 58%% win): %.2f" % data.wave_power_for(3), data.wave_power_for(3) >= 1.3 and data.wave_power_for(3) <= 1.45)
+	ctx.check("the wave-heal note records the measurement", str(JSON.parse_string(FileAccess.get_file_as_string("res://data/journeys/mummy_waves.json")).get("_tuning_wave_heal", "")).contains("level 15 tier 1 starter 71.7%"))
 	ctx.check("the boss pair comes with the escort mummies only (the ranged escorts were dropped for balance)", last["enemies"].all(func(e): return ["mummy_boss", "mummy_high_wizard", "mummy"].has(str(e["type"]))))
 	ctx.check("the tuning note records the measurement", str(JSON.parse_string(FileAccess.get_file_as_string("res://data/journeys/mummy_waves.json")).get("_tuning_hard_hits_round2", "")).contains("1.68 -> 71.2%, CHOSEN"))
 
