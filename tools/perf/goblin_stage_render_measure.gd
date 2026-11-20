@@ -7,7 +7,7 @@ extends SceneTree
 ##   godot --path . --script res://tools/perf/goblin_stage_render_measure.gd [-- [--aa=N] [--no-glow] [--no-outline]
 ##       [--spot=start|north|south_west|east] [--frames=N] [--shots=<dir>] [--breakdown] [map_id ...]]
 ## It writes user://graphics.cfg (the chosen setup): delete it afterwards to get the defaults back.
-const MAPS := ["goblin_base_gate", "goblin_base_courtyard", "goblin_base_quarry", "goblin_base_chief", "goblin_base_rest"]
+const MAPS := ["goblin_base_gate", "goblin_base_courtyard", "goblin_base_quarry"]
 const Options := preload("res://client/graphics_options.gd")
 const MapLoader := preload("res://logic/map_loader.gd")
 

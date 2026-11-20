@@ -15,7 +15,7 @@ func _init():
  camp=load("res://logic/camp_data_loader.gd").load_default(rules.tiers.size())
  var rng:=RandomNumberGenerator.new();rng.seed=2662026
  profile=load("res://logic/profile.gd").new_player(rules,camp,rng);profile.name="PERF SYNTHETIC"
- map=load("res://logic/map_loader.gd").load_by_id("goblin_arena_c")
+ map=load("res://logic/map_loader.gd").load_by_id("goblin_base_quarry")
  var world=load("res://logic/sim_world.gd").new();world.half_width=map.half_width;world.half_depth=map.half_depth
  for solid in map.solids:world.add_solid(solid.box)
  sim=load("res://logic/game_sim.gd").new(world,load("res://logic/combat_data_loader.gd").load_default(),rng)

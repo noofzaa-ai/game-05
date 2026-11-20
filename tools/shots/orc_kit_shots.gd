@@ -5,14 +5,6 @@ extends SceneTree
 ##   godot --path . --script res://tools/shots/orc_kit_shots.gd [-- <out_dir> [<map_id> ...]]
 
 const LOOKS := {
-	"goblin_arena_a": [["k1_picket_fence", Vector3(-10.0, 0.05, -1.4)], ["k2_bone_fence", Vector3(8.6, 0.05, 9.6)],
-		["k3_totem", Vector3(-7.0, 0.05, 1.6)], ["k4_west_huts", Vector3(-12.5, 0.05, 2.0)]],
-	"goblin_arena_b": [["k1_shrine", Vector3(0.0, 0.05, -5.2)], ["k2_rootwell", Vector3(-2.6, 0.05, -1.4)],
-		["k3_east_cage", Vector3(11.5, 0.05, -3.5)]],
-	"goblin_arena_c": [["k1_ramp_gates", Vector3(0.0, 0.05, -9.8)], ["k2_blocks", Vector3(-6.0, 0.05, -1.0)],
-		["k3_spoil_forge", Vector3(11.5, 0.05, 0.5)], ["k4_west_huts", Vector3(-11.0, 0.05, 8.0)]],
-	"goblin_rest_camp": [["k1_huts", Vector3(4.0, 0.05, 1.6)], ["k2_forge", Vector3(-4.6, 0.05, 2.0)],
-		["k3_bonfire", Vector3(0.0, 0.05, 2.6)]],
 	"brush_ring": [["k1_throne", Vector3(0.0, 0.05, -4.0)], ["k2_west", Vector3(-10.0, 0.05, -2.0)],
 		["k3_east_south", Vector3(10.0, 0.05, 7.0)], ["k4_start", Vector3(0.0, 0.05, 6.0)]],
 }

@@ -15,7 +15,7 @@ class FixtureBackend:
    if request.op=="start" and not companion_joined:return {"ok":false,"error":"party_not_ready"}
   if request.op=="redeem" and ("--companion" in OS.get_cmdline_user_args() or "--companion-delay" in OS.get_cmdline_user_args()):
    return {"ok":true,"room":request.room,"slot":1,"capacity":2,"profile":profile,"fence":"fixturefence","member_fence":"fixturemember","seed":"0000000000000042","camp":true,"companions":[{"id":"arun","slot":2}]}
-  if request.op=="redeem":return {"ok":true,"room":request.room,"slot":2 if request.ticket.begins_with("b") else 1,"capacity":2 if "--coop" in OS.get_cmdline_user_args() else 1,"profile":profile,"fence":"fixturefence","member_fence":"fixturemember","seed":"0000000000000042","diagnostic":true,"farm_map":"" if "--coop" in OS.get_cmdline_user_args() else ("practice_field" if ("--quiet-states" in OS.get_cmdline_user_args() or "--pause" in OS.get_cmdline_user_args()) else "goblin_arena_a")}
+  if request.op=="redeem":return {"ok":true,"room":request.room,"slot":2 if request.ticket.begins_with("b") else 1,"capacity":2 if "--coop" in OS.get_cmdline_user_args() else 1,"profile":profile,"fence":"fixturefence","member_fence":"fixturemember","seed":"0000000000000042","diagnostic":true,"farm_map":"" if "--coop" in OS.get_cmdline_user_args() else ("practice_field" if ("--quiet-states" in OS.get_cmdline_user_args() or "--pause" in OS.get_cmdline_user_args()) else "goblin_base_gate")}
   return {"ok":true}
 var service
 var session

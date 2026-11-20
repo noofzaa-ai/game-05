@@ -8,7 +8,7 @@ func capture() -> void:
 	var args := OS.get_cmdline_user_args()
 	var output := args[0]
 	DirAccess.make_dir_recursive_absolute(output)
-	var paths := ["goblin_arena_a", "goblin_arena_b", "goblin_arena_c", "goblin_rest_camp", "brush_ring"]
+	var paths := ["brush_ring"]  # goblin_arena_a/b/c + goblin_rest_camp removed 2026-11-20
 	for id in paths:
 		var viewport := SubViewport.new()
 		viewport.size = Vector2i(1200, 720)
@@ -41,7 +41,7 @@ func capture() -> void:
 			await process_frame
 		await RenderingServer.frame_post_draw
 		viewport.get_texture().get_image().save_png(output.path_join(id + ".png"))
-		if id == "goblin_arena_a":
+		if id == "brush_ring":
 			camera.size = 23.0
 			camera.position = Vector3(0, 13, 12)
 			camera.look_at(Vector3(0, 1, -10))

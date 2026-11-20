@@ -4,7 +4,7 @@ func _run()->void:
  var manager=preload("res://server/rooms/manager.gd").new()
  var rng=RandomNumberGenerator.new();rng.seed=42
  var profile=preload("res://logic/profile.gd").new_player(manager.rules,manager.camp,rng)
- for map_id in ["practice_field","goblin_arena_a"]:
+ for map_id in ["practice_field","goblin_base_gate"]:
   var result=manager.create("practicecontract"+map_id.replace("_","-"),42,[{"id":1,"profile":profile.to_dict()}],false,1,map_id)
   assert(result.ok,str(result))
   var room=manager.rooms["practicecontract"+map_id.replace("_","-")].room

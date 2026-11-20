@@ -1,6 +1,6 @@
 extends SceneTree
 ## Visual geometry and map collision originate from the same JSON boxes.
-const MAPS=["goblin_base_gate","goblin_base_courtyard","goblin_base_quarry","goblin_base_chief","goblin_base_rest"]
+const MAPS=["goblin_base_gate","goblin_base_courtyard","goblin_base_quarry"]  ## chief/rest removed 2026-11-20 (Boss)
 var groups:Dictionary
 var materials:Dictionary
 func _initialize()->void:call_deferred("run")
@@ -102,17 +102,13 @@ func run()->void:
   for side in [-1,1]:
    # Side cover is scenery outside the playable limits; leave the south side clear for camera.
    for i in range(2):kit("palisade",Vector3(side*(w+1.8),0,-depth+4+i*6.8),side*PI*.5)
-   if id!="goblin_base_chief" or side==1:kit("hut",Vector3(side*(w+4.2),0,-depth*.1),-side*PI*.5)
+   kit("hut",Vector3(side*(w+4.2),0,-depth*.1),-side*PI*.5)
    kit("tower",Vector3(side*(w+2.2),0,-depth-2.8))
    kit("corner",Vector3(side*(w+.8),0,-depth-1.8),-side*PI*.25)
    kit("banner",Vector3(side*(w+.9),0,depth*.65))
    if side==1:kit("crate",Vector3(side*(w+3.0),0,depth*.4))
   kit("weapon_rack",Vector3(-w-3.0,0,-depth*.5),PI*.5)
-  if id=="goblin_base_chief":
-   box(Vector3(0,.25,-depth-2.8),Vector3(6,.5,3),"stone")
-   kit("hut",Vector3(0,.5,-depth-2.8),0,1.3)
-   for x in [-3.5,3.5]:kit("banner",Vector3(x,0,-depth-1.5))
-  elif id=="goblin_base_quarry":
+  if id=="goblin_base_quarry":
    for i in range(5):cone(Vector3(-w+i*w*.5,.7,-depth-3.8),2,.8,1.4,"stone")
   if d.has("campfire"):
    var p=d.campfire;cone(Vector3(p[0],p[1]+.3,p[2]),.4,0,.6,"fire");kit("cauldron",Vector3(w+3.5,0,0),0,.7)

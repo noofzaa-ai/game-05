@@ -37,7 +37,7 @@ class RoomInfraTests(unittest.TestCase):
         builder = load('room_smoke', 'server/rooms/smoke.py')
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder); builder.prepare(root)
-            for file in ('server/rooms/worker.gd', 'server/shared/private_http.gd', 'logic/game_sim.gd', 'data/journeys/ink_road.json', 'data/combat/combat.json', 'data/maps/goblin_arena_a.json'):
+            for file in ('server/rooms/worker.gd', 'server/shared/private_http.gd', 'logic/game_sim.gd', 'data/journeys/ink_road.json', 'data/combat/combat.json', 'data/maps/goblin_base_gate.json'):
                 self.assertTrue((root / file).is_file(), file)
             for file in ('server/names', 'server/profile', 'client', 'art', 'build', 'data/online.local.json'):
                 self.assertFalse((root / file).exists(), file)

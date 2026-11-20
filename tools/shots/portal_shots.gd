@@ -21,7 +21,7 @@ func _initialize() -> void:
 	game_state.start_journey("ink_road", 21)
 	await _seconds(0.6)
 	var journey = game_state.journey
-	journey.nodes[1] = [{"stage": 2, "kind": "combat", "map": "goblin_arena_b"}, {"stage": 2, "kind": "camp", "map": journey.data.camp_map}, {"stage": 2, "kind": "treasure", "map": ""}]
+	journey.nodes[1] = [{"stage": 2, "kind": "combat", "map": "goblin_base_courtyard"}, {"stage": 2, "kind": "camp", "map": journey.data.camp_map}, {"stage": 2, "kind": "treasure", "map": ""}]
 	var stage: Node = current_scene
 	_clear(stage)
 	await _seconds(2.2)
@@ -43,8 +43,8 @@ func _initialize() -> void:
 	journey.completed = 1
 	journey.current = {}
 	journey.state = Journey.CHOOSING
-	journey.nodes[1] = [{"stage": 2, "kind": "combat", "map": "goblin_arena_a"}]
-	journey.nodes[2] = [{"stage": 3, "kind": "challenge", "map": "goblin_arena_a"}, {"stage": 3, "kind": "boss", "map": journey.data.boss_map}, {"stage": 3, "kind": "combat", "map": "goblin_arena_b"}]
+	journey.nodes[1] = [{"stage": 2, "kind": "combat", "map": "goblin_base_gate"}]
+	journey.nodes[2] = [{"stage": 3, "kind": "challenge", "map": "goblin_base_gate"}, {"stage": 3, "kind": "boss", "map": journey.data.boss_map}, {"stage": 3, "kind": "combat", "map": "goblin_base_courtyard"}]
 	game_state.enter_journey_choice(0)
 	await _seconds(0.6)
 	stage = current_scene

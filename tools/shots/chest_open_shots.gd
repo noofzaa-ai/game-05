@@ -20,8 +20,8 @@ func _initialize() -> void:
 	await _seconds(0.6)
 	var journey = game_state.journey
 	var stage: Node = current_scene
-	journey.nodes[1] = [{"stage": 2, "kind": "combat", "map": "goblin_arena_b"}, {"stage": 2, "kind": "treasure", "map": ""}]
-	journey.nodes[2] = [{"stage": 3, "kind": "combat", "map": "goblin_arena_a"}, {"stage": 3, "kind": "challenge", "map": "goblin_arena_b"}, {"stage": 3, "kind": "camp", "map": journey.data.camp_map}]
+	journey.nodes[1] = [{"stage": 2, "kind": "combat", "map": "goblin_base_courtyard"}, {"stage": 2, "kind": "treasure", "map": ""}]
+	journey.nodes[2] = [{"stage": 3, "kind": "combat", "map": "goblin_base_gate"}, {"stage": 3, "kind": "challenge", "map": "goblin_base_courtyard"}, {"stage": 3, "kind": "camp", "map": journey.data.camp_map}]
 	var sim = stage.get("_session")._sim
 	for id in sim.fighters:
 		if sim.fighters[id].team == "enemy":

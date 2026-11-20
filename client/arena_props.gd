@@ -300,11 +300,9 @@ static func build_camp(parent: Node3D, scene_root: Node, map, variant: String = 
 	_place(camp, tower, [_at(-w + 1.5, -d + 1.6, 0.0), _at(w - 1.5, -d + 1.6, 180.0)])
 	_place(camp, corner, [_at(-w + 0.8, d - 0.8, 90.0), _at(w - 0.8, d - 0.8, -90.0)])
 	var huts: Array = [_at(-w + 3.2, -d + 2.8, 20.0), _at(w - 3.4, -d + 2.7, -20.0)]
-	if variant.contains("chief"):
-		huts = [_at(-w + 3.0, -d + 2.7, 15.0)]
 	if not variant.contains("quarry"):
 		_place(camp, hut, huts)
-	_place(camp, banner, [_at(-3.2, -d + 1.4, 0.0), _at(3.2, -d + 1.4, 0.0)] + ([_at(-6.0, -d + 1.4, 0.0), _at(6.0, -d + 1.4, 0.0)] if variant.contains("chief") else []))
+	_place(camp, banner, [_at(-3.2, -d + 1.4, 0.0), _at(3.2, -d + 1.4, 0.0)])
 	_place(camp, rack, [_at(-w + 1.4, -1.2, 90.0)])
 	# Clutter on the margins (never on the board).
 	var crates: Array = [_at(w - 2.0, bd + 1.5, 15.0), _at(w - 1.0, bd + 1.8, -20.0, 0.9), _at(-w + 2.2, bd + 2.0, 40.0), _at(w - 1.6, -bd - 1.4, 0.0)]

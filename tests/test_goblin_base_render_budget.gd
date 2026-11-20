@@ -8,7 +8,7 @@ extends RefCounted
 
 const MapLoader := preload("res://logic/map_loader.gd")
 const GoblinGround := preload("res://client/goblin_ground.gd")
-const MAPS := ["goblin_base_gate", "goblin_base_courtyard", "goblin_base_quarry", "goblin_base_chief", "goblin_base_rest"]
+const MAPS := ["goblin_base_gate", "goblin_base_courtyard", "goblin_base_quarry"]
 const DRESSING := ["goblin_crate", "goblin_stoneblock", "goblin_logwall"]
 const MAX_SCENE_TRIS := 60000
 const MAX_SCENE_SURFACES := 16

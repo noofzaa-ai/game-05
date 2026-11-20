@@ -10,9 +10,9 @@ const InkUi := preload("res://client/ink_ui.gd")
 const MapLoader := preload("res://logic/map_loader.gd")
 
 ## Every map file that must resolve to a style (the index plus the journey boss arena).
-const MAPS := ["sunward_valley", "ink_garden", "shrine_wall", "brush_ring", "practice_field", "goblin_arena_a", "goblin_arena_b", "goblin_rest_camp"]
+const MAPS := ["sunward_valley", "ink_garden", "shrine_wall", "brush_ring", "practice_field", "goblin_base_gate", "goblin_base_courtyard", "goblin_base_quarry"]
 ## The goblin-family maps (Boss 2026-10-12: enemy bars match the map theme; the goblin stages first).
-const GOBLIN_MAPS := ["ink_garden", "shrine_wall", "brush_ring", "sunward_valley", "goblin_arena_a", "goblin_arena_b", "goblin_rest_camp"]
+const GOBLIN_MAPS := ["ink_garden", "shrine_wall", "brush_ring", "sunward_valley"]
 
 
 func run(ctx) -> void:
