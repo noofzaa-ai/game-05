@@ -61,7 +61,7 @@
   "shoot_range": 7.0,
   "kite_distance": 3.0,
   "heavy_every": 4,
-  "reaction": 0.85,
+  "reaction": 0.65,
   "skill_min_targets": 1,
   "support_skill": "",
   "support_below": 0.0,

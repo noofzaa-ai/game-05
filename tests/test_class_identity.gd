@@ -44,7 +44,33 @@ func _profiles_in_data(ctx) -> void:
 		and str(Deck.class_data("longbow")["pilot"]["target"]) == "lowest_hp" and int(Deck.class_data("magic")["pilot"]["skill_min_targets"]) == 2)
 	ctx.check("class signatures load with the race vocabulary (no data errors)", preload("res://logic/race_data.gd").load_from("res://data/races/").errors.is_empty())
 	var f := RaceTest.squad(["human", "viking", "elf"])
-	ctx.check("a squad card reads its class pilot", float(Pilot.pilot_profile(f.sim.fighters[1]).get("reaction", 0.0)) == 0.95)
+	ctx.check("a squad card reads its class pilot (S&S reaction 0.8, guard nerf Boss 2026-11-20: was 0.95)", is_equal_approx(float(Pilot.pilot_profile(f.sim.fighters[1]).get("reaction", 0.0)), 0.8))
+	# Boss 2026-11-20 guard nerf: the shield still reacts (blocks) more often than the other classes.
+	ctx.check("the shield class reacts more often than every other class (0.8 vs 0.65)", ["greatsword", "longbow", "magic"].all(func(c): return float(Deck.class_data(c)["pilot"]["reaction"]) < float(Deck.class_data("sword_shield")["pilot"]["reaction"])))
+	_ranged_stamina(ctx, f.combat)
+
+
+## Boss 2026-11-20: the ranged classes spammed attacks because their stamina was the cheapest (weapon x1.0 vs the
+## greatsword's x1.4). Their weapon moves now cost at least as much as the greatsword's, and their class skills
+## cost more than before (longbow 12/10/14/12 -> 16/14/19/16, magic 10/12/16/14 -> 14/16/22/19).
+func _ranged_stamina(ctx, combat) -> void:
+	var gs_light := float(combat.moves["greatsword_light_1"]["energy_cost"])
+	ctx.check("ranged weapon moves cost at least the greatsword's (light_1: bow %.1f, magic %.1f, gs %.1f; Boss 2026-11-20 ranged spam)" % [float(combat.moves["longbow_light_1"]["energy_cost"]), float(combat.moves["magic_light_1"]["energy_cost"]), gs_light],
+		float(combat.moves["longbow_light_1"]["energy_cost"]) >= gs_light and float(combat.moves["magic_light_1"]["energy_cost"]) >= gs_light)
+	var SkillData = preload("res://logic/class_skills/skill_data.gd").load_default()
+	var want := {"heartseeker_shot": 16, "pinning_shot": 14, "rapid_fire": 19, "vault_shot": 16, "arcane_orb": 14, "repulse_nova": 16, "starfall": 22, "warding_veil": 19}
+	var got := {}
+	for skill in want:
+		got[skill] = int(SkillData.skill(skill).get("stamina", 0))
+	ctx.check("ranged class skills cost the raised stamina (Boss 2026-11-20 ranged spam, ~+35%%): %s" % [got], got == want)
+	var cheapest_ranged := 999
+	var cheapest_melee := 999
+	for skill in want:
+		cheapest_ranged = mini(cheapest_ranged, int(got[skill]))
+	for class_id in ["sword_shield", "greatsword"]:
+		for skill in SkillData.classes[class_id]:
+			cheapest_melee = mini(cheapest_melee, int(SkillData.skill(str(skill)).get("stamina", 0)))
+	ctx.check("no ranged class skill is cheaper than the cheapest melee one (%d vs %d)" % [cheapest_ranged, cheapest_melee], cheapest_ranged >= cheapest_melee)
 
 
 ## A class with no `pilot` block (and a fighter with no class) keeps today's rule: the nearest enemy.

@@ -413,7 +413,7 @@
    "knockback": 0.8,
    "launch": 0.6,
    "stun": 0.8,
-   "stamina": 1.0,
+   "stamina": 1.4,
    "overrides": {
     "light_1": {
      "melee": false,
@@ -630,7 +630,7 @@
    "knockback": 0.8,
    "launch": 0.6,
    "stun": 1.0,
-   "stamina": 1.0,
+   "stamina": 1.6,
    "overrides": {
     "light_1": {
      "melee": false,

@@ -381,7 +381,8 @@ func _data(ctx) -> void:
 	var f := F.make()
 	ctx.check("online squads: combat coop allows 6 fighters", int(f.combat.coop.max_fighters) == 6 and int(f.combat.coop.room_card_cap) == 6 and int(f.combat.coop.auto_continue_seconds) == 20 and f.combat.coop.hp_multiplier.size() == 6)
 	var waves = JourneyData.load_by_id("goblin_waves", f.combat.enemies.keys())
-	ctx.check("online squads: wave_power_by_squad has 6 entries", waves.wave_power_by_squad.size() == 6 and is_equal_approx(waves.wave_power_for(6), 2.9) and is_equal_approx(waves.wave_power_for(3), 2.01))
+	# Boss 2026-11-20: goblin zone has no between-wave heal; squad powers 3..6 x0.836 (2.01 -> 1.68, 2.9 -> 2.42): starter squad 61.7% (120 seeds).
+	ctx.check("online squads: wave_power_by_squad has 6 entries (goblin no-heal retune 2026-11-20)", waves.wave_power_by_squad.size() == 6 and is_equal_approx(waves.wave_power_for(6), 2.42) and is_equal_approx(waves.wave_power_for(3), 1.68) and waves.wave_power_for(4) > waves.wave_power_for(3) and waves.wave_power_for(6) > waves.wave_power_for(5))
 
 
 # ---------------------------------------------------------------- chunk 5: wire and client (two clients, one room)

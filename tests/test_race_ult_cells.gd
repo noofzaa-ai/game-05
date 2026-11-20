@@ -521,7 +521,7 @@ func _runeborn(ctx) -> void:
 	ctx.check("Glyph Barrage use: the boss within 12 m -> fires", _matches(gu.sim, 3))
 
 	# R/Magic Arcane Singularity: zone r4 4 s at densest within 9 m, 45% every 0.5 s, shock on the first pulse;
-	# on_end: shield all 30% of the zone's damage, split, cap 15% max HP each; Runeweaver discharges (shield all 10%).
+	# on_end: shield all 30% of the zone's damage, split, cap 15% max HP each; Runeweaver discharges (shield all 2%, Boss 2026-11-20 magic nerf; was 10%).
 	var a := squad(["runeborn", "runeborn", "runeborn"], MAGIC_SQUAD)
 	var asim = a.sim
 	var af := Act.enemies(asim)
@@ -534,7 +534,7 @@ func _runeborn(ctx) -> void:
 		asim.fighters[id].clear_shield()
 	var matk: float = asim.fighters[3].stat("ATK")
 	all = cast(a, 3)
-	ctx.check("Singularity: Runeweaver discharges on the cast (shield all 10% of the mage's max HP)", all.any(func(e): return e["type"] == "race_proc" and int(e["player"]) == 3 and e["on"] == "ultimate_cast"))
+	ctx.check("Singularity: Runeweaver discharges on the cast (shield all 2% of the mage's max HP, Boss 2026-11-20 nerf)", all.any(func(e): return e["type"] == "race_proc" and int(e["player"]) == 3 and e["on"] == "ultimate_cast"))
 	all.append_array(run_ticks(asim, 260))
 	var shocks: Array = all.filter(func(e): return e["type"] == "effect_applied" and e["effect"] == "shock" and int(e["source"]) == 3)
 	var pulses: Array = damage_by(all, 3).filter(func(e): return int(e["target"]) == af[0] and is_equal_approx(float(e["damage"]), roundf(matk * 0.45)))

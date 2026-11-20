@@ -62,10 +62,10 @@ func run(ctx) -> void:
 	ctx.check("%s.json parses with no errors %s" % [JOURNEY, data.errors], data.is_valid())
 	var goblin = JourneyData.load_by_id("goblin_waves", types)
 	ctx.check("it is a wave-mode journey of 9 waves like the goblin one (%d vs %d)" % [data.stage_count, goblin.stage_count], data.wave_mode and data.stage_count == 9 and data.stages.size() == 9 and data.stage_count == goblin.stage_count)
-	# The between-wave heal is NOT shared any more (Boss 2026-11-20: the pyramid squad started every wave at full HP, so
-	# mummy_waves heals 0 between waves while the goblin journey keeps its heal; see test_high_wizard.gd).
+	# Between-wave heal (Boss 2026-11-20): the pyramid squad started every wave at full HP, so mummy_waves healed 0;
+	# later the same day the goblin zone also went to 0 (no heal in either zone; see test_high_wizard.gd, test_journey.gd).
 	ctx.check("it keeps the goblin journey's pacing fields (camps, node weights, corpse clear, count scale, loot by squad)", data.first_camp_stages == goblin.first_camp_stages and data.last_camp_stage == goblin.last_camp_stage and data.node_weights == goblin.node_weights and is_equal_approx(data.wave_count_scale, goblin.wave_count_scale) and data.loot_by_squad == goblin.loot_by_squad and data.treasure == goblin.treasure)
-	ctx.check("the pyramid heals less between waves than the goblin base (Boss 2026-11-20: too generous)", data.wave_heal_fraction < goblin.wave_heal_fraction)
+	ctx.check("no between-wave heal in the pyramid nor the goblin base (Boss 2026-11-20: too generous, both zones 0): %.2f / %.2f" % [data.wave_heal_fraction, goblin.wave_heal_fraction], is_zero_approx(data.wave_heal_fraction) and is_zero_approx(goblin.wave_heal_fraction))
 	var last: Dictionary = data.stages[-1]
 	var boss_entries: Array = last["enemies"].filter(func(e): return bool(e.get("boss", false)))
 	var boss_types: Array = boss_entries.map(func(e): return str(e["type"]))

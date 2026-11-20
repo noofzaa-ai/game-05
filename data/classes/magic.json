@@ -64,7 +64,7 @@
   "shoot_range": 7.0,
   "kite_distance": 0,
   "heavy_every": 4,
-  "reaction": 0.85,
+  "reaction": 0.65,
   "skill_min_targets": 2,
   "support_skill": "warding_veil",
   "support_below": 0.6,

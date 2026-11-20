@@ -613,7 +613,9 @@ func _test_guard(ctx) -> void:
 	_enemy_light(guarded)
 	var blocked := _damage_on_player(guarded, 20)
 	var events_blocked := false
-	ctx.check("a guarded hit does about 30%% of the damage (%d vs %d)" % [blocked, unguarded], blocked >= 1 and absf(float(blocked) - float(unguarded) * 0.3) <= 1.0)
+	# Follows the data (Boss guard nerf 2026-11-20: guard_damage_reduction 0.7 -> 0.45, a guarded hit now does ~55%).
+	var keep := 1.0 - float(_data.rules["guard_damage_reduction"])
+	ctx.check("a guarded hit does (1 - guard_damage_reduction) of the damage, %.0f%% (%d vs %d)" % [100.0 * keep, blocked, unguarded], blocked >= 1 and blocked < unguarded and absf(float(blocked) - float(unguarded) * keep) <= 1.0)
 	ctx.check("a blocked hit does not stun", guarded.fighters[1].state == Fighter.State.GUARD)
 	var open_x: float = open.bodies[1].position.x
 	for i in 30:
@@ -2030,7 +2032,7 @@ func _test_jump_attacks(ctx) -> void:
 
 func _test_new_data_validation(ctx) -> void:
 	var good := FileAccess.get_file_as_string(CombatDataLoader.DATA_PATH)
-	ctx.check("a guard reduction above 100% is reported", not CombatDataLoader.parse(good.replace("\"guard_damage_reduction\": 0.7", "\"guard_damage_reduction\": 1.5")).is_valid())
+	ctx.check("a guard reduction above 100% is reported (shipped value 0.45 since the Boss guard nerf 2026-11-20)", not CombatDataLoader.parse(good.replace("\"guard_damage_reduction\": 0.45", "\"guard_damage_reduction\": 1.5")).is_valid())
 	ctx.check("untouchable time longer than the dodge is reported", not CombatDataLoader.parse(good.replace("\"dodge_invulnerable_ticks\": 12", "\"dodge_invulnerable_ticks\": 40")).is_valid())
 	ctx.check("a missing dodge setting is reported", not CombatDataLoader.parse(good.replace("\"dodge_cooldown\": 90,", "")).is_valid())
 	var weapons_good := FileAccess.get_file_as_string(CombatDataLoader.WEAPONS_PATH)

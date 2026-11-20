@@ -64,19 +64,19 @@
    "motion": {"segs": [["gs_power_up", 1.30, 3.00, 1.4, [2.05]]]}
   },
   "heartseeker_shot": {
-   "name": "Heartseeker", "class": "longbow", "kind": "shot", "stamina": 12, "impact_tier": 2, "priority": 2, "vfx": "class_skill/heartseeker_shot",
+   "name": "Heartseeker", "class": "longbow", "kind": "shot", "stamina": 16, "impact_tier": 2, "priority": 2, "vfx": "class_skill/heartseeker_shot",
    "stats": {"cooldown": 16.0, "damage": 9.5, "range": 12.0, "crit_add": 25.0, "bonus_status": "sunder", "bonus_mul": 1.5},
    "use": {"any_of": [{"if": "best_shot", "range": 12.0}]},
    "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.2, []], ["lb_aim_recoil", 0.0, 0.70, 1.2, [0.18]]]}
   },
   "pinning_shot": {
-   "name": "Pinning Shot", "class": "longbow", "kind": "shot", "stamina": 10, "impact_tier": 2, "priority": 0.5, "vfx": "class_skill/pinning_shot",
+   "name": "Pinning Shot", "class": "longbow", "kind": "shot", "stamina": 14, "impact_tier": 2, "priority": 0.5, "vfx": "class_skill/pinning_shot",
    "stats": {"cooldown": 20.0, "damage": 2.75, "range": 12.0, "shock": 1.5},
    "use": {"any_of": [{"if": "enemy_near_backline", "distance": 3.0, "range": 12.0}, {"if": "closing_enemy", "range": 8.0}]},
    "motion": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.8, []], ["lb_aim_recoil", 0.0, 0.70, 0.96, [0.18]]]}
   },
   "rapid_fire": {
-   "name": "Rapid Fire", "class": "longbow", "kind": "volley", "stamina": 14, "impact_tier": 1, "priority": 2, "vfx": "class_skill/rapid_fire",
+   "name": "Rapid Fire", "class": "longbow", "kind": "volley", "stamina": 19, "impact_tier": 1, "priority": 2, "vfx": "class_skill/rapid_fire",
    "stats": {"cooldown": 19.0, "damage": 1.55, "range": 12.0, "arrows": 4},
    "use": {"any_of": [{"if": "target_within", "radius": 12.0}]},
    "motion": {"blend": 0.05, "segs": [["lb_draw_arrow", 0.0, 1.017, 2.4, []], ["lb_aim_recoil", 0.0, 0.18, 1.2, [0.18]],
@@ -86,31 +86,31 @@
     ["lb_aim_recoil", 0.18, 0.70, 1.2, []]]}
   },
   "vault_shot": {
-   "name": "Vault Shot", "class": "longbow", "kind": "vault_shot", "stamina": 12, "impact_tier": 1, "priority": 0, "vfx": "class_skill/vault_shot",
+   "name": "Vault Shot", "class": "longbow", "kind": "vault_shot", "stamina": 16, "impact_tier": 1, "priority": 0, "vfx": "class_skill/vault_shot",
    "stats": {"cooldown": 20.0, "damage": 2.25, "distance": 4.0, "min_distance": 1.0, "slow": 3.0, "range": 12.0},
    "use": {"any_of": [{"if": "nearest_within", "radius": 3.0}]},
    "motion": {"segs": [["lb_dodge_backward", 0.0, 0.95, 1.8, []], ["lb_draw_arrow", 0.0, 1.017, 2.4, []], ["lb_aim_recoil", 0.0, 0.70, 1.2, [0.18]]], "travel": [0, 0.25, 0.85], "invulnerable": "travel"}
   },
   "arcane_orb": {
-   "name": "Arcane Orb", "class": "magic", "kind": "orb", "stamina": 10, "impact_tier": 2, "priority": 2, "vfx": "class_skill/arcane_orb",
-   "stats": {"cooldown": 7.0, "damage": 21.0, "range": 12.0, "speed": 12.0, "radius": 2.0, "count": 1, "spread_deg": 15.0},
+   "name": "Arcane Orb", "class": "magic", "kind": "orb", "stamina": 14, "impact_tier": 2, "priority": 2, "vfx": "class_skill/arcane_orb",
+   "stats": {"cooldown": 7.0, "damage": 18.0, "range": 12.0, "speed": 12.0, "radius": 2.0, "count": 1, "spread_deg": 15.0},
    "use": {"any_of": [{"if": "target_cluster", "radius": 2.0, "min": 2, "range": 12.0}, {"if": "target_is_boss", "range": 12.0}, {"if": "held_for", "seconds": 4.0, "and": [{"if": "target_within", "radius": 12.0}]}]},
    "motion": {"segs": [["mg_spell_1h_cast_spell_01", 0.167, 1.55, 1.0, [0.58]]]}
   },
   "repulse_nova": {
-   "name": "Repulse Nova", "class": "magic", "kind": "circle", "stamina": 12, "impact_tier": 2, "priority": 0, "vfx": "class_skill/repulse_nova",
-   "stats": {"cooldown": 14.0, "damage": 6.5, "radius": 3.0, "knockback": 2.5, "slow": 2.0},
+   "name": "Repulse Nova", "class": "magic", "kind": "circle", "stamina": 16, "impact_tier": 2, "priority": 0, "vfx": "class_skill/repulse_nova",
+   "stats": {"cooldown": 14.0, "damage": 5.5, "radius": 3.0, "knockback": 2.5, "slow": 2.0},
    "use": {"any_of": [{"if": "enemies_near", "radius": 2.5, "min": 1}, {"if": "enemies_near", "radius": 3.0, "min": 2}]},
    "motion": {"segs": [["mg_spell_2h_magic_area_attack_01", 0.10, 2.683, 1.5, [1.32]]]}
   },
   "starfall": {
-   "name": "Starfall", "class": "magic", "kind": "delayed_circle", "stamina": 16, "impact_tier": 3, "priority": 1, "vfx": "class_skill/starfall",
-   "stats": {"cooldown": 12.0, "damage": 14.5, "range": 9.0, "radius": 2.5, "delay": 0.8, "stun": 0.3},
+   "name": "Starfall", "class": "magic", "kind": "delayed_circle", "stamina": 22, "impact_tier": 3, "priority": 1, "vfx": "class_skill/starfall",
+   "stats": {"cooldown": 12.0, "damage": 12.5, "range": 9.0, "radius": 2.5, "delay": 0.8, "stun": 0.3},
    "use": {"any_of": [{"if": "dense_point", "reach": 9.0, "radius": 2.5, "min": 3}, {"if": "dense_point", "reach": 9.0, "radius": 2.5, "min": 2, "with_elite": true}, {"if": "boss_near", "radius": 9.0}]},
    "motion": {"segs": [["mg_spell_2h_cast_spell_01", 0.167, 1.967, 1.0, [1.25]]]}
   },
   "warding_veil": {
-   "name": "Warding Veil", "class": "magic", "kind": "ally_buff", "stamina": 14, "impact_tier": 0, "priority": 0.5, "vfx": "class_skill/warding_veil",
+   "name": "Warding Veil", "class": "magic", "kind": "ally_buff", "stamina": 19, "impact_tier": 0, "priority": 0.5, "vfx": "class_skill/warding_veil",
    "stats": {"cooldown": 14.0, "range": 9.0, "taken_mul": 0.7, "duration": 5.0, "haste": 3.0},
    "use": {"any_of": [{"if": "ally_below_hp_attacked", "below": 0.6, "range": 9.0, "self": true, "most_attacked": true}]},
    "motion": {"segs": [["mg_spell_2h_magic_attack_05", 0.267, 3.067, 1.6, [2.03]]]}

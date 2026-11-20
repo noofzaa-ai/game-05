@@ -441,17 +441,18 @@ func _charges_and_burst(ctx) -> void:
 	var bow = bsim.fighters[3]
 	ctx.check("Glyph Shot: discharges on the 6th hit (%s)" % [counts], counts == [0, 0, 0, 0, 0, 1])
 	ctx.check("Glyph Shot: focus 480 ticks + shield 8% max HP", int(bow.effects.get("focus", {}).get("left", 0)) == 480 and is_equal_approx(bow.shield, bow.max_hp() * 0.08))
-	# Runeweaver (Runeborn magic): +1 per skill cast, at 3 -> shield every ally 10% of the caster's max HP (4.3).
+	# Runeweaver (Runeborn magic): +1 per skill cast, at 5 -> shield every ally 2% of the caster's max HP (4.3).
+	# Boss 2026-11-20 magic nerf: was 3 casts / 10% (the squad-wide shield was the main reason the magic squad won ~99%).
 	var m := squad(["runeborn", "human", "elf"], ["magic", "greatsword", "longbow"])
 	var msim = m.sim
 	RacePassives.step(msim)
 	counts = []
-	for i in 3:
+	for i in 5:
 		counts.append(procs(react(msim, {"type": "skill_cast", "player": 1}), 1).size())
 	var mage_hp: float = msim.fighters[1].max_hp()
-	ctx.check("Runeweaver: discharges on the 3rd cast (%s)" % [counts], counts == [0, 0, 1])
-	ctx.check("Runeweaver: every ally gets 10%% of the caster's max HP (%s)" % [[1, 2, 3].map(func(id): return snappedf(msim.fighters[id].shield, 0.01))],
-		[1, 2, 3].all(func(id): return is_equal_approx(msim.fighters[id].shield, minf(mage_hp * 0.1, msim.fighters[id].max_hp() * 0.3))))
+	ctx.check("Runeweaver: discharges on the 5th cast (Boss 2026-11-20 magic nerf, was the 3rd) (%s)" % [counts], counts == [0, 0, 0, 0, 1])
+	ctx.check("Runeweaver: every ally gets 2%% of the caster's max HP (Boss 2026-11-20 magic nerf, was 10%%) (%s)" % [[1, 2, 3].map(func(id): return snappedf(msim.fighters[id].shield, 0.01))],
+		[1, 2, 3].all(func(id): return is_equal_approx(msim.fighters[id].shield, minf(mage_hp * 0.02, msim.fighters[id].max_hp() * 0.3))))
 	# Runes carry across waves.
 	react(msim, {"type": "skill_cast", "player": 1})
 	msim._waves_released += 1

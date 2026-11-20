@@ -2,7 +2,8 @@ extends SceneTree
 ## Class balance check (auto-battler): fixed-seed scripted fights of the goblin wave journey
 ## (data/journeys/goblin_waves.json) through the real rules, with logic/auto_pilot.gd driving our fighters.
 ##   godot --headless --path . --script res://tools/balance/class_sim.gd [-- seeds=8 only=solo,squad,greatsword]
-##   journey=mummy_waves level=15 gear=1 power3=1.8 stat:mummy:ATK=2.5 (measurement-only overrides, see _init)
+##   journey=mummy_waves level=15 gear=1 power3=1.8 stat:mummy:ATK=2.5 rule:guard_damage_reduction=0.45
+##   react:sword_shield=0.7 (measurement-only overrides, see _init)
 ## Scenarios: each class solo, the starter squad (logic/card_deck.gd STARTER_SQUAD), and each class x3
 ## (a measurement only: a real squad never repeats a class). Prints one table row per scenario and one
 ## row per class inside the squads: win rate, waves reached, time to clear, damage dealt/taken, deaths,
@@ -64,6 +65,38 @@ func _init() -> void:
 			card_level = int(arg.substr(6))
 		elif arg.begins_with("power") and arg.contains("="):
 			power_override[int(arg.substr(5, arg.find("=") - 5))] = float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("rule:") and arg.contains("="):
+			# "rule:guard_damage_reduction=0.45": a combat.json rule for this measurement only
+			combat.rules[arg.substr(5, arg.find("=") - 5)] = float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("react:") and arg.contains("="):
+			# "react:sword_shield=0.7": a class pilot's reaction for this measurement only (patches the class cache)
+			var pilot: Dictionary = Deck.class_data(arg.substr(6, arg.find("=") - 6)).get("pilot", {})
+			pilot["reaction"] = float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("wstamx:") and arg.contains("="):
+			# "wstamx:magic=1.6": multiplies the stamina cost of every generated move of that weapon (<weapon>_*), measurement only
+			var weapon := arg.substr(7, arg.find("=") - 7)
+			for move_id in combat.moves:
+				if str(move_id).begins_with(weapon + "_"):
+					combat.moves[move_id]["energy_cost"] = float(combat.moves[move_id]["energy_cost"]) * float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("wpow:") and arg.contains("="):
+			# "wpow:magic=0.8": multiplies the power (damage) of every generated move of that weapon, measurement only
+			var wp := arg.substr(5, arg.find("=") - 5)
+			for move_id in combat.moves:
+				if str(move_id).begins_with(wp + "_"):
+					combat.moves[move_id]["power"] = float(combat.moves[move_id]["power"]) * float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("sstam:") and arg.contains("="):
+			# "sstam:arcane_orb=14": a class skill's stamina cost (patches the cached skill data), measurement only
+			var all_skills: Dictionary = preload("res://logic/class_skills/skill_data.gd").load_default().skills
+			if not all_skills.has(arg.substr(6, arg.find("=") - 6)):
+				printerr("unknown skill in ", arg)
+				quit(1)
+				return
+			all_skills[arg.substr(6, arg.find("=") - 6)]["stamina"] = float(arg.substr(arg.find("=") + 1))
+		elif arg.begins_with("sstat:") and arg.contains("="):
+			# "sstat:arcane_orb:damage=0.9": multiplies one stat of a class skill (cached skill data), measurement only
+			var sp := arg.substr(6, arg.find("=") - 6).split(":")
+			var sk: Dictionary = preload("res://logic/class_skills/skill_data.gd").load_default().skills[sp[0]]
+			sk["stats"][sp[1]] = float(sk["stats"][sp[1]]) * float(arg.substr(arg.find("=") + 1))
 		elif arg.begins_with("stat:") and arg.contains("="):
 			# "stat:mummy:ATK=2.5" multiplies the base ATK of every enemy whose id starts with "mummy" (measurement only,
 			# applied in argument order, so "stat:mummy:ATK=2 stat:mummy_boss:ATK=0.8" leaves the Pharaoh at 1.6x).
@@ -80,8 +113,11 @@ func _init() -> void:
 	scenarios.append({"name": "starter duo", "classes": Array(Deck.STARTER_SQUAD).slice(0, 2), "kind": "duo"})  # loot by squad size (Boss 2026-11-12)
 	# A squad with magic (magic is not in the starter squad): measures the magic kit (class-skills.md 4.5).
 	scenarios.append({"name": "magic squad", "classes": ["sword_shield", "longbow", "magic"], "kind": "squad"})
-	for class_id in ["sword_shield", "greatsword", "longbow"]:
+	for class_id in ["sword_shield", "greatsword", "longbow", "magic"]:
 		scenarios.append({"name": "3x " + class_id, "classes": [class_id, class_id, class_id], "kind": "mono"})
+	for arg in OS.get_cmdline_user_args():  # "squad=sword_shield,greatsword,magic": one extra custom squad (only=custom)
+		if arg.begins_with("squad="):
+			scenarios.append({"name": "custom " + arg.substr(6).replace("sword_shield", "ss").replace("greatsword", "gs").replace("longbow", "lb").replace("magic", "mg"), "classes": Array(arg.substr(6).split(",")), "kind": "custom"})
 	print("CLASS SIM  seeds=%d  reaction=class pilot  max=%ds  gear=%s  level=%d" % [seeds, MAX_TICKS / 60, "starter" if gear_tier < 0 else "tier %d" % gear_tier, card_level])
 	print("scenario            | win  | waves avg/min | clear s | dmg dealt | dmg taken | deaths | ults | timeouts")
 	var per_class := {}
@@ -133,9 +169,10 @@ func _init() -> void:
 				if true:
 					var key := "%s in %s" % [m["class"], scenario["name"]]
 					if not per_class.has(key):
-						per_class[key] = {"dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "n": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": "", "per_skill": {}, "hits": 0, "atk": 0.0}
+						per_class[key] = {"dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "n": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": "", "per_skill": {}, "hits": 0, "atk": 0.0, "in_hits": 0, "in_blocked": 0, "in_dmg": 0.0, "prevented": 0.0, "broken": 0, "oos": 0, "starved": 0, "skill_starved": 0}
 					for field in ["hits", "atk", "dealt", "taken", "deaths", "ults", "attack", "walk", "alive", "kills", "gauge_full", "skill_dealt", "casts", "casting",
-							"ult_dealt", "ult_support", "support", "ult_lost", "ult_gap_ticks", "ult_gaps", "ult_first", "ult_firsts"]:
+							"ult_dealt", "ult_support", "support", "ult_lost", "ult_gap_ticks", "ult_gaps", "ult_first", "ult_firsts",
+							"in_hits", "in_blocked", "in_dmg", "prevented", "broken", "oos", "starved", "skill_starved"]:
 						per_class[key][field] += m[field]
 					per_class[key]["race"] = m["race"]
 					for skill in m["per_skill"]:
@@ -179,6 +216,27 @@ func _init() -> void:
 		var n := float(c["n"])
 		var alive := maxf(1.0, float(c["alive"]))
 		print("%-34s | %10.0f | %9.0f | %5.1f | %9.0f | %5.1f | %6.2f | %4.1f | %12.1f | %9.0f%% | %7.0f%% | %7.0f%%" % [key, c["dealt"] / n, c["skill_dealt"] / n, c["casts"] / n, c["taken"] / n, c["kills"] / n, c["deaths"] / n, c["ults"] / n, c["gauge_full"] / 60.0 / n, 100.0 * c["attack"] / alive, 100.0 * c["walk"] / alive, 100.0 * c["casting"] / alive])
+	# Stamina (measurement only): refused moves (out_of_stamina events), share of alive time below the weapon's
+	# light_1 cost, share of alive time with a skill off cooldown but not enough stamina for it.
+	print("")
+	print("stamina (per run avg)              | refused | starved% (no light) | skill short%")
+	for key in per_class:
+		var c: Dictionary = per_class[key]
+		var alive := maxf(1.0, float(c["alive"]))
+		print("%-34s | %7.1f | %18.1f%% | %11.1f%%" % [key, c["oos"] / float(c["n"]), 100.0 * c["starved"] / alive, 100.0 * c["skill_starved"] / alive])
+		print("STAM|%s|%.1f|%.2f|%.2f" % [key, c["oos"] / float(c["n"]), 100.0 * c["starved"] / alive, 100.0 * c["skill_starved"] / alive])
+	# Guard (measurement only): enemy weapon/projectile hits on each card, the share blocked, damage taken from
+	# them, the damage the guard prevented (estimate) and guard breaks (not enough stamina for the blow).
+	print("")
+	print("guard (per run avg)                | hits in | blocked | blocked% | dmg taken (hits) | prevented | prevented% of raw | breaks")
+	var g_tot := {"in_hits": 0.0, "in_blocked": 0.0, "in_dmg": 0.0, "prevented": 0.0, "broken": 0.0}
+	for key in per_class:
+		var c: Dictionary = per_class[key]
+		var n := float(c["n"])
+		for f in g_tot:
+			g_tot[f] += float(c[f])
+		print("%-34s | %7.1f | %7.1f | %7.1f%% | %16.0f | %9.0f | %16.1f%% | %5.2f" % [key, c["in_hits"] / n, c["in_blocked"] / n, 100.0 * c["in_blocked"] / maxf(1.0, float(c["in_hits"])), c["in_dmg"] / n, c["prevented"] / n, 100.0 * c["prevented"] / maxf(1.0, c["prevented"] + c["in_dmg"]), c["broken"] / n])
+	print("GUARD|all|hits_in=%.0f|blocked=%.0f|dmg=%.0f|prevented=%.0f|broken=%.0f" % [g_tot["in_hits"], g_tot["in_blocked"], g_tot["in_dmg"], g_tot["prevented"], g_tot["broken"]])
 	# Class skills per skill (class-skills.md 4.5): share of the class's damage, share of its skill damage (rule: none
 	# above 60%), casts, enemies hit per cast and time spent in the clip (share of the card's alive time).
 	print("")
@@ -230,6 +288,9 @@ func _trip(seed: int):
 	var profile = Profile.new_player(rules, camp, r)
 	for card in Deck.classes():  # tutorial.md 2: new cards are raceless; the tutorial gives S&S/GS/Bow Human/Viking/Elf
 		Deck.set_race(profile.card_deck, card, Deck.starter_race(card))
+	for arg in OS.get_cmdline_user_args():  # "race:magic=human": a card's race for this measurement only
+		if arg.begins_with("race:") and arg.contains("="):
+			Deck.set_race(profile.card_deck, arg.substr(5, arg.find("=") - 5), arg.substr(arg.find("=") + 1))
 	profile.unlocks["magic_runeborn"] = true
 	if gear_tier >= 0 or card_level > 1:
 		_progress(profile, r)
@@ -329,7 +390,7 @@ func play(classes: Array, seed: int) -> Dictionary:
 		if no_skills:
 			sim.fighters[id].skill_state = {}  # (set_class_style gives a skill-less fighter its class skills)
 		memories[id] = Pilot.new_memory(id * 7919 + 1 + seed)
-		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": "", "per_skill": {}, "hits": 0, "atk": 0.0}
+		members[id] = {"class": classes[i], "dealt": 0.0, "taken": 0.0, "deaths": 0, "ults": 0, "attack": 0, "walk": 0, "alive": 0, "kills": 0, "gauge_full": 0, "skill_dealt": 0.0, "casts": 0, "casting": 0, "ult_dealt": 0.0, "ult_support": 0.0, "support": 0.0, "ult_lost": 0, "ult_gap_ticks": 0, "ult_gaps": 0, "ult_first": 0, "ult_firsts": 0, "race": "", "per_skill": {}, "hits": 0, "atk": 0.0, "in_hits": 0, "in_blocked": 0, "in_dmg": 0.0, "prevented": 0.0, "broken": 0, "oos": 0, "starved": 0, "skill_starved": 0}
 		members[id]["atk"] = sim.fighters[id].stat("ATK")
 		for skill in sim.fighters[id].skill_state.get("skills", []):
 			members[id]["per_skill"][str(skill)] = {"dmg": 0.0, "casts": 0, "ticks": 0, "hits": 0}
@@ -371,6 +432,20 @@ func play(classes: Array, seed: int) -> Dictionary:
 					if members.has(t) and not members.has(a):
 						members[t]["taken"] += float(event["damage"])
 						wave_taken[waves] += float(event["damage"])
+						# guard measurement: incoming enemy weapon/projectile hits, blocked share, damage the guard
+						# prevented (estimated from the blocked damage: raw = blocked / (1 - reduction); the min_damage floor is ignored)
+						members[t]["in_hits"] += 1
+						members[t]["in_dmg"] += float(event["damage"])
+						if str(event["type"]) == "blocked":
+							members[t]["in_blocked"] += 1
+							var keep := maxf(0.01, 1.0 - float(combat.rules["guard_damage_reduction"]))
+							members[t]["prevented"] += float(event["damage"]) / keep - float(event["damage"])
+				"out_of_stamina":
+					if members.has(int(event.get("player", -1))):
+						members[int(event["player"])]["oos"] += 1
+				"guard_broken":
+					if members.has(int(event.get("target", -1))):
+						members[int(event["target"])]["broken"] += 1
 				"skill_hit", "skill_dot":
 					var a := int(event.get("attacker", -1))
 					var t := int(event.get("target", -1))
@@ -464,6 +539,16 @@ func play(classes: Array, seed: int) -> Dictionary:
 				members[id]["walk"] += 1
 			if f.gauge >= gauge_max:
 				members[id]["gauge_full"] += 1
+			# stamina starvation (measurement only): too little stamina for the weapon's first light attack,
+			# or for the cheapest class skill that is off cooldown
+			var light_cost := float(combat.moves.get(str(f.style) + "_light_1", {}).get("energy_cost", 0.0))
+			if f.energy < light_cost:
+				members[id]["starved"] += 1
+			for skill in f.skill_state.get("skills", []):
+				var sd: Dictionary = preload("res://logic/class_skills/skill_data.gd").load_default().skill(str(skill))
+				if int(f.skill_state.get("cd", {}).get(skill, 0)) <= sim.tick_count and f.energy < float(sd.get("stamina", 0.0)):
+					members[id]["skill_starved"] += 1
+					break
 	var alive := 0
 	for id in ids:
 		if sim.fighters[id].is_alive() and not sim.fighters[id].incapacitated:
