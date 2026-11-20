@@ -359,9 +359,107 @@ static func add_pyramid_island(parent: Node3D, map) -> Node3D:
 	return island
 
 
-static func _add_underside(parent: Node3D, w: float, d: float) -> void:
-	var rock := _material(ROCK)
-	var dark := _material(ROCK_DARK)
+## ---- Orc camp night island (level-designer 2026-11-20, tools/maps/build_orc_camp.gd) ----
+## Same contract as the pyramid island (the art scene is the whole island top, meta floating_island), plus meta
+## "night_camp": the client gives it a NIGHT look instead of the day sky (dark blue sky, a dim moon, low ambient: the
+## scene's 4 firelights and its baked torch pools carry the warmth), a darker rock underside, and one cheap ember drift
+## (a single CPUParticles3D, 28 additive quads, emitted from the scene's meta "embers" flame points). The characters keep
+## their own key/rim lights (client/character_light.gd), so units stay readable in the dark.
+
+const NIGHT_ROCK := Color(0.20, 0.19, 0.24)
+const NIGHT_ROCK_DARK := Color(0.13, 0.12, 0.16)
+const NIGHT_SKY_TOP := Color(0.006, 0.010, 0.030)  ## (background colours act linear: keep them very low)
+const NIGHT_SKY_HORIZON := Color(0.016, 0.028, 0.075)
+const NIGHT_MOON := Color(0.62, 0.72, 1.0)
+const NIGHT_MOON_ENERGY := 0.65
+const NIGHT_AMBIENT := Color(0.42, 0.48, 0.74)
+const NIGHT_AMBIENT_ENERGY := 1.35
+const EMBER_COUNT := 28
+
+
+static func is_orc_island(scene_root: Node) -> bool:
+	var art := scene_root.find_child("ArtScene", false, false)
+	return art != null and bool(art.get_meta("night_camp", false))
+
+
+static func add_orc_island(parent: Node3D, map) -> Node3D:
+	var island := Node3D.new()
+	island.name = "OrcIsland"
+	_add_underside(island, float(map.half_width) + MARGIN_X, float(map.half_depth) + MARGIN_Z, NIGHT_ROCK, NIGHT_ROCK_DARK)
+	var art := parent.find_child("ArtScene", false, false)
+	var points: PackedVector3Array = art.get_meta("embers", PackedVector3Array()) if art != null else PackedVector3Array()
+	if not points.is_empty():
+		island.add_child(_embers(points))
+	parent.add_child(island)
+	return island
+
+
+## Embers drifting up from the fires: one particle system for every flame (one draw call), small additive quads.
+static func _embers(points: PackedVector3Array) -> CPUParticles3D:
+	var embers := CPUParticles3D.new()
+	embers.name = "Embers"
+	embers.amount = EMBER_COUNT
+	embers.lifetime = 2.6
+	embers.preprocess = 2.6
+	embers.randomness = 0.6
+	embers.emission_shape = CPUParticles3D.EMISSION_SHAPE_POINTS
+	embers.emission_points = points
+	embers.direction = Vector3.UP
+	embers.spread = 25.0
+	embers.gravity = Vector3(0.25, 0.35, 0.0)  # a slow lift and a light breeze east
+	embers.initial_velocity_min = 0.3
+	embers.initial_velocity_max = 0.8
+	embers.damping_min = 0.1
+	embers.damping_max = 0.3
+	embers.scale_amount_min = 0.5
+	embers.scale_amount_max = 1.0
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1.0, 0.75, 0.35, 1.0))
+	fade.set_color(1, Color(1.0, 0.30, 0.08, 0.0))
+	embers.color_ramp = fade
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.07, 0.07)
+	var material := StandardMaterial3D.new()
+	material.resource_name = "ember_glow"
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	material.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	material.vertex_color_use_as_albedo = true
+	quad.material = material
+	embers.mesh = quad
+	embers.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	embers.set_meta("toon_prepared", true)
+	embers.visibility_aabb = AABB(Vector3(-14, -1, -10), Vector3(28, 8, 20))
+	return embers
+
+
+## The night around the orc island (instead of set_sky's day): a dark blue sky, a dim blue moon, low ambient.
+static func set_night_sky(root: Node) -> void:
+	for node in root.find_children("*", "WorldEnvironment", true, false):
+		var env: Environment = node.environment
+		if env == null:
+			continue
+		# A flat colour, not a sky: the drawn style (client/draw_style/draw_style.gd) swaps every BG_SKY for its painted day sky.
+		env.background_mode = Environment.BG_COLOR
+		env.background_color = NIGHT_SKY_HORIZON.lerp(NIGHT_SKY_TOP, 0.45)
+		env.fog_enabled = false
+		env.adjustment_enabled = true
+		env.adjustment_saturation = 1.1
+		env.adjustment_contrast = 1.08
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+		env.ambient_light_color = NIGHT_AMBIENT
+		env.ambient_light_energy = NIGHT_AMBIENT_ENERGY
+	for node in root.find_children("*", "DirectionalLight3D", true, false):
+		if str(node.name).begins_with("Character"):
+			continue  # (the characters' own key/rim lights keep them readable at night)
+		(node as DirectionalLight3D).light_color = NIGHT_MOON
+		(node as DirectionalLight3D).light_energy = NIGHT_MOON_ENERGY
+
+
+static func _add_underside(parent: Node3D, w: float, d: float, rock_color: Color = ROCK, dark_color: Color = ROCK_DARK) -> void:
+	var rock := _material(rock_color)
+	var dark := _material(dark_color)
 	var layers := [[0.0, 1.0, 1.5], [-1.5, 0.80, 1.9], [-3.4, 0.55, 2.2], [-5.6, 0.28, 2.6]]
 	for layer in layers:
 		var cone := CylinderMesh.new()

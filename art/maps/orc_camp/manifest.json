@@ -1,0 +1,16 @@
+{
+  "orc_camp_night": {
+    "cover": 0,
+    "draw_surfaces": 5,
+    "lights": 4,
+    "mesh_bytes": 616837,
+    "scene_bytes": 2845,
+    "torches": 9,
+    "triangles": 24155,
+    "triangles_by_mesh": {
+      "dressing": 6190,
+      "floor": 3836,
+      "kit": 14129
+    }
+  }
+}

@@ -398,13 +398,19 @@ func _build_stage(map) -> void:
 		if GoblinGround.dressed(map):  # a goblin camp: the kit of its own art scene, re-placed around a dirt yard
 			arena_props.hide_scene(self)  # (hidden, not freed: the kit meshes are read from it)
 			arena_props.build_camp(self, self, map, str(map.id))
+		elif pyramid_island and arena_props.is_orc_island(self):  # the orc night camp: island top + night look + embers
+			arena_props.hide_scene(self)
+			arena_props.add_orc_island(self, map)
 		elif pyramid_island:  # a mummy board: its art scene is the island top, add the goblin island's rock underside
 			arena_props.hide_scene(self)
 			arena_props.add_pyramid_island(self, map)
 		else:
 			arena_props.hide_scene(self)
 			arena_props.add_island(self, map)
-		arena_props.set_sky(self)
+		if pyramid_island and arena_props.is_orc_island(self):
+			arena_props.set_night_sky(self)
+		else:
+			arena_props.set_sky(self)
 
 
 func _build_session(map) -> bool:

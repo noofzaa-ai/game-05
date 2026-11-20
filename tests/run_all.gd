@@ -34,6 +34,7 @@ const TEST_FILES := [
 	"res://tests/test_hub_card_level.gd",
 	"res://tests/test_hub_quests_panel.gd",
 	"res://tests/test_mummy_pyramid.gd",
+	"res://tests/test_orc_camp.gd",
 	"res://tests/test_boss_loot.gd",
 	"res://tests/test_squad_zone_rooms.gd",
 	"res://tests/test_tier_up.gd",

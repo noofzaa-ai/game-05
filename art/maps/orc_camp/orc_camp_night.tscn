@@ -1,0 +1,60 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://art/maps/orc_camp/meshes/orc_camp_night_floor.res" id="1_4635a"]
+[ext_resource type="ArrayMesh" path="res://art/maps/orc_camp/meshes/orc_camp_night_dressing.res" id="2_tppil"]
+[ext_resource type="ArrayMesh" path="res://art/maps/orc_camp/meshes/orc_camp_night_kit.res" id="3_7tmbr"]
+
+[node name="orc_camp_night" type="Node3D" unique_id=1300149502]
+metadata/floating_island = true
+metadata/night_camp = true
+metadata/embers = PackedVector3Array(-2.7, 2.29, -5.55, 2.7, 2.29, -5.55, -6.2, 2.09, -6.75, 6.2, 2.09, -6.75, -10.45, 2.09, -3.4, 10.45, 2.09, -3.4, 10.45, 2.09, 0.6, -10.45, 1.89, 4.3, 10.45, 1.89, 4.3, -9.9, 1.04, 0.6)
+
+[node name="PyramidFloor" type="MeshInstance3D" parent="." unique_id=984840249]
+cast_shadow = 0
+mesh = ExtResource("1_4635a")
+metadata/toon_no_outline = true
+
+[node name="Dressing" type="MeshInstance3D" parent="." unique_id=1755788728]
+mesh = ExtResource("2_tppil")
+
+[node name="Kit" type="MeshInstance3D" parent="." unique_id=140996483]
+mesh = ExtResource("3_7tmbr")
+
+[node name="light_fire0" type="Node3D" parent="." unique_id=582102683]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.7, 2.59, -5.55)
+
+[node name="light_fire1" type="Node3D" parent="." unique_id=1517199914]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 2.59, -5.55)
+
+[node name="light_fire2" type="Node3D" parent="." unique_id=1939745316]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.9, 1.34, 0.6)
+
+[node name="light_fire3" type="Node3D" parent="." unique_id=1634191832]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
+
+[node name="spawn" type="Node3D" parent="." unique_id=1788149036]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 0.05, 0)
+
+[node name="enemy_0" type="Node3D" parent="." unique_id=1405885798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, -3.4)
+
+[node name="enemy_1" type="Node3D" parent="." unique_id=908069595]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, -1.13)
+
+[node name="enemy_2" type="Node3D" parent="." unique_id=622017981]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, 1.13)
+
+[node name="enemy_3" type="Node3D" parent="." unique_id=1856783369]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, 3.4)
+
+[node name="enemy_4" type="Node3D" parent="." unique_id=2011407191]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9, 0.05, -3.4)
+
+[node name="enemy_5" type="Node3D" parent="." unique_id=1434063805]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9, 0.05, 3.4)
+
+[node name="enemy_6" type="Node3D" parent="." unique_id=2121942240]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.8, 0.05, -3.4)
+
+[node name="enemy_7" type="Node3D" parent="." unique_id=951158288]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.8, 0.05, 3.4)

@@ -61,6 +61,15 @@ func run(ctx) -> void:
 		all_valid = all_valid and MapLoader.load_by_id(str(id)).is_valid()
 	ctx.check("every map listed in index.json is valid", all_valid)
 
+	var boards_ok := true
+	var boards := 0
+	for id in index.data:
+		var board := MapLoader.load_by_id(str(id))
+		if board.camera_style != "arena":
+			continue
+		boards += 1
+		boards_ok = boards_ok and is_equal_approx(board.half_width, 8.0) and is_equal_approx(board.half_depth, 4.5) and board.player_spawns.size() == 3 and (board.art_scene.is_empty() or ResourceLoader.exists(board.art_scene))
+	ctx.check("every arena board in index.json is the 16 x 9 m island board with 3 squad spawns and an existing art scene (%d boards, incl. orc_camp_night)" % boards, boards_ok and index.data.has("orc_camp_night"))
 	_test_second_stage(ctx, combat, arena)
 	for id in index.data:
 		_check_layout(ctx, MapLoader.load_by_id(str(id)))

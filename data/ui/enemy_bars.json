@@ -59,6 +59,34 @@
 			}
 		},
 
+		"orc": {
+			"_doc": "Orc Camp family (level-designer 2026-11-20, the night camp map; mirrors the goblin/mummy styles): a crude iron-and-hide frame in dark rust, a blood-red to ember fill (deeper than the player's red, reads on the night-blue floor because of the dark back plate), the fang mark of a brute. Orc tiers are listed once the orc family exists in data/combat.",
+			"frame_shape": "crude",
+			"frame": [0.46, 0.28, 0.20, 1.0],
+			"back": [0.05, 0.04, 0.06, 0.88],
+			"fill": [0.66, 0.20, 0.14, 1.0],
+			"fill_low": [0.92, 0.48, 0.16, 1.0],
+			"trail": [0.30, 0.08, 0.06, 1.0],
+			"outline": [0.02, 0.02, 0.03, 1.0],
+			"low_flash": [1.0, 0.62, 0.22, 1.0],
+			"mark": "fang",
+			"elite": {
+				"_doc": "Orc elite: a studded blackened-iron frame and the double notch.",
+				"frame_shape": "studded",
+				"frame": [0.52, 0.40, 0.34, 1.0],
+				"fill": [0.60, 0.18, 0.12, 1.0],
+				"mark": "fang_double"
+			},
+			"boss": {
+				"_doc": "The Orc Warlord and the HUD boss bar on an orc map: the richest frame in war-bronze with the skull mark.",
+				"frame_shape": "chief",
+				"frame": [0.78, 0.52, 0.26, 1.0],
+				"fill": [0.58, 0.14, 0.10, 1.0],
+				"fill_low": [0.94, 0.44, 0.14, 1.0],
+				"mark": "skull"
+			}
+		},
+
 		"brass": {
 			"_doc": "The default for every other map: the plain Night Brass family. Frame and low-HP colours come from the InkUi tokens (null), the fill is the HUD HP red, so unthemed maps keep the current look and a chosen theme still drives it.",
 			"frame_shape": "plain",
@@ -95,7 +123,8 @@
 		"sunward_valley": "goblin",
 		"mummy_pyramid_gate": "mummy",
 		"mummy_pyramid_hall": "mummy",
-		"mummy_pyramid_sanctum": "mummy"
+		"mummy_pyramid_sanctum": "mummy",
+		"orc_camp_night": "orc"
 	},
 
 	"by_atmosphere": {
