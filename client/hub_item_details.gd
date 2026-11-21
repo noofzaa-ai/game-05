@@ -31,6 +31,10 @@ var actions: HBoxContainer
 var socket_row: HBoxContainer  ## boss-loot.md 2: the Relic socket (icon + effect, or "empty"); hidden without a socket
 var socket_icon: TextureRect
 var socket_text: Label
+var boss_line: Label  ## the boss option of a boss-drop piece (Boss 2026-11-21), boss gold; hidden for other pieces
+var _boss := false  ## the shown piece is a boss-drop piece: title in boss gold
+var _pad := 0.0
+var _icon := 0.0
 var _ratio := 1.0
 var _low := false
 var _wide := true
@@ -68,6 +72,9 @@ func _init() -> void:
 	subs.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	subs.vertical_alignment = VERTICAL_ALIGNMENT_TOP
 	add_child(subs)
+	boss_line = CardTokens.label("", CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_BOSS_TEXT, 1.0, 0, "medium")
+	boss_line.visible = false
+	add_child(boss_line)
 	compare = HBoxContainer.new()
 	compare.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(compare)
@@ -129,16 +136,44 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 	subs.position = Vector2(tx, y)
 	subs.size = Vector2(tw, line)
 	CardTokens.hub_text(subs, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
-	compare.position = Vector2(tx, y + subs.size.y)
-	compare.size = Vector2(tw, line)
-	CardTokens.gap(compare, 12.0, s)
 	_wide = wide
 	_button_h = button_h
 	_text_x = tx
 	_text_w = tw
 	_place_level_tag()
 	_line = line
-	var bar_y := maxf(pad + icon + pad * 0.5, compare.position.y + compare.size.y)
+	_pad = pad
+	_icon = icon
+	_place_lower()
+	actions.position = Vector2(pad, h - pad * 0.7 - button_h)
+	actions.size = Vector2(w - pad * 2.0, button_h)
+	CardTokens.gap(actions, 18.0, s)
+	_draw_bar()
+
+
+## Everything under the substats: the boss option line (boss-drop pieces only), the "vs worn" row, durability, cost,
+## socket. Re-run when the boss line appears or goes (show_item / show_empty), so it never overlaps the bar.
+func _place_lower() -> void:
+	if _line <= 0.0:
+		return
+	var w := size.x
+	var pad := _pad
+	var tx := _text_x
+	var tw := _text_w
+	var line := _line
+	var y := subs.position.y + subs.size.y
+	if boss_line.visible and not subs.text.is_empty():  # substats can wrap (phone): the boss line goes under their real height
+		y = subs.position.y + maxf(subs.size.y, float(subs.get_line_count()) * float(subs.get_line_height()))
+	boss_line.position = Vector2(tx, y)
+	boss_line.size = Vector2(tw, line)
+	if boss_line.visible:  # one line when it fits, else two (phone): never clipped
+		var fitted := HubLook.fit(boss_line, str(boss_line.get_meta("full_text", boss_line.text)), CardTokens.FONT_CHAR_SLOT, tw, CardTokens.HUB_BOSS_TEXT, s, 2, "medium")
+		boss_line.size.y = maxf(line, HubLook.lines_height(int(fitted["lines"]), int(fitted["px"])))
+		y += boss_line.size.y
+	compare.position = Vector2(tx, y)
+	compare.size = Vector2(tw, line)
+	CardTokens.gap(compare, 12.0, s)
+	var bar_y := maxf(pad + _icon + pad * 0.5, compare.position.y + compare.size.y)
 	var key_w := 130.0 * s
 	dur_key.position = Vector2(pad, bar_y)
 	dur_key.size = Vector2(key_w, CardTokens.CHAR_BAR_H * s * 1.4)
@@ -149,7 +184,7 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 	dur_text.position = Vector2(dur_back.position.x + dur_back.size.x + pad, bar_y)
 	dur_text.size = Vector2(140.0 * s, dur_key.size.y)
 	CardTokens.hub_text(dur_text, CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_INK, s, 0, "medium")
-	if wide:
+	if _wide:
 		cost.position = Vector2(dur_text.position.x + dur_text.size.x, bar_y)
 	else:
 		cost.position = Vector2(pad, bar_y + dur_key.size.y)
@@ -159,10 +194,6 @@ func layout_box(w: float, h: float, button_h: float, p_s: float, wide: bool = tr
 	_fit_cost()
 	_place_socket()
 	_fit_title()
-	actions.position = Vector2(pad, h - pad * 0.7 - button_h)
-	actions.size = Vector2(w - pad * 2.0, button_h)
-	CardTokens.gap(actions, 18.0, s)
-	_draw_bar()
 
 
 ## No piece: the slot / prompt in the title and up to three short lines.
@@ -173,7 +204,7 @@ func show_empty(heading: String, line_sub: String, line_main: String, line_subs:
 	for node in [dur_key, dur_back, dur_text, cost]:
 		node.visible = false
 	socket_row.visible = false
-	_place_socket()
+	_set_boss("")
 	title.text = heading
 	_fit_title()
 	sub.text = line_sub
@@ -210,6 +241,7 @@ func show_item(item, rules) -> void:
 	cell.locked = false
 	for node in [dur_key, dur_back, dur_text, cost]:
 		node.visible = true
+	_set_boss(ItemText.boss_option_text(str(item.item_id)) if ItemText.is_boss_piece(str(item.item_id), rules) else "", ItemText.is_boss_piece(str(item.item_id), rules))
 	title.text = item_name(item, rules) + ("  +%d" % item.refine_level if item.refine_level > 0 else "")
 	_fit_title()
 	var tier_id := str(rules.tiers[clampi(item.tier, 0, rules.tiers.size() - 1)]["id"])
@@ -231,6 +263,7 @@ func show_item(item, rules) -> void:
 	for n in item.substats.size():
 		lines.append(ItemText.substat_text(item, rules, n))
 	subs.text = "  ·  ".join(lines)
+	_place_lower()  # the boss line sits under the (possibly wrapped) substats
 	_ratio = item.durability_ratio()
 	_low = _ratio < rules.durability_full_above
 	_draw_bar()
@@ -411,7 +444,17 @@ func _fit_title() -> void:
 		return
 	var full: String = title.get_meta("full_text", "") if title.text.ends_with("…") else title.text
 	title.set_meta("full_text", full)
-	HubLook.fit(title, full, CardTokens.FONT_CHAR_ITEM, title.size.x, CardTokens.HUB_INK, s, 1)
+	HubLook.fit(title, full, CardTokens.FONT_CHAR_ITEM, title.size.x, CardTokens.HUB_BOSS_TEXT if _boss else CardTokens.HUB_INK, s, 1)
+
+
+## Boss-drop piece look (Boss 2026-11-21): the title in boss gold and the boss option line under the substats.
+## `option` "" hides the line. Re-places the lower rows.
+func _set_boss(option: String, is_boss: bool = false) -> void:
+	_boss = is_boss
+	boss_line.visible = not option.is_empty()
+	boss_line.text = option
+	boss_line.set_meta("full_text", option)
+	_place_lower()
 
 
 ## One parchment plate button in the action row (fills the row; the row height is the tap size).

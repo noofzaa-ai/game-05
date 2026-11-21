@@ -74,6 +74,8 @@ var stat_mods: Dictionary = {}  ## what the effects add up to, per stat: {"add",
 var incapacitated := false  ## stunned or asleep: cannot do anything
 var rooted := false  ## shocked: cannot move, jump, run or dodge
 var control_immune_left := 0  ## ticks after a stun/shock/sleep during which no new one can land
+var boss_procs: Array = []  ## boss-option status procs of the worn boss pieces (logic/boss_procs.gd; set from the gear); saved in checkpoints
+var proc_ready: Dictionary = {}  ## boss option item id -> sim tick from which it may trigger again (internal cooldown)
 
 
 func max_hp() -> float:

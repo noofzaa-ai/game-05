@@ -683,10 +683,9 @@ func _show_loot(event: Dictionary) -> void:
 		_loot_line(at, line, "+%d" % int(event["materials"][id]), Color("fff3db"), InkUi.icon(str(id),24))
 		line += 1
 	for item in event["items"]:
-		var tier: Dictionary = GameState.item_rules.tiers[int(item["tier"])]
 		var label := str(item["weapon_type"]) if item["slot"] == "weapon" and not str(item["weapon_type"]).is_empty() else str(item["slot"])
 		label = str(GameState.item_rules.catalog.entry(str(item.get("item_id", ""))).get("name", label.capitalize()))
-		var color: Color = InkUi.rarity_color(tier["color"], true)
+		var color: Color = InkUi.rarity_color(preload("res://client/item_text.gd").rarity_key_for(str(item.get("item_id", "")), int(item["tier"]), GameState.item_rules), true)  # boss-drop pieces: boss gold
 		var level_id := str(item.get("item_id", ""))
 		var level: int = GameState.item_rules.catalog.req_level(level_id)
 		_loot_line(at, line, "%s ×1" % label + (" · " + CardTokens.t("req_lv_short") % level if level > 1 else ""), color, ItemAssets.icon_for_id(str(item.get("item_id", "")), GameState.item_rules.catalog, ItemAssets.card_race(_session.profile_for(_local_player_id))))
@@ -1651,9 +1650,8 @@ func _on_chest_opened() -> void:
 	_hud.flash(Color(1.0, 0.85, 0.35, 0.25), 0.25)
 	var loot_line := 0
 	for item in reward.get("items", []):  # (Item objects, logic/item.gd)
-		var tier: Dictionary = GameState.item_rules.tiers[int(item.tier)]
 		var label := str(GameState.item_rules.catalog.entry(str(item.item_id)).get("name", str(item.slot).capitalize()))
-		var color: Color = InkUi.rarity_color(tier["color"], true)
+		var color: Color = InkUi.rarity_color(preload("res://client/item_text.gd").rarity_key_for(str(item.item_id), int(item.tier), GameState.item_rules), true)
 		_loot_line(at,loot_line,"%s ×1" % label,color,ItemAssets.icon_for_id(str(item.item_id),GameState.item_rules.catalog,ItemAssets.card_race(_session.profile_for(_local_player_id)),str(item.id).begins_with("starter-")))
 		loot_line += 1
 	if not reward.get("lost_items", []).is_empty():

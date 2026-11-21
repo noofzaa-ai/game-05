@@ -26,6 +26,7 @@ const Run := preload("res://logic/run.gd")
 const SquadMember := preload("res://logic/squad_member.gd")
 const Wear := preload("res://logic/wear.gd")
 const RacePassives := preload("res://logic/race_passives.gd")
+const BossProcs := preload("res://logic/boss_procs.gd")
 const ClassSkills := preload("res://logic/class_skills/engine.gd")
 const ClassSkillUse := preload("res://logic/class_skills/use_rules.gd")
 const ClassSkillData := preload("res://logic/class_skills/skill_data.gd")
@@ -269,6 +270,7 @@ func tick(prediction_player: int = -1) -> void:
 		areas = _ranged["areas"]
 		Combat.resolve_hits(fighters, bodies, combat, rng, events,melee_target_boxes)
 		ClassSkills.step(self)  # class skills: travel, releases, counters, orbs (logic/class_skills/engine.gd)
+		BossProcs.step(self)  # boss-drop pieces: status-on-hit procs of this tick's landed hits (own RNG streams)
 		_release_waves()
 		RacePassives.step(self)  # after hits, skills and waves of this tick: race triggers react to them
 		_check_stage_clear()
@@ -489,6 +491,7 @@ func _refresh_run_stats(id: int) -> void:
 	var fighter: Fighter = fighters[id]
 	fighter.stats = combat.full_stats(runs[id].stats(item_rules))
 	RacePassives.apply_stats(fighter)  # race/synergy stat_mod (HP, ATK ...) on top of gear
+	fighter.boss_procs = BossProcs.options_for(runs[id].loadout().items())  # boss-drop pieces' status-on-hit options
 	fighter.hp = minf(fighter.hp, fighter.max_hp())
 	bodies[id].move_speed_multiplier = Stats.move_multiplier(fighter.stats)
 

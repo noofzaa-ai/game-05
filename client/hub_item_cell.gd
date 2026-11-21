@@ -8,6 +8,7 @@ const CardTokens := preload("res://client/card_tokens.gd")
 const ItemAssets := preload("res://client/item_assets.gd")
 const ItemIcon := preload("res://client/item_icon.gd")
 const CarvedLook := preload("res://client/carved_look.gd")  ## carved slot tiles (Boss 2026-11-14)
+const ItemText := preload("res://client/item_text.gd")
 signal activated()
 
 var key := ""  ## paper-doll "slot:index", "" for storage cells
@@ -20,6 +21,7 @@ var locked := false
 var fits := false
 var selected := false
 var low := false  ## worn down (stats reduced)
+var boss := false  ## a boss-drop piece (Boss 2026-11-21): boss-gold frame + four corner brackets (shape, not colour only)
 var card_level := -1  ## level of the card this cell is viewed for (-1: the lead card), for the details level tag warning
 var card_race := ""  ## gear race of the card this cell is viewed for ("" = the lead card's): which race's icon it shows
 var s := 1.0
@@ -41,6 +43,7 @@ func show_item(p_item, rules, empty_caption: String) -> void:
 	caption = empty_caption
 	icon_tex = ItemAssets.icon(item, rules.catalog, _look_race()) if item != null and rules != null else null
 	low = item != null and rules != null and item.durability_ratio() < rules.durability_full_above
+	boss = item != null and rules != null and ItemText.is_boss_piece(str(item.item_id), rules)
 	tooltip_text = ""
 	queue_redraw()
 
@@ -100,6 +103,8 @@ func _draw() -> void:
 			var at := Vector2(size.x * 0.9 - w, size.y * 0.1 + px * 0.8)
 			draw_string_outline(font, at, words, HORIZONTAL_ALIGNMENT_LEFT, -1, px, maxi(2, int(px * 0.15)), CardTokens.HUB_OUTLINE)
 			draw_string(font, at, words, HORIZONTAL_ALIGNMENT_LEFT, -1, px, CardTokens.HUB_REFINE)
+		if boss:  # boss-drop piece: a boss-gold frame and an L bracket in each corner (the painted icon keeps its own colours)
+			draw_boss_frame(self, rect, s)
 		if low:  # worn down: a red disc with "!" top left (shape + colour)
 			var rr := size.x * 0.1
 			var cc := Vector2(size.x * 0.17, size.y * 0.17)
@@ -122,6 +127,22 @@ func _draw() -> void:
 		draw_colored_polygon(PackedVector2Array([inner.position, inner.position + Vector2(k, 0.0), inner.position + Vector2(0.0, k)]), CardTokens.HUB_FIT_MARK)
 	if has_focus():
 		draw_style_box(CardTokens.hub_focus(s, 12.0), rect)
+
+## The boss-gold frame of a boss-drop piece on `canvas` over `rect` (also used by other item cells).
+static func draw_boss_frame(canvas: CanvasItem, rect: Rect2, p_s: float) -> void:
+	var inner := rect.grow(-rect.size.x * 0.07)
+	var w := maxf(2.0, 3.0 * p_s)
+	canvas.draw_rect(inner.grow(w * 0.5), CardTokens.HUB_OUTLINE, false, w + 2.0)
+	canvas.draw_rect(inner, CardTokens.HUB_BOSS_GOLD, false, w)
+	var k := rect.size.x * 0.2
+	var t := w * 1.8
+	for corner in [Vector2(0, 0), Vector2(1, 0), Vector2(0, 1), Vector2(1, 1)]:
+		var at: Vector2 = inner.position + inner.size * corner
+		var sx := 1.0 if corner.x == 0 else -1.0
+		var sy := 1.0 if corner.y == 0 else -1.0
+		canvas.draw_rect(Rect2(at + Vector2(0 if sx > 0 else -k, 0 if sy > 0 else -t), Vector2(k, t)), CardTokens.HUB_BOSS_GOLD)
+		canvas.draw_rect(Rect2(at + Vector2(0 if sx > 0 else -t, 0 if sy > 0 else -k), Vector2(t, k)), CardTokens.HUB_BOSS_GOLD)
+
 
 static func _tier_color(tier: int) -> Color:
 	return CardTokens.HUB_TIER[clampi(tier, 0, CardTokens.HUB_TIER.size() - 1)]

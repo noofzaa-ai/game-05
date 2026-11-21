@@ -64,8 +64,8 @@ static func _ink() -> Dictionary:
 		"ORNAMENT": Color(0.82, 0.66, 0.36), "PANEL": Color(0.115, 0.105, 0.095), "PANEL_LIGHT": Color(0.16, 0.145, 0.13),
 		"PAPER": Color(0.93, 0.89, 0.8), "PRESSED_BG": Color(0.3, 0.13, 0.1), "PROMPT_TEXT": Color(0.6, 1, 0.9),
 		"RADIUS_ADD": 0,
-		"RARITY": {"blue": Color(0.45, 0.68, 1), "gold": Color(1, 0.82, 0.25), "purple": Color(0.82, 0.55, 1), "white": Color(0.92, 0.92, 0.92)},
-		"RARITY_WORLD": {"blue": Color(0.4, 0.65, 1), "gold": Color(1, 0.8, 0.2), "purple": Color(0.8, 0.5, 1), "white": Color(0.95, 0.95, 0.95)},
+		"RARITY": {"blue": Color(0.45, 0.68, 1), "boss": Color(1, 0.7, 0.1), "gold": Color(1, 0.82, 0.25), "purple": Color(0.82, 0.55, 1), "white": Color(0.92, 0.92, 0.92)},
+		"RARITY_WORLD": {"blue": Color(0.4, 0.65, 1), "boss": Color(1, 0.72, 0.12), "gold": Color(1, 0.8, 0.2), "purple": Color(0.8, 0.5, 1), "white": Color(0.95, 0.95, 0.95)},
 		"SCRIM": Color(0, 0, 0, 0.7), "SCRIM_STRONG": Color(0, 0, 0, 0.85), "SCROLL_TRACK": Color(0, 0, 0, 0.25),
 		"SEAL": Color(0.84, 0.24, 0.18), "SELECT_MARK": Color(1, 1, 1), "SKILL_BANNER_BG": Color(0.05, 0.05, 0.07, 0.92),
 		"SKILL_BANNER_TEXT": Color(1, 0.98, 0.92), "SLOT_BG": Color(0.085, 0.078, 0.07),
@@ -97,7 +97,7 @@ static func _sumi() -> Dictionary:
 	var good := Color(0.55, 0.85, 0.55)
 	var bad := Color(1.0, 0.48, 0.38)
 	var warn := Color(1.0, 0.72, 0.3)
-	var rarity := {"white": Color(0.90, 0.88, 0.83), "blue": Color(0.45, 0.68, 1.0), "purple": Color(0.82, 0.55, 1.0), "gold": Color(1.0, 0.80, 0.25)}
+	var rarity := {"white": Color(0.90, 0.88, 0.83), "blue": Color(0.45, 0.68, 1.0), "purple": Color(0.82, 0.55, 1.0), "gold": Color(1.0, 0.80, 0.25), "boss": Color(1.0, 0.70, 0.12)}
 	return {
 		"PAPER": paper, "MUTED": muted, "TEXT_PLAIN": paper, "TEXT_BRIGHT": paper, "TEXT_TAG": muted,
 		"TEXT_UNLOCKED": paper, "TEXT_LOCKED": Color(0.52, 0.49, 0.44), "HEADING_ACCENT": gold,
@@ -144,7 +144,7 @@ static func _journal() -> Dictionary:
 		"ICON_FALLBACK": Color(0.62, 0.58, 0.52), "DOLL_SHADE": Color(0.55, 0.45, 0.32), "SELECT_MARK": Color(0.10, 0.06, 0.04),
 		"TITLE_STYLE": "underline", "TITLE_BG": seal, "TITLE_TEXT": ink, "TITLE_OUTLINE": page,
 		"STAGE_COMBAT": ink, "STAGE_CHALLENGE": seal, "STAGE_TREASURE": gold, "STAGE_CAMP": good, "STAGE_BOSS": seal,
-		"RARITY": {"white": Color(0.38, 0.37, 0.35), "blue": Color(0.10, 0.36, 0.80), "purple": Color(0.50, 0.18, 0.72), "gold": Color(0.75, 0.50, 0.0)},
+		"RARITY": {"white": Color(0.38, 0.37, 0.35), "blue": Color(0.10, 0.36, 0.80), "purple": Color(0.50, 0.18, 0.72), "gold": Color(0.75, 0.50, 0.0), "boss": Color(0.62, 0.40, 0.0)},
 		"HUD_PANEL": Color(0.93, 0.89, 0.80, 0.92), "HUD_TEXT": ink, "HUD_OUTLINE": halo, "LOOT_OUTLINE": Color(0.10, 0.07, 0.04),
 		"HP": Color(0.82, 0.20, 0.16), "HP_TRAIL": Color(0.98, 0.72, 0.56), "STAMINA": Color(0.40, 0.66, 0.26),
 		"STAMINA_EXHAUSTED": Color(0.95, 0.55, 0.35), "ULT": Color(0.56, 0.40, 0.84), "ULT_READY_TEXT": Color(0.30, 0.10, 0.50),
@@ -170,7 +170,7 @@ static func _pop() -> Dictionary:
 	var good := Color(0.40, 0.92, 0.58)
 	var bad := Color(1.0, 0.45, 0.45)
 	var warn := Color(1.0, 0.68, 0.18)
-	var rarity := {"white": Color(0.86, 0.89, 0.96), "blue": Color(0.36, 0.70, 1.0), "purple": Color(0.80, 0.47, 1.0), "gold": Color(1.0, 0.78, 0.16)}
+	var rarity := {"white": Color(0.86, 0.89, 0.96), "blue": Color(0.36, 0.70, 1.0), "purple": Color(0.80, 0.47, 1.0), "gold": Color(1.0, 0.78, 0.16), "boss": Color(1.0, 0.68, 0.08)}
 	return {
 		"INK": Color(0.09, 0.10, 0.19), "PANEL": Color(0.14, 0.16, 0.29), "PANEL_LIGHT": Color(0.21, 0.24, 0.41),
 		"SLOT_BG": Color(0.11, 0.12, 0.23), "FIELD_BG": Color(0.07, 0.08, 0.15), "BORDER": outline,

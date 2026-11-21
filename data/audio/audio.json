@@ -1353,6 +1353,16 @@
 				]
 			}
 		],
+		"boss_proc": [
+			{
+				"when": {
+					"local": true
+				},
+				"play": [
+					"buff_up"
+				]
+			}
+		],
 		"race_shield": [
 			{
 				"when": {

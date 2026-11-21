@@ -13,7 +13,35 @@ const STAT_LABELS := {
 
 
 static func tier_color(item: Item, rules: ItemRules) -> Color:
-	return InkUi.rarity_color(rules.tiers[item.tier]["color"])
+	return InkUi.rarity_color(rarity_key(item, rules))
+
+
+## True for a boss-drop piece (catalog "boss" set: the boss sets and the boss weapons, Boss 2026-11-21).
+static func is_boss_piece(item_id: String, rules: ItemRules) -> bool:
+	return not str(rules.catalog.entry(item_id).get("boss", "")).is_empty()
+
+
+## The rarity colour key of a piece: "boss" (boss gold) for a boss-drop piece whatever its tier, else the tier's key.
+static func rarity_key(item: Item, rules: ItemRules) -> String:
+	return rarity_key_for(item.item_id, item.tier, rules)
+
+
+static func rarity_key_for(item_id: String, tier: int, rules: ItemRules) -> String:
+	if is_boss_piece(item_id, rules):
+		return InkUi.RARITY_BOSS
+	return str(rules.tiers[clampi(tier, 0, rules.tiers.size() - 1)]["color"])
+
+
+## The boss option of catalog item `item_id` in words ("" when it has none): "Boss option: 10% on hit: Weaken 3s
+## (cooldown 8s)". Numbers from data/items/boss_options.json (logic/boss_procs.gd); words from client/card_tokens.gd.
+static func boss_option_text(item_id: String) -> String:
+	var BossProcs = load("res://logic/boss_procs.gd")
+	var option: Dictionary = BossProcs.option(item_id)
+	if option.is_empty():
+		return ""
+	var Tokens = load("res://client/card_tokens.gd")
+	var name := str(BossProcs.status_name(str(option["status"]))[0 if Tokens.language == "th" else 1])
+	return Tokens.t("boss_option") % [_number(float(option["chance"])), name, _number(float(option["duration"]) / 60.0), _number(float(option["icd"]) / 60.0)]
 
 
 ## "Rare Golden Blossom Katana  +3": a catalog item's own name; a plain piece is named by its weapon
@@ -89,6 +117,31 @@ static func race_set_lines(item: Item, rules: ItemRules, worn_items: Array, race
 		lines.append({"text": Tokens.t("set_race_step") % [int(step["pieces"]), str(step["name"]), state, str(step["tier"]), str(step["text"])], "on": bool(step["active"])})
 	if not bool(entry["matched"]):
 		lines.append({"text": Tokens.t("set_needs_race") % Tokens.race_name(str(entry["race"])), "on": false})
+	return lines
+
+
+## The boss set block for `item` worn with `worn_items` (Item objects): [{"text", "on"}], the header "Mummy High Wizard's
+## Regalia 3/6" then one line per step ("2 pcs Curse of the Sands [on, rare]: ATK +6%."). [] for a piece of no boss set.
+## Numbers from logic/boss_loot.gd set_status; words from client/card_tokens.gd (the race set lines' format).
+static func boss_set_lines(item: Item, rules: ItemRules, worn_items: Array) -> Array:
+	var Tokens = load("res://client/card_tokens.gd")
+	var set_id: String = rules.catalog.entry(item.item_id).get("set", "")
+	var info: Dictionary = rules.catalog.sets.get(set_id, {})
+	if str(info.get("kind", "")) != "boss":
+		return []
+	var items: Array = worn_items.filter(func(worn): return worn != null and rules.catalog.entry(worn.item_id).get("set", "") == set_id)
+	if not items.any(func(worn): return worn.id == item.id):
+		items.append(item)  # a piece in the stash: show the set as if it were worn
+	var entry: Dictionary = {}
+	for status in load("res://logic/boss_loot.gd").set_status(rules, items):
+		if status["set_id"] == set_id:
+			entry = status
+	if entry.is_empty():
+		return []
+	var lines: Array = [{"text": Tokens.t("set_race_line") % [str(info.get("name", set_id)), int(entry["count"]), int(entry["total"])], "on": true}]
+	for step in entry["steps"]:
+		var state: String = Tokens.t("set_step_on") if step["active"] else Tokens.t("set_step_off")
+		lines.append({"text": Tokens.t("set_race_step") % [int(step["pieces"]), str(step["name"]), state, str(step["tier"]), str(step["text"])], "on": bool(step["active"])})
 	return lines
 
 

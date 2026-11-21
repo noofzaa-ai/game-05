@@ -39,6 +39,7 @@ const TEST_FILES := [
 	"res://tests/test_orc_zone.gd",
 	"res://tests/test_boss_loot.gd",
 	"res://tests/test_boss_weapons.gd",
+	"res://tests/test_boss_procs.gd",
 	"res://tests/test_squad_zone_rooms.gd",
 	"res://tests/test_tier_up.gd",
 	"res://tests/test_gear_purge.gd",

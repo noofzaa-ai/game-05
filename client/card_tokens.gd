@@ -258,6 +258,8 @@ const HUB_BAR_FILL := Color("D4A866")
 const HUB_BAR_LOW := Color("C8372D")
 const HUB_STAT_STRIP := Color(0.07, 0.05, 0.04, 0.78)
 const HUB_TIER: Array[Color] = [Color("E8E2D4"), Color("5A8FD8"), Color("A06AD8"), Color("E0A83A")]  ## pips 1..4
+const HUB_BOSS_GOLD := Color("FFB21E")  ## boss-drop piece: its cell frame + corner marks on dark leather (Boss 2026-11-21)
+const HUB_BOSS_TEXT := Color("8A5A00")  ## boss-drop piece: its name and boss option on parchment (dark gold, >= 4.5:1 on HUB_PAPER)
 const HUB_SUBTEXT := Color("3E6CB8")  ## slot · tier line
 const HUB_REFINE := Color("FFE7A8")  ## "+N" on slots
 const HUB_GOOD := Color("2E7D32")
@@ -981,6 +983,9 @@ const STRINGS := {
 	"err_invalid_relic": ["เรลิกไม่ถูกต้อง", "Unknown Relic"],
 	"summary_boss_coin": ["+%d %s", "+%d %s"],
 	"summary_boss_relic": ["%s!", "%s!"],
+	# Boss option (Boss 2026-11-21, data/items/boss_options.json): gold boss-drop pieces with a status-on-hit proc
+	"boss_option": ["ออปชันบอส: โจมตีโดน %s%% ติด%s %s วิ (คูลดาวน์ %s วิ)", "Boss option: %s%% on hit: %s %ss (cooldown %ss)"],
+	"boss_tag": ["บอส", "BOSS"],
 	"err_not_sellable": ["ขายชิ้นนี้ไม่ได้", "That can't be sold"],
 	"err_price_changed": ["ราคาเปลี่ยน ลองใหม่", "The price changed, try again"],
 	"err_gold_limit": ["ทองเต็มแล้ว", "You can't hold more gold"],

@@ -68,9 +68,12 @@ static var STAGE_BOSS := Color(1, 0.44, 0.22)
 
 ## Item rarity by the tier's color key in data/items/rules.json. Every rarity also has a shape:
 ## 1-4 diamond pips and a thicker frame per tier on cells, and its name in words in text.
-static var RARITY := {"blue": Color(0.38, 0.64, 1), "gold": Color(1, 0.77, 0.3), "green": Color(0.42, 0.86, 0.58), "purple": Color(0.76, 0.5, 1), "white": Color(0.8, 0.83, 0.88)}
+## "boss": boss gold (Boss 2026-11-21): every boss-drop piece shows this instead of its tier colour (the tier stays in
+## its pips and words); a deeper, warmer gold than legendary so the two never read as one.
+static var RARITY := {"blue": Color(0.38, 0.64, 1), "boss": Color(1, 0.71, 0.12), "gold": Color(1, 0.77, 0.3), "green": Color(0.42, 0.86, 0.58), "purple": Color(0.76, 0.5, 1), "white": Color(0.8, 0.83, 0.88)}
 ## The same over the 3D world (loot beams, loot lines and the HUD loot feed): a little brighter.
-static var RARITY_WORLD := {"blue": Color(0.45, 0.7, 1), "gold": Color(1, 0.8, 0.3), "green": Color(0.48, 0.92, 0.62), "purple": Color(0.82, 0.56, 1), "white": Color(0.88, 0.9, 0.94)}
+static var RARITY_WORLD := {"blue": Color(0.45, 0.7, 1), "boss": Color(1, 0.74, 0.16), "gold": Color(1, 0.8, 0.3), "green": Color(0.48, 0.92, 0.62), "purple": Color(0.82, 0.56, 1), "white": Color(0.88, 0.9, 0.94)}
+const RARITY_BOSS := "boss"  ## the rarity key of boss-drop pieces (client/item_text.gd rarity_key)
 
 # ------------------------------------------------------------------ HUD (in-combat) colors
 static var HUD_PANEL := Color(0.04, 0.08, 0.1, 0.86)  ## bar backs, skill icons

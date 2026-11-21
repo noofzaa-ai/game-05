@@ -31,7 +31,7 @@
 			]
 		},
 		"orc_camp": {
-			"_placeholder": "2026-11-21 PLACEHOLDER until the Orc Warlock's own set/coin/relic/icons exist (checklist section 4): the Warlock pays the Mummy High Wizard's set, coin and relic with the same chances. price_coins 0 = no second shop listing of the same pieces (the pyramid entry already sells them). No weapon_drops yet.",
+			"_placeholder": "2026-11-21 PLACEHOLDER until the Orc Warlock's own set/coin/relic/icons exist (checklist section 4): the Warlock pays the Mummy High Wizard's set, coin and relic with the same chances. price_coins 0 = no second shop listing of the same pieces (the pyramid entry already sells them). No weapon_drops yet. Boss option (gold + status proc, data/items/boss_options.json): the mummy pieces carry their mummy options here too; to swap, point set/coin/relic at the Warlock's own ids, add its catalog items with boss \"orc_camp\" and one boss_options.json entry per piece (tests/test_boss_procs.gd lists any piece without one).",
 			"enemy": "orc_warlock",
 			"set": "boss_mummy_high_wizard",
 			"coin": "coin_mummy_high_wizard",

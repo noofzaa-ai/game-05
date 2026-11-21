@@ -1,0 +1,38 @@
+{
+	"version": 1,
+	"_comment": "Boss option (Boss 2026-11-21): every BOSS-DROP piece (a catalog item with a non-empty \"boss\") is gold and carries one status-on-hit proc that zone drops never have. Read by logic/boss_procs.gd. Key = catalog item id. On each landed hit (melee/projectile \"hit\" or class \"skill_hit\", never blocked, periodic, reflected or redirected) of the wearer on a living enemy, an option that is off cooldown rolls `chance` percent (own derived RNG, the sim stream is untouched); a trigger starts its internal cooldown `icd` (ticks, 60 = 1 s) whether or not the status then lands. The status itself goes through logic/effects.gd apply() with base 100: it lands at 100 + the wearer's EFFECT/group/per-effect ACC - the target's RES (resistance >= 100 = immune: CTRL_RES 100 bosses never get a control status). `duration` (ticks) overrides the status's own. Two copies of the same piece (earring/bracelet/ring x2) give ONE option. A destroyed or broken-down (durability 0) piece gives none. Rules (validated by tests/test_boss_procs.gd): chance in [chance_min, chance_max]; icd > duration (cannot chain into permanent uptime); a control status (stun/shock/sleep) only on a weapon and at most weapon_control_max_ticks; statuses are distinct within one boss. PLACEHOLDER numbers until the Boss plays.",
+	"_swap": "Orc Warlock (data/loot/boss_loot.json orc_camp) still pays the Mummy High Wizard set, so its pieces carry the mummy options below. When the Warlock's own set exists: add its catalog items (boss \"orc_camp\") and one entry per piece here; tests/test_boss_procs.gd fails while a boss piece has no option.",
+	"rules": {
+		"chance_min": 5,
+		"chance_max": 15,
+		"weapon_control_max_ticks": 30
+	},
+	"status_names": {
+		"bleed": ["เลือดไหล", "Bleed"],
+		"burn": ["ไฟเผา", "Burn"],
+		"poison": ["พิษ", "Poison"],
+		"slow": ["เชื่องช้า", "Slow"],
+		"weaken": ["อ่อนแรง", "Weaken"],
+		"sunder": ["เกราะแตก", "Sunder"],
+		"wound": ["บาดแผล", "Wound"],
+		"curse": ["คำสาป", "Curse"],
+		"exhaust": ["หมดแรง", "Exhaust"],
+		"stun": ["มึนงง", "Stun"],
+		"shock": ["ช็อต", "Shock"],
+		"sleep": ["หลับ", "Sleep"]
+	},
+	"options": {
+		"boss_goblin_chief_necklace": {"status": "weaken", "chance": 10, "duration": 180, "icd": 480},
+		"boss_goblin_chief_earring": {"status": "exhaust", "chance": 10, "duration": 180, "icd": 480},
+		"boss_goblin_chief_bracelet": {"status": "sunder", "chance": 10, "duration": 180, "icd": 480},
+		"boss_goblin_chief_ring": {"status": "slow", "chance": 10, "duration": 180, "icd": 480},
+		"boss_goblin_chief_back": {"status": "bleed", "chance": 8, "duration": 180, "icd": 480},
+		"boss_mummy_high_wizard_necklace": {"status": "weaken", "chance": 10, "duration": 180, "icd": 480},
+		"boss_mummy_high_wizard_earring": {"status": "wound", "chance": 10, "duration": 240, "icd": 480},
+		"boss_mummy_high_wizard_bracelet": {"status": "sunder", "chance": 10, "duration": 180, "icd": 480},
+		"boss_mummy_high_wizard_ring": {"status": "poison", "chance": 10, "duration": 180, "icd": 480},
+		"boss_mummy_high_wizard_back": {"status": "curse", "chance": 8, "duration": 240, "icd": 480},
+		"boss_mummy_boss_crook": {"status": "bleed", "chance": 12, "duration": 180, "icd": 360},
+		"boss_mummy_high_wizard_staff": {"status": "burn", "chance": 12, "duration": 180, "icd": 360}
+	}
+}
