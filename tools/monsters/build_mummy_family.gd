@@ -63,6 +63,14 @@ const VARIANTS := {
 	"orc_mage": {"node": "Monster_OrcMage", "height": 1.6, "stance": "orc_magic", "width": 0.94, "head": 1.06,
 		"tint": Color(0.84, 0.86, 1.0), "gear": ["totem_staff", "skull_mask"], "source": ORC_SOURCE, "albedo": ORC_ALBEDO, "texture_size": 1024, "simplify": false,
 		"sheet": "orc_family", "clips": {"cast": "the bolt", "cast_aoe": "the ground slam", "blink": "the escape"}},
+	## The Orc Warlock, the Orc Camp's BOSS (Boss 2026-11-21: its own supplied FBX, a hooded purple-robed horned orc; weapon = sword
+	## and shield). Squeezed by squeeze_fbx.py and landmark-rigged by tools/monsters/rig_warlock_fbx.py into build/orc_warlock (kept out
+	## of git). No tint (its own albedo). The sword and shield are PLAIN MOCKUPS (Boss: no real weapon models yet) so the copied
+	## sword-and-shield clips can be judged; the real weapons replace _gear_mock_sword / _gear_mock_shield later.
+	"orc_warlock": {"node": "Monster_OrcWarlock", "height": 3.2, "stance": "orc_warlock", "width": 1.0, "head": 1.0,
+		"tint": Color(1.0, 1.0, 1.0), "gear": ["mock_shield", "mock_sword"], "source": "res://build/orc_warlock/rigged.glb",
+		"albedo": "res://build/orc_warlock/albedo.png", "texture_size": 1024, "simplify": false, "sheet": "orc_warlock",
+		"clips": {"attack_1": "the sweeping cleave", "skyfall": "the leaping skyfall smash", "cataclysm": "the airborne ground breaker", "block": "the bulwark (shield slam, then the held guard)"}},
 }
 const ORC_SOURCE := "res://build/orc_base/rigged.glb"
 const ORC_ALBEDO := "res://build/orc_base/albedo.png"
@@ -781,6 +789,51 @@ func _gear_skull_mask(ctx: Dictionary) -> Dictionary:
 	var eyes_name: String = ctx["node"] + "_MaskEyes"
 	_add_piece(ctx, eyes_name, eyes, "mixamorig_Head", {}, _mat("mask_eyes_glow", ORC_GLOW, 0.0, 0.3, true))
 	return {name: "mixamorig_Head", eyes_name: "mixamorig_Head"}
+
+
+# ------------------------------------------------------------------ orc warlock MOCKUP weapons (2026-11-21)
+# Boss: the warlock fights with sword and shield, but no weapon model exists yet. These are deliberately PLAIN placeholder shapes
+# (flat grey steel, plain brown board, every mesh and material named MOCKUP) in the exact pose of the player's own sword and
+# shield, so the copied sword-and-shield clips can be judged. Replace them with the real weapon models when they arrive.
+const MOCK_STEEL := Color(0.62, 0.63, 0.66)
+const MOCK_BOARD := Color(0.42, 0.3, 0.2)
+
+
+## A straight broadsword along the player's sword frame: grip, a plain cross-guard, a long straight blade with a point.
+func _gear_mock_sword(ctx: Dictionary) -> Dictionary:
+	var frame := _weapon_frame(ARMOR_SWORD_SHIELD, ["B 02 | Sword"])
+	var L: float = frame["reach"] * 1.05
+	var blade := _acc()
+	_add_extrude_frame(blade, PackedVector2Array([Vector2(0.2, -0.055), Vector2(0.9, -0.05), Vector2(1.0, 0.0), Vector2(0.9, 0.05), Vector2(0.2, 0.055)]), frame, L, 0.025 * L)
+	_add_extrude_frame(blade, PackedVector2Array([Vector2(0.16, -0.16), Vector2(0.2, -0.16), Vector2(0.2, 0.16), Vector2(0.16, 0.16)]), frame, L, 0.06 * L)
+	var grip := _acc()
+	_add_extrude_frame(grip, PackedVector2Array([Vector2(-0.14, -0.035), Vector2(0.16, -0.035), Vector2(0.16, 0.035), Vector2(-0.14, 0.035)]), frame, L, 0.06 * L)
+	var name: String = ctx["node"] + "_MOCKUP_Sword"
+	_add_piece(ctx, name, blade, frame["joint"], frame, _mat("MOCKUP_sword_steel", MOCK_STEEL, 0.3, 0.6), grip, _mat("MOCKUP_sword_grip", MOCK_BOARD, 0.0, 0.9))
+	return {name: frame["joint"]}
+
+
+## A plain kite shield on the player's shield frame (long axis along the forearm, as the player's heater shield), a little larger.
+func _gear_mock_shield(ctx: Dictionary) -> Dictionary:
+	var frame := _weapon_frame(ARMOR_SWORD_SHIELD, ["B 01 | Shield"])
+	var H: float = frame["length"] * 1.15
+	var W: float = frame["width"] * 1.15
+	var outline := PackedVector2Array([Vector2(0.5, -0.5), Vector2(0.5, 0.5), Vector2(0.1, 0.5), Vector2(-0.25, 0.32), Vector2(-0.5, 0.0), Vector2(-0.25, -0.32), Vector2(0.1, -0.5)])
+	var scaled := PackedVector2Array()
+	for p in outline:
+		scaled.append(Vector2(p.x * H, p.y * W))
+	var up: Vector3 = frame["up"]
+	var across: Vector3 = (frame["normal"] as Vector3).cross(up).normalized()
+	var board := _acc()
+	_add_extrude(board, scaled, frame["centre"], up, across, frame["normal"], 0.05 * W, Vector3.ZERO)
+	var boss := _acc()
+	var disc := PackedVector2Array()
+	for i in 8:
+		disc.append(Vector2(cos(TAU * i / 8.0), sin(TAU * i / 8.0)) * W * 0.14)
+	_add_extrude(boss, disc, frame["centre"] + (frame["normal"] as Vector3) * W * 0.04 + up * H * 0.08, up, across, frame["normal"], 0.05 * W, Vector3.ZERO)
+	var name: String = ctx["node"] + "_MOCKUP_Shield"
+	_add_piece(ctx, name, board, frame["joint"], frame, _mat("MOCKUP_shield_board", MOCK_BOARD, 0.0, 0.9), boss, _mat("MOCKUP_shield_boss", MOCK_STEEL, 0.3, 0.6))
+	return {name: frame["joint"]}
 
 
 # ------------------------------------------------------------------ the player's weapon frames

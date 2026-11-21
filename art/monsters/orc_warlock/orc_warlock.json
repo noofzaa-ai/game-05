@@ -1,0 +1,46 @@
+{
+  "id": "orc_warlock",
+  "model": "res://art/monsters/orc_warlock/orc_warlock.glb",
+  "model_height": 3.2,
+  "animations": "res://art/animations/monster_clips_orc_warlock.glb",
+  "stance": "orc_warlock",
+  "clips": [
+    "attack_1",
+    "block",
+    "cataclysm",
+    "death",
+    "hit",
+    "idle",
+    "run",
+    "skyfall"
+  ],
+  "move_clips": {
+    "attack_1": "the sweeping cleave",
+    "skyfall": "the leaping skyfall smash",
+    "cataclysm": "the airborne ground breaker",
+    "block": "the bulwark (shield slam, then the held guard)"
+  },
+  "run_clip_speed": 0.919,
+  "hips_scale": 1.0,
+  "sockets": {
+    "Monster_OrcWarlock_MOCKUP_Shield": "mixamorig_LeftForeArm",
+    "Monster_OrcWarlock_MOCKUP_Sword": "mixamorig_RightHand"
+  },
+  "meshes": {
+    "Monster_OrcWarlock_Body": 3508,
+    "Monster_OrcWarlock_MOCKUP_Shield": 52,
+    "Monster_OrcWarlock_MOCKUP_Sword": 40
+  },
+  "triangles": 3600,
+  "joints": 106,
+  "extra_joints": [
+    "bandage_upper_L",
+    "bandage_upper_R",
+    "bandage_lower_L",
+    "bandage_lower_R"
+  ],
+  "rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
+  "texture": "one 1024x1024 albedo (the Boss model atlas), lossy",
+  "built_by": "tools/monsters/build_mummy_family.gd",
+  "request_sheet": "docs/art/monster_requests/orc_warlock.md"
+}

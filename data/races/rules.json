@@ -19,8 +19,8 @@
  "fury_factor": 1.5,
  "gauge": {"time": 1.5, "dealt": 2.0, "taken": 1.2, "support": 2.0, "kill": 4.0},
  "_enemy_ranks": "Which enemy types count as the boss / an elite for the pilot (longbow boss_first, magic skill hold, ultimate use rules).",
- "boss_types": ["goblin_chief", "mummy_boss", "mummy_high_wizard"],
- "elite_types": ["goblin_chief", "goblin_knight", "brute", "mummy_boss", "mummy_knight", "mummy_high_wizard"],
+ "boss_types": ["goblin_chief", "mummy_boss", "mummy_high_wizard", "orc_warlock"],
+ "elite_types": ["goblin_chief", "goblin_knight", "brute", "mummy_boss", "mummy_knight", "mummy_high_wizard", "orc_warlock"],
  "vocabulary": {
   "effect_types": ["stat_mod", "low_hp_scaling", "skill_mod", "trigger", "charges", "aggro", "cleave"],
   "events": ["wave_start", "hit", "heavy_hit", "skill_cast", "skill_hit", "kill", "hurt", "guard_block", "self_low_hp", "ultimate_cast"],

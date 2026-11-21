@@ -38,10 +38,12 @@ const FAMILY := {
 	"orc_grunt": ["orc_grunt", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 1.7, ["Monster_OrcGrunt_Body", "Monster_OrcGrunt_Cleaver"]],
 	"orc_archer": ["orc_bow", ["death", "hit", "idle", "run", "shoot", "volley"], 1.6, ["Monster_OrcArcher_Body", "Monster_OrcArcher_Bow", "Monster_OrcArcher_BowString", "arrow", "Monster_OrcArcher_Headband"]],
 	"orc_mage": ["orc_magic", ["blink", "cast", "cast_aoe", "death", "hit", "idle", "run"], 1.6, ["Monster_OrcMage_Body", "Monster_OrcMage_Staff", "Monster_OrcMage_StaffStone", "Monster_OrcMage_SkullMask", "Monster_OrcMage_MaskEyes"]],
+	## The Orc Warlock boss (Boss 2026-11-21: its own FBX; sword and shield as MOCKUPS until the real weapons exist)
+	"orc_warlock": ["orc_warlock", ["attack_1", "block", "cataclysm", "death", "hit", "idle", "run", "skyfall"], 3.2, ["Monster_OrcWarlock_Body", "Monster_OrcWarlock_MOCKUP_Sword", "Monster_OrcWarlock_MOCKUP_Shield"]],
 }
 const ORC_TYPES := ["orc_grunt", "orc_archer", "orc_mage"]
 ## The Boss's own boss model (2026-11-18): the library has 9 clips incl. 3 new keyframed specials, so it gets a bigger budget (278 KB at 1.0 degree).
-const LIBRARY_BUDGET_BY_STANCE := {"wizard_boss": 300 * 1024}
+const LIBRARY_BUDGET_BY_STANCE := {"wizard_boss": 300 * 1024, "orc_warlock": 300 * 1024}
 const STANCE_LIBRARY_BUDGET := 230 * 1024  ## source .glb of one stance library (7 clips at key tolerance 1.0 degree: 153-207 KB)
 
 
@@ -150,7 +152,7 @@ func run(ctx) -> void:
 func _check_fight_wiring(ctx) -> void:
 	var data = CombatDataLoader.parse(FileAccess.get_file_as_string("res://data/combat/combat.json"))
 	var expected := {"mummy": "mummy", "mummy_archer": "bow", "mummy_knight": "sword_shield", "mummy_mage": "magic", "mummy_boss": "greatsword", "mummy_high_wizard": "wizard_boss",
-		"orc_grunt": "orc_grunt", "orc_archer": "orc_bow", "orc_mage": "orc_magic"}
+		"orc_grunt": "orc_grunt", "orc_archer": "orc_bow", "orc_mage": "orc_magic", "orc_warlock": "orc_warlock"}
 	for id: String in expected:
 		var e: Dictionary = data.enemies[id]
 		var path := "res://art/animations/monster_clips_%s.glb" % expected[id]
@@ -212,6 +214,32 @@ func _check_orc_family(ctx, data) -> void:
 			if ORC_TYPES.any(func(t): return text.contains("\"%s\"" % t)):
 				leaked.append(file)
 	ctx.check("no journey or map spawns an orc yet (orc_waves.json comes later; one family per zone) %s" % [leaked], leaked.is_empty())
+	_check_orc_warlock(ctx, data)
+
+
+## The Orc Warlock boss (Boss 2026-11-21): family orc, boss-class like the Mummy High Wizard (boss_types, CTRL_RES 100, several
+## ai.skills each with its own cooldown, statuses on the squad, ~2x the orc base ATK), bigger than the grunt, the mockup weapons
+## clearly named, its own library from the player's Sword & Shield clips with a held block and the leap/spin skills rising.
+func _check_orc_warlock(ctx, data) -> void:
+	var e: Dictionary = data.enemies.get("orc_warlock", {})
+	ctx.check("orc_warlock: in combat.json with family 'orc'", not e.is_empty())
+	if e.is_empty():
+		return
+	var bosses: Array = load("res://logic/race_data.gd").load_default().rules.get("boss_types", [])
+	ctx.check("orc_warlock: listed in boss_types with CTRL_RES 100", bosses.has("orc_warlock") and float(e["stats"].get("CTRL_RES", 0.0)) >= 100.0)
+	var skills: Array = e["ai"]["skills"]
+	var statuses := {}
+	for s in skills:
+		for fx in data.moves[s["move"]]["effects"]:
+			if fx["target"] == "enemy":
+				statuses[fx["id"]] = true
+	ctx.check("orc_warlock: at least three ai.skills, each with a cooldown, putting statuses on the squad %s" % [statuses.keys()], skills.size() >= 3 and skills.all(func(s): return int(data.moves[s["move"]]["cooldown"]) > 0) and statuses.size() >= 4)
+	ctx.check("orc_warlock: ~2x the orc grunt's ATK and at least as strong as the High Wizard (%s)" % e["stats"]["ATK"], float(e["stats"]["ATK"]) >= 2.0 * float(data.enemies["orc_grunt"]["stats"]["ATK"]) and float(e["stats"]["ATK"]) >= float(data.enemies["mummy_high_wizard"]["stats"]["ATK"]))
+	ctx.check("orc_warlock: 3.0-3.4 m tall, far bigger than the grunt (%.1f m)" % float(e["model_height"]), float(e["model_height"]) >= 3.0 and float(e["model_height"]) <= 3.4)
+	var library := AnimationSet.load_file(str(e["animations"]))
+	var hips := func(clip: String, t: float) -> float: return library.sample(clip, t)["mixamorig_Hips"]["position"].y
+	ctx.check("orc_warlock: the skyfall leaps (hips rise) and the cataclysm rises before it slams", hips.call("skyfall", 0.95) > hips.call("skyfall", 0.0) + 0.05 and hips.call("cataclysm", 1.8) > hips.call("cataclysm", 0.0) + 0.05)
+	ctx.check("orc_warlock: the block holds its guard (the end pose equals the middle of the hold)", library.length("block") > 3.0 and library.sample("block", 2.6)["mixamorig_LeftArm"]["rotation"].angle_to(library.sample("block", 3.3)["mixamorig_LeftArm"]["rotation"]) < 0.25)
 
 
 ## Highest the LOWER foot rises above its lowest point over one run loop (sampled every 1/30 s, rest-pose chain from the library's

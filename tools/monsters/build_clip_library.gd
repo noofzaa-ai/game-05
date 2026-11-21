@@ -242,6 +242,53 @@ const LIBRARIES := {
 		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 1.2, 1.2]], "loop": false},
 		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
 	}},
+	## orc_warlock = the Orc Camp BOSS (Boss 2026-11-21: its own FBX, sword and shield; "reuse OUR sword & shield player set, only SOME
+	## clips, the flashiest: grand skills and a brutal, over-the-top BLOCK"). Every clip comes from the player's Sword & Shield body.
+	## run = the REGAL BRUTE WALK: the sword_shield march "run" at 1.8x, pelvis straightened 18 deg, chest out, chin up, a long stride
+	## (thighs x1.3) with the knees lifted (shins x1.15: no dragging feet), every step planted ("floor"), a slow 3 deg roll, the shield
+	## held across the body, the sword arm swinging low and heavy.
+	## idle = idle_4 (shield up, steady) upright, chin up, wide stance.
+	## attack_1 (orc_warlock_cleave) = slash from 0.4 s: blade drawn back over the shoulder, cut 1.4-1.7 s, a keyed trunk lunge.
+	## skyfall (orc_warlock_skyfall) = attack_2, the player's own ULTIMATE: the run-up, the LEAP (keyed hover: the hips rise 0.15 rig units
+	## over 0.7-1.15 s) and the overhead smash landing at 1.33 s (hand-speed peak); the ground travel goes to the sim's dash.
+	## cataclysm (orc_warlock_cataclysm) = slash_4, the player's Breaker Slam, at 1.25x: the rising spin into the air (+ a keyed 0.08 hover
+	## at the apex), then the sword driven into the ground (peak 3.33 s source), held low, rises.
+	## block (orc_warlock_bulwark) = block (the shield slammed up, 1.4x) then block_idle held, with a keyed over-the-top layer: a hop and a
+	## STOMP into a wide, low stance (thighs out 12 deg), the trunk thrown 14 deg into the shield, the shield arm driven forward, the head
+	## tucked behind the rim. hit = impact at 1.4x. death = death_2 at 2.6x (sword lowered, drops to the knees, topples face down).
+	"orc_warlock": {"donor": "res://art/characters/studio05/split/body_sword_shield.glb", "clips": {
+		"idle": {"segs": [["idle_4", 0.0, 6.375, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, -4, 0, 0]], "mixamorig_Head": [[0.0, -8, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 6]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -6]]}},
+		"run": {"segs": [["run", 0.0, 1.7916, 1.8]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"upright": [[0.0, 18]],
+			"amp": {"mixamorig_LeftUpLeg": 1.3, "mixamorig_RightUpLeg": 1.3, "mixamorig_LeftLeg": 1.15, "mixamorig_RightLeg": 1.15},
+			"calm": {"mixamorig_LeftArm": 0.8, "mixamorig_LeftForeArm": 0.8, "mixamorig_RightArm": 0.5, "mixamorig_RightForeArm": 0.4},
+			"lean": {"mixamorig_Spine": [[0.0, -4, 0, 3], [0.5, -4, 0, -3], [1.0, -4, 0, 3]],
+				"mixamorig_Head": [[0.0, -8, 0, 0]],
+				"mixamorig_LeftArm": [[0.0, -25, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 5]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -5]]},
+			"swing": {"mixamorig_RightArm": [-16, 0.74, 0]},
+			"shrug": {"mixamorig_LeftShoulder": 0.5, "mixamorig_RightShoulder": 0.5}},
+		"attack_1": {"segs": [["slash", 0.4, 2.6, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 1.4, "strike_src": 1.7,
+			"shrug": {"mixamorig_LeftShoulder": 0.5, "mixamorig_RightShoulder": 0.5},
+			"lean": {"mixamorig_Spine": [[0.0, 0, 0, 0], [0.9, -8, 0, 0], [1.3, 16, 0, 0], [1.8, 6, 0, 0], [2.2, 0, 0, 0]]}},
+		"skyfall": {"segs": [["attack_2", 0.0, 3.29, 1.0]], "loop": false, "pin_travel": 0.0, "release_in_seg": 0, "release_src": 1.15, "strike_src": 1.4,
+			"shrug": {"mixamorig_LeftShoulder": 0.5, "mixamorig_RightShoulder": 0.5},
+			"hover": [[0.0, 0.0], [0.7, 0.0], [0.95, 0.15], [1.15, 0.13], [1.35, 0.0], [3.29, 0.0]]},
+		"cataclysm": {"segs": [["slash_4", 0.43, 5.6, 1.25]], "loop": false, "pin_travel": 0.0, "release_in_seg": 0, "release_src": 3.13, "strike_src": 3.53,
+			"shrug": {"mixamorig_LeftShoulder": 0.5, "mixamorig_RightShoulder": 0.5},
+			"hover": [[0.0, 0.0], [1.0, 0.0], [1.6, 0.08], [2.1, 0.08], [2.4, 0.0], [4.14, 0.0]]},
+		"block": {"segs": [["block", 0.0, 1.4583, 1.4], ["block_idle", 0.0, 2.4, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.45, "strike_src": 0.75,
+			"ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, 0, 0, 0], [0.25, -8, 0, 0], [0.5, 14, -10, 0], [3.44, 14, -10, 0]],
+				"mixamorig_Head": [[0.0, 0, 0, 0], [0.5, 10, 0, 0], [3.44, 10, 0, 0]],
+				"mixamorig_LeftArm": [[0.0, 0, 0, 0], [0.25, 10, 0, 0], [0.5, -22, 0, 0], [3.44, -22, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 0], [0.5, 0, 0, 12], [3.44, 0, 0, 12]], "mixamorig_RightUpLeg": [[0.0, 0, 0, 0], [0.5, 0, 0, -12], [3.44, 0, 0, -12]]},
+			"hover": [[0.0, 0.0], [0.25, 0.05], [0.5, 0.0], [3.44, 0.0]]},
+		"hit": {"segs": [["impact", 0.0, 1.9583, 1.4]], "loop": false, "ground": true},
+		"death": {"segs": [["death_2", 0.0, 8.3, 2.6]], "loop": false},
+	}},
 }
 ## Optional sway tracks for the loose-bandage bones of a mummy (name -> parent donor bone). A monster without them ignores the tracks.
 const EXTRA_BONES := {"bandage_upper_L": "mixamorig_LeftArm", "bandage_upper_R": "mixamorig_RightArm", "bandage_lower_L": "mixamorig_LeftForeArm", "bandage_lower_R": "mixamorig_RightForeArm"}

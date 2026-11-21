@@ -217,7 +217,8 @@ func _check_skill_list(ctx) -> void:
 	var bad := CombatDataLoader.parse(JSON.stringify(raw))
 	ctx.check("ai.skills: an unknown move and a move without a cooldown are load errors %s" % [bad.errors], bad.errors.size() == 2)
 	var combat := CombatDataLoader.load_default()
-	ctx.check("every other monster has no ai.skills (their AI is the old one-special path)", combat.enemies.keys().all(func(id): return id == ID or combat.enemies[id]["ai"].get("skills", []).is_empty()))
+	# (the Orc Warlock boss, 2026-11-21, is the second ai.skills boss)
+	ctx.check("every other monster has no ai.skills (their AI is the old one-special path)", combat.enemies.keys().all(func(id): return id == ID or id == "orc_warlock" or combat.enemies[id]["ai"].get("skills", []).is_empty()))
 	var input := SimInput.new()
 	input.special = true
 	input.special_move = "mummy_hw_curse"
