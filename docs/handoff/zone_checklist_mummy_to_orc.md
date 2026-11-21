@@ -7,6 +7,7 @@ Rules fixed by the Boss that apply to every zone: the game is the NEW auto-battl
 ## 0. Decide first (ask the Boss before any agent starts)
 - Orc identity: what are the 5 types (grunt, archer, knight, mage, boss) or another set? Boss decided for the mummies: the goblin family 1:1 and the boss is a PAIR in wave 9 (a big caster plus the zone's mini boss). Is the Orc finale also a pair, and what is the big boss?
 - Boss's own model files? For the mummies the Boss supplied an FBX (189 MB, squeezed to 4.3k triangles). Ask for files early; compress to the budget.
+- **Boss rule 2026-11-21:** a zone's monster family may come from ONE supplied body; rig it once, make every type from it (tint, proportions, own weapon, own animations). Do not wait for one model per type.
 - Zone unlock quest (data/world/zone_quests.json) and gear level (data/world/gear_levels.json, pyramid = 15): numbers for orc_camp.
 - Zone theme words for the map: three island maps like the goblin and mummy ones (same size 16x9, spawns 3 players / 8 enemies, walls on 3 sides, open cliff in front).
 
@@ -23,6 +24,7 @@ Rules fixed by the Boss that apply to every zone: the game is the NEW auto-battl
 
 ## 2. Models and animation (monster-rigger, animator, character-artist)
 - Role brief: `.claude/agents/monster-rigger.md`. **LESSON:** the harness could not call `monster-rigger` as an agent type in a running session (new agent files load at session start); use a general-purpose agent told to read the brief, or restart the session.
+- **Boss rule 2026-11-21:** a zone's monster family may come from ONE supplied body; rig it once, make every type from it (tint, proportions, own weapon, own animations). Do not wait for one model per type. Done for the orcs: one orc FBX -> `orc_grunt` / `orc_archer` / `orc_mage` (`docs/art/monster_requests/orc_family.md`, `tools/monsters/rig_orc_fbx.py`, the orc entries of `build_mummy_family.gd` and `build_clip_library.gd`). **LESSON:** a short chibi body has a model_fit of about 2, so walk clips play too fast: start from the donor RUN clips. Godot's glTF writer adds TANGENT streams; drop them with `prune_glb.py --strip-tangents` to meet the 450 KB budget.
 - Request sheets first: `docs/art/monster_requests/<monster>.md`. Rules in every sheet: at most 5,000 triangles, one flat-colour material (no baked ink, no PBR maps), model and each texture <= 450 KB, textures <= 1024 px lossy, shared 102-joint studio05 rig, extra bandage-style bones allowed, never touch `art/characters/studio05/**`.
 - Clip libraries `art/animations/monster_clips_<stance>.glb/.json` built by `tools/monsters/build_clip_library.gd`. Give each type its own walk (grunt shamble, knight stomp, boss regal, caster hunch); only a floating boss may hover. Death should read (a plain fall shipped for the mummies; a dust/shatter effect was recommended).
 - Tests: `tests/test_monster_rig.gd` (triangle/joint/size budgets, clip names, run_clip_speed equals the measured foot speed, run inside the 0.6 to 1.4x clamp, foot never leaves the floor). Windowed shots of idle/run/attack/hit/death at fight camera and phone size 844x390, LOOK at them.

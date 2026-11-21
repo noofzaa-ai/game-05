@@ -1,0 +1,32 @@
+{
+  "death": {
+    "length": 3.1166,
+    "loop": false
+  },
+  "hit": {
+    "length": 0.9833,
+    "loop": false
+  },
+  "idle": {
+    "length": 3.2,
+    "loop": true
+  },
+  "run": {
+    "foot_speed": 1.77,
+    "length": 0.5699,
+    "loop": true,
+    "travel_per_second": 1.77
+  },
+  "shoot": {
+    "length": 1.2833,
+    "loop": false,
+    "strike_end": 0.8333,
+    "windup_end": 0.7633
+  },
+  "volley": {
+    "length": 1.547,
+    "loop": false,
+    "strike_end": 1.097,
+    "windup_end": 1.027
+  }
+}

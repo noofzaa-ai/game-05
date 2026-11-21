@@ -34,7 +34,12 @@ const FAMILY := {
 	"mummy_mage": ["magic", ["blink", "cast", "cast_aoe", "death", "hit", "idle", "run"], 1.9, ["Monster_MummyMage_Body", "Monster_MummyMage_Staff", "Monster_MummyMage_StaffCrystal", "Monster_MummyMage_Hood"]],
 	"mummy_high_wizard": ["wizard_boss", ["cast", "cast_aoe", "death", "hit", "idle", "run", "sandstorm", "starfall", "summon"], 3.4, ["Monster_MummyHighWizard_Body"]],
 	"mummy_boss": ["greatsword", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 2.6, ["Monster_MummyBoss_Body", "Monster_MummyBoss_Khopesh", "Monster_MummyBoss_Nemes", "Monster_MummyBoss_Mask", "Monster_MummyBoss_Eyes", "Monster_MummyBoss_Collar"]],
+	## The orc family (Boss 2026-11-21: ONE supplied body rigged once; each type its own tint, proportions, gear and animation set)
+	"orc_grunt": ["orc_grunt", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 1.7, ["Monster_OrcGrunt_Body", "Monster_OrcGrunt_Cleaver"]],
+	"orc_archer": ["orc_bow", ["death", "hit", "idle", "run", "shoot", "volley"], 1.6, ["Monster_OrcArcher_Body", "Monster_OrcArcher_Bow", "Monster_OrcArcher_BowString", "arrow", "Monster_OrcArcher_Headband"]],
+	"orc_mage": ["orc_magic", ["blink", "cast", "cast_aoe", "death", "hit", "idle", "run"], 1.6, ["Monster_OrcMage_Body", "Monster_OrcMage_Staff", "Monster_OrcMage_StaffStone", "Monster_OrcMage_SkullMask", "Monster_OrcMage_MaskEyes"]],
 }
+const ORC_TYPES := ["orc_grunt", "orc_archer", "orc_mage"]
 ## The Boss's own boss model (2026-11-18): the library has 9 clips incl. 3 new keyframed specials, so it gets a bigger budget (278 KB at 1.0 degree).
 const LIBRARY_BUDGET_BY_STANCE := {"wizard_boss": 300 * 1024}
 const STANCE_LIBRARY_BUDGET := 230 * 1024  ## source .glb of one stance library (7 clips at key tolerance 1.0 degree: 153-207 KB)
@@ -144,7 +149,8 @@ func run(ctx) -> void:
 ## monster's real MOVESPD (so the planted foot does not slide). The goblins are untouched.
 func _check_fight_wiring(ctx) -> void:
 	var data = CombatDataLoader.parse(FileAccess.get_file_as_string("res://data/combat/combat.json"))
-	var expected := {"mummy": "mummy", "mummy_archer": "bow", "mummy_knight": "sword_shield", "mummy_mage": "magic", "mummy_boss": "greatsword", "mummy_high_wizard": "wizard_boss"}
+	var expected := {"mummy": "mummy", "mummy_archer": "bow", "mummy_knight": "sword_shield", "mummy_mage": "magic", "mummy_boss": "greatsword", "mummy_high_wizard": "wizard_boss",
+		"orc_grunt": "orc_grunt", "orc_archer": "orc_bow", "orc_mage": "orc_magic"}
 	for id: String in expected:
 		var e: Dictionary = data.enemies[id]
 		var path := "res://art/animations/monster_clips_%s.glb" % expected[id]
@@ -172,6 +178,40 @@ func _check_fight_wiring(ctx) -> void:
 			ctx.check("%s: through its whole run the lower foot never leaves the floor (max lift %.3f rig units)" % [id, lift], lift < 0.006)
 	var goblin: Dictionary = data.enemies["goblin"]
 	ctx.check("goblins untouched: the goblin still plays its own library", goblin["animations"] == "res://art/animations/goblin.glb")
+	_check_orc_family(ctx, data)
+
+
+## The orc family (Boss 2026-11-21): every type is the SAME supplied body (one source mesh, same triangle count) made distinct by its
+## own animation set (no library shared between two orcs, nor with a mummy), its own gear and tint; goblin stats as the base with
+## about 2x ATK; family 'orc' (the first id part) not used by any zone journey or map yet (orc_waves.json comes later).
+func _check_orc_family(ctx, data) -> void:
+	var libraries := {}
+	var bodies := {}
+	for id: String in ORC_TYPES:
+		var e: Dictionary = data.enemies.get(id, {})
+		ctx.check("%s: in combat.json with family 'orc'" % id, not e.is_empty() and id.split("_")[0] == "orc")
+		if e.is_empty():
+			continue
+		libraries[e["animations"]] = true
+		var scene := (load(e["model"]) as PackedScene).instantiate()
+		for mesh in scene.find_children("*", "MeshInstance3D", true, false):
+			if str(mesh.name).ends_with("_Body"):
+				bodies[(mesh.mesh.surface_get_arrays(0)[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3] = true
+		scene.free()
+		var twin: String = {"orc_grunt": "goblin", "orc_archer": "goblin_archer", "orc_mage": "goblin_mage"}[id]
+		var g: Dictionary = data.enemies[twin]
+		var ratio := float(e["stats"]["ATK"]) / float(g["stats"]["ATK"])
+		ctx.check("%s: goblin counterpart %s as the base (HP %s = %s, DEF %s = %s) with ~2x ATK (%.2fx)" % [id, twin, e["stats"]["HP"], g["stats"]["HP"], e["stats"]["DEF"], g["stats"]["DEF"], ratio],
+			float(e["stats"]["HP"]) == float(g["stats"]["HP"]) and float(e["stats"]["DEF"]) == float(g["stats"]["DEF"]) and ratio >= 1.8 and ratio <= 2.2)
+	ctx.check("the three orcs each play their OWN animation set %s" % [libraries.keys()], libraries.size() == ORC_TYPES.size())
+	ctx.check("the three orcs share ONE supplied body (same body triangle count %s)" % [bodies.keys()], bodies.size() == 1)
+	var leaked := []
+	for dir_path in ["res://data/journeys", "res://data/maps"]:
+		for file in DirAccess.get_files_at(dir_path):
+			var text := FileAccess.get_file_as_string(dir_path.path_join(file)) if file.ends_with(".json") else ""
+			if ORC_TYPES.any(func(t): return text.contains("\"%s\"" % t)):
+				leaked.append(file)
+	ctx.check("no journey or map spawns an orc yet (orc_waves.json comes later; one family per zone) %s" % [leaked], leaked.is_empty())
 
 
 ## Highest the LOWER foot rises above its lowest point over one run loop (sampled every 1/30 s, rest-pose chain from the library's

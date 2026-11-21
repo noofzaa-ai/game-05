@@ -1,0 +1,48 @@
+{
+  "id": "orc_mage",
+  "model": "res://art/monsters/orc_mage/orc_mage.glb",
+  "model_height": 1.6,
+  "animations": "res://art/animations/monster_clips_orc_magic.glb",
+  "stance": "orc_magic",
+  "clips": [
+    "blink",
+    "cast",
+    "cast_aoe",
+    "death",
+    "hit",
+    "idle",
+    "run"
+  ],
+  "move_clips": {
+    "cast": "the bolt",
+    "cast_aoe": "the ground slam",
+    "blink": "the escape"
+  },
+  "run_clip_speed": 1.325,
+  "hips_scale": 1.0,
+  "sockets": {
+    "Monster_OrcMage_Staff": "mixamorig_RightHand",
+    "Monster_OrcMage_StaffStone": "mixamorig_RightHand",
+    "Monster_OrcMage_SkullMask": "mixamorig_Head",
+    "Monster_OrcMage_MaskEyes": "mixamorig_Head"
+  },
+  "meshes": {
+    "Monster_OrcMage_Body": 3414,
+    "Monster_OrcMage_Staff": 172,
+    "Monster_OrcMage_StaffStone": 12,
+    "Monster_OrcMage_SkullMask": 200,
+    "Monster_OrcMage_MaskEyes": 24
+  },
+  "triangles": 3822,
+  "joints": 106,
+  "extra_joints": [
+    "bandage_upper_L",
+    "bandage_upper_R",
+    "bandage_lower_L",
+    "bandage_lower_R"
+  ],
+  "rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
+  "texture": "one 1024x1024 albedo (the Boss model atlas, tinted), lossy",
+  "built_by": "tools/monsters/build_mummy_family.gd",
+  "request_sheet": "docs/art/monster_requests/orc_family.md"
+}

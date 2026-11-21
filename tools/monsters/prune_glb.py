@@ -1,12 +1,18 @@
 """Drops the accessors and buffer views nothing references from a .glb (Godot's glTF writer keeps the replaced mesh data of
-tools/monsters/simplify_monster.gd), compacts the BIN chunk and writes a compact JSON chunk. Usage: python prune_glb.py in.glb [out.glb]"""
+tools/monsters/simplify_monster.gd), compacts the BIN chunk and writes a compact JSON chunk. Usage: python prune_glb.py in.glb [out.glb] [--strip-tangents]
+--strip-tangents drops the TANGENT streams Godot's glTF writer always adds (a flat-colour monster has no normal map: 16 bytes
+per vertex of nothing; the orc body's 7k vertices carried 113 KB of them)."""
 import json, struct, sys
 
 
-def prune(path_in, path_out):
+def prune(path_in, path_out, strip_tangents=False):
     data = open(path_in, 'rb').read()
     jl = struct.unpack('<I', data[12:16])[0]
     gltf = json.loads(data[20:20 + jl])
+    if strip_tangents:
+        for mesh in gltf.get('meshes', []):
+            for primitive in mesh['primitives']:
+                primitive['attributes'].pop('TANGENT', None)
     bin_start = 20 + jl + 8
     binary = data[bin_start:]
     used_acc = set()
@@ -84,4 +90,6 @@ def prune(path_in, path_out):
 
 
 if __name__ == '__main__':
-    prune(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else sys.argv[1])
+    flags = [a for a in sys.argv[1:] if a.startswith('--')]
+    paths = [a for a in sys.argv[1:] if not a.startswith('--')]
+    prune(paths[0], paths[1] if len(paths) > 1 else paths[0], '--strip-tangents' in flags)

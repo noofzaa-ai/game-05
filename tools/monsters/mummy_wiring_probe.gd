@@ -1,7 +1,7 @@
 extends SceneTree
 ## Prints, per mummy type, what the fight view really uses: the resolved model / animation set / clip map from combat.json
 ## (logic/combat_data_loader.gd picks the first `looks` entry whose model exists), and whether the set it loads has clips.
-##   godot --headless --path . --script res://tools/monsters/mummy_wiring_probe.gd
+##   godot --headless --path . --script res://tools/monsters/mummy_wiring_probe.gd [-- orc_grunt orc_archer orc_mage]  (other ids)
 
 const AnimationSet := preload("res://client/animation_set.gd")
 const IDS := ["mummy", "mummy_archer", "mummy_knight", "mummy_mage", "mummy_boss", "mummy_high_wizard"]
@@ -9,7 +9,8 @@ const IDS := ["mummy", "mummy_archer", "mummy_knight", "mummy_mage", "mummy_boss
 
 func _init() -> void:
 	var data = preload("res://logic/combat_data_loader.gd").load_default()
-	for id in IDS:
+	var ids: Array = OS.get_cmdline_user_args() if not OS.get_cmdline_user_args().is_empty() else IDS
+	for id in ids:
 		var e: Dictionary = data.enemies[id]
 		var found: RefCounted = null
 		var path: String = e["animations"]

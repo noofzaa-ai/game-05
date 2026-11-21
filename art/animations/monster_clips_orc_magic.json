@@ -1,0 +1,38 @@
+{
+  "blink": {
+    "length": 0.6,
+    "loop": false,
+    "strike_end": 0.235,
+    "windup_end": 0.175
+  },
+  "cast": {
+    "length": 1.6,
+    "loop": false,
+    "strike_end": 0.53,
+    "windup_end": 0.4
+  },
+  "cast_aoe": {
+    "length": 2.9666,
+    "loop": false,
+    "strike_end": 1.27,
+    "windup_end": 1.13
+  },
+  "death": {
+    "length": 3.6333,
+    "loop": false
+  },
+  "hit": {
+    "length": 1.0,
+    "loop": false
+  },
+  "idle": {
+    "length": 1.8833,
+    "loop": true
+  },
+  "run": {
+    "foot_speed": 1.325,
+    "length": 0.6,
+    "loop": true,
+    "travel_per_second": 1.325
+  }
+}

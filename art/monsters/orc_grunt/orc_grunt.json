@@ -1,0 +1,40 @@
+{
+  "id": "orc_grunt",
+  "model": "res://art/monsters/orc_grunt/orc_grunt.glb",
+  "model_height": 1.7,
+  "animations": "res://art/animations/monster_clips_orc_grunt.glb",
+  "stance": "orc_grunt",
+  "clips": [
+    "attack_1",
+    "attack_2",
+    "death",
+    "hit",
+    "idle",
+    "run"
+  ],
+  "move_clips": {
+    "attack_1": "the cleaver chop",
+    "attack_2": "the lunging cleave"
+  },
+  "run_clip_speed": 1.546,
+  "hips_scale": 1.0,
+  "sockets": {
+    "Monster_OrcGrunt_Cleaver": "mixamorig_RightHand"
+  },
+  "meshes": {
+    "Monster_OrcGrunt_Body": 3414,
+    "Monster_OrcGrunt_Cleaver": 44
+  },
+  "triangles": 3458,
+  "joints": 106,
+  "extra_joints": [
+    "bandage_upper_L",
+    "bandage_upper_R",
+    "bandage_lower_L",
+    "bandage_lower_R"
+  ],
+  "rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
+  "texture": "one 1024x1024 albedo (the Boss model atlas), lossy",
+  "built_by": "tools/monsters/build_mummy_family.gd",
+  "request_sheet": "docs/art/monster_requests/orc_family.md"
+}

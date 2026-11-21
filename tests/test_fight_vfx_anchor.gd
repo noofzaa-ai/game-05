@@ -16,6 +16,7 @@ const SkillData := preload("res://logic/class_skills/skill_data.gd")
 const CASTER_CENTRED := [
 	"swing/run_heavy", "swing/brute_roar", "land/air_heavy", "windup/ultimate", "windup/goblin_mage_hex",
 	"windup/mummy_mage_curse", "windup/mummy_boss_nova", "swing/mummy_boss_nova",  # the mage's cast glyph; the Pharaoh's nova is a box on itself
+	"windup/orc_mage_hex",  # the orc shaman's cast glyph (as the goblin and mummy mages)
 	"skill_cast/riposte", "skill_cast/lightning_strike", "skill_cast/frost_armor",
 	"guard_break", "knockdown", "death", "loot", "rest",
 ]

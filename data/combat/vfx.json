@@ -338,6 +338,40 @@
 			{"type": "sprite", "mode": "star", "size": [0.6, 1.8], "spikes": 8, "seconds": 0.22, "color": "#ffd27a", "ink": 0.3},
 			{"type": "burst", "style": "puff", "anchor": "feet", "count": 10, "speed": 2.6, "spread": 80, "dir": "up", "gravity": 2, "drag": 3, "size": 0.5, "seconds": 0.6, "color": "#cdb27a", "ink": 0.3}
 		]},
+		"swing/orc_grunt_chop": {"layers": [
+			{"type": "trail", "shape": "arc", "radius": 1.0, "width": 0.3, "from": 70, "to": -50, "rise": [1.2, 0.6], "tilt": 30, "seconds": 0.16, "sweep": 0.4, "tail": 0.7, "color": "#d9d6cf", "ink": 0.5}
+		]},
+		"windup/orc_grunt_cleave": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.2, 1.3, 0.0], "size": [0.25, 0.9], "spikes": 6, "seconds": 0.5, "color": "#ffd27a", "ink": 0.2},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 6, "speed": 1.0, "spread": 50, "dir": "up", "gravity": -0.4, "drag": 2, "size": 0.45, "seconds": 0.5, "color": "dust", "ink": 0.3}
+		]},
+		"swing/orc_grunt_cleave": {"layers": [
+			{"type": "trail", "shape": "arc", "radius": 1.4, "width": 0.5, "from": 95, "to": -90, "rise": [1.2, 0.6], "tilt": 10, "seconds": 0.22, "sweep": 0.5, "tail": 0.75, "color": "#d9d6cf", "ink": 0.55},
+			{"type": "shake", "strength": 0.15, "seconds": 0.18}
+		]},
+		"swing/orc_archer_shot": {"layers": []},
+		"swing/orc_archer_volley": {"layers": []},
+		"windup/orc_archer_shot": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.45, 0.9, 0.0], "size": [0.15, 0.45], "spikes": 4, "seconds": 0.35, "color": "#fff1c4", "ink": 0.2}
+		]},
+		"windup/orc_archer_volley": {"layers": [
+			{"type": "sprite", "mode": "star", "anchor": "feet", "offset": [0.45, 0.9, 0.0], "size": [0.2, 0.7], "spikes": 6, "seconds": 0.45, "color": "#ffd27a", "ink": 0.2}
+		]},
+		"swing/orc_mage_bolt": {"layers": []},
+		"swing/orc_mage_hex": {"layers": []},
+		"swing/orc_mage_blink": {"layers": [
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 12, "speed": 1.6, "spread": 70, "dir": "up", "gravity": -0.3, "drag": 2, "size": 0.5, "seconds": 0.6, "color": "#8fd45a", "ink": 0.35}
+		]},
+		"windup/orc_mage_bolt": {"layers": [
+			{"type": "sprite", "mode": "glow", "anchor": "feet", "offset": [0.4, 1.3, 0.1], "size": [0.2, 0.6], "seconds": 0.45, "color": "#8cf04a"}
+		]},
+		"windup/orc_mage_hex": {"layers": [
+			{"type": "sprite", "mode": "swirl", "anchor": "feet", "offset": [0.0, 1.2, 0.0], "size": [0.4, 1.1], "spin": 260, "seconds": 0.5, "color": "#8cf04a", "ink": 0.3},
+			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [0.6, 1.4], "seconds": 0.5, "color": "#5fa832", "ink": 0.4}
+		]},
+		"hit/orc_mage_bolt": {"layers": [
+			{"type": "sprite", "mode": "glow", "size": [0.6, 1.4], "seconds": 0.22, "color": "#8cf04a"}
+		]},
 		"swing/mummy_mage_bolt": {"layers": []},
 		"swing/mummy_mage_curse": {"layers": []},
 		"swing/mummy_mage_blink": {"layers": [

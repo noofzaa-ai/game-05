@@ -66,7 +66,10 @@
 		"mummy_knight": {"ground_light": "mummy_knight_cleave", "ground_heavy": "mummy_knight_bash", "air_light": "mummy_knight_cleave", "special": "mummy_knight_bash"},
 		"mummy_mage": {"ground_light": "mummy_mage_bolt", "ground_heavy": "mummy_mage_blink", "air_light": "mummy_mage_bolt", "special": "mummy_mage_curse"},
 		"mummy_boss": {"ground_light": "mummy_boss_combo", "ground_heavy": "mummy_boss_nova", "air_light": "mummy_boss_combo", "special": "mummy_boss_nova"},
-		"mummy_high_wizard": {"ground_light": "mummy_hw_bolt", "ground_heavy": "mummy_hw_sandstorm", "air_light": "mummy_hw_bolt", "special": "mummy_hw_starfall"}
+		"mummy_high_wizard": {"ground_light": "mummy_hw_bolt", "ground_heavy": "mummy_hw_sandstorm", "air_light": "mummy_hw_bolt", "special": "mummy_hw_starfall"},
+		"orc_grunt": {"ground_light": "orc_grunt_chop", "ground_heavy": "orc_grunt_cleave", "air_light": "orc_grunt_chop", "special": "orc_grunt_cleave"},
+		"orc_archer": {"ground_light": "orc_archer_shot", "ground_heavy": "orc_archer_shot", "air_light": "orc_archer_shot", "special": "orc_archer_volley"},
+		"orc_mage": {"ground_light": "orc_mage_bolt", "ground_heavy": "orc_mage_blink", "air_light": "orc_mage_bolt", "special": "orc_mage_hex"}
 	},
 
 	"_ranged_comment": "RANGED ATTACKS (logic/projectiles.gd). A move fires through its 'spawns' list: {projectile: id | area: id | blink: meters, frame: move frame (default = its startup, the strike), offset: [forward, up, side (+ = the shooter's right)] from the feet in meters, measured on the clip's release frame (2026-10-12: archer arrow tip at frame 34 of shoot / 44 of volley, mage crystal at frame 30 of cast, where the staff has thrust forward), angle: degrees off the facing}. A move with spawns hits only through them (melee: true to also swing). Damage, guard, dodge and effects are the melee rules with the move's power. PROJECTILES: look = how the client draws it (arrow, bolt), speed m/s, range m it flies, radius m, pierce = extra targets it passes through, gravity m/s2 down and lift = m/s up at release (an arrow's slight arc), homing = degrees per second it turns toward its target (0 = none, weak = 30-60), walls = stops at walls and the floor, aim_cone = it aims straight at the nearest opponent within this many degrees of the facing (free aim; otherwise straight ahead). It can be guarded from the front (unless the move ignores_guard) and i-frames let it fly through. AREAS: a circle marked on the ground at the opponent the caster faces (within range and aim_cone), radius m, delay = ticks of warning before it goes off (at least 20; the circle fills up meanwhile), active = ticks it hurts (each opponent once), height m it reaches up, guardable (false: step out or dodge).",
@@ -77,6 +80,8 @@
 		"goblin_bolt": {"look": "bolt", "speed": 8.5, "range": 11.0, "radius": 0.28, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 45.0, "walls": true, "aim_cone": 40},
 		"mummy_scarab": {"look": "bolt", "speed": 8.5, "range": 11.0, "radius": 0.28, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 45.0, "walls": true, "aim_cone": 40},
 		"hw_bolt": {"look": "gold_bolt", "speed": 10.0, "range": 12.0, "radius": 0.35, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 40.0, "walls": true, "aim_cone": 40},
+		"orc_arrow": {"look": "arrow", "speed": 16.0, "range": 13.0, "radius": 0.15, "pierce": 0, "gravity": 3.0, "lift": 0.9, "homing": 0.0, "walls": true, "aim_cone": 30},
+		"orc_bolt": {"look": "bolt", "speed": 8.5, "range": 11.0, "radius": 0.28, "pierce": 0, "gravity": 0.0, "lift": 0.0, "homing": 45.0, "walls": true, "aim_cone": 40},
 		"pharaoh_sand_crescent": {"look": "bolt", "speed": 11.0, "range": 4.5, "radius": 0.45, "pierce": 2, "gravity": 0.0, "lift": 0.0, "homing": 0.0, "walls": true, "aim_cone": 30},
 		"player_jade_arrow": {
 			"look": "jade_arrow",
@@ -106,6 +111,7 @@
 
 	"areas": {
 		"goblin_hex": {"look": "hex_circle", "radius": 1.6, "delay": 66, "active": 3, "height": 2.2, "range": 9.0, "aim_cone": 70, "guardable": false},
+		"orc_hex": {"look": "hex_circle", "radius": 1.6, "delay": 66, "active": 3, "height": 2.2, "range": 9.0, "aim_cone": 70, "guardable": false},
 		"mummy_curse": {"look": "hex_circle", "radius": 1.6, "delay": 66, "active": 3, "height": 2.2, "range": 9.0, "aim_cone": 70, "guardable": false},
 		"hw_curse": {"look": "curse_mark", "radius": 2.0, "delay": 66, "active": 3, "height": 3.0, "range": 12.0, "aim_cone": 90, "guardable": false},
 		"hw_star": {"look": "star_mark", "radius": 1.5, "delay": 54, "active": 3, "height": 3.0, "range": 12.0, "aim_cone": 120, "guardable": false}
@@ -285,6 +291,52 @@
 			"hit_offset": [0.0, 1.1, 0.0], "hit_size": [5.0, 2.2, 5.0],
 			"knockback": 8.0, "launch": 3.0, "hitstun": 26, "hitstop": 7,
 			"effects": [{"id": "curse", "chance": 70}, {"id": "wound", "chance": 50}]
+		},
+		"orc_grunt_chop": {
+			"startup": 18, "active": 4, "recovery": 16, "power": 0.75,
+			"hit_offset": [0.95, 0.85, 0.0], "hit_size": [1.4, 1.2, 1.4],
+			"knockback": 2.5, "launch": 0.0, "hitstun": 12, "hitstop": 3
+		},
+		"orc_grunt_cleave": {
+			"startup": 30, "active": 10, "recovery": 34, "power": 2.0, "cooldown": 360,
+			"hit_offset": [1.2, 0.85, 0.0], "hit_size": [1.6, 1.2, 1.6],
+			"knockback": 6.0, "launch": 0.0, "hitstun": 22, "hitstop": 6, "telegraph": true,
+			"effects": [{"id": "wound", "chance": 50}]
+		},
+		"orc_archer_shot": {
+			"startup": 46, "active": 4, "recovery": 28, "power": 0.85,
+			"hit_offset": [0.5, 0.7, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 2.5, "launch": 0.0, "hitstun": 14, "hitstop": 3, "telegraph": false,
+			"spawns": [{"projectile": "orc_arrow", "frame": 46, "offset": [0.62, 1.0, 0.12]}]
+		},
+		"orc_archer_volley": {
+			"startup": 62, "active": 4, "recovery": 34, "power": 0.8, "cooldown": 420,
+			"hit_offset": [0.5, 0.7, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 2.0, "launch": 0.0, "hitstun": 12, "hitstop": 3, "telegraph": true,
+			"spawns": [
+				{"projectile": "orc_arrow", "frame": 62, "offset": [0.62, 1.0, 0.12], "angle": -14},
+				{"projectile": "orc_arrow", "frame": 62, "offset": [0.62, 1.0, 0.12]},
+				{"projectile": "orc_arrow", "frame": 62, "offset": [0.62, 1.0, 0.12], "angle": 14}
+			]
+		},
+		"orc_mage_bolt": {
+			"startup": 28, "active": 2, "recovery": 26, "power": 0.85,
+			"hit_offset": [0.5, 0.8, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 3.0, "launch": 0.0, "hitstun": 16, "hitstop": 4,
+			"spawns": [{"projectile": "orc_bolt", "frame": 28, "offset": [0.8, 1.1, -0.18]}]
+		},
+		"orc_mage_hex": {
+			"startup": 40, "active": 2, "recovery": 36, "power": 2.0, "cooldown": 300,
+			"hit_offset": [0.5, 0.8, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 5.0, "launch": 4.0, "hitstun": 26, "hitstop": 6, "telegraph": true,
+			"spawns": [{"area": "orc_hex"}],
+			"effects": [{"id": "slow", "chance": 70}]
+		},
+		"orc_mage_blink": {
+			"startup": 8, "active": 2, "recovery": 18, "power": 0.0, "invuln_from": 6, "invuln_to": 12,
+			"hit_offset": [0.5, 0.8, 0.0], "hit_size": [0.4, 0.4, 0.4],
+			"knockback": 0.0, "launch": 0.0, "hitstun": 0, "hitstop": 0,
+			"spawns": [{"blink": -4.0, "frame": 8}]
 		},
 		"mummy_hw_bolt": {
 			"startup": 40, "active": 4, "recovery": 40, "power": 0.9,
@@ -531,6 +583,52 @@
 			"stats": {"HP": 110, "ATK": 12, "DEF": 80, "MOVESPD": -48, "CRIRATE": 0, "EFFECT_RES": 30},
 			"poise": 140,
 			"ai": {"attack_range": 3.1, "cooldown_min": 90, "cooldown_max": 150, "attack_input": "light", "wait_range": 4.0, "skill_chance": 35}
+		},
+		"orc_grunt": {
+			"role": "Orc Grunt: the Orc Camp's basic melee brute with a butcher's cleaver (the goblin's counterpart). It swaggers straight in and chops; it winds up ('!') a lunging two-step cleave that can WOUND you (healing down). It never hops back.",
+			"_design": "monster-rigger 2026-11-21 (Boss: the orc family from ONE supplied body, goblin stats as base, ~2x ATK like the mummies). HP 30 / DEF 30 = the goblin; ATK 10 -> 20 (2x). Moves mirror goblin_jab / goblin_lunge (power, frames, cooldown, wound 50%) with the jab's startup at 18 (the chop clip's 0.4 s wind-up, as the mummy strike). No retreat/flee (a brute; the goblin's hop-back dropped). MOVESPD -12 = the goblin's 3.3 m/s. Model art/monsters/orc_grunt (tools/monsters/build_mummy_family.gd), clips art/animations/monster_clips_orc_grunt.glb, run_clip_speed = the run's planted-foot speed. Needs combat-designer review once orc_waves exists.",
+			"style": "orc_grunt",
+			"color": [0.5, 0.62, 0.25],
+			"model": "res://art/monsters/orc_grunt/orc_grunt.glb",
+			"animations": "res://art/animations/monster_clips_orc_grunt.glb",
+			"clips": {"orc_grunt_chop": "attack_1", "orc_grunt_cleave": "attack_2"},
+			"run_clip_speed": 1.546,
+			"model_height": 1.7,
+			"body_height": 1.6,
+			"stats": {"HP": 30, "ATK": 20, "DEF": 30, "MOVESPD": -12, "CRIRATE": 0},
+			"poise": 0,
+			"ai": {"attack_range": 1.7, "cooldown_min": 60, "cooldown_max": 110, "attack_input": "light", "wait_range": 3.6, "skill_chance": 25, "retreat_ticks": 0, "flee_hp": 0}
+		},
+		"orc_archer": {
+			"role": "Orc Archer: a prowling orc hunter in a red headband. Keeps its distance and shoots; a rarer slow draw fires a 3-arrow volley that warns ('!'). Close in: it backs away but cannot fight up close.",
+			"_design": "monster-rigger 2026-11-21: the goblin archer's HP 22 / DEF 20 / AI (keep 7, retreat 4, strafe, flee 30%), ATK 9.5 -> 19 (2x), cooldowns 80-130 like the mummy archer. Shot/volley = the mummy archer's frames (its clips are the same two-part player shot: startup 46 / 62 on the release mark), projectile orc_arrow = goblin_arrow numbers, offsets measured for a 1.6 m body. MOVESPD -12 (3.3 m/s). Model art/monsters/orc_archer, clips monster_clips_orc_bow.glb.",
+			"style": "orc_archer",
+			"color": [0.5, 0.55, 0.3],
+			"model": "res://art/monsters/orc_archer/orc_archer.glb",
+			"animations": "res://art/animations/monster_clips_orc_bow.glb",
+			"clips": {"orc_archer_shot": "shoot", "orc_archer_volley": "volley"},
+			"nock_mesh": "arrow",
+			"run_clip_speed": 1.77,
+			"model_height": 1.6,
+			"body_height": 1.5,
+			"stats": {"HP": 22, "ATK": 19, "DEF": 20, "MOVESPD": -12, "CRIRATE": 0},
+			"poise": 0,
+			"ai": {"attack_range": 11.0, "cooldown_min": 80, "cooldown_max": 130, "attack_input": "light", "wait_range": 7.0, "skill_chance": 25, "keep_range": 7.0, "retreat_range": 4.0, "strafe": 0.45, "flee_hp": 0.3, "flee_ticks": 60}
+		},
+		"orc_mage": {
+			"role": "Orc Mage: a waddling orc shaman in a bone skull mask with a horned totem staff. Keeps away, throws slow homing bolts and marks the ground where you stand: the circle fills, then bursts and SLOWS. Keep moving; it blinks away when you reach it.",
+			"_design": "monster-rigger 2026-11-21: the goblin mage's HP 24 / DEF 25 / EFFECT_RES 20 / whole AI, ATK 11 -> 22 (2x). Moves mirror goblin_mage_bolt / _hex / _blink (projectile orc_bolt = goblin_bolt numbers, area orc_hex = goblin_hex numbers, slow 70%); the hex startup 30 -> 40 to sit on the ground-slam clip's 1.13 s wind-up as the view stretches it. MOVESPD -18 (3.1 m/s). Model art/monsters/orc_mage, clips monster_clips_orc_magic.glb.",
+			"style": "orc_mage",
+			"color": [0.45, 0.35, 0.65],
+			"model": "res://art/monsters/orc_mage/orc_mage.glb",
+			"animations": "res://art/animations/monster_clips_orc_magic.glb",
+			"clips": {"orc_mage_bolt": "cast", "orc_mage_hex": "cast_aoe", "orc_mage_blink": "blink"},
+			"run_clip_speed": 1.325,
+			"model_height": 1.6,
+			"body_height": 1.45,
+			"stats": {"HP": 24, "ATK": 22, "DEF": 25, "MOVESPD": -18, "CRIRATE": 0, "EFFECT_RES": 20},
+			"poise": 0,
+			"ai": {"attack_range": 10.0, "cooldown_min": 110, "cooldown_max": 170, "attack_input": "light", "wait_range": 7.5, "skill_chance": 45, "keep_range": 7.5, "retreat_range": 4.5, "strafe": 0.35, "escape_input": "heavy", "escape_range": 2.6, "escape_cooldown": 360, "flee_hp": 0.25, "flee_ticks": 60}
 		}
 	}
 }

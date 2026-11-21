@@ -12,7 +12,8 @@ const Rig := preload("res://tools/monsters/rig_common.gd")
 ## Libraries, one per weapon stance (a monster loads ONE: its own idle/run/hit/death + the attacks of its stance).
 ## Each is a skeleton-only glb named monster_clips_<stance>.glb with a .json of marks next to it.
 ## Clip entries: clip name -> {"segs": [[donor clip, from, to, speed]...] played one after the other (speed 2 = twice as fast)}.
-## Shipped: bow (mummy_archer), mummy, sword_shield (mummy_knight), greatsword (mummy_boss), magic (mummy_mage), wizard_boss.
+## Shipped: bow (mummy_archer), mummy, sword_shield (mummy_knight), greatsword (mummy_boss), magic (mummy_mage), wizard_boss,
+## orc_grunt, orc_bow (orc_archer), orc_magic (orc_mage).
 ## Clip choices checked by the animator 2026-11-19 (windowed shots: tools/monsters/mummy_anim_shots.gd).
 ## bow shoot  = the player's own two-part shot (class_skills.json heartseeker: lb_draw_arrow then lb_aim_recoil, released at 0.18 s of the recoil).
 ## bow volley = the same with a slow draw, so it reads as the telegraphed move.
@@ -159,6 +160,72 @@ const LIBRARIES := {
 			"add": {"mixamorig_Hips": [[0.0, 0, 0, 0], [0.9, 0, 0, 0], [1.4, 0, 120, 0], [2.4, 0, 560, 0], [3.0, 0, 720, 0], [3.3, 0, 720, 0]]},
 			"hover": [[0.0, 0.0], [1.0, 0.0], [1.5, 0.06], [2.6, 0.06], [3.3, 0.0]]},
 		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 0.62, 1.0]], "loop": false},
+		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
+	}},
+	## ---- The orc family (2026-11-21, Boss: ONE supplied orc body, every type made from it, each with its OWN animation set). ----
+	## Every orc keeps a foot on the floor through its run ("floor"); speeds baked so the type's MOVESPD plays inside the 0.6-1.4x clamp.
+	## orc_grunt (cleaver, MOVESPD -12 = 3.3 m/s): the BRUTE SWAGGER. run = the sword_shield march "run" at 2.7x (the knight plays it at 1.6x upright with a
+	## still shield arm; run_2 / walk_2 / gs_run drift backward, gs_run_2 is the mummy's), trunk hunched 14 deg and rolling
+	## 7 deg over each planted foot, a wide stance (thighs out 6 deg, stride x1.3), both arms held out from the body (gorilla).
+	## attack_1 (orc_grunt_chop) = attack_4 from 0.6 s: blade drawn back 0.6-1.0 s, chopped 1.0-1.2 s (hand-speed peak 1.13 s).
+	## attack_2 (orc_grunt_cleave) = slash_3 from 1.3 s: the big two-step wind-up, the cut 1.93-2.2 s (peak 2.07 s), with a keyed
+	## lunge of the trunk. hit = impact_3 at 1.3x. death = death (falls) at 1.4x. idle = gs_idle hunched, arms out.
+	"orc_grunt": {"donor": "res://art/characters/studio05/split/body_sword_shield.glb", "clips": {
+		"idle": {"donor": "res://art/characters/studio05/split/body_greatsword.glb", "segs": [["gs_idle", 0.0, 2.0166, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, 12, 0, 0]], "mixamorig_Head": [[0.0, -8, 0, 0]],
+				"mixamorig_LeftArm": [[0.0, 0, 0, 14]], "mixamorig_RightArm": [[0.0, 0, 0, -14]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 6]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -6]]}},
+		"run": {"segs": [["run", 0.0, 1.7916, 2.7]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.35, "mixamorig_RightUpLeg": 1.35, "mixamorig_LeftLeg": 1.1, "mixamorig_RightLeg": 1.1},
+			"calm": {"mixamorig_LeftArm": 0.4, "mixamorig_RightArm": 0.3},
+			"lean": {"mixamorig_Spine": [[0.0, 14, 0, 7], [0.5, 14, 0, -7], [1.0, 14, 0, 7]],
+				"mixamorig_Head": [[0.0, -10, 0, -4], [0.5, -10, 0, 4], [1.0, -10, 0, -4]],
+				"mixamorig_LeftArm": [[0.0, -10, 0, 18]], "mixamorig_RightArm": [[0.0, -10, 0, -18]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 6]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -6]]}},
+		"attack_1": {"segs": [["attack_4", 0.6, 2.0, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 1.0, "strike_src": 1.2,
+			"lean": {"mixamorig_Spine": [[0.0, 10, 0, 0]], "mixamorig_LeftArm": [[0.0, 0, 0, 12]]}},
+		"attack_2": {"segs": [["slash_3", 1.3, 3.6, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 1.93, "strike_src": 2.2,
+			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 0], [0.55, -6, 0, 0], [0.8, 24, 0, 0], [1.3, 24, 0, 0], [2.3, 8, 0, 0]],
+				"mixamorig_Head": [[0.0, -6, 0, 0], [0.8, -14, 0, 0], [2.3, -6, 0, 0]]}},
+		"hit": {"segs": [["impact_3", 0.0, 1.7916, 1.3]], "loop": false, "ground": true},
+		"death": {"segs": [["death", 0.4, 4.6, 1.4]], "loop": false},
+	}},
+	## orc_bow = orc_archer (MOVESPD -12 = 3.3 m/s): the HUNTER'S PROWL. run = lb_run_forward at 1.55x, the head kept low and level (trunk 6 deg
+	## forward on top of the donor's own run lean: 18 deg folded the short orc double), stride x1.2, the bow arm held low in front. shoot / volley = the
+	## player's own two-part shot as the bow library (released at 0.18 s of the recoil). hit = lb_react_small_from_headshot.
+	## death = lb_death_backward_01 (the mummy archer falls forward). idle = lb_idle_02_looking (scans around).
+	"orc_bow": {"donor": "res://art/characters/studio05/split/body_longbow.glb", "clips": {
+		"idle": {"segs": [["lb_idle_02_looking", 0.0, 3.2, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 0]], "mixamorig_Head": [[0.0, -6, 0, 0]]}},
+		"run": {"segs": [["lb_run_forward", 0.0, 0.8833333, 1.55]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.2, "mixamorig_RightUpLeg": 1.2},
+			"calm": {"mixamorig_LeftArm": 0.5, "mixamorig_LeftForeArm": 0.4},
+			"lean": {"mixamorig_Spine": [[0.0, 6, 0, 0]], "mixamorig_Head": [[0.0, -12, 0, 0]], "mixamorig_LeftArm": [[0.0, -20, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 3]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -3]]}},
+		"shoot": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.35], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
+		"volley": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.0], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
+		"hit": {"segs": [["lb_react_small_from_headshot", 0.0, 0.9833, 1.0]], "loop": false},
+		"death": {"segs": [["lb_death_backward_01", 0.0, 3.1166, 1.0]], "loop": false},
+	}},
+	## orc_magic = orc_mage (MOVESPD -18 = 3.1 m/s): the SHAMAN'S WADDLE. run = mg_loco_run_forward at 1.25x with a wide stance and a
+	## big side-to-side roll over each foot (8 deg), the head bobbing, the free arm swinging out; floor-planted.
+	## cast = mg_spell_1h_magic_attack_02 (a quick one-hand throw, peak 0.53 s). cast_aoe = mg_spell_2h_magic_area_attack_01 (both
+	## arms raised, slammed down at 1.27 s). blink = mg_spell_2h_cast_spell_01 at 2x. hit = mg_lite_react_small_from_front at 1.2x.
+	## death = mg_lite_react_death_backward.
+	"orc_magic": {"donor": "res://art/characters/studio05/split/body_magic.glb", "clips": {
+		"idle": {"segs": [["mg_spell_idle", 0.0, 1.8833, 1.0]], "loop": true, "ground": true,
+			"lean": {"mixamorig_Spine": [[0.0, 10, 0, 0]], "mixamorig_Head": [[0.0, -6, 0, 0]]}},
+		"run": {"segs": [["mg_loco_run_forward", 0.0, 0.75, 1.25]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"amp": {"mixamorig_LeftUpLeg": 1.3, "mixamorig_RightUpLeg": 1.3},
+			"calm": {"mixamorig_RightArm": 0.5, "mixamorig_RightForeArm": 0.5},
+			"lean": {"mixamorig_Spine": [[0.0, 12, 0, 8], [0.5, 12, 0, -8], [1.0, 12, 0, 8]],
+				"mixamorig_Head": [[0.0, -8, 0, -6], [0.25, -12, 0, 0], [0.5, -8, 0, 6], [0.75, -12, 0, 0], [1.0, -8, 0, -6]],
+				"mixamorig_LeftArm": [[0.0, -10, 0, 16]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 7]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -7]]}},
+		"cast": {"segs": [["mg_spell_1h_magic_attack_02", 0.0, 1.6, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.4, "strike_src": 0.53},
+		"cast_aoe": {"segs": [["mg_spell_2h_magic_area_attack_01", 0.0, 2.9666, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.13, "strike_src": 1.27},
+		"blink": {"segs": [["mg_spell_2h_cast_spell_01", 0.2, 1.4, 2.0]], "loop": false, "release_in_seg": 0, "release_src": 0.55, "strike_src": 0.67},
+		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 1.2, 1.2]], "loop": false},
 		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
 	}},
 }

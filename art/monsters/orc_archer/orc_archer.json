@@ -1,0 +1,46 @@
+{
+  "id": "orc_archer",
+  "model": "res://art/monsters/orc_archer/orc_archer.glb",
+  "model_height": 1.6,
+  "animations": "res://art/animations/monster_clips_orc_bow.glb",
+  "stance": "orc_bow",
+  "clips": [
+    "death",
+    "hit",
+    "idle",
+    "run",
+    "shoot",
+    "volley"
+  ],
+  "move_clips": {
+    "shoot": "one arrow",
+    "volley": "three arrows (slow draw)"
+  },
+  "run_clip_speed": 1.742,
+  "hips_scale": 1.0,
+  "sockets": {
+    "Monster_OrcArcher_Bow": "mixamorig_LeftHand",
+    "Monster_OrcArcher_BowString": "mixamorig_LeftHand",
+    "arrow": "mixamorig_RightHand",
+    "Monster_OrcArcher_Headband": "mixamorig_Head"
+  },
+  "meshes": {
+    "Monster_OrcArcher_Body": 3414,
+    "Monster_OrcArcher_Bow": 450,
+    "Monster_OrcArcher_BowString": 20,
+    "arrow": 42,
+    "Monster_OrcArcher_Headband": 136
+  },
+  "triangles": 4062,
+  "joints": 106,
+  "extra_joints": [
+    "bandage_upper_L",
+    "bandage_upper_R",
+    "bandage_lower_L",
+    "bandage_lower_R"
+  ],
+  "rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
+  "texture": "one 1024x1024 albedo (the Boss model atlas, tinted), lossy",
+  "built_by": "tools/monsters/build_mummy_family.gd",
+  "request_sheet": "docs/art/monster_requests/orc_family.md"
+}

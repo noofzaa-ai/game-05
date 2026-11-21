@@ -51,7 +51,28 @@ const VARIANTS := {
 	"mummy_boss": {"node": "Monster_MummyBoss", "height": 2.6, "stance": "greatsword", "width": 1.24, "head": 1.18,
 		"tint": Color(0.5, 0.62, 0.6), "gear": ["boss_khopesh", "nemes", "mask", "collar"],
 		"clips": {"attack_1": "the two-cut combo", "attack_2": "the leaping nova slam (in place)"}},
+	## ---- The orc family (Boss 2026-11-21: ONE supplied body, rigged once, every type made from it by tint, proportions, its own
+	## tool-built weapon/headgear and its OWN animation set). Source: the Boss's orc FBX squeezed by tools/monsters/squeeze_fbx.py
+	## (3,892 triangles) and landmark-rigged by tools/monsters/rig_orc_fbx.py into build/orc_base (kept out of git: re-run those two).
+	"orc_grunt": {"node": "Monster_OrcGrunt", "height": 1.7, "stance": "orc_grunt", "width": 1.12, "head": 1.0,
+		"tint": Color(1.0, 1.0, 1.0), "gear": ["cleaver"], "source": ORC_SOURCE, "albedo": ORC_ALBEDO, "texture_size": 1024, "simplify": false,
+		"sheet": "orc_family", "clips": {"attack_1": "the cleaver chop", "attack_2": "the lunging cleave"}},
+	"orc_archer": {"node": "Monster_OrcArcher", "height": 1.6, "stance": "orc_bow", "width": 0.94, "head": 1.0,
+		"tint": Color(0.86, 0.94, 0.8), "gear": ["bow", "headband"], "source": ORC_SOURCE, "albedo": ORC_ALBEDO, "texture_size": 1024, "simplify": false,
+		"sheet": "orc_family", "clips": {"shoot": "one arrow", "volley": "three arrows (slow draw)"}},
+	"orc_mage": {"node": "Monster_OrcMage", "height": 1.6, "stance": "orc_magic", "width": 0.94, "head": 1.06,
+		"tint": Color(0.84, 0.86, 1.0), "gear": ["totem_staff", "skull_mask"], "source": ORC_SOURCE, "albedo": ORC_ALBEDO, "texture_size": 1024, "simplify": false,
+		"sheet": "orc_family", "clips": {"cast": "the bolt", "cast_aoe": "the ground slam", "blink": "the escape"}},
 }
+const ORC_SOURCE := "res://build/orc_base/rigged.glb"
+const ORC_ALBEDO := "res://build/orc_base/albedo.png"
+const ARMOR_LONGBOW := "res://art/characters/studio05/v1111/outfits/armor_longbow.glb"
+const Archer := preload("res://tools/monsters/build_mummy_archer.gd")
+const IRON := Color(0.42, 0.43, 0.45)
+const LEATHER := Color(0.33, 0.2, 0.11)
+const BONE := Color(0.86, 0.82, 0.7)
+const RED_CLOTH := Color(0.55, 0.12, 0.08)
+const ORC_GLOW := Color(0.55, 0.95, 0.25)
 
 const MAP := {
 	"root": "Root", "hips": "mixamorig_Hips", "spine": "mixamorig_Spine", "chest": "mixamorig_Spine2", "neck": "mixamorig_Neck", "head": "mixamorig_Head",
@@ -267,6 +288,11 @@ func _build(id: String, spec: Dictionary) -> void:
 	var ctx := {"donor_global": donor_by_name, "new_global": new_global, "name_to_index": name_to_index, "skeleton": skeleton,
 		"skin": new_skin, "node": spec["node"], "head": _bounds(final_pos, infl, "mixamorig_Head", 0.9),
 		"chest": _bounds(final_pos, infl, "mixamorig_Spine2", 0.5), "new_pos": new_pos}
+	# the face/skull of the head (an orc's head bounds include the ears and the mohawk): the middle 62% across, the lower 64% up
+	var hb: AABB = ctx["head"]
+	# centred on the head joint across (the bounds are lopsided: one ear is a separate rigid part, the mohawk leans)
+	var head_x: float = (new_pos["mixamorig_Head"] as Vector3).x
+	ctx["face"] = AABB(Vector3(head_x - hb.size.x * 0.31, hb.position.y, hb.position.z), Vector3(hb.size.x * 0.62, hb.size.y * 0.64, hb.size.z))
 	var sockets := {}
 	for gear in spec["gear"]:
 		var made: Dictionary = call("_gear_" + gear, ctx)
@@ -302,6 +328,10 @@ func _build(id: String, spec: Dictionary) -> void:
 		err = document.write_to_filesystem(state, out_dir + id + ".glb")
 	if err == OK:
 		Rig.minify_glb(out_dir + id + ".glb")
+	if err == OK and spec.has("sheet"):
+		# the orcs (a 3.4k-triangle body): drop the TANGENT streams Godot's writer adds (no normal map; ~100 KB) to stay in the budget
+		var py := OS.execute("python", ["-I", ProjectSettings.globalize_path("res://tools/monsters/prune_glb.py"), ProjectSettings.globalize_path(out_dir + id + ".glb"), "--strip-tangents"])
+		print("  prune_glb --strip-tangents exit=", py)
 	var bytes := FileAccess.get_file_as_bytes(out_dir + id + ".glb").size()
 	print(id, ": export err=", err, " tris=", tris, " ", mesh_tris, " joints=", skeleton.get_bone_count(), " bounds y=", bottom, "..", top, " bytes=", bytes)
 
@@ -322,11 +352,11 @@ func _build(id: String, spec: Dictionary) -> void:
 		"meshes": mesh_tris,
 		"triangles": tris,
 		"joints": skeleton.get_bone_count(),
-		"extra_joints": ["bandage_upper_L", "bandage_upper_R", "bandage_lower_L", "bandage_lower_R"],
+		"extra_joints": ["bandage_upper_L", "bandage_upper_R", "bandage_lower_L", "bandage_lower_R"],  ## the shared monster rig's extras (an orc leaves them unweighted)
 		"rig": "shared studio05 102-joint rig (donor art/characters/studio05/split/body_longbow.glb), no donor joint removed or merged",
-		"texture": "one %dx%d albedo (%s), lossy" % [tex_size, tex_size, "the Boss model atlas" if spec.has("source") else "stand-in bandage atlas, tinted"],
+		"texture": "one %dx%d albedo (%s), lossy" % [tex_size, tex_size, "the Boss model atlas" + (", tinted" if spec["tint"] != Color(1, 1, 1) else "") if spec.has("source") else "stand-in bandage atlas, tinted"],
 		"built_by": "tools/monsters/build_mummy_family.gd",
-		"request_sheet": "docs/art/monster_requests/%s.md" % ("mummy_base" if id == "mummy" else ("mummy_boss" if id == "mummy_high_wizard" else id)),
+		"request_sheet": "docs/art/monster_requests/%s.md" % spec.get("sheet", "mummy_base" if id == "mummy" else ("mummy_boss" if id == "mummy_high_wizard" else id)),
 	}
 	var file := FileAccess.open(out_dir + id + ".json", FileAccess.WRITE)
 	file.store_string(JSON.stringify(info, "  ", false) + "\n")
@@ -582,6 +612,175 @@ func _gear_collar(ctx: Dictionary) -> Dictionary:
 	_add_piece(ctx, name, acc, "mixamorig_Spine2", {}, bands)
 	print("  collar: neck y=", neck.y, " shoulder=", shoulder, " chest depth=", depth)
 	return {name: "mixamorig_Spine2"}
+
+
+# ------------------------------------------------------------------ orc gear (2026-11-21)
+
+## The grunt's cleaver: a wide, square-ended butcher blade with a notch, on a leather-wrapped grip, in the pose of the player's sword.
+func _gear_cleaver(ctx: Dictionary) -> Dictionary:
+	var frame := _weapon_frame(ARMOR_SWORD_SHIELD, ["B 02 | Sword"])
+	var L: float = frame["reach"] * 0.85
+	var blade := PackedVector2Array([Vector2(0.2, -0.07), Vector2(0.62, -0.1), Vector2(0.98, -0.12), Vector2(1.0, -0.04), Vector2(0.98, 0.2),
+		Vector2(0.78, 0.22), Vector2(0.72, 0.16), Vector2(0.64, 0.2), Vector2(0.2, 0.16)])
+	var acc := _acc()
+	_add_extrude_frame(acc, blade, frame, L, 0.04 * L)
+	var grip := _acc()
+	_add_extrude_frame(grip, PackedVector2Array([Vector2(-0.18, -0.045), Vector2(0.21, -0.045), Vector2(0.21, 0.045), Vector2(-0.18, 0.045)]), frame, L, 0.07 * L)
+	var name: String = ctx["node"] + "_Cleaver"
+	_add_piece(ctx, name, acc, frame["joint"], frame, _mat("cleaver", IRON, 0.4, 0.5), grip, _mat("cleaver_grip", LEATHER, 0.0, 0.85))
+	return {name: frame["joint"]}
+
+
+## The archer's bow: the player's own longbow and string (weighted to the donor rig) moved to the orc's rest pose like the mummy
+## archer's, plus the nocked "arrow" the view shows while a shot winds up (placed on the full-draw pose, weighted to the right hand).
+func _gear_bow(ctx: Dictionary) -> Dictionary:
+	var donor_global: Dictionary = ctx["donor_global"]
+	var new_global: Dictionary = ctx["new_global"]
+	var name_to_index: Dictionary = ctx["name_to_index"]
+	var armor_state := GLTFState.new()
+	var armor_doc := GLTFDocument.new()
+	armor_doc.append_from_file(ProjectSettings.globalize_path(ARMOR_LONGBOW), armor_state)
+	var armor := armor_doc.generate_scene(armor_state)
+	var armor_sk := Rig.donor_skeleton(armor)
+	var armor_global := _globals(armor_sk)
+	var made := {}
+	for piece in [["L 01 | Bow", "_Bow", LEATHER.darkened(0.1)], ["L 17 | Bow string", "_BowString", BONE]]:
+		var mi := armor.find_child(piece[0], true, false) as MeshInstance3D
+		var a := mi.mesh.surface_get_arrays(0)
+		var av: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
+		var an: PackedVector3Array = a[Mesh.ARRAY_NORMAL]
+		var ab: PackedInt32Array = a[Mesh.ARRAY_BONES]
+		var aw: PackedFloat32Array = a[Mesh.ARRAY_WEIGHTS]
+		var aper := ab.size() / av.size()
+		var out_v := PackedVector3Array()
+		var out_n := PackedVector3Array()
+		var out_infl := []
+		for v in av.size():
+			var p := Vector3.ZERO
+			var n := Vector3.ZERO
+			var list := {}
+			for k in aper:
+				var w := aw[v * aper + k]
+				if w <= 0.0:
+					continue
+				var bname := String(mi.skin.get_bind_name(ab[v * aper + k]))
+				if bname == "":
+					bname = armor_sk.get_bone_name(mi.skin.get_bind_bone(ab[v * aper + k]))
+				var gd: Transform3D = armor_global[armor_sk.find_bone(bname)]
+				var rest_pos: Vector3 = gd * (mi.skin.get_bind_pose(ab[v * aper + k]) * av[v])
+				var move: Transform3D = (new_global[bname] as Transform3D) * (donor_global[bname] as Transform3D).affine_inverse()
+				p += w * (move * rest_pos)
+				n += w * (move.basis * (gd.basis * (mi.skin.get_bind_pose(ab[v * aper + k]).basis * an[v])))
+				list[bname] = list.get(bname, 0.0) + w
+			out_v.append(p)
+			out_n.append(n.normalized())
+			out_infl.append(list)
+		var surface := _surface(out_v, out_n, a[Mesh.ARRAY_TEX_UV], out_infl, name_to_index, a[Mesh.ARRAY_INDEX])
+		if piece[1] == "_Bow":
+			var rests := []
+			for i in (ctx["skeleton"] as Skeleton3D).get_bone_count():
+				rests.append(new_global[(ctx["skeleton"] as Skeleton3D).get_bone_name(i)])
+			surface = _simplify(surface, rests)
+		var mesh := ArrayMesh.new()
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, surface)
+		mesh.surface_set_material(0, _mat("bow" + piece[1].to_lower(), piece[2], 0.0, 0.85))
+		_add_mesh(ctx["skeleton"], ctx["node"] + piece[1], mesh, ctx["skin"])
+		made[ctx["node"] + piece[1]] = "mixamorig_LeftHand"
+	armor.free()
+	# the nocked arrow on the full-draw pose
+	var skeleton: Skeleton3D = ctx["skeleton"]
+	var donor := Rig.load_donor()
+	var draw := Rig.donor_player(donor).get_animation("lb_draw_arrow")
+	Rig.pose_at(skeleton, draw, Rig.clip_tracks(draw), 1.017)
+	var rh := skeleton.find_bone("mixamorig_RightHand")
+	var lh := skeleton.find_bone("mixamorig_LeftHand")
+	var rh_pose := skeleton.get_bone_global_pose(rh)
+	var tail: Vector3 = rh_pose.origin
+	var dir: Vector3 = (skeleton.get_bone_global_pose(lh).origin - tail).normalized()
+	_add_mesh(skeleton, "arrow", Archer._arrow(tail, dir, 0.3, rh_pose, new_global["mixamorig_RightHand"], name_to_index["mixamorig_RightHand"]), ctx["skin"])
+	skeleton.reset_bone_poses()
+	donor.free()
+	made["arrow"] = "mixamorig_RightHand"
+	return made
+
+
+## The archer's red cloth headband round the brow (under the mohawk), its two tails hanging at the back of the head.
+func _gear_headband(ctx: Dictionary) -> Dictionary:
+	var head: AABB = ctx["face"]
+	var c := head.get_center()
+	var r := head.size * 0.5 * Vector3(1.06, 1.0, 1.06)
+	var acc := _acc()
+	_add_shell(acc, c + Vector3(0, r.y * 0.1, 0), r, func(_theta: float) -> float: return deg_to_rad(66.0), 14, 1, head.size.x * 0.03, deg_to_rad(48.0))
+	for sgn in [-1.0, 1.0]:
+		var top: Vector3 = c + Vector3(sgn * r.x * 0.18, r.y * 0.2, -r.z * 0.98)
+		_add_slab(acc, top, top + Vector3(sgn * r.x * 0.25, -r.y * 0.9, -r.z * 0.25), r.x * 0.2, r.x * 0.14, head.size.x * 0.03, Vector3(0, 0, -1))
+	var name: String = ctx["node"] + "_Headband"
+	_add_piece(ctx, name, acc, "mixamorig_Head", {}, _mat("headband", RED_CLOTH, 0.0, 0.85))
+	return {name: "mixamorig_Head"}
+
+
+## The shaman's totem staff: a crooked wooden pole with bone rings, topped by a horned skull holding a green glowing stone.
+func _gear_totem_staff(ctx: Dictionary) -> Dictionary:
+	var frame := _weapon_frame(ARMOR_MAGIC, ["M 01 | Staff"])
+	var head_dir: Vector3 = frame["head_dir"]
+	var grip: Vector3 = frame["grip"]
+	var side: Vector3 = frame["side"]
+	var fwd: float = frame["reach_head"] * 1.5
+	var back: float = frame["reach_tail"] * 1.0
+	var r: float = frame["length"] * 0.04
+	var wood := _acc()
+	var bend := side * fwd * 0.05
+	_add_tube(wood, grip - head_dir * back, grip + head_dir * fwd * 0.5 + bend, r, r * 1.1, 6, true)
+	_add_tube(wood, grip + head_dir * fwd * 0.5 + bend, grip + head_dir * fwd, r * 1.1, r * 1.3, 6, true)
+	var tip := grip + head_dir * fwd
+	var bone := _acc()
+	for t: float in [0.15, 0.55]:
+		var p: Vector3 = grip + head_dir * fwd * t + bend * (t * 2.0)
+		_add_tube(bone, p - head_dir * r, p + head_dir * r, r * 1.6, r * 1.6, 6, true)
+	# the skull: a squat block-ish crystal, two horns curving up and out
+	_add_crystal(bone, tip + head_dir * r * 3.0, head_dir, side, r * 3.2, r * 3.6)
+	for sgn in [-1.0, 1.0]:
+		var prev: Vector3 = tip + head_dir * r * 3.5 + side * sgn * r * 2.4
+		for k in range(1, 5):
+			var t := k / 4.0
+			var p: Vector3 = tip + head_dir * (r * 3.5 + t * r * 6.0) + side * sgn * (r * 2.4 + t * r * 5.0 - t * t * r * 2.0)
+			_add_tube(bone, prev, p, r * (1.0 - t * 0.55), r * (1.0 - t * 0.7), 4, false)
+			prev = p
+	var stone := _acc()
+	_add_crystal(stone, tip + head_dir * r * 7.5, head_dir, side, r * 1.6, r * 2.4)
+	var name: String = ctx["node"] + "_Staff"
+	_add_piece(ctx, name, wood, frame["joint"], frame, _mat("staff_wood", WOOD, 0.0, 0.85), bone, _mat("staff_bone", BONE, 0.0, 0.7))
+	var stone_name: String = ctx["node"] + "_StaffStone"
+	_add_piece(ctx, stone_name, stone, frame["joint"], frame, _mat("stone_glow", ORC_GLOW, 0.0, 0.3, true))
+	return {name: frame["joint"], stone_name: frame["joint"]}
+
+
+## The shaman's skull mask: a bone face plate over the upper face (brow to the tusks), green glowing eye holes, two small horns.
+func _gear_skull_mask(ctx: Dictionary) -> Dictionary:
+	var head: AABB = ctx["face"]
+	var c := head.get_center() + Vector3(0, -head.size.y * 0.14, 0)  # down over the eyes (the face box reaches up into the skull)
+	var r := head.size * 0.5 * Vector3(1.04, 1.0, 1.1)
+	var acc := _acc()
+	_add_patch(acc, c, r, deg_to_rad(-58.0), deg_to_rad(58.0), deg_to_rad(40.0), deg_to_rad(104.0), 8, 5)
+	for sgn in [-1.0, 1.0]:
+		var base: Vector3 = c + Vector3(sgn * r.x * 0.55, r.y * 0.72, r.z * 0.45)
+		var prev: Vector3 = base
+		for k in range(1, 4):
+			var t := k / 3.0
+			var p: Vector3 = base + Vector3(sgn * r.x * (0.25 * t), r.y * (0.55 * t), -r.z * (0.25 * t * t))
+			_add_tube(acc, prev, p, head.size.x * 0.07 * (1.0 - t * 0.6), head.size.x * 0.07 * (1.0 - t * 0.85), 5, true)
+			prev = p
+	var eyes := _acc()
+	for sgn in [-1.0, 1.0]:
+		var theta: float = sgn * deg_to_rad(24.0)
+		var phi := deg_to_rad(78.0)
+		var p: Vector3 = c + Vector3(r.x * sin(phi) * sin(theta), r.y * cos(phi), r.z * sin(phi) * cos(theta)) * 1.03
+		_add_crystal(eyes, p, Vector3(sgn * 0.2, 0, 1).normalized(), Vector3(1, 0, 0), r.x * 0.17, r.x * 0.06)
+	var name: String = ctx["node"] + "_SkullMask"
+	_add_piece(ctx, name, acc, "mixamorig_Head", {}, _mat("skull_mask", BONE, 0.0, 0.7))
+	var eyes_name: String = ctx["node"] + "_MaskEyes"
+	_add_piece(ctx, eyes_name, eyes, "mixamorig_Head", {}, _mat("mask_eyes_glow", ORC_GLOW, 0.0, 0.3, true))
+	return {name: "mixamorig_Head", eyes_name: "mixamorig_Head"}
 
 
 # ------------------------------------------------------------------ the player's weapon frames
