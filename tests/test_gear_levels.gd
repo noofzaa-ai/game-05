@@ -131,8 +131,13 @@ func _level1_piece(ctx, f: Dictionary) -> void:
 	p.stash.add_item(drop)
 	var ids: Array = Shop.batch_sellable(p, rules, rules.tiers.map(func(t): return str(t["id"])))["ids"]
 	ctx.check("level-1 drop: bulk sell takes the drop but never the real starter kit", ids.has(drop.id) and not ids.has(kit.id))
-	ctx.check("level-1 drop: level_stat_mul falls back to the nearest lower key (25 -> the 15 value), never x1.0",
-		is_equal_approx(rules.catalog.level_mul(25), rules.catalog.level_mul(15)) and rules.catalog.level_mul(15) > 1.0 and is_equal_approx(rules.catalog.level_mul(1), 1.0))
+	var lower := 0  # the highest level_stat_mul key at or below 25 (15 for the race gear, 20 since the pyramid boss weapons)
+	for key in rules.catalog.level_stat_mul:
+		if int(str(key)) <= 25:
+			lower = maxi(lower, int(str(key)))
+	ctx.check("level-1 drop: level_stat_mul falls back to the nearest lower key (25 -> the %d value), never x1.0" % lower,
+		is_equal_approx(rules.catalog.level_mul(25), rules.catalog.level_mul(lower)) and is_equal_approx(rules.catalog.level_mul(24), rules.catalog.level_mul(lower))
+		and rules.catalog.level_mul(15) > 1.0 and is_equal_approx(rules.catalog.level_mul(1), 1.0))
 
 
 ## Forgery: a client has no command that creates an item or renames one; a crafted "starter-drop-" id on a piece that can never

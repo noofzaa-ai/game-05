@@ -126,6 +126,34 @@
    "asset_path": "",
    "icon_path": "res://art/items/boss/mummy_high_wizard/back.png"
   },
+  "boss_mummy_boss_crook": {
+   "asset_id": "",
+   "name": "Pharaoh's Golden Crook",
+   "name_th": "ไม้เท้าตะขอทองฟาโรห์",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "class": "greatsword",
+   "boss": "pyramid",
+   "no_drop": true,
+   "drop_level": 20,
+   "req_level": 20,
+   "asset_path": "res://art/weapons/race_boss/mummy_crook.glb",
+   "icon_path": "res://art/items/boss/mummy_boss/crook.png"
+  },
+  "boss_mummy_high_wizard_staff": {
+   "asset_id": "",
+   "name": "High Wizard's Scarab Staff",
+   "name_th": "คทาสคารับจอมเวทมัมมี่",
+   "slot": "weapon",
+   "weapon_type": "magic",
+   "class": "magic",
+   "boss": "pyramid",
+   "no_drop": true,
+   "drop_level": 20,
+   "req_level": 20,
+   "asset_path": "res://art/weapons/race_boss/mummy_staff.glb",
+   "icon_path": "res://art/items/boss/mummy_high_wizard/staff.png"
+  },
   "armour_sword_shield_shirt": {
    "asset_id": "armour_sword_shield_shirt",
    "name": "Sword & Shield Tunic",
@@ -692,5 +720,5 @@
    ]
   }
  },
- "_boss_items": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16): boss_<boss>_<slot> = that boss's accessory set (necklace, earring, bracelet, ring, back), 2D icons only (never on the 3D model), no_drop = never a normal monster/chest/shop-tier drop (logic/boss_loot.gd gives them). relics = socket gems (a stack material in camp.json, never worn alone); effects count while the socketed item is worn and not broken (durability 0). Not built by tools/items/build_race_gear.py (it keeps non-race keys)."
+ "_boss_items": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16): boss_<boss>_<slot> = that boss's accessory set (necklace, earring, bracelet, ring, back), 2D icons only (never on the 3D model), no_drop = never a normal monster/chest/shop-tier drop (logic/boss_loot.gd gives them). relics = socket gems (a stack material in camp.json, never worn alone); effects count while the socketed item is worn and not broken (durability 0). Not built by tools/items/build_race_gear.py (it keeps non-race keys). Boss unique WEAPONS (Boss 2026-11-21): boss_mummy_boss_crook (the Pharaoh mini boss's golden crook, a greatsword) and boss_mummy_high_wizard_staff (the High Wizard's staff, magic): no set (they never count toward a boss set and are never in the boss shop), boss=pyramid, no_drop, req_level 20; given only by data/loot/boss_loot.json weapon_drops. Boss-unique tier: their main stat uses data/items/tier_up.json level_stat_mul \"20\" (only these two pieces are level 20). Models: art/weapons/race_boss/ (built by tools/items/build_boss_weapons.py on the Studio rig)."
 }
