@@ -44,6 +44,10 @@ Rebuild: `squeeze_fbx.py <fbx> build/orc_warlock 3350` -> `rig_warlock_fbx.py bu
 - Wiring probe `tools/monsters/mummy_wiring_probe.gd -- orc_warlock`: own model, own library, 0% foot slide.
 - Windowed shots `tools/monsters/warlock_shots.gd` (1280x720 and 844x390, with --strips).
 
+## 6b. Boss feedback 2026-11-21 (robe read PINK)
+- Root cause: the source albedo itself (the robe and hood are painted purple-magenta, hue 280-350), not the tint/squeeze or the ink shader; under the toon light it read pink. `rig_warlock_fbx.py` now repaints every purple pixel of the albedo warm earth brown (hue 24-36, darker shadows, the light rune trim turns bronze), except the spiked pauldrons' islands, and brightens the face in the hood (gamma 0.7, x1.2). Output `build/orc_warlock/albedo_brown.png`, used by `build_mummy_family.gd`.
+- Coat stretch in the wide block stance: the skirt's thigh share cut from 60% to 35%.
+
 ## 7. Known weaknesses
 - MOCKUP weapons: plain shapes on purpose.
 - The coat is one shell: on the widest stride and the block's low stance the skirt stretches between the legs; at the cataclysm's spin the hood and coat move as a stiff block.

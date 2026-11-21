@@ -69,7 +69,7 @@ const VARIANTS := {
 	## sword-and-shield clips can be judged; the real weapons replace _gear_mock_sword / _gear_mock_shield later.
 	"orc_warlock": {"node": "Monster_OrcWarlock", "height": 3.2, "stance": "orc_warlock", "width": 1.0, "head": 1.0,
 		"tint": Color(1.0, 1.0, 1.0), "gear": ["mock_shield", "mock_sword"], "source": "res://build/orc_warlock/rigged.glb",
-		"albedo": "res://build/orc_warlock/albedo.png", "texture_size": 1024, "simplify": false, "sheet": "orc_warlock",
+		"albedo": "res://build/orc_warlock/albedo_brown.png", "texture_size": 1024, "simplify": false, "sheet": "orc_warlock",
 		"clips": {"attack_1": "the sweeping cleave", "skyfall": "the leaping skyfall smash", "cataclysm": "the airborne ground breaker", "block": "the bulwark (shield slam, then the held guard)"}},
 }
 const ORC_SOURCE := "res://build/orc_base/rigged.glb"

@@ -53,7 +53,14 @@ SMOOTH = {
 }
 # below the belt: weight drifts from the hips to the thigh on the vertex's side (max SKIRT_MAX at SKIRT_DEPTH under SKIRT_TOP)
 SKIRT = {"part_16", "part_19"}
-SKIRT_TOP, SKIRT_DEPTH, SKIRT_MAX, SKIRT_SPLIT = 0.40, 0.22, 0.6, 0.10
+# (0.6 stretched the coat between the legs in the wide block stance, Boss 2026-11-21: 0.35 keeps the skirt mostly on the hips)
+SKIRT_TOP, SKIRT_DEPTH, SKIRT_MAX, SKIRT_SPLIT = 0.40, 0.26, 0.35, 0.12
+# Boss 2026-11-21: the source robe is purple-magenta (albedo hue 280-350; the game's toon light makes it read pink). The robe and
+# hood are repainted warm earth BROWN in the albedo (only inside these parts' UV islands and only purple pixels: green skin, bone
+# horns, belt and the pauldrons stay as they are; the light rune trim becomes bronze), and the face in the hood is lifted so it
+# reads at phone size. Written as <out dir>/albedo_brown.png, which build_mummy_family.gd uses.
+KEEP_PARTS = ["part_3", "part_0"]  # the spiked pauldrons keep their purple
+FACE_PARTS = ["part_17"]
 RIGID = {
     "part_17": "head",       # the face in the hood
     "part_2": "head",        # right horn
@@ -134,6 +141,72 @@ for part, allowed in SMOOTH.items():
         for n, w in ws.items():
             if w > 0.0:
                 o.vertex_groups[n].add([v.index], w, "REPLACE")
+import os
+import numpy as np
+
+
+def uv_mask(parts, size):
+    """Pixels covered by the UV triangles of `parts` (Blender image rows: 0 = bottom = uv v 0)."""
+    mask = np.zeros((size, size), dtype=bool)
+    ys, xs = np.mgrid[0:size, 0:size]
+    for name in parts:
+        me = objs[name].data
+        uv = me.uv_layers.active.data
+        for poly in me.polygons:
+            pts = [uv[li].uv for li in poly.loop_indices]
+            for k in range(1, len(pts) - 1):
+                a, b, c = [np.array((p.x * size, p.y * size)) for p in (pts[0], pts[k], pts[k + 1])]
+                x0, x1 = int(max(0, min(a[0], b[0], c[0]) - 1)), int(min(size - 1, max(a[0], b[0], c[0]) + 1))
+                y0, y1 = int(max(0, min(a[1], b[1], c[1]) - 1)), int(min(size - 1, max(a[1], b[1], c[1]) + 1))
+                if x1 < x0 or y1 < y0:
+                    continue
+                d = (b[1] - c[1]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[1] - c[1])
+                if abs(d) < 1e-9:
+                    continue
+                px_ = xs[y0:y1 + 1, x0:x1 + 1] + 0.5
+                py_ = ys[y0:y1 + 1, x0:x1 + 1] + 0.5
+                l1 = ((b[1] - c[1]) * (px_ - c[0]) + (c[0] - b[0]) * (py_ - c[1])) / d
+                l2 = ((c[1] - a[1]) * (px_ - c[0]) + (a[0] - c[0]) * (py_ - c[1])) / d
+                l3 = 1.0 - l1 - l2
+                e = -0.02  # a little slack so island edges are covered
+                mask[y0:y1 + 1, x0:x1 + 1] |= (l1 >= e) & (l2 >= e) & (l3 >= e)
+    return mask
+
+
+albedo_path = os.path.join(os.path.dirname(os.path.abspath(src)), "albedo.png")
+img = bpy.data.images.load(albedo_path)
+W, H = img.size
+px = np.array(img.pixels[:], dtype=np.float32).reshape(H, W, 4)
+rgb = px[..., :3]
+mx = rgb.max(-1)
+mn = rgb.min(-1)
+sat = np.where(mx > 1e-5, (mx - mn) / np.maximum(mx, 1e-5), 0.0)
+r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+hue = np.degrees(np.arctan2(np.sqrt(3.0) * (g - b), 2.0 * r - g - b)) % 360.0
+purple = ((hue >= 245.0) | (hue < 5.0)) & (sat > 0.12) & (b > g)
+# every purple pixel except the spiked pauldrons' islands (kept as they are): the robe/hood islands alone missed seams and
+# small islands the decimated mesh still samples (purple patches remained on the hood)
+keep = uv_mask(KEEP_PARTS, W)
+robe = purple & ~keep
+# brown: value a little darker, hue 24 (shadow) to 36 (light rune trim -> bronze), saturation 0.52-0.6
+v = mx * 0.82
+t = np.clip((mx - 0.5) / 0.3, 0.0, 1.0)
+h6 = (24.0 + 12.0 * t) / 60.0
+s_new = 0.52 + 0.08 * t
+c = v * s_new
+x = c * (1.0 - np.abs(h6 % 2.0 - 1.0))
+brown = np.stack([v, v - c + x, v - c], -1)  # hue in [0, 60): r = v, g = m + x, b = m
+rgb[robe] = brown[robe]
+face = uv_mask(FACE_PARTS, W)
+rgb[face] = np.clip(np.power(np.clip(rgb[face], 0.0, 1.0), 0.7) * 1.2, 0.0, 1.0)
+px[..., :3] = rgb
+out_img = bpy.data.images.new("albedo_brown", W, H)
+out_img.pixels = px.ravel().tolist()
+out_img.filepath_raw = os.path.join(os.path.dirname(os.path.abspath(out)), "albedo_brown.png")
+out_img.file_format = "PNG"
+out_img.save()
+print("RECOLOUR robe px", int(robe.sum()), "face px", int(face.sum()), "->", out_img.filepath_raw)
+
 for part, bone in RIGID.items():
     o = objs[part]
     g = o.vertex_groups.new(name=bone)
