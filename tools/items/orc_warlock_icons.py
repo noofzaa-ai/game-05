@@ -1,4 +1,7 @@
-"""Orc Warlock boss accessory icons, step 2 of 2: the cel-shaded raw frames from tools/items/orc_warlock_icon_models.py
+"""NOTE 2026-11-21: the SHIPPED icons in art/items/boss/orc_warlock/ are now the router-generated set the Boss accepted
+(build/orc_warlock_icons_v2/), not this script's output. This Blender path is kept only as a fallback/reference.
+
+Orc Warlock boss accessory icons, step 2 of 2:the cel-shaded raw frames from tools/items/orc_warlock_icon_models.py
 (build/orc_warlock_icons/raw-<name>.png) painted into the 96x96 boss icon style of art/items/boss/* with the same pass as
 tools/items/boss_weapon_icons.py (colour clumping, a warm lift on the lit side, inner form shadow, dark warm-brown
 outline, soft golden halo, a couple of sparkles on the coin/relic/ring). Tone is checked on the review strip against the
