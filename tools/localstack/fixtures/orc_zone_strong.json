@@ -1,0 +1,51 @@
+{
+ "_about": "DEV: Orc Camp open with every card Lv60 so a solo online run reaches the Orc Warlock (wave 9) for screenshots. `scenario.gd -- --fixture orc_zone_strong --open go_orc`.",
+ "card_deck": {
+  "cards": {
+   "sword_shield": {
+    "race": "human",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   },
+   "greatsword": {
+    "race": "viking",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   },
+   "longbow": {
+    "race": "elf",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   },
+   "magic": {
+    "race": "runeborn",
+    "progress": {
+     "level": 60,
+     "xp": 0
+    }
+   }
+  },
+  "squad": [
+   "sword_shield",
+   "greatsword",
+   "longbow"
+  ]
+ },
+ "tutorial": {
+  "version": 1,
+  "step": "done",
+  "tour_done": true,
+  "unlock_seen": true
+ },
+ "unlocks": {
+  "magic_runeborn": true,
+  "boss_goblin_base": true,
+  "boss_pyramid": true
+ }
+}

@@ -236,7 +236,31 @@ static func grant(profile, rules, loot, journey_data, first_kill: bool, factor: 
 	if not relic.is_empty() and relic_roll < float(entry.get("relic_chance", 0.0)) * factor:
 		if profile.stash.add_material(relic, 1) == 1:
 			summary["relics"][relic] = 1
+	_grant_weapons(profile, rules, entry, weights, factor, rng, id_prefix, summary)
 	return summary
+
+
+## Boss-unique weapons (Boss 2026-11-21; data weapon_drops [{item, chance}]): OFF until the Boss approves them, i.e. only
+## when the entry also says "weapon_drops_enabled": true. Each listed weapon is an independent chance x factor roll (two
+## draws each: the roll and its tier, rolled like a set piece; no first-kill guarantee). The draws come AFTER the four
+## fixed ones above, so turning this on never changes the set piece / relic results of a seed.
+static func _grant_weapons(profile, rules, entry: Dictionary, weights: Array, factor: float, rng: RandomNumberGenerator, id_prefix: String, summary: Dictionary) -> void:
+	if not bool(entry.get("weapon_drops_enabled", false)):
+		return
+	for drop in Array(entry.get("weapon_drops", [])):
+		if not drop is Dictionary:
+			continue
+		var item_id := str(drop.get("item", ""))
+		var roll := rng.randf()
+		var tier := _roll_tier(weights, rng)
+		if item_id.is_empty() or rules.catalog.entry(item_id).is_empty() or roll >= float(drop.get("chance", 0.0)) * factor:
+			continue
+		var slot := str(rules.catalog.entry(item_id)["slot"])
+		var weapon = ItemSystem.create_item(rules, _free_id(profile, "%s-%d-%s" % [id_prefix, rng.seed, item_id]), slot, clampi(tier, 0, rules.tiers.size() - 1), rng, "", item_id)
+		if weapon != null:
+			profile.stash.items.append(weapon)
+			profile.stash.capacity = maxi(profile.stash.capacity, profile.stash.slots_used())
+			summary["items"].append(weapon)
 
 
 static func _tier_index(rules, tier_id: String) -> int:

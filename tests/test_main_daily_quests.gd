@@ -82,7 +82,7 @@ func run(ctx) -> void:
 	_set_levels(q, [20, 10, 10, 10])
 	ctx.check("quest done: OPEN, start_journey_for gives the orc journey", Zones.state(q, "orc_camp") == Zones.OPEN and Zones.start_journey_for(q, "orc_camp") == "orc_waves")
 	Zones._cache = saved
-	ctx.check("shipped data: the orc camp stays coming soon while its journey is empty", Zones.state(q, "orc_camp") == Zones.SOON)
+	ctx.check("shipped data: the orc camp is wired (orc_waves) and OPEN for the quest-done profile", Zones.state(q, "orc_camp") == Zones.OPEN and Zones.start_journey_for(q, "orc_camp") == "orc_waves")
 	# --- daily: day boundary and reset
 	var hour := int(Daily.data().get("reset_hour_utc", 0))
 	var boundary := (Daily.day_of(T0) + 1) * Daily.DAY + hour * 3600

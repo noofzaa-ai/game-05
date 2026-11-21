@@ -213,7 +213,8 @@ func _check_orc_family(ctx, data) -> void:
 			var text := FileAccess.get_file_as_string(dir_path.path_join(file)) if file.ends_with(".json") else ""
 			if ORC_TYPES.any(func(t): return text.contains("\"%s\"" % t)):
 				leaked.append(file)
-	ctx.check("no journey or map spawns an orc yet (orc_waves.json comes later; one family per zone) %s" % [leaked], leaked.is_empty())
+	leaked.sort()
+	ctx.check("orcs spawn only in the orc zone: orc_waves.json and its board orc_camp_night (one family per zone) %s" % [leaked], leaked == ["orc_camp_night.json", "orc_waves.json"])
 	_check_orc_warlock(ctx, data)
 
 

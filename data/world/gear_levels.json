@@ -3,7 +3,9 @@
  "version": 1,
  "zones": {
   "goblin_base": 1,
-  "pyramid": 15
+  "pyramid": 15,
+  "orc_camp": 20
  },
+ "_orc_camp": "2026-11-21 PO default: orc_camp = 20, the level its main quest War Drums asks for (one card Lv20, every card Lv10) and the req/drop level of the pyramid boss weapons (catalog boss_mummy_*). No droppable level-20 catalog pieces exist yet, so until a level-20 gear line is added the cap changes nothing in practice (drops stay level 1 / 15; boss weapons are no_drop and never picked as siblings). When orc boss gear is made, give it req_level/drop_level 20.",
  "level_weights": {}
 }

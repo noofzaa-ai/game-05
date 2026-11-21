@@ -1,0 +1,51 @@
+{
+ "_about": "Orc Camp still LOCKED: pyramid boss beaten but the War Drums quest is not met (best card Lv15, one card Lv9 under the all-Lv10 step). `scenario.gd -- --fixture orc_zone_locked --open map_orc`.",
+ "card_deck": {
+  "cards": {
+   "sword_shield": {
+    "race": "human",
+    "progress": {
+     "level": 15,
+     "xp": 0
+    }
+   },
+   "greatsword": {
+    "race": "viking",
+    "progress": {
+     "level": 10,
+     "xp": 0
+    }
+   },
+   "longbow": {
+    "race": "elf",
+    "progress": {
+     "level": 10,
+     "xp": 0
+    }
+   },
+   "magic": {
+    "race": "runeborn",
+    "progress": {
+     "level": 9,
+     "xp": 0
+    }
+   }
+  },
+  "squad": [
+   "sword_shield",
+   "greatsword",
+   "longbow"
+  ]
+ },
+ "tutorial": {
+  "version": 1,
+  "step": "done",
+  "tour_done": true,
+  "unlock_seen": true
+ },
+ "unlocks": {
+  "magic_runeborn": true,
+  "boss_goblin_base": true,
+  "boss_pyramid": true
+ }
+}

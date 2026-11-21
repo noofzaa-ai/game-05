@@ -1,7 +1,7 @@
 extends RefCounted
 ## The Orc Camp night board (level-designer 2026-11-20, tools/maps/build_orc_camp.gd): the goblin courtyard's board (same
 ## bounds, spawns, no cover) on a floating island at night, three merged meshes, at most 4 real lights, fake torch glow,
-## embers, phone-light budgets, the night look in the client. Not wired to a journey or zones.json yet (no orc family).
+## embers, phone-light budgets, the night look in the client. Wired 2026-11-21: the orc_waves journey (tests/test_orc_zone.gd).
 
 const MapLoader := preload("res://logic/map_loader.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
@@ -42,18 +42,19 @@ func run(ctx) -> void:
 	tests._check_layout(ctx, map)
 	tests._check_camera_8_layout(ctx, map)
 	tests._check_monsters_reach_player(ctx, map, combat)
-	ctx.check("not wired yet: no journey names %s and zones.json is untouched" % ID, not _journeys_naming(ID) and not FileAccess.get_file_as_string("res://data/world/zones.json").contains(ID))
+	ctx.check("wired: orc_waves is the only journey naming %s" % ID, _journeys_naming(ID) == ["orc_waves.json"])
 	_check_scene(ctx, map)
 	_check_island(ctx, map)
 	_check_client(ctx, map)
 	_check_pack(ctx)
 
 
-static func _journeys_naming(id: String) -> bool:
+static func _journeys_naming(id: String) -> Array:
+	var out: Array = []
 	for file in DirAccess.get_files_at("res://data/journeys"):
 		if file.ends_with(".json") and FileAccess.get_file_as_string("res://data/journeys/" + file).contains(id):
-			return true
-	return false
+			out.append(file)
+	return out
 
 
 func _check_scene(ctx, map) -> void:
