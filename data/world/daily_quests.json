@@ -1,0 +1,16 @@
+{
+ "_comment": "Daily quests (Boss 2026-11-21: the Quests panel has a DAILY page). PO defaults, PLACEHOLDERS the Boss can change here without code. The day turns over at reset_hour_utc (17 = 00:00 Bangkok time) on the SERVER clock (the same unix time every server command already gets as state.now); progress and claims of an older day count as 0. Counters are recorded only by the authority at a run's end (logic/journey.gd pay_card_xp): stat fights = runs finished (won, lost or retreated), waves = waves cleared (the boss wave counts on a win), bosses = runs won (the zone boss beaten). reward = gold paid into the stash by the daily_claim command, once per quest per day.",
+ "version": 1,
+ "reset_hour_utc": 17,
+ "quests": [
+  {"id": "daily_fights", "stat": "fights", "target": 3, "reward": {"gold": 300},
+   "name_th": "ออกรบ 3 ครั้ง", "name_en": "Fight 3 battles",
+   "desc_th": "จบการต่อสู้ครบ {cur}/{target} ครั้ง (ชนะหรือแพ้ก็ได้)", "desc_en": "Finish battles: {cur}/{target} (win or lose)"},
+  {"id": "daily_waves", "stat": "waves", "target": 15, "reward": {"gold": 300},
+   "name_th": "ฝ่าคลื่นศัตรู", "name_en": "Wave Breaker",
+   "desc_th": "ผ่านคลื่นศัตรู {cur}/{target} คลื่น", "desc_en": "Clear enemy waves: {cur}/{target}"},
+  {"id": "daily_boss", "stat": "bosses", "target": 1, "reward": {"gold": 500},
+   "name_th": "ล่าบอสประจำวัน", "name_en": "Daily Boss Hunt",
+   "desc_th": "โค่นบอสโซนใดก็ได้ {cur}/{target} ครั้ง", "desc_en": "Defeat any zone boss: {cur}/{target}"}
+ ]
+}

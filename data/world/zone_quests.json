@@ -1,5 +1,5 @@
 {
- "_comment": "Zone unlock quests (Boss 2026-11-17: 'a quest that unlocks the mummy map: character level 15'). Key = zone id from zones.json. A zone with an entry opens only when EVERY step is met (plus the old rule: the zone before it has its boss beaten). Step types: boss_beaten {zone} and card_level {min, count: how many cards must be at least that level}. Text placeholders: {cur} {target}. All numbers and texts are PLACEHOLDERS the Boss can change here without code. To add the next zone's quest, add another key.",
+ "_comment": "Zone unlock quests (Boss 2026-11-17: 'a quest that unlocks the mummy map: character level 15'). Key = zone id from zones.json. A zone with an entry opens only when EVERY step is met (plus the old rule: the zone before it has its boss beaten). Step types: boss_beaten {zone}, card_level {min, count: how many cards must be at least that level} and card_level_all {min: EVERY card the player owns must be at least that level; 0 cards = not met}. Main quest chain (Boss 2026-11-21): these quests in map order are the MAIN quests of the Quests panel; quest N shows locked until quest N-1 is done. Text placeholders: {cur} {target}. All numbers and texts are PLACEHOLDERS the Boss can change here without code. To add the next zone's quest, add another key.",
  "version": 1,
  "quests": {
   "pyramid": {
@@ -9,6 +9,16 @@
    "steps": [
     {"type": "boss_beaten", "zone": "goblin_base", "text_th": "ล้มหัวหน้าก็อบลิน", "text_en": "Defeat the Goblin Chief"},
     {"type": "card_level", "min": 15, "count": 1, "text_th": "การ์ดเลเวล {target}: เลเวลสูงสุดตอนนี้ Lv {cur}/{target}", "text_en": "Reach card level {target}: best card Lv {cur}/{target}"}
+   ]
+  },
+  "orc_camp": {
+   "id": "quest_orc_camp",
+   "name_th": "กลองศึกแห่งค่ายออร์ค", "name_en": "War Drums",
+   "desc_th": "แม่ทัพออร์คกำลังรวมพล ทั้งทัพต้องแกร่ง และต้องมีหัวหอกที่แกร่งที่สุด", "desc_en": "The Orc Warlord is gathering his horde. Your whole squad must be strong, with one champion to lead.",
+   "steps": [
+    {"type": "boss_beaten", "zone": "pyramid", "text_th": "ล้มจอมเวทฟาโรห์", "text_en": "Defeat the Mummy High Wizard"},
+    {"type": "card_level_all", "min": 10, "text_th": "การ์ดทุกใบเลเวล 10: ถึงแล้ว {cur}/{target} ใบ", "text_en": "Every card level 10: {cur}/{target} cards"},
+    {"type": "card_level", "min": 20, "count": 1, "text_th": "การ์ดเลเวล {target} หนึ่งใบ: เลเวลสูงสุดตอนนี้ Lv {cur}/{target}", "text_en": "One card at level {target}: best card Lv {cur}/{target}"}
    ]
   }
  }

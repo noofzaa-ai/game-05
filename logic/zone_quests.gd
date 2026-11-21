@@ -2,10 +2,16 @@ extends RefCounted
 ## Zone unlock quests (Boss 2026-11-17; data/world/zone_quests.json). A zone with a quest opens only when every
 ## step is met. Pure rules over the profile (`unlocks` boss flags, `card_deck` card levels): no nodes, no client.
 ## The unlock is derived, never stored, so there is nothing to migrate. Used by logic/world_zones.gd state().
+## Main quest chain (Boss 2026-11-21): the zone quests in map order ARE the main quests; quest N is LOCKED (shown,
+## not active) until quest N-1 is met. Step type card_level_all {min}: EVERY card the player owns is at least `min`
+## (0 cards = never met).
 
 const PATH := "res://data/world/zone_quests.json"
 const CardProgress := preload("res://logic/card_progress.gd")
-const STEP_TYPES := ["boss_beaten", "card_level"]
+const STEP_TYPES := ["boss_beaten", "card_level", "card_level_all"]
+const MAIN_DONE := "done"
+const MAIN_ACTIVE := "active"
+const MAIN_LOCKED := "locked"
 
 static var _cache = null
 
@@ -67,6 +73,15 @@ static func progress(profile, zone_id: String) -> Array:
 					if int(l) >= minimum:
 						reached += 1
 				cur = mini(reached, count)
+		elif type == "card_level_all":
+			var minimum := int(s.get("min", 1))
+			var levels := _best_levels(profile)
+			target = levels.size()
+			for l in levels:
+				if int(l) >= minimum:
+					cur += 1
+			if target == 0:
+				target = 1  # no cards: 0/1, never met (fail closed)
 		else:
 			target = 1  # unknown type: never met (fail closed)
 		out.append({"type": type, "current": cur, "target": target, "done": type in STEP_TYPES and cur >= target,
@@ -80,6 +95,42 @@ static func met(profile, zone_id: String) -> bool:
 		if not step["done"]:
 			return false
 	return true
+
+
+## The main quest chain: the zones with a quest, in map order.
+static func chain() -> Array:
+	var out: Array = []
+	for z in load("res://logic/world_zones.gd").zones():  # (load, not preload: world_zones preloads this file)
+		if has_quest(str(z.get("id", ""))):
+			out.append(str(z.get("id", "")))
+	return out
+
+
+## MAIN_DONE (every step met), MAIN_ACTIVE (the first quest of the chain not met yet) or MAIN_LOCKED (a quest before
+## it is not done: shown, not active).
+static func main_state(profile, zone_id: String) -> String:
+	for id in chain():
+		if met(profile, id):
+			if id == zone_id:
+				return MAIN_DONE
+			continue
+		return MAIN_ACTIVE if id == zone_id else MAIN_LOCKED
+	return MAIN_DONE if has_quest(zone_id) else MAIN_LOCKED
+
+
+## The zone of the active main quest ("" when every main quest is done).
+static func active_main(profile) -> String:
+	for id in chain():
+		if not met(profile, id):
+			return id
+	return ""
+
+
+## The main quest before `zone_id` in the chain ("" for the first).
+static func previous_main(zone_id: String) -> String:
+	var list := chain()
+	var at := list.find(zone_id)
+	return str(list[at - 1]) if at > 0 else ""
 
 
 ## Data check (tests): zones exist, steps are known types with sane numbers and both-language texts.
@@ -106,6 +157,6 @@ static func problems(zone_ids: Array) -> Array:
 				out.append("%s step %s missing text" % [zone_id, type])
 			if type == "boss_beaten" and not zone_ids.has(str(s.get("zone", ""))):
 				out.append("%s boss_beaten of unknown zone" % zone_id)
-			if type == "card_level" and (int(s.get("min", 0)) < 1 or int(s.get("min", 0)) > CardProgress.max_level() or int(s.get("count", 1)) < 1):
+			if type in ["card_level", "card_level_all"] and (int(s.get("min", 0)) < 1 or int(s.get("min", 0)) > CardProgress.max_level() or int(s.get("count", 1)) < 1):
 				out.append("%s card_level out of range" % zone_id)
 	return out

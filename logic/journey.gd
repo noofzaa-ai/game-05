@@ -480,6 +480,10 @@ static func _card_of(trip) -> String:
 ## Run end (GDD skill-tree 3.7): every card that started the run gets the same XP, downed or not. Paid ONCE
 ## (card_xp_paid is saved with the journey), so a repeated end never pays twice. Lost, retreated and abandoned
 ## runs pay for the waves already cleared.
+## Test clock for the daily quest counters (0 = the server clock). Not saved.
+var daily_now := 0
+
+
 func pay_card_xp() -> void:
 	if card_xp_paid or not is_over():
 		return
@@ -487,6 +491,12 @@ func pay_card_xp() -> void:
 	if state == WON:
 		pay_boss_loot()
 	var amount := CardProgress.run_xp(xp_waves_cleared(), state == WON, state == WON)
+	# Daily quests (Boss 2026-11-21): one finished fight per account, its cleared waves, a boss when won (server clock).
+	var counted: Array = []
+	for entry in xp_cards():
+		if not counted.any(func(c): return is_same(c, entry[0])):
+			counted.append(entry[0])
+			preload("res://logic/daily_quests.gd").record_run(entry[0], daily_now if daily_now > 0 else int(Time.get_unix_time_from_system()), cleared_wave(), state == WON)
 	for entry in xp_cards():
 		# design/gdd/tutorial.md 2: the first goblin_waves run that clears wave 12 unlocks Magic + Runeborn (authority only).
 		Unlocks.on_battle_result(entry[0], str(data.id), cleared_wave())

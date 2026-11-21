@@ -31,7 +31,11 @@ func run(ctx) -> void:
 	p.unlocks["boss_goblin_base"] = true
 	ctx.check("half done: still tracked", Tracker.tracked_zone(p) == "pyramid")
 	_levels(p, 15)
-	ctx.check("quest done (zone OPEN): hidden", Zones.state(p, "pyramid") == Zones.OPEN and Tracker.tracked_zone(p) == "")
+	ctx.check("quest done (zone OPEN): the next main quest (orc camp) is tracked", Zones.state(p, "pyramid") == Zones.OPEN and Tracker.tracked_zone(p) == "orc_camp")
+	p.unlocks["boss_pyramid"] = true
+	_levels(p, 20)
+	ctx.check("every main quest done: hidden", Tracker.tracked_zone(p) == "")
+	p.unlocks.erase("boss_pyramid")
 	# --- content th / en from the data
 	_levels(p, 7)
 	var q := ZoneQuests.quest("pyramid")
@@ -89,10 +93,10 @@ func run(ctx) -> void:
 		_levels(p, 9)
 		hub.show_deck(deck, null)
 		ctx.check("%s: level-up updates the line" % sz, "Lv 9/15" in str(t._lines[1].text))
-		# quest done: the next sync hides it
+		# quest done: the next sync moves on to the next main quest (orc camp: 3 steps)
 		_levels(p, 15)
 		hub.show_deck(deck, null)
-		ctx.check("%s: quest done hides the tracker" % sz, not t.visible)
+		ctx.check("%s: quest done moves the tracker to the orc camp quest" % sz, t.visible and t.zone_id == "orc_camp" and "10" in str(t._lines[1].text))
 		_levels(p, 7)
 		hub.show_deck(deck, null)
 		ctx.check("%s: back to pending shows it again" % sz, t.visible)

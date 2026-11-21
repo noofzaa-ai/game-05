@@ -92,6 +92,7 @@ func run(ctx) -> void:
 		map.close()
 		root.queue_free()
 		await tree.process_frame
+	await _pages(ctx, tree, f, p)
 	# tutorial: still the "coming soon" panel
 	GameState.profile = Profile.new_player(f.rules, f.camp, F.rng(12))
 	var root2 := Control.new()
@@ -125,3 +126,50 @@ func run(ctx) -> void:
 	await tree.process_frame
 	GameState.profile = saved
 	CardTokens.language = lang
+
+
+## Boss 2026-11-21: Main / Daily pages. Main = the chain (orc camp locked until the pyramid quest is done); Daily =
+## progress, reward and a Claim that sends daily_claim (here through the real Commands.apply) and redraws.
+func _pages(ctx, tree: SceneTree, f, p) -> void:
+	var Daily = load("res://logic/daily_quests.gd")
+	var Commands = load("res://logic/commands.gd")
+	var now := 1795262400
+	_levels(p, 5)
+	p.daily = {}
+	Daily.record_run(p, now, 9, true)
+	for sz in [Vector2(1280, 720), Vector2(1558, 720)]:
+		var root := Control.new()
+		root.size = sz
+		tree.root.add_child(root)
+		var panel = QuestsPanel.new()
+		panel.now_override = now
+		panel.send = func(req: Dictionary) -> Dictionary: return Commands.apply({"now": now, "profile": p, "rules": f.rules, "camp": f.camp, "location": "camp"}, req, F.rng(2))
+		root.add_child(panel)
+		panel.size = sz
+		panel.open()
+		await tree.process_frame
+		var orc: Control = panel.row_of("orc_camp")
+		ctx.check("%s: main page lists the orc camp quest as locked after the pyramid one" % sz, orc != null and orc.visible and "Locked" in _texts(orc) and "Into the Sand" in _texts(orc) and panel.row_of("pyramid").position.y < orc.position.y)
+		ctx.check("%s: tabs are tap-sized and inside the body" % sz, panel._tabs.size() == 2 and panel._tabs[0].size.y >= CardTokens.SVC_ROW_H * panel.s - 0.5 and Rect2(Vector2.ZERO, panel.body.size).encloses(panel._tabs[1].get_rect()))
+		panel._tabs[1].pressed.emit()
+		await tree.process_frame
+		ctx.check("%s: the Daily tab shows the daily list, hides the main list" % sz, panel.page == "daily" and panel._daily_scroll.visible and not panel._scroll.visible and panel._reset.visible and "Resets in" in panel._reset.text)
+		var boss: Control = panel.daily_row_of("daily_boss")
+		var fights: Control = panel.daily_row_of("daily_fights")
+		var claim: Button = boss.get_node("Claim")
+		ctx.check("%s: boss daily done -> Claim enabled; fights 1/3 -> Not done" % sz, not claim.disabled and claim.text == "Claim" and fights.get_node("Claim").disabled and "1/3" in _texts(fights))
+		var inside := true
+		for row in [boss, fights]:
+			for c in row.get_children():
+				if c is Control and c.visible and not Rect2(Vector2.ZERO, row.size).grow(1.0).encloses(Rect2(c.position, c.size)):
+					inside = false
+		ctx.check("%s: daily lines and button inside their rows" % sz, inside)
+		var gold: int = p.stash.gold
+		claim.pressed.emit()
+		await tree.process_frame
+		await tree.process_frame
+		ctx.check("%s: Claim pays the gold and the button turns to Claimed" % sz, p.stash.gold == gold + 500 and claim.disabled and claim.text == "Claimed")
+		p.daily = {}
+		Daily.record_run(p, now, 9, true)
+		root.queue_free()
+		await tree.process_frame

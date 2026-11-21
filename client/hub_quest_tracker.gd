@@ -11,6 +11,7 @@ const CarvedLook := preload("res://client/carved_look.gd")
 const Zones := preload("res://logic/world_zones.gd")
 const ZoneQuests := preload("res://logic/zone_quests.gd")
 const Tutorial := preload("res://logic/tutorial.gd")
+const DailyQuests := preload("res://logic/daily_quests.gd")
 
 var zone_id := ""  ## the zone whose quest is shown ("" = hidden)
 var steps: Array = []  ## ZoneQuests.progress() of that zone
@@ -23,17 +24,13 @@ var _lines: Array[Label] = []
 var _chevron: TextureRect
 
 
-## The zone whose quest the hub tracks: the first zone in map order that has a quest and is LOCKED (not open yet,
-## not "coming soon"). "" when there is none, or while the new-player tutorial is still running (it has its own
-## spotlight steps; the tracker would only clutter them).
+## The zone whose quest the hub tracks: the ACTIVE main quest (Boss 2026-11-21: the zone quests are a chain, the first
+## one not done yet; logic/zone_quests.gd active_main). "" when every main quest is done, or while the new-player
+## tutorial is still running (it has its own spotlight steps; the tracker would only clutter them).
 static func tracked_zone(profile) -> String:
 	if not tutorial_done(profile):
 		return ""
-	for z in Zones.zones():
-		var id := str(z.get("id", ""))
-		if ZoneQuests.has_quest(id) and Zones.state(profile, id) == Zones.LOCKED:
-			return id
-	return ""
+	return ZoneQuests.active_main(profile)
 
 
 ## True once the new-player tutorial is over (a profile without a tutorial block counts as done). The tracker and the
@@ -53,8 +50,9 @@ static func quest_zones() -> Array:
 	return out
 
 
-## The text lines for `zone`: [title, step lines...] in the current language.
-static func lines_for(profile, zone: String) -> Array:
+## The text lines for `zone`: [title, step lines...] in the current language, plus a last "Daily: N reward ready" line
+## when a daily quest waits to be claimed (`now` = the display clock, 0 = this machine's).
+static func lines_for(profile, zone: String, now: int = 0) -> Array:
 	if zone.is_empty():
 		return []
 	var th := CardTokens.language == "th"
@@ -63,6 +61,9 @@ static func lines_for(profile, zone: String) -> Array:
 	var out: Array = [CardTokens.t("quest_track_title") % [str(q.get("name_th" if th else "name_en", "")), str(z.get("name_th" if th else "name_en", zone))]]
 	for step in ZoneQuests.progress(profile, zone):
 		out.append(CardTokens.t("quest_mark_done" if step.done else "quest_mark_todo") + str(step.get("text_th" if th else "text_en", "")))
+	var ready := DailyQuests.claimable(profile, now if now > 0 else int(Time.get_unix_time_from_system()))
+	if ready > 0:
+		out.append(CardTokens.t("daily_ready_hint") % ready)
 	return out
 
 
@@ -138,11 +139,31 @@ func _place() -> void:
 	_chevron.position = Vector2(size.x - pad * 0.5 - _chevron.size.x, (size.y - chev) * 0.5)
 	var left := pad * 0.8
 	var w := maxf(_chevron.position.x - pad * 0.3 - left, 1.0)
-	var labels := _shown_labels()
-	var row_h := (size.y - pad * 0.8) / float(labels.size())
 	# (a headless or tiny window reports a silly screen_k: the floor never asks for more than twice the token size)
 	var base := int(maxf(roundf(CardTokens.FONT_HUB_QUEST_LINE * s), 8.0))
 	var floor_px := int(clampf(ceilf(CardTokens.HUB_QUEST_SCREEN_MIN / screen_k), CardTokens.FONT_MIN, maxf(base * 2.0, CardTokens.FONT_MIN)))
+	# Too many rows for the height at the floor size (a phone, a 3-step quest + the daily hint): drop the daily hint
+	# first, then done steps, then the last steps (the full list is on the Quests panel).
+	for l in _lines:
+		l.visible = not l.text.is_empty()
+	var font: Font = CardTokens.medium_font()
+	while font != null and _shown_labels().size() > 2 and font.get_height(floor_px) > (size.y - pad * 0.8) / float(_shown_labels().size()) * 1.05:
+		var drop: Label = null
+		for i in _lines.size():
+			if _lines[i].visible and i >= steps.size():
+				drop = _lines[i]  # the daily hint
+		if drop == null:
+			for i in mini(steps.size(), _lines.size()):
+				if _lines[i].visible and bool(steps[i].done):
+					drop = _lines[i]
+					break
+		if drop == null:
+			for l in _lines:
+				if l.visible:
+					drop = l
+		drop.visible = false
+	var labels := _shown_labels()
+	var row_h := (size.y - pad * 0.8) / float(labels.size())
 	var px := maxi(base, floor_px)  # never under FONT_MIN canvas px, nor HUB_QUEST_SCREEN_MIN window px
 	while px > floor_px and not _fits(labels, px, w, row_h):
 		px -= 1
@@ -151,7 +172,8 @@ func _place() -> void:
 	for i in labels.size():
 		var l: Label = labels[i]
 		var face := "medium"  # (the serif display face is 1.8x its size tall: three rows would not fit a phone)
-		var done: bool = i > 0 and i - 1 < steps.size() and bool(steps[i - 1].done)
+		var k := _lines.find(l)  # (rows may be dropped: map the label back to its step)
+		var done: bool = k >= 0 and (k >= steps.size() or bool(steps[k].done))  # (the daily hint line is green too)
 		CardTokens.hub_text(l, px, CardTokens.HUB_GOOD if done else CardTokens.HUB_INK, 1.0, 0, face)  # (px is already canvas px)
 		l.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		var lx := left + (icon_w + pad * 0.2 if l == _title else 0.0)

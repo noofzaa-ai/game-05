@@ -34,6 +34,8 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 		"card_race": {"class": TYPE_STRING, "race": TYPE_STRING},  # design/gdd/races-and-classes.md 3.7: free switch (Boss 2026-11-13)
 		# New-player tutorial (design/gdd/tutorial.md 2-3, logic/tutorial.gd): confirm the next step; replay the menu tour.
 		"tutorial_step": {"step": TYPE_STRING}, "tutorial_replay": {},
+		# Daily quests (Boss 2026-11-21, logic/daily_quests.gd): claim a done quest's gold once per server day.
+		"daily_claim": {"quest": TYPE_STRING},
 		# Card skill tree (design/gdd/skill-tree.md 3.3, logic/skill_tree.gd): learn one node, confirm a whole draft, reset a branch.
 		"tree_learn": {"card": TYPE_STRING, "node": TYPE_STRING}, "tree_save": {"card": TYPE_STRING, "draft": TYPE_DICTIONARY},
 		"tree_reset_class": {"card": TYPE_STRING}, "tree_reset_race": {"card": TYPE_STRING},
@@ -244,6 +246,7 @@ static func apply(state: Dictionary, command: Dictionary, _rng: RandomNumberGene
 				"shop_buy": result = preload("res://logic/shop.gd").buy(p, state["rules"], state["camp"], command.sku, _rng)
 				"relic_socket": result = BossLoot.socket(p, state["rules"], item, command.relic)
 				"relic_unsocket": result = BossLoot.unsocket(p, item)
+				"daily_claim": result = preload("res://logic/daily_quests.gd").claim(p, command.quest, int(state.get("now", 0)))
 				"tier_up": result = preload("res://logic/tier_up.gd").apply(p, state["rules"], item, card)
 				"refine": result = preload("res://logic/refine.gd").apply(item, p, state["rules"], state["camp"], int(command.level), _rng)
 				"repair": result = Repair.repair(item, p, state["camp"])

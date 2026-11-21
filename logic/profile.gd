@@ -71,6 +71,9 @@ var card_deck: Dictionary = preload("res://logic/card_deck.gd").initial(preload(
 var tutorial: Dictionary = done_tutorial()
 ## Content gates {flag: bool} (logic/unlocks.gd). Set only by the server's battle-result hook.
 var unlocks: Dictionary = {"magic_runeborn": true}
+## Daily quests of the current server day {"day", "counts", "claimed"} (logic/daily_quests.gd). Changed only at a run's end
+## on the authority and by the daily_claim command; an older day reads as empty.
+var daily: Dictionary = {}
 var name := ""  ## the character's name, set when the player creates the character
 var created := false  ## false until the player has made the character (the game opens the creator first)
 
@@ -464,12 +467,15 @@ func to_dict() -> Dictionary:
 		saved_gear[card] = {"loadout": card_gear[card]["loadout"].to_dict()}
 	# "loadout" below is the lead card's copy, kept for readers that still need it
 	# (server runner/rooms, plaza, admin); plan step 7 removes them. from_dict reads only "card_gear".
-	return {"card_gear": saved_gear,
+	var out := {"card_gear": saved_gear,
 		"v": 1, "stash": stash.to_dict(), "vault": vault.to_dict(), "loadout": loadout.to_dict(),
 		"diamonds": diamonds, "mall_owned": mall_owned.duplicate(), "farm": farm.duplicate(true), "camp_level": camp_level, "facility_levels": facility_levels.duplicate(),
 		"appearance": saved_appearance, "name": name, "created": created,
 		"armor_migration_version": armor_migration_version, "legacy_item_version": legacy_item_version, "starter_armor_kit_version": starter_armor_kit_version, "starter_weapon_kit_version": starter_weapon_kit_version, "starter_shield_kit_version": starter_shield_kit_version, "starter_kit_version": starter_kit_version, "beta_kit_version": beta_kit_version, "tree_migration_version": tree_migration_version, "bonus_stash_slots": bonus_stash_slots, "migrations": migrations.duplicate(true), "migrations_log": migrations_log.duplicate(true),
 		"card_deck": card_deck.duplicate(true), "tutorial": tutorial.duplicate(true), "unlocks": unlocks.duplicate(true)}
+	if not daily.is_empty():  # (daily quests: only once a run or claim wrote it, so older saves round-trip unchanged)
+		out["daily"] = daily.duplicate(true)
+	return out
 
 
 ## The tutorial block of an account that finished (or predates) the tutorial.
@@ -530,6 +536,7 @@ static func from_dict(d: Dictionary, item_rules: ItemRules, camp: CampData):
 	else:
 		p.tutorial = done_tutorial()
 		p.unlocks = {preload("res://logic/unlocks.gd").flag(): true}
+	p.daily = preload("res://logic/daily_quests.gd").sanitized(d.get("daily"))
 	p.card_deck = preload("res://logic/card_deck.gd").repaired(d.get("card_deck"), preload("res://logic/cosmetic_options.gd").load_default())  # old saves get the starter cards
 	var old_builds := {}  ## card -> the save's old skill_build (dropped after the level migration below)
 	if d.has("card_gear"):

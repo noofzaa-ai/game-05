@@ -777,6 +777,24 @@ const STRINGS := {
 	"quest_opens": ["เปิดโซน: %s", "Opens: %s"],
 	"quest_none": ["ยังไม่มีเควสต์ตอนนี้", "No quests right now"],
 	"quest_list_hint": ["แตะเควสต์เพื่อดูโซนบนแผนที่โลก", "Tap a quest to see its zone on the world map"],
+	# Quests panel pages (Boss 2026-11-21): MAIN (the zone quest chain) and DAILY
+	"quest_tab_main": ["เควสต์หลัก", "Main"],
+	"quest_tab_daily": ["ประจำวัน", "Daily"],
+	"quest_state_locked": ["ล็อกอยู่", "Locked"],
+	"quest_locked_after": ["ทำเควสต์ \"%s\" ให้เสร็จก่อน", "Finish \"%s\" first"],
+	"quest_main_step": ["เควสต์หลัก %d", "Main quest %d"],
+	"daily_reset_in": ["รีเซ็ตในอีก %d ชม. %d นาที", "Resets in %dh %dm"],
+	"daily_reward": ["รางวัล: ทอง %d", "Reward: %d gold"],
+	"daily_claim": ["รับรางวัล", "Claim"],
+	"daily_claimed": ["รับแล้ว", "Claimed"],
+	"daily_not_done": ["ยังไม่ครบ", "Not done"],
+	"daily_got": ["ได้รับทอง %d", "Got %d gold"],
+	"daily_ready_hint": ["ภารกิจประจำวัน: รับรางวัลได้ %d", "Daily: %d reward ready"],
+	"daily_none": ["ยังไม่มีภารกิจประจำวัน", "No daily quests right now"],
+	"err_already_claimed": ["รับรางวัลนี้ไปแล้ววันนี้", "Already claimed today"],
+	"err_quest_not_done": ["ภารกิจยังไม่ครบ", "This quest is not done yet"],
+	"err_unknown_quest": ["ไม่พบภารกิจนี้", "Unknown quest"],
+	"err_clock_unavailable": ["เวลาเซิร์ฟเวอร์ไม่พร้อม", "Server clock unavailable"],
 	"svc_locked_line": ["ทำเควสต์ 3 เพื่อปลดล็อก", "Quest 3 to unlock"],
 	"soon_body": ["ส่วนนี้ยังไม่เปิด", "This service is not open yet."],
 	"close": ["ปิด", "Close"],
@@ -1358,6 +1376,11 @@ static func hub_box(fill: Color, edge: Color, line: float, radius: float, s: flo
 
 
 ## The words of an error reason from logic/commands.gd ("err_<reason>"), or the generic line.
+## A disabled button whose word must stay readable on the dark idle plate (Quests Daily "Not done" / "Claimed").
+static func readable_disabled(button: Button, color: Color = HUB_INK) -> void:
+	button.add_theme_color_override("font_disabled_color", color)
+
+
 static func error_text(reason: String) -> String:
 	return t("err_" + reason) if STRINGS.has("err_" + reason) or STRINGS_RACE.has("err_" + reason) else t("err_unknown")
 
