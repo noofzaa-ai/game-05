@@ -57,9 +57,10 @@ SKIRT = {"part_16", "part_19"}
 SKIRT_TOP, SKIRT_DEPTH, SKIRT_MAX, SKIRT_SPLIT = 0.40, 0.26, 0.35, 0.12
 # Boss 2026-11-21: the source robe is purple-magenta (albedo hue 280-350; the game's toon light makes it read pink). The robe and
 # hood are repainted warm earth BROWN in the albedo (only inside these parts' UV islands and only purple pixels: green skin, bone
-# horns, belt and the pauldrons stay as they are; the light rune trim becomes bronze), and the face in the hood is lifted so it
+# horns and belt stay as they are; the light rune trim becomes bronze), and the face in the hood is lifted so it
 # reads at phone size. Written as <out dir>/albedo_brown.png, which build_mummy_family.gd uses.
-KEEP_PARTS = ["part_3", "part_0"]  # the spiked pauldrons keep their purple
+# Boss 2026-11-21 (later): the spiked pauldrons go brown too (no purple left), so no part is kept.
+KEEP_PARTS = []  # was ["part_3", "part_0"] (the spiked pauldrons)
 FACE_PARTS = ["part_17"]
 RIGID = {
     "part_17": "head",       # the face in the hood
@@ -184,7 +185,7 @@ sat = np.where(mx > 1e-5, (mx - mn) / np.maximum(mx, 1e-5), 0.0)
 r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
 hue = np.degrees(np.arctan2(np.sqrt(3.0) * (g - b), 2.0 * r - g - b)) % 360.0
 purple = ((hue >= 245.0) | (hue < 5.0)) & (sat > 0.12) & (b > g)
-# every purple pixel except the spiked pauldrons' islands (kept as they are): the robe/hood islands alone missed seams and
+# every purple pixel except the KEEP_PARTS islands (none since the pauldrons went brown): the robe/hood islands alone missed seams and
 # small islands the decimated mesh still samples (purple patches remained on the hood)
 keep = uv_mask(KEEP_PARTS, W)
 robe = purple & ~keep
