@@ -52,5 +52,5 @@ Rebuild: `squeeze_fbx.py <fbx> build/orc_warlock 3350` -> `rig_warlock_fbx.py bu
 - MOCKUP weapons: plain shapes on purpose.
 - The coat is one shell: on the widest stride and the block's low stance the skirt stretches between the legs; at the cataclysm's spin the hood and coat move as a stiff block.
 - The face reads dark inside the hood at phone size (the source texture is dark there).
-- VFX: no own bundles yet (Boss). Strikes use the violence presets (boss / skill / aura) in purple; the Bulwark plays the player's Iron Guard aura at 1.8x.
+- VFX (tech-artist 2026-11-21, Boss: own spectacular L3 effects): four daiyooo bundles in `art/vfx/monster/orc_warlock/` (cleave ember arc, skyfall meteor from the sky, cataclysm cracks + debris, bulwark ember aura + shield bash), ember orange / fire with a purple accent, wired in `data/combat/monster_vfx.json`; violence looks retinted ember in `data/combat/vfx.json`. Shots: `tools/shots/warlock_vfx_shots.gd`. The cleave reads smallest of the four at phone size.
 - Numbers are placeholders until `orc_waves.json` exists and the combat-designer runs `class_sim`.

@@ -1,8 +1,9 @@
 extends Node3D
 ## Baked daiyooo-vfx effects for monster moves (combat-designer 2026-11-18: the Mummy High Wizard's curse circle,
 ## starfall, sandstorm, golden bolt and the summoning circles its escorts rise from). Data: res://data/combat/monster_vfx.json,
-## assets: res://art/vfx/monster/<vfx>/effect.tscn. Plays from the sim's events (area_placed, attack_started, projectile_fired,
-## wave_arrived); display only, nothing here changes the fight. Instances are pooled per effect, built and drawn once
+## assets: res://art/vfx/monster/<vfx>/effect.tscn. Plays from the sim's events (area_placed, attack_started, attack_active =
+## the blow lands, projectile_fired, wave_arrived; ahead = metres along the attacker's facing, face = turned along it);
+## display only, nothing here changes the fight. Instances are pooled per effect, built and drawn once
 ## under the floor while the stage loads (no shader cache on the web), and slimmed like the class skill effects
 ## (client/skills/class_skill_vfx.gd slim_animation: only the live flipbook phase of each particle is drawn).
 
@@ -67,8 +68,9 @@ func vfx_for_types(types: Array, combat_data) -> Array:
 		for skill in enemy.get("ai", {}).get("skills", []):  # ai.skills moves are not style slots
 			move_ids.append(str(skill["move"]))
 		for move_id in move_ids:
-			if spec.has("attack_started/" + move_id):
-				keys[str(spec["attack_started/" + move_id]["vfx"])] = true
+			for event_name in ["attack_started/", "attack_active/"]:
+				if spec.has(event_name + move_id):
+					keys[str(spec[event_name + move_id]["vfx"])] = true
 			for entry in combat_data.moves.get(move_id, {}).get("spawns", []):
 				if entry.has("area") and spec.has("area_placed/" + str(entry["area"])):
 					keys[str(spec["area_placed/" + str(entry["area"])]["vfx"])] = true
@@ -108,11 +110,14 @@ func handle_events(events: Array) -> void:
 					var dir := Vector3(flat.x, 0.0, flat.y).normalized() if flat.length() > 0.001 else Vector3.RIGHT
 					var at: Vector3 = Vector3(event["pos"]) + dir * float(entry.get("forward", 0.0)) + Vector3.UP * float(entry.get("lift", 0.0))
 					_play(entry, at, float(entry.get("scale", 1.0)), -1, dir if bool(entry.get("face", false)) else Vector3.ZERO)
-			"attack_started":
-				var entry: Dictionary = spec.get("attack_started/" + str(event.get("move", "")), {})
+			"attack_started", "attack_active":
+				var entry: Dictionary = spec.get(str(event["type"]) + "/" + str(event.get("move", "")), {})
 				var player := int(event.get("player", -1))
 				if not entry.is_empty() and session != null and session.bodies.has(player):
-					_play(entry, _position_of(player), float(entry.get("scale", 1.0)), player if bool(entry.get("follow", false)) else -1)
+					var facing := _facing(player)
+					var at := _position_of(player) + facing * float(entry.get("ahead", 0.0))
+					var follow := player if bool(entry.get("follow", false)) else -1
+					_play(entry, at, float(entry.get("scale", 1.0)), follow, facing if bool(entry.get("face", false)) else Vector3.ZERO)
 			"wave_arrived":
 				_on_wave(event)
 
@@ -144,7 +149,8 @@ func _play(entry: Dictionary, at: Vector3, size: float, follow: int, dir: Vector
 	var seek := float(entry.get("seek", 0.0))
 	var speed := maxf(0.05, float(entry.get("speed", 1.0)))
 	_start(inst, vfx, seek, at, size, speed, dir)
-	_live.append({"node": inst, "vfx": vfx, "age": seek, "length": _clip_length(inst), "follow": follow, "speed": speed})
+	_live.append({"node": inst, "vfx": vfx, "age": seek, "length": _clip_length(inst), "follow": follow, "speed": speed,
+		"ahead": float(entry.get("ahead", 0.0))})
 
 
 func _process(delta: float) -> void:
@@ -156,7 +162,7 @@ func _process(delta: float) -> void:
 		var follow := int(fx["follow"])
 		if follow >= 0:
 			if session != null and session.bodies.has(follow):
-				node.global_position = _position_of(follow)
+				node.global_position = _position_of(follow) + _facing(follow) * float(fx.get("ahead", 0.0))
 			else:
 				done = true
 		if done:
@@ -167,6 +173,15 @@ func _process(delta: float) -> void:
 ## How many monster effects are playing now (tests, the performance overlay).
 func live_count() -> int:
 	return _live.size()
+
+
+## The fighter's facing on the floor (+X when it has none).
+func _facing(id: int) -> Vector3:
+	if session != null and session.fighters.has(id):
+		var d = session.fighters[id].get("direction")
+		if d is Vector2 and (d as Vector2).length() > 0.01:
+			return Vector3(d.x, 0.0, d.y).normalized()
+	return Vector3.RIGHT
 
 
 func _position_of(id: int) -> Vector3:

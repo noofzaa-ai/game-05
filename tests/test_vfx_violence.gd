@@ -13,7 +13,12 @@ const ViolentVfx := preload("res://client/vfx/violent_vfx.gd")
 const SkillData := preload("res://logic/class_skills/skill_data.gd")
 const SUPPORT := ["ult_aura", "aura"]  ## heal / shield / rally ults, buff / stance skills: the soft floating look
 const BOSS_MOVES := ["monster/hw_star", "monster/hw_curse", "monster/mummy_hw_sandstorm", "monster/hw_bolt", "monster/summon",
-	"monster/mummy_boss_nova", "monster/pharaoh_sand_crescent", "monster/mummy_knight_bash", "monster/mummy_curse"]
+	"monster/mummy_boss_nova", "monster/pharaoh_sand_crescent", "monster/mummy_knight_bash", "monster/mummy_curse",
+	"monster/orc_warlock_cleave", "monster/orc_warlock_skyfall", "monster/orc_warlock_cataclysm", "monster/orc_warlock_bulwark"]
+const MonsterVfx := preload("res://client/monster_vfx.gd")
+## The Orc Warlock's own daiyooo bundles (Boss 2026-11-21: spectacular, violent, ember / fire with a touch of purple).
+const WARLOCK_KEYS := {"attack_active/orc_warlock_cleave": "orc_warlock/cleave", "attack_started/orc_warlock_skyfall": "orc_warlock/skyfall",
+	"attack_active/orc_warlock_cataclysm": "orc_warlock/cataclysm", "attack_started/orc_warlock_bulwark": "orc_warlock/bulwark"}
 
 
 func run(ctx) -> void:
@@ -26,6 +31,7 @@ func run(ctx) -> void:
 	_check_switch(ctx, data)
 	await _check_play(ctx, lib)
 	_check_no_allocation(ctx)
+	_check_orc_warlock(ctx, lib, data)
 	Violence.override_level = ""
 	Violence.override_phone = -1
 	Violence.override_reduced = -1
@@ -246,6 +252,51 @@ func _check_play(ctx, lib) -> void:
 	effects.queue_free()
 
 
+## The Orc Warlock plays its own four bundles (not the player's Iron Guard, not purple player presets), warm ember colours
+## with a purple accent, the skyfall falls from the sky, the cataclysm draws cracks and debris but no flat ground ring, and
+## an attack_active bundle lands `ahead` along the boss's facing.
+func _check_orc_warlock(ctx, lib, data) -> void:
+	var spec := MonsterVfx.load_spec()
+	for key in WARLOCK_KEYS:
+		ctx.check("orc warlock %s plays its own bundle %s" % [key, WARLOCK_KEYS[key]], spec.has(key) and str(spec[key]["vfx"]) == WARLOCK_KEYS[key]
+			and MonsterVfx.scene_path(WARLOCK_KEYS[key]) != "")
+		var recipe: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://art/vfx/monster/%s/recipe.json" % WARLOCK_KEYS[key]))
+		var hues: Array = recipe["layers"].map(func(l): return Color.html(str(l["color"])))
+		ctx.check("%s: ember / fire orange with a touch of purple" % WARLOCK_KEYS[key],
+			hues.any(func(c: Color): return c.s > 0.5 and c.h > 0.03 and c.h < 0.12) and hues.any(func(c: Color): return c.s > 0.4 and c.h > 0.72 and c.h < 0.85))
+		if key.ends_with("skyfall"):
+			ctx.check("the skyfall's meteor falls from the sky", recipe["layers"].any(func(l): return str(l["motion"]) == "fall" and str(l["style"]) == "meteor"))
+		if key.ends_with("cataclysm"):
+			ctx.check("the cataclysm breaks the floor with cracks and debris, no flat ring", recipe["layers"].any(func(l): return str(l["style"]) == "combat_ground_crack")
+				and recipe["layers"].any(func(l): return str(l["type"]) == "debris") and recipe["layers"].all(func(l): return str(l["type"]) != "wave"))
+	ctx.check("no warlock effect borrows the player's Iron Guard any more", spec.values().all(func(e): return not str(e["vfx"]).contains("iron_guard")))
+	ctx.check("the cataclysm's swing draws no ground ring", lib.layers("swing/orc_warlock_cataclysm").all(func(l): return str(l.get("type")) != "ground"))
+	ctx.check("the bulwark's shield bash has its own hit burst", not lib.layers("hit/orc_warlock_bulwark").is_empty())
+	for key in ["monster/orc_warlock_cleave", "monster/orc_warlock_skyfall", "monster/orc_warlock_cataclysm", "monster/orc_warlock_bulwark"]:
+		var c := Color.html(str(data["skills"][key]["color"]))
+		ctx.check("%s violent look is ember orange (%s)" % [key, c.to_html(false)], c.h > 0.03 and c.h < 0.12 and c.s > 0.6)
+	var combat = load("res://logic/combat_data_loader.gd").load_default()
+	Violence.override_level = "current"  # (no violent child: this checks the bundle only)
+	var mv = MonsterVfx.new()
+	var bundles: Array = mv.vfx_for_types(["orc_warlock"], combat)
+	bundles.sort()
+	ctx.check("the warlock's fight prewarms its four bundles %s" % [bundles], bundles == ["orc_warlock/bulwark", "orc_warlock/cataclysm", "orc_warlock/cleave", "orc_warlock/skyfall"])
+	var session := _FakeSession.new()
+	session.fighters = {1: _FakeFighter.new()}
+	mv.session = session
+	ctx.root.add_child(mv)
+	mv.handle_events([{"type": "attack_active", "player": 1, "move": "orc_warlock_cleave"}])
+	ctx.check("the cleave's blow plays its bundle", mv.live_count() == 1)
+	if mv.live_count() == 1:
+		var node: Node3D = mv._live[0]["node"]
+		var want := Vector3(2.0, 0.0, 1.0) + Vector3(0.0, 0.0, 1.0) * float(spec["attack_active/orc_warlock_cleave"]["ahead"])
+		ctx.check("it lands ahead along the boss's facing and turned with it (%s)" % [node.global_position], node.global_position.is_equal_approx(want)
+			and (node.global_basis.z.normalized()).is_equal_approx(Vector3(0.0, 0.0, 1.0)))
+	mv.handle_events([{"type": "attack_started", "player": 1, "move": "orc_warlock_cleave"}])
+	ctx.check("the cleave's windup plays no bundle", mv.live_count() == 1)
+	mv.queue_free()
+
+
 ## The per-frame path (the flash clock) and the event scan allocate no objects.
 func _check_no_allocation(ctx) -> void:
 	var violent := ViolentVfx.new()
@@ -270,6 +321,11 @@ class _FakeSession:
 	extends RefCounted
 	var bodies := {1: _FakeBody.new(), 3: _FakeBody.new(), 4: _FakeBody.new()}
 	var fighters := {}
+
+
+class _FakeFighter:
+	extends RefCounted
+	var direction := Vector2(0.0, 1.0)
 
 
 class _FakeRig:

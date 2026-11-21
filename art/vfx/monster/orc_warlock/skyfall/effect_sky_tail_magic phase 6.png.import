@@ -1,0 +1,43 @@
+[remap]
+
+importer="texture"
+type="CompressedTexture2D"
+uid="uid://b7njgoyu2vbhy"
+path="res://.godot/imported/effect_sky_tail_magic phase 6.png-ad9e227482aa871e70c4c282585fe41d.ctex"
+metadata={
+"vram_texture": false
+}
+generator_parameters={
+"md5": "656d986553bd8e96ae309d0a7f98a985"
+}
+
+[deps]
+
+source_file="res://art/vfx/monster/orc_warlock/skyfall/effect_sky_tail_magic phase 6.png"
+dest_files=["res://.godot/imported/effect_sky_tail_magic phase 6.png-ad9e227482aa871e70c4c282585fe41d.ctex"]
+
+[params]
+
+compress/mode=0
+compress/high_quality=false
+compress/lossy_quality=0.7
+compress/uastc_level=0
+compress/rdo_quality_loss=0.0
+compress/hdr_compression=1
+compress/normal_map=0
+compress/channel_pack=0
+mipmaps/generate=true
+mipmaps/limit=-1
+roughness/mode=0
+roughness/src_normal=""
+process/channel_remap/red=0
+process/channel_remap/green=1
+process/channel_remap/blue=2
+process/channel_remap/alpha=3
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/normal_map_invert_y=false
+process/hdr_as_srgb=false
+process/hdr_clamp_exposure=false
+process/size_limit=0
+detect_3d/compress_to=1

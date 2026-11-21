@@ -1,0 +1,357 @@
+{
+  "type": "skill",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "Orc Warlock Skyfall",
+  "duration": 3.6,
+  "seed": 4242,
+  "settings": {
+    "bloom": 0.56,
+    "exposure": 1.2
+  },
+  "layers": [
+    {
+      "id": "dad2c4c3-0d6e-5792-9586-8761d30dc3e2",
+      "type": "debris",
+      "name": "sky_meteor",
+      "enabled": true,
+      "seed": 713,
+      "color": "#3a1a4a",
+      "secondary": "#ff9a3a",
+      "style": "meteor",
+      "motion": "fall",
+      "start": 0.1,
+      "duration": 1.2,
+      "size": 0.8,
+      "spread": 3,
+      "rise": 5,
+      "speed": 1,
+      "energy": 0.5,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "bd023944-1a4f-5f54-b2dc-eb33b932a329",
+      "type": "flame",
+      "name": "sky_tail",
+      "enabled": true,
+      "seed": 850,
+      "color": "#fe9251",
+      "secondary": "#ffdfcd",
+      "style": "jet",
+      "motion": "fall",
+      "start": 0.1,
+      "duration": 1.2,
+      "size": 0.6,
+      "spread": 3,
+      "rise": 5,
+      "speed": 1,
+      "energy": 1.2,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 10,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "411fbb3f-2f76-55fb-a939-d7aa3a719d85",
+      "type": "flame",
+      "name": "sky_tail_magic",
+      "enabled": true,
+      "seed": 851,
+      "color": "#9a4aff",
+      "secondary": "#ffc0ff",
+      "style": "jet",
+      "motion": "fall",
+      "start": 0.12,
+      "duration": 1.18,
+      "size": 0.45,
+      "spread": 3,
+      "rise": 5,
+      "speed": 1,
+      "energy": 0.9,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 6,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "75ca2309-9eef-526a-8ff9-c63b0f90a84b",
+      "type": "flash",
+      "name": "sky_impact",
+      "enabled": true,
+      "seed": 987,
+      "color": "#fe9251",
+      "secondary": "#ffdfcd",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 1.3,
+      "duration": 0.45,
+      "size": 3.4,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.6,
+      "opacity": 0.95,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b8e3f0e6-a5a1-568a-a19a-977558bbc05c",
+      "type": "flash",
+      "name": "sky_impact_magic",
+      "enabled": true,
+      "seed": 988,
+      "color": "#9a4aff",
+      "secondary": "#ff9a3a",
+      "style": "glow",
+      "motion": "burst",
+      "start": 1.3,
+      "duration": 0.6,
+      "size": 3.6,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.7,
+      "opacity": 0.5,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.4,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "0a1b2c3d-1111-4222-8333-944455566677",
+      "type": "beam",
+      "name": "sky_crack",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#ff5212",
+      "secondary": "#ffb040",
+      "style": "combat_ground_crack",
+      "motion": "burst",
+      "start": 1.3,
+      "duration": 1.8,
+      "size": 2.4,
+      "spread": 0,
+      "rise": 1,
+      "speed": 1,
+      "energy": 1.3,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.08,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "e6f2dd8f-2686-5ce0-845b-e0459ce0e4a6",
+      "type": "flame",
+      "name": "sky_fire",
+      "enabled": true,
+      "seed": 995,
+      "color": "#ff6a1a",
+      "secondary": "#ffd27a",
+      "style": "fork",
+      "motion": "burst",
+      "start": 1.3,
+      "duration": 0.9,
+      "size": 0.9,
+      "spread": 1.6,
+      "rise": 1.6,
+      "speed": 1,
+      "energy": 1.1,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 10,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "b3fa9e28-435b-5af4-a787-43aefc959cce",
+      "type": "debris",
+      "name": "sky_rocks",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#5a4638",
+      "secondary": "#c08a5a",
+      "style": "rock",
+      "motion": "burst",
+      "start": 1.3,
+      "duration": 2,
+      "size": 0.18,
+      "spread": 4.5,
+      "rise": 3,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 34,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "9df16cc9-27b0-51f4-b9d9-566e05dd3c68",
+      "type": "sparks",
+      "name": "sky_sparks",
+      "enabled": true,
+      "seed": 1398,
+      "color": "#fe9251",
+      "secondary": "#ffdfcd",
+      "style": "needle",
+      "motion": "burst",
+      "start": 1.3,
+      "duration": 1.4,
+      "size": 0.045,
+      "spread": 5,
+      "rise": 3,
+      "speed": 1.2,
+      "energy": 1.6,
+      "opacity": 1,
+      "scale": 1,
+      "count": 70,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "0876c5a1-5d3c-5a6e-a3b0-2778754eeebc",
+      "type": "sparks",
+      "name": "sky_embers",
+      "enabled": true,
+      "seed": 1400,
+      "color": "#ffb060",
+      "secondary": "#fff0b8",
+      "style": "glint",
+      "motion": "drift",
+      "start": 1.35,
+      "duration": 1.8,
+      "size": 0.09,
+      "spread": 3,
+      "rise": 2.2,
+      "speed": 1,
+      "energy": 1.2,
+      "opacity": 1,
+      "scale": 1,
+      "count": 24,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "dfa9abd2-1154-5dae-b07d-c2a85ba1dd6e",
+      "type": "smoke",
+      "name": "sky_dust",
+      "enabled": true,
+      "seed": 1535,
+      "color": "#8a6a50",
+      "secondary": "#d8a878",
+      "style": "dust",
+      "motion": "burst",
+      "start": 1.35,
+      "duration": 2.2,
+      "size": 1.2,
+      "spread": 4,
+      "rise": 1.3,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 0.22,
+      "scale": 1,
+      "count": 16,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

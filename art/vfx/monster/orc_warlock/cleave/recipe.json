@@ -1,0 +1,233 @@
+{
+  "type": "attack",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "Orc Warlock Cleave",
+  "duration": 1.4,
+  "seed": 4242,
+  "settings": {
+    "bloom": 0.48,
+    "exposure": 1.36
+  },
+  "layers": [
+    {
+      "id": "be3ba207-9ff6-5e00-b824-fe18e497df7e",
+      "type": "slash",
+      "name": "cleave_blade",
+      "enabled": true,
+      "seed": 713,
+      "color": "#f77500",
+      "secondary": "#ffdbc8",
+      "style": "sword_blade",
+      "motion": "burst",
+      "start": 0.02,
+      "duration": 0.8,
+      "size": 2.1,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.85,
+      "opacity": 0.95,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.15,
+        0.2
+      ],
+      "rotation": [
+        -22,
+        0,
+        -20
+      ]
+    },
+    {
+      "id": "b41a9b60-f9ec-53be-b00e-dfdf843a799d",
+      "type": "slash",
+      "name": "cleave_core",
+      "enabled": true,
+      "seed": 850,
+      "color": "#ffcaad",
+      "secondary": "#fff3e9",
+      "style": "sword_line",
+      "motion": "burst",
+      "start": 0.02,
+      "duration": 0.7,
+      "size": 1.8,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1,
+      "opacity": 0.9,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.15,
+        0.2
+      ],
+      "rotation": [
+        -22,
+        0,
+        -20
+      ]
+    },
+    {
+      "id": "808f9bfb-285a-5f72-a1b2-9cd0b3f1b2c6",
+      "type": "slash",
+      "name": "cleave_magic",
+      "enabled": true,
+      "seed": 901,
+      "color": "#8a3ae0",
+      "secondary": "#ff9a3a",
+      "style": "sword_wisp",
+      "motion": "burst",
+      "start": 0.05,
+      "duration": 0.8,
+      "size": 2.3,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.5,
+      "opacity": 0.55,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.15,
+        0.2
+      ],
+      "rotation": [
+        -22,
+        0,
+        -20
+      ]
+    },
+    {
+      "id": "16a2057f-de69-5fb8-a638-02887d3c0461",
+      "type": "sparks",
+      "name": "cleave_embers",
+      "enabled": true,
+      "seed": 987,
+      "color": "#ff9a5e",
+      "secondary": "#ffddca",
+      "style": "glint",
+      "motion": "swing",
+      "start": 0.02,
+      "duration": 1.2,
+      "size": 0.13,
+      "spread": 2.2,
+      "rise": 1,
+      "speed": 1.3,
+      "energy": 1.3,
+      "opacity": 1,
+      "scale": 1,
+      "count": 40,
+      "position": [
+        0,
+        1.15,
+        0.2
+      ],
+      "rotation": [
+        -22,
+        0,
+        -20
+      ]
+    },
+    {
+      "id": "7bb8f7eb-87d5-5f1e-a5c3-b2f7a7de26fb",
+      "type": "sparks",
+      "name": "cleave_sparks",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#e76d00",
+      "secondary": "#ffae81",
+      "style": "tetra",
+      "motion": "swing",
+      "start": 0.02,
+      "duration": 0.9,
+      "size": 0.06,
+      "spread": 2.4,
+      "rise": 1.4,
+      "speed": 1.5,
+      "energy": 1.2,
+      "opacity": 1,
+      "scale": 1,
+      "count": 26,
+      "position": [
+        0,
+        1.15,
+        0.2
+      ],
+      "rotation": [
+        -22,
+        0,
+        -20
+      ]
+    },
+    {
+      "id": "a408fbfe-ce7b-5d69-9bac-d2f1e4270b20",
+      "type": "flash",
+      "name": "cleave_flash",
+      "enabled": true,
+      "seed": 1188,
+      "color": "#ff7a1a",
+      "secondary": "#ffe2a0",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0.06,
+      "duration": 0.25,
+      "size": 2,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.9,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.1,
+        1.2
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "f8394f67-0e09-5be6-816b-cbdd868dc811",
+      "type": "smoke",
+      "name": "cleave_smoke",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#5a2b0c",
+      "secondary": "#9c5121",
+      "style": "cloud",
+      "motion": "swing",
+      "start": 0.05,
+      "duration": 1.1,
+      "size": 0.5,
+      "spread": 1.9,
+      "rise": 0.4,
+      "speed": 1,
+      "energy": 0.05,
+      "opacity": 0.22,
+      "scale": 1,
+      "count": 6,
+      "position": [
+        0,
+        1.15,
+        0.2
+      ],
+      "rotation": [
+        -22,
+        0,
+        -20
+      ]
+    }
+  ]
+}

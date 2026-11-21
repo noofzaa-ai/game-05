@@ -1,0 +1,326 @@
+{
+  "type": "attack",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "Orc Warlock Cataclysm",
+  "duration": 2.4,
+  "seed": 4242,
+  "settings": {
+    "bloom": 0.5,
+    "exposure": 1.2
+  },
+  "layers": [
+    {
+      "id": "5962962d-75f0-5711-8a11-78af27e95364",
+      "type": "flash",
+      "name": "cat_flash",
+      "enabled": true,
+      "seed": 713,
+      "color": "#ff6a1a",
+      "secondary": "#ffb84a",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0,
+      "duration": 0.4,
+      "size": 4.2,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.9,
+      "opacity": 0.75,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "12fb0f34-850e-5bdf-a389-9f1e6909b2e3",
+      "type": "flash",
+      "name": "cat_star",
+      "enabled": true,
+      "seed": 714,
+      "color": "#ffb040",
+      "secondary": "#fff0c8",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0,
+      "duration": 0.3,
+      "size": 3.6,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.2,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.6,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "5b4d170c-d32a-52c4-9d29-668f40c321f4",
+      "type": "flash",
+      "name": "cat_magic",
+      "enabled": true,
+      "seed": 715,
+      "color": "#8a3ae0",
+      "secondary": "#ff8a2a",
+      "style": "glow",
+      "motion": "burst",
+      "start": 0.02,
+      "duration": 0.7,
+      "size": 4.6,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.6,
+      "opacity": 0.45,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.3,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "f08cc371-0c20-5ce9-812d-cea9c1c015ab",
+      "type": "beam",
+      "name": "cat_crack",
+      "enabled": true,
+      "seed": 1261,
+      "color": "#ff6a1a",
+      "secondary": "#ffd27a",
+      "style": "combat_ground_crack",
+      "motion": "burst",
+      "start": 0,
+      "duration": 2.2,
+      "size": 3.4,
+      "spread": 0,
+      "rise": 1,
+      "speed": 1,
+      "energy": 1.4,
+      "opacity": 1,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        0.08,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "6c3d367f-0bf4-54ed-9b15-d24f3b3e7dd5",
+      "type": "flame",
+      "name": "cat_fire",
+      "enabled": true,
+      "seed": 995,
+      "color": "#ff6a1a",
+      "secondary": "#ffd27a",
+      "style": "fork",
+      "motion": "burst",
+      "start": 0,
+      "duration": 0.8,
+      "size": 0.8,
+      "spread": 2.6,
+      "rise": 1.4,
+      "speed": 1,
+      "energy": 1,
+      "opacity": 0.85,
+      "scale": 1,
+      "count": 10,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "7f682aef-ddeb-5935-b882-86947a854105",
+      "type": "debris",
+      "name": "cat_rocks",
+      "enabled": true,
+      "seed": 1398,
+      "color": "#5a4638",
+      "secondary": "#a08c78",
+      "style": "rock",
+      "motion": "burst",
+      "start": 0.02,
+      "duration": 1.8,
+      "size": 0.16,
+      "spread": 3.6,
+      "rise": 2.6,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 40,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "31cff524-3446-56b9-b4b6-bdfad0ed6a5e",
+      "type": "debris",
+      "name": "cat_slabs",
+      "enabled": true,
+      "seed": 1399,
+      "color": "#4a3c34",
+      "secondary": "#8a7460",
+      "style": "shard",
+      "motion": "burst",
+      "start": 0.02,
+      "duration": 1.6,
+      "size": 0.3,
+      "spread": 2.8,
+      "rise": 1.8,
+      "speed": 1,
+      "energy": 0.1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "6f2936b7-918d-57d2-a377-3ce8efad43c5",
+      "type": "sparks",
+      "name": "cat_sparks",
+      "enabled": true,
+      "seed": 1672,
+      "color": "#ff7a2a",
+      "secondary": "#ffc870",
+      "style": "tetra",
+      "motion": "burst",
+      "start": 0,
+      "duration": 1,
+      "size": 0.045,
+      "spread": 3.6,
+      "rise": 2.4,
+      "speed": 1.2,
+      "energy": 1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 60,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "fa045aa4-86c0-53b2-86a2-9b1be6682b4d",
+      "type": "sparks",
+      "name": "cat_magic_motes",
+      "enabled": true,
+      "seed": 1673,
+      "color": "#b05aff",
+      "secondary": "#ffb0ff",
+      "style": "glint",
+      "motion": "drift",
+      "start": 0.05,
+      "duration": 1.6,
+      "size": 0.08,
+      "spread": 3,
+      "rise": 2.4,
+      "speed": 1,
+      "energy": 1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 20,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "aead81d7-8484-5339-935c-815e707880d7",
+      "type": "smoke",
+      "name": "cat_dust",
+      "enabled": true,
+      "seed": 1535,
+      "color": "#8a6a50",
+      "secondary": "#d0b898",
+      "style": "dust",
+      "motion": "burst",
+      "start": 0.05,
+      "duration": 2.2,
+      "size": 1.2,
+      "spread": 3.6,
+      "rise": 0.6,
+      "speed": 1,
+      "energy": 0.05,
+      "opacity": 0.22,
+      "scale": 1,
+      "count": 18,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}

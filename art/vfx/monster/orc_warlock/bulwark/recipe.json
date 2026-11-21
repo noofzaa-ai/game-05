@@ -1,0 +1,357 @@
+{
+  "type": "buff",
+  "playback": "once",
+  "anchor": "world",
+  "schema": "daiyooo.vfx.recipe",
+  "version": 1,
+  "name": "Orc Warlock Bulwark",
+  "duration": 3.4,
+  "seed": 4242,
+  "settings": {
+    "bloom": 0.45,
+    "exposure": 1.2
+  },
+  "layers": [
+    {
+      "id": "62438c97-9f28-5338-802c-80201a3f0f21",
+      "type": "beam",
+      "name": "bul_flames",
+      "enabled": true,
+      "seed": 7101,
+      "color": "#ff5a12",
+      "secondary": "#ff9a3a",
+      "style": "status_flame",
+      "motion": "pulse",
+      "start": 0.2,
+      "duration": 3,
+      "size": 0.42,
+      "spread": 0.5,
+      "rise": 1.6,
+      "speed": 1,
+      "energy": 0.4,
+      "opacity": 0.7,
+      "scale": 1,
+      "count": 12,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "50570338-d67e-5d74-ab6a-01576a298dfd",
+      "type": "beam",
+      "name": "bul_flames_core",
+      "enabled": true,
+      "seed": 7102,
+      "color": "#ffb030",
+      "secondary": "#ffe2a0",
+      "style": "status_flame",
+      "motion": "pulse",
+      "start": 0.25,
+      "duration": 2.9,
+      "size": 0.26,
+      "spread": 0.42,
+      "rise": 1.5,
+      "speed": 1,
+      "energy": 0.35,
+      "opacity": 0.65,
+      "scale": 1,
+      "count": 10,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "0a97350d-4dd0-5177-889c-ff4369412903",
+      "type": "sparks",
+      "name": "bul_embers",
+      "enabled": true,
+      "seed": 987,
+      "color": "#ffa040",
+      "secondary": "#fff0b0",
+      "style": "glint",
+      "motion": "orbit",
+      "start": 0.15,
+      "duration": 3.2,
+      "size": 0.06,
+      "spread": 0.8,
+      "rise": 2.4,
+      "speed": 1,
+      "energy": 0.9,
+      "opacity": 1,
+      "scale": 1,
+      "count": 36,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "e9f1500f-81e0-56f5-b2f1-077786f5a538",
+      "type": "sparks",
+      "name": "bul_magic",
+      "enabled": true,
+      "seed": 988,
+      "color": "#a050ff",
+      "secondary": "#ffb0ff",
+      "style": "glint",
+      "motion": "orbit",
+      "start": 0.3,
+      "duration": 3,
+      "size": 0.05,
+      "spread": 0.9,
+      "rise": 2.2,
+      "speed": 1,
+      "energy": 0.8,
+      "opacity": 1,
+      "scale": 1,
+      "count": 14,
+      "position": [
+        0,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "d01a3302-832c-5f03-b401-dd432e14de0e",
+      "type": "flash",
+      "name": "bul_heat",
+      "enabled": true,
+      "seed": 1124,
+      "color": "#ff4a10",
+      "secondary": "#a040ff",
+      "style": "orb_aura",
+      "motion": "pulse",
+      "start": 0.15,
+      "duration": 3.1,
+      "size": 2.6,
+      "spread": 0.1,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.16,
+      "opacity": 0.18,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.2,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "d4c13fe5-040e-5062-b5f6-c3c380284f3a",
+      "type": "flash",
+      "name": "bul_bash",
+      "enabled": true,
+      "seed": 1201,
+      "color": "#ff8a2a",
+      "secondary": "#fff0c8",
+      "style": "starburst",
+      "motion": "burst",
+      "start": 0.33,
+      "duration": 0.3,
+      "size": 2.8,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 1.2,
+      "opacity": 0.8,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.2,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "165a42fc-0fe8-53f3-bfd9-28de4b7cab8d",
+      "type": "flash",
+      "name": "bul_bash_halo",
+      "enabled": true,
+      "seed": 1202,
+      "color": "#ff8a2a",
+      "secondary": "#ffc85a",
+      "style": "halo",
+      "motion": "burst",
+      "start": 0.36,
+      "duration": 0.45,
+      "size": 2.4,
+      "spread": 0,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.5,
+      "opacity": 0.6,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.2,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "5f5c4aaf-64bf-5abe-929c-32399cc05c98",
+      "type": "beam",
+      "name": "bul_bash_burst",
+      "enabled": true,
+      "seed": 1203,
+      "color": "#ff4412",
+      "secondary": "#ff8a2a",
+      "style": "combat_crit_burst",
+      "motion": "burst",
+      "start": 0.33,
+      "duration": 0.5,
+      "size": 1.3,
+      "spread": 0,
+      "rise": 1,
+      "speed": 1,
+      "energy": 0.45,
+      "opacity": 0.8,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.2,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "f23e592f-5ad8-5e72-9659-adb32dbf0f4e",
+      "type": "beam",
+      "name": "bul_bash_spikes",
+      "enabled": true,
+      "seed": 1204,
+      "color": "#ff7a1a",
+      "secondary": "#ffcc6a",
+      "style": "combat_spikes",
+      "motion": "burst",
+      "start": 0.33,
+      "duration": 0.35,
+      "size": 1.2,
+      "spread": 0,
+      "rise": 1,
+      "speed": 1,
+      "energy": 0.35,
+      "opacity": 0.8,
+      "scale": 1,
+      "count": 1,
+      "position": [
+        0,
+        1.2,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "3ed89b70-227e-5095-981b-b69bd27b620f",
+      "type": "sparks",
+      "name": "bul_iron",
+      "enabled": true,
+      "seed": 1205,
+      "color": "#d8d0c8",
+      "secondary": "#fff4e0",
+      "style": "diamond",
+      "motion": "radial",
+      "start": 0.33,
+      "duration": 0.6,
+      "size": 0.04,
+      "spread": 1.9,
+      "rise": 0,
+      "speed": 1,
+      "energy": 0.8,
+      "opacity": 1,
+      "scale": 1,
+      "count": 34,
+      "position": [
+        0,
+        1.2,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "62a6c914-dffc-51bb-bba5-f7e387ff54cf",
+      "type": "sparks",
+      "name": "bul_bash_embers",
+      "enabled": true,
+      "seed": 1206,
+      "color": "#ff6a1a",
+      "secondary": "#ffc870",
+      "style": "tetra",
+      "motion": "radial",
+      "start": 0.33,
+      "duration": 0.8,
+      "size": 0.045,
+      "spread": 2.2,
+      "rise": 0.6,
+      "speed": 1,
+      "energy": 1,
+      "opacity": 1,
+      "scale": 1,
+      "count": 40,
+      "position": [
+        0,
+        1.2,
+        0.8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ]
+    }
+  ]
+}
