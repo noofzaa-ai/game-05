@@ -335,90 +335,158 @@ def blade_plane(points, axis):
 
 
 # ---------------------------------------------------------------------------------------------------------------- crook
+ORIGINAL_CROOK = "art/monsters/mummy_boss/mummy_boss.glb"
+CROOK_GOLD = {"name": "Boss Crook | Gold", "pbrMetallicRoughness": {
+    "baseColorFactor": [0.570481538772583, 0.2632734179496765, 0.02198094315826893, 1.0], "metallicFactor": 0.45, "roughnessFactor": 0.45}}
+# The original crook exactly as the first build placed it in the player's RightHand frame (commit be242d6b, lifted from the
+# monster's "Monster_MummyBoss_Khopesh"): a flat plate. Its outline in (w, axis) coordinates of the level-15 greatsword
+# frame (w = the blade's width direction, axis = the blade direction), z from -0.036 to 0.020. The hook (with its root) and
+# the guard crossbar keep this outline; only the flat bar under the hook becomes a round handle on the bar's centre line.
+HOOK = [(0.0808, 0.3729), (0.0942, 0.4154), (0.0991, 0.4602), (0.0951, 0.5056), (0.0823, 0.5498), (0.0608, 0.5912),
+        (0.0314, 0.6279), (-0.0049, 0.6585), (-0.047, 0.6817), (-0.0932, 0.6964), (-0.1419, 0.7019), (-0.0924, 0.7014),
+        (-0.0435, 0.6912), (0.0248, 0.7071), (0.092, 0.6936), (0.1534, 0.6588), (0.2012, 0.6051), (0.2279, 0.538),
+        (0.2283, 0.4659), (0.1995, 0.3993), (0.1282, 0.3557)]
+GUARD = [(-0.0165, 0.2025), (-0.0051, 0.2341), (0.1055, 0.1942), (0.0941, 0.1625)]
+BAR_BOTTOM, BAR_TOP = np.array([-0.0584, -0.0861]), np.array([0.1045, 0.3643])  # the flat bar's centre line
+Z_MID, Z_HALF = -0.008, 0.028
+THICKEN = 1.25  # Boss: "a little" thicker than the original plate, same outline
+
+
+def _area(poly):
+    x, y = poly[:, 0], poly[:, 1]
+    return 0.5 * float(np.sum(x * np.roll(y, -1) - np.roll(x, -1) * y))
+
+
+def _ear_clip(poly):
+    """Triangles of a simple counter-clockwise polygon, as index triples."""
+    def cross(a, b, c):
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+    idx = list(range(len(poly)))
+    out = []
+    while len(idx) > 3:
+        for k in range(len(idx)):
+            i, j, l = idx[k - 1], idx[k], idx[(k + 1) % len(idx)]
+            a, b, c = poly[i], poly[j], poly[l]
+            if cross(a, b, c) <= 1e-12:
+                continue
+            if any(cross(a, b, poly[m]) >= 0 and cross(b, c, poly[m]) >= 0 and cross(c, a, poly[m]) >= 0
+                   for m in idx if m not in (i, j, l)):
+                continue
+            out.append((i, j, l))
+            idx.pop(k)
+            break
+        else:
+            raise ValueError("ear clipping failed")
+    out.append(tuple(idx))
+    return out
+
+
+def _inset(poly, d):
+    """Each vertex of a counter-clockwise polygon moved inward by about d (miter, clamped at sharp corners)."""
+    out = []
+    n = len(poly)
+    for i in range(n):
+        p0, p1, p2 = poly[i - 1], poly[i], poly[(i + 1) % n]
+        e0 = (p1 - p0) / np.linalg.norm(p1 - p0)
+        e1 = (p2 - p1) / np.linalg.norm(p2 - p1)
+        n0, n1 = np.array([-e0[1], e0[0]]), np.array([-e1[1], e1[0]])  # left = inward
+        m = n0 + n1
+        m = n0 if np.linalg.norm(m) < 1e-6 else m / np.linalg.norm(m)
+        out.append(p1 + m * min(d / max(float(m @ n0), 1e-3), 1.5 * d))
+    return np.array(out)
+
+
+def _slab(mesh, poly2, to3, ez, zc, half, bevel):
+    """A bevelled extrusion of a 2D outline: flat caps at zc +- half (inset by `bevel`), and a rounded edge band (the outline
+    itself at the middle, smooth normals blending from the cap to the side) so the plate reads as a thick piece of gold."""
+    poly2 = np.asarray(poly2, dtype=np.float64)
+    if _area(poly2) < 0:
+        poly2 = poly2[::-1]
+    n = len(poly2)
+    tri = _ear_clip(poly2)
+    inner = _inset(poly2, bevel)
+    side = []
+    for i in range(n):
+        e0 = poly2[i] - poly2[i - 1]
+        e1 = poly2[(i + 1) % n] - poly2[i]
+        v = np.array([e0[1], -e0[0]]) / np.linalg.norm(e0) + np.array([e1[1], -e1[0]]) / np.linalg.norm(e1)
+        side.append(to3(v / max(np.linalg.norm(v), 1e-9), 0.0) - to3(np.zeros(2), 0.0))
+    for s in (1.0, -1.0):
+        P = np.array([to3(p, zc + s * half) for p in inner])
+        mesh.add(P, np.broadcast_to(ez * s, P.shape).copy(), np.zeros((n, 2)), [(a, b, c) if s > 0 else (a, c, b) for a, b, c in tri])
+    rows = [(inner, zc + half, 0.8), (poly2, zc + half * 0.35, 0.3), (poly2, zc - half * 0.35, -0.3), (inner, zc - half, -0.8)]
+    P, N = [], []
+    for ring, zz, nz in rows:
+        for i in range(n):
+            P.append(to3(ring[i], zz))
+            v = side[i] * (1.0 - abs(nz)) + ez * nz
+            N.append(v / np.linalg.norm(v))
+    T = []
+    for r in range(3):
+        for i in range(n):
+            a, b = r * n + i, r * n + (i + 1) % n
+            c, d = (r + 1) * n + (i + 1) % n, (r + 1) * n + i
+            T += [(a, d, c), (a, c, b)]
+    P, N = np.array(P), np.array(N)
+    t0 = np.array(T)
+    fn = np.cross(P[t0[:, 1]] - P[t0[:, 0]], P[t0[:, 2]] - P[t0[:, 0]])
+    if float((fn * N[t0].sum(1)).sum()) < 0:
+        T = [(a, c, b) for a, b, c in T]
+    mesh.add(P, N, np.zeros((len(P), 2)), T)
+
+
+def _lathe_split(gold, atlas, axis, side, origin, profile):
+    """lathe(): gold rows go to the untextured gold mesh, the other rows (gem, leather) to the atlas mesh."""
+    side = side - axis * (side @ axis)
+    side /= np.linalg.norm(side)
+    other = np.cross(axis, side)
+    groups, cur = [], []
+    for row in profile:
+        if cur and row[2] != cur[-1][2]:
+            groups.append(cur)
+            cur = [(cur[-1][0], cur[-1][1], row[2], row[3])] if cur[-1][1] > 1e-7 else []
+        cur.append(row)
+    groups.append(cur)
+    for g in groups:
+        if len(g) < 2:
+            continue
+        t = np.array([r[0] for r in g])
+        frames = np.broadcast_to(np.stack([side, other])[None], (len(g), 2, 3))
+        sweep(gold if g[0][2] == R_GOLD else atlas, origin + np.outer(t, axis), frames, np.array([r[1] for r in g]), g[0][2],
+              np.array([r[3] for r in g]))
+
+
 def build_crook():
-    """The crook in the player's RightHand frame (hand at the origin): positions, normals, uvs, triangles."""
+    """The crook in the player's RightHand frame (fist at the origin): (gold arrays, atlas arrays). Gold, the original
+    material: the original hook and guard outlines thickened a little, the round shaft, pommel ball and collar rings.
+    Atlas: the leather spiral-wrapped two-hand grip and the lapis gem capping the pommel."""
     _, _, player = player_frame(GREATSWORD)
-    ax, p_len, _ = frame(player)
-    w, c0 = blade_plane(player, ax)
+    ax, _, _ = frame(player)
+    w, _ = blade_plane(player, ax)
     z = np.cross(ax, w)
-    m = Mesh()
-    G, L, S = R_GOLD, R_LEATHER, R_STRIPE
-    # the straight part along the axis, t = 0 at the fist; the player blade spans t -0.137 .. 0.709
-    prof = []
-    prof += [(t, r, R_LAPIS, v) for t, r, _, v in ball(-0.150, 0.019, 1, None, 0.0, 0.5)]   # lapis gem cap (pole at the butt)
-    prof += [(t, r, G, v) for t, r, _, v in ball(-0.134, 0.033, 3, None, 0.15, 0.85)][1:]  # gold pommel ball, lower half
-    prof += [(-0.110, 0.024, G, 1.0)]                             # pommel neck
-    prof += [(t, r, G, v) for t, r, _, v in torus_ring(-0.100, 0.023, 0.029, G, 3)]       # collar under the grip
-    grip = np.linspace(-0.090, 0.024, 5)
-    for k, t in enumerate(grip):                                                          # leather wrap, faint wrap ripple
-        r = 0.0225 - 0.0015 * (t - grip[0]) / (grip[-1] - grip[0]) + (0.0008 if k % 2 else 0.0)
-        prof.append((t, r, L, (t - grip[0]) / (grip[-1] - grip[0])))
-    prof += [(t, r, G, v) for t, r, _, v in torus_ring(0.034, 0.021, 0.029, G, 3)]         # guard collar: three rounded rings
-    prof += [(t, r, G, v) for t, r, _, v in torus_ring(0.052, 0.025, 0.037, G, 3)][1:]
-    prof += [(t, r, G, v) for t, r, _, v in torus_ring(0.070, 0.021, 0.028, G, 3)][1:]
-    shaft = np.linspace(0.078, 0.470, 3)
-    for t in shaft:                                                                       # nemes-striped shaft, tapered
-        f = (t - shaft[0]) / (shaft[-1] - shaft[0])
-        prof.append((t, 0.0200 - 0.0030 * f, S, 0.05 + 0.9 * f))
-    prof += [(t, r, G, v) for t, r, _, v in torus_ring(0.480, 0.0168, 0.0245, G, 3)]
-    prof += [(0.492, 0.017, G, 0.5), (0.500, 0.0, G, 0.5)]                                # closes inside the hook root
-    lathe(m, ax, w, c0, prof)
-    # the guard's scarabs: a lapis/turquoise oval on each face (+-z, the faces seen side-on to the swing plane)
-    for s in (1.0, -1.0):
-        ellipsoid(m, c0 + ax * 0.052 + z * s * 0.0315, np.stack([ax, w, z * s]), np.array([0.019, 0.014, 0.0075]), R_TURQ, rings=3)
-    # the hook: from inside the top collar up the axis, then a curl toward +w (in the swing plane) back down, tapering
-    R = 0.092
-    centre = c0 + ax * 0.555 + w * R
-    pts, tans, rad, v = [], [], [], []
-    for k, t in enumerate(np.linspace(0.486, 0.555, 2)):
-        pts.append(c0 + ax * t)
-        tans.append(ax)
-        rad.append(0.0168)
-    arc = np.radians(np.linspace(0.0, 215.0, 9))[1:]
-    for k, a in enumerate(arc):
-        pts.append(centre + R * (np.sin(a) * ax - np.cos(a) * w))
-        tans.append(np.cos(a) * ax + np.sin(a) * w)
-        f = a / arc[-1]
-        rad.append(0.0168 - 0.0080 * f ** 1.3)
-    tip_dir, end, r_end = tans[-1], pts[-1], rad[-1]
-    for a in np.radians((50.0, 90.0)):  # rounded tip: a quarter-circle cap
-        pts.append(end + tip_dir * r_end * np.sin(a))
-        tans.append(tip_dir)
-        rad.append(r_end * np.cos(a) if a < np.pi / 2 - 1e-6 else 0.0)
-    pts, tans, rad = np.array(pts), np.array(tans), np.array(rad)
-    frames = np.stack([np.cross(z, tans), np.broadcast_to(z, tans.shape)], 1)
-    frames[:, 0] /= np.linalg.norm(frames[:, 0], axis=1, keepdims=True)
-    seg = np.r_[0.0, np.cumsum(np.linalg.norm(np.diff(pts, axis=0), axis=1))]
-    sweep(m, pts, frames, rad, S, 0.02 + 0.96 * seg / seg[-1])
-    # the crescent blade on the hook's outer rim: rows root (inside the tube) -> bevel -> edge, both faces (+-z)
-    a = np.radians(np.linspace(18.0, 178.0, 11))
-    width = 0.052 * np.sin((a - a[0]) / (a[-1] - a[0]) * np.pi) ** 0.8
-    rows = [(0.0, 0.0085, 0.05), (0.55, 0.0058, 0.55), (1.0, 0.0008, 0.97)]  # (fraction of the width, half thickness, u)
-    radial = np.sin(a)[:, None] * ax - np.cos(a)[:, None] * w                  # out from the curl centre
-    for s in (1.0, -1.0):
-        P, N, UV = [], [], []
-        for i in range(len(a)):
-            for frac, half, u in rows:
-                tube_r = 0.0168 - 0.0080 * (a[i] / np.radians(215.0)) ** 1.3
-                d = R + tube_r * 0.4 + frac * width[i]
-                P.append(centre + radial[i] * d + z * s * (half if width[i] > 1e-6 else 0.0006))
-                UV.append(region_uv(R_EDGE, u, i / (len(a) - 1)))
-        P = np.array(P).reshape(len(a), 3, 3)
-        Nf = grid_normals(P, closed_u=False).reshape(-1, 3)
-        Nf = np.where(((Nf @ (z * s)) < 0)[:, None], -Nf, Nf)  # each face's normals point out of its side
-        Nf = Nf + z * s * 0.6  # bias toward the face normal: the bevel reads as one lit face, not a crease
-        tris = []
-        for i in range(len(a) - 1):
-            for j in range(2):
-                q = [i * 3 + j, i * 3 + j + 1, (i + 1) * 3 + j + 1, (i + 1) * 3 + j]
-                tris += [(q[0], q[1], q[2]), (q[0], q[2], q[3])]
-        Pf = P.reshape(-1, 3)
-        t0 = np.array(tris)
-        fn = np.cross(Pf[t0[:, 1]] - Pf[t0[:, 0]], Pf[t0[:, 2]] - Pf[t0[:, 0]])
-        if float((fn @ (z * s)).sum()) < 0:
-            tris = [(x, zz, y) for x, y, zz in tris]
-        m.add(Pf, Nf, np.array(UV), tris)
-    return m.arrays(), p_len
+
+    def to3(p, zz):
+        return w * p[0] + ax * p[1] + z * zz
+    gold, atlas = Mesh(), Mesh()
+    half = Z_HALF * THICKEN
+    _slab(gold, HOOK, to3, z, Z_MID, half, 0.007)
+    _slab(gold, GUARD, to3, z, Z_MID, half * 0.85, 0.006)
+    d2 = (BAR_TOP - BAR_BOTTOM) / np.linalg.norm(BAR_TOP - BAR_BOTTOM)
+    axis = w * d2[0] + ax * d2[1]
+    origin = to3(BAR_BOTTOM, Z_MID)  # s = 0 at the old bar's bottom; the fist sits at s ~ 0.09
+    G = R_GOLD
+    rows = [(t, r, R_LAPIS, v) for t, r, _, v in ball(-0.064, 0.013, 2, None, 0.0, 0.5)]   # lapis gem cap
+    rows += [(t, r, G, v) for t, r, _, v in ball(-0.042, 0.029, 3, None, 0.15, 0.85)][1:]   # round gold pommel ball
+    rows += [(-0.031, 0.026, G, 0.9), (-0.024, 0.019, G, 1.0)]                              # its upper half, the neck
+    rows += [(t, r, G, v) for t, r, _, v in torus_ring(-0.016, 0.0195, 0.0255, G, 3)][1:]  # gold collar ring
+    grip = np.linspace(-0.008, 0.170, 6)
+    rows += [(t, 0.0215 - 0.0014 * k / 5 + (0.0008 if k % 2 else 0.0), R_LEATHER, k / 5) for k, t in enumerate(grip)]
+    rows += [(t, r, G, v) for t, r, _, v in torus_ring(0.178, 0.019, 0.025, G, 3)]          # gold collar ring
+    rows += [(0.186, 0.0185, G, 0.5), (0.330, 0.0175, G, 0.5), (0.440, 0.0165, G, 0.5)]  # round gold shaft
+    rows += [(t, r, G, v) for t, r, _, v in torus_ring(0.452, 0.0165, 0.0225, G, 3)][1:]   # small collar at the hook root
+    rows += [(0.475, 0.0165, G, 0.5), (0.492, 0.0, G, 0.5)]                                # ends inside the hook
+    _lathe_split(gold, atlas, axis, z, origin, rows)
+    return gold.arrays(), atlas.arrays()
 
 
 # ---------------------------------------------------------------------------------------------------------------- staff
@@ -567,10 +635,11 @@ def write(wid, player_path, label, surfaces, source_note):
         joints[:, 0] = k
         weights = np.zeros((len(pos), 4), dtype="<f4")
         weights[:, 0] = 1.0
-        if uri not in images:
-            images.append(uri)
         material = json.loads(json.dumps(material))
-        material["pbrMetallicRoughness"]["baseColorTexture"] = {"index": images.index(uri)}
+        if uri is not None:  # None: an untextured surface (the crook's original flat gold)
+            if uri not in images:
+                images.append(uri)
+            material["pbrMetallicRoughness"]["baseColorTexture"] = {"index": images.index(uri)}
         materials.append(material)
         prims.append({"attributes": {
             "POSITION": add(mesh_pos.astype("<f4"), 5126, "VEC3", 34962, True),
@@ -613,9 +682,10 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     make_atlas(os.path.join(OUT, ATLAS))
     print("atlas %s %d bytes" % (ATLAS, os.path.getsize(os.path.join(OUT, ATLAS))))
-    mat = {"name": "Boss Crook | Pharaoh Atlas", "doubleSided": True, "pbrMetallicRoughness": {"metallicFactor": 0.0, "roughnessFactor": 0.6}}
-    (pos, nrm, uv, tris), _ = build_crook()
-    write("mummy_crook", GREATSWORD, "Weapon_Boss | Sword", [(pos, nrm, uv, tris, mat, ATLAS)], "procedural pharaoh crook")
+    grip_mat = {"name": "Boss Crook | Grip Atlas", "pbrMetallicRoughness": {"metallicFactor": 0.0, "roughnessFactor": 0.6}}
+    gold, grip = build_crook()
+    write("mummy_crook", GREATSWORD, "Weapon_Boss | Sword", [(*gold, CROOK_GOLD, None), (*grip, grip_mat, ATLAS)],
+          "%s Monster_MummyBoss_Khopesh outline (hook, guard) + round handle" % ORIGINAL_CROOK)
     (spos, snrm, suv, stris), (hpos, hnrm, huv, htris) = build_staff()
     shaft_mat = {"name": "Boss Staff | Pharaoh Atlas", "doubleSided": True, "pbrMetallicRoughness": {"metallicFactor": 0.0, "roughnessFactor": 0.6}}
     head_mat = {"name": "Boss Staff | Wizard Atlas", "pbrMetallicRoughness": {"metallicFactor": 0.0, "roughnessFactor": 0.8}}
