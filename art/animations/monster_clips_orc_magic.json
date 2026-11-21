@@ -30,9 +30,9 @@
     "loop": true
   },
   "run": {
-    "foot_speed": 1.325,
+    "foot_speed": 1.42,
     "length": 0.6,
     "loop": true,
-    "travel_per_second": 1.325
+    "travel_per_second": 1.42
   }
 }

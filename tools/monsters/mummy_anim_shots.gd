@@ -147,9 +147,19 @@ func _grab(spot: Vector3, h: float) -> Image:
 	await _frames(3)
 	await RenderingServer.frame_post_draw
 	var shot := root.get_texture().get_image()
-	var centre := _camera.unproject_position(spot + Vector3(0, 0.85 * h / 1.8, 0))
-	var box := Rect2i(Vector2i(centre) - CROP / 2, CROP).intersection(Rect2i(Vector2i.ZERO, shot.get_size()))
-	return shot.get_region(box)
+	# unproject_position answers in the viewport's logical (stretched) space; the grabbed image is in window pixels. At 844x390
+	# with the project's canvas_items/expand stretch the two differ (the old crop landed off the unit: blank strips). Map the
+	# centre into image pixels and crop a box of the same share of the screen height, scaled back to CROP.
+	var logical := root.get_visible_rect().size
+	var px := Vector2(shot.get_size()) / logical
+	var centre := _camera.unproject_position(spot + Vector3(0, 0.85 * h / 1.8, 0)) * px
+	var k := float(shot.get_height()) / 720.0
+	var size := Vector2i(int(CROP.x * k), int(CROP.y * k))
+	var box := Rect2i(Vector2i(centre) - size / 2, size).intersection(Rect2i(Vector2i.ZERO, shot.get_size()))
+	var region := shot.get_region(box)
+	if k != 1.0:
+		region.resize(maxi(1, int(box.size.x / k)), maxi(1, int(box.size.y / k)), Image.INTERPOLATE_BILINEAR)
+	return region
 
 
 func _save_row(images: Array[Image], path: String) -> void:
@@ -191,7 +201,7 @@ func _contact(view: Node3D, anim: RefCounted, spot: Vector3, h: float, speed: fl
 					var tint := Color.from_hsv(float(i) / exposures, 0.35, 1.0)
 					composite.set_pixel(x, y, c.lerp(c * tint, 0.5))
 	view.position = spot
-	var ground_y := int(_camera.unproject_position(spot).y)
+	var ground_y := int(_camera.unproject_position(spot).y * float(composite.get_height()) / root.get_visible_rect().size.y)
 	for x in composite.get_width():
 		if ground_y >= 0 and ground_y < composite.get_height():
 			composite.set_pixel(x, ground_y, Color(1, 0.2, 0.2))

@@ -16,11 +16,12 @@ From: monster-rigger (2026-11-21). For: the model team, through the PO.
 ## 2. Clips (each type has its OWN library and its own walk)
 | type | idle | run (own walk) | attacks | hit | death |
 |---|---|---|---|---|---|
-| grunt | `gs_idle`, hunched, arms out | sword_shield `run` at 2.7x: brute swagger, hunched 14 deg, rolling 7 deg, wide stance, arms held out | attack_1 = `attack_4` 0.6-2.0 s; attack_2 = `slash_3` 1.3-3.6 s + keyed trunk lunge | `impact_3` 1.3x | `death` 1.4x |
-| archer | `lb_idle_02_looking` | `lb_run_forward` 1.55x: low crouched prowl, trunk 18 deg, bow arm low | shoot / volley = `lb_draw_arrow` + `lb_aim_recoil` (the player's shot) | `lb_react_small_from_headshot` | `lb_death_backward_01` |
-| mage | `mg_spell_idle` | `mg_loco_run_forward` 1.25x: shaman waddle, 8 deg side roll, head bob, free arm out | cast = `mg_spell_1h_magic_attack_02`; cast_aoe = `mg_spell_2h_magic_area_attack_01`; blink = `mg_spell_2h_cast_spell_01` 2x | `mg_lite_react_small_from_front` 1.2x | `mg_lite_react_death_backward` |
+| grunt | `gs_idle`, hunched, arms out | sword_shield `run` at 2.7x: brute stomp, pelvis straightened 16 deg (trunk ~17 deg), rolling 7 deg, wide stance, both arms swinging against the legs, cleaver carried | attack_1 = `attack_4` 0.6-2.0 s; attack_2 = `slash_3` 1.3-3.6 s + keyed trunk lunge | `impact_3` 1.3x | `death` 1.4x |
+| archer | `lb_idle_02_looking` | `lb_run_forward` 1.55x: light upright run, pelvis straightened 22 deg (trunk ~14 deg, was 44), knee lift x1.2, arms counter-swinging, bow at the side | shoot / volley = `lb_draw_arrow` + `lb_aim_recoil` (the player's shot) | `lb_react_small_from_headshot` | `lb_death_backward_01` |
+| mage | `mg_spell_idle` | `mg_loco_run_forward` 1.25x: shaman waddle, upright-ish (trunk ~12 deg), 8 deg side roll, head bob, free arm swinging | cast = `mg_spell_1h_magic_attack_02`; cast_aoe = `mg_spell_2h_magic_area_attack_01`; blink = `mg_spell_2h_cast_spell_01` 2x | `mg_lite_react_small_from_front` 1.2x | `mg_lite_react_death_backward` |
 
-Every run keeps one foot on the floor (no flight phase). `run_clip_speed` = the measured planted-foot speed (grunt 1.546, archer 1.279, mage 1.325), so each type plays inside the 0.6-1.4x clamp at its MOVESPD (1.06x / 1.36x / 1.24x). Table and marks: `tools/monsters/build_clip_library.gd`.
+Every run keeps one foot on the floor (no flight phase). `run_clip_speed` = the measured planted-foot speed (grunt 1.546, archer 1.726, mage 1.42), so each type plays inside the 0.6-1.4x clamp at its MOVESPD. Table and marks: `tools/monsters/build_clip_library.gd`.
+Animator pass 2026-11-21 (Boss: "the run must not look like crawling"): new layers in the builder: `upright` (tips the pelvis back while the thighs keep their direction, so a folded donor run straightens without changing the stride), `swing` (stride-synced arm counter-swing), `shrug` (hands part of the clavicle's rotation to the upper arm: the arm points the same way, the clavicle and the pad/vest top skinned to it lift about half as much). Posture numbers: `tools/monsters/posture_probe.gd`.
 
 ## 3. Rig
 - The shared 102-joint studio05 rig (no donor joint removed or merged). The shared monster rig's four `bandage_*` extra joints are present but unweighted.
@@ -49,5 +50,5 @@ Rebuild: `squeeze_fbx.py <fbx> build/orc_base 3400` -> `rig_orc_fbx.py build/orc
 
 ## 7. Known weaknesses
 - All three share one silhouette. They are told apart mainly by weapon, headgear, tint and gait; at phone size the tint difference is subtle.
-- The shoulder pads and the vest deform as a stiff shell when the arms are raised high (cast_aoe, the overhead cleave).
+- The shoulder pads and the vest deform as a stiff shell when the arms are raised high (cast_aoe, the overhead cleave). Reduced 2026-11-21 by `shrug` in the clips (clavicle lift about halved); the pads are still weighted only to clavicle + upper arm, so a fully raised arm still lifts them. A real fix is a re-weight in `rig_orc_fbx.py` (pads partly on the chest), not done here.
 - The archer's bow is the player's longbow, recoloured, not an orc-made bow.

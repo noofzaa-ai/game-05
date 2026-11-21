@@ -176,15 +176,20 @@ const LIBRARIES := {
 				"mixamorig_LeftArm": [[0.0, 0, 0, 14]], "mixamorig_RightArm": [[0.0, 0, 0, -14]],
 				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 6]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -6]]}},
 		"run": {"segs": [["run", 0.0, 1.7916, 2.7]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
+			"upright": [[0.0, 16]],
 			"amp": {"mixamorig_LeftUpLeg": 1.35, "mixamorig_RightUpLeg": 1.35, "mixamorig_LeftLeg": 1.1, "mixamorig_RightLeg": 1.1},
-			"calm": {"mixamorig_LeftArm": 0.4, "mixamorig_RightArm": 0.3},
-			"lean": {"mixamorig_Spine": [[0.0, 14, 0, 7], [0.5, 14, 0, -7], [1.0, 14, 0, 7]],
-				"mixamorig_Head": [[0.0, -10, 0, -4], [0.5, -10, 0, 4], [1.0, -10, 0, -4]],
-				"mixamorig_LeftArm": [[0.0, -10, 0, 18]], "mixamorig_RightArm": [[0.0, -10, 0, -18]],
-				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 6]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -6]]}},
+			"calm": {"mixamorig_LeftArm": 0.6, "mixamorig_RightArm": 0.6, "mixamorig_LeftForeArm": 0.3, "mixamorig_RightForeArm": 0.3},
+			"lean": {"mixamorig_Spine": [[0.0, 2, 0, 7], [0.5, 2, 0, -7], [1.0, 2, 0, 7]],
+				"mixamorig_Head": [[0.0, -6, 0, -4], [0.5, -6, 0, 4], [1.0, -6, 0, -4]],
+				"mixamorig_LeftArm": [[0.0, 0, 0, 14]], "mixamorig_RightArm": [[0.0, 0, 0, -14]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 6]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -6]]},
+			"swing": {"mixamorig_LeftArm": [-30, 0.74, 0], "mixamorig_RightArm": [-24, 0.24, 0]},
+			"shrug": {"mixamorig_LeftShoulder": 0.5, "mixamorig_RightShoulder": 0.5}},
 		"attack_1": {"segs": [["attack_4", 0.6, 2.0, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 1.0, "strike_src": 1.2,
+			"shrug": {"mixamorig_LeftShoulder": 0.6, "mixamorig_RightShoulder": 0.6},
 			"lean": {"mixamorig_Spine": [[0.0, 10, 0, 0]], "mixamorig_LeftArm": [[0.0, 0, 0, 12]]}},
 		"attack_2": {"segs": [["slash_3", 1.3, 3.6, 1.0]], "loop": false, "ground": true, "release_in_seg": 0, "release_src": 1.93, "strike_src": 2.2,
+			"shrug": {"mixamorig_LeftShoulder": 0.6, "mixamorig_RightShoulder": 0.6},
 			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 0], [0.55, -6, 0, 0], [0.8, 24, 0, 0], [1.3, 24, 0, 0], [2.3, 8, 0, 0]],
 				"mixamorig_Head": [[0.0, -6, 0, 0], [0.8, -14, 0, 0], [2.3, -6, 0, 0]]}},
 		"hit": {"segs": [["impact_3", 0.0, 1.7916, 1.3]], "loop": false, "ground": true},
@@ -198,10 +203,13 @@ const LIBRARIES := {
 		"idle": {"segs": [["lb_idle_02_looking", 0.0, 3.2, 1.0]], "loop": true, "ground": true,
 			"lean": {"mixamorig_Spine": [[0.0, 8, 0, 0]], "mixamorig_Head": [[0.0, -6, 0, 0]]}},
 		"run": {"segs": [["lb_run_forward", 0.0, 0.8833333, 1.55]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
-			"amp": {"mixamorig_LeftUpLeg": 1.2, "mixamorig_RightUpLeg": 1.2},
-			"calm": {"mixamorig_LeftArm": 0.5, "mixamorig_LeftForeArm": 0.4},
-			"lean": {"mixamorig_Spine": [[0.0, 6, 0, 0]], "mixamorig_Head": [[0.0, -12, 0, 0]], "mixamorig_LeftArm": [[0.0, -20, 0, 0]],
-				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 3]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -3]]}},
+			"upright": [[0.0, 22]],
+			"amp": {"mixamorig_LeftUpLeg": 1.25, "mixamorig_RightUpLeg": 1.25, "mixamorig_LeftLeg": 1.2, "mixamorig_RightLeg": 1.2},
+			"calm": {"mixamorig_LeftArm": 0.5, "mixamorig_LeftForeArm": 0.3, "mixamorig_RightArm": 0.5, "mixamorig_RightForeArm": 0.3},
+			"lean": {"mixamorig_Spine": [[0.0, -8, 0, 0]], "mixamorig_Head": [[0.0, -4, 0, 0]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 3]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -3]]},
+			"swing": {"mixamorig_LeftArm": [14, 0.25, 0], "mixamorig_RightArm": [-28, 0.25, 0]},
+			"shrug": {"mixamorig_LeftShoulder": 0.5, "mixamorig_RightShoulder": 0.5}},
 		"shoot": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.35], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
 		"volley": {"segs": [["lb_draw_arrow", 0.0, 1.017, 1.0], ["lb_aim_recoil", 0.17, 0.70, 1.0]], "loop": false, "release_in_seg": 1, "release_src": 0.18, "strike_src": 0.25},
 		"hit": {"segs": [["lb_react_small_from_headshot", 0.0, 0.9833, 1.0]], "loop": false},
@@ -216,15 +224,21 @@ const LIBRARIES := {
 		"idle": {"segs": [["mg_spell_idle", 0.0, 1.8833, 1.0]], "loop": true, "ground": true,
 			"lean": {"mixamorig_Spine": [[0.0, 10, 0, 0]], "mixamorig_Head": [[0.0, -6, 0, 0]]}},
 		"run": {"segs": [["mg_loco_run_forward", 0.0, 0.75, 1.25]], "loop": true, "strip_travel": true, "frac": true, "ground": "floor",
-			"amp": {"mixamorig_LeftUpLeg": 1.3, "mixamorig_RightUpLeg": 1.3},
+			"upright": [[0.0, 8]],
+			"amp": {"mixamorig_LeftUpLeg": 1.3, "mixamorig_RightUpLeg": 1.3, "mixamorig_LeftLeg": 1.15, "mixamorig_RightLeg": 1.15},
 			"calm": {"mixamorig_RightArm": 0.5, "mixamorig_RightForeArm": 0.5},
-			"lean": {"mixamorig_Spine": [[0.0, 12, 0, 8], [0.5, 12, 0, -8], [1.0, 12, 0, 8]],
-				"mixamorig_Head": [[0.0, -8, 0, -6], [0.25, -12, 0, 0], [0.5, -8, 0, 6], [0.75, -12, 0, 0], [1.0, -8, 0, -6]],
-				"mixamorig_LeftArm": [[0.0, -10, 0, 16]],
-				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 7]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -7]]}},
-		"cast": {"segs": [["mg_spell_1h_magic_attack_02", 0.0, 1.6, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.4, "strike_src": 0.53},
-		"cast_aoe": {"segs": [["mg_spell_2h_magic_area_attack_01", 0.0, 2.9666, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.13, "strike_src": 1.27},
-		"blink": {"segs": [["mg_spell_2h_cast_spell_01", 0.2, 1.4, 2.0]], "loop": false, "release_in_seg": 0, "release_src": 0.55, "strike_src": 0.67},
+			"lean": {"mixamorig_Spine": [[0.0, 6, 0, 8], [0.5, 6, 0, -8], [1.0, 6, 0, 8]],
+				"mixamorig_Head": [[0.0, -6, 0, -6], [0.25, -9, 0, 0], [0.5, -6, 0, 6], [0.75, -9, 0, 0], [1.0, -6, 0, -6]],
+				"mixamorig_LeftArm": [[0.0, -6, 0, 16]],
+				"mixamorig_LeftUpLeg": [[0.0, 0, 0, 7]], "mixamorig_RightUpLeg": [[0.0, 0, 0, -7]]},
+			"swing": {"mixamorig_LeftArm": [-22, 0.8, 0]},
+			"shrug": {"mixamorig_LeftShoulder": 0.5, "mixamorig_RightShoulder": 0.5}},
+		"cast": {"segs": [["mg_spell_1h_magic_attack_02", 0.0, 1.6, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 0.4, "strike_src": 0.53,
+			"shrug": {"mixamorig_LeftShoulder": 0.6, "mixamorig_RightShoulder": 0.6}},
+		"cast_aoe": {"segs": [["mg_spell_2h_magic_area_attack_01", 0.0, 2.9666, 1.0]], "loop": false, "release_in_seg": 0, "release_src": 1.13, "strike_src": 1.27,
+			"shrug": {"mixamorig_LeftShoulder": 0.6, "mixamorig_RightShoulder": 0.6}},
+		"blink": {"segs": [["mg_spell_2h_cast_spell_01", 0.2, 1.4, 2.0]], "loop": false, "release_in_seg": 0, "release_src": 0.55, "strike_src": 0.67,
+			"shrug": {"mixamorig_LeftShoulder": 0.6, "mixamorig_RightShoulder": 0.6}},
 		"hit": {"segs": [["mg_lite_react_small_from_front", 0.0, 1.2, 1.2]], "loop": false},
 		"death": {"segs": [["mg_lite_react_death_backward", 0.0, 3.6333, 1.0]], "loop": false},
 	}},
@@ -421,9 +435,47 @@ func _compose(clip: String, spec: Dictionary, player: AnimationPlayer) -> Dictio
 				var parent_rest := _parent_global_rest(bone)
 				var key_time: float = time / total if spec.get("frac", false) else time
 				q = parent_rest.inverse() * _layer(spec["lean"][bone], key_time) * parent_rest * q
+			if spec.has("swing") and (spec["swing"] as Dictionary).has(bone):
+				# a smooth MODEL-space x swing (same axes as "lean"): [amplitude deg, clip fraction of the peak, offset deg];
+				# angle = offset + amplitude * cos(2 pi (fraction - peak)). Arms swung against the legs (a real run's counter-swing).
+				var sw: Array = spec["swing"][bone]
+				var frac_t: float = time / total
+				var deg: float = float(sw[2]) + float(sw[0]) * cos(TAU * (frac_t - float(sw[1])))
+				var pr := _parent_global_rest(bone)
+				q = pr.inverse() * Quaternion(Vector3.RIGHT, deg_to_rad(deg)) * pr * q
 			rot_v.append(q)
 			if has_pos:
 				pos_v.append(anim.position_track_interpolate(tr["pos"], src_time))
+	# "upright": [[t, degrees]...] tips the PELVIS back (model x axis) by that many degrees while both thighs keep their model-space
+	# direction exactly (the legs do not swing forward with it): straightens a donor run that is folded forward at the hips
+	# without changing the stride (Boss 2026-11-21: "the orc run looks like crawling").
+	if spec.has("upright") and rot_of.has("mixamorig_Hips"):
+		var pr := _parent_global_rest("mixamorig_Hips")
+		for i in times.size():
+			var key_time: float = float(times[i]) / total if spec.get("frac", false) else float(times[i])
+			var deg := _ease_keys(spec["upright"], key_time)
+			var lh := pr.inverse() * Quaternion(Vector3.RIGHT, deg_to_rad(-deg)) * pr
+			var qh: Quaternion = rot_of["mixamorig_Hips"][i]
+			var qh2 := (lh * qh).normalized()
+			rot_of["mixamorig_Hips"][i] = qh2
+			for leg in ["mixamorig_LeftUpLeg", "mixamorig_RightUpLeg"]:
+				if rot_of.has(leg):
+					rot_of[leg][i] = (qh2.inverse() * qh * (rot_of[leg][i] as Quaternion)).normalized()
+	# "shrug": {shoulder bone: fraction} hands that fraction of the clavicle's swing away from rest over to the upper arm, so the
+	# arm still points exactly where the donor's does while the clavicle (and the shoulder pad / vest top skinned to it) stays
+	# lower: an arm raised overhead no longer lifts the whole shoulder shell with it (Boss 2026-11-21, the orc pads).
+	if spec.has("shrug"):
+		for shoulder: String in spec["shrug"]:
+			var arm := shoulder.replace("Shoulder", "Arm")
+			if not rot_of.has(shoulder) or not rot_of.has(arm):
+				continue
+			var rest := _rest_rotation(shoulder)
+			var keep := 1.0 - float(spec["shrug"][shoulder])
+			for i in times.size():
+				var qs: Quaternion = rot_of[shoulder][i]
+				var qs2 := rest.slerp(qs, keep)
+				rot_of[arm][i] = (qs2.inverse() * qs * (rot_of[arm][i] as Quaternion)).normalized()
+				rot_of[shoulder][i] = qs2
 	# "ground": the layers above lengthen or bend the legs; the Hips height is moved so the lower foot stays exactly as high
 	# as the donor's own lower foot at that moment (planted feet stay planted, nothing sinks into or floats over the floor).
 	# "ground": "floor" keeps the lower foot ON the floor every frame (the donor's lowest foot height): a run loses its flight
