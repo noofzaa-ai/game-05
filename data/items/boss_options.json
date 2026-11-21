@@ -38,6 +38,8 @@
 		"boss_orc_warlock_ring": {"status": "burn", "chance": 10, "duration": 180, "icd": 480},
 		"boss_orc_warlock_back": {"status": "slow", "chance": 8, "duration": 180, "icd": 480},
 		"boss_mummy_boss_crook": {"status": "bleed", "chance": 12, "duration": 180, "icd": 360},
-		"boss_mummy_high_wizard_staff": {"status": "burn", "chance": 12, "duration": 180, "icd": 360}
+		"boss_mummy_high_wizard_staff": {"status": "burn", "chance": 12, "duration": 180, "icd": 360},
+		"boss_orc_warlock_sword": {"status": "wound", "chance": 12, "duration": 180, "icd": 360},
+		"boss_orc_warlock_shield": {"status": "weaken", "chance": 12, "duration": 180, "icd": 360}
 	}
 }

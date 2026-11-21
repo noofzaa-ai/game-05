@@ -145,6 +145,34 @@ func _data(ctx) -> void:
 		var item = Loot.roll_piece(f.rules, "x-%d" % i, 1, 10, f.combat.weapon_ids, rng)
 		any_boss = any_boss or (item != null and item.item_id.begins_with("boss_"))
 	ctx.check("boss loot: 2000 normal piece rolls never give a boss piece", not any_boss)
+	_weapon_summary(ctx, f)
+
+
+## Boss weapon drops ON (Boss 2026-11-21): a won orc_camp run whose seed rolls a weapon gives the sword or the shield in
+## the run-end summary (it survives the wire round trip, slot kept), and a race-drop conversion never turns it into a race
+## piece (race_drops only converts per-kill / chest drops, and a boss weapon is not in any race piece table).
+func _weapon_summary(ctx, f: Dictionary) -> void:
+	var data = JourneyData.load_by_id("orc_waves", f.combat.enemies.keys())
+	var found := {}
+	for s in 600:
+		var p = F.past_tutorial(F.Profile.new_player(f.rules, f.camp, F.rng(s)))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = s
+		var got: Dictionary = BossLoot.grant(p, f.rules, f.loot, data, false, 1.0, rng)
+		for item in got["items"]:
+			if str(item.item_id) in ["boss_orc_warlock_sword", "boss_orc_warlock_shield"] and not found.has(item.item_id):
+				var back: Dictionary = BossLoot.summary_from_dict(JSON.parse_string(JSON.stringify(BossLoot.summary_to_dict(got))))
+				var same: Array = back["items"].filter(func(i): return i.item_id == item.item_id and i.slot == item.slot)
+				found[item.item_id] = same.size() == 1 and str(back["zone"]) == "orc_camp"
+	ctx.check("boss loot: orc_camp wins drop the Warlock sword and shield, kept through the summary wire (%s)" % [found],
+		found.size() == 2 and found.values().all(func(v): return v))
+	# race_drops makes a race piece from race_piece / race_shield ids only: never the boss weapons
+	var race_ids := {}
+	for race in ["human", "viking", "elf", "runeborn"]:
+		race_ids[f.rules.catalog.race_shield(race)] = true
+		for cls in ["sword_shield", "greatsword", "longbow", "magic"]:
+			race_ids[f.rules.catalog.race_piece(race, cls, "weapon")] = true
+	ctx.check("boss loot: no race-drop target is a boss weapon / shield", race_ids.keys().all(func(id): return str(f.rules.catalog.entry(str(id)).get("boss", "")).is_empty()))
 
 
 func _ac1_drop_rates(ctx) -> void:

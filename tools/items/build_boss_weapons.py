@@ -315,11 +315,11 @@ def frame(points, hand=np.zeros(3), wide_head=False):
     return axis, length, (g - float(t.min())) / length
 
 
-def player_frame(path):
+def player_frame(path, hand=HAND):
     js, binary = glb.read_glb(os.path.join(ROOT, path))
     name = list(glb.meshed(js))[0]
     pos, _, _ = lv15.mesh_arrays(js, binary, name)
-    return js, binary, apply(inverse_bind(js, binary, HAND), pos)
+    return js, binary, apply(inverse_bind(js, binary, hand), pos)
 
 
 def blade_plane(points, axis):
@@ -597,10 +597,11 @@ def _turn(a, b):
     return np.eye(3) + k + k @ k * (1.0 / (1.0 + c))
 
 
-def write(wid, player_path, label, surfaces, source_note):
-    """surfaces: list of (pos, nrm, uv, tris, material, image uri) in the RightHand frame; one mesh, one primitive each."""
+def write(wid, player_path, label, surfaces, source_note, hand=HAND, budget=None, script="tools/items/build_boss_weapons.py"):
+    """surfaces: list of (pos, nrm, uv, tris, material, image uri) in the `hand` joint frame (RightHand by default; the Orc
+    Warlock shield uses LeftForeArm like the race shields); one mesh, one primitive each."""
     tjs, tbin = glb.read_glb(os.path.join(ROOT, player_path))
-    to_mesh = np.linalg.inv(inverse_bind(tjs, tbin, HAND))
+    to_mesh = np.linalg.inv(inverse_bind(tjs, tbin, hand))
     assert np.linalg.det(to_mesh[:3, :3]) > 0
     out_js = {k: json.loads(json.dumps(v)) for k, v in tjs.items() if k in ("asset", "scene", "scenes", "nodes", "skins")}
     chunks = []
@@ -624,7 +625,7 @@ def write(wid, player_path, label, surfaces, source_note):
         return len(out_js["accessors"]) - 1
 
     out_js["skins"][0]["inverseBindMatrices"] = add(acc(tjs, tbin, tjs["skins"][0]["inverseBindMatrices"]).astype("<f4"), 5126, "MAT4")
-    k = joint_index(tjs, HAND)
+    k = joint_index(tjs, hand)
     prims, materials, images = [], [], []
     n_tris = 0
     for pos, nrm, uv, tris, material, uri in surfaces:
@@ -659,18 +660,18 @@ def write(wid, player_path, label, surfaces, source_note):
         if "mesh" in node:
             node["name"] = label
             node["mesh"] = 0
-    out_js["extras"] = {"zorx_source": source_note + " (tools/items/build_boss_weapons.py)"}
+    out_js["extras"] = {"zorx_source": source_note + " (%s)" % script}
     binary = b"".join(chunks)
     out_js["buffers"] = [{"byteLength": len(binary)}]
     path = os.path.join(OUT, wid + ".glb")
     glb.write_glb(path, out_js, binary)
     njs, nbin = glb.read_glb(path)
     assert glb.rig_hash(njs, nbin) == glb.rig_hash(tjs, tbin), "rig differs from the player's weapon file"
-    assert lv15.bound_joints(njs, nbin, label) == {HAND}
-    assert n_tris <= BUDGET[wid], "%s: %d triangles" % (wid, n_tris)
-    _, _, player = player_frame(player_path)
+    assert lv15.bound_joints(njs, nbin, label) == {hand}
+    assert n_tris <= (BUDGET[wid] if budget is None else budget), "%s: %d triangles" % (wid, n_tris)
+    _, _, player = player_frame(player_path, hand)
     p_axis, p_len, p_grip = frame(player)
-    check = apply(inverse_bind(njs, nbin, HAND), lv15.mesh_arrays(njs, nbin, label)[0])
+    check = apply(inverse_bind(njs, nbin, hand), lv15.mesh_arrays(njs, nbin, label)[0])
     t = check @ p_axis
     f_len = float(t.max() - t.min())
     print("%-12s %4d tris %6d bytes  length %.3f = %.2f x the player weapon  grip %.2f (player %.2f)"

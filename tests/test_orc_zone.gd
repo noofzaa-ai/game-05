@@ -3,7 +3,7 @@ extends RefCounted
 ## orc_waves.json (9 waves, orc family only, the Orc Warlock at wave 9, no heal), zones.json wiring, the War Drums quest
 ## gate on a fixture profile -> the zone OPENS -> the client start_journey really starts the orc fight offline; the room
 ## manager hosts orc_waves for an open profile and refuses a locked one; a driven room reaches the Warlock, wins, pays the
-## orc boss loot, flags boss_orc_camp and counts the daily boss. Plus the boss weapon_drops roll (OFF unless enabled).
+## orc boss loot, flags boss_orc_camp and counts the daily boss. Plus the boss weapon_drops roll (ON for pyramid and orc_camp, Boss 2026-11-21).
 const Zones := preload("res://logic/world_zones.gd")
 const Quests := preload("res://logic/zone_quests.gd")
 const Daily := preload("res://logic/daily_quests.gd")
@@ -49,8 +49,9 @@ func run(ctx) -> void:
 ## one-time lv15 gear purge never runs again on a new player who holds them.
 func _warlock_loot(ctx, f: Dictionary) -> void:
 	var entry: Dictionary = BossLoot.boss("orc_camp")
-	ctx.check("warlock loot: orc_camp pays boss_orc_warlock, coin_orc_warlock, relic_orc_warlock, no weapon drops",
-		entry.get("set", "") == "boss_orc_warlock" and entry.get("coin", "") == "coin_orc_warlock" and entry.get("relic", "") == "relic_orc_warlock" and not entry.has("weapon_drops"))
+	ctx.check("warlock loot: orc_camp pays boss_orc_warlock, coin_orc_warlock, relic_orc_warlock, its sword + shield weapon drops ON",
+		entry.get("set", "") == "boss_orc_warlock" and entry.get("coin", "") == "coin_orc_warlock" and entry.get("relic", "") == "relic_orc_warlock"
+		and bool(entry.get("weapon_drops_enabled", false)) and Array(entry.get("weapon_drops", [])).map(func(w): return str(w.item)) == ["boss_orc_warlock_sword", "boss_orc_warlock_shield"])
 	var data = JourneyData.load_by_id(JOURNEY, f.combat.enemies.keys())
 	var pieces := 0
 	var foreign := 0
@@ -165,42 +166,49 @@ func _rooms(ctx, f: Dictionary) -> void:
 	ctx.check("settle: the daily boss counts the Orc Warlock", back != null and Daily.progress(back, int(Time.get_unix_time_from_system())).any(func(q): return q.id == "daily_boss" and q.current >= 1))
 
 
+## Boss weapon drops (Boss 2026-11-21: ON for the pyramid crook + staff and the Warlock sword + shield, 5% each). Per zone:
+## the data, ~5% each over 2000 wins, the drop lands in the stash as the right slot (the shield in "offhand"), the set
+## piece / relic rolls of a seed are the same as with drops OFF (a test copy of the entry), and OFF gives no weapon.
 func _weapon_drops(ctx, f: Dictionary) -> void:
-	var data = JourneyData.load_by_id("mummy_waves", f.combat.enemies.keys())
-	var entry: Dictionary = BossLoot.boss("pyramid")
-	ctx.check("pyramid weapon_drops data kept at 5%% each, OFF (no weapon_drops_enabled)", Array(entry.get("weapon_drops", [])).size() == 2 and Array(entry.weapon_drops).all(func(w): return is_equal_approx(float(w.chance), 0.05)) and not entry.has("weapon_drops_enabled"))
-	var weapons := 0
-	for s in 200:
-		var p = F.past_tutorial(Profile.new_player(f.rules, f.camp, F.rng(s)))
-		var rng := RandomNumberGenerator.new()
-		rng.seed = s
-		var got: Dictionary = BossLoot.grant(p, f.rules, f.loot, data, false, 1.0, rng)
-		weapons += got["items"].filter(func(i): return str(i.item_id).begins_with("boss_mummy_boss_crook") or str(i.item_id) == "boss_mummy_high_wizard_staff").size()
-	ctx.check("weapon drops OFF: 200 pyramid wins give no boss weapon", weapons == 0)
-	# Enabled (a test copy of the entry): ~5% each, and the set-piece/relic results of a seed do not change.
-	var saved: Dictionary = BossLoot._cached
-	var on: Dictionary = saved.duplicate(true)
-	on["bosses"]["pyramid"]["weapon_drops_enabled"] = true
-	var crook := 0
-	var staff := 0
-	var same := true
-	for s in 2000:
-		var p1 = F.past_tutorial(Profile.new_player(f.rules, f.camp, F.rng(1)))
-		var p2 = F.past_tutorial(Profile.new_player(f.rules, f.camp, F.rng(1)))
-		var r1 := RandomNumberGenerator.new(); r1.seed = s
-		var r2 := RandomNumberGenerator.new(); r2.seed = s
+	var zones := {"pyramid": ["mummy_waves", "boss_mummy_boss_crook", "boss_mummy_high_wizard_staff"],
+		"orc_camp": [JOURNEY, "boss_orc_warlock_sword", "boss_orc_warlock_shield"]}
+	for zone in zones:
+		var data = JourneyData.load_by_id(str(zones[zone][0]), f.combat.enemies.keys())
+		var a: String = zones[zone][1]
+		var b: String = zones[zone][2]
+		var entry: Dictionary = BossLoot.boss(zone)
+		ctx.check("%s weapon_drops: %s + %s at 5%% each, ON" % [zone, a, b], bool(entry.get("weapon_drops_enabled", false))
+			and Array(entry.get("weapon_drops", [])).map(func(w): return str(w.item)) == [a, b] and Array(entry.weapon_drops).all(func(w): return is_equal_approx(float(w.chance), 0.05)))
+		var saved: Dictionary = BossLoot._cached
+		var off: Dictionary = saved.duplicate(true)
+		off["bosses"][zone].erase("weapon_drops_enabled")
+		var n_a := 0
+		var n_b := 0
+		var off_weapons := 0
+		var same := true
+		var slots_ok := true
+		for s in 2000:
+			var p1 = F.past_tutorial(Profile.new_player(f.rules, f.camp, F.rng(1)))
+			var p2 = F.past_tutorial(Profile.new_player(f.rules, f.camp, F.rng(1)))
+			var r1 := RandomNumberGenerator.new(); r1.seed = s
+			var r2 := RandomNumberGenerator.new(); r2.seed = s
+			BossLoot._cached = off
+			var off_got: Dictionary = BossLoot.grant(p1, f.rules, f.loot, data, false, 1.0, r1)
+			BossLoot._cached = saved
+			var on_got: Dictionary = BossLoot.grant(p2, f.rules, f.loot, data, false, 1.0, r2)
+			off_weapons += off_got["items"].filter(func(i): return i.item_id == a or i.item_id == b).size()
+			var set_on: Array = on_got["items"].filter(func(i): return str(f.rules.catalog.entry(i.item_id).get("set", "")) != "")
+			same = same and set_on.size() == off_got["items"].size() and on_got["relics"] == off_got["relics"]
+			for i in on_got["items"]:
+				if i.item_id == a or i.item_id == b:
+					n_a += 1 if i.item_id == a else 0
+					n_b += 1 if i.item_id == b else 0
+					slots_ok = slots_ok and i.slot == str(f.rules.catalog.entry(i.item_id).slot) and p2.stash.items.has(i)
 		BossLoot._cached = saved
-		var off_got: Dictionary = BossLoot.grant(p1, f.rules, f.loot, data, false, 1.0, r1)
-		BossLoot._cached = on
-		var on_got: Dictionary = BossLoot.grant(p2, f.rules, f.loot, data, false, 1.0, r2)
-		var set_on: Array = on_got["items"].filter(func(i): return str(f.rules.catalog.entry(i.item_id).get("set", "")) != "")
-		same = same and set_on.size() == off_got["items"].size() and on_got["relics"] == off_got["relics"]
-		for i in on_got["items"]:
-			if i.item_id == "boss_mummy_boss_crook": crook += 1
-			if i.item_id == "boss_mummy_high_wizard_staff": staff += 1
-	BossLoot._cached = saved
-	ctx.check("weapon drops ON: each weapon ~5%% of 2000 wins (crook %d, staff %d)" % [crook, staff], crook >= 60 and crook <= 140 and staff >= 60 and staff <= 140)
-	ctx.check("weapon drops ON: the set piece and relic rolls of each seed are unchanged", same)
+		ctx.check("%s weapon drops ON: each ~5%% of 2000 wins (%s %d, %s %d)" % [zone, a, n_a, b, n_b], n_a >= 60 and n_a <= 140 and n_b >= 60 and n_b <= 140)
+		ctx.check("%s weapon drops: in the stash in their catalog slot (the shield in offhand)" % zone, slots_ok)
+		ctx.check("%s weapon drops: the set piece and relic rolls of each seed match drops OFF" % zone, same)
+		ctx.check("%s weapon drops OFF (test copy): 2000 wins give no boss weapon" % zone, off_weapons == 0)
 
 
 ## The client half (Boss warning): the GameState start path really starts the orc fight offline for the quest-done

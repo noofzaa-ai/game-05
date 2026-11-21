@@ -17,7 +17,8 @@ const Codec := preload("res://logic/state_codec.gd")
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
 
 ## The intended statuses (themes from the Boss brief): mummy curse/wound/sunder/weaken (+ the cobra ring's poison),
-## crook greatsword bleed, scarab staff burn; goblin chief weaken/exhaust/sunder/slow/bleed.
+## crook greatsword bleed, scarab staff burn; goblin chief weaken/exhaust/sunder/slow/bleed; Warlock sword wound, shield
+## weaken (bleed/sunder/slow are taken by the Warlock set: one status per boss).
 const THEMES := {
 	"boss_mummy_high_wizard_necklace": "weaken", "boss_mummy_high_wizard_earring": "wound", "boss_mummy_high_wizard_bracelet": "sunder",
 	"boss_mummy_high_wizard_ring": "poison", "boss_mummy_high_wizard_back": "curse",
@@ -26,6 +27,7 @@ const THEMES := {
 	"boss_goblin_chief_ring": "slow", "boss_goblin_chief_back": "bleed",
 	"boss_orc_warlock_necklace": "curse", "boss_orc_warlock_earring": "bleed", "boss_orc_warlock_bracelet": "sunder",
 	"boss_orc_warlock_ring": "burn", "boss_orc_warlock_back": "slow",
+	"boss_orc_warlock_sword": "wound", "boss_orc_warlock_shield": "weaken",
 }
 
 var _combat
@@ -56,8 +58,8 @@ func _data(ctx) -> void:
 		if not str(_rules.catalog.items[id].get("boss", "")).is_empty():
 			boss_ids.append(str(id))
 	boss_ids.sort()
-	ctx.check("boss options: 17 boss-drop pieces (3 sets of 5 + 2 weapons), each with an option (%d)" % boss_ids.size(),
-		boss_ids.size() == 17 and boss_ids.all(func(id): return not BossProcs.option(id).is_empty()))
+	ctx.check("boss options: 19 boss-drop pieces (3 sets of 5 + 4 weapons/shield), each with an option (%d)" % boss_ids.size(),
+		boss_ids.size() == 19 and boss_ids.all(func(id): return not BossProcs.option(id).is_empty()))
 	ctx.check("boss options: no zone drop has one (only catalog boss pieces)", _rules.catalog.items.keys().all(func(id):
 		return not BossProcs.option(str(id)).is_empty() == not str(_rules.catalog.items[id].get("boss", "")).is_empty()))
 	var themed := true
@@ -294,6 +296,10 @@ func _gear_path(ctx) -> void:
 	f.profile.loadout.unequip("necklace", 0)
 	sim.gear_changed(1)
 	ctx.check("gear: taking a piece off (gear_changed) drops its option", sim.fighters[1].boss_procs.map(func(o): return o["item"]) == ["boss_mummy_high_wizard_ring"])
+	# the Orc Warlock pair: the sword (weapon slot) and the shield (offhand slot) each give their own option
+	var pair := BossProcs.options_for([_piece("boss_orc_warlock_sword"), _piece("boss_orc_warlock_shield")])
+	ctx.check("gear: the Warlock sword + shield give wound + weaken (%s)" % [pair.map(func(o): return o["status"])],
+		pair.map(func(o): return o["item"]) == ["boss_orc_warlock_shield", "boss_orc_warlock_sword"] and pair.map(func(o): return o["status"]) == ["weaken", "wound"])
 
 
 # ---------------------------------------------------------------- a real fight + checkpoints

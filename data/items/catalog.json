@@ -219,6 +219,33 @@
    "asset_path": "",
    "icon_path": "res://art/items/boss/orc_warlock/back.png"
   },
+  "boss_orc_warlock_sword": {
+   "asset_id": "",
+   "name": "Warlock's Ember Cleaver",
+   "name_th": "ดาบกรรโชกถ่านไฟจอมอสูรออร์ค",
+   "slot": "weapon",
+   "weapon_type": "blade",
+   "class": "sword_shield",
+   "boss": "orc_camp",
+   "no_drop": true,
+   "drop_level": 20,
+   "req_level": 20,
+   "asset_path": "res://art/weapons/race_boss/orc_warlock_sword.glb",
+   "icon_path": "res://art/items/boss/orc_warlock/sword.png"
+  },
+  "boss_orc_warlock_shield": {
+   "asset_id": "",
+   "name": "Warlock's Bulwark",
+   "name_th": "โล่ปราการจอมอสูรออร์ค",
+   "slot": "offhand",
+   "class": "sword_shield",
+   "boss": "orc_camp",
+   "no_drop": true,
+   "drop_level": 20,
+   "req_level": 20,
+   "asset_path": "res://art/weapons/race_boss/orc_warlock_shield.glb",
+   "icon_path": "res://art/items/boss/orc_warlock/shield.png"
+  },
   "armour_sword_shield_shirt": {
    "asset_id": "armour_sword_shield_shirt",
    "name": "Sword & Shield Tunic",
@@ -804,5 +831,5 @@
    ]
   }
  },
- "_boss_items": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16): boss_<boss>_<slot> = that boss's accessory set (necklace, earring, bracelet, ring, back), 2D icons only (never on the 3D model), no_drop = never a normal monster/chest/shop-tier drop (logic/boss_loot.gd gives them). relics = socket gems (a stack material in camp.json, never worn alone); effects count while the socketed item is worn and not broken (durability 0). Not built by tools/items/build_race_gear.py (it keeps non-race keys). Boss unique WEAPONS (Boss 2026-11-21): boss_mummy_boss_crook (the Pharaoh mini boss's golden crook, a greatsword) and boss_mummy_high_wizard_staff (the High Wizard's staff, magic): no set (they never count toward a boss set and are never in the boss shop), boss=pyramid, no_drop, req_level 20; given only by data/loot/boss_loot.json weapon_drops. Boss-unique tier: their main stat uses data/items/tier_up.json level_stat_mul \"20\". Orc Warlock set boss_orc_warlock (2026-11-21): boss=orc_camp, req/drop level 20 (gear_levels.json orc_camp), main stat x1.8 like the boss weapons. Models: art/weapons/race_boss/ (built by tools/items/build_boss_weapons.py on the Studio rig)."
+ "_boss_items": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16): boss_<boss>_<slot> = that boss's accessory set (necklace, earring, bracelet, ring, back), 2D icons only (never on the 3D model), no_drop = never a normal monster/chest/shop-tier drop (logic/boss_loot.gd gives them). relics = socket gems (a stack material in camp.json, never worn alone); effects count while the socketed item is worn and not broken (durability 0). Not built by tools/items/build_race_gear.py (it keeps non-race keys). Boss unique WEAPONS (Boss 2026-11-21): boss_mummy_boss_crook (the Pharaoh mini boss's golden crook, a greatsword) and boss_mummy_high_wizard_staff (the High Wizard's staff, magic): no set (they never count toward a boss set and are never in the boss shop), boss=pyramid, no_drop, req_level 20; given only by data/loot/boss_loot.json weapon_drops. Boss-unique tier: their main stat uses data/items/tier_up.json level_stat_mul \"20\". Orc Warlock set boss_orc_warlock (2026-11-21): boss=orc_camp, req/drop level 20 (gear_levels.json orc_camp), main stat x1.8 like the boss weapons. Orc Warlock weapons (2026-11-21): boss_orc_warlock_sword (Sword & Shield one-hand sword, weapon_type blade) and boss_orc_warlock_shield (offhand), no set, boss=orc_camp, no_drop, req/drop level 20, given only by boss_loot.json orc_camp weapon_drops; their 3D is a PLACEHOLDER (tools/items/build_orc_warlock_weapons.py, from the Warlock's mockup pieces): the real models replace them by asset_path / icon_path here (data only). Models: art/weapons/race_boss/ (built by tools/items/build_boss_weapons.py on the Studio rig)."
 }
