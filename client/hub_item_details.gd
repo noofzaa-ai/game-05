@@ -208,6 +208,7 @@ func show_empty(heading: String, line_sub: String, line_main: String, line_subs:
 	title.text = heading
 	_fit_title()
 	sub.text = line_sub
+	CardTokens.hub_text(sub, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_SUBTEXT, s, 0, "medium")
 	level_tag.visible = false
 	_place_level_tag()
 	main_line.text = line_main
@@ -218,7 +219,7 @@ func show_empty(heading: String, line_sub: String, line_main: String, line_subs:
 func show_level(item, rules) -> void:
 	level_tag.text = CardTokens.item_level_label(item, rules.catalog)
 	level_tag.visible = true
-	_tag_color = CardTokens.HUB_BAD if CardTokens.item_level_low(item, rules.catalog, cell.viewed_card_level()) else CardTokens.HUB_SUBTEXT
+	_tag_color = CardTokens.HUB_BAD if CardTokens.item_level_low(item, rules.catalog, cell.viewed_card_level()) else (CardTokens.HUB_BOSS_TEXT if _boss else CardTokens.HUB_SUBTEXT)
 	_place_level_tag()
 
 
@@ -244,8 +245,10 @@ func show_item(item, rules) -> void:
 	_set_boss(ItemText.boss_option_text(str(item.item_id)) if ItemText.is_boss_piece(str(item.item_id), rules) else "", ItemText.is_boss_piece(str(item.item_id), rules))
 	title.text = item_name(item, rules) + ("  +%d" % item.refine_level if item.refine_level > 0 else "")
 	_fit_title()
-	var tier_id := str(rules.tiers[clampi(item.tier, 0, rules.tiers.size() - 1)]["id"])
-	sub.text = "%s  ·  %s  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), "◆".repeat(item.tier + 1)]
+	var shown: int = ItemText.shown_tier(item, rules)  # a boss-drop piece shows the top tier (Boss 2026-11-21)
+	var tier_id := str(rules.tiers[shown]["id"])
+	sub.text = "%s  ·  %s  %s" % [CardTokens.slot_name(item.slot), CardTokens.t("tier_" + tier_id), "◆".repeat(shown + 1)]
+	CardTokens.hub_text(sub, CardTokens.FONT_CHAR_LINE, CardTokens.HUB_BOSS_TEXT if _boss else CardTokens.HUB_SUBTEXT, s, 0, "medium")
 	# Boss 2026-11-16: the item level is always shown ("Lv 1" for starter pieces) in its own tag at the end of the line;
 	# the diamonds are dropped when the line would not fit beside it.
 	show_level(item, rules)

@@ -263,7 +263,7 @@ func _offer_tile(offer: Dictionary, p) -> Button:
 	tag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(tag)
 	if currency != "gold":  # a boss piece rolls its tier when bought (data/items/shop.json boss_item_tier "random")
-		var roll := CardTokens.label(CardTokens.t("shop_tier_random_short"), CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_SUBTEXT, s, 0, "medium")
+		var roll := CardTokens.label(CardTokens.t("shop_tier_random_short"), CardTokens.FONT_CHAR_SLOT, CardTokens.HUB_BOSS_TEXT, s, 0, "medium")
 		roll.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		roll.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		roll.size_flags_horizontal = Control.SIZE_EXPAND_FILL

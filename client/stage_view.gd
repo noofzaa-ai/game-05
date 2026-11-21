@@ -1187,9 +1187,10 @@ func _play_loot(event: Dictionary) -> void:
 	var color: Color = _vfx.palette.get("gold", Color(1.0, 0.8, 0.2))
 	var best := -1
 	for item in event["items"]:
-		if int(item["tier"]) > best:
-			best = int(item["tier"])
-			color = InkUi.RARITY_WORLD.get(GameState.item_rules.tiers[best]["color"], color)
+		var shown: int = preload("res://logic/boss_loot.gd").shown_tier(GameState.item_rules, str(item.get("item_id", "")), int(item["tier"]))  # boss drops: top tier
+		if shown > best:
+			best = shown
+			color = InkUi.rarity_color(preload("res://client/item_text.gd").rarity_key_for(str(item.get("item_id", "")), int(item["tier"]), GameState.item_rules), true)
 	var feet: Vector3 = _session.bodies[event["enemy"]].position
 	_effects.play("loot", Effects.context(feet, feet, Vector2.RIGHT, color))
 

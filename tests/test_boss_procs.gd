@@ -407,9 +407,59 @@ func _ui(ctx) -> void:
 	details.show_item(boss_piece, _rules)
 	var boss_shown: bool = details.boss_line.visible and not details.boss_line.text.is_empty()
 	var below: bool = details.dur_key.position.y >= details.boss_line.position.y + details.boss_line.size.y - 0.5
+	var top_id := str(_rules.tiers[_rules.tiers.size() - 1]["id"])
+	var boss_sub: String = details.sub.text
+	var boss_sub_color: Color = details.sub.get_theme_color("font_color")
 	details.show_item(zone_piece, _rules)
 	ctx.check("ui: details show the boss option line for a boss piece, above the durability row, and hide it for a zone piece", boss_shown and below and not details.boss_line.visible)
+	ctx.check("ui: a white-roll boss weapon's details say '%s' with 4 diamonds in boss gold text (%s)" % [CardTokens.t("tier_" + top_id), boss_sub],
+		boss_sub.contains(CardTokens.t("tier_" + top_id)) and not boss_sub.contains(CardTokens.t("tier_normal")) and boss_sub_color == CardTokens.HUB_BOSS_TEXT and boss_sub_color != CardTokens.HUB_SUBTEXT)
 	details.free()
+	_top_tier(ctx)
+
+
+## Boss 2026-11-21: boss-drop items are the highest tier: every view resolves them to the top tier whatever their rolled
+## tier, never with a white/blue/purple colour; the rolled tier (and so every stat) is unchanged.
+func _top_tier(ctx) -> void:
+	var InkUi = preload("res://client/ink_ui.gd")
+	var ItemText = preload("res://client/item_text.gd")
+	var CardTokens = preload("res://client/card_tokens.gd")
+	var BossLoot = preload("res://logic/boss_loot.gd")
+	var top: int = _rules.tiers.size() - 1
+	var lower_colors: Array = []
+	for t in top:
+		lower_colors.append(InkUi.RARITY.get(str(_rules.tiers[t]["color"])))
+		lower_colors.append(CardTokens.HUB_TIER[t])
+	var ok := true
+	var stats_same := true
+	var bad: Array = []
+	for id in _rules.catalog.items:
+		if str(_rules.catalog.items[id].get("boss", "")).is_empty():
+			continue
+		for t in _rules.tiers.size():
+			var piece = _piece(str(id), t)
+			var before: Dictionary = piece.stat_totals(_rules)
+			var good: bool = ItemText.shown_tier(piece, _rules) == top and BossLoot.shown_tier(_rules, str(id), t) == top \
+				and ItemText.title(piece, _rules).begins_with(str(_rules.tiers[top]["id"]).capitalize()) \
+				and not lower_colors.has(ItemText.tier_color(piece, _rules)) \
+				and not lower_colors.has(InkUi.rarity_color(ItemText.rarity_key_for(str(id), t, _rules), true))
+			if not good:
+				bad.append("%s@%d" % [id, t])
+			ok = ok and good
+			stats_same = stats_same and piece.tier == t and piece.stat_totals(_rules) == before
+	ctx.check("top tier: every boss piece at every rolled tier shows the top tier, title '%s ...', and no white/blue/purple colour %s" % [str(_rules.tiers[top]["id"]).capitalize(), bad], ok)
+	ctx.check("top tier: display only, the rolled tier and stats are unchanged (no silent buff)", stats_same)
+	var zone = ItemSystem.create_item(_rules, "t-zone-top", "shirt", 1, F.rng(5), "", "armour_sword_shield_shirt")
+	ctx.check("top tier: a rare zone piece still shows rare", ItemText.shown_tier(zone, _rules) == 1)
+	var Cell = preload("res://client/hub_item_cell.gd")
+	var cell = Cell.new()
+	cell.setup()
+	cell.card_race = "human"
+	cell.show_item(_piece("boss_goblin_chief_ring", 0), _rules, "")
+	ctx.check("top tier: the hub cell of a white-roll boss piece is marked boss (4 gold pips drawn)", cell.boss)
+	cell.free()
+	var Journey = load("res://client/journey_screen.gd")
+	ctx.check("top tier: loot summary sorts/counts a boss entry as the top tier", Journey._shown_tier({"item_id": "boss_mummy_high_wizard_ring", "tier": 1}, _rules) == top and Journey._shown_tier({"item_id": "armour_sword_shield_shirt", "tier": 1}, _rules) == 1)
 
 
 static func _luminance(c: Color) -> float:

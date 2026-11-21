@@ -26,6 +26,11 @@ static func rarity_key(item: Item, rules: ItemRules) -> String:
 	return rarity_key_for(item.item_id, item.tier, rules)
 
 
+## The tier a piece shows: the top tier for a boss-drop piece (logic/boss_loot.gd shown_tier), else its own.
+static func shown_tier(item: Item, rules: ItemRules) -> int:
+	return load("res://logic/boss_loot.gd").shown_tier(rules, item.item_id, item.tier)
+
+
 static func rarity_key_for(item_id: String, tier: int, rules: ItemRules) -> String:
 	if is_boss_piece(item_id, rules):
 		return InkUi.RARITY_BOSS
@@ -53,7 +58,7 @@ static func title(item: Item, rules: ItemRules, weapon_names: Dictionary = {}) -
 		kind = base["name"]
 	elif item.slot == "weapon" and not item.weapon_type.is_empty():
 		kind = str(weapon_names.get(item.weapon_type, item.weapon_type.capitalize()))
-	var text := "%s %s" % [str(rules.tiers[item.tier]["id"]).capitalize(), kind]
+	var text := "%s %s" % [str(rules.tiers[shown_tier(item, rules)]["id"]).capitalize(), kind]
 	if item.refine_level > 0:
 		text += "  +%d" % item.refine_level
 	elif item.level > 0:

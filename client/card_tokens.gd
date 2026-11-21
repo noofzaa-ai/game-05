@@ -967,8 +967,9 @@ const STRINGS := {
 	"shop_need_coins": ["ต้องใช้ %d เหรียญ (มี %d)", "Need %d coins (have %d)"],
 	"shop_need_gold": ["ต้องใช้ %d ทอง (มี %d)", "Need %d gold (have %d)"],
 	"shop_boss_piece": ["ชิ้นเซ็ตบอส · ช่องเรลิก 1 ช่อง", "Boss set piece  ·  1 Relic socket"],
-	"shop_tier_random": ["เกรดสุ่ม (น้ำเงิน/ม่วง/ทอง)", "Random tier (blue/purple/gold)"],  # the detail note (always shown for a boss piece, even when short of coins)
-	"shop_tier_random_short": ["เกรดสุ่ม", "Random tier"],  # the same on a stock tile
+	# Boss 2026-11-21: boss pieces always SHOW the top tier (gold); only their stats still roll at purchase
+	"shop_tier_random": ["เกรดบอส (ทอง) · ค่าพลังสุ่ม", "Boss tier (gold)  ·  random stats"],  # the detail note (always shown for a boss piece, even when short of coins)
+	"shop_tier_random_short": ["ค่าสุ่ม", "Random stats"],  # the same on a stock tile
 	"relic_empty": ["ช่องเรลิก: ว่าง", "Relic socket: empty"],
 	"relic_in": ["เรลิก: %s", "Relic: %s"],
 	"relic_socket_btn": ["ใส่เรลิก", "Socket"],

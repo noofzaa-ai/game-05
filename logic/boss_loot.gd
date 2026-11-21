@@ -55,6 +55,15 @@ static func is_boss_piece(rules, item) -> bool:
 	return item != null and not str(rules.catalog.entry(item.item_id).get("boss", "")).is_empty()
 
 
+## The tier a piece SHOWS and sorts by (Boss 2026-11-21: boss-drop items are the highest tier): the top tier for any
+## catalog item with a boss, else its own tier. Display / ordering only: stats, substat count, set tier_mul and sell price
+## keep reading Item.tier (the rolled tier), so no boss piece changes its numbers (the top tier would raise them).
+static func shown_tier(rules, item_id: String, tier: int) -> int:
+	if not str(rules.catalog.entry(item_id).get("boss", "")).is_empty():
+		return rules.tiers.size() - 1
+	return clampi(tier, 0, rules.tiers.size() - 1)
+
+
 ## True when `item` has a Relic socket (v1: boss set pieces and legendary items, one socket each).
 static func has_socket(rules, item) -> bool:
 	return item != null and not item.destroyed and (is_boss_piece(rules, item) or int(item.tier) >= rules.tiers.size() - 1)

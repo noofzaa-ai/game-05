@@ -20,9 +20,10 @@ func _strings(ctx) -> void:
 		ctx.check("shop tier note (%s): detail text exists" % lang, not full.is_empty() and full != "shop_tier_random")
 		ctx.check("shop tier note (%s): tile text exists and is shorter" % lang, not short.is_empty() and short != "shop_tier_random_short" and short.length() < full.length())
 	CardTokens.language = "en"
-	ctx.check("shop tier note (en): names blue/purple/gold", CardTokens.t("shop_tier_random") == "Random tier (blue/purple/gold)")
+	# Boss 2026-11-21: boss pieces always show the top tier (gold); the note no longer names blue/purple
+	ctx.check("shop tier note (en): boss tier gold, random stats, no blue/purple", CardTokens.t("shop_tier_random") == "Boss tier (gold)  ·  random stats")
 	CardTokens.language = "th"
-	ctx.check("shop tier note (th): says random tier (blue/purple/gold)", CardTokens.t("shop_tier_random").begins_with("เกรดสุ่ม") and CardTokens.t("shop_tier_random").contains("/"))
+	ctx.check("shop tier note (th): boss tier gold, no blue/purple", CardTokens.t("shop_tier_random").contains("ทอง") and not CardTokens.t("shop_tier_random").contains("น้ำเงิน") and not CardTokens.t("shop_tier_random").contains("ม่วง"))
 	ctx.check("shop boss piece line no longer carries the tier (it has its own line, shown when short of coins too)", not CardTokens.t("shop_boss_piece").contains("เกรดสุ่ม"))
 	CardTokens.language = "en"
 	ctx.check("shop boss piece line (en) no longer carries the tier", not CardTokens.t("shop_boss_piece").to_lower().contains("random tier"))

@@ -164,7 +164,7 @@ func _reward_text(reward: Dictionary) -> String:
 		return "nothing"
 	var parts: Array[String] = []
 	for item in reward.get("items", []):
-		parts.append("%s %s" % [str(GameState.item_rules.tiers[item.tier]["id"]).capitalize(), item.slot])
+		parts.append("%s %s" % [str(GameState.item_rules.tiers[_shown_tier({"item_id": item.item_id, "tier": item.tier})]["id"]).capitalize(), item.slot])
 	if int(reward.get("gold", 0)) > 0:
 		parts.append("%d gold" % int(reward["gold"]))
 	for id in reward.get("materials", {}):
@@ -388,7 +388,7 @@ func _add_loot(loot: Dictionary, width: float, s: float) -> void:
 	if items.is_empty():
 		return
 	var sorted := items.duplicate()
-	sorted.sort_custom(func(a, b) -> bool: return int(a["tier"]) > int(b["tier"]))
+	sorted.sort_custom(func(a, b) -> bool: return _shown_tier(a) > _shown_tier(b))
 	var grid := _flow(width, CardTokens.SUMMARY_CELL_GAP, s)
 	var cell_px := CardTokens.SUMMARY_CELL * s
 	for index in mini(sorted.size(), CardTokens.SUMMARY_MAX_ITEMS):
@@ -412,7 +412,7 @@ func _add_loot(loot: Dictionary, width: float, s: float) -> void:
 		grid.add_child(more)
 	var counts := {}
 	for entry in sorted:
-		counts[int(entry["tier"])] = int(counts.get(int(entry["tier"]), 0)) + 1
+		counts[_shown_tier(entry)] = int(counts.get(_shown_tier(entry), 0)) + 1
 	var tiers := _flow(width, CardTokens.SUMMARY_GAP * 1.5, s)
 	var order := counts.keys()
 	order.sort()
@@ -421,6 +421,11 @@ func _add_loot(loot: Dictionary, width: float, s: float) -> void:
 		var tier_id := str(GameState.item_rules.tiers[tier]["id"]) if tier < GameState.item_rules.tiers.size() else "normal"
 		var words := "%s %s" % ["◆".repeat(tier + 1), HubLook.t("summary_tiers") % [counts[tier], CardTokens.t("tier_" + tier_id)]]
 		tiers.add_child(CardTokens.label(words, CardTokens.FONT_SUMMARY_LINE, HubLook.tier_color(tier), s, CardTokens.OUTLINE_HUB, "medium", CardTokens.HUB_OUTLINE))
+
+
+## The tier a loot summary entry ({"item_id", "tier"}) shows: the top tier for a boss-drop piece (Boss 2026-11-21).
+static func _shown_tier(entry: Dictionary, rules = null) -> int:
+	return preload("res://logic/boss_loot.gd").shown_tier(rules if rules != null else GameState.item_rules, str(entry.get("item_id", "")), int(entry.get("tier", 0)))
 
 
 ## The boss kill rewards of this player (journey.boss_loot, design/gdd/boss-loot.md 2): the coin, the set piece (a hub

@@ -483,7 +483,7 @@ func _show_item(cell: Control, item) -> void:
 		cell.frame_color = InkUi.BORDER
 	else:
 		var color: Color = ItemText.tier_color(item, rules)
-		cell.tier = item.tier
+		cell.tier = ItemText.shown_tier(item, rules)  # boss-drop pieces: the top tier's frame (Boss 2026-11-21)
 		cell.level = item.refine_level if item.refine_level > 0 else item.level
 		cell.frame_color = color
 		cell.icon_fill = color
@@ -522,8 +522,10 @@ func _rebuild_grid() -> void:
 			return ca < cb
 		if a.slot != b.slot:
 			return slot_order.find(a.slot) < slot_order.find(b.slot)
-		if a.tier != b.tier:
-			return a.tier > b.tier
+		var ta: int = ItemText.shown_tier(a, rules)  # boss-drop pieces sort as the top tier
+		var tb: int = ItemText.shown_tier(b, rules)
+		if ta != tb:
+			return ta > tb
 		return a.level > b.level)
 	var cell_size: float = SIZES[mode]["cell"]
 	for item in entries:
@@ -587,7 +589,7 @@ func _new_bag_cell(cell_size: float) -> Control:
 
 
 func _search_text(item) -> String:
-	return ("%s %s %s %s" % [_title(item), _slot_name(item.slot, -1), ItemText.stats_line(item, rules), str(rules.tiers[item.tier]["color"])]).to_lower()
+	return ("%s %s %s %s" % [_title(item), _slot_name(item.slot, -1), ItemText.stats_line(item, rules), ItemText.rarity_key(item, rules) + " " + str(rules.tiers[ItemText.shown_tier(item, rules)]["color"])]).to_lower()
 
 
 ## Updates the selected / highlighted / dimmed marks without rebuilding anything (so a press that
@@ -849,7 +851,7 @@ func _preview_cell(item) -> Control:
 func _detail_item(item, worn: bool) -> void:
 	var where := _slot_name(item.slot, selection.get("index", -1) if worn else -1)
 	_detail_header(_preview_cell(item), _title(item), ItemText.tier_color(item, rules),
-		TEXT["tier_slot"] % [where, item.tier + 1, rules.tiers.size()] + ("   " + TEXT["worn_tag"] if worn else ""))
+		TEXT["tier_slot"] % [where, ItemText.shown_tier(item, rules) + 1, rules.tiers.size()] + ("   " + TEXT["worn_tag"] if worn else ""))
 	_detail.add_child(ItemText.base_label(item, rules))
 	for index in item.substats.size():
 		_detail.add_child(_line("   " + ItemText.substat_text(item, rules, index), InkUi.SUBSTAT, InkUi.FONT_LABEL))

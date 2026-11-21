@@ -83,19 +83,20 @@ func _draw() -> void:
 	var font := CardTokens.medium_font()
 	if item != null:
 		var bounds := rect.grow(-size.x * 0.19)
+		var shown: int = CardTokens.HUB_TIER.size() - 1 if boss else int(item.tier)  # boss-drop pieces show the top tier (Boss 2026-11-21)
 		if icon_tex != null:
 			var picture := icon_tex.get_size()
 			var fit := minf(bounds.size.x / picture.x, bounds.size.y / picture.y)
 			var fitted := picture * fit
 			draw_texture_rect(icon_tex, Rect2(bounds.get_center() - fitted * 0.5 - Vector2(0.0, size.y * 0.03), fitted), false)
 		else:
-			ItemIcon.draw_icon(self, bounds, ItemIcon.shape_for(item.slot, item.weapon_type), _tier_color(item.tier))
-		var count: int = clampi(item.tier + 1, 1, CardTokens.HUB_TIER.size())
+			ItemIcon.draw_icon(self, bounds, ItemIcon.shape_for(item.slot, item.weapon_type), _tier_color(shown))
+		var count: int = clampi(shown + 1, 1, CardTokens.HUB_TIER.size())
 		var r := size.x * 0.045
 		for i in count:
 			var c := Vector2(size.x * 0.5 + (float(i) - float(count - 1) * 0.5) * r * CardTokens.CHAR_PIP_SPACING, size.y * 0.86)
 			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r - 1.0), c + Vector2(r + 1.0, 0), c + Vector2(0, r + 1.0), c + Vector2(-r - 1.0, 0)]), CardTokens.HUB_OUTLINE)
-			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)]), _tier_color(item.tier))
+			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -r), c + Vector2(r, 0), c + Vector2(0, r), c + Vector2(-r, 0)]), _tier_color(shown))
 		if item.refine_level > 0:
 			var px := maxi(int(round(size.x * 0.2)), CardTokens.FONT_MIN)
 			var words := "+%d" % item.refine_level

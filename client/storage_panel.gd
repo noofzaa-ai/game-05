@@ -149,7 +149,7 @@ func _render() -> void:
 			cell.locked = _busy or _blocked
 			if cell.kind == "item":
 				var item = cell.entry.item
-				cell.item = item; cell.tier = item.tier; cell.level = item.refine_level
+				cell.item = item; cell.tier = Text.shown_tier(item, rules); cell.level = item.refine_level
 				cell.icon_texture = Assets.icon(item, rules.catalog)
 				cell.frame_color = Text.tier_color(item, rules)
 				cell.icon_fill = cell.frame_color
