@@ -40,7 +40,43 @@ func run(ctx) -> void:
 	_gate(ctx, f)
 	_rooms(ctx, f)
 	_weapon_drops(ctx, f)
+	_warlock_loot(ctx, f)
 	await _client_start(ctx, f)
+
+
+## The Warlock pays its OWN accessory set (2026-11-21, replaces the mummy placeholder): set pieces, coin and relic are
+## orc_warlock ids; pieces are level-20 gear (gear_levels.json orc_camp), wearable at card level 20 and never at 19, and the
+## one-time lv15 gear purge never runs again on a new player who holds them.
+func _warlock_loot(ctx, f: Dictionary) -> void:
+	var entry: Dictionary = BossLoot.boss("orc_camp")
+	ctx.check("warlock loot: orc_camp pays boss_orc_warlock, coin_orc_warlock, relic_orc_warlock, no weapon drops",
+		entry.get("set", "") == "boss_orc_warlock" and entry.get("coin", "") == "coin_orc_warlock" and entry.get("relic", "") == "relic_orc_warlock" and not entry.has("weapon_drops"))
+	var data = JourneyData.load_by_id(JOURNEY, f.combat.enemies.keys())
+	var pieces := 0
+	var foreign := 0
+	for s in 120:
+		var p = F.past_tutorial(Profile.new_player(f.rules, f.camp, F.rng(s)))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = s
+		var got: Dictionary = BossLoot.grant(p, f.rules, f.loot, data, s == 0, 1.0, rng)
+		for i in got["items"]:
+			if str(i.item_id).begins_with("boss_orc_warlock_"):
+				pieces += 1
+			else:
+				foreign += 1
+		if p.stash.material_count("coin_mummy_high_wizard") > 0 or p.stash.material_count("coin_orc_warlock") < 1:
+			foreign += 1
+	ctx.check("warlock loot: 120 orc wins pay Warlock coins and Warlock pieces only (%d pieces, %d foreign)" % [pieces, foreign], pieces > 0 and foreign == 0)
+	var gear_level := GearLevels.zone_level("orc_camp")
+	var purge := preload("res://logic/gear_purge.gd")
+	for id in BossLoot.set_pieces(f.rules, "boss_orc_warlock"):
+		var item = preload("res://logic/item_system.gd").create_item(f.rules, "wl-" + id, str(f.rules.catalog.entry(id).slot), 1, F.rng(3), "", id)
+		var p = Profile.new_player(f.rules, f.camp, F.rng(7))
+		p.stash.items.append(item)
+		ctx.check("warlock loot %s: req/drop level = orc gear level %d, wearable at 20 not 19, survives the one-time purge" % [id, gear_level],
+			gear_level == 20 and f.rules.catalog.req_level(id) == gear_level and int(f.rules.catalog.entry(id).drop_level) == gear_level
+			and Profile.slot_problem("sword_shield", item, f.rules, 20) == "" and Profile.slot_problem("sword_shield", item, f.rules, 19) == "level_too_low"
+			and purge.done(p) and not purge.purge(p, f.rules)["ran"] and p.stash.items.has(item))
 
 
 func _journey_data(ctx, f: Dictionary) -> void:

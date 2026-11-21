@@ -24,6 +24,8 @@ const THEMES := {
 	"boss_mummy_boss_crook": "bleed", "boss_mummy_high_wizard_staff": "burn",
 	"boss_goblin_chief_necklace": "weaken", "boss_goblin_chief_earring": "exhaust", "boss_goblin_chief_bracelet": "sunder",
 	"boss_goblin_chief_ring": "slow", "boss_goblin_chief_back": "bleed",
+	"boss_orc_warlock_necklace": "curse", "boss_orc_warlock_earring": "bleed", "boss_orc_warlock_bracelet": "sunder",
+	"boss_orc_warlock_ring": "burn", "boss_orc_warlock_back": "slow",
 }
 
 var _combat
@@ -54,8 +56,8 @@ func _data(ctx) -> void:
 		if not str(_rules.catalog.items[id].get("boss", "")).is_empty():
 			boss_ids.append(str(id))
 	boss_ids.sort()
-	ctx.check("boss options: 12 boss-drop pieces (2 sets of 5 + 2 weapons), each with an option (%d)" % boss_ids.size(),
-		boss_ids.size() == 12 and boss_ids.all(func(id): return not BossProcs.option(id).is_empty()))
+	ctx.check("boss options: 17 boss-drop pieces (3 sets of 5 + 2 weapons), each with an option (%d)" % boss_ids.size(),
+		boss_ids.size() == 17 and boss_ids.all(func(id): return not BossProcs.option(id).is_empty()))
 	ctx.check("boss options: no zone drop has one (only catalog boss pieces)", _rules.catalog.items.keys().all(func(id):
 		return not BossProcs.option(str(id)).is_empty() == not str(_rules.catalog.items[id].get("boss", "")).is_empty()))
 	var themed := true
@@ -73,7 +75,11 @@ func _data(ctx) -> void:
 		return n is Array and n.size() == 2 and not str(n[0]).is_empty() and not str(n[1]).is_empty()))
 	var orc: Dictionary = preload("res://logic/boss_loot.gd").boss("orc_camp")
 	var orc_pieces := preload("res://logic/boss_loot.gd").set_pieces(_rules, str(orc.get("set", "")))
-	ctx.check("boss options: the Orc Warlock placeholder set's pieces carry options (data-only swap later)", not orc_pieces.is_empty() and orc_pieces.all(func(id): return not BossProcs.option(id).is_empty()))
+	ctx.check("boss options: the Orc Warlock pays its own set (5 pieces, boss orc_camp), each with an option",
+		str(orc.get("set", "")) == "boss_orc_warlock" and orc_pieces.size() == 5 and orc_pieces.all(func(id): return not BossProcs.option(id).is_empty() and str(_rules.catalog.entry(id).get("boss", "")) == "orc_camp"))
+	var top: int = _rules.tiers.size() - 1
+	ctx.check("boss options: every Warlock piece shows the top tier at every rolled tier", orc_pieces.all(func(id):
+		return range(_rules.tiers.size()).all(func(t): return preload("res://logic/boss_loot.gd").shown_tier(_rules, id, t) == top)))
 
 
 ## validate() catches each rule; the shipped data is restored afterwards.

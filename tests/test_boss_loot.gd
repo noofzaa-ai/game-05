@@ -42,6 +42,7 @@ func _boss_set_parity(ctx) -> void:
 	var bosses := {
 		"goblin_base": {"set": "boss_goblin_chief", "dir": "goblin_chief", "coin": "coin_goblin_chief", "relic": "relic_goblin_chief", "req": 1},
 		"pyramid": {"set": "boss_mummy_high_wizard", "dir": "mummy_high_wizard", "coin": "coin_mummy_high_wizard", "relic": "relic_mummy_high_wizard", "req": 15},
+		"orc_camp": {"set": "boss_orc_warlock", "dir": "orc_warlock", "coin": "coin_orc_warlock", "relic": "relic_orc_warlock", "req": 20},
 	}
 	var raw_items: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/items/catalog.json")).get("items", {})  # name_th is not kept by the loader
 	var goblin_set: Dictionary = f.rules.catalog.sets["boss_goblin_chief"]
@@ -73,6 +74,23 @@ func _boss_set_parity(ctx) -> void:
 	var goblin_item = ItemSystem.create_item(f.rules, "bp-gb", "ring", 1, F.rng(5), "", "boss_goblin_chief_ring")
 	ctx.check("boss set pyramid: pieces are real catalog items of their slot and the level-15 main stat is x%s of the goblin one" % [f.rules.catalog.level_mul(15)],
 		mummy_item != null and mummy_item.item_id == "boss_mummy_high_wizard_ring" and goblin_item != null and absf(mummy_item.main_value(f.rules) / goblin_item.main_value(f.rules) - f.rules.catalog.level_mul(15)) < 0.001)
+	# Orc Camp (2026-11-21): its own set/coin/relic (no longer the mummy placeholder), level-20 pieces one step above the mummy
+	# ones (x level_mul(20) of the goblin piece), set steps and relic above the mummy's.
+	var orc_entry: Dictionary = BossLoot.boss("orc_camp")
+	ctx.check("boss set orc_camp: boss_loot.json entry names the Warlock set, coin and relic, sold for 500 Warlock coins",
+		orc_entry.get("set", "") == "boss_orc_warlock" and orc_entry.get("coin", "") == "coin_orc_warlock" and orc_entry.get("relic", "") == "relic_orc_warlock" and int(orc_entry.get("price_coins", 0)) == 500)
+	var orc_item = ItemSystem.create_item(f.rules, "bp-oc", "ring", 1, F.rng(5), "", "boss_orc_warlock_ring")
+	ctx.check("boss set orc_camp: level-20 main stat is x%s of the goblin one and above the mummy one" % [f.rules.catalog.level_mul(20)],
+		orc_item != null and absf(orc_item.main_value(f.rules) / goblin_item.main_value(f.rules) - f.rules.catalog.level_mul(20)) < 0.001 and orc_item.main_value(f.rules) > mummy_item.main_value(f.rules))
+	var mummy_steps: Array = f.rules.catalog.sets["boss_mummy_high_wizard"].steps
+	var orc_steps: Array = f.rules.catalog.sets["boss_orc_warlock"].steps
+	var steps_up := true
+	for k in 3:
+		steps_up = steps_up and str(orc_steps[k].effects[0].stat) == str(mummy_steps[k].effects[0].stat) and float(orc_steps[k].effects[0].mul) > float(mummy_steps[k].effects[0].mul)
+	ctx.check("boss set orc_camp: each set step is the mummy step's stat, a bit higher", steps_up)
+	var sum := func(rid: String) -> float:
+		return f.rules.catalog.relics[rid].effects.reduce(func(acc, e): return acc + (float(e.get("mul", 0.0)) if str(e.stat) == "ATK" else 0.0), 0.0)
+	ctx.check("boss set orc_camp: the Warlock relic's ATK is above the mummy relic's", sum.call("relic_orc_warlock") > sum.call("relic_mummy_high_wizard"))
 
 
 
@@ -314,10 +332,12 @@ func _ac5_shop(ctx) -> void:
 	var offers := Shop.stock(f.rules, f.camp)
 	var ids: Array = offers.map(func(o): return str(o.id))
 	ids.sort()
-	var all_pieces: Array = BossLoot.set_pieces(f.rules, SET) + BossLoot.set_pieces(f.rules, "boss_mummy_high_wizard")
+	var all_pieces: Array = BossLoot.set_pieces(f.rules, SET) + BossLoot.set_pieces(f.rules, "boss_mummy_high_wizard") + BossLoot.set_pieces(f.rules, "boss_orc_warlock")
 	all_pieces.sort()
-	ctx.check("AC5 the shop lists only the boss pieces (5 per boss: goblin + mummy) %s" % [ids], ids == all_pieces)
-	ctx.check("AC5 each costs 500 coins of its own boss (Goblin Chief / Mummy High Wizard)", offers.all(func(o): return int(o.price) == 500 and str(o.currency) == (COIN if str(o.id).begins_with("boss_goblin_chief_") else "coin_mummy_high_wizard")))
+	ctx.check("AC5 the shop lists only the boss pieces (5 per boss: goblin + mummy + orc warlock) %s" % [ids], ids == all_pieces)
+	var coin_of := func(id: String) -> String:
+		return COIN if id.begins_with("boss_goblin_chief_") else "coin_orc_warlock" if id.begins_with("boss_orc_warlock_") else "coin_mummy_high_wizard"
+	ctx.check("AC5 each costs 500 coins of its own boss (Goblin Chief / Mummy High Wizard / Orc Warlock)", offers.all(func(o): return int(o.price) == 500 and str(o.currency) == coin_of.call(str(o.id))))
 	ctx.check("AC5 relics are never sold", not ids.has(RELIC) and offers.all(func(o): return o.kind == "item"))
 	var gold_before: int = p.stash.gold
 	p.stash.add_material(COIN, 499)

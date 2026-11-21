@@ -103,6 +103,30 @@
 				0.55,
 				0.85
 			]
+		},
+		"coin_orc_warlock": {
+			"name": "Orc Warlock Coin",
+			"name_th": "เหรียญจอมเวทออร์ค",
+			"stack": 99,
+			"sellable": false,
+			"icon_path": "res://art/items/boss/orc_warlock/coin.png",
+			"color": [
+				0.72,
+				0.45,
+				0.22
+			]
+		},
+		"relic_orc_warlock": {
+			"name": "Orc Warlock's Relic",
+			"name_th": "เรลิกจอมเวทออร์ค",
+			"stack": 99,
+			"sellable": false,
+			"icon_path": "res://art/items/boss/orc_warlock/relic.png",
+			"color": [
+				0.55,
+				0.3,
+				0.7
+			]
 		}
 	},
 	"bag": {

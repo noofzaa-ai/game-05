@@ -104,6 +104,60 @@
       ],
       "bonuses": []
     },
+    "boss_orc_warlock": {
+      "name": "Orc Warlock's War Regalia",
+      "name_th": "ชุดจอมเวทออร์ค",
+      "kind": "boss",
+      "boss": "orc_camp",
+      "tier_mul": {
+        "normal": 0.75,
+        "rare": 1.0,
+        "epic": 1.25,
+        "legendary": 1.5
+      },
+      "steps": [
+        {
+          "pieces": 2,
+          "name": "War Drums",
+          "name_th": "กลองศึก",
+          "text": "ATK +7%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "ATK",
+              "mul": 0.07
+            }
+          ]
+        },
+        {
+          "pieces": 4,
+          "name": "Hide of the Night Camp",
+          "name_th": "หนังสัตว์ค่ายราตรี",
+          "text": "Max HP +12%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "HP",
+              "mul": 0.12
+            }
+          ]
+        },
+        {
+          "pieces": 6,
+          "name": "Warlock's Ember Rite",
+          "name_th": "พิธีถ่านไฟจอมเวท",
+          "text": "ATK +10%.",
+          "effects": [
+            {
+              "type": "stat_mod",
+              "stat": "ATK",
+              "mul": 0.1
+            }
+          ]
+        }
+      ],
+      "bonuses": []
+    },
     "race_human": {
       "name": "Human Banner Gear",
       "name_th": "ชุดธงศึกมนุษย์",
