@@ -65,10 +65,9 @@ const VARIANTS := {
 		"sheet": "orc_family", "clips": {"cast": "the bolt", "cast_aoe": "the ground slam", "blink": "the escape"}},
 	## The Orc Warlock, the Orc Camp's BOSS (Boss 2026-11-21: its own supplied FBX, a hooded purple-robed horned orc; weapon = sword
 	## and shield). Squeezed by squeeze_fbx.py and landmark-rigged by tools/monsters/rig_warlock_fbx.py into build/orc_warlock (kept out
-	## of git). No tint (its own albedo). The sword and shield are PLAIN MOCKUPS (Boss: no real weapon models yet) so the copied
-	## sword-and-shield clips can be judged; the real weapons replace _gear_mock_sword / _gear_mock_shield later.
+	## of git). No tint (its own albedo). The sword and shield are the Boss's REAL models (warlock-ss.fbx; see _gear_real_sword).
 	"orc_warlock": {"node": "Monster_OrcWarlock", "height": 3.2, "stance": "orc_warlock", "width": 1.0, "head": 1.0,
-		"tint": Color(1.0, 1.0, 1.0), "gear": ["mock_shield", "mock_sword"], "source": "res://build/orc_warlock/rigged.glb",
+		"tint": Color(1.0, 1.0, 1.0), "gear": ["real_shield", "real_sword"], "source": "res://build/orc_warlock/rigged.glb",
 		"albedo": "res://build/orc_warlock/albedo_brown.png", "texture_size": 1024, "simplify": false, "sheet": "orc_warlock",
 		"clips": {"attack_1": "the sweeping cleave", "skyfall": "the leaping skyfall smash", "cataclysm": "the airborne ground breaker", "block": "the bulwark (shield slam, then the held guard)"}},
 }
@@ -791,7 +790,55 @@ func _gear_skull_mask(ctx: Dictionary) -> Dictionary:
 	return {name: "mixamorig_Head", eyes_name: "mixamorig_Head"}
 
 
-# ------------------------------------------------------------------ orc warlock MOCKUP weapons (2026-11-21)
+# ------------------------------------------------------------------ orc warlock REAL weapons (Boss FBX warlock-ss.fbx, 2026-11-21)
+# The Boss's own sword and shield: tools/items/prep_orc_warlock_weapons_fbx.py (decimate + re-bake, purple repainted brown) ->
+# tools/items/build_orc_warlock_weapons.py writes build/warlock_ss/monster_sword.glb / monster_shield.glb on the player's
+# 102-joint rig (RightHand / LeftForeArm, the player's weapon pose, x1.05 / x1.15). Moved with the joint like the archer's bow.
+const REAL_WEAPONS := "res://build/warlock_ss/"
+
+
+func _gear_real_sword(ctx: Dictionary) -> Dictionary:
+	return _real_piece(ctx, "monster_sword", "Sword", "mixamorig_RightHand")
+
+
+func _gear_real_shield(ctx: Dictionary) -> Dictionary:
+	return _real_piece(ctx, "monster_shield", "Shield", "mixamorig_LeftForeArm")
+
+
+func _real_piece(ctx: Dictionary, file: String, part: String, joint: String) -> Dictionary:
+	var scene := Rig.load_gltf(REAL_WEAPONS + file + ".glb")
+	var mi := scene.find_children("*", "MeshInstance3D", true, false)[0] as MeshInstance3D
+	var a := mi.mesh.surface_get_arrays(0)
+	# mesh space -> the file's skeleton rest space (as _weapon_frame does): the joint's rest global times its skin bind pose
+	var sk := Rig.donor_skeleton(scene)
+	var globals := _globals(sk)
+	var bind := -1
+	for b in mi.skin.get_bind_count():
+		var bname := String(mi.skin.get_bind_name(b))
+		if bname == "":
+			bname = sk.get_bone_name(mi.skin.get_bind_bone(b))
+		if bname == joint:
+			bind = b
+	var joint_global: Transform3D = globals[sk.find_bone(joint)]
+	var to_rest: Transform3D = joint_global * mi.skin.get_bind_pose(bind)
+	var acc := _acc()
+	for v in (a[Mesh.ARRAY_VERTEX] as PackedVector3Array):
+		acc["v"].append(to_rest * v)
+	for n in (a[Mesh.ARRAY_NORMAL] as PackedVector3Array):
+		acc["n"].append((to_rest.basis * n).normalized())
+	acc["uv"] = Array(a[Mesh.ARRAY_TEX_UV])
+	acc["i"] = Array(a[Mesh.ARRAY_INDEX])
+	scene.free()
+	var image := Image.load_from_file(ProjectSettings.globalize_path(REAL_WEAPONS + part.to_lower() + "_256.png"))
+	var m := _mat(part.to_lower(), Color.WHITE, 0.0, 0.85)
+	m.albedo_texture = ImageTexture.create_from_image(image)
+	var name: String = ctx["node"] + "_" + part
+	# keeps its offset in the holding joint's frame as the weapon file has it (moved with the joint like the archer's bow)
+	_add_piece(ctx, name, acc, joint, {"joint_global": joint_global}, m)
+	return {name: joint}
+
+
+# ------------------------------------------------------------------ orc warlock MOCKUP weapons (2026-11-21, replaced by the real ones above)
 # Boss: the warlock fights with sword and shield, but no weapon model exists yet. These are deliberately PLAIN placeholder shapes
 # (flat grey steel, plain brown board, every mesh and material named MOCKUP) in the exact pose of the player's own sword and
 # shield, so the copied sword-and-shield clips can be judged. Replace them with the real weapon models when they arrive.

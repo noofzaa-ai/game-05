@@ -5,7 +5,7 @@ From: monster-rigger (2026-11-21). For: the model team, through the PO.
 ## 1. Source and role
 - Source: the Boss's FBX `20261121101433_6c4e401e.fbx` (198 MB, 20 loose parts, 2.85 M triangles, no rig, no animation, one 4096 PBR set). It holds ONE chibi orc warlord: a deep purple hooded war-robe (long coat to the knees), two big bone horns on the hood, a crest spike, spiked bone-and-purple pauldrons, a green face in the hood's shadow, leather cuffs, a belt with a skull buckle, brown trousers, boots with straps. Empty hands, A-pose. Nothing unexpected inside.
 - Role: the zone BOSS (family `orc`, enemy id `orc_warlock`, in `data/races/rules.json` boss_types and elite_types). Melee, **sword and shield** (Boss). Size: `model_height` 3.2 m (the grunt is 1.7 m, the Mummy High Wizard 3.4 m).
-- **The sword and shield are MOCKUPS** (Boss: no weapon models yet): `Monster_OrcWarlock_MOCKUP_Sword` (plain grey broadsword) and `Monster_OrcWarlock_MOCKUP_Shield` (plain brown kite board with a steel boss), built by `_gear_mock_sword` / `_gear_mock_shield` in `tools/monsters/build_mummy_family.gd` in the exact pose of the player's own sword (right hand) and shield (left forearm). Replace them with real models later; they only exist so the animations can be judged.
+- **The sword and shield are the Boss's REAL models since 2026-11-22** (see section 6c). Before that they were MOCKUPS: `Monster_OrcWarlock_MOCKUP_Sword` (plain grey broadsword) and `Monster_OrcWarlock_MOCKUP_Shield` (plain brown kite board with a steel boss), built by `_gear_mock_sword` / `_gear_mock_shield` in `tools/monsters/build_mummy_family.gd` in the exact pose of the player's own sword (right hand) and shield (left forearm). Replace them with real models later; they only exist so the animations can be judged.
 
 ## 2. Clips (all from the player's Sword & Shield set, `body_sword_shield.glb`; only 8 of its 47 clips)
 | game clip | move | source clip | what it shows |
@@ -48,8 +48,12 @@ Rebuild: `squeeze_fbx.py <fbx> build/orc_warlock 3350` -> `rig_warlock_fbx.py bu
 - Root cause: the source albedo itself (the robe and hood are painted purple-magenta, hue 280-350), not the tint/squeeze or the ink shader; under the toon light it read pink. `rig_warlock_fbx.py` now repaints every purple pixel of the albedo warm earth brown (hue 24-36, darker shadows, the light rune trim turns bronze) (since the later Boss call 2026-11-21 the spiked pauldrons too: no purple left; skin and horns unchanged), and brightens the face in the hood (gamma 0.7, x1.2). Output `build/orc_warlock/albedo_brown.png`, used by `build_mummy_family.gd`.
 - Coat stretch in the wide block stance: the skirt's thigh share cut from 60% to 35%.
 
+## 6c. Real weapons (2026-11-22)
+- Source: the Boss's `warlock-ss.fbx` (184.7 MB, 21 loose parts, 2.43 M triangles, no rig, one 4096 PBR set): a rusty spiked ember-cracked sword with a round leather grip and ring pommel, and a horned kite shield (iron rim and rivets, round boss, bone horns, drapes, ember rune).
+- `tools/items/prep_orc_warlock_weapons_fbx.py` (Blender): decimate, re-bake the base colour to one compact UV per weapon, purple drapes repainted brown (the boss rule), 256 px. `tools/items/build_orc_warlock_weapons.py`: player items (sword 760, shield 1,297 tris) + the monster pieces (sword 190, shield 240) on the player's rig. `build_mummy_family.gd` gear `real_sword` / `real_shield` (RightHand / LeftForeArm, the player's pose, x1.05 / x1.15).
+- Monster now 3,938 triangles; model without textures 456,921 bytes (limit 460,800); weapon albedos 17 KB each.
+
 ## 7. Known weaknesses
-- MOCKUP weapons: plain shapes on purpose.
 - The coat is one shell: on the widest stride and the block's low stance the skirt stretches between the legs; at the cataclysm's spin the hood and coat move as a stiff block.
 - The face reads dark inside the hood at phone size (the source texture is dark there).
 - VFX (tech-artist 2026-11-21, Boss: own spectacular L3 effects): four daiyooo bundles in `art/vfx/monster/orc_warlock/` (cleave ember arc, skyfall meteor from the sky, cataclysm cracks + debris, bulwark ember aura + shield bash), ember orange / fire with a purple accent, wired in `data/combat/monster_vfx.json`; violence looks retinted ember in `data/combat/vfx.json`. Shots: `tools/shots/warlock_vfx_shots.gd`. The cleave reads smallest of the four at phone size.

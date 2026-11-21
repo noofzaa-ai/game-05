@@ -38,8 +38,8 @@ const FAMILY := {
 	"orc_grunt": ["orc_grunt", ["attack_1", "attack_2", "death", "hit", "idle", "run"], 1.7, ["Monster_OrcGrunt_Body", "Monster_OrcGrunt_Cleaver"]],
 	"orc_archer": ["orc_bow", ["death", "hit", "idle", "run", "shoot", "volley"], 1.6, ["Monster_OrcArcher_Body", "Monster_OrcArcher_Bow", "Monster_OrcArcher_BowString", "arrow", "Monster_OrcArcher_Headband"]],
 	"orc_mage": ["orc_magic", ["blink", "cast", "cast_aoe", "death", "hit", "idle", "run"], 1.6, ["Monster_OrcMage_Body", "Monster_OrcMage_Staff", "Monster_OrcMage_StaffStone", "Monster_OrcMage_SkullMask", "Monster_OrcMage_MaskEyes"]],
-	## The Orc Warlock boss (Boss 2026-11-21: its own FBX; sword and shield as MOCKUPS until the real weapons exist)
-	"orc_warlock": ["orc_warlock", ["attack_1", "block", "cataclysm", "death", "hit", "idle", "run", "skyfall"], 3.2, ["Monster_OrcWarlock_Body", "Monster_OrcWarlock_MOCKUP_Sword", "Monster_OrcWarlock_MOCKUP_Shield"]],
+	## The Orc Warlock boss (Boss 2026-11-21: its own FBX; its real sword and shield from the Boss weapon FBX warlock-ss.fbx)
+	"orc_warlock": ["orc_warlock", ["attack_1", "block", "cataclysm", "death", "hit", "idle", "run", "skyfall"], 3.2, ["Monster_OrcWarlock_Body", "Monster_OrcWarlock_Sword", "Monster_OrcWarlock_Shield"]],
 }
 const ORC_TYPES := ["orc_grunt", "orc_archer", "orc_mage"]
 ## The Boss's own boss model (2026-11-18): the library has 9 clips incl. 3 new keyframed specials, so it gets a bigger budget (278 KB at 1.0 degree).

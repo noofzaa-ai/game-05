@@ -23,15 +23,15 @@
   "run_clip_speed": 0.919,
   "hips_scale": 1.0,
   "sockets": {
-    "Monster_OrcWarlock_MOCKUP_Shield": "mixamorig_LeftForeArm",
-    "Monster_OrcWarlock_MOCKUP_Sword": "mixamorig_RightHand"
+    "Monster_OrcWarlock_Shield": "mixamorig_LeftForeArm",
+    "Monster_OrcWarlock_Sword": "mixamorig_RightHand"
   },
   "meshes": {
     "Monster_OrcWarlock_Body": 3508,
-    "Monster_OrcWarlock_MOCKUP_Shield": 52,
-    "Monster_OrcWarlock_MOCKUP_Sword": 40
+    "Monster_OrcWarlock_Shield": 240,
+    "Monster_OrcWarlock_Sword": 190
   },
-  "triangles": 3600,
+  "triangles": 3938,
   "joints": 106,
   "extra_joints": [
     "bandage_upper_L",

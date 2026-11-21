@@ -1,187 +1,100 @@
-"""Orc Warlock boss weapons (Boss 2026-11-21), PLACEHOLDER 3D until the real models arrive:
+"""Orc Warlock boss weapons, the Boss's REAL models (warlock-ss.fbx, 2026-11-21; replaces the placeholder of be499d67):
 
-  boss_orc_warlock_sword   -> art/weapons/race_boss/orc_warlock_sword.glb   (Sword & Shield one-hand sword, weapon_type blade)
-  boss_orc_warlock_shield  -> art/weapons/race_boss/orc_warlock_shield.glb  (off-hand shield)
+  boss_orc_warlock_sword   -> art/weapons/race_boss/orc_warlock_sword.glb  (+ orc_warlock_sword.jpg)   Sword & Shield one-hand sword
+  boss_orc_warlock_shield  -> art/weapons/race_boss/orc_warlock_shield.glb (+ orc_warlock_shield.jpg)  off-hand shield
 
-The shapes are the Warlock monster's own mockup pieces (art/monsters/orc_warlock/orc_warlock.glb meshes
-Monster_OrcWarlock_MOCKUP_Sword / _Shield; the monster model is NOT changed), their outlines measured in the monster's
-RightHand / LeftForeArm joint frames and rebuilt on the player rig:
-  sword  = the mockup blade + crossguard outline (bevelled slabs, scaled 0.55 so it is about as long as the player's
-           level-15 sword, blade 1.25x wider), dark iron with an ember rune strip; the mockup's box grip becomes a ROUND
-           leather-wrapped grip (12 sides) with iron collars and a round bone pommel capped by an ember gem.
-  shield = the mockup kite board outline (0.68x along the forearm, 0.9x across: a little larger than the race shield), brown wood with a dark iron rim, two iron
-           bands, a round iron boss, two ivory tusks and an ember rune on the face.
-Frames: the sword in the player's RightHand frame of art/weapons/race_human/sword_shield_lv15.glb (handle on that sword's
-axis and blade plane, the fist at the same place); the shield in the LeftForeArm frame of
-art/weapons/race_human/shield_lv15.glb (the race shields are LeftForeArm-bound: face toward +x of the bone, board just off
-the forearm, centred where the race shield is). Same 102-joint Studio rig, inverse bind matrices copied byte for byte, every
-vertex 100% on one joint. Writer and helpers: tools/items/build_boss_weapons.py.
-
-SWAP when the real 3D arrives: replace the two GLBs (same paths and node labels "Weapon_Boss | Sword" / "| Shield", same
-rig, bound to RightHand / LeftForeArm) or point catalog.json asset_path at the new files: data only, no code.
-Run: python -I tools/items/build_orc_warlock_weapons.py            (from the repo root)
+Input: tools/items/prep_orc_warlock_weapons_fbx.py output in build/warlock_ss (kept out of git): the source parts decimated
+(sword_hi 760, shield_hi 1300 triangles for the player; sword_lo / shield_lo for the monster), canonical frames (sword: grip
+centre at the origin, blade +Y, blade width X; shield: board centre at the origin, top +Y, face +Z), and the base colour
+re-baked into one compact UV per weapon (purple repainted brown like the monster; 256 px shipped as JPEG).
+Placement (the player's joint frames, as the placeholder had): the sword on the player's level-15 Sword & Shield sword axis
+and blade plane (art/weapons/race_human/sword_shield_lv15.glb RightHand frame), the fist round the source's own ROUND leather
+grip, the guard where the player's guard is, overall length about the player's sword; the shield on LeftForeArm like the race
+shields (art/weapons/race_human/shield_lv15.glb: face toward +x of the bone, kite point toward the hand, centred where the race
+shield is), a little larger. Same 102-joint Studio rig, inverse bind matrices copied byte for byte, every vertex 100% on one
+joint (tools/items/build_boss_weapons.py write()).
+Also writes the MONSTER pieces (lo meshes, the request sheet's proportions: sword x1.05, shield x1.15 of the player's) to
+build/warlock_ss/monster_sword.glb / monster_shield.glb, read by tools/monsters/build_mummy_family.gd (gear real_sword / real_shield).
+Run: python -I tools/items/build_orc_warlock_weapons.py            (from the repo root, after the prep step)
 """
 import os
 import sys
 
 import numpy as np
+from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_boss_weapons as B  # noqa: E402
 
 SWORD_REF = "art/weapons/race_human/sword_shield_lv15.glb"
 SHIELD_REF = "art/weapons/race_human/shield_lv15.glb"
-BUDGET = {"orc_warlock_sword": 700, "orc_warlock_shield": 900}
-
-# Mockup outlines, read from Monster_OrcWarlock_MOCKUP_* in the monster's joint frames (see the module comment).
-# Sword: (width, along the blade) about the monster's fist; the blade centre line is at width 0.010.
-MOCK_BLADE = [(-0.016, 0.093), (0.036, 0.093), (0.033, 0.420), (0.010, 0.466), (-0.013, 0.420)]
-MOCK_GUARD = [(-0.065, 0.075), (0.085, 0.075), (0.085, 0.093), (-0.065, 0.093)]
-SWORD_SCALE, BLADE_WIDEN = 0.55, 1.25
-# Shield board: (along the forearm, across) in the LeftForeArm frame; apex toward the hand.
-MOCK_BOARD = [(0.198, 0.011), (0.106, 0.079), (-0.022, 0.114), (-0.169, 0.107), (-0.165, -0.119), (-0.017, -0.112), (0.110, -0.066)]
-BOARD_ALONG, BOARD_ACROSS = 0.68, 0.9
-BOARD_CENTRE_Y = 0.075  # the race shield's centre along the forearm
-BOARD_X, BOARD_HALF = 0.030, 0.0075  # board mid plane (in front of the forearm) and half thickness
+PREP = os.path.join(B.ROOT, "build", "warlock_ss")
+BUDGET = {"orc_warlock_sword": 1500, "orc_warlock_shield": 1500}
+SWORD_SCALE = 0.33   # source metres -> the player's RightHand frame (the whole sword 0.89 m -> 0.29, the player's is 0.28)
+SHIELD_SCALE = 0.32  # board 0.89 x 0.61 m -> 0.28 along the forearm, 0.20 across (the placeholder: 0.25 x 0.21)
+SHIELD_CENTRE = np.array([0.030, 0.075, 0.0])  # the race shield's centre (face plane just off the forearm)
+MONSTER = {"sword": 1.05, "shield": 1.15}  # the request sheet: the monster's sword x1.05, shield x1.15 of the player's
 
 
-def mat(name, rgb, metal=0.0, rough=0.7, emissive=None):
-    m = {"name": name, "pbrMetallicRoughness": {"baseColorFactor": [rgb[0], rgb[1], rgb[2], 1.0], "metallicFactor": metal, "roughnessFactor": rough}}
-    if emissive:
-        m["emissiveFactor"] = list(emissive)
-    return m
+def material(name):
+    return {"name": name, "pbrMetallicRoughness": {"metallicFactor": 0.0, "roughnessFactor": 0.8}}
 
 
-IRON = mat("Orc Warlock | Iron", (0.085, 0.085, 0.095), 0.5, 0.5)
-IRON_DARK = mat("Orc Warlock | Iron Rim", (0.05, 0.048, 0.052), 0.5, 0.55)
-WOOD = mat("Orc Warlock | Wood", (0.20, 0.095, 0.038), 0.0, 0.85)
-BONE = mat("Orc Warlock | Bone", (0.72, 0.62, 0.44), 0.0, 0.6)
-EMBER = mat("Orc Warlock | Ember", (1.0, 0.30, 0.03), 0.0, 0.4, (1.0, 0.35, 0.05))
-LEATHER = {"name": "Orc Warlock | Grip Atlas", "pbrMetallicRoughness": {"metallicFactor": 0.0, "roughnessFactor": 0.7}}
+def load(name):
+    js, binary = B.glb.read_glb(os.path.join(PREP, name + ".glb"))
+    prim = js["meshes"][0]["primitives"][0]
+    at = prim["attributes"]
+    pos = B.acc(js, binary, at["POSITION"]).astype(np.float64)
+    nrm = B.acc(js, binary, at["NORMAL"]).astype(np.float64)
+    uv = B.acc(js, binary, at["TEXCOORD_0"]).astype(np.float64)
+    tris = B.acc(js, binary, prim["indices"]).reshape(-1, 3).astype(np.int64)
+    return pos, nrm, uv, tris
 
 
-def lathe_parts(meshes, axis, side, origin, profile):
-    """A straight lathe whose rows carry a part key (rows: (t, radius, key)); each run of one key goes to meshes[key]
-    (a new ring at the key change keeps a clean colour edge). Leather rows map onto the shared atlas' leather wrap."""
-    side = side - axis * (side @ axis)
-    side /= np.linalg.norm(side)
-    other = np.cross(axis, side)
-    groups, cur = [], []
-    for row in profile:
-        if cur and row[2] != cur[-1][2]:
-            groups.append(cur)
-            cur = [(cur[-1][0], cur[-1][1], row[2])] if cur[-1][1] > 1e-7 else []
-        cur.append(row)
-    groups.append(cur)
-    for g in groups:
-        if len(g) < 2:
-            continue
-        t = np.array([r[0] for r in g])
-        v = (t - t.min()) / max(float(t.max() - t.min()), 1e-6)
-        frames = np.broadcast_to(np.stack([side, other])[None], (len(g), 2, 3))
-        B.sweep(meshes[g[0][2]], origin + np.outer(t, axis), frames, np.array([r[1] for r in g]), B.R_LEATHER if g[0][2] == "leather" else B.R_GOLD, v)
-
-
-def build_sword():
+def sword_basis():
+    """Canonical sword axes (X width, Y blade, Z flat normal) as columns in the player's RightHand frame, and the handle offset."""
     _, _, player = B.player_frame(SWORD_REF)
     ax, _, _ = B.frame(player)
     w, off = B.blade_plane(player, ax)
-    z = np.cross(ax, w)
-
-    def to3(p, zz):
-        return off + w * p[0] + ax * p[1] + z * zz
-
-    def fit(poly, widen=1.0):
-        return [((x - 0.010) * SWORD_SCALE * widen, t * SWORD_SCALE) for x, t in poly]
-    m = {k: B.Mesh() for k in ("iron", "dark", "ember", "bone", "leather")}
-    blade = fit(MOCK_BLADE, BLADE_WIDEN)
-    guard = fit(MOCK_GUARD)
-    B._slab(m["iron"], blade, to3, z, 0.0, 0.0045, 0.003)
-    B._slab(m["dark"], guard, to3, z, 0.0, 0.0085, 0.004)
-    t0, t1 = guard[2][1] + 0.016, blade[2][1] - 0.03  # the ember rune strip along the blade's middle (shows on both faces)
-    B._slab(m["ember"], [(-0.003, t0), (0.003, t0), (0.0022, t1), (0.0, t1 + 0.006), (-0.0022, t1)], to3, z, 0.0, 0.0052, 0.0008)
-    g0 = guard[0][1]  # bottom of the guard
-    rows = [(t, r, "ember") for t, r, _, _ in B.ball(-0.034, 0.0065, 2, None)]               # ember gem cap
-    rows += [(t, r, "bone") for t, r, _, _ in B.ball(-0.022, 0.0135, 3, None)][1:]           # round bone pommel
-    rows += [(-0.0135, 0.0115, "bone"), (-0.0095, 0.0085, "bone")]
-    rows += [(t, r, "dark") for t, r, _, _ in B.torus_ring(-0.0075, 0.0095, 0.0125, None, 3)][1:]  # iron collar
-    grip = np.linspace(-0.004, g0 - 0.005, 5)
-    rows += [(t, 0.0102 + (0.0006 if k % 2 else 0.0), "leather") for k, t in enumerate(grip)]  # round leather grip
-    rows += [(t, r, "dark") for t, r, _, _ in B.torus_ring(g0 - 0.002, 0.0095, 0.0125, None, 3)]   # collar under the guard
-    rows += [(g0 + 0.004, 0.0085, "dark"), (g0 + 0.008, 0.0, "dark")]
-    lathe_parts(m, ax, w, off, rows)
-    out = [(*m["iron"].arrays(), IRON, None), (*m["dark"].arrays(), IRON_DARK, None), (*m["ember"].arrays(), EMBER, None),
-           (*m["bone"].arrays(), BONE, None), (*m["leather"].arrays(), LEATHER, B.ATLAS)]
-    return out
+    return np.stack([w, ax, np.cross(w, ax)], 1), off
 
 
-def build_shield():
-    ex = np.array([1.0, 0.0, 0.0])  # face normal (front = +x of LeftForeArm, as the race shields)
-    ey = np.array([0.0, 1.0, 0.0])  # along the forearm (toward the hand)
-    ez = np.array([0.0, 0.0, 1.0])
-    centre_mock = np.mean([p[0] for p in MOCK_BOARD])
-    across_mock = np.mean([p[1] for p in MOCK_BOARD])
-
-    def to3(p, xx):
-        return ex * xx + ey * p[0] + ez * p[1]
-    board = [((y - centre_mock) * BOARD_ALONG + BOARD_CENTRE_Y, (s - across_mock) * BOARD_ACROSS) for y, s in MOCK_BOARD]
-    c2 = np.array(board).mean(0)
-    rim = [tuple(c2 + (np.array(p) - c2) * 1.07) for p in board]
-    m = {k: B.Mesh() for k in ("wood", "iron", "dark", "bone", "ember")}
-    B._slab(m["wood"], board, to3, ex, BOARD_X, BOARD_HALF, 0.004)
-    B._slab(m["dark"], rim, to3, ex, BOARD_X - 0.002, BOARD_HALF * 0.75, 0.006)  # iron rim: a larger, thinner plate behind
-    face = BOARD_X + BOARD_HALF
-    # two iron bands across the board (clipped to its width at their height by a simple inset)
-    for yb in (c2[0] + 0.075, c2[0] - 0.07):
-        half_w = _width_at(board, yb) - 0.006
-        B._slab(m["dark"], [(yb - 0.009, -half_w), (yb + 0.009, -half_w), (yb + 0.009, half_w), (yb - 0.009, half_w)], to3, ex, face, 0.0022, 0.002)
-    # ember rune (a small chevron) under the boss
-    yr = c2[0] - 0.045
-    B._slab(m["ember"], [(yr - 0.012, 0.0), (yr + 0.010, -0.016), (yr + 0.016, -0.012), (yr + 0.002, 0.0), (yr + 0.016, 0.012), (yr + 0.010, 0.016)],
-            to3, ex, face + 0.0006, 0.0012, 0.0006)
-    # round iron boss: a dome on the face
-    centre = to3(c2, face)
-    rows = [(0.0, 0.034, "iron"), (0.005, 0.032, "iron"), (0.011, 0.026, "iron"), (0.016, 0.016, "iron"), (0.0185, 0.007, "iron"), (0.019, 0.0, "iron")]
-    lathe_parts(m, ex, ez, centre - ex * 0.001, rows)
-    # two ivory tusks curling out of the boss sides (tapered sweeps)
-    for s in (1.0, -1.0):
-        n = 6
-        k = np.linspace(0.0, 1.0, n)
-        base = centre + ez * s * 0.026 + ex * 0.008
-        pts = np.array([base + ez * s * (0.028 * kk) + ex * (0.016 * kk) + ey * (0.026 * kk * kk) for kk in k])
-        tang = np.gradient(pts, axis=0)
-        tang /= np.linalg.norm(tang, axis=1, keepdims=True)
-        frames = []
-        for tg in tang:
-            a = np.cross(tg, ey)
-            a /= np.linalg.norm(a)
-            frames.append(np.stack([a, np.cross(tg, a)]))
-        radii = 0.0075 * (1.0 - k) ** 0.8
-        radii[-1] = 0.0
-        B.sweep(m["bone"], pts, np.array(frames), radii, B.R_GOLD, k)
-    return [(*m["wood"].arrays(), WOOD, None), (*m["dark"].arrays(), IRON_DARK, None), (*m["iron"].arrays(), IRON, None),
-            (*m["bone"].arrays(), BONE, None), (*m["ember"].arrays(), EMBER, None)]
+def shield_basis():
+    """Canonical shield axes as columns in LeftForeArm: across -> +z, top -> -y (the elbow; the kite point toward the hand),
+    face -> +x (as the race shields)."""
+    return np.array([[0.0, 0.0, 1.0], [0.0, -1.0, 0.0], [1.0, 0.0, 0.0]]).T
 
 
-def _width_at(poly, y):
-    """Half width (across) of a polygon symmetric-ish about 0 at height y (along): the smallest |across| of its edge
-    crossings, so a band stays inside the board."""
-    hits = []
-    n = len(poly)
-    for i in range(n):
-        (y0, s0), (y1, s1) = poly[i], poly[(i + 1) % n]
-        if (y0 - y) * (y1 - y) <= 0 and y0 != y1:
-            hits.append(abs(s0 + (s1 - s0) * (y - y0) / (y1 - y0)))
-    return min(hits) if hits else 0.05
+def place(name, basis, scale, offset):
+    pos, nrm, uv, tris = load(name)
+    return pos @ basis.T * scale + offset, nrm @ basis.T, uv, tris
 
 
 def main():
     script = "tools/items/build_orc_warlock_weapons.py"
-    src = "art/monsters/orc_warlock/orc_warlock.glb"
-    B.write("orc_warlock_sword", SWORD_REF, "Weapon_Boss | Sword", build_sword(),
-            "%s Monster_OrcWarlock_MOCKUP_Sword outline + round grip (PLACEHOLDER)" % src, budget=BUDGET["orc_warlock_sword"], script=script)
-    B.write("orc_warlock_shield", SHIELD_REF, "Weapon_Boss | Shield", build_shield(),
-            "%s Monster_OrcWarlock_MOCKUP_Shield outline (PLACEHOLDER)" % src, hand="LeftForeArm", budget=BUDGET["orc_warlock_shield"], script=script)
+    src = "Boss FBX warlock-ss.fbx (2026-11-21)"
+    sb, soff = sword_basis()
+    hb = shield_basis()
+    assert np.linalg.det(sb) > 0 and np.linalg.det(hb) > 0
+    for key in ("sword", "shield"):
+        Image.open(os.path.join(PREP, key + "_256.png")).convert("RGB").save(os.path.join(B.OUT, "orc_warlock_%s.jpg" % key), quality=85, optimize=True)
+    sword = place("sword_hi", sb, SWORD_SCALE, soff)
+    shield = place("shield_hi", hb, SHIELD_SCALE, SHIELD_CENTRE)
+    B.write("orc_warlock_sword", SWORD_REF, "Weapon_Boss | Sword", [(*sword, material("Orc Warlock | Sword"), "orc_warlock_sword.jpg")],
+            "%s sword parts, decimated + re-baked" % src, budget=BUDGET["orc_warlock_sword"], script=script)
+    B.write("orc_warlock_shield", SHIELD_REF, "Weapon_Boss | Shield", [(*shield, material("Orc Warlock | Shield"), "orc_warlock_shield.jpg")],
+            "%s shield parts, decimated + re-baked" % src, hand="LeftForeArm", budget=BUDGET["orc_warlock_shield"], script=script)
+    # the monster's pieces (lo meshes) on the same rig, next to the prep output for build_mummy_family.gd
+    out = B.OUT
+    B.OUT = PREP
+    try:
+        m_sword = place("sword_lo", sb, SWORD_SCALE * MONSTER["sword"], soff)
+        m_shield = place("shield_lo", hb, SHIELD_SCALE * MONSTER["shield"], SHIELD_CENTRE + np.array([0.004, 0.0, 0.0]))
+        B.write("monster_sword", SWORD_REF, "Monster | Sword", [(*m_sword, material("sword"), "sword_256.png")], "monster piece", budget=400, script=script)
+        B.write("monster_shield", SHIELD_REF, "Monster | Shield", [(*m_shield, material("shield"), "shield_256.png")], "monster piece",
+                hand="LeftForeArm", budget=400, script=script)
+    finally:
+        B.OUT = out
 
 
 if __name__ == "__main__":
