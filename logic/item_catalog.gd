@@ -71,6 +71,7 @@ func parse(item_data: Dictionary, set_data: Dictionary, known_slots: Array, know
 			"race": str(entry.get("race", "")), "class": str(entry.get("class", "")),  ## race gear: the set's race, the class whose look it is
 			"fallback_asset_path": str(entry.get("fallback_asset_path", "")), "fallback_icon_path": str(entry.get("fallback_icon_path", "")),  ## shown until the Studio file exists
 			"boss": str(entry.get("boss", "")), "no_drop": bool(entry.get("no_drop", false)),  ## boss loot: the zone whose boss gives it; never a normal drop
+			"main_stat_mul": float(entry.get("main_stat_mul", -1.0)),  ## own main stat multiplier, overrides level_stat_mul[req_level] (-1 = none; Boss 2026-11-22: the level-20 boss weapons = 1.695, the level-15 x1.5 at refine +10)
 		}
 
 
@@ -117,11 +118,13 @@ func set_counts(item_ids: Array) -> Dictionary:
 
 
 ## The main stat multiplier of a piece (Boss/PO 2026-11-16 tier-up): a starter piece (instance id "starter-...") is x1.0; any
-## other piece of a catalog item with a req_level gets level_stat_mul[req_level] (1.0 when the level has no entry).
+## other piece of a catalog item with a req_level gets level_stat_mul[req_level] (1.0 when the level has no entry), unless the
+## catalog item sets its own "main_stat_mul" (Boss 2026-11-22: the four level-20 boss weapons use 1.695 = their level-15 kin at refine +10).
 func main_stat_mul(item_id: String, instance_id: String) -> float:
 	if instance_id.begins_with(STARTER_ID_PREFIX):
 		return 1.0
-	return level_mul(req_level(item_id))
+	var own := float(items.get(item_id, {}).get("main_stat_mul", -1.0))
+	return own if own >= 0.0 else level_mul(req_level(item_id))
 
 
 ## The main stat multiplier of gear level `level`: its own tier_up.json key, else the multiplier of the nearest LOWER key

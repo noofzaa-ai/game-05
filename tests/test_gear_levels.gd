@@ -131,7 +131,7 @@ func _level1_piece(ctx, f: Dictionary) -> void:
 	p.stash.add_item(drop)
 	var ids: Array = Shop.batch_sellable(p, rules, rules.tiers.map(func(t): return str(t["id"])))["ids"]
 	ctx.check("level-1 drop: bulk sell takes the drop but never the real starter kit", ids.has(drop.id) and not ids.has(kit.id))
-	var lower := 0  # the highest level_stat_mul key at or below 25 (15 for the race gear, 20 since the pyramid boss weapons)
+	var lower := 0  # the highest level_stat_mul key at or below 25 (15 for the race gear, 20 for the Orc Warlock accessory set; the boss weapons use their own catalog main_stat_mul)
 	for key in rules.catalog.level_stat_mul:
 		if int(str(key)) <= 25:
 			lower = maxi(lower, int(str(key)))

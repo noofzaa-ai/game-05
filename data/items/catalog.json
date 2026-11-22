@@ -137,6 +137,7 @@
    "no_drop": true,
    "drop_level": 20,
    "req_level": 20,
+   "main_stat_mul": 1.695,
    "asset_path": "res://art/weapons/race_boss/mummy_crook.glb",
    "icon_path": "res://art/items/boss/mummy_boss/crook.png"
   },
@@ -151,6 +152,7 @@
    "no_drop": true,
    "drop_level": 20,
    "req_level": 20,
+   "main_stat_mul": 1.695,
    "asset_path": "res://art/weapons/race_boss/mummy_staff.glb",
    "icon_path": "res://art/items/boss/mummy_high_wizard/staff.png"
   },
@@ -230,6 +232,7 @@
    "no_drop": true,
    "drop_level": 20,
    "req_level": 20,
+   "main_stat_mul": 1.695,
    "asset_path": "res://art/weapons/race_boss/orc_warlock_sword.glb",
    "icon_path": "res://art/items/boss/orc_warlock/sword.png"
   },
@@ -243,6 +246,7 @@
    "no_drop": true,
    "drop_level": 20,
    "req_level": 20,
+   "main_stat_mul": 1.695,
    "asset_path": "res://art/weapons/race_boss/orc_warlock_shield.glb",
    "icon_path": "res://art/items/boss/orc_warlock/shield.png"
   },
