@@ -9,6 +9,8 @@ extends RefCounted
 ##    and after a checkpoint restore.
 ##  - orc_grunt / orc_archer / orc_mage are ai.aggressive: in a driven N-second fight they never back off, hop back, flee
 ##    or escape, never wait their turn, and run in; the loader rejects an aggressive monster that could still flee.
+## Boss 2026-11-23: the wave-9 mummy pair (Pharaoh + High Wizard) was now too fast; they play at 1.5x their ORIGINAL
+## pace instead (every timing ~2/3 of OLD; the Warlock keeps its ~3x). Measured attacks per 30 s are locked below.
 ## Measurement printout: tools/balance/boss_tempo.gd (tempo) and tools/balance/class_sim.gd (AI rows in the waves).
 
 const CombatDataLoader := preload("res://logic/combat_data_loader.gd")
@@ -29,6 +31,12 @@ const OLD := {
 	"mummy_boss_combo": [14, 28, 0], "mummy_boss_nova": [40, 40, 300],
 }
 const OLD_AI := {"orc_warlock": [70, 120], "mummy_high_wizard": [100, 150], "mummy_boss": [70, 120]}  ## cooldown_min / cooldown_max before
+## New / old ratio band per boss (move-id prefix or enemy id): the Warlock ~1/3 (3x pace), the mummy pair ~2/3 (1.5x pace,
+## Boss 2026-11-23).
+const BAND := {"orc_warlock": [0.25, 0.45], "mummy_hw": [0.6, 0.72], "mummy_high_wizard": [0.6, 0.72], "mummy_boss": [0.6, 0.72]}
+## Measured with tools/balance/boss_tempo.gd measure() (passive squad), attacks per 30 s: original (pre-speed-up data)
+## Pharaoh 18.6 / High Wizard 13.2; the 3x round 50.3 / 39.0; now ~27 / ~20 (targets 27.3 / 19.8 = 1.5x).
+const TEMPO_TARGET := {"mummy_boss": [24.5, 30.0], "mummy_high_wizard": [17.5, 22.0]}
 ## Boss 2026-11-22 round 2: the wave-9 pair's HP doubled from these (applied once).
 const OLD_HP := {"mummy_boss": 200, "mummy_high_wizard": 270}
 ## Big blows: always telegraphed with at least MIN_WARN.
@@ -50,15 +58,16 @@ func _check_timings(ctx, combat) -> void:
 	for move_id in OLD:
 		var move: Dictionary = combat.moves[move_id]
 		var old: Array = OLD[move_id]
+		var band: Array = _band(move_id)
 		var s := float(move["startup"]) / float(old[0])
 		var r := float(move["recovery"]) / float(old[1])
 		# (a telegraphed wind-up never goes under MIN_WARN: the bulwark's 20 was already the floor)
-		var at_floor := bool(move["telegraph"]) and int(move["startup"]) == MIN_WARN and float(old[0]) / 3.0 <= MIN_WARN
-		ctx.check("%s startup %d (was %d, %.2fx%s) and recovery %d (was %d, %.2fx) are about a third" % [move_id, move["startup"], old[0], s, ", at the warning floor" if at_floor else "", move["recovery"], old[1], r],
-			((s >= 0.25 and s <= 0.45) or at_floor) and r >= 0.25 and r <= 0.45)
+		var at_floor := bool(move["telegraph"]) and int(move["startup"]) == MIN_WARN and float(old[0]) * float(band[1]) <= MIN_WARN
+		ctx.check("%s startup %d (was %d, %.2fx%s) and recovery %d (was %d, %.2fx) are within %.2f-%.2fx" % [move_id, move["startup"], old[0], s, ", at the warning floor" if at_floor else "", move["recovery"], old[1], r, band[0], band[1]],
+			((s >= band[0] and s <= band[1]) or at_floor) and r >= band[0] and r <= band[1])
 		if int(old[2]) > 0:
 			var c := float(move["cooldown"]) / float(old[2])
-			ctx.check("%s cooldown %d (was %d) is about a third (%.2fx)" % [move_id, move["cooldown"], old[2], c], c >= 0.25 and c <= 0.4)
+			ctx.check("%s cooldown %d (was %d) is %.2fx (%.2f-%.2fx)" % [move_id, move["cooldown"], old[2], c, band[0], band[1]], c >= band[0] and c <= band[1])
 		if bool(move["telegraph"]) or BIG.has(move_id):
 			ctx.check("%s still warns: telegraphed wind-up %d ticks >= %d (%.2f s)" % [move_id, move["startup"], MIN_WARN, MIN_WARN / 60.0], bool(move["telegraph"]) and int(move["startup"]) >= MIN_WARN)
 		# (the Pharaoh's crescent flies on the combo's second cut, inside its recovery: before the move ends)
@@ -69,10 +78,12 @@ func _check_timings(ctx, combat) -> void:
 		ctx.check("area %s fills for >= %d ticks before it bursts (%d)" % [area_id, MIN_WARN, combat.areas[area_id]["delay"]], int(combat.areas[area_id]["delay"]) >= MIN_WARN)
 	for id in OLD_AI:
 		var ai: Dictionary = combat.enemies[id]["ai"]
+		var band: Array = BAND[id]
 		var lo := float(ai["cooldown_min"]) / float(OLD_AI[id][0])
 		var hi := float(ai["cooldown_max"]) / float(OLD_AI[id][1])
-		ctx.check("%s rests %d-%d ticks between attacks (was %d-%d: %.2fx / %.2fx)" % [id, ai["cooldown_min"], ai["cooldown_max"], OLD_AI[id][0], OLD_AI[id][1], lo, hi], lo >= 0.25 and lo <= 0.4 and hi >= 0.25 and hi <= 0.4)
-		ctx.check("%s opens within 0.2 s (opening_cooldown %d, the old fixed 30)" % [id, ai["opening_cooldown"]], int(ai["opening_cooldown"]) <= 12)
+		ctx.check("%s rests %d-%d ticks between attacks (was %d-%d: %.2fx / %.2fx)" % [id, ai["cooldown_min"], ai["cooldown_max"], OLD_AI[id][0], OLD_AI[id][1], lo, hi], lo >= band[0] and lo <= band[1] and hi >= band[0] and hi <= band[1])
+		var open_max := 12 if id == "orc_warlock" else 20  # (the old fixed 30 at 3x / 1.5x pace)
+		ctx.check("%s opens within %d ticks (opening_cooldown %d, the old fixed 30)" % [id, open_max, ai["opening_cooldown"]], int(ai["opening_cooldown"]) <= open_max)
 	# The clip plays faster, not slides: the view stretches each phase of the clip over the move's own frames, so the
 	# play rate of the wind-up = clip windup_end / startup seconds. ~3x the old rate for each Warlock move.
 	var marks = JSON.parse_string(FileAccess.get_file_as_string("res://art/animations/monster_clips_orc_warlock.json"))
@@ -82,8 +93,7 @@ func _check_timings(ctx, combat) -> void:
 		var rate := float(clip["windup_end"]) / (float(combat.moves[move_id]["startup"]) / 60.0)
 		var old_rate := float(clip["windup_end"]) / (float(OLD[move_id][0]) / 60.0)
 		ctx.check("%s: its clip wind-up plays %.1fx (was %.1fx: %.1fx faster)" % [move_id, rate, old_rate, rate / old_rate], rate / old_rate >= 2.2 and rate / old_rate <= 4.0)
-	# The Pharaoh's greatsword clips: the combo's whole clip (wind-up, cut, recovery) ~3x; the nova's wind-up sits at the
-	# 20-tick warning floor (2x), its strike + recovery ~3x.
+	# The Pharaoh's greatsword clips: the whole clip of each move (wind-up, cut, recovery) plays ~1.5x (Boss 2026-11-23).
 	var gs = JSON.parse_string(FileAccess.get_file_as_string("res://art/animations/monster_clips_greatsword.json"))
 	var pclips: Dictionary = combat.enemies["mummy_boss"]["clips"]
 	for move_id in ["mummy_boss_combo", "mummy_boss_nova"]:
@@ -92,7 +102,25 @@ func _check_timings(ctx, combat) -> void:
 		var total := float(mv["startup"]) + float(mv["active"]) + float(mv["recovery"])
 		var old_total := float(OLD[move_id][0]) + (5.0) + float(OLD[move_id][1])  # (both had active 5 before)
 		var speedup := old_total / total
-		ctx.check("%s: the whole clip plays %.1fx faster (%d -> %d ticks for its %.2f s)" % [move_id, speedup, old_total, total, float(c["length"])], speedup >= 2.2 and speedup <= 4.0)
+		ctx.check("%s: the whole clip plays %.2fx faster (%d -> %d ticks for its %.2f s), 1.35-1.65x" % [move_id, speedup, old_total, total, float(c["length"])], speedup >= 1.35 and speedup <= 1.65)
+	# The crescent keeps its place in the clip (the second cut): the same fraction of the combo as before (frame 26 of 47).
+	var combo: Dictionary = combat.moves["mummy_boss_combo"]
+	var frac := float(combo["spawns"][0]["frame"]) / (float(combo["startup"]) + float(combo["active"]) + float(combo["recovery"]))
+	ctx.check("the crescent sits at %.2f of the combo (was 26/47 = 0.55)" % frac, absf(frac - 26.0 / 47.0) <= 0.05)
+	# The High Wizard's clips: each wind-up plays ~1.5x the old rate (clip windup_end / startup seconds).
+	var wmarks = JSON.parse_string(FileAccess.get_file_as_string("res://art/animations/monster_clips_wizard_boss.json"))
+	var wclips: Dictionary = combat.enemies["mummy_high_wizard"]["clips"]
+	for move_id in ["mummy_hw_bolt", "mummy_hw_curse", "mummy_hw_starfall", "mummy_hw_sandstorm"]:
+		var wrate := float(OLD[move_id][0]) / float(combat.moves[move_id]["startup"])
+		ctx.check("%s: its clip wind-up plays %.2fx the old rate (1.35-1.65x, clip '%s')" % [move_id, wrate, wclips[move_id]], wmarks.has(str(wclips[move_id])) and wrate >= 1.35 and wrate <= 1.65)
+	# Measured pace: one boss vs the standing squad (tools/balance/boss_tempo.gd measure(), 3 seeds x 60 s).
+	var tempo = load("res://tools/balance/boss_tempo.gd")
+	for id in TEMPO_TARGET:
+		var attacks := 0
+		for k in 3:
+			attacks += int(tempo.measure(combat, id, 500 + k * 13, 60)["attacks"])
+		var per30 := float(attacks) / 6.0
+		ctx.check("%s measured %.1f attacks / 30 s within %.1f-%.1f (1.5x its original pace, Boss 2026-11-23)" % [id, per30, TEMPO_TARGET[id][0], TEMPO_TARGET[id][1]], per30 >= TEMPO_TARGET[id][0] and per30 <= TEMPO_TARGET[id][1])
 	var crescent: Dictionary = combat.moves["mummy_boss_combo"]["spawns"][0]
 	ctx.check("the Pharaoh's sand crescent still flies on the second cut, after the first (frame %d > startup %d)" % [crescent["frame"], combat.moves["mummy_boss_combo"]["startup"]],
 		float(crescent["frame"]) > float(combat.moves["mummy_boss_combo"]["startup"]))
@@ -103,6 +131,13 @@ func _check_timings(ctx, combat) -> void:
 	ctx.check("the skyfall leap still lands inside its wind-up (dash %d-%d, startup %d)" % [dash["dash_from"], dash["dash_to"], dash["startup"]], float(dash["dash_to"]) <= float(dash["startup"]) and float(dash["dash_from"]) < float(dash["dash_to"]))
 	var bulwark: Dictionary = combat.moves["orc_warlock_bulwark"]
 	ctx.check("the bulwark is still untouchable through its bash (invuln %d-%d around startup %d)" % [bulwark["invuln_from"], bulwark["invuln_to"], bulwark["startup"]], float(bulwark["invuln_from"]) <= float(bulwark["startup"]) and float(bulwark["invuln_to"]) > float(bulwark["startup"]) + float(bulwark["active"]))
+
+
+static func _band(move_id: String) -> Array:
+	for prefix in BAND:
+		if move_id.begins_with(prefix):
+			return BAND[prefix]
+	return [0.25, 0.45]
 
 
 ## A world with a floor, three cards (sword_shield in front, longbow, magic behind) and one monster.

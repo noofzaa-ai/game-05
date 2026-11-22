@@ -388,13 +388,13 @@
 			{"type": "sprite", "mode": "glow", "size": [0.6, 1.4], "seconds": 0.22, "color": "#e8c35a"}
 		]},
 		"swing/mummy_boss_combo": {"layers": [
-			{"type": "trail", "shape": "arc", "radius": 1.8, "width": 0.5, "from": 95, "to": -80, "rise": [1.6, 1.0], "tilt": 10, "seconds": 0.1, "sweep": 0.45, "tail": 0.75, "color": "#f0c860", "ink": 0.45},
-			{"type": "trail", "shape": "arc", "radius": 1.7, "width": 0.45, "from": -80, "to": 90, "rise": [1.0, 1.4], "tilt": -10, "delay": 0.07, "seconds": 0.1, "sweep": 0.45, "tail": 0.75, "color": "#f0c860", "ink": 0.45}
+			{"type": "trail", "shape": "arc", "radius": 1.8, "width": 0.5, "from": 95, "to": -80, "rise": [1.6, 1.0], "tilt": 10, "seconds": 0.13, "sweep": 0.45, "tail": 0.75, "color": "#f0c860", "ink": 0.45},
+			{"type": "trail", "shape": "arc", "radius": 1.7, "width": 0.45, "from": -80, "to": 90, "rise": [1.0, 1.4], "tilt": -10, "delay": 0.13, "seconds": 0.13, "sweep": 0.45, "tail": 0.75, "color": "#f0c860", "ink": 0.45}
 		]},
 		"windup/mummy_boss_nova": {"layers": [
-			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [1.0, 5.0], "seconds": 0.33, "color": "#c9a24a", "ink": 0.4},
-			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.8, 2.2], "seconds": 0.33, "color": "#f0c860"},
-			{"type": "burst", "style": "puff", "anchor": "feet", "count": 12, "speed": 1.0, "spread": 80, "dir": "up", "gravity": -0.6, "drag": 2, "size": 0.6, "seconds": 0.33, "color": "#cdb27a", "ink": 0.3}
+			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [1.0, 5.0], "seconds": 0.45, "color": "#c9a24a", "ink": 0.4},
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.8, 2.2], "seconds": 0.45, "color": "#f0c860"},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 12, "speed": 1.0, "spread": 80, "dir": "up", "gravity": -0.6, "drag": 2, "size": 0.6, "seconds": 0.45, "color": "#cdb27a", "ink": 0.3}
 		]},
 		"swing/mummy_boss_nova": {"layers": [
 			{"type": "ground", "mode": "ring", "anchor": "feet", "size": [0.8, 5.2], "seconds": 0.45, "color": "#e6c27a", "ink": 0.35},
@@ -441,7 +441,7 @@
 		"windup/mummy_hw_curse": {"layers": []},
 		"swing/mummy_hw_curse": {"layers": []},
 		"windup/mummy_hw_starfall": {"layers": [
-			{"type": "shake", "strength": 0.08, "seconds": 0.53}
+			{"type": "shake", "strength": 0.08, "seconds": 0.93}
 		]},
 		"swing/mummy_hw_starfall": {"layers": []},
 		"windup/mummy_hw_sandstorm": {"layers": []},

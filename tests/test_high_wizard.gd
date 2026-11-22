@@ -55,14 +55,14 @@ func _check_kit(ctx, combat, enemy: Dictionary) -> void:
 		ctx.check("%s plays the wizard clip '%s'" % [move_id, clip], str(enemy["clips"].get(move_id, "")) == clip and marks is Dictionary and marks.has(clip))
 		if marks is Dictionary and marks.has(clip):
 			var windup := float(marks[clip]["windup_end"]) * 60.0
-			# Boss 2026-11-22: the bosses act ~3x faster, so the wind-ups are ~a third of the clip's (the view plays the clip
-			# ~3x fast over them; tests/test_boss_tempo.gd locks the old -> new ratios). Was 0.6-1.0x of the clip.
-			ctx.check("%s wind-up %d ticks is the clip's %.0f within 0.2-0.4x (the clip plays ~3x fast, Boss 2026-11-22)" % [move_id, int(move["startup"]), windup], float(move["startup"]) >= windup * 0.2 and float(move["startup"]) <= windup * 0.4)
+			# Boss 2026-11-23: 1.5x the original pace (3x on 2026-11-22 was too fast), so the wind-ups are ~2/3 of the original
+			# 0.6-1.0x of the clip (the view plays the clip ~1.5x fast over them; tests/test_boss_tempo.gd locks old -> new).
+			ctx.check("%s wind-up %d ticks is the clip's %.0f within 0.38-0.7x (the clip plays ~1.5x fast, Boss 2026-11-23)" % [move_id, int(move["startup"]), windup], float(move["startup"]) >= windup * 0.38 and float(move["startup"]) <= windup * 0.7)
 		if move_id != "mummy_hw_bolt":  # (the bolt is a plain homing shot, like the mage's)
 			ctx.check("%s is telegraphed (warned on the ground)" % move_id, bool(move["telegraph"]))
 	for area_id in ["hw_curse", "hw_star"]:
 		var area: Dictionary = combat.areas[area_id]
-		# (Boss 2026-11-22, ~3x faster: the fill is a third of the old 0.9-1.1 s, at least the loader's 20-tick warning)
+		# (Boss 2026-11-23, 1.5x pace: the fill is 2/3 of the old 0.9-1.1 s, at least the loader's 20-tick warning)
 		ctx.check("area %s cannot be guarded, warns at least 0.33 s and has its own client look" % area_id, not bool(area["guardable"]) and int(area["delay"]) >= 20 and ProjectileView.LOOKS.has(str(area["look"])))
 	var star: Array = combat.moves["mummy_hw_starfall"]["spawns"]
 	ctx.check("the starfall drops 3 marks one after another (a chasing barrage)", star.size() == 3 and float(star[2]["frame"]) > float(star[1]["frame"]) and float(star[1]["frame"]) > float(star[0]["frame"]))
@@ -232,7 +232,7 @@ func _check_skill_list(ctx) -> void:
 	ctx.check("special_move is copied with the input", input.duplicate_input().special_move == "mummy_hw_curse")
 	var bytes: PackedByteArray = input.encode()
 	ctx.check("special_move is not on the wire (still %d bytes, decodes to empty)" % SimInput.wire_size(), bytes.size() == SimInput.wire_size() and SimInput.decode(bytes).special_move == "")
-	# Its own cooldown per skill: after a curse, the next special it starts is not the curse until 240 ticks pass.
+	# Its own cooldown per skill: after a curse, the next special it starts is not the curse until its cooldown passes.
 	var world := SimWorld.new()
 	world.half_width = 8.0
 	world.half_depth = 4.5

@@ -6,9 +6,10 @@
 ##   godot --path . --script res://tools/shots/mummy_tempo_shots.gd -- [--size=1280x720] [--out=res://build/mummy_tempo_shots]
 ## Shots: <out>/<WxH>_<move>_f<NN>.png, NN = the move frame (tick, 60 per s) it was taken at. HP raised on both sides (a look check only).
 
-const MOVES := {  # move frames (ticks): combo 5/2/9 (16 ticks, 0.27 s), nova 20/2/13 (35 ticks, 0.58 s)
-	"mummy_boss_combo": [1, 3, 5, 7, 9, 12, 15],
-	"mummy_boss_nova": [4, 10, 16, 20, 22, 27, 33],
+const MOVES := {  # move frames (ticks): combo 9/3/19 (31 ticks, 0.52 s; crescent 17), nova 27/3/27 (57 ticks, 0.95 s)
+	# (Boss 2026-11-23: 1.5x the original pace; was 5/2/9 and 20/2/13 at 3x)
+	"mummy_boss_combo": [2, 5, 9, 12, 17, 23, 29],
+	"mummy_boss_nova": [6, 14, 22, 27, 30, 40, 54],
 }
 
 var out := "res://build/mummy_tempo_shots"
