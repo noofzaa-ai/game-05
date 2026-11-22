@@ -205,11 +205,15 @@ func _check_boss_statuses(ctx, combat) -> void:
 		minf(atk.call("mummy_high_wizard"), atk.call("mummy_boss")) > atk.call("mummy_knight") and atk.call("mummy_knight") > maxf(atk.call("mummy_mage"), atk.call("mummy_archer")) and minf(atk.call("mummy_mage"), atk.call("mummy_archer")) >= atk.call("mummy"))
 	# Boss 2026-11-19 round 2: ATK about 2x the pre-change mummy values, HP back near them (round 1's HP /4 is gone).
 	var original := {"mummy": [15.0, 45.0], "mummy_archer": [14.0, 33.0], "mummy_mage": [16.5, 36.0], "mummy_knight": [18.0, 165.0], "mummy_boss": [18.8, 225.0], "mummy_high_wizard": [20.0, 300.0]}
+	# Boss 2026-11-22: the wave-9 boss pair's HP doubled (tests/test_boss_tempo.gd locks the exact x2): 1.5-2.0x the original.
+	var hp_range := {"mummy_boss": [1.5, 2.0], "mummy_high_wizard": [1.5, 2.0]}
 	for id in original:
 		var stats: Dictionary = combat.enemies[id]["stats"]
 		var atk_ratio: float = float(stats["ATK"]) / float(original[id][0])
 		var hp_ratio: float = float(stats["HP"]) / float(original[id][1])
-		ctx.check("round 2: %s ATK %.2fx the original (1.8-2.3x) and HP %.2fx (0.75-1.0x)" % [id, atk_ratio, hp_ratio], atk_ratio >= 1.8 and atk_ratio <= 2.3 and hp_ratio >= 0.75 and hp_ratio <= 1.0)
+		var hp_lo: float = hp_range.get(id, [0.75, 1.0])[0]
+		var hp_hi: float = hp_range.get(id, [0.75, 1.0])[1]
+		ctx.check("round 2: %s ATK %.2fx the original (1.8-2.3x) and HP %.2fx (%.2f-%.2fx)" % [id, atk_ratio, hp_ratio, hp_lo, hp_hi], atk_ratio >= 1.8 and atk_ratio <= 2.3 and hp_ratio >= hp_lo and hp_ratio <= hp_hi)
 
 
 ## ai.skills (Boss 2026-11-18 option a): the loader rejects a bad list; each skill keeps its own cooldown; a monster

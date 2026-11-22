@@ -25,10 +25,14 @@ const OLD := {
 	"orc_warlock_cleave": [26, 32, 0], "orc_warlock_skyfall": [60, 54, 360], "orc_warlock_cataclysm": [96, 60, 540],
 	"orc_warlock_bulwark": [20, 150, 420],
 	"mummy_hw_bolt": [40, 40, 0], "mummy_hw_curse": [72, 54, 240], "mummy_hw_starfall": [96, 60, 480], "mummy_hw_sandstorm": [70, 40, 0],
+	# Boss 2026-11-22 round 2: the Mummy Pharaoh (mini boss of the wave-9 pair) gets the same ~3x from its values then.
+	"mummy_boss_combo": [14, 28, 0], "mummy_boss_nova": [40, 40, 300],
 }
-const OLD_AI := {"orc_warlock": [70, 120], "mummy_high_wizard": [100, 150]}  ## cooldown_min / cooldown_max before
+const OLD_AI := {"orc_warlock": [70, 120], "mummy_high_wizard": [100, 150], "mummy_boss": [70, 120]}  ## cooldown_min / cooldown_max before
+## Boss 2026-11-22 round 2: the wave-9 pair's HP doubled from these (applied once).
+const OLD_HP := {"mummy_boss": 200, "mummy_high_wizard": 270}
 ## Big blows: always telegraphed with at least MIN_WARN.
-const BIG :=["orc_warlock_skyfall", "orc_warlock_cataclysm", "mummy_hw_curse", "mummy_hw_starfall", "mummy_hw_sandstorm"]
+const BIG :=["orc_warlock_skyfall", "orc_warlock_cataclysm", "mummy_hw_curse", "mummy_hw_starfall", "mummy_hw_sandstorm", "mummy_boss_nova"]
 const ORCS := ["orc_grunt", "orc_archer", "orc_mage"]
 const RETREATS := ["back_off", "hop_back", "flee", "escape"]
 
@@ -57,8 +61,10 @@ func _check_timings(ctx, combat) -> void:
 			ctx.check("%s cooldown %d (was %d) is about a third (%.2fx)" % [move_id, move["cooldown"], old[2], c], c >= 0.25 and c <= 0.4)
 		if bool(move["telegraph"]) or BIG.has(move_id):
 			ctx.check("%s still warns: telegraphed wind-up %d ticks >= %d (%.2f s)" % [move_id, move["startup"], MIN_WARN, MIN_WARN / 60.0], bool(move["telegraph"]) and int(move["startup"]) >= MIN_WARN)
+		# (the Pharaoh's crescent flies on the combo's second cut, inside its recovery: before the move ends)
+		var spawn_end := int(move["startup"]) + int(move["active"]) + (int(move["recovery"]) if move_id == "mummy_boss_combo" else 0)
 		for spawn in move["spawns"]:
-			ctx.check("%s spawns inside the move (frame %d <= %d)" % [move_id, spawn["frame"], int(move["startup"]) + int(move["active"])], float(spawn["frame"]) <= float(move["startup"]) + float(move["active"]))
+			ctx.check("%s spawns inside the move (frame %d <= %d)" % [move_id, spawn["frame"], spawn_end], float(spawn["frame"]) <= float(spawn_end))
 	for area_id in ["hw_curse", "hw_star"]:
 		ctx.check("area %s fills for >= %d ticks before it bursts (%d)" % [area_id, MIN_WARN, combat.areas[area_id]["delay"]], int(combat.areas[area_id]["delay"]) >= MIN_WARN)
 	for id in OLD_AI:
@@ -76,6 +82,23 @@ func _check_timings(ctx, combat) -> void:
 		var rate := float(clip["windup_end"]) / (float(combat.moves[move_id]["startup"]) / 60.0)
 		var old_rate := float(clip["windup_end"]) / (float(OLD[move_id][0]) / 60.0)
 		ctx.check("%s: its clip wind-up plays %.1fx (was %.1fx: %.1fx faster)" % [move_id, rate, old_rate, rate / old_rate], rate / old_rate >= 2.2 and rate / old_rate <= 4.0)
+	# The Pharaoh's greatsword clips: the combo's whole clip (wind-up, cut, recovery) ~3x; the nova's wind-up sits at the
+	# 20-tick warning floor (2x), its strike + recovery ~3x.
+	var gs = JSON.parse_string(FileAccess.get_file_as_string("res://art/animations/monster_clips_greatsword.json"))
+	var pclips: Dictionary = combat.enemies["mummy_boss"]["clips"]
+	for move_id in ["mummy_boss_combo", "mummy_boss_nova"]:
+		var mv: Dictionary = combat.moves[move_id]
+		var c: Dictionary = gs[str(pclips[move_id])]
+		var total := float(mv["startup"]) + float(mv["active"]) + float(mv["recovery"])
+		var old_total := float(OLD[move_id][0]) + (5.0) + float(OLD[move_id][1])  # (both had active 5 before)
+		var speedup := old_total / total
+		ctx.check("%s: the whole clip plays %.1fx faster (%d -> %d ticks for its %.2f s)" % [move_id, speedup, old_total, total, float(c["length"])], speedup >= 2.2 and speedup <= 4.0)
+	var crescent: Dictionary = combat.moves["mummy_boss_combo"]["spawns"][0]
+	ctx.check("the Pharaoh's sand crescent still flies on the second cut, after the first (frame %d > startup %d)" % [crescent["frame"], combat.moves["mummy_boss_combo"]["startup"]],
+		float(crescent["frame"]) > float(combat.moves["mummy_boss_combo"]["startup"]))
+	for id in OLD_HP:
+		var hp := float(combat.enemies[id]["stats"]["HP"])
+		ctx.check("%s HP %d is 2x the %d before (Boss 2026-11-22, applied once)" % [id, hp, OLD_HP[id]], is_equal_approx(hp, 2.0 * float(OLD_HP[id])))
 	var dash: Dictionary = combat.moves["orc_warlock_skyfall"]
 	ctx.check("the skyfall leap still lands inside its wind-up (dash %d-%d, startup %d)" % [dash["dash_from"], dash["dash_to"], dash["startup"]], float(dash["dash_to"]) <= float(dash["startup"]) and float(dash["dash_from"]) < float(dash["dash_to"]))
 	var bulwark: Dictionary = combat.moves["orc_warlock_bulwark"]

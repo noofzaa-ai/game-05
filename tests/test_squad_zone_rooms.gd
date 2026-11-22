@@ -65,7 +65,13 @@ func run(ctx) -> void:
 				seen[f.enemy_type] = true
 				if f.enemy_type in ["mummy_high_wizard", "mummy_boss"]:  # let the boss pair act so its moves reach the event stream
 					boss_ticks += 1
-					if boss_ticks < 1500: continue
+					if boss_ticks < 1500:
+						# (Boss 2026-11-22: the pair acts ~3x faster with 2x HP and would wipe the idle squad in this
+						# window; this drive checks the event stream and the settle, not balance, so the cards stay up)
+						for pid in room.sim.fighters:
+							var p = room.sim.fighters[pid]
+							if p.team != "enemy" and p.is_alive(): p.hp = p.max_hp()
+						continue
 				f.hp = 0; f.state = FS.DEAD
 		if room.journey.state != Journey.IN_STAGE: break
 	ctx.check("zone rooms: wave drive saw the mummy boss pair %s" % [seen.keys()], seen.has("mummy_high_wizard") and seen.size() >= 3)
