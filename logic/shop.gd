@@ -2,6 +2,11 @@ extends RefCounted
 ## Fixed-price camp merchant. Catalog and costs come only from server-owned data.
 const ItemSystem := preload("res://logic/item_system.gd")
 const PATH := "res://data/items/shop.json"
+## shop_sell_batch limits: sell_batch refuses more than BATCH_MAX entries; the entries' JSON stays under
+## BATCH_ENTRIES_BUDGET characters so the whole online command envelope (request id, revision, type, price: ~150
+## characters) fits the 4096-character profile RPC payload cap (server/names/runtime/src/security.ts, profile.ts).
+const BATCH_MAX := 64
+const BATCH_ENTRIES_BUDGET := 3600
 static var _config := {}
 
 static func config() -> Dictionary:
@@ -126,15 +131,19 @@ static func sell_material(profile, camp, id: String, count: int, expected_price:
 ## blue) that are safe to sell in one go. Never included: a piece with a socketed Relic, a boss set piece, a destroyed or
 ## unpriced piece, a starter piece (kept for the tier-up path). Worn pieces are not in the stash, so they are never listed.
 ## (There is no favourite/lock mark in the game yet; add the check here when there is.)
-## Returns {"entries": [{"kind": "item", "id"}] (the shop_sell_batch entries, at most 64), "count", "total" (gold), "ids"}.
+## Returns {"entries": [{"kind": "item", "id"}] (the shop_sell_batch entries, at most BATCH_MAX and BATCH_ENTRIES_BUDGET
+## characters of JSON), "count", "total" (gold), "ids", "more" (pieces of those tiers left for the next press)}.
+## One press = one command, so the label count/gold is exactly what that press sells (2026-11-22 fix: the online profile
+## RPC refuses a payload over 4096 characters, and 64 long level-1 drop ids ("starter-drop-drop-<seed>-<state>") went
+## over it, so a big White / White+Blue sale was refused as invalid_payload and sold nothing).
 static func batch_sellable(profile, rules, tier_ids: Array) -> Dictionary:
 	var BossLoot = preload("res://logic/boss_loot.gd")
 	var entries: Array = []
 	var ids: Array = []
 	var total := 0
+	var used := 0
+	var more := 0
 	for piece in profile.stash.items:
-		if entries.size() >= 64:
-			break
 		if piece.tier < 0 or piece.tier >= rules.tiers.size() or not tier_ids.has(str(rules.tiers[piece.tier]["id"])):
 			continue
 		if piece.destroyed or not piece.relic.is_empty() or BossLoot.is_boss_piece(rules, piece) or (str(piece.id).begins_with("starter-") and not str(piece.id).begins_with("starter-drop-")):  # the real starter kit stays; level-1 drops (logic/gear_levels.gd) sell
@@ -142,15 +151,36 @@ static func batch_sellable(profile, rules, tier_ids: Array) -> Dictionary:
 		var price := item_sell_price(piece, rules)
 		if price < 1:
 			continue
-		entries.append({"kind": "item", "id": piece.id})
+		var entry := {"kind": "item", "id": piece.id}
+		var cost := entry_chars(entry)
+		if entries.size() >= BATCH_MAX or used + cost > BATCH_ENTRIES_BUDGET:
+			more += 1
+			continue
+		used += cost
+		entries.append(entry)
 		ids.append(piece.id)
 		total += price
-	return {"entries": entries, "count": entries.size(), "total": total, "ids": ids}
+	return {"entries": entries, "count": entries.size(), "total": total, "ids": ids, "more": more}
+
+
+## The JSON characters one shop_sell_batch entry adds to the command (with its separating comma).
+static func entry_chars(entry: Dictionary) -> int:
+	return JSON.stringify(entry).length() + 1
+
+
+## True when `entries` fit one shop_sell_batch command (count and JSON size; see BATCH_ENTRIES_BUDGET).
+static func batch_fits(entries: Array) -> bool:
+	if entries.size() > BATCH_MAX:
+		return false
+	var used := 0
+	for entry in entries:
+		used += entry_chars(entry)
+	return used <= BATCH_ENTRIES_BUDGET
 
 
 ## Validate the entire batch before changing any item, material or Gold.
 static func sell_batch(profile, rules, camp, entries: Array, expected_price: int) -> Dictionary:
-	if entries.is_empty() or entries.size() > 64: return {"ok": false, "reason": "invalid_command"}
+	if entries.is_empty() or entries.size() > BATCH_MAX: return {"ok": false, "reason": "invalid_command"}
 	var seen := {}
 	var take_indices: Array[int] = []
 	var materials := {}

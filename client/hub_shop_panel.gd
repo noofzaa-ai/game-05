@@ -428,9 +428,19 @@ func _marked_total(p) -> int:
 func _toggle_mark(id: String) -> void:
 	if marked.has(id):
 		marked.erase(id)
+	elif not Shop.batch_fits(_marked_entries() + [{"kind": "item", "id": id}]):  # one sale = one command (Shop.BATCH_ENTRIES_BUDGET)
+		say(CardTokens.t("shop_mark_full") % marked.size(), false)
+		return
 	else:
 		marked.append(id)
 	refresh()
+
+
+func _marked_entries() -> Array:
+	var entries: Array = []
+	for id in marked:
+		entries.append({"kind": "item", "id": str(id)})
+	return entries
 
 
 # ------------------------------------------------------------------ commands (rules in logic/commands.gd)
@@ -458,9 +468,7 @@ func _sell(item_id: String, price: int) -> void:
 
 func _sell_marked() -> void:
 	var p = _profile()
-	var entries: Array = []
-	for id in marked:
-		entries.append({"kind": "item", "id": str(id)})
+	var entries := _marked_entries()
 	var total := _marked_total(p)
 	var result := await run({"type": "shop_sell_batch", "entries": entries, "expected_price": total})
 	if result.get("ok", false):

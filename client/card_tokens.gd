@@ -839,6 +839,7 @@ const STRINGS := {
 	"shop_bulk_sure": ["แตะอีก: ขาย %d ชิ้น %d ทอง", "Again: sell %d for %dg"],
 	"shop_bulk_none": ["ว่าง", "none"],
 	"shop_bulk_sold": ["ขาย %d ชิ้น ได้ %d ทอง", "Sold %d items for %d gold"],
+	"shop_mark_full": ["เลือกได้ครั้งละ %d ชิ้น ขายชุดนี้ก่อน", "Up to %d marked per sale: sell these first"],
 	"shop_bulk_hint": ["ไม่ขายของที่สวม ฝังเรลิก ชุดบอส ของเริ่มต้น", "Never sells worn, relic, boss or starter pieces"],
 	"err_reskill_required": ["ต้องรีเซ็ตสกิลก่อนเปลี่ยนอาวุธ", "Reset the skills before changing weapon family"],
 	"err_bag_full": ["คลังเต็ม", "Storage is full"],
