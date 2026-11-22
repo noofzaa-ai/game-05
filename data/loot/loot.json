@@ -7,6 +7,8 @@
 
 	"_mummy_family": "Pyramid (combat-designer 2026-11-17): each mummy uses its goblin twin's table (archer/mage -> goblin, knight -> charger, Pharaoh -> brute) except the base mummy, which keeps the richer grunt table it was registered with (item 0.155 vs 0.095, gold 9-23 vs 6-15): the zone-2 loot step. The zone's boss is the Mummy High Wizard (Boss 2026-11-18; the pair clears with wave 9, which sets unlocks.boss_pyramid); its boss_loot.json entry (zone pyramid) names the High Wizard's set/coin/relic ids (items added by the item agent).",
 
+	"_orc_family": "Orc Camp (2026-11-22 fix: the four orc types had NO by_enemy entry, so every orc kill rolled nothing and the zone dropped nothing). Same structure as the mummies: orc_grunt -> grunt (the zone's base melee, like mummy), orc_archer / orc_mage -> goblin (like their goblin/mummy twins), the Orc Warlock boss -> brute (like goblin_chief / mummy_high_wizard). Dropped pieces then follow data/loot/race_drops.json (random race + class) and the gear level cap (data/world/gear_levels.json, orc_camp = 20). tests/test_loot_coverage.gd fails if any combat.json monster type has no table.",
+
 	"gold_per_level": 0.12,
 
 	"tier_weights": [
@@ -62,6 +64,10 @@
 		"mummy_mage": "goblin",
 		"mummy_boss": "brute",
 		"mummy_high_wizard": "brute",
+		"orc_grunt": "grunt",
+		"orc_archer": "goblin",
+		"orc_mage": "goblin",
+		"orc_warlock": "brute",
 		"dummy_grunt": "grunt",
 		"goblin": "goblin",
 		"goblin_chief": "brute",

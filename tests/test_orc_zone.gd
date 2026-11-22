@@ -166,8 +166,8 @@ func _rooms(ctx, f: Dictionary) -> void:
 	ctx.check("settle: the daily boss counts the Orc Warlock", back != null and Daily.progress(back, int(Time.get_unix_time_from_system())).any(func(q): return q.id == "daily_boss" and q.current >= 1))
 
 
-## Boss weapon drops (Boss 2026-11-21: ON for the pyramid crook + staff and the Warlock sword + shield, 5% each). Per zone:
-## the data, ~5% each over 2000 wins, the drop lands in the stash as the right slot (the shield in "offhand"), the set
+## Boss weapon drops (Boss 2026-11-21: ON for the pyramid crook + staff and the Warlock sword + shield, 10% each since Boss 2026-11-22). Per zone:
+## the data, ~10% each over 2000 wins, the drop lands in the stash as the right slot (the shield in "offhand"), the set
 ## piece / relic rolls of a seed are the same as with drops OFF (a test copy of the entry), and OFF gives no weapon.
 func _weapon_drops(ctx, f: Dictionary) -> void:
 	var zones := {"pyramid": ["mummy_waves", "boss_mummy_boss_crook", "boss_mummy_high_wizard_staff"],
@@ -177,8 +177,8 @@ func _weapon_drops(ctx, f: Dictionary) -> void:
 		var a: String = zones[zone][1]
 		var b: String = zones[zone][2]
 		var entry: Dictionary = BossLoot.boss(zone)
-		ctx.check("%s weapon_drops: %s + %s at 5%% each, ON" % [zone, a, b], bool(entry.get("weapon_drops_enabled", false))
-			and Array(entry.get("weapon_drops", [])).map(func(w): return str(w.item)) == [a, b] and Array(entry.weapon_drops).all(func(w): return is_equal_approx(float(w.chance), 0.05)))
+		ctx.check("%s weapon_drops: %s + %s at 10%% each, ON" % [zone, a, b], bool(entry.get("weapon_drops_enabled", false))
+			and Array(entry.get("weapon_drops", [])).map(func(w): return str(w.item)) == [a, b] and Array(entry.weapon_drops).all(func(w): return is_equal_approx(float(w.chance), 0.10)))
 		var saved: Dictionary = BossLoot._cached
 		var off: Dictionary = saved.duplicate(true)
 		off["bosses"][zone].erase("weapon_drops_enabled")
@@ -205,7 +205,7 @@ func _weapon_drops(ctx, f: Dictionary) -> void:
 					n_b += 1 if i.item_id == b else 0
 					slots_ok = slots_ok and i.slot == str(f.rules.catalog.entry(i.item_id).slot) and p2.stash.items.has(i)
 		BossLoot._cached = saved
-		ctx.check("%s weapon drops ON: each ~5%% of 2000 wins (%s %d, %s %d)" % [zone, a, n_a, b, n_b], n_a >= 60 and n_a <= 140 and n_b >= 60 and n_b <= 140)
+		ctx.check("%s weapon drops ON: each ~10%% of 2000 wins (%s %d, %s %d)" % [zone, a, n_a, b, n_b], n_a >= 150 and n_a <= 250 and n_b >= 150 and n_b <= 250)
 		ctx.check("%s weapon drops: in the stash in their catalog slot (the shield in offhand)" % zone, slots_ok)
 		ctx.check("%s weapon drops: the set piece and relic rolls of each seed match drops OFF" % zone, same)
 		ctx.check("%s weapon drops OFF (test copy): 2000 wins give no boss weapon" % zone, off_weapons == 0)

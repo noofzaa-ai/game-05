@@ -1,6 +1,6 @@
 {
 	"version": 1,
-	"_comment": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16), read by logic/boss_loot.gd. One entry per zone boss (key = data/world/zones.json zone id). On a WON run of the zone's journey (server, Journey.pay_card_xp) each account gets: coins_per_kill of `coin` (a camp.json material, never scaled); a `piece_chance` chance of one random piece of `set` (uniform over the set's catalog items), its tier rolled from data/loot/loot.json tier_weights at the boss's level (the journey's last stage, enemy with boss: true); a `relic_chance` chance of one `relic` (a camp.json material). Both chances x that player's loot_by_squad factor. first_kill_min_tier: the account's first win (before unlocks.boss_<zone> is set) guarantees one piece of at least this tier (rerolled tier below it is raised to it); it replaces that run's piece roll. price_coins: the shop price of each set piece in this boss's coin. shop_tier_weights (Boss 2026-11-16): relative weights over rules.json tiers [normal, rare, epic, legendary] for the tier a BOUGHT piece rolls (normal is 0: a bought piece is never white) (server rng, one draw). weapon_drops (Boss 2026-11-21): fixed boss-unique weapons (catalog no_drop, no set, never in the shop, never converted by race_drops.json): each entry is an independent `chance` x factor roll on a WON run, the piece's tier rolled like a set piece (first kill does not guarantee it). 5% each = the chance of any ONE specific accessory (25% over 5 pieces). The roll is in logic/boss_loot.gd (_grant_weapons); it runs only for an entry with \"weapon_drops_enabled\": true (absent = off). Boss 2026-11-21: ON for pyramid and orc_camp. PLACEHOLDER numbers (25% / 1% / 500 are the GDD's; the 500-coin farm time is flagged for a Boss check in GDD 3).",
+	"_comment": "Boss loot (design/gdd/boss-loot.md, Boss 2026-11-16), read by logic/boss_loot.gd. One entry per zone boss (key = data/world/zones.json zone id). On a WON run of the zone's journey (server, Journey.pay_card_xp) each account gets: coins_per_kill of `coin` (a camp.json material, never scaled); a `piece_chance` chance of one random piece of `set` (uniform over the set's catalog items), its tier rolled from data/loot/loot.json tier_weights at the boss's level (the journey's last stage, enemy with boss: true); a `relic_chance` chance of one `relic` (a camp.json material). Both chances x that player's loot_by_squad factor. first_kill_min_tier: the account's first win (before unlocks.boss_<zone> is set) guarantees one piece of at least this tier (rerolled tier below it is raised to it); it replaces that run's piece roll. price_coins: the shop price of each set piece in this boss's coin. shop_tier_weights (Boss 2026-11-16): relative weights over rules.json tiers [normal, rare, epic, legendary] for the tier a BOUGHT piece rolls (normal is 0: a bought piece is never white) (server rng, one draw). weapon_drops (Boss 2026-11-21): fixed boss-unique weapons (catalog no_drop, no set, never in the shop, never converted by race_drops.json): each entry is an independent `chance` x factor roll on a WON run, the piece's tier rolled like a set piece (first kill does not guarantee it). 10% each (Boss 2026-11-22; was 5%). The roll is in logic/boss_loot.gd (_grant_weapons); it runs only for an entry with \"weapon_drops_enabled\": true (absent = off). Boss 2026-11-21: ON for pyramid and orc_camp. PLACEHOLDER numbers (25% / 1% / 500 are the GDD's; the 500-coin farm time is flagged for a Boss check in GDD 3).",
 	"bosses": {
 		"goblin_base": {
 			"enemy": "goblin_chief",
@@ -27,12 +27,12 @@
 			"shop_tier_weights": [0, 70, 22, 8],
 			"weapon_drops_enabled": true,
 			"weapon_drops": [
-				{"item": "boss_mummy_boss_crook", "chance": 0.05},
-				{"item": "boss_mummy_high_wizard_staff", "chance": 0.05}
+				{"item": "boss_mummy_boss_crook", "chance": 0.10},
+				{"item": "boss_mummy_high_wizard_staff", "chance": 0.10}
 			]
 		},
 		"orc_camp": {
-			"_note": "2026-11-21: the Orc Warlock's own accessory set boss_orc_warlock (5 pieces, level 20, stats only, icons art/items/boss/orc_warlock/), coin and relic replace the earlier placeholder that reused the Mummy High Wizard's. Same chances and shop price as the other bosses (its pieces are sold for 500 Warlock coins). Weapon drops (Boss 2026-11-21, ON): the Warlock's sword and shield (boss_orc_warlock_sword / _shield), 5% each, never in the shop or the set.",
+			"_note": "2026-11-21: the Orc Warlock's own accessory set boss_orc_warlock (5 pieces, level 20, stats only, icons art/items/boss/orc_warlock/), coin and relic replace the earlier placeholder that reused the Mummy High Wizard's. Same chances and shop price as the other bosses (its pieces are sold for 500 Warlock coins). Weapon drops (Boss 2026-11-21, ON): the Warlock's sword and shield (boss_orc_warlock_sword / _shield), 10% each (Boss 2026-11-22), never in the shop or the set.",
 			"enemy": "orc_warlock",
 			"set": "boss_orc_warlock",
 			"coin": "coin_orc_warlock",
@@ -45,8 +45,8 @@
 			"shop_tier_weights": [0, 70, 22, 8],
 			"weapon_drops_enabled": true,
 			"weapon_drops": [
-				{"item": "boss_orc_warlock_sword", "chance": 0.05},
-				{"item": "boss_orc_warlock_shield", "chance": 0.05}
+				{"item": "boss_orc_warlock_sword", "chance": 0.10},
+				{"item": "boss_orc_warlock_shield", "chance": 0.10}
 			]
 		}
 	}

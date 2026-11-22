@@ -66,8 +66,8 @@ func run(ctx) -> void:
 		var icon = ItemAssets.icon(item, rules.catalog)
 		ctx.check("boss weapon %s: client icon is the 96x96 boss icon" % id, icon is Texture2D and icon.get_width() == 96)
 		var entry: Dictionary = BossLoot.boss(spec[4])
-		ctx.check("boss weapon %s: boss_loot.json %s drops it at 5%%, drops ON" % [id, spec[4]],
-			bool(entry.get("weapon_drops_enabled", false)) and Array(entry.get("weapon_drops", [])).any(func(d): return str(d.item) == id and is_equal_approx(float(d.chance), 0.05)))
+		ctx.check("boss weapon %s: boss_loot.json %s drops it at 10%% (Boss 2026-11-22), drops ON" % [id, spec[4]],
+			bool(entry.get("weapon_drops_enabled", false)) and Array(entry.get("weapon_drops", [])).any(func(d): return str(d.item) == id and is_equal_approx(float(d.chance), 0.10)))
 	_looks(ctx, rules)
 
 

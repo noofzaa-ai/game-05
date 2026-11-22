@@ -44,6 +44,7 @@ const TEST_FILES := [
 	"res://tests/test_tier_up.gd",
 	"res://tests/test_gear_purge.gd",
 	"res://tests/test_loot_settle.gd",
+	"res://tests/test_loot_coverage.gd",
 	"res://tests/test_localstack_fixtures.gd",
 	"res://tests/test_card_progress.gd",
 	"res://tests/test_class_skills.gd",
