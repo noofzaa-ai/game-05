@@ -38,7 +38,8 @@ static func fill(profile, item_rules, camp_data, rng: RandomNumberGenerator) -> 
 	var added := 0
 	for item_id in ids:
 		var slot_id: String = item_rules.catalog.entry(item_id)["slot"]
-		if profile.stash.add_item(ItemSystem.create_item(item_rules, "test-" + item_id, slot_id, 0, rng, "", item_id)):
+		var tier := maxi(0, preload("res://logic/boss_loot.gd").weapon_drop_tier(item_rules, item_id))  # boss weapons: their fixed drop tier (epic)
+		if profile.stash.add_item(ItemSystem.create_item(item_rules, "test-" + item_id, slot_id, tier, rng, "", item_id)):
 			added += 1
 		else:
 			push_warning("test kit: the stash is full at %s" % item_id)

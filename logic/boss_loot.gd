@@ -251,8 +251,10 @@ static func grant(profile, rules, loot, journey_data, first_kill: bool, factor: 
 
 ## Boss-unique weapons (Boss 2026-11-21; data weapon_drops [{item, chance}]): OFF until the Boss approves them, i.e. only
 ## when the entry also says "weapon_drops_enabled": true. Each listed weapon is an independent chance x factor roll (two
-## draws each: the roll and its tier, rolled like a set piece; no first-kill guarantee). The draws come AFTER the four
-## fixed ones above, so turning this on never changes the set piece / relic results of a seed.
+## draws each: the roll and a tier roll; no first-kill guarantee). Its tier is the entry's fixed "tier" (a rules.json tier
+## id; Boss 2026-11-22: "epic" for all four boss weapons, so +0 = the level-15 epic weapon at +10); only an entry without
+## "tier" uses the rolled one (as a set piece). The tier draw is always taken so a seed's draws never shift. The draws come
+## AFTER the four fixed ones above, so turning this on never changes the set piece / relic results of a seed.
 static func _grant_weapons(profile, rules, entry: Dictionary, weights: Array, factor: float, rng: RandomNumberGenerator, id_prefix: String, summary: Dictionary) -> void:
 	if not bool(entry.get("weapon_drops_enabled", false)):
 		return
@@ -262,6 +264,8 @@ static func _grant_weapons(profile, rules, entry: Dictionary, weights: Array, fa
 		var item_id := str(drop.get("item", ""))
 		var roll := rng.randf()
 		var tier := _roll_tier(weights, rng)
+		if drop.has("tier"):
+			tier = _tier_index(rules, str(drop["tier"]))
 		if item_id.is_empty() or rules.catalog.entry(item_id).is_empty() or roll >= float(drop.get("chance", 0.0)) * factor:
 			continue
 		var slot := str(rules.catalog.entry(item_id)["slot"])
@@ -270,6 +274,16 @@ static func _grant_weapons(profile, rules, entry: Dictionary, weights: Array, fa
 			profile.stash.items.append(weapon)
 			profile.stash.capacity = maxi(profile.stash.capacity, profile.stash.slots_used())
 			summary["items"].append(weapon)
+
+
+## The fixed tier index of a boss weapon drop (its weapon_drops entry's "tier"; Boss 2026-11-22: epic for all four), or -1
+## when `item_id` has no weapon_drops entry with a fixed tier. Other paths that make such a weapon (test kit) use this.
+static func weapon_drop_tier(rules, item_id: String) -> int:
+	for entry in data().get("bosses", {}).values():
+		for drop in Array(Dictionary(entry).get("weapon_drops", [])):
+			if drop is Dictionary and str(drop.get("item", "")) == item_id and drop.has("tier"):
+				return clampi(_tier_index(rules, str(drop["tier"])), 0, rules.tiers.size() - 1)
+	return -1
 
 
 static func _tier_index(rules, tier_id: String) -> int:

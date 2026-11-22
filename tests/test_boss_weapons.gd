@@ -3,7 +3,8 @@ extends RefCounted
 ## greatsword, and the High Wizard's staff, magic) and the Orc Warlock pair (tools/items/build_orc_warlock_weapons.py,
 ## PLACEHOLDER 3D: a Sword & Shield sword and an off-hand shield) as catalog items: level 20, no_drop, no set (not in the boss
 ## set / shop), Studio-rig GLBs within budget, icons, wearable only by their class at 20+, main stat at refine +0 EQUAL to the
-## level-15 gear of the same kind at refine +10 (Boss 2026-11-22), dropped at refine +0, a relic socket, never purged for a new player, never a normal / race drop, and dropped by
+## level-15 gear of the same kind at refine +10 (Boss 2026-11-22), dropped at refine +0 at the fixed EPIC tier (so = the level-15
+## EPIC weapon at +10) while shown gold, a relic socket, never purged for a new player, never a normal / race drop, and dropped by
 ## data/loot/boss_loot.json weapon_drops (ON for both zones).
 const Profile := preload("res://logic/profile.gd")
 const ItemSystem := preload("res://logic/item_system.gd")
@@ -84,6 +85,63 @@ func run(ctx) -> void:
 			bool(entry.get("weapon_drops_enabled", false)) and Array(entry.get("weapon_drops", [])).any(func(d): return str(d.item) == id and is_equal_approx(float(d.chance), 0.10) and not d.has("refine")))
 	_level20(ctx, rules)
 	_looks(ctx, rules)
+	_epic_drops(ctx, rules, camp)
+
+
+## Boss 2026-11-22: the four boss weapons DROP at the fixed epic (purple) tier, so a dropped +0 weapon has exactly the main
+## stat of the level-15 EPIC weapon of the same type at refine +10, while it still SHOWS the gold top tier. The fixed tier
+## never shifts a seed's draws (the tier draw is always taken), and the test kit gives them at epic too.
+func _epic_drops(ctx, rules, camp) -> void:
+	var epic := -1
+	for t in rules.tiers.size():
+		if str(rules.tiers[t]["id"]) == "epic":
+			epic = t
+	ctx.check("boss weapons: rules.json has the epic tier (index %d)" % epic, epic >= 0 and str(rules.tiers[epic]["color"]) == "purple")
+	for id in IDS:
+		var spec: Array = IDS[id]
+		var entry: Dictionary = BossLoot.boss(spec[4])
+		var drop: Array = Array(entry.get("weapon_drops", [])).filter(func(d): return str(d.item) == id)
+		ctx.check("boss weapon %s: weapon_drops entry fixes tier \"epic\" at 10%%" % id,
+			drop.size() == 1 and str(drop[0].get("tier", "")) == "epic" and is_equal_approx(float(drop[0].chance), 0.10) and BossLoot.weapon_drop_tier(rules, id) == epic)
+		# the real grant path (BossLoot._grant_weapons) with every chance at 100% so each weapon drops
+		var sure: Dictionary = entry.duplicate(true)
+		for d in sure["weapon_drops"]:
+			d["chance"] = 1.0
+		var p = Profile.new_player(rules, camp, RandomNumberGenerator.new())
+		var rng := RandomNumberGenerator.new()
+		rng.seed = 7
+		var summary := {"items": []}
+		BossLoot._grant_weapons(p, rules, sure, [100.0, 0.0, 0.0, 0.0], 1.0, rng, "bw-drop", summary)
+		var got: Array = summary["items"].filter(func(i): return i.item_id == id)
+		# the same entry without the fixed tier, its tier ROLLED epic, takes the same draws (the tier draw is always taken;
+		# the rng ends in the same state, the item's substat draws being the same epic count)
+		var rolled: Dictionary = sure.duplicate(true)
+		for d in rolled["weapon_drops"]:
+			d.erase("tier")
+		var rng2 := RandomNumberGenerator.new()
+		rng2.seed = 7
+		BossLoot._grant_weapons(Profile.new_player(rules, camp, RandomNumberGenerator.new()), rules, rolled, [0.0, 0.0, 100.0, 0.0], 1.0, rng2, "bw-drop", {"items": []})
+		ctx.check("boss weapon %s: the fixed tier never shifts the seed's draws" % id, rng.state == rng2.state)
+		if got.size() != 1:
+			ctx.check("boss weapon %s: the grant path drops it" % id, false)
+			continue
+		var w = got[0]
+		var ref_id: String = rules.catalog.race_piece("human", spec[2], "weapon") if spec[0] == "weapon" else rules.catalog.race_shield("human")
+		var r = ItemSystem.create_item(rules, "bw-epic-ref", spec[0], epic, RandomNumberGenerator.new(), "", ref_id)
+		var l15: float = rules.catalog.level_mul(15) / rules.catalog.main_stat_mul(ref_id, r.id)  # the race shield: x1.5 base
+		var ref0: float = r.main_value(rules) * l15
+		r.refine_level = 10
+		var ref10: float = r.main_value(rules) * l15
+		var mine: float = w.main_value(rules)
+		print("BOSS_EPIC %s: L15 epic +0 %.3f | L15 epic +10 %.3f | boss L20 epic +0 %.3f | diff %.4f%%" % [id, ref0, ref10, mine, 100.0 * (mine - ref10) / ref10])
+		ctx.check("boss weapon %s: a dropped one is epic at refine +0, main %.2f = level-15 epic %s at +10 %.2f (within 0.1%%), shows the gold top tier" % [id, mine, ref_id, ref10],
+			w.tier == epic and w.refine_level == 0 and absf(mine - ref10) <= 0.001 * ref10 and BossLoot.shown_tier(rules, id, w.tier) == rules.tiers.size() - 1)
+	# the test kit (GameState.TEST_KIT) gives the four at their fixed epic tier too
+	var kit_camp = preload("res://logic/camp_data_loader.gd").load_default(rules.tiers.size())
+	var kp = Profile.new_player(rules, kit_camp, RandomNumberGenerator.new())
+	preload("res://logic/test_kit.gd").fill(kp, rules, kit_camp, RandomNumberGenerator.new())
+	var kit: Array = kp.stash.items.filter(func(i): return IDS.has(str(i.item_id)))
+	ctx.check("boss weapons: the test kit's boss weapons are epic (%d)" % kit.size(), kit.size() == IDS.size() and kit.all(func(i): return i.tier == epic))
 
 
 ## Nothing else is level 20 by drops (Boss 2026-11-22): wave / race drops stay capped at 15 (no droppable catalog piece is
