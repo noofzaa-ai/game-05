@@ -55,12 +55,15 @@ func _check_kit(ctx, combat, enemy: Dictionary) -> void:
 		ctx.check("%s plays the wizard clip '%s'" % [move_id, clip], str(enemy["clips"].get(move_id, "")) == clip and marks is Dictionary and marks.has(clip))
 		if marks is Dictionary and marks.has(clip):
 			var windup := float(marks[clip]["windup_end"]) * 60.0
-			ctx.check("%s wind-up %d ticks is the clip's %.0f within 0.6-1.0x (the clip plays at most 1.7x fast)" % [move_id, int(move["startup"]), windup], float(move["startup"]) >= windup * 0.6 and float(move["startup"]) <= windup * 1.0)
+			# Boss 2026-11-22: the bosses act ~3x faster, so the wind-ups are ~a third of the clip's (the view plays the clip
+			# ~3x fast over them; tests/test_boss_tempo.gd locks the old -> new ratios). Was 0.6-1.0x of the clip.
+			ctx.check("%s wind-up %d ticks is the clip's %.0f within 0.2-0.4x (the clip plays ~3x fast, Boss 2026-11-22)" % [move_id, int(move["startup"]), windup], float(move["startup"]) >= windup * 0.2 and float(move["startup"]) <= windup * 0.4)
 		if move_id != "mummy_hw_bolt":  # (the bolt is a plain homing shot, like the mage's)
 			ctx.check("%s is telegraphed (warned on the ground)" % move_id, bool(move["telegraph"]))
 	for area_id in ["hw_curse", "hw_star"]:
 		var area: Dictionary = combat.areas[area_id]
-		ctx.check("area %s cannot be guarded, warns at least 0.8 s and has its own client look" % area_id, not bool(area["guardable"]) and int(area["delay"]) >= 48 and ProjectileView.LOOKS.has(str(area["look"])))
+		# (Boss 2026-11-22, ~3x faster: the fill is a third of the old 0.9-1.1 s, at least the loader's 20-tick warning)
+		ctx.check("area %s cannot be guarded, warns at least 0.33 s and has its own client look" % area_id, not bool(area["guardable"]) and int(area["delay"]) >= 20 and ProjectileView.LOOKS.has(str(area["look"])))
 	var star: Array = combat.moves["mummy_hw_starfall"]["spawns"]
 	ctx.check("the starfall drops 3 marks one after another (a chasing barrage)", star.size() == 3 and float(star[2]["frame"]) > float(star[1]["frame"]) and float(star[1]["frame"]) > float(star[0]["frame"]))
 	var storm: Dictionary = combat.moves["mummy_hw_sandstorm"]

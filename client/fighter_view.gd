@@ -37,6 +37,7 @@ const DOWN_COLOR := Color(0.45, 0.45, 0.5)
 const DEAD_COLOR := Color(0.2, 0.2, 0.22)
 const STATUS_LINE := 0.27  ## height of one status-effect tag above the head
 const StatusVfx := preload("res://client/status_vfx.gd")
+const RUN_CLIP_MAX_RUNNING := 2.1  ## a monster that runs (input.run, x1.75 speed) may play its run clip up to this fast
 const MONSTER_RUN_SPEED := 2.44  ## m/s a monster run clip is authored for at the goblin rig's own size; played 0.6-1.4x (x the model's scale)
 
 var base_color := Color(0.85, 0.85, 0.9)
@@ -542,7 +543,9 @@ func _show_monster_clip(body: SimBody, fighter: Fighter, data: CombatData) -> bo
 			if not _anim.has_clip(clip):
 				return false
 			var reference := monster_run_clip_speed if monster_run_clip_speed > 0.0 else MONSTER_RUN_SPEED
-			var rate := clampf(speed / (reference * _fit), 0.6, 1.4) if clip == "run" else 1.0
+			# A running monster (the orcs charging in, Boss 2026-11-22) may play its run up to RUN_CLIP_MAX_RUNNING fast so the
+			# planted foot keeps up with the 1.75x run speed instead of sliding at the walk cap.
+			var rate := clampf(speed / (reference * _fit), 0.6, RUN_CLIP_MAX_RUNNING if fighter.running else 1.4) if clip == "run" else 1.0
 			if _anim_clip != clip:
 				_set_clip(clip, 0.0, rate)
 			_anim_rate = rate

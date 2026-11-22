@@ -405,19 +405,19 @@
 			{"type": "trail", "shape": "arc", "radius": 2.0, "width": 0.55, "from": 100, "to": -85, "rise": [1.9, 1.0], "tilt": 15, "seconds": 0.2, "sweep": 0.45, "tail": 0.75, "color": "#ff9a3a", "ink": 0.45}
 		]},
 		"windup/orc_warlock_skyfall": {"layers": [
-			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.8, 2.4], "seconds": 0.9, "color": "#ff8a2a"},
-			{"type": "sprite", "mode": "swirl", "anchor": "chest", "size": [0.5, 1.6], "spin": 360, "seconds": 0.9, "color": "#a050ff", "ink": 0.3},
-			{"type": "burst", "style": "puff", "anchor": "feet", "count": 10, "speed": 1.2, "spread": 70, "dir": "up", "gravity": -0.4, "drag": 2, "size": 0.6, "seconds": 0.6, "color": "dust", "ink": 0.3}
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.8, 2.4], "seconds": 0.33, "color": "#ff8a2a"},
+			{"type": "sprite", "mode": "swirl", "anchor": "chest", "size": [0.5, 1.6], "spin": 360, "seconds": 0.33, "color": "#a050ff", "ink": 0.3},
+			{"type": "burst", "style": "puff", "anchor": "feet", "count": 10, "speed": 1.2, "spread": 70, "dir": "up", "gravity": -0.4, "drag": 2, "size": 0.6, "seconds": 0.3, "color": "dust", "ink": 0.3}
 		]},
 		"swing/orc_warlock_skyfall": {"layers": [
 			{"type": "burst", "style": "puff", "anchor": "feet", "count": 22, "speed": 4.2, "spread": 90, "dir": "none", "drag": 2.5, "size": 0.7, "seconds": 0.8, "color": "dust", "ink": 0.25},
 			{"type": "shake", "strength": 0.3, "seconds": 0.3}
 		]},
 		"windup/orc_warlock_cataclysm": {"layers": [
-			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [1.0, 6.5], "seconds": 1.6, "color": "#b0602a", "ink": 0.4},
-			{"type": "sprite", "mode": "swirl", "anchor": "chest", "size": [0.8, 2.6], "spin": 420, "seconds": 1.6, "color": "#ff8a2a", "ink": 0.3},
-			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.5, 1.6], "seconds": 1.6, "color": "#a050ff"},
-			{"type": "shake", "strength": 0.08, "seconds": 1.6}
+			{"type": "ground", "mode": "glyph", "anchor": "feet", "size": [1.0, 6.5], "seconds": 0.53, "color": "#b0602a", "ink": 0.4},
+			{"type": "sprite", "mode": "swirl", "anchor": "chest", "size": [0.8, 2.6], "spin": 420, "seconds": 0.53, "color": "#ff8a2a", "ink": 0.3},
+			{"type": "sprite", "mode": "glow", "anchor": "chest", "size": [0.5, 1.6], "seconds": 0.53, "color": "#a050ff"},
+			{"type": "shake", "strength": 0.08, "seconds": 0.53}
 		]},
 		"swing/orc_warlock_cataclysm": {"layers": [
 			{"type": "burst", "style": "puff", "anchor": "feet", "count": 30, "speed": 5.0, "spread": 90, "dir": "none", "drag": 2.5, "size": 0.8, "seconds": 0.9, "color": "dust", "ink": 0.25},
@@ -441,7 +441,7 @@
 		"windup/mummy_hw_curse": {"layers": []},
 		"swing/mummy_hw_curse": {"layers": []},
 		"windup/mummy_hw_starfall": {"layers": [
-			{"type": "shake", "strength": 0.08, "seconds": 1.4}
+			{"type": "shake", "strength": 0.08, "seconds": 0.53}
 		]},
 		"swing/mummy_hw_starfall": {"layers": []},
 		"windup/mummy_hw_sandstorm": {"layers": []},

@@ -849,6 +849,14 @@ static func _parse_enemies(root: Dictionary, data: CombatData) -> void:
 			if not data.moves.has(str(move_id)):
 				data.errors.append("%s.standin_clips.%s is not a known move" % [label, move_id])
 			standin_clips[str(move_id)] = str(raw["standin_clips"][move_id])
+		# Boss 2026-11-22: target_priority "" (nearest) or "ranged_first" (bosses go for the bow/magic cards first);
+		# aggressive = never waits its turn, backs off, flees or escapes (the orcs); run_beyond = runs in from beyond this.
+		var target_priority := str(ai.get("target_priority", ""))
+		if not ["", "ranged_first"].has(target_priority):
+			data.errors.append("%s.ai.target_priority must be \"\" or \"ranged_first\"" % label)
+			target_priority = ""
+		if bool(ai.get("aggressive", false)) and (int(ai.get("retreat_ticks", 0)) > 0 or float(ai.get("flee_hp", 0.0)) > 0.0 or str(ai.get("escape_input", "")) != ""):
+			data.errors.append("%s.ai.aggressive cannot also retreat, flee or escape" % label)
 		var retreat_ticks := int(ai.get("retreat_ticks", 0))
 		if retreat_ticks < 0:
 			data.errors.append("%s.ai.retreat_ticks must not be negative" % label)
@@ -923,6 +931,10 @@ static func _parse_enemies(root: Dictionary, data: CombatData) -> void:
 				"escape_input": escape_input,
 				"escape_range": float(ai.get("escape_range", 0.0)),
 				"escape_cooldown": int(ai.get("escape_cooldown", 300)),
+				"aggressive": bool(ai.get("aggressive", false)),
+				"run_beyond": maxf(float(ai.get("run_beyond", 0.0)), 0.0),
+				"target_priority": target_priority,
+				"opening_cooldown": maxi(int(ai.get("opening_cooldown", 30)), 0),
 			},
 		}
 

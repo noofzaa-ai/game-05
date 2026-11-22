@@ -111,8 +111,10 @@ func add_enemy(id: int, spawn: Vector3, enemy_type: String, level: int = 1) -> S
 	brain.retreat_ticks = definition["ai"]["retreat_ticks"]
 	brain.flee_hp = definition["ai"]["flee_hp"]
 	brain.flee_ticks = definition["ai"]["flee_ticks"]
-	for key in ["keep_range", "retreat_range", "strafe", "escape_input", "escape_range", "escape_cooldown"]:
+	for key in ["keep_range", "retreat_range", "strafe", "escape_input", "escape_range", "escape_cooldown", "aggressive", "run_beyond", "target_priority"]:
 		brain.set(key, definition["ai"][key])
+	brain.cooldown = int(definition["ai"]["opening_cooldown"])
+	brain.ranged_styles = combat.ranged_styles()
 	brain.world = world
 	body.height = definition["body_height"]
 	_ai[id] = brain
@@ -681,6 +683,8 @@ func restore(saved: Dictionary, camp_data = null) -> bool:
 	for id in d["ai"]:
 		var brain := EnemyAI.new()
 		StateCodec.apply_fields(brain, d["ai"][id])
+		if combat != null and brain.ranged_styles.is_empty():
+			brain.ranged_styles = combat.ranged_styles()  # (a checkpoint from before target_priority existed)
 		brain.world = world
 		_ai[id] = brain
 	for id in d["inputs"]:

@@ -74,6 +74,18 @@ func weapon_stats(weapon_id: String, attack_speed_stat: float = 0.0) -> Dictiona
 	}
 
 
+## The fighting styles whose light attack fires something instead of striking in melee (longbow, magic and the
+## monster archers/mages): the "ranged" fighters a boss with ai.target_priority "ranged_first" goes for first.
+func ranged_styles() -> Array:
+	var found := []
+	for style_id in styles:
+		var light_id := str(styles[style_id].get("ground_light", ""))
+		if moves.has(light_id) and not bool(moves[light_id]["melee"]):
+			found.append(str(style_id))
+	found.sort()
+	return found
+
+
 ## Total ticks a move lasts at normal attack speed.
 func move_length(move_id: String) -> int:
 	var move: Dictionary = moves[move_id]

@@ -15,6 +15,11 @@ extends RefCounted
 ## the player comes within retreat_range, steps in when too far, drifts sideways (strafe) while
 ## holding, and shoots only with a clear line (no wall between). With an escape move (escape_input,
 ## the mage's blink) it jumps away when the player gets within escape_range, every escape_cooldown.
+## An aggressive monster (ai.aggressive, the orcs, Boss 2026-11-22) never waits its turn at wait_range, runs while it
+## closes in, and never backs off, flees or escapes (a ranged one walks in to its attack range and shoots from there).
+## ai.target_priority "ranged_first" (the bosses) picks the nearest living RANGED fighter (its style's light attack
+## fires something: longbow, magic) before any melee one; with no ranged fighter left it is the nearest, as usual.
+## `intent` names what it chose this tick (measurement and tests only; no rule reads it).
 ## EXTENDING: smarter behaviors (guard, call for help) are new branches in think().
 
 const Combat := preload("res://logic/combat.gd")
@@ -54,6 +59,11 @@ var strafe := 0.0  ## ranged: how fast (fraction of walking) it drifts sideways 
 var escape_input := ""  ## ranged: the attack that gets it out of reach (a blink), or "" for none
 var escape_range := 0.0
 var escape_cooldown := 300
+var aggressive := false  ## ai.aggressive: no turn waiting, runs in, never retreats/flees/escapes
+var run_beyond := 0.0  ## ai.run_beyond: it runs (not walks) while the target is farther than this (0 = never runs in)
+var target_priority := ""  ## ai.target_priority: "" = nearest, "ranged_first" = the nearest ranged fighter first
+var ranged_styles: Array = []  ## the fighting styles that count as ranged (set by the simulation from the combat data)
+var intent := ""  ## what it chose this tick: attack, approach, wait, hold, back_off, hop_back, flee, escape, idle
 var world: SimWorld  ## the walls, for its line of sight (set by the simulation)
 ## Taunt (GDD races 3.2 Bulwark, 3.6 aggro/pulse_aggro): while taunt_left > 0 and that fighter is alive, it is the
 ## target instead of the nearest player. Set through taunt() (GameSim.taunt_enemy); saved in checkpoints.
@@ -156,22 +166,15 @@ func _decide(fighter: Fighter, body: SimBody, bodies: Dictionary, fighters: Dict
 	_phase += 0.03
 	if fighter.state == Fighter.State.ATTACK:
 		_was_attacking = true
+	intent = "busy"
 	if fighter.state != Fighter.State.IDLE:
 		return input
+	intent = "idle"
 	if _was_attacking:
 		_was_attacking = false
-		_retreat_left = retreat_ticks
+		_retreat_left = 0 if aggressive else retreat_ticks
 
-	var target_id := -1
-	var nearest := INF
-	for id in fighters:
-		var other: Fighter = fighters[id]
-		if other.team == fighter.team or not other.is_alive():
-			continue
-		var distance := body.position.distance_to(bodies[id].position)
-		if distance < nearest:
-			nearest = distance
-			target_id = id
+	var target_id := pick_target(fighter, body, bodies, fighters)
 	var taunter := taunted_by(fighter, fighters)
 	if taunter >= 0:
 		target_id = taunter
@@ -179,17 +182,21 @@ func _decide(fighter: Fighter, body: SimBody, bodies: Dictionary, fighters: Dict
 		return input
 
 	var offset: Vector3 = bodies[target_id].position - body.position
-	if not _fled and flee_ticks > 0 and fighter.hp < fighter.max_hp() * flee_hp:
+	if aggressive:
+		may_attack = true  # it never waits its turn in a ring
+	elif not _fled and flee_ticks > 0 and fighter.hp < fighter.max_hp() * flee_hp:
 		_fled = true
 		_flee_left = flee_ticks
 	if _flee_left > 0:  # run away from the player (facing the way it runs)
 		_flee_left -= 1
+		intent = "flee"
 		var from := Vector2(offset.x, offset.z)
 		input.move = -from.normalized() if from.length() > 0.001 else Vector2(-1.0, 0.0)
 		input.run = true
 		return input
 	if _retreat_left > 0:  # hop back from the player, still facing it
 		_retreat_left -= 1
+		intent = "hop_back"
 		var away := Vector2(offset.x, offset.z)
 		input.move = -away.normalized() if away.length() > 0.001 else Vector2(-1.0, 0.0)
 		input.aim = _strike_axis(away)
@@ -198,6 +205,7 @@ func _decide(fighter: Fighter, body: SimBody, bodies: Dictionary, fighters: Dict
 		_keep_distance(input, fighter, body, bodies[target_id], offset, may_attack, rng)
 		return input
 	if not may_attack:
+		intent = "wait"
 		_wait(input, offset)
 		return input
 
@@ -211,22 +219,49 @@ func _decide(fighter: Fighter, body: SimBody, bodies: Dictionary, fighters: Dict
 	var reach := attack_range * 0.8
 	if along <= reach and along >= attack_min_range and across <= HIT_LANE_TOLERANCE:
 		input.aim = axis
+		intent = "hold"
 		if cooldown <= 0:
+			intent = "attack"
 			_press_attack(input, fighter, rng)
 			cooldown = rng.randi_range(cooldown_min, cooldown_max)
 		return input
 
-	if flat.length() < attack_min_range:
+	if flat.length() < attack_min_range and not aggressive:
+		intent = "back_off"
 		input.move = -flat.normalized() if flat.length() > 0.001 else Vector2(-1.0, 0.0)  # too close for its attack: back off
 		return input
 	# The spot to strike from: on the chosen line through the player, at a distance it can hit from.
+	intent = "approach"
 	var strike_from := clampf(along, attack_min_range + APPROACH_MARGIN, reach - APPROACH_MARGIN)  # (inside the reach by more than ARRIVE_DISTANCE)
 	var to_spot := flat - axis * strike_from
 	if to_spot.length() > ARRIVE_DISTANCE:
 		input.move = to_spot.normalized()
+		input.run = run_beyond > 0.0 and flat.length() > run_beyond
 	if to_spot.length() <= ARRIVE_DISTANCE or flat.length() <= reach + FACE_WHILE_STEPPING:
 		input.aim = axis  # close in: keep facing the player while stepping into place (no turning with each small step)
 	return input
+
+
+## Who it goes for: the taunter (see taunted_by), else by target_priority: the nearest living opponent, or with
+## "ranged_first" the nearest living opponent whose style is ranged and only then the nearest of the rest.
+## Re-chosen every tick, so a target that falls is dropped at once (no lock on the dead); ties keep fighter id order.
+func pick_target(fighter: Fighter, body: SimBody, bodies: Dictionary, fighters: Dictionary) -> int:
+	var best := -1
+	var best_distance := INF
+	var best_ranged := false
+	var ids := fighters.keys()
+	ids.sort()
+	for id in ids:
+		var other: Fighter = fighters[id]
+		if other.team == fighter.team or not other.is_alive() or not bodies.has(id):
+			continue
+		var ranged := target_priority == "ranged_first" and ranged_styles.has(other.style)
+		var distance := body.position.distance_to(bodies[id].position)
+		if (ranged and not best_ranged) or (ranged == best_ranged and distance < best_distance):
+			best = id
+			best_distance = distance
+			best_ranged = ranged
+	return best
 
 
 ## A ranged monster's turn: hold keep_range (back off, close in, drift sideways), face the player,
@@ -239,15 +274,25 @@ func _keep_distance(input: SimInput, fighter: Fighter, body: SimBody, target: Si
 	var toward := flat / distance if distance > 0.001 else Vector2(1.0, 0.0)
 	var side := Vector2(-toward.y, toward.x)
 	input.aim = toward
-	if escape_input != "" and distance < escape_range and _escape_left <= 0:
+	if escape_input != "" and distance < escape_range and _escape_left <= 0 and not aggressive:
 		_escape_left = escape_cooldown
+		intent = "escape"
 		_press(input, escape_input)  # (faces the player and blinks backwards)
 		return
 	var clear := _clear_line(body, target)
-	if may_attack and cooldown <= 0 and clear and distance >= attack_min_range and distance <= attack_range:
+	var reach := minf(attack_range, keep_range + WAIT_BAND) if aggressive else attack_range  # aggressive: closes in first, then shoots
+	if may_attack and cooldown <= 0 and clear and distance >= attack_min_range and distance <= reach:
+		intent = "attack"
 		_press_attack(input, fighter, rng)
 		cooldown = rng.randi_range(cooldown_min, cooldown_max)
 		return
+	if aggressive:  # walk (run when far) straight in to its attack range and never back off or drift
+		intent = "approach" if distance > keep_range or not clear else "hold"
+		if distance > keep_range or not clear:
+			input.move = toward if clear else (toward + side * signf(sin(_phase))).normalized()
+			input.run = run_beyond > 0.0 and distance > run_beyond
+		return
+	intent = "back_off" if distance < retreat_range else "hold"
 	if distance < retreat_range:
 		input.move = -toward + side * signf(sin(_phase)) * 0.35  # back off at an angle (not straight into a wall)
 	elif distance > keep_range + WAIT_BAND:
