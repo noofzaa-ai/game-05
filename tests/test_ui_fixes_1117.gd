@@ -9,6 +9,8 @@ func run(ctx) -> void:
 	var tree: SceneTree = ctx
 	_strings(ctx)
 	await _blacksmith_button(ctx, tree)
+	# the Skills tab look (2026-11-23); runs from here until tests/run_all.gd lists test_skill_tree_ui.gd itself
+	await load("res://tests/test_skill_tree_ui.gd").new().run(ctx)
 
 
 func _strings(ctx) -> void:

@@ -1672,23 +1672,41 @@ const STRINGS_HUB_LOOK := {
 # ------------------------------------------------------------------ Skills tab (design/gdd/skill-tree.md 9)
 ## Art of the card skill tree (art/ui/skill_tree/manifest.json, Boss-approved 2026-11-12).
 const TREE_MANIFEST := "res://art/ui/skill_tree/manifest.json"
-## Node drawing size (reference px, GDD 9.1): minor / major / capstone / combo. Phones keep >= HUB_TAP_MIN_PHONE.
-const TREE_NODE := {"minor": 96.0, "major": 112.0, "capstone": 144.0, "combo": 160.0}
-const TREE_ICON_HOLE := {"minor": 0.71, "major": 0.71, "capstone": 0.6, "combo": 0.48}  ## icon size / frame size (manifest note)
+## Node size (Boss 2026-11-23: "pictures too small, too many frames"): the icon IS the node, one ring around it. One base
+## size N per layout, fitted to the room; each kind is N x TREE_NODE_KIND. Reference px (x the layout scale).
+const TREE_NODE_KIND := {"minor": 1.0, "major": 1.0, "capstone": 1.1, "combo": 1.2}
+const TREE_NODE_MAX := 132.0  ## largest base node (big screens stop growing here)
+const TREE_NODE_MIN := 80.0  ## smallest base node on a PC screen; under it the tree scrolls instead of shrinking
+const TREE_NODE_MIN_PHONE := HUB_TAP_MIN_PHONE  ## smallest base node on a phone (the finger size); scrolls under it
+## Smallest base node in the compact (short phone) layout: ~56 px at 844x390 (1.6x the old 35 px); the tree scrolls up
+## (it opens at the bottom, T1) when four rows do not fit.
+const TREE_NODE_MIN_COMPACT := 125.0
+const TREE_ROW_PAD := 1.1  ## a tier row is this x its tallest node (rows never touch)
+const TREE_ROW_PAD_COMPACT := 1.04  ## the same on the compact (phone) layout: the pictures get the height
+const TREE_PAIR_GAP := 0.36  ## the gap inside an OR pair, x N (the "or" word sits in it)
+const TREE_GROUP_GAP := 0.3  ## the least gap between node groups in a row (and at the row ends), x N
+const TREE_GROUP_GAP_COMPACT := 0.12
+const TREE_BRANCH_GAP := 0.4  ## room between the class and the race branch, x N
+const TREE_RING := 0.06  ## the one ring's width, of the node size
+const TREE_RING_TAKEN_X := 1.5  ## a learned node's ring is this much thicker
+const TREE_RING_MIN := 2.5  ## thinnest ring, reference px
 const TREE_HEADER_H := 96.0
-const TREE_DETAIL_W := 430.0
+const TREE_DETAIL_W := 340.0  ## detail panel width (or TREE_DETAIL_SHARE of the tab, the larger): compact, the tree gets the room
+const TREE_DETAIL_SHARE := 0.22
 const TREE_GAP := 14.0
-const TREE_COMBO_COLUMN := 1.25  ## the combo's own column between the branches, x the combo node size
+## The Skills tab's inner margins on the card panel (left, top, right, bottom): thinner than CHAR_CONTENT so the tree gets
+## the height the other tabs use for their own headings.
+const TREE_CONTENT := Rect2(90.0, 100.0, 90.0, 60.0)
 const TREE_PLATE_MIN_SCALE := 0.8  ## below this layout scale the Skills tab buttons use the flat parchment skin
 ## Compact (phone) Skills tab (ux-ui 2026-11-13): below this tab height in reference px (height / scale) the header is one
 ## row, the tree takes the full width and the node details open as a sheet on the side away from the selected node.
-const TREE_COMPACT_BELOW := 560.0
-const TREE_NODE_MIN_COMPACT := 80.0  ## smallest node in the compact layout (PO default: 80-100 px keeps the tree whole)
+const TREE_COMPACT_BELOW := 600.0
 const TREE_SHEET_W := 0.5  ## compact detail sheet width, share of the tab width
 const TREE_COMPACT_BUTTON_W := 230.0  ## compact header button width (the label wraps to two lines)
-const TREE_BADGE := 0.34  ## OR / lock / tick badge size, of the node size
-const TREE_PATH_W := 5.0
+const TREE_MAP_CROP := 0.035  ## the map art's own leather border, cut off each side (the card board is the only frame)
+const TREE_PATH_W := 3.0
 const TREE_FONT_COST := 18
+const TREE_FONT_OR := 16
 const TREE_FONT_HEAD := 22
 const TREE_FONT_NAME := 30
 const TREE_FONT_BODY := 20
@@ -1701,7 +1719,12 @@ const TREE_DRAFT := Color(1.0, 0.96, 0.84)
 const TREE_PATH_OFF := Color(0.29, 0.19, 0.11, 0.45)  ## ink path to a node not taken
 const TREE_PATH_ON := Color(0.48, 0.16, 0.09, 0.9)  ## ink path to a taken node (class branch)
 const TREE_COST_NO := Color("B3261E")  ## cost in red ink: not enough points
-const TREE_SELECT := Color("FFE7A8")  ## selected node ring
+const TREE_SELECT := Color("FFE7A8")  ## selected node: the soft glow outside its ring
+## The one ring of a node, by state (lightness differs too, so it reads without colour vision).
+const TREE_RING_LOCKED := Color("3A2414")  ## dark ink
+const TREE_RING_OPEN := Color("F3E6C8")  ## light parchment: can be learned
+const TREE_RING_TAKEN := Color("E2A93B")  ## brass gold: learned (solid, thick) / draft (dashed)
+const TREE_SHADOW := Color(0.16, 0.09, 0.04, 0.35)  ## the soft drop under a node
 const TREE_PLATE_OFF := Color(0.55, 0.5, 0.46)  ## a disabled Skills button: the same plate, clearly dimmed
 const TREE_TEXT_OFF := Color("E8D9BC")  ## its text in light parchment ink: readable on the dimmed plate
 const TREE_BAND := Color(0.29, 0.19, 0.11, 0.18)  ## tier contour line
@@ -1734,6 +1757,7 @@ const STRINGS_TREE := {
 	"tree_pick": ["แตะโหนดเพื่อดูรายละเอียด", "Tap a node to see it"],
 	"tree_needs": ["ต้องการ %d", "Needs %d"],
 	"tree_needs_short": ["%d+", "%d+"],
+	"tree_or_word": ["หรือ", "or"],
 	"tree_hint": ["แตะ = รายละเอียด · แตะสองครั้ง = เรียน · Q / E = เปลี่ยนการ์ด · Esc / B = กลับ", "Tap = details  ·  Double-tap = learn  ·  Q / E = switch card  ·  Esc / B = back"],
 	"tree_saved_ok": ["บันทึกต้นไม้สกิลแล้ว", "Skill tree saved"],
 	"tree_reset_ok": ["รีเซ็ตแล้ว คืน %d แต้ม", "Reset: %d points back"],

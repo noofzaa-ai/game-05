@@ -600,8 +600,9 @@ func _layout_other(pw: float, ph: float) -> void:
 
 func _layout_skills(pw: float, ph: float) -> void:
 	var s := _s
-	_skills.position = Vector2(CardTokens.CHAR_CONTENT.position.x * s, CardTokens.CHAR_CONTENT.position.y * s)
-	_skills.size = Vector2(pw - (CardTokens.CHAR_CONTENT.position.x + CardTokens.CHAR_CONTENT.size.x) * s, ph - (CardTokens.CHAR_CONTENT.position.y + CardTokens.CHAR_CONTENT.size.y) * s)
+	var inner := CardTokens.TREE_CONTENT  # thinner margins than the other tabs: the tree is the page (Boss 2026-11-23)
+	_skills.position = Vector2(inner.position.x * s, inner.position.y * s)
+	_skills.size = Vector2(pw - (inner.position.x + inner.size.x) * s, ph - (inner.position.y + inner.size.y) * s)
 	_skills.s = s
 	_skills.phone = _phone
 	_refresh_skills()

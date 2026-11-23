@@ -39,7 +39,9 @@ var _manifest := {}
 var _textures := {}
 
 var _map: TextureRect
-var _lines: Control  ## tier bands, gate numbers and ink paths are drawn here
+var _scroll: ScrollContainer  ## the tree canvas
+var _lines: Control  ## the scrolled content: tier bands, gate numbers, "or" words and ink paths are drawn here; holds the nodes
+var tree_data = null  ## the tree data (tests set a fixture); null = the game's data
 var _nodes := {}  ## node id -> SkillTreeNode
 var _positions := {}  ## node id -> centre (in _lines space)
 var _bands: Array = []  ## [{"y", "x0", "x1", "gate", "color"}]
@@ -68,8 +70,11 @@ var _d_scroll: ScrollContainer  ## the detail text scrolls when it does not fit 
 var _d_box: VBoxContainer
 var _d_spacer: Control
 var _compact := false  ## phone landscape: one-row header, full-width tree, detail as a sheet (TREE_COMPACT_BELOW)
-var _side_min := 0.0  ## node size floor / cap in screen px (set by _layout_nodes)
-var _side_cap := INF
+var node_base := 0.0  ## the fitted base node size N in screen px (each kind is N x TREE_NODE_KIND)
+var _labels_in_rows := false  ## gate tags under each row (tall canvas) instead of in side gutters (wide canvas)
+var _combo_id := ""
+var _or_marks: Array = []  ## centres of the "or" words between OR pairs
+var _opened_at: Array = []  ## [card, content size] the scroll was last reset for
 
 
 func _ready() -> void:
@@ -77,16 +82,20 @@ func _ready() -> void:
 	var parsed = JSON.parse_string(FileAccess.get_file_as_string(CardTokens.TREE_MANIFEST)) if FileAccess.file_exists(CardTokens.TREE_MANIFEST) else null
 	_manifest = parsed if parsed is Dictionary else {}
 	_map = TextureRect.new()
-	_map.texture = _texture(str(_manifest.get("background", "")))
+	_map.texture = _cropped(_texture(str(_manifest.get("background", ""))))
 	_map.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_map.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_map.clip_contents = true
 	_map.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_map)
-	_lines = Control.new()
-	_lines.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_scroll = ScrollContainer.new()  # scrolls only when the nodes would be under their least size (many nodes / tiny screen)
+	_scroll.mouse_filter = Control.MOUSE_FILTER_PASS
+	_scroll.scroll_deadzone = int(CardTokens.TREE_GAP)
+	add_child(_scroll)
+	_lines = Control.new()  # the content: lines and labels are drawn here, the nodes are its children
+	_lines.mouse_filter = Control.MOUSE_FILTER_PASS
 	_lines.draw.connect(_draw_lines)
-	add_child(_lines)
+	_scroll.add_child(_lines)
 	_build_header()
 	_build_detail()
 
@@ -169,6 +178,17 @@ func _button(callback: Callable) -> Button:
 	b.pressed.connect(callback)
 	add_child(b)
 	return b
+
+
+## The map art without its own leather border (the card board around the tab is the only frame).
+func _cropped(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	var cut := Vector2(texture.get_size()) * CardTokens.TREE_MAP_CROP
+	var atlas := AtlasTexture.new()
+	atlas.atlas = texture
+	atlas.region = Rect2(cut, Vector2(texture.get_size()) - cut * 2.0)
+	return atlas
 
 
 func _texture(path: String) -> Texture2D:
@@ -283,7 +303,7 @@ func _say(text: String) -> void:
 
 # ================================================================== nodes
 func _data():
-	return TreeData.load_default()
+	return tree_data if tree_data != null else TreeData.load_default()
 
 
 ## The nodes this card shows: its class branch, its race's branch and its class x race combo.
@@ -301,31 +321,23 @@ func _build_nodes() -> void:
 	for id in _nodes:
 		_nodes[id].queue_free()
 	_nodes.clear()
-	var frames: Dictionary = _manifest.get("frames", {})
-	var badges := {}
-	for key in _manifest.get("badges", {}):
-		badges[key] = _texture(str(_manifest["badges"][key]))
 	for n in shown_nodes():
 		var id := str(n["id"])
-		var art: Dictionary = _manifest.get("nodes", {}).get(id, {})
 		var b := SkillTreeNode.new()
 		b.node_id = id
 		b.kind = "combo" if _data().branch_of(id) == "combo" else str(n["type"])
 		b.cost = int(n["cost"])
 		b.exclusive = not str(n["excl"]).is_empty()
-		b.frame = _texture(str(frames.get(str(art.get("frame", "")), "")))
 		b.art = _texture(str(n["icon"]))
-		b.badges = badges
 		b.tooltip_text = str(n["name"])
 		b.setup()
+		b.mouse_filter = Control.MOUSE_FILTER_PASS  # a drag that starts on a node still scrolls the tree
 		b.pressed.connect(select.bind(id))
 		b.activated.connect(func() -> void:
 			select(id)
 			learn(id))
-		add_child(b)
+		_lines.add_child(b)
 		_nodes[id] = b
-	for c in [_detail, _learn, _unlearn, _close]:
-		move_child(c, -1)
 
 
 ## The state of one node in the current draft (GDD 9.2).
@@ -356,16 +368,16 @@ func layout_tab() -> void:
 		_detail.size = Vector2(size.x * CardTokens.TREE_SHEET_W, size.y - top)
 		_detail.position = Vector2(size.x - _detail.size.x, top)
 	else:  # detail panel at the right edge, the canvas fills the rest
-		var dw := maxf(CardTokens.TREE_DETAIL_W * s, size.x * 0.26)
+		var dw := maxf(CardTokens.TREE_DETAIL_W * s, size.x * CardTokens.TREE_DETAIL_SHARE)
 		_detail.position = Vector2(size.x - dw, top)
 		_detail.size = Vector2(dw, size.y - top)
 		canvas = Rect2(0.0, top, size.x - dw - gap, size.y - top)
 	CarvedLook.inset(_detail, s)  # carved look: a parchment inset with an ink line
 	_map.position = canvas.position
 	_map.size = canvas.size
-	_lines.position = Vector2.ZERO
-	_lines.size = size
-	_layout_nodes(canvas)
+	_scroll.position = canvas.position
+	_scroll.size = canvas.size
+	_layout_nodes(Rect2(Vector2.ZERO, canvas.size))
 	_layout_detail()
 	refresh()
 
@@ -573,67 +585,154 @@ func _place_sheet() -> void:
 	_detail.visible = open
 	if not open:
 		return
-	var at: Vector2 = _positions.get(selected, Vector2.ZERO)
+	var at: Vector2 = _positions.get(selected, Vector2.ZERO) + _scroll.position - Vector2(_scroll.scroll_horizontal, 0.0)
 	_detail.position.x = 0.0 if at.x > size.x * 0.5 else size.x - _detail.size.x
 	_layout_detail()
 
 
-## Places the nodes on the canvas: class branch on the left ~64%, race branch on the right, tiers from the bottom (T1)
-## to the top (T4); the combo sits at the top between the branches. Node sizes shrink to fit (never under the phone tap
-## size on a phone), so 1280x720 and 960x540 fit without scrolling.
+## Places the nodes (Boss 2026-11-23: the pictures are the hero). Class branch left, race branch right, tiers from the
+## bottom (T1) to the top (T4); the combo sits at the right end of the top class row, next to the race branch. One base
+## size N is fitted to the canvas (each kind N x TREE_NODE_KIND, at most TREE_NODE_MAX); the gate tags go in a strip under
+## each row when the height allows, else in side gutters, whichever leaves N larger. N never goes under TREE_NODE_MIN
+## (TREE_NODE_MIN_PHONE on a phone): the tree scrolls then instead (many nodes / a tiny screen).
 func _layout_nodes(canvas: Rect2) -> void:
 	var data = _data()
 	var race := CardDeck.race_of(deck, card)
 	var class_tiers := _by_tier(data.class_nodes(card))
 	var race_tiers := _by_tier(data.race_nodes(race))
-	var gap := CardTokens.TREE_GAP * s
-	var gutter := _gutter()
-	# three columns: class branch | combo column (its own clear spot, top centre) | race branch
-	var combo_col: float = float(CardTokens.TREE_NODE["combo"]) * s * CardTokens.TREE_COMBO_COLUMN
-	var class_w := (canvas.size.x - combo_col) * 0.66
-	var combo_x := canvas.position.x + class_w
-	var race_x := combo_x + combo_col
-	var race_w := canvas.end.x - race_x - gap * 0.3
-	# fit: widest class row, the tier heights
-	var widest := 0.0
-	for tier in class_tiers:
-		var row: Array = class_tiers[tier]
-		var w := 0.0
-		for n in row:
-			w += _size_of(n, 1.0) + gap
-		widest = maxf(widest, w)
-	var tall := 0.0
-	for tier in [1, 2, 3, 4]:
-		var h := 0.0
-		for n in class_tiers.get(tier, []) + race_tiers.get(tier, []):
-			h = maxf(h, _size_of(n, 1.0))
-		tall += h
 	var combo: Dictionary = data.combo_node(race, card)
-	var gate_room := CardTokens.TREE_FONT_GATE * 1.4 * s * 4.0
-	var k := minf(1.0, minf((class_w - gutter) / maxf(widest, 1.0), (canvas.size.y - gate_room - gap * 2.0) / maxf(tall, 1.0)))
-	# rows: equal steps from the bottom; a node is never taller than its row (rows must not touch)
-	var step := (canvas.size.y - gap * 2.0) / 4.0
-	_side_min = (CardTokens.TREE_NODE_MIN_COMPACT if _compact else CardTokens.HUB_TAP_MIN_PHONE) * s if phone else 0.0
-	_side_cap = step * 0.96 if _compact else INF
-	var floor_k := _side_min / (CardTokens.TREE_NODE["minor"] * s) if phone else 0.0
-	k = maxf(k, floor_k)
+	_combo_id = str(combo.get("id", ""))
+	var top_tier := 1
+	for t in class_tiers.keys() + race_tiers.keys():
+		top_tier = maxi(top_tier, int(t))
+	var tiers: Array = range(1, top_tier + 1)
+	# the rows in N units: widths (nodes + OR gaps + group gaps) and heights
+	var class_units := 0.0
+	var race_units := 0.0
+	var tall_units := 0.0
+	var labelled := 0
+	for tier in tiers:
+		var class_row: Array = class_tiers.get(tier, []).duplicate()
+		if tier == top_tier and not combo.is_empty():
+			class_row.append(combo)
+		class_units = maxf(class_units, _row_units(class_row))
+		race_units = maxf(race_units, _row_units(race_tiers.get(tier, [])))
+		var h := 0.0
+		for n in class_row + race_tiers.get(tier, []):
+			h = maxf(h, _kind_of(n))
+		tall_units += h * _row_pad()
+		if _gate(data, "class", tier) > 0 or _gate(data, "race", tier) > 0:
+			labelled += 1
+	var wide_units := class_units + race_units + (CardTokens.TREE_BRANCH_GAP if race_units > 0.0 else 0.0)
+	var label_h := _px(CardTokens.TREE_FONT_GATE) * 1.3
+	var gutter := _gutter()
+	var in_rows := minf(canvas.size.x / maxf(wide_units, 1.0), (canvas.size.y - label_h * labelled) / maxf(tall_units, 1.0))
+	var in_gutters := minf((canvas.size.x - gutter * 2.0) / maxf(wide_units, 1.0), canvas.size.y / maxf(tall_units, 1.0))
+	_labels_in_rows = in_rows >= in_gutters
+	var n_fit := maxf(in_rows, in_gutters)
+	var n_min := (CardTokens.TREE_NODE_MIN_COMPACT if _compact else (CardTokens.TREE_NODE_MIN_PHONE if phone else CardTokens.TREE_NODE_MIN)) * s
+	node_base = clampf(n_fit, n_min, maxf(CardTokens.TREE_NODE_MAX * s, n_min))
+	# the content: the canvas, or larger when N had to stay over its least size (the tree scrolls then)
+	var side_room := 0.0 if _labels_in_rows else gutter * 2.0
+	var strip := label_h if _labels_in_rows else 0.0
+	var need := Vector2(wide_units * node_base + side_room, tall_units * node_base + strip * labelled)
+	var content := Vector2(maxf(canvas.size.x, ceilf(need.x)), maxf(canvas.size.y, ceilf(need.y)))
+	_lines.custom_minimum_size = content
+	_lines.size = content
+	var left := 0.0 if _labels_in_rows else gutter
+	var usable := content.x - side_room - (CardTokens.TREE_BRANCH_GAP * node_base if race_units > 0.0 else 0.0)
+	var class_w := usable * class_units / maxf(class_units + race_units, 0.01)
+	var race_x := left + class_w + CardTokens.TREE_BRANCH_GAP * node_base
+	var race_w := usable - class_w
+	var extra := (content.y - need.y) / float(tiers.size())  # spare height, shared by the rows
 	_positions.clear()
 	_bands.clear()
+	_or_marks.clear()
 	var class_color: Color = CardTokens.palette(card)["shadow"]
 	var race_color := CardTokens.race_color(race)
-	for tier in [1, 2, 3, 4]:
-		var y := canvas.end.y - gap - step * (float(tier) - 0.5)
-		_place_row(class_tiers.get(tier, []), canvas.position.x + gutter, class_w - gutter, y, k)
-		var row_race: Array = race_tiers.get(tier, [])
-		_place_row(row_race, race_x, race_w - gutter, y, k)
-		var band_y := y + step * 0.5
-		_bands.append({"y": band_y, "x0": canvas.position.x + gap * 0.3, "x1": canvas.position.x + class_w, "gate": int(data.tier_rule("class", tier).get("gate", 0)), "color": class_color})
-		_bands.append({"y": band_y, "x0": race_x, "x1": race_x + race_w - gap * 0.3, "gate": int(data.tier_rule("race", tier).get("gate", 0)), "color": race_color, "right": true})
-	if not combo.is_empty():  # centred in its own column, at the capstone row
-		var top_y := canvas.end.y - gap - step * 3.5
-		var side := minf(_size_of(combo, k), maxf(combo_col - gap, _side_min))
-		_put(str(combo["id"]), Vector2(combo_x + combo_col * 0.5, top_y), side)
+	var y := content.y
+	for tier in tiers:
+		var class_row: Array = class_tiers.get(tier, [])
+		var race_row: Array = race_tiers.get(tier, [])
+		var h := 0.0
+		for n in class_row + race_row + ([combo] if tier == top_tier and not combo.is_empty() else []):
+			h = maxf(h, _kind_of(n))
+		var has_gate := _gate(data, "class", tier) > 0 or _gate(data, "race", tier) > 0
+		var own_strip := strip if has_gate else 0.0
+		var row_h := h * _row_pad() * node_base + extra
+		var centre_y := y - own_strip - row_h * 0.5
+		var band_y := y - own_strip * 0.5 if _labels_in_rows else y
+		var combo_slot := 0.0
+		if tier == top_tier and not combo.is_empty():  # the combo: right end of the top class row, by the race branch
+			var side := node_base * _kind_of(combo)
+			combo_slot = side + _group_gap() * node_base
+			_put(_combo_id, Vector2(left + class_w - combo_slot * 0.5, centre_y), side)
+		_place_row(class_row, left, class_w - combo_slot, centre_y)
+		_place_row(race_row, race_x, race_w, centre_y)
+		if tier > 1 or has_gate:
+			_bands.append({"y": band_y, "x0": left, "x1": left + class_w, "gate": _gate(data, "class", tier), "color": class_color})
+			if not race_row.is_empty():
+				_bands.append({"y": band_y, "x0": race_x, "x1": race_x + race_w, "gate": _gate(data, "race", tier), "color": race_color, "right": true})
+		y -= own_strip + row_h
+	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if content.x > canvas.size.x + 0.5 else ScrollContainer.SCROLL_MODE_DISABLED
+	_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO if content.y > canvas.size.y + 0.5 else ScrollContainer.SCROLL_MODE_DISABLED
+	if _opened_at != [card, content]:  # a new card / size opens at the bottom (T1, where the player starts)
+		_opened_at = [card, content]
+		_scroll_to_start.call_deferred()
 	_lines.queue_redraw()
+
+
+func _scroll_to_start() -> void:
+	if _scroll != null and is_instance_valid(_scroll):
+		_scroll.scroll_vertical = int(maxf(0.0, _lines.size.y - _scroll.size.y))
+		_scroll.scroll_horizontal = 0
+
+
+func _row_pad() -> float:
+	return CardTokens.TREE_ROW_PAD_COMPACT if _compact else CardTokens.TREE_ROW_PAD
+
+
+func _group_gap() -> float:
+	return CardTokens.TREE_GROUP_GAP_COMPACT if _compact else CardTokens.TREE_GROUP_GAP
+
+
+func _gate(data, branch: String, tier: int) -> int:
+	return int(data.tier_rule(branch, tier).get("gate", 0))
+
+
+## True when the tree is larger than its canvas (it scrolls).
+func scrolls() -> bool:
+	return _lines.size.x > _scroll.size.x + 0.5 or _lines.size.y > _scroll.size.y + 0.5
+
+
+## A row's width in N units: its groups (an OR pair as one group with the "or" gap) and the gaps between and around them.
+func _row_units(row: Array) -> float:
+	var groups := _groups(row)
+	if groups.is_empty():
+		return 0.0
+	var units := _group_gap() * float(groups.size() + 1)
+	for group in groups:
+		for n in group:
+			units += _kind_of(n)
+		if group.size() > 1:
+			units += CardTokens.TREE_PAIR_GAP
+	return units
+
+
+## [[node, node?]] in data order, an OR pair as one group.
+func _groups(row: Array) -> Array:
+	var groups: Array = []
+	var seen := {}
+	for n in row:
+		var excl := str(n["excl"])
+		if excl.is_empty():
+			groups.append([n])
+		elif not seen.has(excl):
+			seen[excl] = groups.size()
+			groups.append([n])
+		else:
+			groups[int(seen[excl])].append(n)
+	return groups
 
 
 func _by_tier(nodes: Array) -> Dictionary:
@@ -646,38 +745,41 @@ func _by_tier(nodes: Array) -> Dictionary:
 	return out
 
 
-func _size_of(n: Dictionary, k: float) -> float:
+## A node's size in N units (TREE_NODE_KIND of its kind; the combo is "combo").
+func _kind_of(n: Dictionary) -> float:
 	var kind := "combo" if _data().branch_of(str(n["id"])) == "combo" else str(n["type"])
-	var side: float = float(CardTokens.TREE_NODE.get(kind, 96.0)) * s * k
-	return minf(maxf(side, _side_min), _side_cap)
+	return float(CardTokens.TREE_NODE_KIND.get(kind, 1.0))
 
 
-## One row centred in [x, x + w] at height y; OR pairs sit close together, other nodes evenly spread.
-func _place_row(row: Array, x: float, w: float, y: float, k: float) -> void:
-	if row.is_empty():
+## One row in [x, x + w] at height y: the groups spread evenly (equal gaps between and around them); an OR pair keeps
+## its two nodes TREE_PAIR_GAP apart with the "or" word between them.
+func _place_row(row: Array, x: float, w: float, y: float) -> void:
+	var groups := _groups(row)
+	if groups.is_empty():
 		return
-	var groups: Array = []  ## [[node, node?]] in data order, an OR pair as one group
-	var seen := {}
-	for n in row:
-		var excl := str(n["excl"])
-		if excl.is_empty():
-			groups.append([n])
-		elif not seen.has(excl):
-			seen[excl] = groups.size()
-			groups.append([n])
-		else:
-			groups[int(seen[excl])].append(n)
-	var slot := w / float(groups.size())
+	var widths: Array = []
+	var total := 0.0
+	for group in groups:
+		var gw := 0.0
+		for n in group:
+			gw += _kind_of(n) * node_base
+		if group.size() > 1:
+			gw += CardTokens.TREE_PAIR_GAP * node_base
+		widths.append(gw)
+		total += gw
+	var gap := maxf(0.0, (w - total) / float(groups.size() + 1))
+	var at := x + gap
 	for i in groups.size():
 		var group: Array = groups[i]
-		var cx := x + slot * (float(i) + 0.5)
-		if group.size() == 1:
-			_put(str(group[0]["id"]), Vector2(cx, y), _size_of(group[0], k))
-		else:  # an OR pair: two nodes side by side inside the slot (never over the next slot)
-			var side := minf(_size_of(group[0], k), slot * 0.49)
-			var spread := minf(slot * 0.25, side * 0.56)
-			_put(str(group[0]["id"]), Vector2(cx - spread, y), side)
-			_put(str(group[1]["id"]), Vector2(cx + spread, y), side)
+		var cx := at
+		for j in group.size():
+			var side := _kind_of(group[j]) * node_base
+			_put(str(group[j]["id"]), Vector2(cx + side * 0.5, y), side)
+			cx += side
+			if j == 0 and group.size() > 1:
+				_or_marks.append(Vector2(cx + CardTokens.TREE_PAIR_GAP * node_base * 0.5, y))
+				cx += CardTokens.TREE_PAIR_GAP * node_base
+		at += float(widths[i]) + gap
 
 
 func _put(id: String, centre: Vector2, side: float) -> void:
@@ -779,21 +881,34 @@ func _refresh_detail() -> void:
 		CardTokens.tree_disabled_text(b)
 
 
-## Tier bands with their gate numbers, and ink paths: a class T1 node to its two T2 fork nodes, every other node down
-## to the band under it. Taken / draft paths are solid colour, the rest faint ink.
+## Tier lines with their gate numbers as plain outlined ink ("Needs 8", no tag box), the small "or" word between each OR
+## pair, and the only ink paths: a class T1 node up to its two T2 fork nodes (solid colour once taken, else faint ink).
+## The other tiers need no path: their gate line says what opens them.
 func _draw_lines() -> void:
 	var font := CardTokens.display_font()
-	var font_size := maxi(int(round(CardTokens.TREE_FONT_GATE * s)), CardTokens.FONT_MIN)
+	var font_size := int(_px(CardTokens.TREE_FONT_GATE))
+	var outline := maxi(2, int(4.0 * s))
 	for band in _bands:
 		_lines.draw_line(Vector2(band["x0"], band["y"]), Vector2(band["x1"], band["y"]), CardTokens.TREE_BAND, maxf(1.0, 2.0 * s))
-		if int(band["gate"]) > 0:  # the gate as an ink label on a parchment tag: "Needs 8"
+		if int(band["gate"]) > 0:
 			var text := _gate_text(int(band["gate"]))
 			var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-			var tag_x: float = float(band["x1"]) - w - 12.0 * s if bool(band.get("right", false)) else float(band["x0"])
-			var tag := Rect2(tag_x, float(band["y"]) - font_size * 0.65, w + 12.0 * s, font_size * 1.3)
-			_lines.draw_rect(tag, CardTokens.HUB_PAPER)
-			_lines.draw_rect(tag, band["color"], false, maxf(1.0, 2.0 * s))
-			_lines.draw_string(font, Vector2(tag.position.x + 6.0 * s, tag.end.y - font_size * 0.32), text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, CardTokens.HUB_INK)
+			var right := bool(band.get("right", false))
+			var x: float
+			if _labels_in_rows:  # inside the strip under the row, at the branch's outer end
+				x = float(band["x1"]) - w - 6.0 * s if right else float(band["x0"]) + 6.0 * s
+			else:  # in the side gutter
+				x = float(band["x1"]) + 6.0 * s if right else float(band["x0"]) - w - 6.0 * s
+			var at := Vector2(x, float(band["y"]) + font_size * 0.35)
+			_lines.draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, outline, CardTokens.HUB_PAPER)
+			_lines.draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, CardTokens.HUB_INK)  # ink: readable for every race colour
+	var or_size := int(_px(CardTokens.TREE_FONT_OR))
+	var or_text := CardTokens.tt("tree_or_word")
+	var or_w := font.get_string_size(or_text, HORIZONTAL_ALIGNMENT_LEFT, -1, or_size).x
+	for mark in _or_marks:
+		var at := Vector2(mark.x - or_w * 0.5, mark.y + or_size * 0.35)
+		_lines.draw_string_outline(font, at, or_text, HORIZONTAL_ALIGNMENT_LEFT, -1, or_size, outline, CardTokens.HUB_PAPER)
+		_lines.draw_string(font, at, or_text, HORIZONTAL_ALIGNMENT_LEFT, -1, or_size, CardTokens.HUB_INK)
 	var data = _data()
 	var class_nodes: Array = data.class_nodes(card)
 	var t1: Array = class_nodes.filter(func(n): return int(n["tier"]) == 1)
@@ -801,24 +916,16 @@ func _draw_lines() -> void:
 	for n in class_nodes:
 		if int(n["tier"]) == 2 and not pairs.has(str(n["excl"])):
 			pairs.append(str(n["excl"]))
-	var width := CardTokens.TREE_PATH_W * s
+	var width := maxf(1.5, CardTokens.TREE_PATH_W * s)
 	for id in _positions:
 		var n: Dictionary = data.node(id)
-		var to: Vector2 = _positions[id]
-		var on: bool = draft.get(data.branch_of(id), []).has(id)
-		var color: Color = CardTokens.TREE_PATH_OFF
-		if on:
-			color = CardTokens.race_color(CardDeck.race_of(deck, card)) if data.branch_of(id) == "race" else CardTokens.TREE_PATH_ON
-		var from := Vector2(to.x, to.y + (_nodes[id] as Control).size.y * 0.5 + _band_gap())
-		if data.branch_of(id) == "class" and int(n["tier"]) == 2:
-			var at := pairs.find(str(n["excl"]))
-			if at >= 0 and at < t1.size() and _positions.has(str(t1[at]["id"])):
-				var parent: Vector2 = _positions[str(t1[at]["id"])]
-				from = parent - Vector2(0.0, (_nodes[str(t1[at]["id"])] as Control).size.y * 0.5)
-		elif data.branch_of(id) == "combo":
+		if data.branch_of(id) != "class" or int(n["tier"]) != 2:
 			continue
-		_lines.draw_line(from, to + Vector2(0.0, (_nodes[id] as Control).size.y * 0.45), color, width, true)
-
-
-func _band_gap() -> float:
-	return CardTokens.TREE_GAP * s
+		var at := pairs.find(str(n["excl"]))
+		if at < 0 or at >= t1.size() or not _positions.has(str(t1[at]["id"])):
+			continue
+		var to: Vector2 = _positions[id]
+		var parent: Vector2 = _positions[str(t1[at]["id"])]
+		var on: bool = draft.get("class", []).has(id)
+		var from := parent - Vector2(0.0, (_nodes[str(t1[at]["id"])] as Control).size.y * 0.5)
+		_lines.draw_line(from, to + Vector2(0.0, (_nodes[id] as Control).size.y * 0.5), CardTokens.TREE_PATH_ON if on else CardTokens.TREE_PATH_OFF, width, true)
