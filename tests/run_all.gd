@@ -22,6 +22,7 @@ const TEST_FILES := [
 	"res://tests/test_online_login.gd",
 	"res://tests/test_coop.gd",
 	"res://tests/test_auto_pilot.gd",
+	"res://tests/test_autopilot_survival.gd",
 	"res://tests/test_corpse_clear.gd",
 	"res://tests/test_card_deck.gd",
 	"res://tests/test_tutorial_unlocks.gd",

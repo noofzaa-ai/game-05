@@ -13,7 +13,7 @@ const KINDS: Array[String] = ["dash_strike", "stance", "ally_leap", "circle", "a
 	"shot", "volley", "vault_shot", "orb", "delayed_circle", "ally_buff"]
 ## Conditions the skill `use` rules may name (GDD 3.7): the race list (logic/auto_pilot.gd use_matches) plus the skill-only ones.
 const CONDITIONS: Array[String] = ["enemies_near", "boss_near", "elite_near", "self_hurt", "boss_telegraph", "ally_hurt",
-	"peel_target_attacking_ally", "target_within", "self_attacked_by", "ally_below_hp_attacked", "self_hp_at_least",
+	"peel_target_attacking_ally", "target_within", "self_attacked_by", "ally_below_hp_attacked", "pilot_support", "self_hp_at_least",
 	"enemies_in_arc", "boss_in_arc", "held_for", "dense_point", "boss_between", "loose_pack", "best_shot",
 	"enemy_near_backline", "closing_enemy", "nearest_within", "target_cluster", "target_is_boss"]
 ## Old skill ids (GDD 3.6): no data file may name them once the classes are switched (acceptance criterion 1).

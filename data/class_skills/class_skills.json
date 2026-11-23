@@ -112,7 +112,7 @@
   "warding_veil": {
    "name": "Warding Veil", "class": "magic", "kind": "ally_buff", "stamina": 19, "impact_tier": 0, "priority": 0.5, "vfx": "class_skill/warding_veil",
    "stats": {"cooldown": 14.0, "range": 9.0, "taken_mul": 0.7, "duration": 5.0, "haste": 3.0},
-   "use": {"any_of": [{"if": "ally_below_hp_attacked", "below": 0.6, "range": 9.0, "self": true, "most_attacked": true}]},
+   "use": {"any_of": [{"if": "ally_below_hp_attacked", "below": 0.6, "range": 9.0, "self": true, "most_attacked": true}, {"if": "pilot_support", "range": 9.0}]},
    "motion": {"segs": [["mg_spell_2h_magic_attack_05", 0.267, 3.067, 1.6, [2.03]]]}
   }
  }

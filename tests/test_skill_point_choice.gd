@@ -70,5 +70,7 @@ func _pilot_vs_lone_boss(ctx) -> void:
 	var dealt: float = hp_before - sim.fighters[BOSS].hp
 	ctx.check("Magic vs lone Chief: Starfall cast at least once (%d)" % starfalls, starfalls >= 1)
 	ctx.check("Magic vs lone Chief: never stuck re-pressing a refused skill > 2 s (worst %d ticks)" % worst, worst <= 120)
-	ctx.check("Magic vs lone Chief: attacks with its bolts (%d ticks in ATTACK)" % attacking, attacking >= 120)
+	# >= 90 (was 120): since the survival pilot (2026-11-23) the card also steps out of the Chief's reach and lunge markers
+	# instead of standing in them, so it shoots a little less; the freeze this guards against gave 0.
+	ctx.check("Magic vs lone Chief: attacks with its bolts (%d ticks in ATTACK)" % attacking, attacking >= 90)
 	ctx.check("Magic vs lone Chief: deals damage to the boss (%.0f)" % dealt, dealt > 0.0)

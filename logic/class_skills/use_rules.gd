@@ -96,6 +96,10 @@ static func matches(sim, id: int, skill: String, rule: Dictionary, target: int) 
 			"self_hp_at_least":
 				if me.hp >= me.max_hp() * float(rule.get("at_least", 0.0)):
 					out = {"target": target}
+			"pilot_support":  # the class pilot's support_boss_below (auto_pilot.support_choice): an ally a boss is on, warded earlier
+				var ally: int = load(PILOT).support_choice(sim, id, float(rule.get("range", 9.0)))
+				if ally >= 0:
+					out = {"target": ally}
 			"ally_below_hp_attacked":
 				var ally := hurt_ally(sim, id, rule)
 				if ally >= 0:
