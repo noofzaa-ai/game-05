@@ -2,9 +2,9 @@ extends SceneTree
 ## Draw-style prototype review (tech-artist 2026-11-13, Boss: "feel like watching a cartoon").
 ## Opens a real auto-battle stage, lets the fight start, freezes the simulation, then for two camera views
 ## (the arena overview and a closer look) saves a PNG and measures frame time. Needs a window (no --headless):
-##   godot --path . --script res://tools/shots/draw_style_shots.gd -- [--style=ink_a|ink_b|ink_c] [--out=<dir>]
+##   godot --path . --script res://tools/shots/draw_style_shots.gd -- [--style=off|lite|on (or ink_a|ink_b|ink_c)] [--out=<dir>]
 ##       [--size=1280x720] [--scale=1.0] [--aa=2] [--frames=240] [--audit] [map_id ...]
-## --style is read by client/draw_style.gd (the same switch as the web URL ?style=). Output:
+## --style is read by client/draw_style/draw_style.gd (the same switch as the web URL ?style=). Output:
 ## <out>/<map>_{overview,close}.png and lines "DRAWSTYLE <style> <map> <view> frame_ms=.. cpu=.. gpu=.. dc=.. prims=..".
 ## It sets render scale/AA through client/graphics_options.gd (user://graphics.cfg) and deletes that file at the end.
 const Options := preload("res://client/graphics_options.gd")
