@@ -2,6 +2,12 @@
 
 อัปเดตล่าสุด: 2026-11-13 (auto-battler; ส่วนล่างเป็นบันทึกเก่าก่อนเปลี่ยนแนวเกม)
 
+## ▶ สถานะ 2026-11-14..11-23 (สรุปจาก AI_SYNC.md; โค้ดล่าสุด = branch fix/autopilot-checkpoint, staging web build 5a8972a6a535 = 00011f15)
+- ส่งขึ้น staging แล้ว: ด่าน Mummy Pyramid (บอสคู่ Mummy + High Wizard wave 9, จังหวะ ~1.5x ของเดิม, HP x2), ด่าน Orc Camp (9 เวฟ, บอส Orc Warlock เดี่ยว, ตระกูลออร์คจากโมเดลเดียว), ชุดบอส + ดาบโล่ Orc Warlock จริง, boss_proc (สถานะติดตอนตี), อาวุธบอสดรอป 10% ระดับ epic แสดงทอง, Quests Main/Daily, ขายยกชุดออนไลน์, ค่าเริ่มต้นมือถือ + Lag report, nerf guard / wave_heal 0, AI รอดชีวิตของทัพ, Skill tree UI
+- กฎ Boss: ชุดเกราะตาม CLASS เผ่าเปลี่ยนแค่หัว (2026-11-17)
+- รอ Boss ตัดสิน: Orc Warlock แบบคู่ (ตอนนี้เดี่ยว); ยังไม่มีเทสต์เล่นจริงบนเว็บ/มือถือ; งานค้างจาก 11-13 (เกจอัลติบนจอ, VFX อัลติ, ลด VFX หนัก, ทำนายสกิลออนไลน์, วัด solo/duo)
+- หมายเหตุ: main (a4e7c4a) ล้าหลัง 300+ commit; worktree game05/game05 เก่า ห้ามใช้ ทำงานที่ game-05
+
 ## ▶ เริ่มตรงนี้ (2026-11-13)
 - อ่าน `AI_SYNC.md` หัวข้อ 5 (สถานะ) และ `docs/po_defaults.md` (ค่าที่ PO เลือกแทน Boss) ก่อน
 - เทสต์ 3024 ผ่าน / 38 พัง (baseline เทียบรายชื่อ), SCRIPT ERROR 3 ตัวเดิม
