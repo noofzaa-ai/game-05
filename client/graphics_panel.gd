@@ -9,6 +9,7 @@ extends CanvasLayer
 ## Back / Esc / gamepad B / a tap on the dim closes it. Every colour, size and word comes from card_tokens.gd.
 
 const Options := preload("res://client/graphics_options.gd")
+const Language := preload("res://client/language_options.gd")  ## the "Language" row (descriptions only)
 const CardTokens := preload("res://client/card_tokens.gd")
 const CarvedLook := preload("res://client/carved_look.gd")
 
@@ -17,6 +18,7 @@ const QUALITY := [["render_scale", "gfx_render_scale", [0.5, 0.75, 1.0], ["gfx_s
 	["antialiasing", "gfx_aa", [0, 2, 4], ["gfx_off", "gfx_aa_2", "gfx_aa_4"]]]
 const DRAWN := [["drawn_style", "gfx_drawn_style", ["on", "lite", "off"], ["gfx_drawn_on", "gfx_drawn_lite", "gfx_off"]]]
 const SCENE := [["shadows", "gfx_shadows"], ["decorative_lights", "gfx_lights"], ["fog", "gfx_fog"], ["glow", "gfx_glow"]]
+const LANGUAGE := [["language", "lang_row", ["en", "th"], ["lang_en", "lang_th"]]]  ## client/language_options.gd
 const EFFECTS := [["outline", "gfx_outline"], ["metal_glint", "gfx_metal"], ["ultimate_vfx", "gfx_ult_vfx"], ["combat_vfx", "gfx_combat_vfx"], ["ultimate_camera", "gfx_ult_camera"]]
 
 var panel: Control  ## the hub panel (SettingsPanel), for tests and shot scripts
@@ -35,7 +37,7 @@ func _ready() -> void:
 ## Returns the content; its first plate is in meta "first_focus".
 static func contents(two_columns: bool = false, s: float = 0.8, phone: bool = false) -> Control:
 	var sections := [["gfx_sec_quality", QUALITY, "gfx_scale_hint"], ["gfx_sec_drawn", DRAWN, "gfx_drawn_hint"],
-		["gfx_sec_scene", SCENE, ""], ["gfx_sec_effects", EFFECTS, ""]]
+		["gfx_sec_scene", SCENE, ""], ["gfx_sec_effects", EFFECTS, ""], ["lang_row", LANGUAGE, "lang_hint"]]
 	var root := HBoxContainer.new()
 	root.name = "Settings"
 	CardTokens.gap(root, CardTokens.SET_COLUMN_GAP, s)
@@ -49,7 +51,7 @@ static func contents(two_columns: bool = false, s: float = 0.8, phone: bool = fa
 		column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		CardTokens.gap(column, CardTokens.SET_ROW_GAP, s)
 		root.add_child(column)
-	var placed := {0: left, 1: right, 2: left, 3: right}
+	var placed := {0: left, 1: right, 2: left, 3: right, 4: left}
 	for index in sections.size():
 		var section: Array = sections[index]
 		var column: VBoxContainer = placed[index]
@@ -119,7 +121,10 @@ static func _row(column: VBoxContainer, row: Array, s: float, phone: bool) -> Bu
 		line.add_child(b)
 	for b in chips:
 		b.pressed.connect(func() -> void:
-			Options.set_value(key, b.get_meta("value"))
+			if key == "language":
+				Language.set_value(str(b.get_meta("value")))
+			else:
+				Options.set_value(key, b.get_meta("value"))
 			_mark(chips, key, words, s))
 	_mark(chips, key, words, s)
 	column.add_child(line)
@@ -128,7 +133,7 @@ static func _row(column: VBoxContainer, row: Array, s: float, phone: bool) -> Bu
 
 ## Shows which plate holds the saved value: a check mark, the display face and the dark ring (shape, not colour).
 static func _mark(chips: Array[Button], key: String, words: Array, s: float) -> void:
-	var current: Variant = Options.effective(key)  # what is applied (phone default, slow-device cut or the player's pick)
+	var current: Variant = Language.value() if key == "language" else Options.effective(key)  # what is applied (phone default, slow-device cut or the player's pick)
 	for index in chips.size():
 		var b := chips[index]
 		var value: Variant = b.get_meta("value")

@@ -45,8 +45,8 @@ static func boss_option_text(item_id: String) -> String:
 	if option.is_empty():
 		return ""
 	var Tokens = load("res://client/card_tokens.gd")
-	var name := str(BossProcs.status_name(str(option["status"]))[0 if Tokens.language == "th" else 1])
-	return Tokens.t("boss_option") % [_number(float(option["chance"])), name, _number(float(option["duration"]) / 60.0), _number(float(option["icd"]) / 60.0)]
+	var name := str(BossProcs.status_name(str(option["status"]))[0 if Tokens.desc_language() == "th" else 1])
+	return Tokens.dt("boss_option") % [_number(float(option["chance"])), name, _number(float(option["duration"]) / 60.0), _number(float(option["icd"]) / 60.0)]
 
 
 ## "Rare Golden Blossom Katana  +3": a catalog item's own name; a plain piece is named by its weapon
@@ -117,9 +117,15 @@ static func race_set_lines(item: Item, rules: ItemRules, worn_items: Array, race
 	var thai: bool = Tokens.language == "th"
 	var name := str(info.get("name_th", info.get("name", set_id))) if thai else str(info.get("name", set_id))
 	var lines: Array = [{"text": Tokens.t("set_race_line") % [name, int(entry["count"]), int(entry["total"])], "on": bool(entry["matched"])}]
-	for step in entry["steps"]:
+	var raw_steps: Array = info.get("steps", [])
+	for index in entry["steps"].size():
+		var step: Dictionary = entry["steps"][index]
 		var state: String = Tokens.t("set_step_on") if step["active"] else Tokens.t("set_step_off")
-		lines.append({"text": Tokens.t("set_race_step") % [int(step["pieces"]), str(step["name"]), state, str(step["tier"]), str(step["text"])], "on": bool(step["active"])})
+		var words := str(step["text"])
+		if index < raw_steps.size():  # the description in the chosen description language (data text_th)
+			var block: Dictionary = preload("res://logic/race_sets.gd").step_block(raw_steps[index], class_id)
+			if not block.is_empty(): words = Tokens.desc(block)
+		lines.append({"text": Tokens.t("set_race_step") % [int(step["pieces"]), str(step["name"]), state, str(step["tier"]), words], "on": bool(step["active"])})
 	if not bool(entry["matched"]):
 		lines.append({"text": Tokens.t("set_needs_race") % Tokens.race_name(str(entry["race"])), "on": false})
 	return lines
@@ -144,9 +150,12 @@ static func boss_set_lines(item: Item, rules: ItemRules, worn_items: Array) -> A
 	if entry.is_empty():
 		return []
 	var lines: Array = [{"text": Tokens.t("set_race_line") % [str(info.get("name", set_id)), int(entry["count"]), int(entry["total"])], "on": true}]
-	for step in entry["steps"]:
+	var raw_steps: Array = info.get("steps", [])
+	for index in entry["steps"].size():
+		var step: Dictionary = entry["steps"][index]
 		var state: String = Tokens.t("set_step_on") if step["active"] else Tokens.t("set_step_off")
-		lines.append({"text": Tokens.t("set_race_step") % [int(step["pieces"]), str(step["name"]), state, str(step["tier"]), str(step["text"])], "on": bool(step["active"])})
+		var words: String = Tokens.desc(raw_steps[index]) if index < raw_steps.size() else str(step["text"])
+		lines.append({"text": Tokens.t("set_race_step") % [int(step["pieces"]), str(step["name"]), state, str(step["tier"]), words], "on": bool(step["active"])})
 	return lines
 
 

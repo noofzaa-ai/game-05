@@ -37,7 +37,10 @@ func run(ctx) -> void:
 	ctx.check("en: name, desc, opens, pending", en.name == str(q.name_en) and en.desc == str(q.desc_en) and "Sand Pyramid" in en.opens and en.state == "In progress" and not en.done)
 	ctx.check("en: steps with ticks and live progress %s" % [en.steps], en.steps.size() == 2 and str(en.steps[0].text).begins_with("[x] ") and "Lv 5/15" in str(en.steps[1].text) and str(en.steps[1].text).begins_with("[ ] "))
 	CardTokens.language = "th"
+	var desc_lang: String = preload("res://client/language_options.gd").value()
+	preload("res://client/language_options.gd")._value = "th"  # the description follows the Language setting
 	var th := QuestsPanel.row_lines(p, "pyramid")
+	preload("res://client/language_options.gd")._value = desc_lang
 	ctx.check("th: Thai name, desc, opens", th.name == str(q.name_th) and th.desc == str(q.desc_th) and "พีระมิดทราย" in th.opens and th.state == "กำลังทำ")
 	CardTokens.language = "en"
 	_levels(p, 15)

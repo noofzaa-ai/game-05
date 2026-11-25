@@ -1024,6 +1024,10 @@ const STRINGS := {
 	"gfx_ult_vfx": ["เอฟเฟกต์อัลติ", "Ultimate effects"],
 	"gfx_combat_vfx": ["เอฟเฟกต์ต่อสู้ / ริ้วอาวุธ", "Combat effects / trails"],
 	"gfx_ult_camera": ["กล้องอัลติ", "Ultimate camera"],
+	"lang_row": ["Language", "Language"],  ## a menu label: English in both (only descriptions change language)
+	"lang_en": ["EN", "EN"],
+	"lang_th": ["TH", "TH"],
+	"lang_hint": ["Thai changes skill and item descriptions only; menus stay English.", "Thai changes skill and item descriptions only; menus stay English."],
 	"gfx_note": ["จำค่าบนอุปกรณ์นี้ · เกมยังดำเนินต่อ", "Saved on this device · the game keeps running"],
 	"zone_zone_locked": ["โซนนี้ยังไม่เปิด ทำเควสต์และโค่นบอสโซนก่อนหน้าก่อน", "This zone is still locked: finish its quest and beat the previous boss"],
 	"zone_invalid_journey": ["ไม่พบด่านนี้บนเซิร์ฟเวอร์ ลองอัปเดตเกม", "The server doesn't know this stage, try updating the game"],
@@ -1033,6 +1037,25 @@ const STRINGS := {
 static func t(key: String) -> String:
 	var entry: Array = STRINGS.get(key, STRINGS_RACE.get(key, [key, key]))
 	return str(entry[0 if language == "th" else 1])
+
+
+## The description language (client/language_options.gd, the Settings "Language" row): "en" or "th". Only
+## descriptive text follows it; menus keep `language` (English).
+static func desc_language() -> String:
+	return preload("res://client/language_options.gd").value()
+
+
+## A description field of a data entry: `field`_th when the description language is Thai and it is set, else `field`.
+static func desc(entry: Dictionary, field: String = "text") -> String:
+	if desc_language() == "th" and not str(entry.get(field + "_th", "")).is_empty():
+		return str(entry[field + "_th"])
+	return str(entry.get(field, ""))
+
+
+## A word of STRINGS in the description language (description templates such as the boss option line).
+static func dt(key: String) -> String:
+	var entry: Array = STRINGS.get(key, STRINGS_RACE.get(key, [key, key]))
+	return str(entry[0 if desc_language() == "th" else 1])
 
 
 ## Item level (Boss 2026-11-16): the card level a piece needs. Starter pieces (id "starter-...") are level 1 whatever

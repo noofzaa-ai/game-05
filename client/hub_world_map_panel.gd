@@ -135,7 +135,7 @@ func refresh() -> void:
 				var th: bool = CardTokens.language == "th"
 				lines.append(str(q.get("name_th" if th else "name_en", "")))
 				for step in ZoneQuests.progress(p, selected):
-					lines.append(("[x] " if step.done else "[ ] ") + str(step.get("text_th" if th else "text_en", "")))
+					lines.append(("[x] " if step.done else "[ ] ") + str(step.get("text_th" if CardTokens.desc_language() == "th" else "text_en", "")))
 			else:
 				lines.append(CardTokens.t("map_locked") % before)
 		_:

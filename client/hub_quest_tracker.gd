@@ -60,7 +60,7 @@ static func lines_for(profile, zone: String, now: int = 0) -> Array:
 	var z := Zones.zone(zone)
 	var out: Array = [CardTokens.t("quest_track_title") % [str(q.get("name_th" if th else "name_en", "")), str(z.get("name_th" if th else "name_en", zone))]]
 	for step in ZoneQuests.progress(profile, zone):
-		out.append(CardTokens.t("quest_mark_done" if step.done else "quest_mark_todo") + str(step.get("text_th" if th else "text_en", "")))
+		out.append(CardTokens.t("quest_mark_done" if step.done else "quest_mark_todo") + str(step.get("text_th" if CardTokens.desc_language() == "th" else "text_en", "")))
 	var ready := DailyQuests.claimable(profile, now if now > 0 else int(Time.get_unix_time_from_system()))
 	if ready > 0:
 		out.append(CardTokens.t("daily_ready_hint") % ready)

@@ -155,7 +155,7 @@ static func row_lines(profile, zone_id: String) -> Dictionary:
 	var number := ZoneQuests.chain().find(zone_id) + 1
 	var steps: Array = []
 	for step in ZoneQuests.progress(profile, zone_id):
-		steps.append({"text": CardTokens.t("quest_mark_done" if step.done else "quest_mark_todo") + str(step.get("text_th" if th else "text_en", "")), "done": bool(step.done)})
+		steps.append({"text": CardTokens.t("quest_mark_done" if step.done else "quest_mark_todo") + str(step.get("text_th" if CardTokens.desc_language() == "th" else "text_en", "")), "done": bool(step.done)})
 	return {
 		"name": str(q.get("name_th" if th else "name_en", zone_id)),
 		"number": CardTokens.t("quest_main_step") % number,
@@ -163,7 +163,7 @@ static func row_lines(profile, zone_id: String) -> Dictionary:
 		"done": done,
 		"locked": locked,
 		"locked_line": (CardTokens.t("quest_locked_after") % str(prev.get("name_th" if th else "name_en", ""))) if locked else "",
-		"desc": str(q.get("desc_th" if th else "desc_en", "")),
+		"desc": str(q.get("desc_th" if CardTokens.desc_language() == "th" else "desc_en", "")),
 		"steps": steps,
 		"opens": CardTokens.t("quest_opens") % str(z.get("name_th" if th else "name_en", zone_id)),
 	}
@@ -177,7 +177,7 @@ static func daily_lines(profile, now_unix: int) -> Array:
 	var th := CardTokens.language == "th"
 	var out: Array = []
 	for q in DailyQuests.progress(profile, now_unix):
-		out.append({"id": q.id, "name": str(q.get("name_th" if th else "name_en")), "desc": CardTokens.t("quest_mark_done" if q.done else "quest_mark_todo") + str(q.get("desc_th" if th else "desc_en")),
+		out.append({"id": q.id, "name": str(q.get("name_th" if th else "name_en")), "desc": CardTokens.t("quest_mark_done" if q.done else "quest_mark_todo") + str(q.get("desc_th" if CardTokens.desc_language() == "th" else "desc_en")),
 			"reward": CardTokens.t("daily_reward") % int(q.reward_gold), "done": bool(q.done), "claimed": bool(q.claimed),
 			"button": CardTokens.t("daily_claimed" if q.claimed else ("daily_claim" if q.done else "daily_not_done"))})
 	return out

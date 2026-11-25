@@ -16,7 +16,7 @@
         {
           "pieces": 2,
           "name": "Warband",
-          "text": "ATK +5%.",
+          "text": "ATK +5%.", "text_th": "ATK +5%",
           "effects": [
             {
               "type": "stat_mod",
@@ -28,7 +28,7 @@
         {
           "pieces": 4,
           "name": "Hide of the Chief",
-          "text": "Max HP +8%.",
+          "text": "Max HP +8%.", "text_th": "HP สูงสุด +8%",
           "effects": [
             {
               "type": "stat_mod",
@@ -40,7 +40,7 @@
         {
           "pieces": 6,
           "name": "Swarm Breaker",
-          "text": "ATK +6%.",
+          "text": "ATK +6%.", "text_th": "ATK +6%",
           "effects": [
             {
               "type": "stat_mod",
@@ -68,7 +68,7 @@
         {
           "pieces": 2,
           "name": "Curse of the Sands",
-          "text": "ATK +6%.",
+          "text": "ATK +6%.", "text_th": "ATK +6%",
           "effects": [
             {
               "type": "stat_mod",
@@ -80,7 +80,7 @@
         {
           "pieces": 4,
           "name": "Wrappings of the Tomb",
-          "text": "Max HP +10%.",
+          "text": "Max HP +10%.", "text_th": "HP สูงสุด +10%",
           "effects": [
             {
               "type": "stat_mod",
@@ -92,7 +92,7 @@
         {
           "pieces": 6,
           "name": "Pharaoh's Wrath",
-          "text": "ATK +8%.",
+          "text": "ATK +8%.", "text_th": "ATK +8%",
           "effects": [
             {
               "type": "stat_mod",
@@ -120,7 +120,7 @@
           "pieces": 2,
           "name": "War Drums",
           "name_th": "กลองศึก",
-          "text": "ATK +7%.",
+          "text": "ATK +7%.", "text_th": "ATK +7%",
           "effects": [
             {
               "type": "stat_mod",
@@ -133,7 +133,7 @@
           "pieces": 4,
           "name": "Hide of the Night Camp",
           "name_th": "หนังสัตว์ค่ายราตรี",
-          "text": "Max HP +12%.",
+          "text": "Max HP +12%.", "text_th": "HP สูงสุด +12%",
           "effects": [
             {
               "type": "stat_mod",
@@ -146,7 +146,7 @@
           "pieces": 6,
           "name": "Warlock's Ember Rite",
           "name_th": "พิธีถ่านไฟจอมเวท",
-          "text": "ATK +10%.",
+          "text": "ATK +10%.", "text_th": "ATK +10%",
           "effects": [
             {
               "type": "stat_mod",
@@ -175,7 +175,7 @@
           "name": "Race Weapon",
           "by_class": {
             "sword_shield": {
-              "text": "The race passive's numbers +10%. Rallying Drill cooldown x0.85.",
+              "text": "The race passive's numbers +10%. Rallying Drill cooldown x0.85.", "text_th": "ค่าพาสซีฟเผ่า +10% คูลดาวน์ Rallying Drill x0.85",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -190,7 +190,7 @@
               ]
             },
             "greatsword": {
-              "text": "The race passive's numbers +10%. Skill radius +10%.",
+              "text": "The race passive's numbers +10%. Skill radius +10%.", "text_th": "ค่าพาสซีฟเผ่า +10% รัศมีสกิล +10%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -210,7 +210,7 @@
               ]
             },
             "longbow": {
-              "text": "The race passive's numbers +10%. Skill crit rate +10.",
+              "text": "The race passive's numbers +10%. Skill crit rate +10.", "text_th": "ค่าพาสซีฟเผ่า +10% คริสกิล +10",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -230,7 +230,7 @@
               ]
             },
             "magic": {
-              "text": "The race passive's numbers +10%. Skill cooldowns x0.95.",
+              "text": "The race passive's numbers +10%. Skill cooldowns x0.95.", "text_th": "ค่าพาสซีฟเผ่า +10% คูลดาวน์สกิล x0.95",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -250,7 +250,7 @@
               ]
             },
             "default_class": {
-              "text": "The race passive's numbers +10%.",
+              "text": "The race passive's numbers +10%.", "text_th": "ค่าพาสซีฟเผ่า +10%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -281,7 +281,7 @@
           "name": "Race Weapon",
           "by_class": {
             "sword_shield": {
-              "text": "The race passive's numbers +10%. Unbroken triggers 5% HP higher.",
+              "text": "The race passive's numbers +10%. Unbroken triggers 5% HP higher.", "text_th": "ค่าพาสซีฟเผ่า +10% Unbroken ทำงานที่ HP สูงขึ้น 5%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -296,7 +296,7 @@
               ]
             },
             "greatsword": {
-              "text": "The race passive's numbers +10%. Berserker reaches its full bonus 5% HP higher.",
+              "text": "The race passive's numbers +10%. Berserker reaches its full bonus 5% HP higher.", "text_th": "ค่าพาสซีฟเผ่า +10% Berserker ได้โบนัสเต็มที่ HP สูงขึ้น 5%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -311,7 +311,7 @@
               ]
             },
             "longbow": {
-              "text": "The race passive's numbers +10%. Headhunter's Rage and Haste last 25% longer.",
+              "text": "The race passive's numbers +10%. Headhunter's Rage and Haste last 25% longer.", "text_th": "ค่าพาสซีฟเผ่า +10% Rage และ Haste ของ Headhunter นานขึ้น 25%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -326,7 +326,7 @@
               ]
             },
             "magic": {
-              "text": "The race passive's numbers +10%. A kill heals 3% max HP.",
+              "text": "The race passive's numbers +10%. A kill heals 3% max HP.", "text_th": "ค่าพาสซีฟเผ่า +10% การสังหารฟื้น HP 3%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -354,7 +354,7 @@
               ]
             },
             "default_class": {
-              "text": "The race passive's numbers +10%.",
+              "text": "The race passive's numbers +10%.", "text_th": "ค่าพาสซีฟเผ่า +10%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -385,7 +385,7 @@
           "name": "Race Weapon",
           "by_class": {
             "sword_shield": {
-              "text": "The race passive's numbers +10%. Warden's Grove cooldown x0.75.",
+              "text": "The race passive's numbers +10%. Warden's Grove cooldown x0.75.", "text_th": "ค่าพาสซีฟเผ่า +10% คูลดาวน์ Warden's Grove x0.75",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -400,7 +400,7 @@
               ]
             },
             "greatsword": {
-              "text": "The race passive's numbers +10%. Living Bark regen lasts 25% longer.",
+              "text": "The race passive's numbers +10%. Living Bark regen lasts 25% longer.", "text_th": "ค่าพาสซีฟเผ่า +10% Regen ของ Living Bark นานขึ้น 25%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -415,7 +415,7 @@
               ]
             },
             "longbow": {
-              "text": "The race passive's numbers +10%. Moonlit Arrow every 4th shot instead of every 5th.",
+              "text": "The race passive's numbers +10%. Moonlit Arrow every 4th shot instead of every 5th.", "text_th": "ค่าพาสซีฟเผ่า +10% Moonlit Arrow ทุกนัดที่ 4 แทนนัดที่ 5",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -430,7 +430,7 @@
               ]
             },
             "magic": {
-              "text": "The race passive's numbers +10%. Bloomcaster heals x1.15.",
+              "text": "The race passive's numbers +10%. Bloomcaster heals x1.15.", "text_th": "ค่าพาสซีฟเผ่า +10% Bloomcaster ฮีล x1.15",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -445,7 +445,7 @@
               ]
             },
             "default_class": {
-              "text": "The race passive's numbers +10%.",
+              "text": "The race passive's numbers +10%.", "text_th": "ค่าพาสซีฟเผ่า +10%",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -476,7 +476,7 @@
           "name": "Race Weapon",
           "by_class": {
             "sword_shield": {
-              "text": "The race passive's numbers +10%. Rune Aegis needs 1 rune less.",
+              "text": "The race passive's numbers +10%. Rune Aegis needs 1 rune less.", "text_th": "ค่าพาสซีฟเผ่า +10% Rune Aegis ใช้รูนน้อยลง 1",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -491,7 +491,7 @@
               ]
             },
             "greatsword": {
-              "text": "The race passive's numbers +10%. Runic Edge needs 1 rune less.",
+              "text": "The race passive's numbers +10%. Runic Edge needs 1 rune less.", "text_th": "ค่าพาสซีฟเผ่า +10% Runic Edge ใช้รูนน้อยลง 1",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -506,7 +506,7 @@
               ]
             },
             "longbow": {
-              "text": "The race passive's numbers +10%. Glyph Shot needs 1 rune less.",
+              "text": "The race passive's numbers +10%. Glyph Shot needs 1 rune less.", "text_th": "ค่าพาสซีฟเผ่า +10% Glyph Shot ใช้รูนน้อยลง 1",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -521,7 +521,7 @@
               ]
             },
             "magic": {
-              "text": "The race passive's numbers +10%. Runeweaver keeps 1 rune after a discharge.",
+              "text": "The race passive's numbers +10%. Runeweaver keeps 1 rune after a discharge.", "text_th": "ค่าพาสซีฟเผ่า +10% Runeweaver เก็บรูนไว้ 1 หลังปลดปล่อย",
               "effects": [
                 {
                   "type": "cell_mod",
@@ -536,7 +536,7 @@
               ]
             },
             "default_class": {
-              "text": "The race passive's numbers +10%.",
+              "text": "The race passive's numbers +10%.", "text_th": "ค่าพาสซีฟเผ่า +10%",
               "effects": [
                 {
                   "type": "cell_mod",

@@ -142,9 +142,9 @@ func show_card(class_id: String, deck: Dictionary) -> void:
 		(parts["name"] as Label).text = CardTokens.race_name(race)
 		(parts["tag"] as Label).text = CardTokens.t("race_current") if race == current else ""
 		(parts["p_head"] as Label).text = CardTokens.t("race_passive") % str(passive.get("name", ""))
-		(parts["p_text"] as Label).text = str(passive.get("text", ""))
+		(parts["p_text"] as Label).text = CardTokens.desc(passive)
 		(parts["u_head"] as Label).text = CardTokens.t("race_ultimate") % str(ultimate.get("name", ""))
-		(parts["u_text"] as Label).text = str(ultimate.get("text", ""))
+		(parts["u_text"] as Label).text = CardTokens.desc(ultimate)
 		(parts["button"] as Button).tooltip_text = CardTokens.race_name(race)
 	_layout()
 

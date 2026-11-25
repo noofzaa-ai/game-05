@@ -41,6 +41,8 @@ const TutorialMarks := preload("res://client/tutorial_marks.gd")  ## tutorial.md
 const TutorialOverlay := preload("res://client/tutorial_overlay.gd")
 const Unlocks := preload("res://logic/unlocks.gd")
 const Tutorial := preload("res://logic/tutorial.gd")
+const ComboUi := preload("res://client/combo_ui.gd")  ## cross-class skill combos (Boss 2026-11-25)
+const SquadCombos := preload("res://client/squad_combos.gd")
 const HubQuestTracker := preload("res://client/hub_quest_tracker.gd")  ## the next zone's unlock quest (Boss 2026-11-18)
 
 signal card_selected(class_id: String)
@@ -95,6 +97,8 @@ var _row: Control
 var _hint: Label
 var _hint_strip: Control  ## parchment ribbon behind the hint line
 var _bar: Control  ## the squad tray
+var _combo_pill: Button  ## "Combos in squad: N pairs" next to the synergy ribbon; opens the squad combo board
+var _squad_combos: Control
 var _slots: Array = []  ## TraySlot
 var _synergy: Panel  ## the squad's race synergy under the tray (Pair / Trio / Alliance + race badges + bonus)
 var _synergy_kind: Label
@@ -1246,6 +1250,11 @@ func _build_deck_layer() -> void:
 		slot.pressed.connect(_on_tray_pressed.bind(slot))
 		_bar.add_child(slot)
 		_slots.append(slot)
+	_combo_pill = Button.new()
+	_combo_pill.name = "ComboPill"
+	_combo_pill.focus_mode = Control.FOCUS_ALL
+	_combo_pill.pressed.connect(open_squad_combos)
+	_deck_layer.add_child(_combo_pill)
 	_synergy = Panel.new()  # the synergy line under the tray (races-and-classes.md 3.5, 3.8)
 	_synergy.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_deck_layer.add_child(_synergy)
@@ -1574,6 +1583,9 @@ func _layout() -> void:
 	_synergy.position = Vector2(centre - syn_w * 0.5, size.y - CardTokens.HUB_SYNERGY_BOTTOM * s - syn_h)
 	var row_bottom := _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s
 	_bar.position = Vector2(centre - row_w * 0.5, row_bottom - medal)
+	var pill_h := CardTokens.tap(56.0, _phone) * s
+	_combo_pill.size = Vector2(maxf(syn_w * 0.62, 260.0 * s), pill_h)
+	_combo_pill.position = Vector2(centre - _combo_pill.size.x * 0.5, row_bottom - medal - pill_h - 8.0 * s)
 	_bar.size = Vector2(row_w, medal)
 	for i in _slots.size():
 		var slot: TraySlot = _slots[i]
@@ -1756,12 +1768,34 @@ func _refresh_synergy(squad: Array) -> void:
 		if not race.is_empty():
 			x += edge + pad * 0.35
 	x += pad * 0.25
-	var text := str(synergy.get("text", "")) if kind != "none" else CardTokens.t("synergy_none_hint")
+	var text := _synergy_desc(synergy) if kind != "none" else CardTokens.t("synergy_none_hint")
 	_synergy_text.text = text
 	_synergy_text.position = Vector2(x, 0.0)
 	_synergy_text.size = Vector2(maxf(_synergy.size.x - x - pad, 1.0), h)
 	CardTokens.hub_fit(_synergy_text, text, CardTokens.CARVED_FONT_SYNERGY, _synergy_text.size.x, CardTokens.HUB_INK if kind != "none" else CardTokens.HUB_SLOT_TEXT, s)
 	_synergy.tooltip_text = "%s: %s" % [_synergy_kind.text, text]
+	_refresh_combo_pill(squad)
+
+
+func _refresh_combo_pill(squad: Array) -> void:
+	if _combo_pill == null:
+		return
+	var skills := {}
+	for id in squad:
+		skills[str(id)] = ComboUi.class_skills(str(id))
+	var links := ComboUi.squad_links(skills)
+	_combo_pill.visible = squad.size() >= 2 and not ComboUi.load_default().is_empty()
+	_combo_pill.text = ComboUi.pairs_text(links, squad.size())
+	CardTokens.hub_plate_button(_combo_pill, _s)
+	CardTokens.hub_fit(_combo_pill, _combo_pill.text, 26, _combo_pill.size.x - 40.0 * _s, CardTokens.HUB_GOOD if not links.is_empty() else CardTokens.HUB_INK, _s)
+
+
+## The squad combo board (client/squad_combos.gd) over the hub.
+func open_squad_combos() -> void:
+	if _squad_combos == null:
+		_squad_combos = SquadCombos.new()
+		add_child(_squad_combos)
+	_squad_combos.open(_squad())
 
 
 # ================================================================== squad
@@ -2873,3 +2907,14 @@ func tutorial_hide_hint(hidden: bool) -> void:
 	if _hint != null and _hint.visible == hidden:
 		_hint.visible = not hidden
 		_hint_strip.visible = not hidden
+
+
+## The synergy's description in the description language: the race file's synergy block (or the Alliance rule) text_th.
+func _synergy_desc(synergy: Dictionary) -> String:
+	var races = RaceData.load_default()
+	var block: Dictionary = {}
+	match str(synergy.get("kind", "")):
+		"alliance": block = races.rules.get("alliance", {})
+		"pair": block = races.races.get(str(synergy.get("race", "")), {}).get("synergy", {}).get("2", {})
+		"trio": block = races.races.get(str(synergy.get("race", "")), {}).get("synergy", {}).get("3", {})
+	return CardTokens.desc(block) if block.has("text") else str(synergy.get("text", ""))

@@ -18,6 +18,7 @@ const SkillTree := preload("res://logic/skill_tree.gd")
 const TreeData := preload("res://logic/skill_tree_data.gd")
 const CardProgress := preload("res://logic/card_progress.gd")
 const CardDeck := preload("res://logic/card_deck.gd")
+const ComboBadges := preload("res://client/combo_badges.gd")  ## cross-class combo badges (Boss 2026-11-25)
 
 signal changed()  ## a command changed the profile
 
@@ -63,6 +64,7 @@ var _d_branch: Label
 var _d_state: Label
 var _d_text: Label
 var _d_cost: Label
+var _d_combo: Control  ## Sets / Pays off badges of the skill this node upgrades
 var _learn: Button
 var _unlearn: Button
 var _close: Button  ## compact only: closes the detail sheet
@@ -156,6 +158,8 @@ func _build_detail() -> void:
 	_d_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	_d_text.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
 	_d_box.add_child(_d_text)
+	_d_combo = ComboBadges.new()
+	_d_box.add_child(_d_combo)
 	_d_spacer = Control.new()  # keeps the cost lines at the bottom when the text is short
 	_d_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_d_spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -170,6 +174,14 @@ func _build_detail() -> void:
 	_learn = _button(func() -> void: learn(selected))
 	_unlearn = _button(func() -> void: unlearn(selected))
 	_close = _button(func() -> void: select(""))
+
+
+## The class skill a tree node upgrades (its first skill_upgrade effect), "" for a node that names none.
+static func node_skill(n: Dictionary) -> String:
+	for e in n.get("effects", []):
+		if e is Dictionary and str(e.get("skill", "")) != "":
+			return str(e["skill"])
+	return ""
 
 
 func _button(callback: Callable) -> Button:
@@ -848,6 +860,7 @@ func _refresh_detail() -> void:
 		_d_state.text = ""
 		_d_text.text = ""
 		_d_cost.text = ""
+		_d_combo.visible = false
 		return
 	var branch: String = data.branch_of(selected)
 	_d_name.text = str(n["name"])
@@ -857,7 +870,8 @@ func _refresh_detail() -> void:
 	_d_state.visible = not _compact
 	if _compact:  # phone: branch and state share one line (more room for the description)
 		_d_branch.text += "  ·  " + _d_state.text
-	_d_text.text = data.description(selected, CardTokens.language)
+	_d_text.text = data.description(selected, CardTokens.desc_language())
+	_d_combo.show_skill(node_skill(n), s * (1.2 if _compact else 1.0))
 	var lines: Array[String] = [CardTokens.tt("tree_cost") % int(n["cost"])]
 	if branch == "combo":
 		lines.append(CardTokens.tt("tree_gate_combo") % [int(data.combo_rule()["class_gate"]), int(data.combo_rule()["race_gate"])])

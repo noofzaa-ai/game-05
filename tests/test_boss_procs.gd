@@ -389,11 +389,13 @@ func _ui(ctx) -> void:
 	ctx.check("ui: loot popup key for a boss drop summary is boss", ItemText.rarity_key_for("boss_goblin_chief_ring", 1, _rules) == "boss" and ItemText.rarity_key_for("armour_sword_shield_shirt", 1, _rules) == "blue")
 	for lang in ["en", "th"]:
 		CardTokens.language = lang
+		preload("res://client/language_options.gd")._value = lang  # the option line is a description (Language setting)
 		var text: String = ItemText.boss_option_text("boss_mummy_high_wizard_staff")
 		var name: String = BossProcs.status_name("burn")[0 if lang == "th" else 1]
 		ctx.check("ui (%s): boss option text '%s' names the status and numbers" % [lang, text], not text.is_empty() and name in text and "12" in text and "3" in text and "6" in text)
 		ctx.check("ui (%s): a zone piece has no boss option text" % lang, ItemText.boss_option_text("armour_sword_shield_shirt") == "")
 	CardTokens.language = "en"
+	preload("res://client/language_options.gd")._value = "en"
 	ctx.check("ui: boss name text on parchment reads (contrast %.1f >= 4.5)" % _contrast(CardTokens.HUB_BOSS_TEXT, CardTokens.HUB_PAPER), _contrast(CardTokens.HUB_BOSS_TEXT, CardTokens.HUB_PAPER) >= 4.5)
 	ctx.check("ui: boss frame gold on the dark outline reads (contrast %.1f >= 3)" % _contrast(CardTokens.HUB_BOSS_GOLD, CardTokens.HUB_OUTLINE), _contrast(CardTokens.HUB_BOSS_GOLD, CardTokens.HUB_OUTLINE) >= 3.0)
 	var lines: Array = ItemText.boss_set_lines(_piece("boss_mummy_high_wizard_ring"), _rules, [])

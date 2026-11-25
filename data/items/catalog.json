@@ -782,7 +782,7 @@
    "name_th": "เรลิกจอมเวทออร์ค",
    "boss": "orc_camp",
    "icon_path": "res://art/items/boss/orc_warlock/relic.png",
-   "text": "ATK +10%, effect accuracy +8.",
+   "text": "ATK +10%, effect accuracy +8.", "text_th": "ATK +10%, ความแม่นสถานะ +8",
    "effects": [
     {
      "type": "stat_mod",
@@ -801,7 +801,7 @@
    "name_th": "เรลิกจอมเวทมัมมี่",
    "boss": "pyramid",
    "icon_path": "res://art/items/boss/mummy_high_wizard/relic.png",
-   "text": "ATK +8%, crit damage +10.",
+   "text": "ATK +8%, crit damage +10.", "text_th": "ATK +8%, ดาเมจคริ +10",
    "effects": [
     {
      "type": "stat_mod",
@@ -820,7 +820,7 @@
    "name_th": "เรลิกหัวหน้าก็อบลิน",
    "boss": "goblin_base",
    "icon_path": "res://art/items/boss/goblin_chief/relic.png",
-   "text": "ATK +6%, crit rate +5.",
+   "text": "ATK +6%, crit rate +5.", "text_th": "ATK +6%, อัตราคริ +5",
    "effects": [
     {
      "type": "stat_mod",

@@ -286,7 +286,7 @@ func show_socket(item, rules) -> void:
 		else:
 			var info: Dictionary = rules.catalog.relics.get(item.relic, {})
 			socket_icon.texture = relic_icon(rules, item.relic)
-			socket_text.text = CardTokens.t("relic_in") % str(info.get("text", info.get("name", item.relic)))
+			socket_text.text = CardTokens.t("relic_in") % (CardTokens.desc(info) if info.has("text") else str(info.get("name", item.relic)))
 	_place_socket()
 
 

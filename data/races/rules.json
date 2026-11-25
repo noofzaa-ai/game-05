@@ -2,7 +2,7 @@
  "_comment": "Shared race rules (design/gdd/races-and-classes.md 3.5-3.7). starter_races: the race a class card starts with (Boss 2026-11-13); old saves without a race get it too. vocabulary: the ONLY effect types / events / actions / targets / centers / pseudo-stats a race file may use; anything else fails the load (logic/race_data.gd). Status ids are checked against data/combat/effects.json. The engine (logic/race_passives.gd) runs stat_mod and trigger (apply_status, heal) today; the other entries load but stay inert until their phase-4 feature is built. Numbers are placeholders until class_sim measures them.",
  "default_race": "human",
  "starter_races": {"sword_shield": "human", "greatsword": "viking", "longbow": "elf", "magic": "runeborn"},
- "alliance": {"name": "Alliance", "text": "Three different races: max HP +8%, ATK +8%.",
+ "alliance": {"name": "Alliance", "text": "Three different races: max HP +8%, ATK +8%.", "text_th": "สามเผ่าต่างกัน: HP สูงสุด +8%, ATK +8%",
   "effects": [{"type": "stat_mod", "stat": "HP", "mul": 0.08}, {"type": "stat_mod", "stat": "ATK", "mul": 0.08}]},
  "shield_cap_max_hp": 0.30,
  "ult_shield_cap_max_hp": 0.50,
