@@ -457,6 +457,69 @@ static func set_night_sky(root: Node) -> void:
 		(node as DirectionalLight3D).light_energy = NIGHT_MOON_ENERGY
 
 
+## ---- Elder Grove island (level-designer 2026-11-24, tools/maps/build_elder_grove.gd) ----
+## Same contract as the pyramid island (the art scene is the whole island top, meta floating_island), plus meta
+## "elder_grove": the day sky with a warm green-gold forest light (a soft gold sun through the leaves, a leafy
+## ambient), a mossy earth underside, and one cheap drift of glowing pollen motes (a single CPUParticles3D, at most
+## 24 additive quads, from the scene's meta "motes" points under the canopies).
+
+const GROVE_ROCK := Color(0.36, 0.30, 0.22)
+const GROVE_ROCK_DARK := Color(0.26, 0.30, 0.18)
+const GROVE_SUN := Color(1.0, 0.90, 0.66)
+const GROVE_SUN_ENERGY := 0.95
+const GROVE_AMBIENT := Color(0.80, 0.90, 0.66)
+const GROVE_AMBIENT_ENERGY := 0.62
+const MOTE_COUNT := 24
+
+
+static func is_grove_island(scene_root: Node) -> bool:
+	var art := scene_root.find_child("ArtScene", false, false)
+	return art != null and bool(art.get_meta("elder_grove", false))
+
+
+static func add_grove_island(parent: Node3D, map) -> Node3D:
+	var island := Node3D.new()
+	island.name = "GroveIsland"
+	_add_underside(island, float(map.half_width) + MARGIN_X, float(map.half_depth) + MARGIN_Z, GROVE_ROCK, GROVE_ROCK_DARK)
+	var art := parent.find_child("ArtScene", false, false)
+	var points: PackedVector3Array = art.get_meta("motes", PackedVector3Array()) if art != null else PackedVector3Array()
+	if not points.is_empty():
+		var motes := _embers(points)  # (the ember drift's cheap setup, re-coloured and slowed into pollen)
+		motes.name = "Motes"
+		motes.amount = MOTE_COUNT
+		motes.lifetime = 4.0
+		motes.preprocess = 4.0
+		motes.spread = 70.0
+		motes.gravity = Vector3(0.12, -0.04, 0.05)  # pollen on a light breeze, sinking slowly
+		motes.initial_velocity_min = 0.05
+		motes.initial_velocity_max = 0.25
+		var fade := Gradient.new()
+		fade.set_color(0, Color(1.0, 0.95, 0.55, 0.0))
+		fade.set_color(1, Color(0.75, 1.0, 0.5, 0.0))
+		fade.add_point(0.3, Color(1.0, 0.95, 0.6, 0.9))
+		motes.color_ramp = fade
+		island.add_child(motes)
+	parent.add_child(island)
+	return island
+
+
+## The forest day: the usual day sky (the drawn style paints it), then a warm gold sun and a leafy green ambient.
+static func set_grove_sky(root: Node) -> void:
+	set_sky(root)
+	for node in root.find_children("*", "WorldEnvironment", true, false):
+		var env: Environment = node.environment
+		if env == null:
+			continue
+		env.adjustment_saturation = 1.15
+		env.ambient_light_color = GROVE_AMBIENT
+		env.ambient_light_energy = GROVE_AMBIENT_ENERGY
+	for node in root.find_children("*", "DirectionalLight3D", true, false):
+		if str(node.name).begins_with("Character"):
+			continue  # (the characters' own key/rim lights)
+		(node as DirectionalLight3D).light_color = GROVE_SUN
+		(node as DirectionalLight3D).light_energy = GROVE_SUN_ENERGY
+
+
 static func _add_underside(parent: Node3D, w: float, d: float, rock_color: Color = ROCK, dark_color: Color = ROCK_DARK) -> void:
 	var rock := _material(rock_color)
 	var dark := _material(dark_color)

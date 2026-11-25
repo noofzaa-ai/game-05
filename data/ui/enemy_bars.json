@@ -87,6 +87,34 @@
 			}
 		},
 
+		"elder": {
+			"_doc": "Elder Grove family (level-designer 2026-11-24, the forest island maps; mirrors the goblin/mummy/orc styles): a crude bark-and-vine frame in old wood brown, a sap-gold to amber fill (not the player's red, not the goblin moss: it must read on the green moss floor), the fang mark. Tiers are listed once the grove family exists in data/combat.",
+			"frame_shape": "crude",
+			"frame": [0.40, 0.30, 0.18, 1.0],
+			"back": [0.05, 0.06, 0.04, 0.88],
+			"fill": [0.86, 0.66, 0.22, 1.0],
+			"fill_low": [0.88, 0.38, 0.14, 1.0],
+			"trail": [0.34, 0.20, 0.08, 1.0],
+			"outline": [0.03, 0.04, 0.02, 1.0],
+			"low_flash": [1.0, 0.70, 0.24, 1.0],
+			"mark": "fang",
+			"elite": {
+				"_doc": "Grove elite: a studded old-oak frame and the double notch.",
+				"frame_shape": "studded",
+				"frame": [0.54, 0.42, 0.24, 1.0],
+				"fill": [0.80, 0.60, 0.20, 1.0],
+				"mark": "fang_double"
+			},
+			"boss": {
+				"_doc": "The Grove Warden and the HUD boss bar on a grove map: the richest frame in living-wood gold with the skull mark.",
+				"frame_shape": "chief",
+				"frame": [0.72, 0.60, 0.28, 1.0],
+				"fill": [0.78, 0.56, 0.16, 1.0],
+				"fill_low": [0.90, 0.40, 0.14, 1.0],
+				"mark": "skull"
+			}
+		},
+
 		"brass": {
 			"_doc": "The default for every other map: the plain Night Brass family. Frame and low-HP colours come from the InkUi tokens (null), the fill is the HUD HP red, so unthemed maps keep the current look and a chosen theme still drives it.",
 			"frame_shape": "plain",
@@ -124,7 +152,10 @@
 		"mummy_pyramid_gate": "mummy",
 		"mummy_pyramid_hall": "mummy",
 		"mummy_pyramid_sanctum": "mummy",
-		"orc_camp_night": "orc"
+		"orc_camp_night": "orc",
+		"elder_grove_heart": "elder",
+		"elder_grove_gate": "elder",
+		"elder_grove_shrine": "elder"
 	},
 
 	"by_atmosphere": {

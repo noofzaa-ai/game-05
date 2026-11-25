@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="ArrayMesh" path="res://art/maps/elder_grove/meshes/elder_grove_shrine_floor.res" id="1_2v68y"]
+[ext_resource type="ArrayMesh" path="res://art/maps/elder_grove/meshes/elder_grove_shrine_dressing.res" id="2_2vcdn"]
+[ext_resource type="ArrayMesh" path="res://art/maps/elder_grove/meshes/elder_grove_shrine_kit.res" id="3_wox15"]
+
+[node name="elder_grove_shrine" type="Node3D" unique_id=1351217014]
+metadata/floating_island = true
+metadata/elder_grove = true
+metadata/motes = PackedVector3Array(9.6, 3.5, -5.2, -10.2, 2.2, -5.6, 10.6, 2.2, 4.2, -9.5, 1, 0, 9.5, 1, 0)
+
+[node name="PyramidFloor" type="MeshInstance3D" parent="." unique_id=1281940221]
+cast_shadow = 0
+mesh = ExtResource("1_2v68y")
+metadata/toon_no_outline = true
+
+[node name="Dressing" type="MeshInstance3D" parent="." unique_id=593524227]
+mesh = ExtResource("2_2vcdn")
+
+[node name="Kit" type="MeshInstance3D" parent="." unique_id=189288866]
+mesh = ExtResource("3_wox15")
+
+[node name="light_lantern0" type="Node3D" parent="." unique_id=481139642]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.4375, 1.34, -5.3075)
+
+[node name="light_lantern1" type="Node3D" parent="." unique_id=13342460]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4375, 1.34, -5.3075)
+
+[node name="spawn" type="Node3D" parent="." unique_id=392985533]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.6, 0.05, 0)
+
+[node name="enemy_0" type="Node3D" parent="." unique_id=1860953950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, -3.4)
+
+[node name="enemy_1" type="Node3D" parent="." unique_id=1807251058]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, -1.13)
+
+[node name="enemy_2" type="Node3D" parent="." unique_id=1213837640]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, 1.13)
+
+[node name="enemy_3" type="Node3D" parent="." unique_id=342635397]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0.05, 3.4)
+
+[node name="enemy_4" type="Node3D" parent="." unique_id=1546867202]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9, 0.05, -3.4)
+
+[node name="enemy_5" type="Node3D" parent="." unique_id=163076901]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9, 0.05, 3.4)
+
+[node name="enemy_6" type="Node3D" parent="." unique_id=241485865]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.8, 0.05, -3.4)
+
+[node name="enemy_7" type="Node3D" parent="." unique_id=131933375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.8, 0.05, 3.4)

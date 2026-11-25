@@ -1,0 +1,41 @@
+{
+  "elder_grove_gate": {
+    "cover": 0,
+    "draw_surfaces": 5,
+    "lights": 2,
+    "mesh_bytes": 325653,
+    "scene_bytes": 2483,
+    "triangles": 24770,
+    "triangles_by_mesh": {
+      "dressing": 13462,
+      "floor": 3736,
+      "kit": 7572
+    }
+  },
+  "elder_grove_heart": {
+    "cover": 0,
+    "draw_surfaces": 5,
+    "lights": 2,
+    "mesh_bytes": 323435,
+    "scene_bytes": 2510,
+    "triangles": 24310,
+    "triangles_by_mesh": {
+      "dressing": 14278,
+      "floor": 3896,
+      "kit": 6136
+    }
+  },
+  "elder_grove_shrine": {
+    "cover": 0,
+    "draw_surfaces": 5,
+    "lights": 2,
+    "mesh_bytes": 328430,
+    "scene_bytes": 2494,
+    "triangles": 24976,
+    "triangles_by_mesh": {
+      "dressing": 13588,
+      "floor": 3816,
+      "kit": 7572
+    }
+  }
+}
