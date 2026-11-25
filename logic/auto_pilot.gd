@@ -269,6 +269,18 @@ static func pick_target(sim, id: int, profile: Dictionary, engage: float, neares
 		for e in enemies:
 			if is_boss(sim.fighters[e]):
 				return e
+	# Combos (Boss 2026-11-25): an enemy in engage range carrying a state this card's ready skills pay off wins
+	# (more matching states first, then nearer). Mark counts for every class (+15%).
+	if not me.skill_state.get("skills", []).is_empty():
+		var wanted: Array = ClassSkills.Combos.wanted_states(sim, id)
+		var combo := _best(enemies, func(e):
+			var d: float = _flat(sim.bodies[e].position - at).length()
+			if d > engage:
+				return -INF
+			var n := wanted.filter(func(st): return ClassSkills.Combos.has(sim.fighters[e], str(st))).size()
+			return float(n) * 1000.0 - d if n > 0 else -INF)
+		if combo >= 0:
+			return combo
 	match kind:
 		"peel":  # the enemy nearest the most-hurt other ally (nobody else hurt = nearest)
 			var hurt := -1

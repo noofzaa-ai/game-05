@@ -76,6 +76,9 @@ var rooted := false  ## shocked: cannot move, jump, run or dodge
 var control_immune_left := 0  ## ticks after a stun/shock/sleep during which no new one can land
 var boss_procs: Array = []  ## boss-option status procs of the worn boss pieces (logic/boss_procs.gd; set from the gear); saved in checkpoints
 var proc_ready: Dictionary = {}  ## boss option item id -> sim tick from which it may trigger again (internal cooldown)
+var combo_states: Dictionary = {}  ## cross-class combo states on this fighter (logic/class_skills/combos.gd): state id -> ticks left; checkpointed
+var combo_payoffs := 0  ## combo payoffs this fighter triggered this fight (run summary "combos N")
+var combo_bonus := 0.0  ## extra damage those payoffs + the Mark bonus added (run summary "combo damage X%")
 
 
 func max_hp() -> float:

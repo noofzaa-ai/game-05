@@ -21,6 +21,7 @@ const SimBody := preload("res://logic/sim_body.gd")
 const TREE := "res://logic/skill_tree_effects.gd"
 const RACE := "res://logic/race_passives.gd"
 const MECH := "res://logic/skill_tree_mechanics.gd"  ## skill tree mechanic nodes on casts / skill hits (separate file)
+const Combos := preload("res://logic/class_skills/combos.gd")  ## cross-class combo states (Boss 2026-11-25)
 const ATTACKED_RADIUS := 3.0  ## an enemy this close to an ally counts as attacking it (GDD 3.7 "being attacked")
 
 
@@ -122,6 +123,8 @@ static func cast(sim, id: int, skill: String, choice: Dictionary = {}) -> String
 		return "not_enough_stamina"
 	var kind := str(data["kind"])
 	var at: Vector3 = sim.bodies[id].position
+	choice = choice.duplicate()
+	var combo_paid: Array = Combos.on_cast(sim, id, skill, stats, choice)  # cast-scope payoffs (may retarget / grow numbers)
 	var target := int(choice.get("target", -1))
 	var cast := {"skill": skill, "kind": kind, "cast_time": float(stats.get("cast_time", 1.0)), "start": sim.tick_count, "stats": stats, "target": target, "done": 0, "aim": at + Vector3.RIGHT}
 	var timing: Dictionary = scaled_timing(data["timing"], float(stats.get("cast_time", 1.0)))
@@ -166,6 +169,8 @@ static func cast(sim, id: int, skill: String, choice: Dictionary = {}) -> String
 	cast["releases"] = _release_ticks(sim, kind, stats, timing)
 	cast["pull"] = (timing["pull"] as Array).map(func(t): return sim.tick_count + SkillData.ticks(float(t)))
 	fighter.skill_state["cast"] = cast
+	if not combo_paid.is_empty():
+		Combos.fire(sim, id, target, skill, combo_paid)
 	load(MECH).cast_done(sim, id, fighter, cast)  # tree: cast counters, Grand Archmage
 	fighter.skill_state["now"] = sim.tick_count
 	fighter.skill_state["cd"][skill] = sim.tick_count + SkillData.ticks(float(stats["cooldown"]))
@@ -363,6 +368,8 @@ static func _release(sim, id: int, fighter, cast: Dictionary, index: int) -> voi
 	sim.events.append({"type": "class_skill_release", "player": id, "skill": skill, "index": index, "pos": at, "aim": cast["aim"], "target": int(cast["target"]),
 		"vfx": str(SkillData.load_default().skill(skill).get("vfx", ""))})
 	var target := int(cast["target"])
+	if index == 0:
+		Combos.on_release(sim, id, skill, stats, target)  # Iron Guard taunt, Intercept guard, Warding Veil haste
 	match str(cast["kind"]):
 		"dash_strike":
 			if _enemy_ok(sim, id, target) and _flat(sim.bodies[target].position - at).length() <= float(stats.get("reach", 2.0)):
@@ -437,6 +444,11 @@ static func _release(sim, id: int, fighter, cast: Dictionary, index: int) -> voi
 					Effects.apply(id, fighter, e, sim.fighters[e], {"id": "slow", "chance": 100.0, "duration": SkillData.ticks(float(stats.get("smoke_slow", 2.0)))}, sim.combat, sim.rng, sim.events)
 			if _enemy_ok(sim, id, target) and _flat(sim.bodies[target].position - at).length() <= float(stats.get("range", 12.0)):
 				_hit(sim, id, target, float(stats["damage"]), stats, {"slow": stats.get("slow", 0.0)})
+				var extra_shots: Array = Combos.extra_shots(sim, target)  # combo: a taunted target takes a second shot
+				for k in int(extra_shots[0]):
+					_add_job(fighter, {"kind": "hit", "at": sim.tick_count + SkillData.ticks(float(extra_shots[1])) * (k + 1), "target": target, "frac": float(stats["damage"]), "stats": stats})
+				if int(extra_shots[0]) > 0:
+					Combos.fire(sim, id, target, skill, ["taunt"])
 		"orb":
 			var count := maxi(1, int(stats.get("count", 1)))
 			var aim_dir := _flat_dir(Vector3(cast["aim"]) - at)
@@ -495,6 +507,9 @@ static func _hit_many(sim, id: int, victims: Array, stats: Dictionary, center: V
 		if float(stats.get(key, 0.0)) > 0.0:
 			extra[key] = stats[key]
 	var damage := float(stats["damage"]) if frac < 0.0 else frac
+	if victims.size() > 1:
+		stats = stats.duplicate()
+		stats["_burst"] = victims.size()  # Arcane Orb combo: targets in this burst
 	for e in victims:
 		_hit(sim, id, e, damage * cleave, stats, extra)
 		if float(stats.get("knockback", 0.0)) > 0.0:
@@ -518,8 +533,12 @@ static func _hit(sim, id: int, target_id: int, frac: float, stats: Dictionary, e
 	var bonus_status := str(stats.get("bonus_status", ""))
 	if not bonus_status.is_empty() and target.effects.has(bonus_status):
 		mul *= float(stats.get("bonus_mul", 1.5))  # E9
+	var payoff: Dictionary = Combos.hit_payoff(sim, id, target_id, stats)  # combo payoffs on this target
+	var combo_mul: float = float(payoff["mul"])
+	var mark_mul: float = Combos.mark_mul(target)
+	mul *= combo_mul * mark_mul
 	var chance: float = source.stat("CRIRATE") / 100.0 + float(stats.get("crit_add", 0.0)) / 100.0 + float(stats.get("crit_chance", 0.0))
-	var crit: bool = sim.rng.randf() < chance
+	var crit: bool = sim.rng.randf() < chance or bool(payoff["crit"])
 	var damage: float = source.stat("ATK") * mul * load(MECH).skill_damage_mul(sim, id, target_id, str(stats.get("skill_id", "")))  # tree: Pack Hunt, Called Target, Arcane Convergence
 	if crit:
 		damage *= source.stat("CRIDMG", 150.0) / 100.0
@@ -535,11 +554,24 @@ static func _hit(sim, id: int, target_id: int, frac: float, stats: Dictionary, e
 	sim.events.append({"type": "skill_hit", "attacker": id, "target": target_id, "damage": damage - absorbed, "absorbed": absorbed, "crit": crit,
 		"pos": sim.bodies[target_id].position, "move": "skill:" + skill, "skill": skill, "impact": tier, "ranged": true, "dir": Vector2.ZERO, "effect": "hit", "periodic": false})
 	_hitstop(sim, id, target_id, tier, crit)
+	var dealt: float = damage - absorbed
+	if mark_mul > 1.0:
+		Combos.add_bonus(sim.fighters, id, dealt * (1.0 - 1.0 / mark_mul))
+	if not (payoff["states"] as Array).is_empty():
+		var bonus: float = dealt / mark_mul * (1.0 - 1.0 / combo_mul)
+		if bool(payoff["crit"]):
+			bonus = maxf(bonus, dealt * 0.3)
+		Combos.fire(sim, id, target_id, skill, payoff["states"], bonus)
+		Combos.consume(target, payoff["consume"])
+		if float(payoff["stun"]) > 0.0:
+			extra = extra.duplicate()
+			extra["stun"] = maxf(float(extra.get("stun", 0.0)), float(payoff["stun"]))
 	Effects.wake(target_id, target, sim.combat, sim.events)
 	if target.hp <= 0.0:
 		_kill(sim, target_id, id)
 		load(MECH).skill_kill(sim, id, target_id)  # tree: Arcane Convergence burst
 		return true
+	Combos.set_on_hit(sim, id, target_id, stats)  # the states this skill sets
 	if extra.has("stun") and stats.has("boss_stun") and is_boss(target):
 		extra = extra.duplicate()
 		extra["stun"] = minf(float(extra["stun"]), float(stats["boss_stun"]))  # Gravity Crush: the longer stagger is for non-bosses
@@ -653,6 +685,11 @@ static func _run_counters(sim, id: int, fighter) -> void:
 			var counter_stats: Dictionary = stats.duplicate()
 			counter_stats["skill_id"] = "iron_guard"
 			_hit(sim, id, attacker, float(stance.get("counter", 0.5)), counter_stats, {})
+			var spread: Array = Combos.counter_spread(sim, id, attacker)  # combo: the counter hits the attacker's whole cluster
+			for e in spread:
+				_hit(sim, id, e, float(stance.get("counter", 0.5)), counter_stats, {})
+			if not spread.is_empty():
+				Combos.fire(sim, id, attacker, "iron_guard", ["cluster"])
 			if not stance.is_empty():
 				stance["counter_ticks"] = stance.get("counter_ticks", []) + [sim.tick_count]  # the client plays the counter clip from here
 			sim.events.append({"type": "class_skill_counter", "player": id, "target": attacker})

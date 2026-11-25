@@ -271,6 +271,7 @@ func tick(prediction_player: int = -1) -> void:
 		projectiles = _ranged["projectiles"]
 		areas = _ranged["areas"]
 		Combat.resolve_hits(fighters, bodies, combat, rng, events,melee_target_boxes)
+		ClassSkills.Combos.step(self)  # cross-class combo states: count down, Intercept daze (logic/class_skills/combos.gd)
 		ClassSkills.step(self)  # class skills: travel, releases, counters, orbs (logic/class_skills/engine.gd)
 		BossProcs.step(self)  # boss-drop pieces: status-on-hit procs of this tick's landed hits (own RNG streams)
 		_release_waves()

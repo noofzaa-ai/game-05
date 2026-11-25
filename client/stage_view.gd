@@ -86,6 +86,7 @@ var _ranged: ProjectileView
 var _class_vfx  ## client/skills/class_skill_vfx.gd: the 16 class skill effects (class_skill/<id>)
 var _monster_vfx  ## client/monster_vfx.gd: baked monster move effects (data/combat/monster_vfx.json)
 var _hud: CanvasLayer
+var _combo_fight: CanvasLayer  ## client/combo_fight.gd
 var _event_trigger: Node
 var _party_hud
 var _party_camera
@@ -401,6 +402,9 @@ func _build_stage(map) -> void:
 		elif pyramid_island and arena_props.is_orc_island(self):  # the orc night camp: island top + night look + embers
 			arena_props.hide_scene(self)
 			arena_props.add_orc_island(self, map)
+		elif pyramid_island and arena_props.is_grove_island(self):  # the elder grove: island top + forest light + motes
+			arena_props.hide_scene(self)
+			arena_props.add_grove_island(self, map)
 		elif pyramid_island:  # a mummy board: its art scene is the island top, add the goblin island's rock underside
 			arena_props.hide_scene(self)
 			arena_props.add_pyramid_island(self, map)
@@ -409,6 +413,8 @@ func _build_stage(map) -> void:
 			arena_props.add_island(self, map)
 		if pyramid_island and arena_props.is_orc_island(self):
 			arena_props.set_night_sky(self)
+		elif pyramid_island and arena_props.is_grove_island(self):
+			arena_props.set_grove_sky(self)
 		else:
 			arena_props.set_sky(self)
 
@@ -782,6 +788,12 @@ func _build_effects_and_hud() -> void:
 		network_status.session = _session
 		network_status.hud = _hud
 		add_child(network_status)
+	_combo_fight = preload("res://client/combo_fight.gd").new()  # cross-class combos (Boss 2026-11-25): state icons, popup, counter
+	_combo_fight.run_tally = GameState.run_loot
+	_combo_fight.fighter_ids = func() -> Array: return _session.fighters.keys().filter(func(id): return _session.fighters[id].is_alive() and _views.has(id))
+	_combo_fight.fighter_of = func(id): return _session.fighters.get(id)
+	_combo_fight.head_point = _combo_head_point
+	add_child(_combo_fight)
 	_perf = PerfOverlay.new()
 	add_child(_perf)
 
@@ -871,6 +883,8 @@ func _camera_text() -> String:
 func _handle_events() -> void:
 	var skill_impact := {"tier": 0, "crit": false}  # strongest skill blow this frame that involves us
 	for event in _session.events:
+		if _combo_fight != null and event.get("type") in ["hit", "skill_hit", "skill_dot", "dot"] and _is_our_team(int(event.get("attacker", event.get("source", -1)))):
+			_combo_fight.on_team_damage(float(event.get("damage", 0.0)))
 		if event.get("type") == "party_ping":
 			_popup(event.pos, preload("res://client/party_hud.gd").TEXT.get(event.kind, ""), Color(0.9, 0.75, 0.3), 0.012)
 		match event["type"]:
@@ -894,6 +908,9 @@ func _handle_events() -> void:
 				if _session.bodies.has(event.target):
 					_spawn_damage_number(_session.bodies[event.target].position, int(ceilf(event.damage)), false, false, int(event.target)==_local_player_id)
 					_play_skill_hit(event, skill_impact)
+			"combo":
+				if _combo_fight != null:
+					_combo_fight.on_combo(event)
 			"ultimate_cast":
 				_announce_ultimate(event)
 			"attack_started":
@@ -1250,6 +1267,17 @@ func _update_heal_numbers() -> void:
 
 
 ## Text that floats up from a fighter and fades (damage numbers, status effects).
+## Screen point just above a fighter's 3D health bar (for the combo state icons), null when behind the camera.
+func _combo_head_point(id):
+	var camera := get_viewport().get_camera_3d()
+	if camera == null or not _session.bodies.has(id):
+		return null
+	var at: Vector3 = _session.bodies[id].position + Vector3(0.0, 3.0, 0.0)
+	if camera.is_position_behind(at):
+		return null
+	return camera.unproject_position(at)
+
+
 func _popup(at: Vector3, text: String, color: Color, pixel_size: float) -> void:
 	var label := Label3D.new()
 	label.text = text

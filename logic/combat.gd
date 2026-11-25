@@ -363,6 +363,8 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 	if deadeye and not crit:
 		crit = true
 		damage = roundf(damage * attacker.stat("CRIDMG", 100.0) / 100.0)
+	var mark_mul: float = ClassSkills.Combos.mark_mul(target)  # combo: any hit on a marked enemy +15% (Boss 2026-11-25)
+	damage_mul *= mark_mul
 	damage_mul *= TreeMechanics.dealt_mul(fighters, attacker_id, target, false) * TreeMechanics.taken_mul(target, int(target.skill_state.get("now", 0)))
 	if damage_mul != 1.0:
 		damage = roundf(damage * damage_mul)
@@ -373,6 +375,8 @@ static func apply_hit(attacker_id: int, target_id: int, move_id: String, fighter
 		if damage <= 0.0: return "blocked"
 	if not target.skill_state.is_empty():  # class skills v2: Warding Veil, Iron Guard (+ counter), Intercept link (class-skills.md 4.2)
 		damage = ClassSkills.incoming(target_id, attacker_id, damage, not ranged, fighters, bodies, data, events, int(target.skill_state.get("now", 0)))
+	if mark_mul > 1.0:
+		ClassSkills.Combos.add_bonus(fighters, attacker_id, damage * (1.0 - 1.0 / mark_mul))
 	var absorbed := target.absorb(damage)  # race shield first (GDD races 4.3); the event keeps the full damage
 	target.hp = maxf(0.0, target.hp - (damage - absorbed))
 	if target.hp <= 0.0 and TreeMechanics.cheat_death(target_id, target, events):

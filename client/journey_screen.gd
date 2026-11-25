@@ -332,6 +332,7 @@ func _build_wave_summary() -> void:
 	var total: int = j.wave_total() if j.has_method("wave_total") else int(j.data.stage_count)
 	var cleared := waves_cleared(j.state, int(loot.get("wave", 1)), total)
 	_box.add_child(CardTokens.hub_label(HubLook.t("summary_waves") % [cleared, total], CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_SUBTEXT, s, 0, "medium"))
+	_box.add_child(CardTokens.hub_label(ComboUi.summary_text(int(loot.get("combo_count", 0)), combo_share(loot)), CardTokens.FONT_SUMMARY_LINE, CardTokens.HUB_SUBTEXT, s, 0, "medium"))
 	var line := Panel.new()
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	line.custom_minimum_size = Vector2(width, CardTokens.SUMMARY_DIVIDER_H * s)
@@ -359,6 +360,18 @@ func _build_wave_summary() -> void:
 	_summary_back = back
 	_summary_back_text = back.text
 	_update_summary_back()
+
+
+const ComboUi := preload("res://client/combo_ui.gd")
+
+
+## The run's combo damage share (0..1): the sim's own share when it reports one (`combo_damage_share`), else the
+## client's tally of combo event damage over our team's damage.
+static func combo_share(loot: Dictionary) -> float:
+	if loot.has("combo_damage_share"):
+		return float(loot["combo_damage_share"])
+	var team := float(loot.get("team_damage", 0.0))
+	return float(loot.get("combo_damage", 0.0)) / team if team > 0.0 else 0.0
 
 
 func _back_to_cards() -> void:

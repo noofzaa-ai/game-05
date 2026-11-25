@@ -22,7 +22,7 @@ MDA aesthetics: Challenge (reading the pilot's good choices), Fantasy (class rol
 ### 3.1 Design rules for all 16 skills
 
 1. **One job per skill.** Each class has 4 jobs: a main damage skill, a control/positioning skill, a defensive or utility skill, and a "situational burst" skill.
-2. **Race-agnostic.** No skill heals allies, shields allies, scales with missing HP or uses charges. Those belong to the races. Self-only defence (damage reduction, poise) is allowed because it belongs to the tank/bruiser role.
+2. **Race-agnostic, but squad-linked (Boss 2026-11-25).** No skill heals allies, shields allies, scales with missing HP or uses charges. Those belong to the races. Self-only defence (damage reduction, poise) is allowed because it belongs to the tank/bruiser role. Classes DO affect each other through the 8 combo states (3.8): a skill sets states, another class's skill pays them off ("set up -> pay off"). A combo payoff is never an ally heal or ally shield (guarded/hasted are markers on an ally; Warding Veil's reduction and Intercept's share are the skills' own effects, unchanged).
 3. **No overlap with race ultimates.** No class skill is a lasting zone, a team cooldown refresh, a revive, or a multi-target execute chain. Nearest risks are checked in 5.4.
 4. **No elements.** Statuses come only from `data/combat/effects.json`: `stun`, `shock` (cannot move), `slow`, `weaken`, `sunder`, `haste`, `fortify`. Skill-system element statuses (burn, chill, freeze, bleed) are not used by the base skills. Tree nodes may still add bleed/stun as before (3.6).
 5. **Damage = % of the caster's ATK** through the normal damage rule (DEF, crit). All numbers are first-pass; combat-designer tunes them (section 7).
@@ -248,6 +248,48 @@ magic:
 | combo_hu_lb | Called Target (keep) | no skill id in it, unchanged. |
 
 Other nodes (T3/T4 signatures, race nodes, combos) name no old skill id except `mg_t4_b` and Overload-style `skill` filters; grep `data/classes/*.json` and `data/races/*.json` for the 16 old ids when re-pointing.
+
+### 3.8 Combo states (Boss 2026-11-25)
+
+Data: `data/combat/combos.json` (states + per-skill `sets` / `payoffs`; numbers there). Rules: `logic/class_skills/combos.gd`. Display: `client/combo_ui.gd` reads the same file. All numbers are placeholders until the Boss plays.
+
+**States** (enemy: stagger, cluster, mark, sunder, airborne, taunt; ally: guarded, hasted). A state is a marker with a duration in `Fighter.combo_states`; some are also read from existing machinery: stagger = stun/shock/sleep or hitstun, airborne = launched, sunder = the effects.json `sunder` status (DEF -40%), hasted = `haste`, guarded = a Warding Veil or Intercept link. Markers land on bosses too (only the matching real control/status follows the normal immunity rules).
+
+| state | duration (s) | set by |
+|---|---|---|
+| stagger | 2.0 | shield_rush, crater_leap, pinning_shot |
+| cluster | 3.0 | hook_sweep |
+| mark | 6.0 | heartseeker_shot, vault_shot |
+| sunder | 5.0 | breaker_slam, rapid_fire, starfall (+ Hunter's Mark) |
+| airborne | 2.5 | reaping_arc, repulse_nova |
+| taunt | 3.0 | iron_guard (3 m pulse, real aggro) |
+| guarded | 6.0 | intercept (on the ally) |
+| hasted | 4.0 | warding_veil (on the ally) |
+
+**Mark:** any hit (basic or skill, any class) on a marked enemy deals +15%.
+
+| class | skill | sets | pays off |
+|---|---|---|---|
+| sword_shield | shield_rush | stagger | mark -> dashes to the marked target (in range), stun/stagger x1.75 |
+| sword_shield | iron_guard | taunt | cluster -> counter also hits the attacker's cluster (2.5 m) |
+| sword_shield | intercept | guarded | airborne -> an airborne enemy within 3 m of the tank is dazed (stun 1.2 s) |
+| sword_shield | breaker_slam | sunder | airborne -> slams it down (clears airborne), x2 damage |
+| greatsword | reaping_arc | airborne | stagger or sunder -> +30% damage |
+| greatsword | crater_leap | stagger (area) | cluster -> radius x1.5 |
+| greatsword | hook_sweep | cluster | airborne -> pull range 9 m |
+| greatsword | battle_trance | - | taunt (within 5 m) or hasted -> trance x1.5 longer |
+| longbow | heartseeker_shot | mark | sunder -> guaranteed crit |
+| longbow | pinning_shot | stagger | airborne -> pinned down, stun 2 s |
+| longbow | rapid_fire | sunder | mark or stagger -> 6 arrows instead of 4 |
+| longbow | vault_shot | mark | taunt -> 2 shots |
+| magic | arcane_orb | - | cluster -> +20% per other target in the burst (max x2) |
+| magic | repulse_nova | airborne | guarded ally within 4 m -> knockback x1.8, damage x1.2 |
+| magic | starfall | sunder | cluster AND stagger -> x1.5 damage |
+| magic | warding_veil | hasted | taunt (ally taunted in the last 3 s) -> veil reflects 30% |
+
+**Event:** `{type: "combo", attacker, target, skill, states: [ids], damage}` once per payoff (per target for target-scope payoffs, once per cast for cast-scope). `damage` = the extra damage the payoff added (0 for control payoffs). Tally per fighter: `combo_payoffs`, `combo_bonus` (also the Mark +15% share); `Combos.fight_totals(sim)` sums the team.
+
+**Pilot:** a pilot prefers an enemy in engage range that carries a state its ready skills pay off (or mark); a ready skill whose payoff is not yet available waits while an ally's cast will set that state within 0.6 s (`combos.json pilot.hold_max`), e.g. Starfall waits for Hook Sweep. Survival rules run first and are unchanged.
 
 ### 3.7 Pilot summary (what `logic/auto_pilot.gd` must read)
 

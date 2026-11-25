@@ -377,5 +377,6 @@
   1.0
  ],
  "_tuning_nine_waves": "PO 2026-11-16, class_sim 60 seeds (3x20), starter gear, level 1, wave_power_by_squad unchanged: starter squad 82% (80/75/90), losses at the Chief; squad with magic 100%; was ~73% at 12 waves. Kept: zone 1 is the new player's first boss and every later zone gets harder.",
- "_nine_waves": "Boss 2026-11-16: 12 -> 9 waves (a ~3 min run for boss farming). Dropped the old waves 2, 4 and 7 (repeats of the step before them); the ramp keeps every monster debut: w1 goblins, w2 archer, w3 mage, w4 knight, w5-w8 mixes, w9 the Chief. Win rate re-measured with tools/balance/class_sim.gd, see _tuning_nine_waves."
+ "_nine_waves": "Boss 2026-11-16: 12 -> 9 waves (a ~3 min run for boss farming). Dropped the old waves 2, 4 and 7 (repeats of the step before them); the ramp keeps every monster debut: w1 goblins, w2 archer, w3 mage, w4 knight, w5-w8 mixes, w9 the Chief. Win rate re-measured with tools/balance/class_sim.gd, see _tuning_nine_waves.",
+ "_tuning_combos": "combat-designer 2026-11-25: cross-class combo states added (data/combat/combos.json). ONE measurement, tools/balance/class_sim.gd journey=goblin_waves gear=1 only=squad seeds=40, before -> after: level 1 tier 1 starter squad 100% -> 100% (clear 139 -> 128 s). Baseline was already far from ~70% before the combos in the later zones, so combo numbers were NOT retuned to hit it and journey/monster numbers are unchanged; Boss/PO to decide. Placeholder."
 }

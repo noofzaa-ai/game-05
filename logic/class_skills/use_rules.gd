@@ -38,10 +38,30 @@ static func pick(sim, id: int, target: int) -> Dictionary:
 		var skill: String = row[2]
 		if Skills.cooldown_left(sim, fighter, skill) > 0.0 or fighter.energy < float(data.skill(skill).get("stamina", 0.0)):
 			continue
+		if _hold_for_setup(sim, id, skill):
+			continue  # combo timing: an ally's setup lands within hold_max, wait for it
 		var choice := choose(sim, id, skill, target)
 		if not choice.is_empty():
 			return {"skill": skill, "choice": choice}
 	return {}
+
+
+## True while an ally's cast is about to set a state this skill pays off and nothing here carries it yet (Starfall
+## waits for Hook Sweep's cluster). Bounded by combos.json pilot.hold_max (0.6 s): the wait ends when that release passes.
+static func _hold_for_setup(sim, id: int, skill: String) -> bool:
+	var Combos = Skills.Combos
+	var needs: Array = []
+	for p in Combos.payoffs(skill, "target") + Combos.payoffs(skill, "cast"):
+		var ready := false
+		for e in _enemies(sim, id):
+			if not Combos.matched(sim.fighters[e], p).is_empty():
+				ready = true
+		if ready:
+			return false
+		needs += p.get("needs", [])
+	if needs.is_empty():
+		return false
+	return Combos.setup_coming(sim, id, needs) <= float(Combos.data().get("pilot", {}).get("hold_max", 0.6))
 
 
 ## The skill's use rule now: {} = do not cast, else {"target": id, "point": Vector3 (optional)}.

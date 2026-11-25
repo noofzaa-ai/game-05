@@ -18,7 +18,7 @@ const HEAL_SOURCES: Array[String] = ["max_hp", "damage", "source_max_hp"]
 const SHIELD_SOURCES: Array[String] = ["source_max_hp", "damage"]
 ## Ultimate block fields (GDD 3.7) and the pilot's `use` conditions with the fields each may carry (3.7 fixed list;
 ## `and` [conditions] and `and_ally_hurt_below` may be added to any). An unknown one is a load error.
-const ULTIMATE_FIELDS: Array[String] = ["name", "text", "clip", "cast_ticks", "recover_ticks", "charge_mul", "self_hp_cost", "min_hp", "vfx", "actions", "use"]
+const ULTIMATE_FIELDS: Array[String] = ["name", "text", "text_th", "clip", "cast_ticks", "recover_ticks", "charge_mul", "self_hp_cost", "min_hp", "vfx", "actions", "use"]
 const USE_CONDITIONS := {
 	"enemies_near": ["radius", "min"], "enemies_at_point": ["cast_range", "radius", "min"],
 	"ally_hurt": ["below", "min_allies", "allies_within", "targeted_by_min"], "squad_hp_below": ["below", "enemies_within", "min"],

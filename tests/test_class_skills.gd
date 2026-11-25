@@ -392,7 +392,7 @@ func _heartseeker(ctx) -> void:
 	sim.fighters[1].stats["CRIRATE"] = -25.0  # crit off for the exact number (+25 from the skill)
 	Skills.cast(sim, 1, "heartseeker_shot", choice)
 	step(sim, 110)
-	ctx.check("L1 950%% ATK x1.5 on a sundered target = 1425 (%s)" % lost(sim, 20), is_equal_approx(lost(sim, 20), 1425.0))
+	ctx.check("L1 950%% ATK x1.5 on a sundered target = 1425, a guaranteed crit there (combo payoff, x1.5 CRIDMG = 2138) (%s)" % lost(sim, 20), is_equal_approx(lost(sim, 20), 2138.0))
 	var far := world(["longbow"])
 	put(far, 10, Vector3(13, 0, 0))
 	ctx.check("L1 pilot: nobody within 12 m -> no shot", UseRules.choose(far, 1, "heartseeker_shot", 10).is_empty())
