@@ -20,10 +20,21 @@ static func zone(map_id: String, path: String = DATA_PATH) -> Dictionary:
 	return zones.get(best, {})
 
 
+## The phone path (tech-artist 2026-11-26, Boss played dusk on a phone and it read as night): a phone, or the drawn
+## style "lite"/"off" (no shadows / no screen pass) uses the zone's "phone" sub-block over its values.
+static func is_lifted() -> bool:
+	if preload("res://client/graphics_options.gd").device_class() == "phone":
+		return true
+	return preload("res://client/draw_style/draw_style.gd").mode() in ["lite", "off"]
+
+
 ## Applies the zone's light to every WorldEnvironment, the sun and the character lights under `root`. Call once,
 ## after the stage set its sky.
-static func apply(root: Node, map_id: String) -> Dictionary:
+static func apply(root: Node, map_id: String, lifted: Variant = null) -> Dictionary:
 	var z := zone(map_id)
+	if z.get("phone") is Dictionary and (is_lifted() if lifted == null else bool(lifted)):
+		z = z.duplicate()
+		z.merge(z["phone"], true)  # (the phone path: no shadows / lite style reads darker, lift it at no cost)
 	if z.is_empty():
 		return z
 	for node in root.find_children("*", "WorldEnvironment", true, false):

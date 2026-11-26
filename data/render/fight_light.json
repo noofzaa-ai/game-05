@@ -21,8 +21,8 @@
 			"rim": 1.3
 		},
 		"orc": {
-			"exposure": 1.12,
-			"ambient": 1.05,
+			"exposure": 1.2,
+			"ambient": 1.35,
 			"key": 1.6,
 			"rim": 1.9,
 			"sky": [
@@ -31,7 +31,7 @@
 				"#ff9a4a"
 			],
 			"sun_color": "#ffbf8a",
-			"sun_energy": 0.95,
+			"sun_energy": 1.45,
 			"sun_rotation": [
 				-20.0,
 				-72.0,
@@ -39,7 +39,12 @@
 			],
 			"ambient_color": "#8c7cc4",
 			"key_color": "#ffe6cc",
-			"rim_color": "#ffb070"
+			"rim_color": "#ffb070",
+			"phone": {
+				"exposure": 1.6,
+				"ambient": 2.1,
+				"sun_energy": 2.0
+			}
 		},
 		"elder_grove": {
 			"exposure": 1.08,

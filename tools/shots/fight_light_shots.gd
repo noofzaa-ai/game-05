@@ -22,7 +22,7 @@ func run() -> void:
 			size = Vector2i(int(p[0]), int(p[1]))
 		elif a.begins_with("--out="): out = a.substr(6)
 		elif a.begins_with("--tag="): tag = a.substr(6)
-		else: maps.append(a)
+		elif not a.begins_with("--"): maps.append(a)
 	if maps.is_empty():
 		maps = MAPS
 	DirAccess.make_dir_recursive_absolute(out)
