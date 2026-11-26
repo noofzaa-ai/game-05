@@ -2,6 +2,7 @@
 1080x1920 60 fps H.264 clips with burned-in Thai + English captions (hub fonts Taviraj / Sarabun).
 
     python tools/promo/compose.py [clip1 clip2 clip3 clip4]
+    python tools/promo/compose.py clip6   (LANDSCAPE 1920x1080, frames of --promo=orc_boss -> art_source/promo/2026-11-25/)
 
 Input:  %TEMP%/zorx_promo_frames/{card,battle,hub}/<shot>/<frame>.jpg + manifest.json (ZORX_PROMO_FRAMES overrides)
 Output: art_source/promo/2026-11-15/clipN_*.mp4 (silent), clipN_*_music.mp4 (with the game's own music),
@@ -686,6 +687,213 @@ def card_frame_run(run, shot, n, zoom, centre):
     img = frame(run, shot, n)
     img, _ = window(img, centre[0], centre[1], W / zoom)
     return img.convert("RGBA")
+
+
+# ------------------------------------------------------------------ clip 6: the Orc Warlock (LANDSCAPE 1920x1080, Boss 2026-11-25)
+OUT6 = ROOT / "art_source" / "promo" / "2026-11-25"
+LW, LH = 1920, 1080
+L_SAFE = 96  # 16:9 title-safe margin: no caption ink outside it
+
+
+class LCaption:
+    """Landscape caption, top-left inside the safe margin (clear of the boss bar and the squad HUD)."""
+    def __init__(self, th, en, start, end, th_size=64, en_size=34):
+        self.img = caption_image(th, en, th_size, en_size)
+        ink = self.img.getchannel("A").point(lambda v: 255 if v > 200 else 0).getbbox()
+        self.start, self.end = start, end
+        x = L_SAFE - ink[0]
+        y = L_SAFE - ink[1]  # top-left: the squad HUD bar owns the bottom centre, the boss bar the top centre
+        self.at = (x, y)
+        assert x + ink[2] <= LW / 2 - 150 and y + ink[3] <= LH - L_SAFE, (th, x, y, ink)
+
+    def draw(self, canvas, t):
+        if t < self.start or t > self.end:
+            return
+        a = min(1.0, (t - self.start) / 0.25, (self.end - t) / 0.25)
+        rise = (1.0 - ease(min(1.0, (t - self.start) / 0.35))) * 20
+        img = self.img
+        if a < 1.0:
+            img = img.copy()
+            img.putalpha(img.getchannel("A").point(lambda v: int(v * a)))
+        canvas.alpha_composite(img, (self.at[0], int(self.at[1] + rise)))
+
+
+def l_window(img, cx, cy, w):
+    """A 16:9 window of width w (source px) centred on (cx, cy), clamped inside, scaled to 1920x1080."""
+    sw, sh = img.size
+    w = min(w, sw)
+    h = w * LH / LW
+    h = min(h, sh)
+    x0 = max(0.0, min(max(cx - w / 2, 0), sw - w))
+    y0 = max(0.0, min(max(cy - h / 2, 0), sh - h))
+    return img.resize((LW, LH), Image.LANCZOS, box=(x0, y0, x0 + w, y0 + h))
+
+
+_l_end = {}
+
+
+def l_end_card(t):
+    if not _l_end:
+        back = Image.open(ROOT / "art/ui/hub_carved/backdrop.png").convert("RGB")
+        s = max(LW / back.width, LH / back.height)
+        back = back.resize((int(back.width * s) + 1, int(back.height * s) + 1), Image.LANCZOS)
+        x0 = int(min(max(back.width * 0.30 - LW / 2, 0), back.width - LW))
+        back = back.crop((x0, 0, x0 + LW, LH))
+        vignette = Image.new("L", (LW, LH), 0)
+        ImageDraw.Draw(vignette).ellipse((-200, -150, LW + 200, LH + 150), fill=255)
+        vignette = vignette.filter(ImageFilter.GaussianBlur(140))
+        dark = Image.new("RGB", (LW, LH), (10, 12, 20))
+        _l_end["back"] = Image.composite(Image.blend(back, dark, 0.35), dark, vignette).convert("RGBA")
+        ribbon = Image.open(ROOT / "art/ui/hub_carved/title_ribbon.png").convert("RGBA")
+        rw = 760
+        ribbon = ribbon.resize((rw, int(ribbon.height * rw / ribbon.width)), Image.LANCZOS)
+        ImageDraw.Draw(ribbon).text((rw / 2, ribbon.height * 0.31), "Z O R X", font=font(TAVIRAJ, 132), fill=INK, anchor="mm",
+                                    stroke_width=2, stroke_fill=(255, 246, 224))
+        _l_end["ribbon"] = ribbon
+        _l_end["play"] = caption_image("Play free in your browser", "", th_size=72, en_size=10)
+    canvas = _l_end["back"].copy()
+    ribbon = _l_end["ribbon"]
+    pop = 0.86 + 0.14 * ease(t / 0.45)
+    r = ribbon.resize((int(ribbon.width * pop), int(ribbon.height * pop)), Image.LANCZOS)
+    canvas.alpha_composite(r, (int(LW / 2 - r.width / 2), int(330 - r.height / 2)))
+    d = ImageDraw.Draw(canvas)
+    d.text((LW / 2, 530), "SQUAD OF FOUR RACES", font=font(TAVIRAJ, 46), fill=GILT, anchor="mm", stroke_width=4, stroke_fill=EDGE)
+    k2 = ease((t - 0.35) / 0.4)
+    play = _l_end["play"].copy()
+    play.putalpha(play.getchannel("A").point(lambda v: int(v * k2)))
+    canvas.alpha_composite(play, (int(LW / 2 - play.width / 2), 640 + int((1 - k2) * 30)))
+    return canvas
+
+
+def clip6():
+    """One continuous take (Boss feedback 2026-11-25: no back-and-forth cuts, the boss centred): real time over the
+    entrance, the combo / telegraph / ultimate stretch and the kill; time-lapse between them. The window follows the
+    smoothed boss + squad midpoint and widens (never clamps the boss into a corner)."""
+    global OUT, W, H
+    run = "orc_boss"
+    m = manifest(run)
+    manifest_cache[run] = m
+    shot = m["shots"]["boss"]
+    log = {r["f"]: r for r in shot["log"]}
+    n_frames = shot["frames"]
+    dead = shot["events"]["boss_dead"]
+    boss = next(k for r in shot["log"] for k in r if k.isdigit() and int(k) > 3)
+    # source-frame plan: (from, to, speed). Highlights of seed 5: combos 527/562, Skyfall telegraph 634, ultimate 735.
+    hi0, hi1 = int(os.environ.get("CLIP6_HI0", 430)), int(os.environ.get("CLIP6_HI1", 800))
+    spans = [(1, 120, 1.0), (120, hi0, 4.0), (hi0, hi1, 1.0), (hi1, dead - 60, 12.0), (dead - 60, n_frames, 1.0)]
+    src = []
+    for a, b, sp in spans:
+        x = float(a)
+        while x < b:
+            src.append(x)
+            x += sp
+    src = [min(int(round(s)), n_frames) for s in src]
+
+    def points(f):
+        r = log.get(f) or log.get(f - 1) or {}
+        pts = {k: (v[0], v[1]) for k, v in r.items() if k.isdigit() and v[0] >= 0 and (v[3] or k == boss)}
+        return pts
+
+    # target window per output frame: centre = boss weighted with the squad midpoint, width = what holds them + margin
+    targets = []
+    last = (1440.0, 810.0, 2400.0)
+    for f in src:
+        pts = points(f)
+        if boss in pts:
+            bx, by = pts[boss]
+            sq = [p for k, p in pts.items() if k != boss]
+            mx = sum(p[0] for p in sq) / len(sq) if sq else bx
+            my = sum(p[1] for p in sq) / len(sq) if sq else by
+            cx, cy = bx * 0.65 + mx * 0.35, by * 0.65 + my * 0.35 - 40
+            xs = [p[0] for p in pts.values()]
+            ys = [p[1] for p in pts.values()]
+            need = max(max(abs(x - cx) for x in xs) * 2 + 700, (max(abs(y - cy) for y in ys) * 2 + 450) * 16 / 9, 1700)
+            last = (cx, cy, min(need, 2880))
+        targets.append(last)
+    # heavy exponential smoothing, both directions (no lag, no snap)
+    def smooth(vals, a):
+        out = list(vals)
+        for i in range(1, len(out)):
+            out[i] = out[i - 1] + (out[i] - out[i - 1]) * a
+        for i in range(len(out) - 2, -1, -1):
+            out[i] = out[i + 1] + (out[i] - out[i + 1]) * a
+        return out
+    cxs = smooth([t[0] for t in targets], 0.04)
+    cys = smooth([t[1] for t in targets], 0.04)
+    ws = smooth([t[2] for t in targets], 0.03)
+
+    def window_for(i):
+        cx, cy, w = cxs[i], cys[i], ws[i]
+        # if the frame edge would push the centre off, widen until the window can sit centred-ish
+        for _ in range(40):
+            h = w * 9 / 16
+            x0 = min(max(cx - w / 2, 0), 2880 - w)
+            y0 = min(max(cy - h / 2, 0), 1620 - h)
+            if abs(x0 + w / 2 - cx) < w * 0.12 and abs(y0 + h / 2 - cy) < h * 0.12 or w >= 2880:
+                return cx, cy, w
+            w = min(2880, w * 1.05)
+        return cx, cy, w
+    wins = [window_for(i) for i in range(len(src))]
+    ws2 = smooth([w for _, _, w in wins], 0.03)
+    OUT, W, H = OUT6, LW, LH
+    end_n = 100
+    total = len(src) + end_n
+    t_hi0 = next(i for i, s in enumerate(src) if s >= hi0) / FPS
+    t_hi1 = next(i for i, s in enumerate(src) if s >= hi1) / FPS
+    t_win = next(i for i, s in enumerate(src) if s >= dead - 60) / FPS
+    t_end = len(src) / FPS
+    caps = [LCaption("Orc Warlock", "", 0.2, t_hi0 - 0.1),  # Boss 2026-11-25: English only
+            LCaption("Cross-class combos", "", t_hi0 + 0.1, (t_hi0 + t_hi1) / 2),
+            LCaption("Race ultimates", "", (t_hi0 + t_hi1) / 2 + 0.1, t_hi1 - 0.05),
+            LCaption("Victory!", "", t_win + 0.8, t_end - 0.1)]
+    out = Writer6("clip6_orc_boss", total, int(FPS * (t_hi0 + 2.0)), MUSIC["stage"])
+    lastc = None
+    for i, f in enumerate(src):
+        cx, cy, _ = wins[i]
+        canvas = l_window(frame(run, "boss", f - 1), cx, cy, ws2[i]).convert("RGBA")
+        for c in caps:
+            c.draw(canvas, i / FPS)
+        out.put(canvas)
+        lastc = canvas
+    for i in range(end_n):
+        c = l_end_card(i / FPS + 0.3)
+        if i < 12:
+            c = Image.blend(lastc, c, i / 12)
+        out.put(c)
+    out.close()
+    print("clip6 one take: %d source frames -> %.2f s + end card; highlights %d..%d real time, kill at %d" % (n_frames, len(src) / FPS, hi0, hi1, dead))
+
+
+class Writer6(Writer):
+    """The landscape clip's writer: 16:9 thumbnails, the safe margin drawn on the sheet."""
+    def put(self, canvas):
+        rgb = canvas.convert("RGB")
+        if self.n == self.still_at:
+            rgb.save(OUT / (self.name + "_still.png"))
+        if self.n in self.picks:
+            self.thumbs.append((self.n, rgb.resize((640, 360), Image.LANCZOS)))
+        self.proc.stdin.write(rgb.tobytes())
+        self.n += 1
+
+    def close(self):
+        self.proc.stdin.close()
+        self.proc.wait()
+        sheet = Image.new("RGB", (640 * 3 + 40, 360 * 2 + 30), (20, 20, 24))
+        d = ImageDraw.Draw(sheet)
+        for i, (n, im) in enumerate(self.thumbs[:6]):
+            x, y = 10 + (i % 3) * 650, 10 + (i // 3) * 370
+            sheet.paste(im, (x, y))
+            g = L_SAFE / 3
+            d.rectangle((x + g, y + g, x + 640 - g, y + 360 - g), outline=(255, 80, 80))
+            d.text((x + 6, y + 6), "%.2fs" % (n / FPS), font=font(SARABUN, 22), fill=(255, 255, 0), stroke_width=2, stroke_fill=(0, 0, 0))
+        sheet.save(OUT / (self.name + "_sheet.png"))
+        seconds = self.n / FPS
+        fade_at = max(0.0, seconds - 1.2)
+        subprocess.run([FFMPEG, "-y", "-loglevel", "error", "-i", str(self.path), "-i", str(self.music),
+                        "-map", "0:v", "-map", "1:a", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k",
+                        "-af", "afade=t=in:d=0.4,afade=t=out:st=%.2f:d=1.2,volume=0.9" % fade_at,
+                        "-t", "%.3f" % seconds, "-movflags", "+faststart", str(OUT / (self.name + "_music.mp4"))], check=True)
+        print("%s: %d frames, %.2f s, %.1f MB" % (self.path.name, self.n, seconds, self.path.stat().st_size / 1e6))
 
 
 def main():

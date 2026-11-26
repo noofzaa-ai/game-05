@@ -10,6 +10,8 @@ extends SceneTree
 ##   ... --promo=hairs       (probe: the Tailor portrait in every hair, one PNG each, to pick the clip's last look)
 ##   ... --promo=tailor      (landscape Tailor 2880x1620: hair, hair colour, eyes, makeup, hair taps; then the portrait card close-up)
 ##   ... --promo=stills_hub / stills_battle   (landscape PNG stills 2880x1620 for social posts: <run>/stills/*.png)
+##   ... --promo=orc_boss    (landscape 2880x1620: Orc Camp, straight to wave 9, the Orc Warlock vs a level-20 squad; --seed=N)
+##   ... --promo=orc_probe   (same fight, no frames saved: prints win/lose, combos, ultimates; to pick a winning seed)
 ## ZORX_PROMO_FRAMES = output folder (default %TEMP%/zorx_promo_frames). Each run writes <run>/manifest.json.
 
 const CardDeck := preload("res://logic/card_deck.gd")
@@ -86,6 +88,8 @@ func run() -> void:
 			await _stills_face_run(gs)
 		"stills_battle":
 			await _stills_battle_run(gs)
+		"orc_boss", "orc_probe":
+			await _orc_boss_run(gs)
 	var f := FileAccess.open(_out.path_join("manifest.json"), FileAccess.WRITE)
 	f.store_string(JSON.stringify(_manifest, " "))
 	f.close()
@@ -829,3 +833,156 @@ func _stills_face_run(gs) -> void:
 		await process_frame
 		if f % 12 == 0:
 			await _still("08_face_f%03d" % f)
+
+# ------------------------------------------------------------------ clip 6: the Orc Warlock (landscape, Boss 2026-11-25)
+const ORC_SQUAD := ["sword_shield", "greatsword", "magic"]  ## Human / Viking / Runeborn: Hook Sweep + Crater Leap set up Starfall
+const ORC_RACES := {"sword_shield": "human", "greatsword": "viking", "magic": "runeborn"}
+const ORC_WEAPON := {"sword_shield": "boss_orc_warlock_sword", "greatsword": "boss_mummy_boss_crook", "magic": "boss_mummy_high_wizard_staff"}
+const ORC_SEED := 11  ## the journey seed of the clip (a won fight; --seed overrides)
+const ORC_NAME := "ZORX"
+
+
+## A local level-20 squad dressed like a late player: boss weapons, legendary class armour +10, the Warlock's accessory set.
+func _orc_profile(gs) -> void:
+	var p = gs.profile
+	var rules = gs.item_rules
+	p.name = ORC_NAME
+	p.created = true
+	for z in ["goblin_base", "pyramid"]:
+		p.unlocks[load("res://logic/world_zones.gd").boss_key(z)] = true
+	var deck: Dictionary = p.card_deck
+	var progress = load("res://logic/card_progress.gd")
+	var tree = load("res://logic/skill_tree.gd")
+	var tdata = load("res://logic/skill_tree_data.gd").load_default()
+	var top: int = rules.tiers.size() - 1
+	for id in deck["cards"]:
+		deck["cards"][id]["progress"] = {"level": 20, "xp": 0}
+	for id in ORC_RACES:
+		CardDeck.set_race(deck, id, ORC_RACES[id])
+	deck["cards"]["greatsword"]["hair"] = "f"
+	deck["cards"]["greatsword"]["hair_color"] = "#c4693a"
+	for card in ORC_SQUAD:
+		var worn = p.loadout_of(card)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(card)
+		var pieces := {"weapon": ORC_WEAPON[card], "shirt": "armour_%s_shirt" % card, "pants": "armour_%s_pants" % card,
+			"armband": "armour_%s_armband" % card, "shoes": "armour_%s_shoes" % card, "necklace": "boss_orc_warlock_necklace",
+			"earring": "boss_orc_warlock_earring", "bracelet": "boss_orc_warlock_bracelet", "ring": "boss_orc_warlock_ring", "back": "boss_orc_warlock_back"}
+		if card == "sword_shield":
+			pieces["offhand"] = "boss_orc_warlock_shield"
+		for slot in pieces:
+			var count: int = int(rules.slot(slot).get("count", 1))
+			for i in count:
+				var item = load("res://logic/item_system.gd").create_item(rules, "promo-%s-%s-%d" % [card, slot, i], slot, top, rng, "", pieces[slot])
+				if item == null or item.item_id != pieces[slot]:
+					push_error("PROMO no item " + str(pieces[slot]))
+					continue
+				item.refine_level = 10 if not str(pieces[slot]).begins_with("boss_") else 5
+				worn.equip(item, i)
+		# skill tree: learn every node the points allow, tier by tier (first of each exclusive pair)
+		for branch_nodes in [tdata.class_nodes(card), tdata.race_nodes(ORC_RACES[card])]:
+			var sorted: Array = branch_nodes.duplicate()
+			sorted.sort_custom(func(a, b): return int(a["tier"]) < int(b["tier"]))
+			for n in sorted:
+				tree.learn(deck, card, str(n["id"]), tdata)
+		var combo: Dictionary = tdata.combo_node(ORC_RACES[card], card)
+		if not combo.is_empty():
+			tree.learn(deck, card, str(combo["id"]), tdata)
+		print("PROMO card ", card, " lv ", progress.level_of(deck, card), " tree ", tree.spent(tree.owned(deck, card), tdata))
+	CardDeck.set_squad(deck, ORC_SQUAD)
+
+
+## Straight to wave 9: the field's wave-1 orcs leave and waves 2..8 are dropped from the queue (the boss wave is next).
+func _skip_to_boss() -> void:
+	var sim = _stage()._session._sim
+	for id in sim.fighters.keys():
+		if sim.fighters[id].team == "enemy":
+			sim.remove_player(id)
+	while sim._waves.size() > 1:
+		sim._waves.pop_front()
+	sim._waves_released = 7
+
+
+func _orc_boss_run(gs) -> void:
+	var probe := _run == "orc_probe"
+	var seed_value := int(_arg("seed", str(ORC_SEED)))
+	_window(Vector2i(2880, 1620) if not probe else Vector2i(960, 540))
+	Options._load_once()
+	Options._values["render_scale"] = 1.0
+	Options.revision += 1
+	_orc_profile(gs)
+	gs.selected_zone = "orc_camp"
+	if not gs.start_journey("orc_waves", seed_value):
+		push_error("PROMO orc_waves refused")
+		return
+	while _stage() == null or not _stage()._scene_presented:
+		await process_frame
+	_hide_pill()
+	_skip_to_boss()
+	var st = _stage()
+	var sim = st._session._sim
+	var cam: Camera3D = st._rig._camera
+	if probe:
+		RenderingServer.render_loop_enabled = false
+	_begin("boss", {"seed": seed_value})
+	var log: Array = []
+	var combos: Array = []
+	var ults: Array = []
+	var boss_id := -1
+	var dead_at := -1
+	var lost := false
+	for f in 60 * 120:
+		if probe:
+			await process_frame
+			_shot_frames += 1
+		else:
+			await _grab()
+		if st == null or not is_instance_valid(st) or st._session._sim != sim:
+			break
+		for e in st._session.events:
+			match str(e.get("type", "")):
+				"combo":
+					combos.append([_shot_frames, int(e["attacker"]), int(e["target"]), str(e["skill"]), e["states"]])
+				"ultimate_cast":
+					ults.append([_shot_frames, int(e["player"]), str(e["name"]), str(e["race"])])
+		if boss_id < 0:
+			for id in sim.fighters:
+				if str(sim.fighters[id].enemy_type) == "orc_warlock":
+					boss_id = int(id)
+					_mark("boss_in")
+		var row := {"f": _shot_frames}
+		for id in sim.fighters:
+			var fi = sim.fighters[id]
+			if not sim.bodies.has(id) or (fi.team == "enemy" and id != boss_id):
+				continue
+			var at: Vector3 = sim.bodies[id].position + Vector3(0, 1.2, 0)
+			var sp := cam.unproject_position(at) if cam.is_inside_tree() and not cam.is_position_behind(at) else Vector2(-1, -1)
+			row[str(id)] = [roundi(sp.x), roundi(sp.y), roundf(fi.hp), int(fi.is_alive())]
+			if id == boss_id:
+				row["tele"] = int(load("res://logic/combat.gd").is_telegraphing(fi, sim.combat))
+				row["move"] = fi.move_id if fi.state == fi.State.ATTACK else ""
+		log.append(row)
+		if boss_id >= 0 and dead_at < 0 and (not sim.fighters.has(boss_id) or not sim.fighters[boss_id].is_alive()):
+			dead_at = _shot_frames
+			_mark("boss_dead")
+		var alive := 0
+		for id in sim.fighters:
+			if sim.fighters[id].team != "enemy" and sim.fighters[id].is_alive():
+				alive += 1
+		if alive == 0:
+			lost = true
+			break
+		if dead_at >= 0 and _shot_frames - dead_at > 300:
+			break
+	if probe:
+		RenderingServer.render_loop_enabled = true
+	_manifest["shots"]["boss"]["log"] = log
+	_manifest["shots"]["boss"]["combos"] = combos
+	_manifest["shots"]["boss"]["ults"] = ults
+	_manifest["shots"]["boss"]["won"] = dead_at >= 0 and not lost
+	_end()
+	var squad_hp := []
+	for id in sim.fighters:
+		if sim.fighters[id].team != "enemy":
+			squad_hp.append(roundi(sim.fighters[id].hp))
+	print("PROMO RESULT seed=", seed_value, " won=", dead_at >= 0 and not lost, " boss_dead_frame=", dead_at, " frames=", _shot_frames, " combos=", combos.size(), " ults=", ults.size(), " squad_hp=", squad_hp)
