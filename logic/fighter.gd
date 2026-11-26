@@ -5,6 +5,9 @@ extends RefCounted
 
 enum State { IDLE, ATTACK, HITSTUN, DOWN, DEAD, GUARD, DODGE, DOWNED }
 
+## Card pin (Boss 2026-11-26): {} = free (auto-pilot as before); {"x": float, "z": float} = the ground point the player
+## pinned this card to (logic/auto_pilot.gd stays inside data/combat/pin.json pin_radius). Set by GameSim.set_pin; saved in checkpoints.
+var pin: Dictionary = {}
 var race_state: Dictionary = {}  ## Squad members only: race passive + synergy runtime (logic/race_passives.gd); saved in checkpoints.
 var shield := 0.0  ## race shield (GDD races 4.3): absorbs damage before HP; capped by add_shield; saved in checkpoints
 var shield_until := -1  ## sim tick at which the shield runs out (-1 = no shield)

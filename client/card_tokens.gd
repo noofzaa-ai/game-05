@@ -1937,6 +1937,7 @@ const STRINGS_RACE := {
 	# Race ultimates in battle (client/squad_panel.gd): the tag over the name and each ultimate's name by its vfx key
 	# (race_ult/<race>_<class|default>, data/races/*.json). A key missing here falls back to the data name.
 	"ult_tag": ["ท่าไม้ตาย", "ULTIMATE"],
+	"pin_badge": ["ปักหมุด", "PIN"],  # a pinned squad card (client/card_pin.gd)
 	"ult_name_human_sword_shield": ["เสียงสั่งแม่ทัพ", "Commander's Call"],
 	"ult_name_human_greatsword": ["ฟันปรมาจารย์", "Masterstroke"],
 	"ult_name_human_longbow": ["ศรหมายตา", "Called Shot"],

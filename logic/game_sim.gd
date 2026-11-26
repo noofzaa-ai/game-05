@@ -207,6 +207,62 @@ func set_input(id: int, input: SimInput) -> void:
 		_inputs[id] = input
 
 
+## Card pin (Boss 2026-11-26): the player pins one squad card to a ground point; logic/auto_pilot.gd walks it there
+## and keeps it within data/combat/pin.json pin_radius. Rejected ({} returned) for an unknown, dead or enemy fighter
+## or a non-finite point; otherwise the point is clamped inside the arena (minus edge_margin) and the stored pin
+## {"x", "z"} (plain floats, wire-ready) is returned. Only one card per player is pinned at a time: pass `owner_ids`
+## (the caller's squad) and every other pinned card in it is released.
+func set_pin(id: int, x: float, z: float, owner_ids: Array = []) -> Dictionary:
+	var fighter: Fighter = fighters.get(id)
+	if fighter == null or not fighter.is_alive() or fighter.team == "enemy" or _ai.has(id) or not is_finite(x) or not is_finite(z):
+		return {}
+	var margin := float(pin_rules().get("edge_margin", 0.4))
+	var pin := {"x": clampf(x, -world.half_width + margin, world.half_width - margin),
+		"z": clampf(z, -world.half_depth + margin, world.half_depth - margin)}
+	for other in owner_ids:
+		if int(other) != id and fighters.has(int(other)):
+			fighters[int(other)].pin = {}
+	fighter.pin = pin
+	events.append({"type": "card_pinned", "player": id, "x": pin["x"], "z": pin["z"]})
+	return pin.duplicate()
+
+
+func clear_pin(id: int) -> bool:
+	var fighter: Fighter = fighters.get(id)
+	if fighter == null or fighter.pin.is_empty():
+		return false
+	fighter.pin = {}
+	events.append({"type": "card_unpinned", "player": id})
+	return true
+
+
+## {} = not pinned.
+func get_pin(id: int) -> Dictionary:
+	var fighter: Fighter = fighters.get(id)
+	return {} if fighter == null else fighter.pin.duplicate()
+
+
+static var _pin_rules: Dictionary = {}
+static func pin_rules() -> Dictionary:
+	if _pin_rules.is_empty():
+		var text := FileAccess.get_file_as_string("res://data/combat/pin.json")
+		var parsed = JSON.parse_string(text) if not text.is_empty() else null
+		_pin_rules = parsed if parsed is Dictionary else {"pin_radius": 1.5, "arrive": 0.35, "run_distance": 5.0, "edge_margin": 0.4}
+	return _pin_rules
+
+
+func _clear_all_pins() -> void:
+	for id in fighters:
+		if not fighters[id].pin.is_empty():
+			clear_pin(id)
+
+
+func _clear_dead_pins() -> void:
+	for id in fighters:
+		if not fighters[id].pin.is_empty() and not fighters[id].is_alive():
+			clear_pin(id)
+
+
 func tick(prediction_player: int = -1) -> void:
 	# Client prediction advances only its actor; damage, AI and rewards remain authoritative.
 	events.clear()
@@ -280,6 +336,7 @@ func tick(prediction_player: int = -1) -> void:
 		_process_economy()
 		Coop.step(self)
 		_clear_corpses()
+		_clear_dead_pins()
 	tick_count += 1
 
 
@@ -521,6 +578,7 @@ func _release_waves() -> void:
 	if not by_hp and living_enemy_count() > 0:
 		return
 	_waves.pop_front()
+	_clear_all_pins()  # wave end: every pin is released (Boss 2026-11-26)
 	if wave_heal_fraction > 0.0:
 		for healed_id in fighters:
 			var healed: Fighter = fighters[healed_id]
@@ -580,6 +638,7 @@ func _check_stage_clear() -> void:
 	# and the fight was reported won at wave 6-8 in ~1 run of 3; the next wave arrives on the next tick)
 	if _had_enemies and not _clear_reported and _waves.is_empty() and living_enemy_count() == 0:
 		_clear_reported = true
+		_clear_all_pins()  # fight end
 		events.append({"type": "stage_cleared"})
 
 

@@ -173,6 +173,19 @@ func set_input(id: int, input: SimInput) -> void:
 		_sim.set_input(id, SimInput.decode(input.encode()))
 
 
+## Card pin (Boss 2026-11-26, solo only): thin passthroughs to logic/game_sim.gd (client/card_pin.gd calls these).
+func set_pin(id: int, x: float, z: float, owner_ids: Array = []) -> Dictionary:
+	return _sim.set_pin(id, x, z, owner_ids) if _sim != null else {}
+
+
+func clear_pin(id: int) -> bool:
+	return _sim.clear_pin(id) if _sim != null else false
+
+
+func get_pin(id: int) -> Dictionary:
+	return _sim.get_pin(id) if _sim != null else {}
+
+
 func step(input: SimInput) -> void:
 	set_input(_player_id, input)
 	tick()

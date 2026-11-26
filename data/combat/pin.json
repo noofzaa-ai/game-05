@@ -1,0 +1,11 @@
+{
+	"_design": "Card pin (Boss 2026-11-26): the player taps a card, then the ground; the card walks there and stays. PLACEHOLDER numbers (combat-designer 2026-11-26) until the Boss plays.",
+	"pin_radius": 1.5,
+	"_pin_radius": "Metres around the pin a pinned card may step inside (to reach a melee enemy). It never chases outside.",
+	"arrive": 0.35,
+	"_arrive": "With nothing in reach, a card further than this from the pin walks back to its centre.",
+	"run_distance": 5.0,
+	"_run_distance": "Runs (spends stamina) to the pin when further than this.",
+	"edge_margin": 0.4,
+	"_edge_margin": "A pin is clamped this far inside the arena edges (a body's half width)."
+}

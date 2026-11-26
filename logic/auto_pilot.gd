@@ -138,6 +138,8 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 			decided.erase(other_id)
 	if nearest == -1:
 		return input
+	if not me.pin.is_empty():
+		return _pinned(sim, combat, id, me, profile, memory, tick, survival, hold_skills, nearest)
 
 	var engage := _engage_range(combat, me, profile)
 	var class_pick: Dictionary = {}
@@ -196,6 +198,11 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 	# (the old weapon ultimate button is off for players: GameSim drops it, so a full gauge never freezes the pilot)
 	if not class_pick.is_empty():
 		return _skill_input(sim, id, me, class_pick)
+	return _swing(sim, me, profile, memory, tick, hold_skills, input)
+
+
+## The light/heavy press rhythm once a target is in reach (heavy every Nth press).
+static func _swing(sim, me: Fighter, profile: Dictionary, memory: Dictionary, tick: int, hold_skills: bool, input: SimInput) -> SimInput:
 	if tick % SWING_EVERY == 0:
 		memory["swings"] = int(memory["swings"]) + 1
 		var every := ClassSkills.heavy_every(sim, me)  # Battle Trance: every 2nd swing is a heavy (class-skills.md 3.3 G4)
@@ -206,6 +213,66 @@ static func decide(sim, combat, id: int, memory: Dictionary, tick: int, reaction
 		else:
 			input.light = true
 	return input
+
+
+## Card pin (Boss 2026-11-26, data/combat/pin.json): walk to the pin first, then stay within pin_radius of it. Only
+## enemies reachable from inside that circle are fought: a shooter shoots anything in its engage range, a melee card
+## steps (inside the circle) toward an enemy whose body comes within pin_radius + reach of the pin, else it waits.
+## Never kites or chases out; hazard escapes and guards ran before this (decide) and the card walks back after.
+static func _pinned(sim, combat, id: int, me: Fighter, profile: Dictionary, memory: Dictionary, tick: int, survival: bool, hold_skills: bool, nearest: int) -> SimInput:
+	var input := SimInput.new()
+	var rules: Dictionary = sim.pin_rules() if sim.has_method("pin_rules") else {}
+	var radius := float(rules.get("pin_radius", 1.5))
+	var at: Vector3 = sim.bodies[id].position
+	var pin := Vector3(float(me.pin["x"]), at.y, float(me.pin["z"]))
+	var home: Vector2 = _flat(pin - at)
+	if home.length() > radius:
+		input.move = home.normalized()  # on the way to the pin: no fighting yet
+		input.run = home.length() > float(rules.get("run_distance", RUN_DISTANCE)) and me.energy > 25.0 and not me.exhausted
+		if survival:
+			input.move = _safe_move(sim, id, input.move)
+		input.aim = input.move
+		return input
+	var engage := _engage_range(combat, me, profile)
+	var shooter := _is_shooter(combat, me)
+	var reach_from_pin := engage if shooter else radius + engage
+	var origin: Vector3 = at if shooter else pin
+	var in_reach: Array = _enemy_ids(sim, id).filter(func(e): return _flat(sim.bodies[e].position - origin).length() <= reach_from_pin)
+	if in_reach.is_empty():
+		if home.length() > float(rules.get("arrive", 0.35)):
+			input.move = _safe_move(sim, id, home.normalized()) if survival else home.normalized()
+		input.aim = _flat(sim.bodies[nearest].position - at)
+		return input
+	in_reach.sort()
+	var target := pick_target(sim, id, profile, engage, nearest)
+	if not in_reach.has(target):
+		target = _best(in_reach, func(e): return -_flat(sim.bodies[e].position - at).length())
+	var toward: Vector2 = _flat(sim.bodies[target].position - at)
+	if RaceUltimates.ready(sim, id) and wants_ultimate(sim, id, engage):
+		input.ultimate = true
+		input.aim = toward
+		return input
+	if ClassSkills.has_skills(me) and me.state == Fighter.State.IDLE and not ClassSkills.busy(me):
+		var pick := ClassSkillUse.pick(sim, id, target)
+		if not pick.is_empty() and not (survival and (_clip_too_long(sim, id, str(pick["skill"])) or (float(SkillData_priority(str(pick["skill"]))) >= 1.0 				and (hold_skills or _short_of_reserve(sim, id, me, profile, str(pick["skill"])))))):
+			return _skill_input(sim, id, me, pick)
+	if toward.length() > engage:
+		var step := toward.normalized()
+		var next := _flat(at - pin) + step * 0.3
+		if next.length() <= radius - 0.2:  # leave room for body pushes
+			input.move = _safe_move(sim, id, step) if survival else step  # melee: close in, inside the circle only
+		input.aim = toward
+		return input
+	input.aim = toward
+	if me.state != Fighter.State.IDLE and me.state != Fighter.State.ATTACK:
+		return input
+	return _swing(sim, me, profile, memory, tick, hold_skills, input)
+
+
+## True when this fighter's light attack fires projectiles (longbow, magic).
+static func _is_shooter(combat, me: Fighter) -> bool:
+	var style: Dictionary = combat.styles.get(me.style, {})
+	return not combat.moves.get(str(style.get("ground_light", "")), {}).get("spawns", []).is_empty()
 
 
 ## The input that casts a class skill picked by ClassSkillUse.pick: its slot, aimed at the chosen target or point (the

@@ -72,6 +72,9 @@ var _session
 var _popup_stacks := {}  ## spot key -> {frame, count} of the latest popups there (see _popup)
 var _combat_numbers: Node2D
 var _loot_popups: Node2D
+const FightTextRules := preload("res://client/fight_text_rules.gd")
+var _fight_rules = null  ## data/ui/fight_text.json, shared with _combo_fight (lanes, budget, number filter)
+var _loot_to_feed := false
 var _heal_samples := {}
 var _combat_data
 var _vfx  ## what every action looks like (client/vfx/vfx_library.gd, from data/combat/vfx.json)
@@ -417,6 +420,7 @@ func _build_stage(map) -> void:
 			arena_props.set_grove_sky(self)
 		else:
 			arena_props.set_sky(self)
+	preload("res://client/fight_light.gd").apply(self, str(map.id))  # (readable fighters per zone: data/render/fight_light.json)
 
 
 func _build_session(map) -> bool:
@@ -503,6 +507,7 @@ func _add_fighter_view(id: int, enemy_type: String, is_boss: bool) -> void:
 		view.looks = _player_looks(id)
 	else:
 		view.show_health_bar = true
+		view.status_words = not _is_auto_fight()  # auto-battle: status icons only (client/combo_fight.gd)
 		var tier: String = _enemy_bars.tier_for(enemy_type, is_boss)
 		view.bar_style = _enemy_bars.resolve(_map_id, _map_atmosphere, tier)
 		var definition: Dictionary = _combat_data.enemies[enemy_type]
@@ -604,6 +609,8 @@ func _show_boss_bar() -> void:
 
 ## A "BOSS" name tag over a journey boss (its label comes from the journey data).
 func _add_boss_label(view: Node3D) -> void:
+	if _fight_rules != null and _fight_rules.category_action("boss_label") == "hide":  # the top boss bar names it (data/ui/fight_text.json)
+		return
 	var label := Label3D.new()
 	label.text = str(_journey.data.boss.get("label", "BOSS"))
 	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -680,6 +687,7 @@ func _bag_text() -> String:
 ## Floating text for what a kill dropped: gold, materials and equipment (colored by tier).
 func _show_loot(event: Dictionary) -> void:
 	var at: Vector3 = _session.bodies[event["enemy"]].position
+	_loot_to_feed = _fight_rules != null and _is_auto_fight() and _fight_rules.category_action("loot") == "feed"
 	var line := 0
 	if int(event["gold"]) > 0:
 		_loot_line(at, line, "+%d" % int(event["gold"]), InkUi.LOOT_GOLD, InkUi.icon("gold",24,InkUi.LOOT_GOLD))
@@ -699,11 +707,14 @@ func _show_loot(event: Dictionary) -> void:
 	# Pickups use A-style floating icons only; do not duplicate them in a boxed feed.
 	if int(event["lost_items"]) > 0 or not event["lost_materials"].is_empty():
 		_hud.add_loot("BAG FULL: some loot was left behind", InkUi.LOOT_PROBLEM)
-	if int(event["lost_items"]) > 0 or not event["lost_materials"].is_empty():
+	if (int(event["lost_items"]) > 0 or not event["lost_materials"].is_empty()) and not _loot_to_feed:
 		_loot_line(at, line, "BAG FULL", InkUi.LOOT_PROBLEM)
 
 
 func _loot_line(at: Vector3, line: int, text: String, color: Color, icon: Texture2D = null) -> void:
+	if _loot_to_feed:  # clean fight screen: pickups go to the HUD's corner feed, never over the fight
+		_hud.add_loot(text, color, icon)
+		return
 	_loot_popups.show_pickup(at,text,color,icon,line)
 
 
@@ -769,6 +780,16 @@ func _build_effects_and_hud() -> void:
 		_squad_panel = preload("res://client/squad_panel.gd").new()
 		add_child(_squad_panel)
 		_squad_panel.selected.connect(func(id: int) -> void: _focus_id = id)
+		if preload("res://client/card_pin.gd").enabled_for(_session) and not _squad_room():  # card pin: solo/local only (Boss 2026-11-26)
+			_card_pin = preload("res://client/card_pin.gd").new()
+			_card_pin.session = _session
+			_card_pin.squad_panel = _squad_panel
+			_card_pin.hud = _hud
+			_card_pin.views = _views
+			_card_pin.camera_of = func(): return _rig.get("_camera") if _rig != null else null
+			for squad_id in _session.fighters:
+				if _session.fighters[squad_id].team == "player": _card_pin.owner_ids.append(squad_id)
+			add_child(_card_pin)
 		preload("res://client/tutorial_driver.gd").attach_battle(self, _squad_panel, _session.has_method("is_remote") or _squad_room())  # tutorial.md 4 battle_tip (solo only)
 	if _boss_id >= 0:  # style the boss bar to the map once (the Chief's bar matches its floating goblin bar)
 		_hud.set_boss_style(_enemy_bars.resolve(_map_id, _map_atmosphere, "boss"))
@@ -793,6 +814,9 @@ func _build_effects_and_hud() -> void:
 	_combo_fight.fighter_ids = func() -> Array: return _session.fighters.keys().filter(func(id): return _session.fighters[id].is_alive() and _views.has(id))
 	_combo_fight.fighter_of = func(id): return _session.fighters.get(id)
 	_combo_fight.head_point = _combo_head_point
+	_combo_fight.is_ours = _is_our_team
+	_combo_fight.card_rect = func(id): return _squad_panel.card_rect(id) if _squad_panel != null else null
+	_fight_rules = _combo_fight.rules
 	add_child(_combo_fight)
 	_perf = PerfOverlay.new()
 	add_child(_perf)
@@ -902,15 +926,17 @@ func _handle_events() -> void:
 			"skill_hit":
 				if _views.has(event.target):
 					_views[event.target].flash()
-					_spawn_damage_number(_session.bodies[event.target].position, int(ceilf(event.damage)), bool(event.get("crit",false)), false, int(event.target)==_local_player_id)
+					_spawn_damage_number(_session.bodies[event.target].position, int(ceilf(event.damage)), bool(event.get("crit",false)), false, int(event.target)==_local_player_id, _max_hp_of(int(event.target)))
 					skill_impact = _play_skill_hit(event, skill_impact)
 			"skill_dot":
 				if _session.bodies.has(event.target):
-					_spawn_damage_number(_session.bodies[event.target].position, int(ceilf(event.damage)), false, false, int(event.target)==_local_player_id)
+					_spawn_damage_number(_session.bodies[event.target].position, int(ceilf(event.damage)), false, false, int(event.target)==_local_player_id, _max_hp_of(int(event.target)))
 					_play_skill_hit(event, skill_impact)
 			"combo":
 				if _combo_fight != null:
 					_combo_fight.on_combo(event)
+				if _session.bodies.has(int(event.get("target", -1))) and float(event.get("damage", 0.0)) >= 1.0:  # the payoff's bonus is a number worth showing
+					_spawn_damage_number(_session.bodies[int(event.target)].position, int(ceilf(float(event.damage))), false, false, false, 0.0, true)
 			"ultimate_cast":
 				_announce_ultimate(event)
 			"attack_started":
@@ -922,24 +948,24 @@ func _handle_events() -> void:
 				var target_id: int = event["target"]
 				if _views.has(target_id): _views[target_id].flash()  # (a view still queued by _flush_pending_views has none yet)
 				_play_hit(event)
-				_spawn_damage_number(_session.bodies[target_id].position, event["damage"], event["crit"], false, target_id==_local_player_id)
+				_spawn_damage_number(_session.bodies[target_id].position, event["damage"], event["crit"], false, target_id==_local_player_id, _max_hp_of(target_id))
 			"blocked":
 				var guard_id: int = event["target"]
 				if _views.has(guard_id): _views[guard_id].flash()
 				var guard_feet: Vector3 = _session.bodies[guard_id].position
 				_effects.play("block", _fighter_context(guard_id, Effects.context(event["pos"], guard_feet, -Vector2(event["dir"]), _vfx.palette.get("block", Color.SKY_BLUE))))
-				_spawn_damage_number(guard_feet, event["damage"], false, true, guard_id==_local_player_id)
+				_spawn_damage_number(guard_feet, event["damage"], false, true, guard_id==_local_player_id, _max_hp_of(guard_id))
 			"effect_applied":
 				var applied: Dictionary = _combat_data.effects[event["effect"]]
 				var applied_at: Vector3 = _session.bodies[event["target"]].position
-				_popup(applied_at, ("+" if applied["kind"] == "buff" else "") + str(applied["name"]).to_upper(), applied["color"], 0.011)
+				_say_at(int(event["target"]), applied_at, FightTextRules.effect_category(applied, _is_our_team(int(event["target"]))), ("+" if applied["kind"] == "buff" else "") + str(applied["name"]).to_upper(), applied["color"])
 				_play_at_fighter(_vfx.status_key(str(applied.get("control", "")), str(applied["kind"])), int(event["target"]), applied["color"])
 				if event["target"] == _local_player_id and applied["kind"] == "debuff":
 					_hud.flash(Color(applied["color"].r, applied["color"].g, applied["color"].b, 0.22), 0.2)
 			"effect_resisted":
-				_popup(_session.bodies[event["target"]].position, "RESIST", InkUi.POPUP_RESIST, 0.009)
+				_say_at(int(event["target"]), _session.bodies[event["target"]].position, "resist", "RESIST", InkUi.POPUP_RESIST)
 			"dot":
-				_spawn_damage_number(_session.bodies[event["target"]].position, int(ceilf(event["damage"])), false, false, int(event["target"])==_local_player_id)
+				_spawn_damage_number(_session.bodies[event["target"]].position, int(ceilf(event["damage"])), false, false, int(event["target"])==_local_player_id, _max_hp_of(int(event["target"])))
 			"out_of_stamina":
 				if event["player"] == _local_player_id:
 					_hud.flash_stamina()
@@ -983,11 +1009,11 @@ func _handle_events() -> void:
 						# (a bound method, not a lambda: the connection drops by itself if the view is freed first)
 						get_tree().create_timer(2.4).timeout.connect(dead_view.hide)
 			"downed":
-				_popup(_session.bodies[event["player"]].position, "P%d DOWN - stand nearby to revive" % event["player"], Color.MEDIUM_PURPLE, .01)
+				_say_at(int(event["player"]), _session.bodies[event["player"]].position, "squad_state", ("DOWN" if _is_auto_fight() else "P%d DOWN - stand nearby to revive" % event["player"]), Color.MEDIUM_PURPLE)
 			"revived":
-				_popup(_session.bodies[event["player"]].position, "REVIVED", Color.PALE_GREEN, .012)
+				_say_at(int(event["player"]), _session.bodies[event["player"]].position, "squad_state", "REVIVED", Color.PALE_GREEN)
 			"eliminated":
-				_popup(_session.bodies[event["player"]].position, "OUT", Color.INDIAN_RED, .012)
+				_say_at(int(event["player"]), _session.bodies[event["player"]].position, "squad_state", "OUT", Color.INDIAN_RED)
 			"team_wiped":
 				_result = "defeated"
 			"wave_arrived":
@@ -1071,6 +1097,8 @@ func _update_popup_keep_out() -> void:
 		keep.append_array(_squad_panel.keep_out_rects())
 	_combat_numbers.keep_out = keep
 	_loot_popups.keep_out = keep
+	if _combo_fight != null:
+		_combo_fight.keep_out = keep
 
 
 ## A skill's own visual landed (logic/skills: a burst at a point, or a beam from `position` to `end`): its
@@ -1097,6 +1125,8 @@ func _announce_cast(id: int, skill: String) -> void:
 	if not _session.fighters.has(id) or _session.fighters[id].team != _session.fighters.get(_local_player_id, _session.fighters[id]).team:
 		return
 	var name := skill_display_name(skill)
+	if _fight_rules != null and _squad_panel != null and _fight_rules.category_action("class_skill") == "hide":
+		return  # clean fight screen: normal class skills get no name bubble (ultimates still do)
 	if _squad_panel != null:
 		_squad_panel.callout(id, name, _vfx.skill_color(skill, DEFAULT_WEAPON_COLOR))
 	elif id == _local_player_id:
@@ -1236,10 +1266,13 @@ static func damage_style(damage: int, crit: bool, blocked: bool) -> Dictionary:
 	return {"pixel_size": size, "color": color}
 
 
-func _spawn_damage_number(at: Vector3, damage: int, crit: bool, blocked: bool, incoming: bool = false) -> void:
+func _spawn_damage_number(at: Vector3, damage: int, crit: bool, blocked: bool, incoming: bool = false, max_hp: float = 0.0, combo: bool = false) -> void:
 	if blocked:
-		_popup(at, "BLOCK", InkUi.DAMAGE_BLOCKED, 0.009)
-	_combat_numbers.show_amount(at, damage, 3 if incoming else (1 if crit and not blocked else 0))
+		_say_at(-1, at, "block", "BLOCK", InkUi.DAMAGE_BLOCKED)
+	# Clean fight screen (data/ui/fight_text.json numbers): crits, combo payoffs and big hits only.
+	if _fight_rules != null and not _fight_rules.shows_number(damage, max_hp, crit and not blocked, combo):
+		return
+	_combat_numbers.show_amount(at, damage, 3 if incoming else (1 if (crit or combo) and not blocked else 0))
 
 
 ## Observe actual HP increases (including server snapshots); do not invent healing or change HP.
@@ -1261,7 +1294,7 @@ func _update_heal_numbers() -> void:
 			sample.amount=0.0;sample.at=now
 		elif hp>float(sample.hp): sample.amount+=hp-float(sample.hp)
 		if now-int(sample.at)>=450:
-			if sample.amount>=1.0: _combat_numbers.show_amount(_session.bodies[id].position,int(roundf(sample.amount)),2);sample.amount=0.0
+			if sample.amount>=1.0 and (_fight_rules == null or _fight_rules.shows_heal(sample.amount, maximum)): _combat_numbers.show_amount(_session.bodies[id].position,int(roundf(sample.amount)),2);sample.amount=0.0
 			sample.at=now
 		sample.hp=hp;sample.max=maximum;_heal_samples[id]=sample
 
@@ -1276,6 +1309,25 @@ func _combo_head_point(id):
 	if camera.is_position_behind(at):
 		return null
 	return camera.unproject_position(at)
+
+
+## A floating fight word through the text rules (client/fight_text_rules.gd): one lane per fighter, merged, capped.
+## Without the fight overlay it falls back to the old 3D popup.
+func _say_at(id: int, at: Vector3, category: String, text: String, color: Color) -> void:
+	if _combo_fight == null or _fight_rules == null:
+		if not text.is_empty(): _popup(at, text, color, 0.01)
+		return
+	var action: String = _fight_rules.category_action(category)
+	if action in ["hide", "icon", "feed"]:
+		return
+	if id < 0:  # no fighter lane (a block at a spot): a small 3D popup
+		_popup(at, text, color, 0.009)
+		return
+	_combo_fight.say(id, category, text, color)
+
+
+func _max_hp_of(id: int) -> float:
+	return _session.fighters[id].max_hp() if _session.fighters.has(id) else 0.0
 
 
 func _popup(at: Vector3, text: String, color: Color, pixel_size: float) -> void:
@@ -1399,6 +1451,7 @@ func _show_telegraph(id: int, shape: Dictionary, clock: float) -> void:
 
 ## Counts down to the portals, fills the one the player stands in, and keeps the prompts current.
 var _squad_panel: CanvasLayer
+var _card_pin  ## client/card_pin.gd (solo fights only)
 var _focus_id := -1  ## auto-battle: the fighter the camera follows when zoomed in (-1 = the local player)
 var _wave_now := 1  ## wave-mode journeys: the wave on the field (arrivals come as "wave_arrived" events)
 

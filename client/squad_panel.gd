@@ -199,7 +199,7 @@ func ultimate_callout(id: int, text: String, race: String) -> void:
 	badge.position = Vector2(tall * 0.3, (tall - edge) * 0.5)
 	badge.show_race(race, edge)
 	var text_x: float = badge.position.x + edge + 8.0
-	var text_w: float = CardTokens.SQUAD_HUD_ULT_CALLOUT.x - text_x - tall * 0.4
+	var text_w: float = _banner_box(card["panel"]).x - text_x - tall * 0.4
 	var tag: Label = card["ult_tag"]
 	tag.position = Vector2(text_x, 3.0)
 	tag.size = Vector2(text_w, tall * 0.3)
@@ -231,11 +231,18 @@ func ultimate_banner_shown(id: int) -> bool:
 	return _cards.has(id) and _cards[id].has("ult_banner") and _cards[id]["ult_banner"].visible
 
 
+## The ultimate banner's size: never wider than its card, so when all three ultimates fire at once the banners stand
+## side by side over their own cards instead of overlapping (the name shrinks to fit).
+static func _banner_box(panel: Control) -> Vector2:
+	var box := CardTokens.SQUAD_HUD_ULT_CALLOUT
+	return Vector2(minf(box.x, panel.size.x), box.y) if panel.size.x > 0.0 else box
+
+
 ## The banner sits above the card's skill pill, centred on the card, moved sideways to stay on screen.
 func _place_banner(card: Dictionary) -> void:
 	var banner: Panel = card["ult_banner"]
 	var panel: Panel = card["panel"]
-	var box := CardTokens.SQUAD_HUD_ULT_CALLOUT
+	var box := _banner_box(panel)
 	var area := get_viewport().get_visible_rect().size if is_inside_tree() else Vector2(1280.0, 720.0)
 	var margin := CardTokens.SQUAD_HUD_MARGIN
 	var left := clampf(panel.position.x + (panel.size.x - box.x) * 0.5, margin, maxf(area.x - margin - box.x, margin))
@@ -268,6 +275,13 @@ func callout(id: int, text: String, color: Color) -> void:
 
 
 ## The squad cards and their callouts, in viewport pixels (combat pop-ups keep off them).
+## Fighter `id`'s card on screen (for its status icon row, client/combo_fight.gd), or null.
+func card_rect(id: int):
+	if not _cards.has(id) or not _cards[id].has("panel"):
+		return null
+	return (_cards[id]["panel"] as Control).get_global_rect()
+
+
 func keep_out_rects() -> Array[Rect2]:
 	var rects: Array[Rect2] = []
 	for card in _cards.values():
@@ -288,6 +302,19 @@ func select(id: int, toggle: bool = true) -> void:
 		return
 	_selected = -1 if toggle and id == _selected else id
 	selected.emit(_selected)
+
+
+## Card pin badge (client/card_pin.gd): gold tab with a blue edge, "PIN", on a pinned card.
+const PIN_BADGE := Vector2(46.0, 22.0)
+const PIN_BADGE_FILL := Color("FFD36A")
+const PIN_BADGE_EDGE := Color("2F6FB8")
+func set_pinned(id: int, on: bool) -> void:
+	if _cards.has(id) and _cards[id].has("pin_badge"):
+		_cards[id]["pin_badge"].visible = on
+
+
+func pinned_shown(id: int) -> bool:
+	return _cards.has(id) and _cards[id].has("pin_badge") and _cards[id]["pin_badge"].visible
 
 
 ## The picked card (-1: the automatic camera).
@@ -398,6 +425,14 @@ func _rebuild() -> void:
 		ring.visible = false
 		var ult_ring := _plain(panel)
 		ult_ring.visible = false
+		var pin_badge := _plain(panel)  # "PIN" tab on the card's top-right corner (client/card_pin.gd)
+		CardTokens.panel(pin_badge, CardTokens.flat(PIN_BADGE_FILL, PIN_BADGE_EDGE, 2.0, 6.0, 1.0))
+		var pin_label := CardTokens.label(CardTokens.t("pin_badge"), CardTokens.FONT_SQUAD_HUD_ULT_TAG, CardTokens.HUB_INK, 1.0)
+		pin_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		pin_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		pin_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		pin_badge.add_child(pin_label)
+		pin_badge.visible = false
 		var pill := _plain(panel)
 		CarvedLook.dark_pill(pill, 1.0)  # the hub's dark ink pill
 		pill.visible = false
@@ -417,7 +452,7 @@ func _rebuild() -> void:
 			"sta_back": sta_back, "sta_fill": sta_fill, "sta_low": false, "sta_ratio": 1.0,
 			"ult_back": ult_back, "ult_fill": ult_fill, "ult_ring": ult_ring, "race": "", "race_color": CardTokens.HUB_GOLD_EDGE, "full": null,
 			"ult_banner": banner, "ult_badge": badge, "ult_tag": tag, "ult_name": ult_name,
-			"ring": ring, "down": down, "callout": pill, "callout_label": callout, "bar_width": 100.0, "alive": true}
+			"ring": ring, "pin_badge": pin_badge, "pin_label": pin_label, "down": down, "callout": pill, "callout_label": callout, "bar_width": 100.0, "alive": true}
 	_place()
 
 
@@ -481,6 +516,9 @@ func _place() -> void:
 		card["down"].size = card["emblem"].size
 		card["ring"].position = Vector2.ZERO
 		card["ring"].size = panel.size
+		var badge_w := maxf(PIN_BADGE.x, (card["pin_label"] as Label).get_minimum_size().x + 12.0)
+		card["pin_badge"].size = Vector2(badge_w, PIN_BADGE.y)
+		card["pin_badge"].position = Vector2(width - badge_w - 6.0, -PIN_BADGE.y * 0.5)
 		card["callout"].size = Vector2(width, CALLOUT_HEIGHT)
 		card["callout"].position = Vector2(0.0, -CALLOUT_HEIGHT - 4.0)
 		card["callout"].pivot_offset = card["callout"].size * 0.5
