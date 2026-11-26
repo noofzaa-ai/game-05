@@ -1583,9 +1583,18 @@ func _layout() -> void:
 	_synergy.position = Vector2(centre - syn_w * 0.5, size.y - CardTokens.HUB_SYNERGY_BOTTOM * s - syn_h)
 	var row_bottom := _synergy.position.y - CardTokens.HUB_SYNERGY_GAP * s
 	_bar.position = Vector2(centre - row_w * 0.5, row_bottom - medal)
-	var pill_h := CardTokens.tap(56.0, _phone) * s
-	_combo_pill.size = Vector2(maxf(syn_w * 0.62, 260.0 * s), pill_h)
-	_combo_pill.position = Vector2(centre - _combo_pill.size.x * 0.5, row_bottom - medal - pill_h - 8.0 * s)
+	# the combo chip: small parchment chip in the free space right of the medallions (never over them, the side
+	# panel, the hint ribbon or the Alliance line); kept left of FIGHT
+	var pill_h := maxf(CardTokens.COMBO_CHIP_H * s, CardTokens.tap(0.0, _phone) * s * 0.6)
+	var pill_w := CardTokens.COMBO_CHIP_W * s
+	var pill_x := centre + row_w * 0.5 + CardTokens.COMBO_CHIP_GAP * s
+	var chip_y := row_bottom - medal * 0.5 - pill_h * 0.5
+	if pill_x + pill_w > fight_x - gap:  # no room beside the row: sit just above its right end
+		pill_x = centre + row_w * 0.5 - pill_w
+		chip_y = row_bottom - medal - pill_h - CardTokens.COMBO_CHIP_GAP * s * 0.5
+	_combo_pill.size = Vector2(pill_w, pill_h)
+	_combo_pill.position = Vector2(pill_x, chip_y)
+	_style_combo_pill()
 	_bar.size = Vector2(row_w, medal)
 	for i in _slots.size():
 		var slot: TraySlot = _slots[i]
@@ -1785,9 +1794,47 @@ func _refresh_combo_pill(squad: Array) -> void:
 		skills[str(id)] = ComboUi.class_skills(str(id))
 	var links := ComboUi.squad_links(skills)
 	_combo_pill.visible = squad.size() >= 2 and not ComboUi.load_default().is_empty()
-	_combo_pill.text = ComboUi.pairs_text(links, squad.size())
-	CardTokens.hub_plate_button(_combo_pill, _s)
-	CardTokens.hub_fit(_combo_pill, _combo_pill.text, 26, _combo_pill.size.x - 40.0 * _s, CardTokens.HUB_GOOD if not links.is_empty() else CardTokens.HUB_INK, _s)
+	_combo_pill.text = ComboUi.chip_text(links)
+	_combo_pill.tooltip_text = ComboUi.pairs_text(links, squad.size())
+	_combo_live = not links.is_empty()
+	_style_combo_pill()
+
+
+var _combo_live := false
+var _combo_icons: Control
+
+
+## Parchment chip: cream face, gold edge, warm hover, darker pressed; two linked state icons at the left.
+func _style_combo_pill() -> void:
+	if _combo_pill == null:
+		return
+	var s := _s
+	var icon_w := _combo_pill.size.y * 1.45
+	CardTokens.combo_chip_button(_combo_pill, s, icon_w, _combo_live)
+	if _combo_icons == null:
+		_combo_icons = Control.new()
+		_combo_icons.name = "ComboIcons"
+		_combo_icons.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_combo_icons.draw.connect(_draw_combo_icons)
+		_combo_pill.add_child(_combo_icons)
+	_combo_icons.position = Vector2(6.0 * s, 0.0)
+	_combo_icons.size = Vector2(icon_w, _combo_pill.size.y)
+	_combo_icons.queue_redraw()
+
+
+## Two state icons joined by a short link (the "sets -> pays off" idea), faded when the squad has no combo.
+func _draw_combo_icons() -> void:
+	var h := _combo_icons.size.y
+	var rad := h * 0.22
+	var a := Vector2(rad + 2.0, h * 0.5)
+	var b := Vector2(_combo_icons.size.x - rad - 2.0, h * 0.5)
+	var alpha := 1.0 if _combo_live else 0.45
+	_combo_icons.draw_line(a, b, Color(CardTokens.HUB_GOLD_EDGE, alpha), maxf(2.0, rad * 0.35), true)
+	var states: Array = ComboUi.load_default().get("states", {}).keys()
+	var s1: String = str(states[0]) if states.size() > 0 else "burn"
+	var s2: String = str(states[1]) if states.size() > 1 else s1
+	ComboUi.draw_state_icon(_combo_icons, a, rad, s1, null, alpha)
+	ComboUi.draw_state_icon(_combo_icons, b, rad, s2, null, alpha)
 
 
 ## The squad combo board (client/squad_combos.gd) over the hub.

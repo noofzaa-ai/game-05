@@ -28,6 +28,9 @@ const TEXT := {
 	"none": ["-", "-"],
 	"squad_pairs": ["คอมโบในทีม: %d คู่", "Combos in squad: %d pairs"],
 	"squad_pair_one": ["คอมโบในทีม: 1 คู่", "Combos in squad: 1 pair"],
+	"chip_n": ["%d คอมโบ", "%d combos"],
+	"chip_one": ["1 คอมโบ", "1 combo"],
+	"chip_none": ["0 คอมโบ", "0 combos"],
 	"squad_none": ["ทีมนี้ยังไม่มีคอมโบ", "No combos in this squad yet"],
 	"squad_need": ["เลือก 2-3 การ์ดเพื่อดูคอมโบ", "Pick 2-3 cards to see combos"],
 	"works_with": ["ใช้คู่กับ: %s", "Works with: %s"],
@@ -153,6 +156,14 @@ static func pairs_text(links: Array, cards: int) -> String:
 	if n == 0:
 		return t("squad_none")
 	return t("squad_pair_one") if n == 1 else t("squad_pairs") % n
+
+
+## Short text for the hub's combo chip ("13 combos").
+static func chip_text(links: Array) -> String:
+	var n := pair_count(links)
+	if n == 0:
+		return t("chip_none")
+	return t("chip_one") if n == 1 else t("chip_n") % n
 
 
 ## "Works with: <class> <skill>, ..." for one skill in the squad (both directions, each partner once).

@@ -1883,6 +1883,10 @@ const RACE_HEAD_INK := Color("7A2E1C")  ## "Passive · name" / "Ultimate · name
 const RACE_PICK_RING := Color("E8A93A")  ## the race waiting for the refund confirmation
 const RACE_WARN_INK := Color("B3261E")  ## the refund warning line
 ## Hub synergy line under the squad tray (3.5, 3.8).
+const COMBO_CHIP_W := 168.0  ## hub combo chip ("13 combos" + two linked state icons)
+const COMBO_CHIP_H := 44.0
+const COMBO_CHIP_GAP := 18.0  ## medallion row right edge to the chip
+const FONT_COMBO_CHIP := 20
 const HUB_SYNERGY_H := 67.0
 const HUB_SYNERGY_GAP := 6.0  ## medallion row bottom to the ribbon top
 const HUB_SYNERGY_BOTTOM := 28.0
@@ -2055,3 +2059,24 @@ static func race_tile_button(button: Button, race_id: String, current: bool, pen
 ## The synergy line's dark pill under the squad tray.
 static func hub_synergy_box(s: float) -> StyleBoxFlat:
 	return flat(HUB_PILL, HUB_GOLD_EDGE, 2.0, HUB_SYNERGY_H * 0.5, s)
+
+
+## The hub's small combo chip: cream parchment face, gold edge, brighter on hover, darker pressed; room at the left
+## for the linked state icons (drawn by the hub); green ink when the squad has combos.
+static func combo_chip_button(button: Button, s: float, icon_w: float, live: bool) -> void:
+	var r := COMBO_CHIP_H * 0.5
+	var normal := flat(PAPER, HUB_GOLD_EDGE, 2.0, r, s, true)
+	var hover := flat(Color("FFFBF2"), HUB_GOLD_EDGE.lightened(0.15), 3.0, r, s, true)
+	var pressed := flat(PAPER_SHADOW, HUB_GOLD_EDGE.darkened(0.2), 3.0, r, s)
+	for box in [normal, hover, pressed]:
+		box.content_margin_left = icon_w + 6.0 * s
+		box.content_margin_right = 12.0 * s
+	button.add_theme_stylebox_override("normal", normal)
+	button.add_theme_stylebox_override("hover", hover)
+	button.add_theme_stylebox_override("pressed", pressed)
+	button.add_theme_stylebox_override("hover_pressed", pressed)
+	button.add_theme_stylebox_override("focus", hub_focus(s, r))
+	var ink := HUB_GOOD if live else HUB_INK
+	hub_fit(button, button.text, FONT_COMBO_CHIP, button.size.x - icon_w - 18.0 * s, ink, s)
+	for k in ["font_hover_color", "font_pressed_color", "font_focus_color"]:
+		button.add_theme_color_override(k, ink)
