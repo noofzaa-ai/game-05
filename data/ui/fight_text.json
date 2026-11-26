@@ -1,0 +1,63 @@
+{
+	"version": 1,
+	"_doc": "Fight-screen text rules (ux-ui 2026-11-25, Boss: the fight HUD must stay CLEAN). Read by client/fight_text_rules.gd (display only, never changes combat). Every floating word in a fight goes through one lane per fighter: at most lane_lines lines, the same word within merge_seconds merges into 'WORD x2' instead of stacking, a full lane drops its oldest line, and the whole screen holds at most budget.phone / budget.desktop texts (phone = aspect >= 2.0, e.g. 844x390). categories: 'lane' = a floating line over the fighter, 'hide' = no text at all, 'icon' = only a status icon (squad card for our team, a small icon row over the enemy's bar), 'feed' = the HUD's corner loot feed, 'top' = the single top-centre lane (combo payoffs, one at a time), 'once' = a lane line only the first time per fighter within once_seconds (big control: stun, shock, sleep).",
+	"budget": {"phone": 4, "desktop": 6},
+	"lane_lines": 2,
+	"merge_seconds": 1.5,
+	"line_seconds": 1.1,
+	"once_seconds": 6.0,
+	"top_seconds": 1.4,
+	"categories": {
+		"buff_ours": "icon",
+		"debuff_ours": "icon",
+		"buff_enemy": "icon",
+		"debuff_enemy": "icon",
+		"control": "once",
+		"resist": "hide",
+		"block": "hide",
+		"boss_label": "hide",
+		"class_skill": "hide",
+		"ultimate": "lane",
+		"enemy_telegraph": "lane",
+		"combo": "top",
+		"loot": "feed",
+		"squad_state": "lane",
+		"ping": "lane",
+		"info": "lane"
+	},
+	"numbers": {
+		"_doc": "Damage numbers: a hit shows a number only when it is a crit, a combo payoff, or at least big_hit_fraction of the target's max HP. Heals show only when the healed amount is at least heal_fraction of max HP. scale multiplies the atlas digit size; spread_px is the sideways scatter (each new number alternates sides); life is in seconds.",
+		"big_hit_fraction": 0.08,
+		"heal_fraction": 0.1,
+		"scale": 0.78,
+		"spread_px": 34,
+		"life": 0.7
+	},
+	"status_icons": {
+		"_doc": "Small status icons (shape + colour + glyph, so they read without colour). Shapes are the combo icon shapes (client/combo_ui.gd). max_icons per fighter; the rest becomes '+n'.",
+		"max_icons": 3,
+		"size": {"_doc": "icon radius = max(min_px, radius * screen scale). Phone min raised 2026-11-25: at 844x390 the scale is 0.45, so radius alone gave 7 px icons that could not be read.", "radius": {"phone": 15, "desktop": 11}, "min_px": {"phone": 13, "desktop": 7}},
+		"icons": {
+			"valor":   {"shape": "circle",  "color": "F4D35E", "glyph": "V"},
+			"unbowed": {"shape": "shield",  "color": "C9A227", "glyph": "U"},
+			"recital": {"shape": "circle",  "color": "B5838D", "glyph": "~"},
+			"rage":    {"shape": "triangle", "color": "E63946", "glyph": "!"},
+			"fortify": {"shape": "shield",  "color": "8CA6CC", "glyph": "+"},
+			"haste":   {"shape": "circle",  "color": "F4F1E8", "glyph": ">"},
+			"regen":   {"shape": "circle",  "color": "52B788", "glyph": "+"},
+			"focus":   {"shape": "diamond", "color": "4CC9F0", "glyph": "o"},
+			"burn":    {"shape": "triangle", "color": "FF8019", "glyph": "^"},
+			"bleed":   {"shape": "triangle_down", "color": "C1121F", "glyph": "v"},
+			"poison":  {"shape": "hexagon", "color": "70E000", "glyph": "*"},
+			"slow":    {"shape": "square",  "color": "5E9ED6", "glyph": "<"},
+			"weaken":  {"shape": "triangle_down", "color": "9D8189", "glyph": "-"},
+			"sunder":  {"shape": "square",  "color": "3A3A40", "glyph": "/"},
+			"wound":   {"shape": "diamond", "color": "9E2A2B", "glyph": "x"},
+			"curse":   {"shape": "hexagon", "color": "7B2CBF", "glyph": "c"},
+			"exhaust": {"shape": "square",  "color": "8D99AE", "glyph": "z"},
+			"stun":    {"shape": "star",    "color": "FFD933", "glyph": "!"},
+			"shock":   {"shape": "star",    "color": "B380FF", "glyph": "!"},
+			"sleep":   {"shape": "circle",  "color": "A0C4FF", "glyph": "z"}
+		}
+	}
+}

@@ -51,6 +51,11 @@ const BOSS_BAR_WIDTH := 440.0
 ## Screens shorter than this many real pixels get the compact (phone) layout.
 const COMPACT_HEIGHT := 560
 const COMPACT_SCALE := 1.8
+## Phone + auto-battle (ux-ui 2026-11-25): only the trip line, boss bar and loot feed are left, so they share the top
+## band at this smaller scale (1.8 pushed the boss bar down onto the squad cards at 844x390).
+const COMPACT_AUTO_SCALE := 1.3
+const COMPACT_AUTO_BOSS_WIDTH := 200.0
+const COMPACT_LOOT_LINES := 3
 const SKILL_KEYS := ["guard", "dodge", "special", "ultimate"]
 const SKILL_FALLBACK_KEYS := {"guard": "F", "dodge": "C", "special": "1", "ultimate": "2"}
 
@@ -183,6 +188,9 @@ func add_loot(text: String, color: Color, icon: Texture2D = null) -> void:
 	var label := InkUi.hud_text("loot", color, 5, InkUi.LOOT_OUTLINE)
 	label.text = text
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.clip_text = true  # a long item name is cut, never pushed out of the feed's column
+	label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	line.add_child(label)
 	var picture := TextureRect.new()
 	picture.custom_minimum_size = Vector2(36.0, 36.0)
@@ -200,10 +208,32 @@ func add_loot(text: String, color: Color, icon: Texture2D = null) -> void:
 			plate.draw(line.get_canvas_item(), Rect2(from, -2.0, line.size.x - from + 6.0, line.size.y + 4.0)))
 		line.sort_children.connect(line.queue_redraw)  # (the label moves when the line is laid out)
 	_loot_feed.add_child(line)
-	while _loot_feed.get_child_count() > LOOT_LINES:
+	while _loot_feed.get_child_count() > (COMPACT_LOOT_LINES if compact and auto_battle else LOOT_LINES):
 		var oldest := _loot_feed.get_child(0)
 		_loot_feed.remove_child(oldest)
 		oldest.queue_free()
+
+
+## The trip line: "Enemies n    Wave    Bag    Gold" on one line; `two_lines` (phone auto-battle, top left) splits the
+## parts in half over two lines so the boss bar keeps the top centre.
+static func trip_line(enemies: String, trip_text: String, two_lines: bool) -> String:
+	var parts: Array = [enemies]
+	if not trip_text.is_empty():
+		parts.append_array(trip_text.split("    ", false))
+	if not two_lines or parts.size() < 2:
+		return "    ".join(PackedStringArray(parts))
+	var half := (parts.size() + 1) / 2
+	return "   ".join(PackedStringArray(parts.slice(0, half))) + "
+" + "   ".join(PackedStringArray(parts.slice(half)))
+
+
+## Screen rects (viewport px) of the boss bar block, trip line and loot feed area, for layout tests.
+func layout_rects() -> Dictionary:
+	var trip_box: Control = _leather_trip if auto_battle and _leather_trip != null and _leather_trip.visible else _trip
+	var boss: Rect2 = _boss_name.get_global_rect().merge((_boss["back"] as Control).get_global_rect())
+	if _leather_boss != null and _leather_boss.visible:
+		boss = boss.merge(_leather_boss.get_global_rect())
+	return {"boss": boss, "trip": trip_box.get_global_rect(), "loot": _loot_feed.get_global_rect()}
 
 
 ## The loot feed's lines now (for tests): Array of their texts.
@@ -266,7 +296,7 @@ func update_from(fighter: Fighter, data: CombatData, enemies_left: int, camera_t
 		_apply_auto_battle()
 	var weapon_name := str(data.weapons.get(fighter.style, {}).get("name", fighter.style))
 	_info.text = "%s    %s" % [weapon_name, camera_text]
-	_trip.text = (TEXT["enemies"] % enemies_left) + ("    " + trip_text if not trip_text.is_empty() else "")
+	_trip.text = trip_line(TEXT["enemies"] % enemies_left, trip_text, compact and auto_battle)
 	_place_trip_plate()
 	_place_leather()
 	if _new_skills != null:
@@ -362,6 +392,21 @@ func show_skill_banner(text: String) -> void:
 	_skill_tween.tween_callback(func() -> void: _skill_banner.visible = false)
 
 
+## Where a ground tap must not set a card pin (client/card_pin.gd): the keep-out rects, but the loot feed counts
+## only its visible lines (its empty box covers a lot of the arena).
+func tap_block_rects() -> Array[Rect2]:
+	var rects: Array[Rect2] = []
+	var feed_box: Rect2 = _loot_feed.get_global_rect().grow(6.0) if _loot_feed != null else Rect2()
+	for r in keep_out_rects():
+		if r != feed_box:
+			rects.append(r)
+	if _loot_feed != null:
+		for line in _loot_feed.get_children():
+			if line is Control and (line as Control).is_visible_in_tree() and (line as Control).modulate.a > 0.05:
+				rects.append((line as Control).get_global_rect().grow(6.0))
+	return rects
+
+
 ## Screen rectangles combat pop-ups must not cover (damage numbers, loot): the trip line (top right),
 ## the skill/wave banner while it shows and the boss bar. In viewport pixels.
 func keep_out_rects() -> Array[Rect2]:
@@ -369,6 +414,8 @@ func keep_out_rects() -> Array[Rect2]:
 	var trip_box: Control = _leather_trip if auto_battle and _leather_trip != null and _leather_trip.visible else (_trip_plate if _trip_plate != null else _trip)
 	if _leather_boss != null and _leather_boss.visible:
 		rects.append(_leather_boss.get_global_rect().grow(6.0))
+	if auto_battle and _loot_feed != null and _loot_feed.get_child_count() > 0:
+		rects.append(_loot_feed.get_global_rect().grow(6.0))
 	for item in [trip_box, _skill_banner, _boss_name]:
 		if item is Control and (item as Control).is_visible_in_tree():
 			rects.append((item as Control).get_global_rect().grow(6.0))
@@ -435,7 +482,7 @@ func _layout() -> void:
 	if _root == null:
 		return
 	compact = _wants_compact()
-	ui_scale = ui_scale_override if ui_scale_override > 0.0 else (COMPACT_SCALE if compact else 1.0)
+	ui_scale = ui_scale_override if ui_scale_override > 0.0 else ((COMPACT_AUTO_SCALE if auto_battle else COMPACT_SCALE) if compact else 1.0)
 	var screen := get_viewport().get_visible_rect().size
 	var area := screen / ui_scale  # the HUD's own coordinate space
 	_root.scale = Vector2(ui_scale, ui_scale)
@@ -460,7 +507,10 @@ func _layout() -> void:
 	# The boss bar: top centre (the skill banner moves under it); compact: under the player's bars.
 	var boss_at := Vector2((area.x - BOSS_BAR_WIDTH) * 0.5, 40.0)
 	var boss_width := BOSS_BAR_WIDTH
-	if compact:
+	if compact and auto_battle:  # phone fight: top centre too (the trip line is top left, the loot feed top right)
+		boss_width = COMPACT_AUTO_BOSS_WIDTH
+		boss_at = Vector2((area.x - boss_width) * 0.5, 36.0)
+	elif compact:
 		boss_width = hp_width
 		boss_at = Vector2(MARGIN, 162.0)
 	_place_bar(_boss, boss_at, Vector2(boss_width, 16.0))
@@ -476,6 +526,12 @@ func _layout() -> void:
 	# Top right: the trip line, with the combo counter under it.
 	_trip.position = Vector2(area.x - MARGIN - 340.0, 16.0)
 	_trip.size = Vector2(340.0, 26.0)
+	if compact and auto_battle:  # two short lines at the top left (the player bars are hidden in auto-battle)
+		_trip.position = Vector2(12.0, 8.0)
+		_trip.size = Vector2(0.0, 0.0)
+		_trip.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	else:
+		_trip.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_place_trip_plate()
 	var combo_width := 236.0
 	_combo_box.position = Vector2(area.x - MARGIN - combo_width, 90.0 if GameState.remote_session != null else 46.0)
@@ -512,6 +568,17 @@ func _layout() -> void:
 	# Right side, above the skill icons: the loot feed grows upward.
 	_loot_feed.size = Vector2(LOOT_FEED_WIDTH, 44.0 * LOOT_LINES)
 	_loot_feed.position = Vector2(area.x - MARGIN - LOOT_FEED_WIDTH, area.y - MARGIN - ICON_SIZE.y - 16.0 - _loot_feed.size.y)
+	if auto_battle:  # no skill icons: the feed hangs from the top right, under the trip line (desktop) or beside the boss
+		_loot_feed.alignment = BoxContainer.ALIGNMENT_BEGIN
+		if compact:
+			var left := (area.x + COMPACT_AUTO_BOSS_WIDTH) * 0.5 + 12.0
+			_loot_feed.size = Vector2(area.x - 12.0 - left, 40.0 * COMPACT_LOOT_LINES)
+			_loot_feed.position = Vector2(left, 8.0)
+		else:
+			_loot_feed.size = Vector2(LOOT_FEED_WIDTH, 44.0 * LOOT_LINES)
+			_loot_feed.position = Vector2(area.x - MARGIN - LOOT_FEED_WIDTH, 16.0 + CardTokens.HUD_TRIP_H + 12.0)
+	else:
+		_loot_feed.alignment = BoxContainer.ALIGNMENT_END
 
 	_apply_auto_battle()
 	_prompt.position = Vector2(area.x * 0.5 - 300.0, area.y - (150.0 if compact else 120.0))
@@ -571,12 +638,19 @@ func _place_leather() -> void:
 	var pad := CardTokens.HUD_TRIP_PAD
 	var text_w := _trip.get_minimum_size().x
 	# a long line grows to the left, never past the right edge
-	var right := _root.size.x - MARGIN
-	_trip.size.x = maxf(_trip.size.x, text_w)
-	_trip.position.x = right - _trip.size.x
+	var text_h := _trip.get_minimum_size().y
 	_leather_trip.visible = not _trip.text.is_empty()
-	_leather_trip.size = Vector2(text_w + pad.x * 2.0, CardTokens.HUD_TRIP_H)
-	_leather_trip.position = Vector2(_trip.position.x + _trip.size.x - text_w - pad.x, _trip.position.y + (_trip.size.y - CardTokens.HUD_TRIP_H) * 0.5)
+	if compact:  # top left, two lines; the plate wraps the text
+		_trip.position = Vector2(12.0 + pad.x, 8.0 + pad.y)
+		_trip.size = Vector2(text_w, text_h)
+		_leather_trip.size = Vector2(text_w + pad.x * 2.0, text_h + pad.y * 2.0)
+		_leather_trip.position = _trip.position - pad
+	else:
+		var right := _root.size.x - MARGIN
+		_trip.size.x = maxf(_trip.size.x, text_w)
+		_trip.position.x = right - _trip.size.x
+		_leather_trip.size = Vector2(text_w + pad.x * 2.0, CardTokens.HUD_TRIP_H)
+		_leather_trip.position = Vector2(_trip.position.x + _trip.size.x - text_w - pad.x, _trip.position.y + (_trip.size.y - CardTokens.HUD_TRIP_H) * 0.5)
 	var bar: Control = _boss["back"]
 	var top := _boss_name.position.y
 	var p := CardTokens.HUD_BOSS_PLATE_PAD

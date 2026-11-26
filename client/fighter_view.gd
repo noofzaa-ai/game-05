@@ -69,6 +69,9 @@ var monster_nock_mesh := ""
 var monster_hips_scale := 1.0  ## leg-proportion factor for the shared clip library (combat.json hips_scale)
 ## Show a floating health bar above the head (enemies; the player has the HUD).
 var show_health_bar := false
+## Word tags for buffs/debuffs over the head. The auto-battle fight turns them off: its statuses are small icons
+## (client/combo_fight.gd, data/ui/fight_text.json), Boss 2026-11-25 clean fight screen.
+var status_words := true
 ## The bar's look, resolved from data by client/enemy_bars.gd (frame shape, colours, the notch mark).
 ## Empty = the old plain red bar (so a view built without a style still works). Set before _ready.
 var bar_style: Dictionary = {}
@@ -889,7 +892,7 @@ func _show_effects(fighter: Fighter, data: CombatData) -> void:
 	ids.sort()
 	var base_y := _height + (0.75 if show_health_bar else 0.35)
 	var index := 0
-	if fighter.is_alive() and show_health_bar:  # the player's own effects are in the HUD
+	if fighter.is_alive() and show_health_bar and status_words:  # the player's own effects are in the HUD
 		for id in ids:
 			var definition: Dictionary = data.effects[id]
 			var tag: Label3D = _status_tags.get(id)
