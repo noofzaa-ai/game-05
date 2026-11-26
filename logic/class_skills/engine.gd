@@ -317,7 +317,9 @@ static func _run_cast(sim, id: int, fighter) -> void:
 			load(MECH).release_copy(sim, id, fighter, cast, index)
 		if fighter.skill_state["cast"].is_empty():
 			return
-	if sim.tick_count >= int(cast["end"]):
+		if bool(cast.get("cut_after_first_hit", false)):  # a pin arrived during the wind-up (GameSim._cut_skill_recovery)
+			break
+	if sim.tick_count >= int(cast["end"]) or (bool(cast.get("cut_after_first_hit", false)) and int(cast["done"]) >= 1):
 		fighter.skill_state["cast"] = {}
 		sim.events.append({"type": "class_skill_end", "player": id, "skill": str(cast["skill"])})
 

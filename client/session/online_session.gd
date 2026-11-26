@@ -198,6 +198,65 @@ func begin_stage(_map_data, _combat_data, _trip = null, _player = 1, _enemy = 10
 			if str(fighters[id].enemy_type).contains("chief"): bosses.append(id)
 	return {"enemy_types": enemies, "bosses": bosses}
 func is_remote() -> bool: return true
+
+# ---------------------------------------------------------------- card pin online (Boss 2026-11-26)
+## Server pins arrive as card_pinned / card_unpinned room events (server/rooms/room.gd _card_pin_command); a tap shows a
+## locally clamped prediction at once, kept until the command result (ok -> server pin, refused -> dropped) or ~1.5 s.
+var pins := {}  ## fighter id -> {x, z} confirmed by the server
+var _pin_predictions := {}  ## fighter id -> {pin, until_ms, command}
+const PIN_PREDICT_MS := 1500
+var _pins_epoch := 0
+## A real fight (not the lobby, route or camp) with this client's own cards on the field.
+func pin_allowed() -> bool:
+	return ready and connected and not is_lobby() and journey != null and str(journey.state) == "in_stage" and not journey.is_at_camp()
+func own_cards() -> Array:
+	return fighters_of(_player_id).filter(func(id): return fighters.has(id) and fighters[id].team != "enemy")
+func set_pin(id: int, x: float, z: float, _owner_ids: Array = []) -> Dictionary:
+	if not pin_allowed() or not own_cards().has(id) or not fighters[id].is_alive() or not is_finite(x) or not is_finite(z): return {}
+	var predicted := _clamp_pin(x, z)
+	var sent := command({"type": "card_pin", "card": id, "x": x, "z": z})
+	if not sent.get("pending", false): return {}
+	for other in own_cards(): _pin_predictions.erase(other)
+	_pin_predictions[id] = {"pin": predicted, "until": Time.get_ticks_msec() + PIN_PREDICT_MS, "command": int(sent.id)}
+	return predicted.duplicate()
+func clear_pin(id: int) -> bool:
+	if not own_cards().has(id) or get_pin(id).is_empty(): return false
+	_pin_predictions.erase(id)
+	pins.erase(id)
+	command({"type": "card_unpin", "card": id})
+	return true
+func get_pin(id: int) -> Dictionary:
+	if _pins_epoch != _epoch: pins.clear(); _pin_predictions.clear(); _pins_epoch = _epoch  # a new stage starts unpinned
+	if not pin_allowed(): return {}
+	var guess = _pin_predictions.get(id)
+	if guess is Dictionary:
+		if Time.get_ticks_msec() <= int(guess.until): return guess.pin.duplicate()
+		_pin_predictions.erase(id)
+	return (pins.get(id, {}) as Dictionary).duplicate()
+func _clamp_pin(x: float, z: float) -> Dictionary:
+	var margin := float(GameSim.pin_rules().get("edge_margin", 0.4))
+	var world = _sim.world if _sim != null and _sim.get("world") != null else null
+	if world == null: return {"x": x, "z": z}
+	return {"x": clampf(x, -world.half_width + margin, world.half_width - margin), "z": clampf(z, -world.half_depth + margin, world.half_depth - margin)}
+func _pin_event(event: Dictionary) -> void:
+	match str(event.get("type", "")):
+		"card_pinned":
+			var who := int(event.get("player", -1))
+			if fighters_of(_player_id).has(who):  # the server holds one pin per player
+				for other in fighters_of(_player_id): if other != who: pins.erase(other)
+			pins[who] = {"x": float(event.get("x", 0.0)), "z": float(event.get("z", 0.0))}
+			_pin_predictions.erase(who)
+		"card_unpinned":
+			var gone := int(event.get("player", -1))
+			pins.erase(gone)
+			_pin_predictions.erase(gone)
+func _pin_command_result(request: Dictionary, command_id: int, result: Dictionary) -> void:
+	if request.get("type") != "card_pin": return
+	var id := int(request.get("card", -1))
+	var guess = _pin_predictions.get(id)
+	if not (guess is Dictionary) or int(guess.command) != command_id: return
+	_pin_predictions.erase(id)
+	if result.get("ok", false) and result.get("pin") is Dictionary: pins[id] = {"x": float(result.pin.x), "z": float(result.pin.z)}
 func player_id() -> int: return _player_id
 func is_coop() -> bool: return server_state.get("meta", {}).get("players", []).size() > 1
 func profile_for(id: int):
@@ -268,6 +327,7 @@ func _receive(bytes: PackedByteArray, _now: int) -> void:
 				event_ack = record.sequence
 				var event: Dictionary = record.event
 				_pending_events.append(event)
+				_pin_event(event)
 				if _pending_events.size() > 512: _pending_events.pop_front()
 		Wire.PONG:
 			if value.get("nonce") is int and value.nonce == _ping_nonce:
@@ -278,6 +338,7 @@ func _receive(bytes: PackedByteArray, _now: int) -> void:
 		Wire.CONTROL:
 			if value.get("id") is int and value.get("result") is Dictionary and _pending_commands.has(value.id):
 				var was_leave: bool = _pending_commands[value.id].request.get("type") == "party_leave"
+				_pin_command_result(_pending_commands[value.id].request, value.id, value.result)
 				_pending_commands.erase(value.id)
 				if was_leave and not value.result.get("ok", false): _leave_requested = false
 				if was_leave and value.result.get("left", false):

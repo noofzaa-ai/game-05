@@ -24,6 +24,7 @@ var lobby := false
 var boss_intro := {}
 var _config := {}
 var _ping_ticks := {}
+var _pin_ticks := {}  ## card pin: player -> recent command ticks (rate limit 5 per second)
 var entity_delta_cache := {}
 var entity_wire_cache := {}
 var _snapshot_tick := -1
@@ -210,6 +211,47 @@ func fighter_ids() -> Array:
 	ids = ids.duplicate()
 	ids.sort()
 	return ids
+
+## Card pin online (Boss 2026-11-26): card_pin {card, x, z} / card_unpin {card}. Only the owner pins its own living
+## card, only while a stage fights; 5 commands per second per player. The server auto-pilot reads fighter.pin.
+## Pin events are appended here because sim.events from a command would be cleared by the next tick unsent.
+const PIN_RATE := 5
+func _card_pin_command(id: int, request: Dictionary) -> Dictionary:
+	var pin_kind: bool = request.type == "card_pin"
+	var keys: Array = ["type", "card", "x", "z"] if pin_kind else ["type", "card"]
+	if request.size() != keys.size() or not request.has_all(keys) or not (request.card is int): return {"ok": false, "error": "invalid_command"}
+	if pin_kind and not ((request.x is float or request.x is int) and (request.z is float or request.z is int) and is_finite(float(request.x)) and is_finite(float(request.z))):
+		return {"ok": false, "error": "invalid_command"}
+	if lobby or scene_loading() or status != "active" or journey.state != Journey.IN_STAGE: return {"ok": false, "error": "not_available_here"}
+	var card: int = request.card
+	var fighter = sim.fighters.get(card)
+	var own: Array = fighters_of(id)
+	if fighter == null or not own.has(card) or companion_slots.has(card) or fighter.team == "enemy": return {"ok": false, "error": "not_your_card"}
+	var recent: Array = (_pin_ticks.get(id, []) as Array).filter(func(t): return clock_tick - int(t) < 60)
+	if recent.size() >= PIN_RATE: _pin_ticks[id] = recent; return {"ok": false, "error": "rate_limited"}
+	recent.append(clock_tick); _pin_ticks[id] = recent
+	var before: int = sim.events.size()
+	var out := {"ok": false, "error": "rejected"}
+	if pin_kind:
+		var pin: Dictionary = sim.set_pin(card, float(request.x), float(request.z), own)
+		if not pin.is_empty(): out = {"ok": true, "pin": pin}
+		# set_pin silently drops the player's other pin: announce it so every client clears that marker too.
+		for other in own:
+			if int(other) != card and _announced_pins.has(int(other)):
+				_relay_event({"type": "card_unpinned", "player": int(other)})
+	else:
+		sim.clear_pin(card); out = {"ok": true}
+	for i in range(before, sim.events.size()): _relay_event(sim.events[i])
+	sim.events.resize(before)
+	return out
+
+var _announced_pins := {}  ## fighter id -> true while a card_pinned is the last pin event relayed for it
+func _relay_event(event: Dictionary) -> void:
+	if event.type == "card_pinned": _announced_pins[int(event.player)] = true
+	elif event.type == "card_unpinned": _announced_pins.erase(int(event.player))
+	event_sequence += 1
+	events.append({"sequence": event_sequence, "tick": clock_tick, "event": event.duplicate(true)})
+	if events.size() > 256: events.pop_front()
 
 ## The fighter ids owned by player slot `player`.
 func fighters_of(player: int) -> Array:
@@ -466,6 +508,8 @@ func tick() -> void:
 	sim.tick()
 	if lobby: return
 	for event in sim.events:
+		if event.get("type") == "card_pinned": _announced_pins[int(event.player)] = true
+		elif event.get("type") == "card_unpinned": _announced_pins.erase(int(event.player))
 		event_sequence += 1
 		events.append({"sequence": event_sequence, "tick": clock_tick, "event": event.duplicate(true)})
 	if events.size() > 256: events = events.slice(-256)
@@ -603,6 +647,8 @@ func command(id: int, request_id: int, request: Dictionary, expected_epoch: int 
 				events.append({"sequence": event_sequence, "tick": clock_tick, "event": {"type": "party_ping", "player": id, "kind": request.kind, "pos": sim.bodies[id].position}})
 				if events.size() > 256: events.pop_front()
 				result = {"ok": true}
+		"card_pin", "card_unpin":
+			result = _card_pin_command(id, request)
 		"journey_choose":
 			if id != leader: result.error = "leader_only"
 			elif request.size() != 2 or not (request.get("index") is int): result.error = "invalid_command"

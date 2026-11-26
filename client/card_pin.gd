@@ -1,5 +1,5 @@
 extends Node3D
-## Card pin, client side (Boss 2026-11-26, solo/local fights only). Tap a squad card (client/squad_panel.gd) to select
+## Card pin, client side (Boss 2026-11-26, local fights and online rooms). Tap a squad card (client/squad_panel.gd) to select
 ## it, then tap/click the arena floor: the card is pinned there (logic/game_sim.gd set_pin via the session) and its
 ## auto-pilot walks to the pin and fights from it. Tapping the selected card again deselects it and clears its pin.
 ## This node only reads input and state and shows feedback (selection ring, pin marker, walk line, card badge);
@@ -33,7 +33,9 @@ var _clock := 0.0
 
 ## Shown only for local solo fights: an online room (remote session) keeps fights 100% auto for now.
 static func enabled_for(a_session) -> bool:
-	return a_session != null and not a_session.has_method("is_remote") and a_session.has_method("set_pin")
+	if a_session == null or not a_session.has_method("set_pin"): return false
+	# Online (Boss 2026-11-26): only fight sessions that send card_pin commands (online_session.gd), never the camp RPC session.
+	return not a_session.has_method("is_remote") or a_session.has_method("pin_allowed")
 
 
 func _ready() -> void:
@@ -82,7 +84,17 @@ func selected_id() -> int:
 func _on_selected(id: int) -> void:
 	if id < 0 and _selected >= 0:
 		unpin(_selected)
-	_selected = id
+	_selected = id if id < 0 or owner_ids.has(id) else -1  # a squad-mate's card is never selected for pinning
+
+
+## This client's own squad cards: online rooms ask the session (meta.squads owners), local sessions take the player team.
+static func own_cards(a_session) -> Array:
+	if a_session == null: return []
+	if a_session.has_method("own_cards"): return a_session.own_cards()
+	var out: Array = []
+	for id in a_session.fighters:
+		if a_session.fighters[id].team == "player": out.append(id)
+	return out
 
 
 func unpin(id: int) -> void:
@@ -168,6 +180,8 @@ func _process(delta: float) -> void:
 	if session == null:
 		return
 	var fighters: Dictionary = session.fighters
+	if session.has_method("own_cards"): owner_ids = session.own_cards()  # room ownership can arrive after the view
+	if _selected >= 0 and not owner_ids.has(_selected): _selected = -1
 	if _selected >= 0 and (not fighters.has(_selected) or not fighters[_selected].is_alive()):
 		_selected = -1
 	_ring.visible = _selected >= 0 and views.has(_selected)

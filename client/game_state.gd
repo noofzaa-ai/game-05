@@ -230,8 +230,10 @@ func journey_map_id(node: Dictionary) -> String:
 ## Adds a pick-up to run_loot (the summary's list): a "loot" event or a treasure / challenge reward. `items` are
 ## summaries ({"item_id", "tier", "slot"}) or Item objects.
 func note_run_loot(gold: int, materials: Dictionary, items: Array) -> void:
-	if run_loot.is_empty():
-		run_loot = {"items": [], "gold": 0, "materials": {}, "wave": 1}
+	# (stage_view may have written only "wave" into an empty run_loot first: fill the missing keys)
+	var blank := {"items": [], "gold": 0, "materials": {}, "wave": 1}
+	for key in blank:
+		if not run_loot.has(key): run_loot[key] = blank[key]
 	run_loot["gold"] = int(run_loot["gold"]) + gold
 	for id in materials:
 		run_loot["materials"][id] = int(run_loot["materials"].get(id, 0)) + int(materials[id])

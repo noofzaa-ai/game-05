@@ -21,6 +21,8 @@ func run(ctx) -> void:
 	_melee_checks(ctx, combat, radius)
 	_hazard_checks(ctx, combat)
 	_clear_checks(ctx, combat)
+	var ticks := pin_cuts_skill_lock(combat)
+	ctx.check("a card mid class skill starts moving to a new pin within 0.25 s (%d ticks)" % ticks, ticks <= 15)
 
 
 static func _sim(combat, enemy_at: Vector3) -> GameSim:
@@ -166,3 +168,24 @@ func _clear_checks(ctx, combat) -> void:
 	sim2.fighters[101].state = Fighter.State.DEAD
 	sim2.tick()
 	ctx.check("pins clear when the fight is won", sim2.get_pin(2).is_empty())
+
+
+## Boss 2026-11-27 "I tap and it does not move": a card mid class skill starts walking to a new pin at once (the
+## skill ends after its first hit; a wind-up before the first hit still plays). Measured with the longbow's Rapid Fire.
+static func pin_cuts_skill_lock(combat) -> int:
+	var sim: GameSim = Survival._arena(combat, "orc_grunt", Vector3(1.5, 0.05, 0.0))
+	Survival._settle(sim)
+	sim.fighters[100].stats["HP"] = 1.0e9
+	sim.fighters[100].hp = 1.0e9
+	var mems := {1: Pilot.new_memory(1), 2: Pilot.new_memory(2), 3: Pilot.new_memory(3)}
+	_drive(sim, combat, 240, mems)
+	var start: Vector3 = sim.bodies[2].position
+	var pin := Vector2(start.x - 8.0, start.z + 4.0)
+	sim.set_pin(2, pin.x, pin.y)
+	var d0 := Vector2(start.x - pin.x, start.z - pin.y).length()
+	for t in 120:
+		_drive(sim, combat, 1, mems)
+		var p: Vector3 = sim.bodies[2].position
+		if d0 - Vector2(p.x - pin.x, p.z - pin.y).length() > 0.15:
+			return t
+	return 999

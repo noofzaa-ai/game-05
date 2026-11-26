@@ -780,15 +780,14 @@ func _build_effects_and_hud() -> void:
 		_squad_panel = preload("res://client/squad_panel.gd").new()
 		add_child(_squad_panel)
 		_squad_panel.selected.connect(func(id: int) -> void: _focus_id = id)
-		if preload("res://client/card_pin.gd").enabled_for(_session) and not _squad_room():  # card pin: solo/local only (Boss 2026-11-26)
+		if preload("res://client/card_pin.gd").enabled_for(_session):  # card pin: local and online rooms (Boss 2026-11-26)
 			_card_pin = preload("res://client/card_pin.gd").new()
 			_card_pin.session = _session
 			_card_pin.squad_panel = _squad_panel
 			_card_pin.hud = _hud
 			_card_pin.views = _views
 			_card_pin.camera_of = func(): return _rig.get("_camera") if _rig != null else null
-			for squad_id in _session.fighters:
-				if _session.fighters[squad_id].team == "player": _card_pin.owner_ids.append(squad_id)
+			_card_pin.owner_ids = preload("res://client/card_pin.gd").own_cards(_session)
 			add_child(_card_pin)
 		preload("res://client/tutorial_driver.gd").attach_battle(self, _squad_panel, _session.has_method("is_remote") or _squad_room())  # tutorial.md 4 battle_tip (solo only)
 	if _boss_id >= 0:  # style the boss bar to the map once (the Chief's bar matches its floating goblin bar)

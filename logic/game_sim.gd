@@ -223,8 +223,24 @@ func set_pin(id: int, x: float, z: float, owner_ids: Array = []) -> Dictionary:
 		if int(other) != id and fighters.has(int(other)):
 			fighters[int(other)].pin = {}
 	fighter.pin = pin
+	_cut_skill_recovery(id, fighter)
 	events.append({"type": "card_pinned", "player": id, "x": pin["x"], "z": pin["z"]})
 	return pin.duplicate()
+
+
+## A new pin should move the card at once (Boss 2026-11-27: "I tap and it does not move"): a class skill locks the
+## caster for its whole clip (Rapid Fire's six arrows ~1.6 s). Once its FIRST hit has landed, the pin ends the cast
+## (later arrows / recovery are given up: the player chose to move). A skill still winding up to its first hit plays
+## on, so a pin is never a free cancel of a wind-up. Stances keep their own rules.
+func _cut_skill_recovery(id: int, fighter: Fighter) -> void:
+	var cast: Dictionary = fighter.skill_state.get("cast", {}) if fighter.skill_state is Dictionary else {}
+	if cast.is_empty() or str(cast.get("kind", "")) == "stance":
+		return
+	if int(cast.get("done", 0)) < 1:
+		cast["cut_after_first_hit"] = true  # logic/class_skills/engine.gd _run_cast ends it right after that hit
+		return
+	fighter.skill_state["cast"] = {}
+	events.append({"type": "class_skill_end", "player": id, "skill": str(cast.get("skill", ""))})
 
 
 func clear_pin(id: int) -> bool:

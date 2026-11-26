@@ -11,7 +11,7 @@ const SimInput := preload("res://logic/sim_input.gd")
 const SimWorld := preload("res://logic/sim_world.gd")
 
 ## Simulation events that are deliberately silent (something else already sounds for them).
-const SILENT_EVENTS := ["effect_ended", "card_pinned", "card_unpinned"]  ## pin tap sound is a UI click (client), not a sim sound
+const SILENT_EVENTS := ["effect_ended", "card_pinned", "card_unpinned", "class_skill_end"]  ## pin tap sound is a UI click (client), not a sim sound
 ## The whole shipped audio folder must stay under this (web download size).
 const AUDIO_BUDGET_BYTES := 4 * 1024 * 1024
 
