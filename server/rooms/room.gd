@@ -1,5 +1,6 @@
 extends RefCounted
 ## One trusted, in-memory Journey/GameSim authority. No client scene or database access.
+const BossLootRules := preload("res://logic/boss_loot.gd")
 const Sim := preload("res://logic/game_sim.gd")
 const World := preload("res://logic/sim_world.gd")
 const SimInput := preload("res://logic/sim_input.gd")
@@ -716,6 +717,10 @@ func public_state(viewer: int, borrowed: bool = false) -> Dictionary:
 	if journey.data.wave_mode and goblin_waves == null:  # wave-mode journey (goblin_waves): the client shows "Wave N/12"
 		state.meta["wave_mode"] = true; state.meta["wave"] = mini(int(sim._waves_released) + 1, journey.wave_total())
 	if squads: _squad_meta(state.meta)
+	# Boss loot (design/gdd/boss-loot.md 2): the viewer's own paid summary, so the client's run summary can show the coin and
+	# set piece / boss weapon (client/session/remote_journey.gd boss_loot -> client/journey_screen.gd _add_boss_loot).
+	if "boss_loot" in journey and journey.boss_loot.has(str(viewer)):
+		state.meta["boss_loot"] = {str(viewer): BossLootRules.summary_to_dict(journey.boss_loot[str(viewer)])}
 	if borrowed: return preload("res://server/rooms/snapshot_cache.gd").freeze(state)
 	return state.duplicate(true)
 

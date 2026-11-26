@@ -158,6 +158,16 @@ func _rooms(ctx, f: Dictionary) -> void:
 	ctx.check("room drive: the run is won", room.journey.state == Journey.WON)
 	if room.journey.state != Journey.WON:
 		return
+	# Boss 2026-11-26 "boss Warlock does not drop items": the room paid journey.boss_loot but never sent it to the client, so the
+	# online run summary (RemoteJourney -> journey_screen _add_boss_loot) showed no coin / set piece / boss weapon.
+	var viewer: int = room.connected.keys()[0]
+	var meta: Dictionary = room.public_state(viewer).meta
+	var remote = preload("res://client/session/remote_journey.gd").new()
+	remote.update(meta, null)
+	var mine: Dictionary = remote.boss_loot.get(str(viewer), {})
+	ctx.check("room snapshot: the won run sends the viewer's boss loot %s" % [meta.get("boss_loot", {}).keys()],
+		meta.has("boss_loot") and str(mine.get("coin", "")) == "coin_orc_warlock" and int(mine.get("coins", 0)) >= 1
+		and (mine.get("items", []) as Array).all(func(i): return i != null and str(i.item_id).begins_with("boss_orc_warlock")))
 	var d: Dictionary = room.finalize().values()[0]
 	var coin := str(BossLoot.boss("orc_camp").get("coin", ""))
 	ctx.check("settle: boss_orc_camp flagged", bool(d.unlocks.get(Zones.boss_key("orc_camp"), false)))

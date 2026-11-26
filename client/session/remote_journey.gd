@@ -13,6 +13,7 @@ var _players := []
 var _stage := 1
 var wave := 1  ## wave-mode rooms: the wave on the field (meta.wave)
 var data = preload("res://logic/journey_data.gd").new()
+var boss_loot: Dictionary = {}  ## the room's boss loot paid to this player on a won run (meta.boss_loot, key = player slot)
 
 func update(meta: Dictionary, trip) -> void:
 	state = meta.state; current = meta.current; treasure_pending = meta.treasure_pending
@@ -20,6 +21,11 @@ func update(meta: Dictionary, trip) -> void:
 	_choices = meta.choices; _players = meta.players; run = trip
 	data.display_name = str(meta.get("content_name", "The Ink Road")); data.stage_count = int(meta.get("stage_count", 12))
 	data.wave_mode = bool(meta.get("wave_mode", false)); wave = int(meta.get("wave", 1))
+	var paid = meta.get("boss_loot", {})
+	if paid is Dictionary and not paid.is_empty():
+		boss_loot = {}
+		for key in paid:
+			if paid[key] is Dictionary: boss_loot[str(key)] = preload("res://logic/boss_loot.gd").summary_from_dict(paid[key])
 
 func is_over() -> bool: return state in ["won", "lost", "retreated", "abandoned"]
 func is_at_camp() -> bool: return state == "at_node" and current.get("kind") == "camp"
