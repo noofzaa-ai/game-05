@@ -33,6 +33,11 @@ var _flash_clock := 99.0
 var _phone_tokens := PHONE_BLOWS_PER_SECOND
 var _ult_wait: Dictionary = {}  ## player id -> ult key, from ultimate_cast until its first action lands
 var _summoners: Array = []  ## enemy types whose arrival plays WAVE_KEY
+## VFX hierarchy (Boss 2026-11-25, data "violence".tiers / budget): preset -> tier A | B; only flash_tiers flash the
+## screen; debris (style chunk) and smoke particles alive at once are capped (lower on phones).
+var tiers: Dictionary = {}
+var budget: Dictionary = {"debris": 48, "debris_phone": 24, "smoke": 24, "smoke_phone": 10, "flash_tiers": ["A"]}
+var _alive_fx: Array = []  ## [kind, count, seconds left] of the debris / smoke layers playing now
 
 
 func _ready() -> void:
@@ -49,6 +54,12 @@ func load_data(path: String) -> void:
 			"scale": float(raw.get("scale", 1.0)), "on": str(raw.get("on", "release")), "at": str(raw.get("at", "caster")),
 			"ahead": float(raw.get("ahead", 0.0))}
 	_summoners = Array(data.get("summoners", []))
+	tiers.clear()
+	for preset in data.get("tiers", {}):
+		if not str(preset).begins_with("_"):
+			tiers[str(preset)] = str(data["tiers"][preset])
+	if data.get("budget") is Dictionary:
+		budget.merge(data["budget"], true)
 	map_colors.clear()
 	var best := ""
 	for prefix in data.get("map_colors", {}):
@@ -62,6 +73,56 @@ func load_data(path: String) -> void:
 func _process(delta: float) -> void:
 	_flash_clock += delta
 	_phone_tokens = minf(PHONE_BLOWS_PER_SECOND, _phone_tokens + delta * PHONE_BLOWS_PER_SECOND)
+	tick_budget(delta)
+
+
+func tick_budget(delta: float) -> void:
+	var i := _alive_fx.size() - 1
+	while i >= 0:
+		_alive_fx[i][2] -= delta
+		if _alive_fx[i][2] <= 0.0:
+			_alive_fx.remove_at(i)
+		i -= 1
+
+
+## Debris / smoke particles alive now (kind "chunk" | "smoke").
+func alive_particles(kind: String) -> int:
+	var n := 0
+	for row in _alive_fx:
+		if row[0] == kind:
+			n += int(row[1])
+	return n
+
+
+## The cap of `kind` ("chunk" = debris, "smoke") for this device.
+func cap_of(kind: String, phone: bool) -> int:
+	var name := "debris" if kind == "chunk" else "smoke"
+	return int(budget.get(name + ("_phone" if phone else ""), 9999))
+
+
+## The tier of a violence key ("A" | "B"; unknown = "B").
+func tier_of(key: String) -> String:
+	var spec: Dictionary = specs.get(key, {})
+	return str(tiers.get(str(spec.get("preset", "")), "B"))
+
+
+## The particle kinds a blow of `layers` must leave out to stay inside the budget (and books the rest).
+func budget_drop(layers: Array, phone: bool, scale: float) -> Array:
+	var drop: Array = []
+	for kind in ["chunk", "smoke"]:
+		var want := 0
+		var longest := 0.0
+		for layer in layers:
+			if str(layer.get("style", "")) == kind:
+				want += int(round(float(layer.get("count", 0)) * (scale if bool(layer.get("scale", false)) else 1.0)))
+				longest = maxf(longest, float(layer.get("seconds", 0.0)) + float(layer.get("delay", 0.0)))
+		if want == 0:
+			continue
+		if alive_particles(kind) + want > cap_of(kind, phone):
+			drop.append(kind)
+		else:
+			_alive_fx.append([kind, want, longest])
+	return drop
 
 
 func handle_events(events: Array) -> void:
@@ -142,11 +203,13 @@ func play(key: String, pos: Vector3, facing: Vector2) -> String:
 			return ""
 		_phone_tokens -= 1.0
 	var feet := Vector3(pos.x, 0.0 if pos.y < 1.5 else pos.y - 1.1, pos.z)  # (an orb's job flies at chest height)
-	var flash := _flash_clock >= FLASH_GAP
+	var tier := tier_of(key)
+	var flash := _flash_clock >= FLASH_GAP and tier in Array(budget.get("flash_tiers", ["A"]))
 	if flash:
 		_flash_clock = 0.0
+	var drop := budget_drop(effects.library.layers(action), action.ends_with("_phone"), float(spec["scale"]))
 	var ctx: Dictionary = Effects.context(feet + Vector3(0.0, 0.6, 0.0), feet, facing, spec["color"],
-		{"violent": true, "flash": flash, "scale": float(spec["scale"]), "colors": map_colors})
+		{"violent": true, "flash": flash, "scale": float(spec["scale"]), "colors": map_colors, "drop": drop})
 	effects.play(action, ctx)
 	played.append(key)
 	if played.size() > 64:

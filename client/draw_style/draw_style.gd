@@ -480,7 +480,7 @@ static func _apply_painting(stage: Node, map_id: String) -> void:
 	if sky != null:
 		for node in stage.find_children("*", "WorldEnvironment", true, false):
 			var env: Environment = (node as WorldEnvironment).environment
-			if env == null or env.background_mode != Environment.BG_SKY:
+			if env == null or env.background_mode != Environment.BG_SKY or env.has_meta("fight_light_sky"):
 				continue  # (a night mood paints a flat dark background: leave it)
 			var material := PanoramaSkyMaterial.new()
 			material.panorama = sky

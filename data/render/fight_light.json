@@ -1,0 +1,52 @@
+{
+	"version": 1,
+	"_comment": "Fight readability light (tech-artist 2026-11-25, Boss approved: 'the fight scene is too dark, small fighters sink into the floor'). Read by client/fight_light.gd after the stage has set its sky / night look. Each block matches a map id prefix (longest wins; 'default' otherwise). exposure = Environment.tonemap_exposure (the whole picture), ambient = multiplier on the map's ambient energy, key / rim = multipliers on the CHARACTER-ONLY key and rim lights (client/character_light.gd: they light only the fighters' render layer, so they lift units off the floor at no extra light cost). Keep each zone's identity: orc stays night-blue, only readable.",
+	"zones": {
+		"default": {
+			"exposure": 1.08,
+			"ambient": 1.1,
+			"key": 1.25,
+			"rim": 1.3
+		},
+		"goblin": {
+			"exposure": 1.08,
+			"ambient": 1.1,
+			"key": 1.25,
+			"rim": 1.3
+		},
+		"mummy": {
+			"exposure": 1.05,
+			"ambient": 1.05,
+			"key": 1.25,
+			"rim": 1.3
+		},
+		"orc": {
+			"exposure": 1.12,
+			"ambient": 1.05,
+			"key": 1.6,
+			"rim": 1.9,
+			"sky": [
+				"#3a1f5c",
+				"#c4507a",
+				"#ff9a4a"
+			],
+			"sun_color": "#ffbf8a",
+			"sun_energy": 0.95,
+			"sun_rotation": [
+				-20.0,
+				-72.0,
+				0.0
+			],
+			"ambient_color": "#8c7cc4",
+			"key_color": "#ffe6cc",
+			"rim_color": "#ffb070"
+		},
+		"elder_grove": {
+			"exposure": 1.08,
+			"ambient": 1.1,
+			"key": 1.3,
+			"rim": 1.3
+		}
+	},
+	"_dusk": "Optional look keys (Boss 2026-11-25: the orc camp is DUSK, not night): sky = [top, middle, horizon] colours (a procedural gradient sky, kept by the drawn style), sun_color / sun_energy / sun_rotation (the stage's one existing sun: low and from one side = long shadows), ambient_color (the shadow tint), key_color / rim_color (the fighters' own lights). Colours, energies and angles only: no new lights or passes."
+}

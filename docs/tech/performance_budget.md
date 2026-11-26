@@ -270,3 +270,37 @@ Full stays inside the +15% budget even at 9 blows a second. The phone variant is
 ~+0.33 ms native -> ~+2-2.6 ms on the Boss's iPhone in this worst case, ~+0.8-1.2 ms for one blow at a time. A normal
 fight is far below this stress. Web pack: no new art files (procedural layers); vfx.json grew ~70 KB of text in the core
 pack, the battle pack is unchanged.
+
+
+### Fight light + VFX tiers, measured 2026-11-25 (tech-artist)
+
+Boss approved: (1) brighter fight scenes, (2) VFX hierarchy. Data: `data/render/fight_light.json` (exposure / ambient /
+character key+rim multipliers per zone, applied by `client/fight_light.gd`; no new lights, no new passes) and
+`data/combat/vfx.json` "violence".tiers / budget. Tiers: **A** = boss big moves + race ultimates (only tier with the screen
+flash and zoom punch; debris halved 56 -> 16 full, 18 -> 9 phone; smoke halved, life x0.55 = 1.65-1.9 s); **B** = class
+skills, combos, monster shots, auras (debris 32+24 -> 10, no grit, smoke 14+10 -> 5+4 at x0.45 life, sparks x0.6, no
+flash, no punch, shake x0.6); **C** = plain hits (no debris, no flash; hit/crit and skill_impact/3|crit lost their flash).
+Screen caps over all violent blows (client/vfx/violent_vfx.gd budget_drop): debris 48 (phone 24), smoke particles 24
+(phone 10); a blow over the cap plays without that layer.
+
+`tools/shots/fight_light_shots.gd` (windowed, RTX 3070 Ti native, vsync off, live wave-1 fight from 6 s, 300 frames, two
+reps mean; CPU frame p50 / p95 ms, draw calls avg):
+
+| map | 844x390 before | 844x390 after | 1280x720 before | 1280x720 after |
+|---|---|---|---|---|
+| goblin courtyard | 2.75 / 4.80, 221 dc | 3.23 / 5.34, 217 dc | 2.77 / 5.40, 228 dc | 2.89 / 5.08, 215 dc |
+| mummy hall | 3.04 / 5.14, 218 dc | 3.18 / 5.37, 209 dc | 3.05 / 5.21, 223 dc | 3.17 / 5.50, 214 dc |
+| orc camp | 3.01 / 5.72, 229 dc | 3.39 / 5.76, 232 dc | 3.00 / 5.99, 228 dc | 3.35 / 6.60, 228 dc |
+| elder grove | 1.84 / 3.45, 178 dc | 1.88 / 3.62, 173 dc | 1.87 / 3.75, 178 dc | 2.07 / 3.68, 178 dc |
+
+Wave 1 has no skills or ultimates yet, so the VFX cut barely shows here; the differences (+0.1-0.4 ms p50) are inside the
+run-to-run noise of these short live fights (the fight differs per run: the sim rng is not seeded by the tool) and draw
+calls are flat or lower. The light change costs nothing by construction (same lights, uniform values only). The VFX cut
+lowers the particle count of every violent blow (tier A debris -50 %, tier B debris -82 %, smoke -50..-65 % and 45-55 %
+shorter life), which is the fill-heavy part on phones (large alpha smoke quads). OPEN: no real-iPhone measure yet; the
+boss-wave stress (vfx_violence_shots.gd --perf) was not re-run.
+
+Orc Camp DUSK (Boss 2026-11-25, same files): the orc zone in fight_light.json also sets a gradient sky (violet top ->
+pink -> orange horizon, ProceduralSkyMaterial; the drawn style keeps it via meta fight_light_sky), the existing sun low
+(-20 deg) from the side, warm #ffbf8a at 0.95, a violet shade ambient #8c7cc4, a warm rim #ffb070 x1.9 and key x1.6. Same
+lights, no new pass: orc 844x390 p50 / p95 3.46 / 5.97 ms, 218 dc (night 'after' 3.39 / 5.76, 232 dc) = noise.

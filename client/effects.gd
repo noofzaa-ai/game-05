@@ -146,6 +146,8 @@ func _play_layer(layer: Dictionary, ctx: Dictionary, instant: bool) -> void:
 	var calm := bool(ctx.get("violent", false)) and not instant and Violence.reduced_motion()
 	if calm and str(layer["type"]) in ["shake", "punch"]:
 		return
+	if not instant and str(layer.get("style", "")) in ctx.get("drop", []):
+		return  # (the on-screen particle budget is full for this kind: client/vfx/violent_vfx.gd)
 	if str(layer["type"]) == "flash" and not instant and not bool(ctx.get("flash", true)):
 		return  # (violent blows close together: one soft flash, never a flicker, client/vfx/violent_vfx.gd FLASH_GAP)
 	match str(layer["type"]):
