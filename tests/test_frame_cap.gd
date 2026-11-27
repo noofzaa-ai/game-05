@@ -142,7 +142,7 @@ func _split(ctx) -> void:
 func _section(ctx) -> void:
 	Cost.reset()
 	for s in 10: Cost.buckets.append([s, 30, 20, 90, 0, 0, 2, 0, 0, 0, 0, 3, 110, 12, 300, 200, 400])
-	for i in Cost.SLOW_KEPT: Cost.slow_frames.append([i, 210, "outside", 160, 15, 4, 0, 0, 0, 3, 8, 20, 12, 160])
+	for i in Cost.SLOW_KEPT: Cost.slow_frames.append([i, 210, "outside", 160, 15, 4, 0, 0, 0, 3, 8, 20, 12, 160, 40, 0])
 	Cost.slow_total = 90
 	Cost.slow_by_phase = {"outside": 80, "draw": 10}
 	var section := Cost.export()

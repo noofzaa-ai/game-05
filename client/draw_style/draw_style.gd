@@ -31,6 +31,13 @@ const DRAWN_KEYS := ["drawn_off", "drawn_lite", "drawn_on"]  ## panel words, in 
 const SCREEN_SCALE := 0.5  ## the only render scale the screen pass runs at (the shipped default)
 const SLOW_FPS := 30.0  ## a battle whose median frame rate is below this marks the device slow for the next battles (Boss 2026-11-18: was 22)
 const SLOW_CAP_SHARE := 0.9  ## under a render cap at or below SLOW_FPS: slow means below 90% of the cap (27 at a 30 cap)
+## Re-evaluation (Boss 2026-11-27: a phone marked slow by one bad battle stayed slow at 35-56 fps): a slow device that
+## runs FAST_STREAK battles in a row with a median at or above FAST_FPS (or FAST_CAP_SHARE of a cap at or below it)
+## is cleared. The bar sits well above SLOW_FPS (hysteresis: the light look itself is faster, so 31 fps is not enough),
+## and one battle under it resets the streak.
+const FAST_FPS := 40.0
+const FAST_CAP_SHARE := 0.95
+const FAST_STREAK := 2
 const SLOW_MIN_SECONDS := 20.0  ## a verdict needs at least this much measured fight
 const SLOW_WARMUP := 3.0  ## seconds after the stage opens before measuring (loading hitches are not "slow")
 const DEVICE_PATH := "user://device_speed.cfg"  ## the remembered verdict (device-local, like graphics.cfg)
@@ -178,7 +185,7 @@ static func _remembered_slow() -> bool:
 
 
 ## A finished battle's median frame rate: below SLOW_FPS (over at least SLOW_MIN_SECONDS) the device is remembered as
-## slow. A battle never marks it fast again (a slow device runs faster without the look); the panel's "On" forgets it.
+## slow. A slow device is cleared again only by FAST_STREAK fast battles (_recheck_slow); the panel's "On" forgets it.
 ## With a render cap (graphics_options.gd frame_cap: 30 on a phone) a healthy battle runs AT the cap with a little
 ## jitter around it (29.9-30.1), so the bar is SLOW_CAP_SHARE of the cap there: a capped phone is slow only when it
 ## cannot hold ~27 fps (tech-artist 2026-11-19: a capped native run at exactly 30.0 fps was marked slow).
@@ -186,14 +193,40 @@ static func record_battle(median_fps: float, seconds: float) -> bool:
 	var bar := SLOW_FPS
 	if Engine.max_fps > 0 and float(Engine.max_fps) <= SLOW_FPS:
 		bar = float(Engine.max_fps) * SLOW_CAP_SHARE
-	if seconds < SLOW_MIN_SECONDS or median_fps >= bar or _remembered_slow():
+	if seconds < SLOW_MIN_SECONDS:
+		return false
+	if _remembered_slow():
+		_recheck_slow(median_fps)
+		return false
+	if median_fps >= bar:
 		return false
 	var config := ConfigFile.new()
 	config.set_value("device", "slow", true)
 	config.set_value("device", "median_fps", snappedf(median_fps, 0.1))
+	config.set_value("device", "fast_streak", 0)
 	config.save(DEVICE_PATH)
 	print("draw_style: this battle ran at %.1f fps (median): the next battles use the light look" % median_fps)
 	return true
+
+
+## A remembered-slow device after a measured battle: FAST_STREAK fast battles in a row clear the verdict (the next
+## battle loads the full look); a battle under the fast bar restarts the count. Returns true when it was cleared.
+static func _recheck_slow(median_fps: float) -> bool:
+	var bar := FAST_FPS
+	if Engine.max_fps > 0 and float(Engine.max_fps) <= FAST_FPS:
+		bar = float(Engine.max_fps) * FAST_CAP_SHARE
+	var config := ConfigFile.new()
+	if config.load(DEVICE_PATH) != OK:
+		return false
+	var streak := int(config.get_value("device", "fast_streak", 0)) + 1 if median_fps >= bar else 0
+	if streak >= FAST_STREAK:
+		DirAccess.remove_absolute(ProjectSettings.globalize_path(DEVICE_PATH))
+		print("draw_style: %d battles in a row at %.1f+ fps (median): the device is no longer marked slow" % [FAST_STREAK, bar])
+		return true
+	config.set_value("device", "fast_streak", streak)
+	config.set_value("device", "last_median_fps", snappedf(median_fps, 0.1))
+	config.save(DEVICE_PATH)
+	return false
 
 
 static func forget_slow() -> void:
@@ -328,7 +361,7 @@ func _watch_speed(delta: float) -> void:
 
 
 func _exit_tree() -> void:
-	if _frame_times.is_empty() or is_slow_device():
+	if _frame_times.is_empty() or _software_renderer():  # (a slow device is measured too: record_battle may clear it)
 		return
 	var seconds := 0.0
 	for t in _frame_times:

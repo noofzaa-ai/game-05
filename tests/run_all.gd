@@ -105,6 +105,7 @@ const TEST_FILES := [
 	"res://tests/test_draw_style.gd",
 	"res://tests/test_phone_graphics.gd",
 	"res://tests/test_frame_cap.gd",
+	"res://tests/test_echo_timing.gd",
 	"res://tests/test_lv15_metal_glint.gd",
 	"res://tests/test_settings_panel.gd",
 	"res://tests/test_items.gd",

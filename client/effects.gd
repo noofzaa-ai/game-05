@@ -36,6 +36,7 @@ var prewarmed_keys: Array[String] = []
 
 var _live: Array[Dictionary] = []  ## effects playing now
 var _pool: Dictionary = {}  ## layer type -> Array of spare MeshInstance3D
+var _created := 0  ## pool misses since the last frame (client/lag_cost.gd slow-frame columns)
 var _trail_meshes: Dictionary = {}  ## layer text -> ArrayMesh
 var _quad: QuadMesh  ## centered unit quad
 var _tall_quad: QuadMesh  ## unit quad standing on its bottom edge (beams, afterimages)
@@ -118,6 +119,8 @@ func live_count() -> int:
 
 
 func _process(delta: float) -> void:
+	preload("res://client/lag_cost.gd").note_vfx(_live.size(), _created)
+	_created = 0
 	if not preload("res://client/graphics_options.gd").enabled("combat_vfx"):
 		for fx in _live: _release(fx)
 		_live.clear()
@@ -325,6 +328,7 @@ func _take(type: String, shader: Shader) -> MeshInstance3D:
 	var spare: Array = _pool.get(type, [])
 	if not spare.is_empty():
 		return spare.pop_back()
+	_created += 1
 	var node := MeshInstance3D.new()
 	node.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var mat := ShaderMaterial.new()

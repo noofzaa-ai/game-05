@@ -22,7 +22,7 @@ const SECONDS := 10  ## one-second buckets kept
 const SLOW_KEPT := 8  ## the latest slow frames kept in full
 const COLUMNS := ["second", "frames", "restores", "restore_ms", "profile_full", "profile_full_ms", "profile_inplace", "view_builds", "view_build_ms", "view_nodes", "view_nodes_max_frame", "slow_frames", "netfox_tick_ms", "physics_ms", "process_ms", "draw_ms", "outside_ms"]
 const PHASES := ["netfox_tick", "state_apply", "view_build", "view_update", "vfx_audio", "hud_camera", "physics_other", "process_other", "draw", "outside"]
-const SLOW_COLUMNS := ["t_since_first_sample_s", "frame_ms", "busiest", "busiest_ms", "netfox_tick_ms", "state_apply_ms", "view_build_ms", "profile_full", "nodes_created", "restores", "physics_ms", "process_ms", "draw_ms", "outside_ms"]
+const SLOW_COLUMNS := ["t_since_first_sample_s", "frame_ms", "busiest", "busiest_ms", "netfox_tick_ms", "state_apply_ms", "view_build_ms", "profile_full", "nodes_created", "restores", "physics_ms", "process_ms", "draw_ms", "outside_ms", "vfx_live", "vfx_new"]
 ## Read once per report (never per frame). Every field is optional: a browser that lacks one leaves it out.
 const DEVICE_JS := "(function(){var o={};try{if(navigator.deviceMemory)o.device_memory_gb=navigator.deviceMemory;if(navigator.hardwareConcurrency)o.cores=navigator.hardwareConcurrency;var m=performance.memory;if(m){o.js_heap_mb=Math.round(m.usedJSHeapSize/1048576);o.js_heap_limit_mb=Math.round(m.jsHeapSizeLimit/1048576);}var b=window.zorxBattery;if(b){o.charging=b.charging;o.battery=b.level;}o.dpr=window.devicePixelRatio;if(window.zorxRealDpr)o.real_dpr=window.zorxRealDpr;o.visibility=document.visibilityState;o.visibility_changes=window.zorxVisibilityChanges||0;}catch(e){}return JSON.stringify(o);})()"
 ## Installed once: counts visibility changes and keeps the battery state (navigator.getBattery, not on iOS Safari).
@@ -62,6 +62,15 @@ static func note_profile(us: int, in_place: bool) -> void:
 	else:
 		profile_full += 1
 		profile_full_us += us
+
+
+## Effect nodes alive / created this frame (client/effects.gd): a slow draw frame with many live additive quads is
+## overdraw (GPU back-pressure), one with new nodes is a pool miss / first use (tech-artist 2026-11-27).
+static var vfx_live := 0
+static var _vfx_new := 0
+static func note_vfx(live: int, created: int) -> void:
+	vfx_live = live
+	_vfx_new += created
 
 
 static func note_view_build(us: int, nodes: int) -> void:
@@ -158,11 +167,12 @@ static func sample(session, stage_marks: Dictionary) -> void:
 			slow_total += 1
 			slow_by_phase[top] = int(slow_by_phase.get(top, 0)) + 1
 			slow_frames.append([roundi(float(now - _started_us) / 1000000.0), frame_ms, top, roundi(ms[top]), roundi(ms["netfox_tick"]), roundi(ms["state_apply"]), roundi(ms["view_build"]), d.call("pfull"), _frame_nodes, d.call("restores"),
-				roundi(physics_ms), roundi(process_ms), roundi(draw_ms), roundi(ms["outside"])])
+				roundi(physics_ms), roundi(process_ms), roundi(draw_ms), roundi(ms["outside"]), vfx_live, _vfx_new])
 			while slow_frames.size() > SLOW_KEPT: slow_frames.pop_front()
 	_last = cur
 	_last_us = now
 	_frame_nodes = 0
+	_vfx_new = 0
 
 
 ## Device hints from the browser ({} on native). Read when the report is built, never per frame.

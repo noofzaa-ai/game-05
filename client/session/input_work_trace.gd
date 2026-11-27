@@ -9,7 +9,7 @@ func record(label:String,start_us:int,end_us:int)->void:
 func browser_setup()->void:
  if browser_installed or not OS.has_feature("web"):return
  browser_installed=true
- JavaScriptBridge.eval("""(()=>{if(window.zorxInputWork)return;const s={supported:false,tasks:[]};window.zorxInputWork=s;try{if(typeof PerformanceObserver!=='undefined'&&PerformanceObserver.supportedEntryTypes.includes('longtask')){s.supported=true;new PerformanceObserver(l=>{for(const e of l.getEntries())s.tasks.push({start_ms:e.startTime,duration_ms:e.duration});s.tasks=s.tasks.slice(-16)}).observe({type:'longtask',buffered:true})}}catch(e){}})()""",true)
+ JavaScriptBridge.eval("""(()=>{if(window.zorxInputWork)return;const s={supported:false,tasks:[]};window.zorxInputWork=s;try{if(typeof PerformanceObserver!=='undefined'&&PerformanceObserver.supportedEntryTypes.includes('longtask')){s.supported=true;new PerformanceObserver(l=>{for(const e of l.getEntries())s.tasks.push({start_ms:e.startTime,duration_ms:e.duration});s.tasks=s.tasks.slice(-16)}).observe({type:'longtask',buffered:true})}}catch(e){}const r={gaps:0,max_ms:0,frames:0,last:0,recent:[]};s.raf=r;const f=t=>{if(r.last){const g=t-r.last;r.frames++;if(g>50){r.gaps++;r.recent.push({start_ms:r.last,duration_ms:Math.round(g)});r.recent=r.recent.slice(-16)}if(g>r.max_ms)r.max_ms=Math.round(g)}r.last=document.visibilityState==='visible'?t:0;requestAnimationFrame(f)};requestAnimationFrame(f)})()""",true)
 func gap(start_us:int,end_us:int,read_browser:bool=true)->Dictionary:
  var selected:Array=[];var intervals:Array=[]
  for span in spans:
@@ -24,7 +24,7 @@ func gap(start_us:int,end_us:int,read_browser:bool=true)->Dictionary:
  selected.sort_custom(func(a,b):return a.duration_ms>b.duration_ms)
  var result:Dictionary={"gap_ms":maxi(0,end_us-start_us)/1000.0,"instrumented_union_ms":covered/1000.0,"outside_instrumented_ms":maxi(0,end_us-start_us-covered)/1000.0,"longest_scopes":selected.slice(0,6),"note":"wall time; scopes may overlap; outside scope is not proof of browser inactivity"}
  if read_browser and OS.has_feature("web"):
-  var raw=JavaScriptBridge.eval("JSON.stringify({visibility:document.visibilityState,focused:document.hasFocus(),now_ms:performance.now(),longtask_supported:!!(window.zorxInputWork&&window.zorxInputWork.supported),tasks:window.zorxInputWork?window.zorxInputWork.tasks:[]})",true)
+  var raw=JavaScriptBridge.eval("JSON.stringify({visibility:document.visibilityState,focused:document.hasFocus(),now_ms:performance.now(),longtask_supported:!!(window.zorxInputWork&&window.zorxInputWork.supported),tasks:window.zorxInputWork?window.zorxInputWork.tasks:[],raf_gaps:window.zorxInputWork&&window.zorxInputWork.raf?{over_50ms:window.zorxInputWork.raf.gaps,max_ms:window.zorxInputWork.raf.max_ms,frames:window.zorxInputWork.raf.frames,recent:window.zorxInputWork.raf.recent}:null})",true)
   var browser=JSON.parse_string(str(raw))
   if browser is Dictionary:result["browser_at_resume"]=browser
  return result

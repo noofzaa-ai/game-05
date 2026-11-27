@@ -44,10 +44,20 @@ func poll()->void:
   recorder.sample(values,{"prediction_us":actor.prediction_us if actor!=null else 0,"restore_us":actor.restore_us if actor!=null else 0,"metadata_decode_us":session.lag_decode_us,"metadata_apply_us":session.metadata_apply_us,"metadata_bytes":session._metadata_bytes,"authority_payload_bytes":actor.state_payload_bytes if actor!=null else 0,"authority_packets":actor.state_packets if actor!=null else 0,"authority_decode_us":actor.state_decode_us if actor!=null else 0,"input_rpc_calls":actor.input_send_calls if actor!=null else 0},now)
   _context={"map":session.server_state.get("meta",{}).get("map",""),"epoch":session.scene_epoch(),"mode":"netfox_authoritative_room","worker_release":net.worker_release,"scene_loading":session.server_state.get("meta",{}).get("scene_loading",false),"saved":session.saved}
   if OS.has_feature("web"):
-   var raw=JavaScriptBridge.eval("JSON.stringify({visibility:document.visibilityState,focused:document.hasFocus(),longtask_supported:!!(window.zorxInputWork&&window.zorxInputWork.supported),tasks:window.zorxInputWork?window.zorxInputWork.tasks:[]})",true)
+   var raw=JavaScriptBridge.eval("JSON.stringify({visibility:document.visibilityState,focused:document.hasFocus(),longtask_supported:!!(window.zorxInputWork&&window.zorxInputWork.supported),tasks:window.zorxInputWork?window.zorxInputWork.tasks:[],raf:window.zorxInputWork&&window.zorxInputWork.raf?{over_50ms:window.zorxInputWork.raf.gaps,max_ms:window.zorxInputWork.raf.max_ms,frames:window.zorxInputWork.raf.frames}:null})",true)
    var browser=JSON.parse_string(str(raw))
-   if browser is Dictionary:_context["browser"]=browser
+   if browser is Dictionary:_context["browser"]=long_task_view(browser)
  if recorder.advance(now):request_worker_capture()
+## Safari/WebKit has no longtask observer: "0 long tasks" there meant unmeasured. The report says which source counted
+## them: "longtask_observer", else "raf_gap" (requestAnimationFrame gaps over 50 ms while visible), else "unsupported".
+static func long_task_view(browser:Dictionary)->Dictionary:
+ var out:=browser.duplicate(true)
+ var raf=browser.get("raf")
+ if bool(browser.get("longtask_supported",false)):out["long_tasks"]={"source":"longtask_observer","count":browser.get("tasks",[]).size()}
+ elif raf is Dictionary:out["long_tasks"]={"source":"raf_gap","over_50ms":int(raf.get("over_50ms",0)),"max_gap_ms":int(raf.get("max_ms",0)),"frames":int(raf.get("frames",0)),"note":"longtask observer unsupported; frame gaps counted instead"}
+ else:out["long_tasks"]={"source":"unsupported","note":"not measured (no longtask observer, no rAF data)"}
+ if not bool(browser.get("longtask_supported",false)):out.erase("tasks")
+ return out
 func _trigger(reason:String,values:Dictionary,now:int)->void:
  if recorder.trigger(reason,values,now):
   _last_trigger=reason

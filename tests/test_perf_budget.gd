@@ -69,7 +69,8 @@ func _scale_penalty(ctx) -> void:
 	var had := FileAccess.file_exists(Options.PATH)
 	Options.force_device("desktop")
 	Options.scale_penalty_override = 1
-	ctx.check("full-size path: 3D drawn at 1.0 whatever the panel says", is_equal_approx(float(Options.effective("render_scale")), 1.0) and is_equal_approx(float(Options.value("render_scale")), 0.5))
+	# (the panel value comes from user://graphics.cfg when one exists on this machine: 0.5 default or whatever a tool saved)
+	ctx.check("full-size path: 3D drawn at 1.0 whatever the panel says (%s)" % Options.value("render_scale"), is_equal_approx(float(Options.effective("render_scale")), 1.0) and float(Options.value("render_scale")) < 1.0)
 	DrawStyle._override = ""
 	DrawStyle._decided = true
 	DrawStyle.slow_device = false

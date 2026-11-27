@@ -241,6 +241,8 @@ func _measure(tag: String, frames: int, base: Dictionary = {}, count: int = -1) 
 		await RenderingServer.frame_post_draw
 		var now := Time.get_ticks_usec()
 		times.append((now - last) / 1000.0)
+		if times[-1] > 25.0 and _args().has("--hitches"):
+			print("COST hitch %s frame=%d ms=%.1f draw_ms=%.1f nodes=%d" % [tag, i, times[-1], (now - _t_pre) / 1000.0, Performance.get_monitor(Performance.OBJECT_NODE_COUNT)])
 		last = now
 		dc += Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)
 		prims += Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)
@@ -249,11 +251,12 @@ func _measure(tag: String, frames: int, base: Dictionary = {}, count: int = -1) 
 	for t in times: mean += t
 	mean /= n
 	times.sort()
-	var r := {"ms": mean, "p95": times[int(n * 0.95)], "draw": _acc_draw / n, "proc": _acc_proc / n, "dc": dc / n, "prims": prims / n}
+	var over50 := times.filter(func(t): return t > 50.0).size()
+	var r := {"ms": mean, "p95": times[int(n * 0.95)], "max": times[-1], "over50": over50, "draw": _acc_draw / n, "proc": _acc_proc / n, "dc": dc / n, "prims": prims / n}
 	var delta := ""
 	if not base.is_empty():
 		delta = " | d_ms=%+.2f d_draw=%+.2f d_dc=%+d d_prims=%+dk" % [r.ms - base.ms, r.draw - base.draw, roundi(r.dc - base.dc), roundi((r.prims - base.prims) / 1000.0)]
-	print("COST %s%s frame_ms=%.2f fps=%.0f p95=%.2f draw_ms=%.2f process_ms=%.2f dc=%d prims=%dk%s" % [tag, "" if count < 0 else "[%d]" % count, r.ms, 1000.0 / r.ms, r.p95, r.draw, r.proc, roundi(r.dc), roundi(r.prims / 1000.0), delta])
+	print("COST %s%s frame_ms=%.2f fps=%.0f p95=%.2f max=%.1f over50=%d draw_ms=%.2f process_ms=%.2f dc=%d prims=%dk%s" % [tag, "" if count < 0 else "[%d]" % count, r.ms, 1000.0 / r.ms, r.p95, r.max, r.over50, r.draw, r.proc, roundi(r.dc), roundi(r.prims / 1000.0), delta])
 	return r
 
 

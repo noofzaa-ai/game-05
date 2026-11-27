@@ -355,3 +355,30 @@ slow frames ~200 ms all 'draw'. The canvas was 2796x1290 (devicePixelRatio 3): t
   so they appear in the report stats (before: only in app_echo events).
 - Graphics panel: "Frame rate 30 / 60" row (frame_cap; phone default 30, desktop unlimited shown as 60).
 OPEN: real-phone fps after the DPR cap (needs Boss's phone, Lag Report after the next deploy).
+
+## Phone report follow-ups (tech-artist 2026-11-27, night; Boss phone 35-56 fps, cap 60, scale 0.75, dpr 2 of 3)
+
+- **net_rtt_ms was always 0.** The pong is handled inside SceneMultiplayer's poll, which runs before
+  `netfox_session.poll()` in the same frame. So the "previous poll start" used as the arrival bound came from two
+  frames back, before the ping was even sent. net = max(0, floor - sent) = 0, and stall = the whole ping (42/42,
+  146/146). Fix: `client/session/echo_timing.gd`. On the web, a WebSocket `message` listener timestamps each pong
+  frame (`performance.now()`, FIFO) and the game reads that timestamp's age when it handles the pong. Elsewhere the
+  arrival bound is the last `process_frame` (after the previous multiplayer poll), never earlier than the send.
+  net_rtt subtracts the server hold (`worker_wait_ms`). The report row `app_echo` now has `echo_source`.
+  Tests: `tests/test_echo_timing.gd` (fake clocks).
+- **Long tasks on Safari:** `longtask_supported:false` meant "not measured". `browser.long_tasks` now carries a
+  `source`: `longtask_observer` | `raf_gap` (requestAnimationFrame gaps > 50 ms while the page is visible:
+  `over_50ms`, `max_gap_ms`, `frames`) | `unsupported`.
+- **Slow-device verdict** (`draw_style.gd`): a remembered slow device is measured again, and FAST_STREAK = 2
+  battles in a row with a median >= FAST_FPS = 40 (or 95% of a cap <= 40) clear it. Hysteresis: slow < 30, fast >= 40,
+  and any battle in between resets the streak. The player's "On" still clears it at once.
+- **Phone draw stalls (110-180 ms, busiest = draw):** these are NOT first-use compiles. They recur through the whole
+  fight (diag 20:53: 166 slow frames, the latest at t = 388-396 s), and in all 70 sampled seconds of the five reports
+  they track the seconds with projectile ends / hits / race bursts (2.2-2.8 slow frames in those seconds vs
+  0.1-1.0 without). Desktop native (opengl3, `__GL_SHADER_DISK_CACHE=0`, orc_waves boss wave, phone profile,
+  1864x860 @ 0.75): 6 x 300 live frames, max 33 ms, 0 frames > 50 ms. Every effect/trail/telegraph/class-skill/
+  monster bundle is already prewarmed (`stage_view._prewarm_effects`). Most likely cause: fill-rate/overdraw of
+  stacked additive effect quads at dpr 2 on the iPhone GPU, which shows up in `frame_post_draw` as a GPU sync.
+  To confirm it, the slow-frame rows now record `vfx_live` (effect quads alive) and `vfx_new` (pool misses that
+  frame). OPEN until a phone report shows them: if `vfx_live` is high in slow frames, the next step is a phone cap on
+  live effect quads (an effect budget, needs the PO's OK because it changes the look).
