@@ -47,6 +47,7 @@ const HERO_INK_MAX_PIXELS := 1.8  ## the brush wobble (+-22%) goes on top: never
 ## before a swell of up to 1.55x: ~0.8 px at the overview, ~5.6 px zoomed in, the fur became a black blob).
 const MONSTER_INK_MIN_PIXELS := 1.0
 const MONSTER_INK_MAX_PIXELS := 2.0
+const HERO_INK_SCREEN_SKIP := ["_Boots_", "_Gloves_"]
 const HERO_INK_PHONE_MIN_TRIANGLES := 400  ## phones: no line on pieces smaller than this (weapons, head, hair keep it)
 const PAINT_DATA := "res://data/ui/draw_style.json"  ## per-stage painted ground, paper tile, sky
 const ENV_SATURATION := 0.95  ## the stage keeps its greens and warm browns (0.85 read grey on the goblin camp)
@@ -211,8 +212,13 @@ static func dress_hero(model: Node) -> void:
 	model.ink_line_world = HERO_INK_WIDTH
 	model.ink_min_pixels = HERO_INK_MIN_PIXELS
 	model.ink_max_pixels = HERO_INK_MAX_PIXELS
-	if is_phone():
-		model.ink_hull_min_triangles = HERO_INK_PHONE_MIN_TRIANGLES
+	# Every device (tech-artist 2026-11-27, goblin boss wave 50 fps on Windows Chrome): no line on small clothing pieces
+	# (buckles, straps, inner layers under a coat; weapons, head and hair keep it). A desktop hero went 71 -> fewer hulls.
+	model.ink_hull_min_triangles = HERO_INK_PHONE_MIN_TRIANGLES
+	# With the screen pass on, its depth lines already ring hands and feet: boots/gloves hulls (~5-6k tris per hero)
+	# only doubled them (goblin boss wave -40% hero hull triangles).
+	if screen_allowed():
+		model.ink_hull_skip = HERO_INK_SCREEN_SKIP
 
 
 ## A phone or tablet (web on Android/iOS, native mobile), or a forced `-- --phone-ink` for measuring.

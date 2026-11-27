@@ -148,6 +148,16 @@ func _nodes(pred: Callable) -> Array:
 func _toggles(stage: Node, frames: int) -> void:
 	var base := await _measure("base", frames, {})
 	await _shot("base")
+	if _args().has("--hulls"):
+		var tally := {}
+		for h in _nodes(func(n): return str(n.name).ends_with("_StudioInk") and n.is_visible_in_tree()):
+			var tris := 0
+			for sf in h.mesh.get_surface_count(): tris += h.mesh.surface_get_array_index_len(sf) / 3
+			var key := str(h.name).trim_suffix("_StudioInk")
+			tally[key] = int(tally.get(key, 0)) + tris
+		var keys := tally.keys()
+		keys.sort_custom(func(a, b): return tally[a] > tally[b])
+		for k in keys: print("COST hull %s tris=%d" % [k, tally[k]])
 	var groups := {
 		"screen_pass": _nodes(func(n): return n.name == "InkScreenPass"),
 		"stage_brush_hulls": _nodes(func(n): return n.name == "InkBrush"),

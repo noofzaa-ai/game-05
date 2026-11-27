@@ -106,11 +106,10 @@ static func clear_choice(key: String) -> void:
 	revision += 1
 	_save()
 
-## The options the graphics panel shows (frame_cap has no panel row yet: it is only in the lag report).
+## The options the graphics panel shows (frame_cap: "Frame rate 30 / 60"; 0 = unlimited, shown as 60).
 static func snapshot() -> Dictionary:
 	_load_once()
 	var shown := _values.duplicate()
-	shown.erase("frame_cap")
 	return shown
 
 ## Tests / tools: pretend this device class ("phone", "desktop", "" = detect). Reloads the saved file.

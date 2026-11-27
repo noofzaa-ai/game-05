@@ -385,6 +385,19 @@ window.ZORX_PACK_BASE = window.ZORX_PACK_BASE || '__PACK_BASE__';
     sessionStorage.removeItem('zorxPendingRealRoomProbe');
     sessionStorage.removeItem('zorxPendingReplayProbe');
   } catch (_) {}
+  // Phones (tech-artist 2026-11-27, Lag Report 11:35): at devicePixelRatio 3 the canvas is 2796x1290 (3.6 Mpx) and the
+  // GPU cannot keep up (one ~200 ms 'draw' stall a second, 19-24 fps). Cap the canvas at 2 px per CSS px on touch
+  // phones (0.44x the pixels; the 3D at render scale 0.5 is then the CSS size). ?dpr=<n> overrides for measuring.
+  (function () {
+    const want = parseFloat(new URLSearchParams(location.search).get('dpr') || '');
+    const phone = matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 600;
+    const cap = want > 0 ? want : (phone ? 2 : 0);
+    const real = window.devicePixelRatio || 1;
+    window.zorxRealDpr = real;
+    if (cap > 0 && real > cap) {
+      try { Object.defineProperty(window, 'devicePixelRatio', { get: function () { return cap; }, configurable: true }); } catch (_) {}
+    }
+  })();
   const GODOT_CONFIG = __GODOT_CONFIG__;
   const engine = new Engine(GODOT_CONFIG);
   const gate = document.getElementById('gate');

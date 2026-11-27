@@ -2,7 +2,7 @@
 # Boss wave of every zone, desktop (1920x987, scale 0.75, MSAA 2x, drawn style on) and phone (932x430, scale 0.5,
 # no MSAA, drawn style on) profiles, against data/perf/budgets.json. Exit 1 when any row fails.
 #   powershell -ExecutionPolicy Bypass -File tools\perf\perf_gate.ps1
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Continue"
 $root = (Resolve-Path "$PSScriptRoot\..\..").Path
 $godot = (Get-Command godot -ErrorAction SilentlyContinue).Source
 if (-not $godot) { $godot = (Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages" -Recurse -Filter "Godot_v*_console.exe" | Select-Object -First 1).FullName }

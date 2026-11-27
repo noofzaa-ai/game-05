@@ -338,3 +338,20 @@ mummy 35 -> 57, goblin 40 -> 50. Other platforms (Mac, phones, ANGLE on GL) are 
 History (where the budget broke, from git): 139aaa92 (screen pass, render scale tied to 0.5), 4e3b9c6d (hero ink hulls in
 battle, +28 draws / +60k prims for 3 heroes), 9e72df54 + 139aaa92 (stage brush hulls on the whole art scene), 8fb8dad3 and 1f752261
 (mummy / orc boss VFX bundles at 150-230 draws each, not under the VFX tier caps); the 0.5/0.75 scale presets predate this repo (ffa3a510), which is why Boss saw ~27 fps before the 11-25 VFX tiers too.
+
+## Phone draw stall and hero hull slimming (tech-artist 2026-11-27, PM)
+
+Boss phone Lag Report 11:35 (build 38706f4d077e, 4 cores, orc boss wave, style "on" chosen, but the remembered
+slow-device verdict was active, so no screen pass and no hero hulls were drawn): 19-24 fps, draw 170-225 ms each second,
+slow frames ~200 ms all 'draw'. The canvas was 2796x1290 (devicePixelRatio 3): the HUD drew at 3.6 Mpx and the 3D at
+1398x645 even at render scale 0.5. Ink was not the cause on that device (none of the hull/screen parts were on).
+
+- `build/web/play.html` caps `devicePixelRatio` at 2 on touch phones (short side < 600 CSS px); `?dpr=<n>` overrides.
+  The lag report's device section now carries `dpr` and `real_dpr`. Native at phone canvas sizes (orc boss wave, live):
+  2796x1290 6.2-6.7 ms/frame, 1864x860 3.7-4.2 ms (desktop GPU; ratio, not phone ms).
+- Hero ink hulls: 400-tri floor on every device (was phones only) and no boots/gloves hull while the screen pass runs
+  (its depth lines ring hands and feet). Goblin boss wave desktop 1920x987: 71 hulls/+45-48k prims -> 38 hulls/+38k.
+- `net_rtt_ms` / `frame_stall_ms` are now sampled every 250 ms into the flight recorder (runtime/diagnostics/session_probe.gd),
+  so they appear in the report stats (before: only in app_echo events).
+- Graphics panel: "Frame rate 30 / 60" row (frame_cap; phone default 30, desktop unlimited shown as 60).
+OPEN: real-phone fps after the DPR cap (needs Boss's phone, Lag Report after the next deploy).

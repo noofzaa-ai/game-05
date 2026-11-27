@@ -41,5 +41,8 @@
   "phone": 90
  },
  "class_skill_vfx_draws": 300,
- "_baseline_2026_11_27": "measured native RTX 3070 Ti, gate frozen boss frame (live VFX keep playing, so +-20% between runs): goblin 287/289k desktop, 327/283k phone; mummy 266/188k, 410/152k; orc 195/169k, 202/150k. Budgets = measured + headroom; tighten as content is slimmed."
+ "_baseline_2026_11_27": "measured native RTX 3070 Ti, gate frozen boss frame (live VFX keep playing, so +-20% between runs): goblin 287/289k desktop, 327/283k phone; mummy 266/188k, 410/152k; orc 195/169k, 202/150k. Budgets = measured + headroom; tighten as content is slimmed.",
+ "phone_canvas_max_dpr": 2,
+ "phone_target_fps": 30,
+ "_phone_2026_11_27": "Boss phone Lag Report 11:35 (build 38706f4d077e, 4 cores, DPR 3, canvas 2796x1290, style on chosen but slow-device verdict = no screen pass/no hero hulls, orc boss wave): 19-24 fps, draw 170-225 ms/s, one ~200 ms 'draw' frame per second. Native at the phone canvas size: 2796x1290 6.4 ms vs 1864x860 3.7 ms (x1.7 draw+UI). Fix: play.html caps devicePixelRatio at phone_canvas_max_dpr (0.44x pixels). Hero ink hulls: no boots/gloves hull when the screen pass runs, 400-tri floor on every device: goblin desktop hero hulls 71 -> 38, +48k -> +38k primitives. Gate 2026-11-27 after: goblin 301/289k, 312/277k; mummy 248/173k, 266/141k; orc 210/177k, 195-281/143-145k (orc phone dc is VFX noise between runs)."
 }

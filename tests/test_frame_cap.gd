@@ -62,7 +62,7 @@ func _defaults(ctx) -> void:
 	Options.set_slow(true)
 	ctx.check("slow mode keeps the cap (it is not in SLOW_OFF)", int(Options.effective("frame_cap")) == 30)
 	Options.set_slow(false)
-	ctx.check("the panel snapshot leaves frame_cap out (no row yet)", not Options.snapshot().has("frame_cap"))
+	ctx.check("the panel snapshot has the frame_cap row (Frame rate 30 / 60)", Options.snapshot().has("frame_cap"))
 	var applied: Dictionary = Options.report().get("applied", {})
 	ctx.check("lag report graphics: the cap and Engine.max_fps are recorded", applied.has("frame_cap") and applied.has("max_fps"))
 

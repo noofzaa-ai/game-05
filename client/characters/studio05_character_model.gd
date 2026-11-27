@@ -122,6 +122,7 @@ var ink_max_pixels := 1000.0
 ## Phones (battle): pieces with fewer triangles than this get no ink line (small plates, gloves, bracers), except the
 ## head, hair, weapons and shield; their outline is mostly covered by the body's. 0 = every piece.
 var ink_hull_min_triangles := 0
+var ink_hull_skip: Array = []  ## label parts that get no ink hull (draw_style.dress_hero: the screen pass lines them)
 ## Simple stand-in shield on the left hand (GLB units, in the left hand bone): radius, thickness.
 const SHIELD_RADIUS := 0.11
 const SHIELD_THICKNESS := 0.012
@@ -693,7 +694,9 @@ func _prepare_meshes() -> void:
 		if mesh.has_meta("no_ink_hull"):
 			pass  # a face overlay (Runeborn runes) lies on the head: an outline would ring every rune
 		elif card_ink:
-			if part != 0 or ink_hull_min_triangles <= 0 or is_weapon_piece(label) or _triangles(mesh.mesh) >= ink_hull_min_triangles:
+			var skipped := ink_hull_skip.any(func(word): return label.contains(word)) and not is_weapon_piece(label)
+			if skipped: pass
+			elif part != 0 or ink_hull_min_triangles <= 0 or is_weapon_piece(label) or _triangles(mesh.mesh) >= ink_hull_min_triangles:
 				_add_card_hull(mesh, part, rest or rest_custom, has_color, rest_custom)
 		elif part != 0:
 			var hull := MeshInstance3D.new()

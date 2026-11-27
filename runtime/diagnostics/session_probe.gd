@@ -37,7 +37,7 @@ func poll()->void:
     remote_age=maxf(remote_age,float(net.network_tick-sync._latest_seen)*1000.0/60.0)
     remote_gap=maxf(remote_gap,maxf(0.0,float(net.network_tick)+float(NetworkTime.tick_factor)-sync._delay-float(sync._latest_seen))*1000.0/60.0)
   var values={"frame_ms":frame_ms,"snapshot_age_ms":age,"outbound_bytes":outbound,"network_tick":net.network_tick,"reference_tick":net.reference_tick,"authority_tick":net.authoritative_tick,"snapshot_world_tick":session.server_state.get("tick",0),"entities":session.net_entities.size(),"projectiles":session.server_state.get("projectiles",[]).size(),"areas":session.server_state.get("areas",[]).size()}
-  if session._last_pong>=0:values["app_rtt_ms"]=session.rtt_ms
+  if session._last_pong>=0:values["app_rtt_ms"]=session.rtt_ms;values["net_rtt_ms"]=session.net_rtt_ms;values["frame_stall_ms"]=session.frame_stall_ms
   if remote_age>=0:values["remote_snapshot_age_ms"]=remote_age;values["interpolation_starvation_ms"]=remote_gap
   if remote_gap>300 and session.ready and not session.saved and not session.server_state.get("meta",{}).get("scene_loading",false):_trigger("interpolation_starvation",{"gap_ms":remote_gap},now)
   if actor!=null:values["input_edge_queue"]=actor.get_node("Input").edges.size()

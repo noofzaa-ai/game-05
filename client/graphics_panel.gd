@@ -15,7 +15,8 @@ const CarvedLook := preload("res://client/carved_look.gd")
 
 ## The rows: [option key, word key, values, value word keys]. Sections are [title word key, rows].
 const QUALITY := [["render_scale", "gfx_render_scale", [0.5, 0.75, 1.0], ["gfx_scale_normal", "gfx_scale_high", "gfx_scale_ultra"]],
-	["antialiasing", "gfx_aa", [0, 2, 4], ["gfx_off", "gfx_aa_2", "gfx_aa_4"]]]
+	["antialiasing", "gfx_aa", [0, 2, 4], ["gfx_off", "gfx_aa_2", "gfx_aa_4"]],
+	["frame_cap", "gfx_frame_cap", [30, 0], ["gfx_fps_30", "gfx_fps_60"]]]
 const DRAWN := [["drawn_style", "gfx_drawn_style", ["on", "lite", "off"], ["gfx_drawn_on", "gfx_drawn_lite", "gfx_off"]]]
 const SCENE := [["shadows", "gfx_shadows"], ["decorative_lights", "gfx_lights"], ["fog", "gfx_fog"], ["glow", "gfx_glow"]]
 const LANGUAGE := [["language", "lang_row", ["en", "th"], ["lang_en", "lang_th"]]]  ## client/language_options.gd

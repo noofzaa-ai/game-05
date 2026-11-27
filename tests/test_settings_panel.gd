@@ -64,7 +64,7 @@ func _check_overlay(ctx, screen: Vector2) -> void:
 	var phone := CardTokens.is_phone(screen)
 	var label := "%dx%d" % [screen.x, screen.y]
 	var plates: Array = hub.find_children("*", "Button", true, false).filter(func(b) -> bool: return b.has_meta("value"))
-	ctx.check("%s: the panel has every choice plate (%d)" % [label, plates.size()], plates.size() == 3 + 3 + 3 + 9 * 2 + 2)  # + Language EN / TH
+	ctx.check("%s: the panel has every choice plate (%d)" % [label, plates.size()], plates.size() == 3 + 3 + 2 + 3 + 9 * 2 + 2)  # + Frame rate 30 / 60, Language EN / TH
 	if phone:
 		var small: Array = plates.filter(func(b) -> bool: return b.custom_minimum_size.y < CardTokens.HUB_TAP_MIN_PHONE * hub.s - 0.5)
 		ctx.check("%s: every plate is >= 96 px tall on a phone (scaled)" % label, small.is_empty() and hub._close.size.y >= CardTokens.HUB_TAP_MIN_PHONE * hub.s - 0.5)
