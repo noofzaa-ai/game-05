@@ -116,6 +116,7 @@ const TEST_FILES := [
 	"res://tests/test_monsters.gd",
 	"res://tests/test_projectiles.gd",
 	"res://tests/test_vfx.gd",
+	"res://tests/test_perf_budget.gd",
 	"res://tests/test_vfx_violence.gd",
 	"res://tests/test_vfx_tiers.gd",
 	"res://tests/test_fight_vfx_anchor.gd",

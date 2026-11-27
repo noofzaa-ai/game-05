@@ -1,0 +1,45 @@
+{
+ "_comment": "Fight performance budgets (tech-artist 2026-11-27, Boss: 'the fps drops' keeps coming back). Checked by tests/test_perf_budget.gd (headless: VFX bundle draws, settings) and by the windowed gate client/perf/fight_bench.tscn -- --gate (boss wave of each zone, frozen frame, desktop and phone profiles; run before a web deploy: tools/perf/perf_gate.ps1). draw_calls/primitives are Godot's per-frame counters in the gl_compatibility renderer at 1920x987 (desktop) and 932x430 (phone). New content must fit: a new monster, VFX or prop that breaks a row is a bug, not a new budget.",
+ "zones": {
+  "goblin_waves": {
+   "desktop": {
+    "draw_calls": 340,
+    "primitives": 330000
+   },
+   "phone": {
+    "draw_calls": 380,
+    "primitives": 330000
+   }
+  },
+  "mummy_waves": {
+   "desktop": {
+    "draw_calls": 320,
+    "primitives": 230000
+   },
+   "phone": {
+    "draw_calls": 440,
+    "primitives": 210000
+   }
+  },
+  "orc_waves": {
+   "desktop": {
+    "draw_calls": 260,
+    "primitives": 230000
+   },
+   "phone": {
+    "draw_calls": 260,
+    "primitives": 210000
+   }
+  }
+ },
+ "frame_cpu_ms": {
+  "desktop": 6.0,
+  "phone": 6.0
+ },
+ "monster_vfx_draws": {
+  "desktop": 130,
+  "phone": 90
+ },
+ "class_skill_vfx_draws": 300,
+ "_baseline_2026_11_27": "measured native RTX 3070 Ti, gate frozen boss frame (live VFX keep playing, so +-20% between runs): goblin 287/289k desktop, 327/283k phone; mummy 266/188k, 410/152k; orc 195/169k, 202/150k. Budgets = measured + headroom; tighten as content is slimmed."
+}

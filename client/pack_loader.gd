@@ -131,6 +131,10 @@ func _finish() -> void:
 ## sign-in in place (client/online/online_account.gd offer_reconnect / reconnect). Otherwise (dev machine, desktop,
 ## headless tests) it plays offline.
 func _open_game() -> void:
+	# Perf bench (tech-artist 2026-11-27): ?bench=fight runs client/perf/fight_bench.tscn in the web build (debug only).
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("new URLSearchParams(location.search).get('bench') || ''", true)) == "fight":
+		get_tree().root.add_child(load("res://client/perf/fight_bench.tscn").instantiate())
+		return
 	var game_state = get_node_or_null("/root/GameState")
 	if game_state == null:
 		get_tree().change_scene_to_file(NEXT_SCENE)

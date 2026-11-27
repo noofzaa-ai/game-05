@@ -14,6 +14,10 @@ var metadata_apply_us:=0
 var _last_metadata_record:=-250
 var _diagnostic_hooked:=false
 var _pending_pings:Dictionary={}
+var _poll_prev_ms:=-1 ## start of the previous poll (frame): a pong read now arrived after it at the earliest
+var _poll_now_ms:=-1
+var frame_stall_ms:=0 ## the frame gap the last pong waited through (ping includes it; Lag Report 2026-11-27)
+var net_rtt_ms:=0.0 ## ping minus that frame gap: the network part (lower bound)
 var _metadata_bytes:=0
 var _last_metadata_tick:=-1
 var _sent_event_ack:=0
@@ -186,6 +190,7 @@ func advance_controls(input:SimInput,_elapsed:float)->void:
  if _sim!=null:_sim.events.clear();_sim.events.append_array(_pending_events);_pending_events.clear()
  _project_owner()
 func poll(delta:float)->void:
+ _poll_prev_ms=_poll_now_ms;_poll_now_ms=Time.get_ticks_msec()
  if not _diagnostic_hooked:
   diagnostics.configure(self);_diagnostic_hooked=true
  diagnostics.poll()
@@ -221,7 +226,7 @@ func enter_camp()->void:
 func netfox_metrics()->Dictionary:
  return {"correction_n":own_actor.correction_count if own_actor!=null else 0,"correction_max_m":snappedf(own_actor.correction_max_m,.001) if own_actor!=null else 0,"correction_last_m":snappedf(own_actor.correction_last_m,.001) if own_actor!=null else 0,"correction_tick":own_actor.correction_tick if own_actor!=null else -1,"correction_state":own_actor.correction_state if own_actor!=null else "","snapshot_age_ms":maxi(0,Time.get_ticks_msec()-_received_at),"protocol":4,"runtime":"netfox-1.35.3","worker_release":server_state.get("netfox",{}).get("worker_release",""),"server_network_tick":server_state.get("netfox",{}).get("network_tick",0),"server_reference_tick":server_state.get("netfox",{}).get("reference_tick",0),"network_tick":net_root.get_node("/root/NetworkTime").tick if net_root!=null else 0,"last_prediction_tick":own_actor.last_prediction_tick if own_actor!=null else 0,"reference_tick":net_root.get_node("/root/NetworkTime").seconds_to_ticks(net_root.get_node("/root/NetworkTimeSynchronizer").get_time()) if net_root!=null else 0,"input_authority":own_actor.get_node("Input").get_multiplayer_authority() if own_actor!=null else 0,"peer_id":net_api.get_unique_id() if net_api!=null and connected else 0,"base_tick":own_actor.base_tick if own_actor!=null else 0,"authoritative_tick":own_actor.sync.get_last_known_state() if own_actor!=null else 0,"prediction_ticks":own_actor.prediction_ticks if own_actor!=null else 0,"prediction_us":own_actor.prediction_us if own_actor!=null else 0,"redundant_replay_ticks_avoided":own_actor.sync.redundant_replay_ticks_avoided if own_actor!=null else 0,"restore_count":own_actor.restore_count if own_actor!=null else 0,"restore_us":own_actor.restore_us if own_actor!=null else 0,"metadata_payload_bytes":_metadata_bytes}
 func debug_metrics()->Dictionary:
- return {"netfox":netfox_metrics(),"mode":"netfox_authoritative_room","rewards_saved":saved,"connected":connected,"epoch":_epoch,"server_tick":server_state.get("tick",0),"ping_ms":rtt_ms,"ping_age_ms":Time.get_ticks_msec()-_last_pong if _last_pong>=0 else -1,"error":error}
+ return {"netfox":netfox_metrics(),"mode":"netfox_authoritative_room","rewards_saved":saved,"connected":connected,"epoch":_epoch,"server_tick":server_state.get("tick",0),"ping_ms":rtt_ms,"net_rtt_ms":net_rtt_ms,"frame_stall_ms":frame_stall_ms,"ping_age_ms":Time.get_ticks_msec()-_last_pong if _last_pong>=0 else -1,"error":error}
 
 func _finish_leave(confirmed:bool)->void:
  if _left_emitted:return
@@ -244,8 +249,14 @@ func _bus_reply(bytes:PackedByteArray)->void:
   var decoded:=Wire.decode(packet.body)
   var value:Dictionary=decoded.get("value",{})
   if _pending_pings.has(value.get("nonce")):
-   var rtt:=Time.get_ticks_msec()-int(_pending_pings[value.nonce])
-   diagnostics.recorder.record("app_echo",{"nonce":value.nonce,"stage":value.get("echo_stage","receipt"),"rtt_ms":rtt,"worker_wait_ms":value.get("worker_wait_ms"),"worker_tick":value.get("worker_tick")})
+   var now_ms:=Time.get_ticks_msec()
+   var rtt:=now_ms-int(_pending_pings[value.nonce])
+   # The reply is read at a frame start: it may have arrived any time after the previous frame started, so a
+   # long frame (draw stall) shows up as ping. Keep both: frame_stall_ms and the network-only lower bound.
+   var earliest:=_poll_prev_ms if _poll_prev_ms>=0 else now_ms
+   frame_stall_ms=maxi(0,now_ms-earliest)
+   net_rtt_ms=float(maxi(0,earliest-int(_pending_pings[value.nonce])))
+   diagnostics.recorder.record("app_echo",{"nonce":value.nonce,"stage":value.get("echo_stage","receipt"),"rtt_ms":rtt,"net_rtt_ms":int(net_rtt_ms),"frame_stall_ms":frame_stall_ms,"worker_wait_ms":value.get("worker_wait_ms"),"worker_tick":value.get("worker_tick")})
  _receive(bytes,Time.get_ticks_msec())
 func diagnostic_report()->Dictionary:
  return await diagnostics.report()

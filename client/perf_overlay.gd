@@ -34,7 +34,7 @@ func _process(delta: float) -> void:
 		var game = get_node_or_null("/root/GameState")
 		if game != null and game.remote_session != null:
 			var metrics: Dictionary = game.remote_session.debug_metrics()
-			_label.text += "\nNET ping %d ms   lead %d ticks   corrections %d   drops %d" % [metrics.ping_ms, metrics.get("lead",0), metrics.get("corrections",0), metrics.get("dropped",0)]
+			_label.text += "\nNET ping %d ms (net %d, frame stall %d)   lead %d ticks   corrections %d   drops %d" % [metrics.ping_ms, metrics.get("net_rtt_ms", metrics.ping_ms), metrics.get("frame_stall_ms", 0), metrics.get("lead",0), metrics.get("corrections",0), metrics.get("dropped",0)]
 		_window = 0.0
 		_frames = 0
 		_worst_ms = 0.0

@@ -304,3 +304,37 @@ Orc Camp DUSK (Boss 2026-11-25, same files): the orc zone in fight_light.json al
 pink -> orange horizon, ProceduralSkyMaterial; the drawn style keeps it via meta fight_light_sky), the existing sun low
 (-20 deg) from the side, warm #ffbf8a at 0.95, a violet shade ambient #8c7cc4, a warm rim #ffb070 x1.9 and key x1.6. Same
 lights, no new pass: orc 844x390 p50 / p95 3.46 / 5.97 ms, 218 dc (night 'after' 3.39 / 5.76, 232 dc) = noise.
+
+## Fight budget gate, 2026-11-27 (tech-artist; Boss "the fps drops", desktop 20-32 fps / phone 10-14 fps)
+
+Numbers live in `data/perf/budgets.json`. New content must fit them; a row that fails is a bug in the content.
+
+| Check | Desktop | Phone | Where |
+|---|---|---|---|
+| Boss-wave frame, draw calls (goblin / mummy / orc) | 340 / 320 / 260 | 380 / 440 / 260 | `client/perf/fight_bench.tscn -- --gate`, `tools/perf/perf_gate.ps1` (windowed) |
+| Boss-wave frame, primitives (goblin / mummy / orc) | 330k / 230k / 230k | 330k / 210k / 210k | same |
+| CPU per frame (process + script) | 6 ms | 6 ms | same |
+| One monster VFX bundle, peak draws | 130 | 90 | `tests/test_perf_budget.gd` (headless, in run_all) |
+| One class skill VFX, draws | 300 | 300 | above (2026-11-13) |
+
+How to measure (the same scene natively and in a real browser):
+- native: `godot --path . --rendering-driver opengl3 res://client/perf/fight_bench.tscn -- --journey=orc_waves [--device=phone --size=932x430 --scale=0.5 --aa=0 --cap=0] [--live|--matrix|--floor|--gate] [--shots=<dir>]`
+- browser: export the Web preset, serve it, open `index.html?bench=fight&journey=orc_waves&...` (same flags without `--`); the
+  results are `COST ...` lines in the console. Native timings on a fast GPU say little: compare in Chrome.
+
+Findings (Chrome 158, RTX 3070 Ti, ANGLE/Direct3D 11, 1920x987, orc boss wave):
+- An EMPTY 3D frame cost 8.7 ms at render scale 0.75 or 0.5 but 1.6 ms at 1.0 (ANGLE on OpenGL: 1.7 ms at all scales).
+  The 3D resolution scale itself was the biggest cost on Windows web, more than all ink hulls together.
+- MSAA 2x + the ink screen pass at full size: +6 ms (the pass resolves the multisampled colour and depth); FXAA instead: +0.4 ms.
+- Ink pieces at 0.75: hero hulls ~3.8 ms, stage brush ~3.4 ms, monster hulls ~1.5 ms, screen pass ~0.5 ms. Glow, fog, lights,
+  HUD, labels: < 0.5 ms each.
+- Monster VFX bundles: one mesh per particle (150-230 draws for the Orc Warlock's cataclysm/bulwark/skyfall and the High
+  Wizard's sandstorm); thinned per emitter group at load (client/monster_vfx.gd PARTICLES_PER_GROUP 16 / phone 8).
+
+Fixes: on web with ANGLE/Direct3D (graphics_options.gd scale_penalty) the 3D scene is drawn at full size with FXAA instead of
+MSAA, and the drawn-style screen pass stays on. Live fight fps in Chrome, before -> after (desktop profile): orc 36 -> 65,
+mummy 35 -> 57, goblin 40 -> 50. Other platforms (Mac, phones, ANGLE on GL) are unchanged except the monster VFX thinning.
+
+History (where the budget broke, from git): 139aaa92 (screen pass, render scale tied to 0.5), 4e3b9c6d (hero ink hulls in
+battle, +28 draws / +60k prims for 3 heroes), 9e72df54 + 139aaa92 (stage brush hulls on the whole art scene), 8fb8dad3 and 1f752261
+(mummy / orc boss VFX bundles at 150-230 draws each, not under the VFX tier caps); the 0.5/0.75 scale presets predate this repo (ffa3a510), which is why Boss saw ~27 fps before the 11-25 VFX tiers too.

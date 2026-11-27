@@ -85,6 +85,8 @@ func _update() -> void:
 		color = Ink.BAD
 	elif int(metrics.get("ping_age_ms", -1)) >= 0:
 		var latency := int(metrics.ping_ms)
+		if metrics.has("net_rtt_ms") and int(metrics.get("frame_stall_ms", 0)) > 50:
+			latency = int(metrics.net_rtt_ms)  # the rest was a long frame here, not the network (shown as FPS)
 		ping = "%d ms" % latency
 		if latency > 200: color = Ink.BAD
 		elif latency > 100: color = Ink.GOLD

@@ -6,6 +6,7 @@ extends SceneTree
 ## slim=1 (default) plays them the way the game does (ClassSkillVfx._slim: phase meshes toggled by visible, no shadows);
 ## slim=0 plays the raw imported scene.
 ## Output lines "VFXCOST <id> ..." (vsync is turned off so frame times are real).
+## Env MONSTER=1 measures the monster bundles (art/vfx/monster) instead.
 ## Env INK=1 forces the ink-wash materials (client/vfx/ink_vfx.gd), INK=0 the original ones (default: the setting).
 
 const ROOT := "res://art/vfx/class_skills/"
@@ -39,19 +40,29 @@ func run() -> void:
 	root.add_child(cam)
 	cam.look_at_from_position(Vector3(0, 9, 12), Vector3(0, 0.8, 0))
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/class_skills/class_skills.json"))
+	var root_dir := ROOT
+	if OS.get_environment("MONSTER") == "1":  # monster bundles (art/vfx/monster/<id>/effect.tscn), slimmed like client/monster_vfx.gd
+		root_dir = "res://art/vfx/monster/"
+		data = {"skills": {}}
+		for id in ["hw_bolt", "hw_curse", "hw_sandstorm", "hw_starfall", "hw_summon", "orc_warlock/bulwark", "orc_warlock/cataclysm", "orc_warlock/cleave", "orc_warlock/skyfall"]:
+			data["skills"][id] = true
 	var base := await _measure([], seconds)
 	print("VFXCOST baseline avg=%.2fms worst=%.2fms draws=%d prims=%d" % [base["avg"], base["worst"], base["draws"], base["prims"]])
 	for sid in data["skills"].keys():
 		if not only.is_empty() and not only.has(sid):
 			continue
-		var packed: PackedScene = load(ROOT + sid + "/effect.tscn")
+		var packed: PackedScene = load(root_dir + sid + "/effect.tscn")
 		var nodes: Array = []
 		for i in copies:
 			var inst: Node3D = packed.instantiate()
 			inst.set("loop_effect", true)
 			inst.position = Vector3((i - (copies - 1) * 0.5) * 3.0, 0, 0)
 			root.add_child(inst)
-			if slim:
+			if slim and root_dir != ROOT:
+				for n in preload("res://client/monster_vfx.gd").thinned(inst, int(OS.get_environment("CAP")) if OS.get_environment("CAP") != "" else 999):
+					n.visible = false
+				vfx._slim(sid, inst)
+			elif slim:
 				vfx._slim(sid, inst)
 			if OS.get_environment("INK") == "1":
 				for mi in inst.find_children("*", "MeshInstance3D", true, false):
@@ -63,6 +74,14 @@ func run() -> void:
 				ap.seek(0.0, true)
 			nodes.append(inst)
 		var m := await _measure(nodes, seconds)
+		if OS.get_environment("SHOTS") != "":  # one frame per effect, part way through its clip
+			DirAccess.make_dir_recursive_absolute(OS.get_environment("SHOTS"))
+			for n in nodes:
+				var ap: AnimationPlayer = vfx._player_of(n)
+				if ap != null: ap.seek(ap.current_animation_length * 0.45, true); ap.pause()
+			for i in 3: await process_frame
+			await RenderingServer.frame_post_draw
+			root.get_texture().get_image().save_png(OS.get_environment("SHOTS").path_join(sid.replace("/", "_") + ".png"))
 		print("VFXCOST %s x%d avg=%.2fms (+%.2f) worst=%.2fms draws=%d (+%d) prims=%d" % [sid, copies, m["avg"], m["avg"] - base["avg"], m["worst"], m["draws"], m["draws"] - base["draws"], m["prims"]])
 		for n in nodes:
 			n.queue_free()

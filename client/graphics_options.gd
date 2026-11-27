@@ -49,9 +49,36 @@ static func value(key: String) -> Variant:
 ## picked it.
 static func effective(key: String) -> Variant:
 	_load_once()
+	if key == "render_scale" and scale_penalty():
+		return 1.0  # (see scale_penalty: a lower 3D resolution is SLOWER there, so it is drawn at full size)
 	if _slow and SLOW_OFF.has(key) and not _chosen.has(key):
 		return SLOW_OFF[key]
 	return _values.get(key, true)
+
+## Web on Windows (Chrome/Edge draw WebGL through ANGLE on Direct3D 11): a 3D render scale below 1.0 costs ~7 ms a
+## frame on its own (tech-artist 2026-11-27, fight_bench --floor in Chrome, RTX 3070 Ti: empty 3D frame 8.7 ms at 0.75,
+## 1.6 ms at 1.0; ANGLE on OpenGL: 1.7 ms at both). There the 3D scene is drawn at full size whatever the panel says
+## (faster AND sharper). Tests / tools: scale_penalty_override = 1 (yes) / 0 (no) / -1 (detect).
+static var scale_penalty_override := -1
+static var _scale_penalty := -1
+
+static func scale_penalty() -> bool:
+	if scale_penalty_override >= 0: return scale_penalty_override == 1
+	if _scale_penalty < 0:
+		_scale_penalty = 1 if OS.has_feature("web") and adapter_has_scale_penalty(web_renderer()) else 0
+	return _scale_penalty == 1
+
+## The browser's unmasked WebGL renderer (Godot only sees "WebKit WebGL"); "" when the browser hides it.
+static func web_renderer() -> String:
+	if not OS.has_feature("web"): return RenderingServer.get_video_adapter_name()
+	var js := "(function(){try{var g=document.createElement('canvas').getContext('webgl2');var e=g&&g.getExtension('WEBGL_debug_renderer_info');return e?String(g.getParameter(e.UNMASKED_RENDERER_WEBGL)):'';}catch(x){return '';}})()"
+	var found = JavaScriptBridge.eval(js, true)
+	return str(found) if found != null else ""
+
+## Pure: the WebGL renderer string of ANGLE on Direct3D (e.g. "ANGLE (NVIDIA, ... Direct3D11 vs_5_0 ps_5_0, D3D11)").
+static func adapter_has_scale_penalty(adapter: String) -> bool:
+	var a := adapter.to_lower()
+	return a.contains("direct3d") or a.contains("d3d11")
 
 static func set_enabled(key: String, on: bool) -> void:
 	set_value(key, on)
@@ -152,7 +179,7 @@ static func report() -> Dictionary:
 	section["device_class"] = device_class()
 	section["slow_device"] = _slow
 	section["chosen"] = _chosen.duplicate()
-	section["applied"] = {"shadows": enabled("shadows"), "antialiasing": int(effective("antialiasing")), "drawn_style": str(effective("drawn_style")),
+	section["applied"] = {"render_scale": float(effective("render_scale")), "full_size_web": scale_penalty(), "shadows": enabled("shadows"), "antialiasing": int(effective("antialiasing")), "drawn_style": str(effective("drawn_style")),
 		"frame_cap": int(effective("frame_cap")), "max_fps": Engine.max_fps}
 	return section
 

@@ -209,7 +209,47 @@ func _make(vfx: String) -> Node3D:
 	return inst
 
 
+## Particles kept per emitter group ("cat_rocks 1".."cat_rocks 40" is one group): a daiyooo bundle draws every particle
+## as its own mesh, so a boss move is 150-230 draw calls (tech-artist 2026-11-27: the Orc Warlock's cataclysm/bulwark/
+## skyfall and the High Wizard's sandstorm dropped a phone to 10-14 fps). The kept particles are spread over the group
+## (every n-th), so the shape and timing stay; only the density drops. Groups at or under the cap are untouched.
+const PARTICLES_PER_GROUP := 16
+const PARTICLES_PER_GROUP_PHONE := 8
+
+
+static func particle_cap() -> int:
+	return PARTICLES_PER_GROUP_PHONE if GraphicsOptions.device_class() == "phone" else PARTICLES_PER_GROUP
+
+
+## The particle nodes to hide in a bundle: per group (name without its trailing number) keep `cap` spread evenly.
+static func thinned(root: Node, cap: int) -> Array:
+	var groups := {}
+	for mi in root.find_children("*", "MeshInstance3D", true, false):
+		var particle: Node = mi.get_parent()
+		var name := str(particle.name)
+		var cut := name.rfind(" ")
+		if cut <= 0 or not name.substr(cut + 1).is_valid_int():
+			continue
+		var key := name.substr(0, cut)
+		if not groups.has(key): groups[key] = []
+		if not groups[key].has(particle): groups[key].append(particle)
+	var hidden: Array = []
+	for key in groups:
+		var members: Array = groups[key]
+		if members.size() <= cap:
+			continue
+		var keep := {}
+		for k in cap:
+			keep[int(floor(float(k) * members.size() / cap))] = true
+		for i in members.size():
+			if not keep.has(i): hidden.append(members[i])
+	return hidden
+
+
 func _slim(vfx: String, inst: Node3D) -> void:
+	var hidden := thinned(inst, particle_cap())
+	for node in hidden:
+		(node as Node3D).visible = false  # (its phase meshes keep their own visible keys; the parent hides them all)
 	for mi in inst.find_children("*", "GeometryInstance3D", true, false):
 		(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var player := _player_of(inst)
@@ -217,7 +257,17 @@ func _slim(vfx: String, inst: Node3D) -> void:
 	if clip == &"":
 		return
 	if not _slim_clip.has(vfx):
-		_slim_clip[vfx] = ClassSkillVfx.slim_animation(player.get_animation(clip), player.get_node(player.root_node))
+		var slim := ClassSkillVfx.slim_animation(player.get_animation(clip), player.get_node(player.root_node))
+		var base := player.get_node(player.root_node)
+		var dead := {}
+		for node in hidden: dead[String(base.get_path_to(node))] = true
+		for t in range(slim.get_track_count() - 1, -1, -1):  # no keys for hidden particles (less work per frame)
+			var path := String(slim.track_get_path(t)).get_slice(":", 0)
+			for d in dead:
+				if path == d or path.begins_with(d + "/"):
+					slim.remove_track(t)
+					break
+		_slim_clip[vfx] = slim
 	var anim: Animation = _slim_clip[vfx]
 	var lib_name := String(clip).get_slice("/", 0) if "/" in String(clip) else ""
 	var anim_name := String(clip).get_slice("/", 1) if "/" in String(clip) else String(clip)

@@ -228,7 +228,11 @@ static func screen_allowed() -> bool:
 		return false
 	if not _override.is_empty():
 		return true
-	return is_equal_approx(float(Options.value("render_scale")), SCREEN_SCALE) and not is_slow_device()
+	if is_slow_device():
+		return false
+	# Web on ANGLE/D3D11 draws the 3D scene at full size (Options.scale_penalty) with FXAA: the pass costs ~0.3-1 ms
+	# there at any panel scale (fight_bench --matrix, 2026-11-27), so the full look stays on.
+	return Options.scale_penalty() or is_equal_approx(float(Options.value("render_scale")), SCREEN_SCALE)
 
 
 ## Applies the look to a built stage (art, fighters, environment) and its camera. Called once at the end of

@@ -43,9 +43,16 @@ func _process(_delta: float) -> void:
 
 func _apply_all() -> void:
 	_revision = Options.revision
-	get_viewport().scaling_3d_scale = float(Options.value("render_scale"))
+	get_viewport().scaling_3d_scale = float(Options.effective("render_scale"))  # (full size where a lower scale is slower: Options.scale_penalty)
 	var aa := int(Options.effective("antialiasing"))  # (a slow device drops it unless the player picked it)
-	get_viewport().msaa_3d = Viewport.MSAA_DISABLED if aa == 0 else (Viewport.MSAA_2X if aa == 2 else Viewport.MSAA_4X)
+	if Options.scale_penalty():
+		# ANGLE/D3D11 at full size: MSAA makes the ink screen pass resolve the multisampled colour+depth every frame
+		# (+6 ms in Chrome, fight_bench --matrix); FXAA gives the edges for ~0.3 ms (tech-artist 2026-11-27).
+		get_viewport().msaa_3d = Viewport.MSAA_DISABLED
+		get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED if aa == 0 else Viewport.SCREEN_SPACE_AA_FXAA
+	else:
+		get_viewport().screen_space_aa = Viewport.SCREEN_SPACE_AA_DISABLED
+		get_viewport().msaa_3d = Viewport.MSAA_DISABLED if aa == 0 else (Viewport.MSAA_2X if aa == 2 else Viewport.MSAA_4X)
 	_apply_frame_cap(int(Options.effective("frame_cap")))
 	_lights = _lights.filter(func(ref: WeakRef): return is_instance_valid(ref.get_ref()))
 	_environments = _environments.filter(func(ref: WeakRef): return is_instance_valid(ref.get_ref()))
