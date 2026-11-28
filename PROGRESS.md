@@ -1,6 +1,16 @@
 # ความคืบหน้าโปรเจกต์ zorx
 
-อัปเดตล่าสุด: 2026-11-13 (auto-battler; ส่วนล่างเป็นบันทึกเก่าก่อนเปลี่ยนแนวเกม)
+อัปเดตล่าสุด: 2026-11-28 (auto-battler; ส่วนล่างเป็นบันทึกเก่าก่อนเปลี่ยนแนวเกม)
+
+## ▶ เริ่มตรงนี้ (2026-11-28) — งานล่าสุดอยู่ที่ `C:\Users\wanwi\orca\workspaces\game05\game-05` branch `fix/autopilot-checkpoint` (pushed `eedf9b2d`), staging web build `b7aeb9e18b67`
+- ห้ามใช้ worktree `game05/game05` (a4e7c4a เก่า) และ main ล้าหลัง; รายละเอียดทุก deploy อยู่บนสุดของ `AI_SYNC.md` หัวข้อ 6
+- **ส่งขึ้น staging แล้ว 11-24..11-27:** แมพ Elder Grove 3 เกาะ (โซน 4 ยัง "เร็วๆ นี้", รอโมเดลมอนจาก Boss); คอมโบข้ามคลาส 8 สถานะ/16 สกิล + UI (ชิปคอมโบเล็กข้างวงการ์ด); ตั้งค่าภาษา EN/TH (ไทยเฉพาะคำอธิบาย เมนูอังกฤษ); จัดข้อความลอย + HUD มือถือ; ความสว่างต่อโซน + VFX 3 ระดับ; ออร์คเป็นยามเย็น (มีค่าแสงแยกมือถือ); **ปักหมุดการ์ด (Boss เปลี่ยนกฎ 11-26: ขยับได้ทีละตัว)** ใช้ได้ทั้งเล่นคนเดียวและห้องออนไลน์, หมุดใหม่ตัดสกิลหลังโดนครั้งแรก; หน้าสรุปออนไลน์แสดงของดรอปบอส (ของเข้า Storage มาตลอด แค่ไม่แสดง)
+- **fps (Boss: "ไม่เคยลื่นขนาดนี้"):** ต้นเหตุจริง = (1) Chrome บน Windows (ANGLE/D3D) ช้าลงเมื่อลด render scale -> บังคับ 1.0 + FXAA; (2) มือถือ DPR 3 วาด 3.6 Mpx -> จำกัด canvas 2 เท่า (`tools/web/play_template.html`, ห้ามแก้แค่ build/web); (3) เอฟเฟกต์บอส Warlock/High Wizard ลดพาร์ทิเคิล. มือถือ 5-27 -> 35-56 fps. วัดบนเครื่องตรงไม่เห็นปัญหานี้ ต้องวัดบน Chrome (`client/perf/fight_bench`, `tools/perf/perf_gate.ps1`, งบ `data/perf/budgets.json` + `tests/test_perf_budget.gd`)
+- **เส้นวาดหมึก = เอกลักษณ์ (Boss): ห้ามปิดเพื่อแก้ fps** ทำให้เบาลงแทน
+- **รายงานแลค:** อ่านจาก Postgres ผ่าน kubectl (อ่านอย่างเดียว) collection `zorx_diagnostics_v1` (data = base64 gzip JSON); ไม่ใช้ ssh. ปิงที่สูงที่ผ่านมาส่วนใหญ่คือเฟรมช้า ไม่ใช่เน็ต. build b7aeb9e แก้ net_rtt (เดิมเป็น 0 เพราะวัดผิด), วัด long task บน Safari ด้วย rAF gap, บันทึก vfx_live/vfx_new
+- **รอ Boss:** รายงานแลคมือถือจาก build `b7aeb9e18b67` (ยังไม่เข้า ณ 11-28) เพื่อยืนยัน net_rtt, ต้นเหตุเฟรมสะดุด 110-130 ms (สงสัย VFX ซ้อน -> ถ้าใช่ต้องขออนุมัติจำกัด VFX มือถือ), slow_device กลับเป็นปกติหลังเล่นลื่น 2 รอบ; Orc Warlock คู่หรือเดี่ยว; win rate มัมมี่/ออร์คในการทดสอบจำลองต่ำกว่าเป้า; Heartseeker คริซ้อน x1.5; บอสโดนสถานะคอมโบได้; มอน Elder Grove แบบ A/B/C
+- **พักไว้ตาม Boss:** ตัวเลือก Resolution (Performance/Balanced/Sharp) "ยังก่อน"; Frame rate 30/60 มีแล้วในตั้งค่า (มือถือเริ่ม 30)
+- **บทเรียน deploy:** export `GODOT_BIN` ทุกครั้ง แล้วเช็ก "Packaging Web build" ให้ตรงกับ build ใหม่ (เคยห่อ build เก่าไป 4 นาที); Docker Desktop อาจหยุดเอง; push ผ่าน `192.168.1.99:30500` (ชื่อ wiyazard resolve ไม่ได้); `kubectl set image` เท่านั้น; เทสต์ baseline = `build/localstack/f3.txt` (32 รายการ)
 
 ## ▶ สถานะ 2026-11-14..11-23 (สรุปจาก AI_SYNC.md; โค้ดล่าสุด = branch fix/autopilot-checkpoint, staging web build 5a8972a6a535 = 00011f15)
 - ส่งขึ้น staging แล้ว: ด่าน Mummy Pyramid (บอสคู่ Mummy + High Wizard wave 9, จังหวะ ~1.5x ของเดิม, HP x2), ด่าน Orc Camp (9 เวฟ, บอส Orc Warlock เดี่ยว, ตระกูลออร์คจากโมเดลเดียว), ชุดบอส + ดาบโล่ Orc Warlock จริง, boss_proc (สถานะติดตอนตี), อาวุธบอสดรอป 10% ระดับ epic แสดงทอง, Quests Main/Daily, ขายยกชุดออนไลน์, ค่าเริ่มต้นมือถือ + Lag report, nerf guard / wave_heal 0, AI รอดชีวิตของทัพ, Skill tree UI
